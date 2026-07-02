@@ -3,11 +3,12 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { runeTarget } from '../../utils/runeClassify';
+import { ACCESSORY_TAGS } from '../../utils/accessoryRunes';
 import { DAMAGE_TYPES } from '../../utils/damage';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import PageEditorShell from '../../components/gm/PageEditorShell';
-import { ArmorRuneForm, armorToForm, armorBlankRune } from './GmArmorRunes';
+import { ArmorRuneForm, armorToForm, armorBlankRune, MODIFIER_STATS, MODIFIER_KINDS } from './GmArmorRunes';
 import './gm.css';
 
 // Property-rune catalog editor (#548 Slice 3b). Rune shape (src/data/pf2eRunes.js):
@@ -451,13 +452,304 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
+// ── Accessory runes (#1033 S4) ───────────────────────────────────────────────
+// Accessory runes inscribe onto mundane worn items matched by USAGE TAGS
+// (utils/accessoryRunes). This form authors the descriptive fields, rarity (the
+// #982 shop filter), the usage-tag list, worn `modifiers` (the armor vocabulary
+// plus the special `resistance` stat, which carries a damage descriptor and the
+// optional persistent-bleed flat-check ease), and rider reminders — and, like
+// the ring form, PRESERVES the content-authored activation fields (actuated /
+// actions / freeActions / reactions / onBlock) by spreading the original doc.
+const ACC_USAGE_TAGS = [...ACCESSORY_TAGS, 'shield', 'container', 'light'];
+const ACC_RARITIES = ['common', 'uncommon', 'rare'];
+const ACC_MODIFIER_STATS = [...MODIFIER_STATS, 'resistance'];
+
+const accToForm = (r) => {
+  const src = r && typeof r === 'object' ? r : {};
+  return {
+    id: src.id,
+    name: src.name || '',
+    level: src.level != null ? String(src.level) : '',
+    price: src.price != null ? String(src.price) : '',
+    rarity: String(src.rarity || 'common').toLowerCase(),
+    description: src.description || '',
+    usage: Array.isArray(src.usage) ? src.usage.map(String) : [],
+    modifiers: Array.isArray(src.modifiers)
+      ? src.modifiers.map((m) => ({
+          stat: m.stat || 'ac',
+          kind: m.kind || 'item',
+          amount: m.amount != null ? String(m.amount) : '',
+          vs: m.vs != null ? String(m.vs) : '',
+          ease: !!m.flatCheckEase,
+        }))
+      : [],
+    reminders: Array.isArray(src.riders)
+      ? src.riders.map((rd) => (typeof rd === 'string' ? rd : rd?.text || '')).filter(Boolean)
+      : [],
+    _original: src,
+  };
+};
+const accBlankRune = () => accToForm({});
+const accBlankModifier = () => ({ stat: 'ac', kind: 'item', amount: '1', vs: '', ease: false });
+
+const accFromForm = (f) => {
+  if (!f.name.trim()) throw new Error('Rune name is required.');
+  const usage = (f.usage || []).filter(Boolean);
+  if (!usage.length) throw new Error('Pick at least one usage tag.');
+  const out = { ...(f._original || {}), type: 'property', target: 'accessory', name: f.name.trim(), usage };
+  const level = parseInt(f.level, 10);
+  if (Number.isNaN(level)) delete out.level; else out.level = level;
+  const price = parseFloat(f.price);
+  if (Number.isNaN(price)) delete out.price; else out.price = price;
+  if (f.description.trim()) out.description = f.description.trim(); else delete out.description;
+  // Common is the filter default (#982) — stored only when it isn't.
+  if (f.rarity && f.rarity !== 'common') out.rarity = f.rarity; else delete out.rarity;
+
+  const modifiers = f.modifiers
+    .map((m) => {
+      if (m.stat === 'resistance') {
+        // Special damage modifier: needs a descriptor; amount and the
+        // flat-check ease are each optional (Stanching carries no amount).
+        const vs = String(m.vs || '').trim().toLowerCase();
+        if (!vs) return null;
+        const mod = { stat: 'resistance', vs };
+        const amount = parseInt(m.amount, 10);
+        if (!Number.isNaN(amount)) mod.amount = amount;
+        if (m.ease) mod.flatCheckEase = true;
+        return mod;
+      }
+      const amount = parseInt(m.amount, 10);
+      if (!m.stat || !m.kind || Number.isNaN(amount)) return null;
+      return { stat: m.stat, kind: m.kind, amount };
+    })
+    .filter(Boolean);
+  if (modifiers.length) out.modifiers = modifiers; else delete out.modifiers;
+
+  const id = f.id || slugify(out.name);
+  const riders = f.reminders
+    .map((t) => String(t).trim())
+    .filter(Boolean)
+    .map((text, i) => ({ id: `${id}-reminder-${i}`, text }));
+  if (riders.length) out.riders = riders; else delete out.riders;
+
+  delete out.id; // the caller stamps the id (slug or existing)
+  return out;
+};
+
+const AccessoryRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
+  const [e, setE] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+  const toggleUsage = (tag) =>
+    setE((cur) => ({
+      ...cur,
+      usage: cur.usage.includes(tag) ? cur.usage.filter((t) => t !== tag) : [...cur.usage, tag],
+    }));
+  const setMod = (i, patch) =>
+    setE((cur) => ({
+      ...cur,
+      modifiers: cur.modifiers.map((m, idx) => (idx === i ? { ...m, ...patch } : m)),
+    }));
+  const addMod = () => setE((cur) => ({ ...cur, modifiers: [...cur.modifiers, accBlankModifier()] }));
+  const rmMod = (i) =>
+    setE((cur) => ({ ...cur, modifiers: cur.modifiers.filter((_, idx) => idx !== i) }));
+  const setReminder = (i, text) =>
+    setE((cur) => ({ ...cur, reminders: cur.reminders.map((r, idx) => (idx === i ? text : r)) }));
+  const addReminder = () => setE((cur) => ({ ...cur, reminders: [...cur.reminders, ''] }));
+  const rmReminder = (i) =>
+    setE((cur) => ({ ...cur, reminders: cur.reminders.filter((_, idx) => idx !== i) }));
+
+  const submit = async (id, payload) => {
+    setConfirm(null); setBusy(true); setError(null);
+    try { await saveDocument('rune', id, payload); onSaved(isNew, id); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  };
+  const save = async () => {
+    let body;
+    try { body = accFromForm(e); } catch (err) { setError(err.message); return; }
+    const id = e.id || slugify(body.name);
+    const payload = { ...body, id };
+    if (isNew && existingIds && existingIds.has(id)) { setConfirm({ kind: 'collision', id, payload }); return; }
+    await submit(id, payload);
+  };
+  const doRemove = async () => {
+    setConfirm(null); setBusy(true); setError(null);
+    try { await deleteDocument('rune', e.id); onSaved(false); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  };
+
+  // Content-authored activation surfaces this form never edits, only preserves.
+  const preserved = [];
+  if (e._original?.actuated) preserved.push('an activation');
+  const cardCount = ['actions', 'freeActions', 'reactions'].reduce(
+    (n, k) => n + (Array.isArray(e._original?.[k]) ? e._original[k].length : 0), 0);
+  if (cardCount) preserved.push(`${cardCount} action card${cardCount === 1 ? '' : 's'}`);
+  if (e._original?.onBlock) preserved.push('a Shield Block rider');
+
+  return (
+    <div className="gm-card" data-testid={`rune-form-${e.id || 'new'}`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>Name</label>
+          <input aria-label="name" value={e.name} onChange={(ev) => set({ name: ev.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>level</label>
+          <input aria-label="level" type="number" value={e.level} onChange={(ev) => set({ level: ev.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>price (gp)</label>
+          <input aria-label="price" type="number" value={e.price} onChange={(ev) => set({ price: ev.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>rarity</label>
+          <select aria-label="rarity" value={e.rarity} onChange={(ev) => set({ rarity: ev.target.value })}>
+            {ACC_RARITIES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Description</label>
+        <textarea aria-label="description" rows={3} value={e.description} onChange={(ev) => set({ description: ev.target.value })} />
+      </div>
+
+      <div className="form-group" data-testid="accessory-usage">
+        <label>usage — host items whose tags match any of these</label>
+        <div className="gm-shop-chips" role="group" aria-label="usage tags">
+          {ACC_USAGE_TAGS.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={`gm-shop-chip${e.usage.includes(tag) ? ' is-on' : ''}`}
+              aria-pressed={e.usage.includes(tag)}
+              aria-label={`usage-${tag}`}
+              onClick={() => toggleUsage(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="gm-card" data-testid="accessory-rune-modifiers">
+        <p className="gm-count">
+          Modifiers — fold onto the sheet while worn + invested; `resistance` takes
+          a damage descriptor (e.g. fire, persistent-bleed) instead of a kind
+        </p>
+        {e.modifiers.map((m, i) => (
+          <div key={i} className="gm-row gm-rank-row">
+            <select
+              aria-label={`modifier-${i}-stat`}
+              value={m.stat}
+              onChange={(ev) => setMod(i, { stat: ev.target.value })}
+            >
+              {ACC_MODIFIER_STATS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            {m.stat === 'resistance' ? (
+              <>
+                <input
+                  aria-label={`modifier-${i}-vs`}
+                  placeholder="vs (e.g. fire)"
+                  value={m.vs}
+                  onChange={(ev) => setMod(i, { vs: ev.target.value })}
+                />
+                <label className="gm-checkbox">
+                  <input
+                    type="checkbox"
+                    aria-label={`modifier-${i}-ease`}
+                    checked={m.ease}
+                    onChange={(ev) => setMod(i, { ease: ev.target.checked })}
+                  />
+                  ease flat check
+                </label>
+              </>
+            ) : (
+              <select
+                aria-label={`modifier-${i}-kind`}
+                value={m.kind}
+                onChange={(ev) => setMod(i, { kind: ev.target.value })}
+              >
+                {MODIFIER_KINDS.map((k) => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+            )}
+            <input
+              aria-label={`modifier-${i}-amount`}
+              type="number"
+              placeholder="amount"
+              value={m.amount}
+              onChange={(ev) => setMod(i, { amount: ev.target.value })}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmMod(i)}>Remove</button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addMod}>Add modifier</button>
+      </div>
+
+      <div className="gm-card" data-testid="accessory-rune-reminders">
+        <p className="gm-count">Reminders — passive notes, no engine effect</p>
+        {e.reminders.map((text, i) => (
+          <div key={i} className="gm-row gm-rank-row">
+            <input
+              aria-label={`reminder-${i}`}
+              value={text}
+              onChange={(ev) => setReminder(i, ev.target.value)}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmReminder(i)}>Remove</button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addReminder}>Add reminder</button>
+      </div>
+
+      {preserved.length > 0 && (
+        <p className="gm-count" data-testid="accessory-preserved-note">
+          Preserved on save: {preserved.join(' · ')} (authored in content).
+        </p>
+      )}
+      {error && <p className="gm-warn" role="alert">{error}</p>}
+      <div className="gm-actions">
+        <button className="btn-primary" disabled={busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
+        {!isNew && (
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>History</button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>Delete</button>
+          </>
+        )}
+      </div>
+      {!isNew && (
+        <HistoryModal isOpen={showHistory} collection="rune" id={e.id} name={e.name}
+          onClose={() => setShowHistory(false)}
+          onRestored={(doc) => { setShowHistory(false); if (doc) setE(accToForm(doc)); setError(null); onRestored(); }} />
+      )}
+      <ConfirmDialog isOpen={confirm?.kind === 'delete'} title="Delete rune"
+        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
+        confirmLabel="Delete forever" requireType={e.name}
+        onConfirm={doRemove} onCancel={() => setConfirm(null)} />
+      <ConfirmDialog isOpen={confirm?.kind === 'collision'} title="Overwrite existing rune?"
+        message={`A rune with id "${confirm?.id}" already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite" onConfirm={() => submit(confirm.id, confirm.payload)} onCancel={() => setConfirm(null)} />
+    </div>
+  );
+};
+
 // Target facet (#967 R9): one editor over ALL property runes, filtered + grouped
-// by rune target so weapon/armor/ring are distinguishable at a glance. The facet
-// also picks the target for a NEW rune (weapon when 'All'). Fundamentals
-// (type:'fundamental') are table-derived — not authored here.
-const TARGETS = ['weapon', 'armor', 'ring'];
-const TARGET_LABEL = { weapon: 'Weapon', armor: 'Armor', ring: 'Ring' };
-const TARGET_ORDER = { weapon: 0, armor: 1, ring: 2 };
+// by rune target so weapon/armor/ring/accessory are distinguishable at a glance.
+// The facet also picks the target for a NEW rune (weapon when 'All').
+// Fundamentals (type:'fundamental') are table-derived — not authored here.
+const TARGETS = ['weapon', 'armor', 'ring', 'accessory'];
+const TARGET_LABEL = { weapon: 'Weapon', armor: 'Armor', ring: 'Ring', accessory: 'Accessory' };
+const TARGET_ORDER = { weapon: 0, armor: 1, ring: 2, accessory: 3 };
 
 const GmRunes = () => {
   const { runes } = useContent();
@@ -487,6 +779,9 @@ const GmRunes = () => {
     }
     if (t === 'ring') {
       return <RingRuneForm initial={isNew ? ringBlankRune() : ringToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+    }
+    if (t === 'accessory') {
+      return <AccessoryRuneForm initial={isNew ? accBlankRune() : accToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
     }
     return <RuneForm initial={isNew ? blankRune() : toForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
   };

@@ -695,6 +695,8 @@ const runeCatalog = [
   { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 }, // ring
   { id: 'fearsome', type: 'property', name: 'Fearsome', level: 5, price: 160, rarity: 'uncommon' }, // weapon, uncommon
   { id: 'striking', type: 'fundamental', target: 'weapon', name: 'Striking', level: 4, price: 65 }, // fundamental — never offered
+  { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50 }, // accessory (#1033 S4)
+  { id: 'called', type: 'property', target: 'accessory', name: 'Called', level: 3, price: 60, rarity: 'uncommon' }, // accessory, uncommon
 ];
 
 describe('isRuneServiceWare (#982 G1)', () => {
@@ -731,7 +733,7 @@ describe('runeOfferings (#982 G1)', () => {
     };
     const offs = runeOfferings('smith', s);
     expect(offs).toHaveLength(1);
-    expect(offs[0].offeringKey).toBe('runeService:weapon:10/10/10:common');
+    expect(offs[0].offeringKey).toBe('runeService:weapon:10/10/10/10:common');
   });
   it('is empty for a shop with no rune-service ware or bad args', () => {
     expect(runeOfferings('bottled-solutions', shops)).toEqual([]);
@@ -758,10 +760,20 @@ describe('eligibleRunes (#982 G1)', () => {
     expect(ids).toEqual(['flaming', 'ring-calling']); // armor runes excluded (not a target)
   });
 
-  it('defaults to all three targets when targets is unset', () => {
+  it('defaults to every target when targets is unset', () => {
     const ware = { runeService: true, maxLevel: 20 };
     const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef).sort();
-    expect(ids).toEqual(['flaming', 'keen', 'ready', 'ring-calling', 'shadow'].sort());
+    // called stays out: uncommon, and the default rarity is common only.
+    expect(ids).toEqual(['flaming', 'keen', 'menacing', 'ready', 'ring-calling', 'shadow'].sort());
+  });
+
+  it('offers accessory runes by target, cap, and rarity (#1033 S4)', () => {
+    const common = { runeService: true, targets: ['accessory'], maxLevel: 10 };
+    expect(eligibleRunes(common, runeCatalog).map((w) => w.runeRef)).toEqual(['menacing']);
+    const uncommon = { ...common, rarities: ['common', 'uncommon'] };
+    expect(eligibleRunes(uncommon, runeCatalog).map((w) => w.runeRef)).toEqual(['menacing', 'called']);
+    const capped = { ...uncommon, maxLevel: 2 };
+    expect(eligibleRunes(capped, runeCatalog)).toEqual([]);
   });
 
   it('emits hand-stocked-shaped runestone ware specs with a stable wareKey', () => {
@@ -797,6 +809,6 @@ describe('runeOfferingSummary (#982 G1)', () => {
   it('labels all-targets and reflects RUNE_TARGETS', () => {
     const sum = runeOfferingSummary({ runeService: true, maxLevel: 20 }, runeCatalog);
     expect(sum.text.startsWith('Runes · all targets ·')).toBe(true);
-    expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'ring']);
+    expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'ring', 'accessory']);
   });
 });

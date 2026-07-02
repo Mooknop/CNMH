@@ -52,18 +52,21 @@ describe('GmRunes', () => {
       ...runes,
       { id: 'slick', type: 'property', armorRune: true, name: 'Slick' },
       { id: 'ring-energy', type: 'property', target: 'ring', name: 'Energy' },
+      { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing' },
       { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', name: '+1 Weapon Potency' },
     ] });
     render(<GmRunes />);
-    // 2 weapon + 1 armor + 1 ring property runes; the fundamental is excluded.
-    expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
+    // 2 weapon + 1 armor + 1 ring + 1 accessory property runes; the fundamental is excluded.
+    expect(screen.getByText('Showing 5 of 5')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Slick' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Energy' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Menacing' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Weapon Potency/ })).not.toBeInTheDocument();
     // Grouped by target.
     expect(screen.getByText('Weapon runes')).toBeInTheDocument();
     expect(screen.getByText('Armor runes')).toBeInTheDocument();
     expect(screen.getByText('Ring runes')).toBeInTheDocument();
+    expect(screen.getByText('Accessory runes')).toBeInTheDocument();
   });
 
   it('facet filters the list to one target (#967 R9)', () => {
@@ -105,6 +108,100 @@ describe('GmRunes', () => {
       freeActions: [{ name: 'Gather Power' }],
       actions: [{ name: 'Release Power', actionCount: 1 }],
     });
+  });
+
+  it('edits an accessory rune, preserving its activation fields (#1033 S4)', async () => {
+    saveDocument.mockResolvedValue({ ok: true });
+    useContent.mockReturnValue({ runes: [
+      { id: 'called', type: 'property', target: 'accessory', name: 'Called', level: 3, price: 60,
+        rarity: 'uncommon', usage: ['light'], description: 'retrieve an item',
+        actuated: { cost: 'none', name: 'Call Item', frequency: 'once per hour' } },
+    ] });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Called' }));
+    const form = screen.getByTestId('rune-form-called');
+    expect(within(form).getByLabelText('name')).toHaveValue('Called');
+    expect(within(form).getByLabelText('rarity')).toHaveValue('uncommon');
+    expect(within(form).getByLabelText('usage-light')).toHaveAttribute('aria-pressed', 'true');
+    expect(within(form).getByLabelText('usage-clothing')).toHaveAttribute('aria-pressed', 'false');
+    expect(within(form).getByTestId('accessory-preserved-note')).toHaveTextContent('an activation');
+    fireEvent.change(within(form).getByLabelText('description'), { target: { value: 'teleports to hand' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [collection, id, data] = saveDocument.mock.calls[0];
+    expect(collection).toBe('rune');
+    expect(id).toBe('called');
+    // Descriptive edit applied; target, usage, rarity + the actuated block preserved.
+    expect(data).toMatchObject({
+      type: 'property', target: 'accessory', name: 'Called', rarity: 'uncommon',
+      usage: ['light'], description: 'teleports to hand',
+      actuated: { cost: 'none', name: 'Call Item', frequency: 'once per hour' },
+    });
+  });
+
+  it('authors a new accessory rune with usage tags, modifiers, and reminders (#1033 S4)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Accessory' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ New accessory rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Menacing' } });
+    fireEvent.change(within(form).getByLabelText('level'), { target: { value: '3' } });
+    fireEvent.change(within(form).getByLabelText('price'), { target: { value: '50' } });
+    fireEvent.click(within(form).getByLabelText('usage-clothing'));
+    fireEvent.click(within(form).getByText('Add modifier'));
+    fireEvent.change(within(form).getByLabelText('modifier-0-stat'), { target: { value: 'intimidation' } });
+    fireEvent.change(within(form).getByLabelText('modifier-0-amount'), { target: { value: '1' } });
+    fireEvent.click(within(form).getByText('Add reminder'));
+    fireEvent.change(within(form).getByLabelText('reminder-0'), { target: { value: 'Coerce only.' } });
+    fireEvent.click(within(form).getByText('Create rune'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, id, data] = saveDocument.mock.calls[0];
+    expect(id).toBe('menacing');
+    expect(data).toEqual({
+      id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing',
+      level: 3, price: 50, usage: ['clothing'],
+      modifiers: [{ stat: 'intimidation', kind: 'item', amount: 1 }],
+      riders: [{ id: 'menacing-reminder-0', text: 'Coerce only.' }],
+    });
+  });
+
+  it('authors a resistance modifier with a descriptor and flat-check ease (#1033 S4)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Accessory' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ New accessory rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Fire-Resistant' } });
+    fireEvent.click(within(form).getByLabelText('usage-clothing'));
+    fireEvent.click(within(form).getByText('Add modifier'));
+    fireEvent.change(within(form).getByLabelText('modifier-0-stat'), { target: { value: 'resistance' } });
+    // The kind select swaps out for the descriptor + ease controls.
+    expect(within(form).queryByLabelText('modifier-0-kind')).not.toBeInTheDocument();
+    fireEvent.change(within(form).getByLabelText('modifier-0-vs'), { target: { value: 'Fire' } });
+    fireEvent.change(within(form).getByLabelText('modifier-0-amount'), { target: { value: '5' } });
+    fireEvent.click(within(form).getByLabelText('modifier-0-ease'));
+    fireEvent.click(within(form).getByText('Create rune'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    expect(data.modifiers).toEqual([
+      { stat: 'resistance', vs: 'fire', amount: 5, flatCheckEase: true },
+    ]);
+  });
+
+  it('requires a usage tag on an accessory rune (#1033 S4)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Accessory' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ New accessory rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Snagging' } });
+    fireEvent.click(within(form).getByText('Create rune'));
+    expect(await within(form).findByRole('alert')).toHaveTextContent(/usage tag/i);
+    expect(saveDocument).not.toHaveBeenCalled();
   });
 
   it('creates a new rune under the selected target facet (#967 R9)', () => {

@@ -333,34 +333,34 @@ export function spellOfferingSummary(ware, spells) {
 }
 
 // ── Generative rune-service offerings (#982 G1) ─────────────────────────────
-// A shop can sell runes for a TARGET (weapon | armor | ring) up to a max rune
-// LEVEL, filtered by rarity — expanded from the rune catalog on demand instead
-// of stocking one { ref:'runestone', runeRef } ware per rune (the pre-generative
-// model). The authored ware is the compact spec:
-//   { runeService:true, targets?:[...], maxLevel: number | { weapon?, armor?, ring? },
-//     rarities?:[...] }
+// A shop can sell runes for a TARGET (weapon | armor | ring | accessory) up to
+// a max rune LEVEL, filtered by rarity — expanded from the rune catalog on
+// demand instead of stocking one { ref:'runestone', runeRef } ware per rune
+// (the pre-generative model). The authored ware is the compact spec:
+//   { runeService:true, targets?:[...],
+//     maxLevel: number | { weapon?, armor?, ring?, accessory? }, rarities?:[...] }
 // directly mirroring the spell-item offering (spellItemOfferings/eligibleSpellItems).
 // FUNDAMENTAL runes (potency/striking/resilient) are NOT offered here — those are
 // stocked as their own item wares; the generative service covers PROPERTY runes,
-// which is also where the ring runes live (#967).
+// which is also where the ring (#967) and accessory (#1033 S4) runes live.
 
-export const RUNE_TARGETS = ['weapon', 'armor', 'ring'];
+export const RUNE_TARGETS = ['weapon', 'armor', 'ring', 'accessory'];
 
 // A ware is a generative rune-service offering (not a flat item/runestone ref).
 export function isRuneServiceWare(w) {
   return !!(w && w.runeService === true);
 }
 
-// Target filter: an explicit non-empty list, else all three. (Empty/unset = all,
-// mirroring offeringTraditions.)
+// Target filter: an explicit non-empty list, else every target. (Empty/unset =
+// all, mirroring offeringTraditions.)
 const offeringTargets = (ware) => {
   const t = Array.isArray(ware.targets) ? ware.targets.filter(Boolean) : [];
   return t.length ? t.map((x) => String(x).toLowerCase()) : RUNE_TARGETS;
 };
 
 // The max rune level a target is offered up to. A scalar `maxLevel` caps every
-// selected target; an object `{ weapon?, armor?, ring? }` caps per target (a
-// target with no finite cap is not offered). Returns 0 when there is no cap.
+// selected target; an object `{ weapon?, armor?, ring?, accessory? }` caps per
+// target (a target with no finite cap is not offered). Returns 0 when there is no cap.
 // Exported so the GM authoring editor (#982 G2) can read a stored per-target cap.
 export const maxLevelForTarget = (ware, target) => {
   const ml = ware ? ware.maxLevel : null;
@@ -416,7 +416,7 @@ export function eligibleRunes(ware, runes) {
 
 // A human-readable coverage summary for one rune-service offering plus its live
 // eligible-rune count, for the G2 authoring preview. Mirrors the offering
-// defaults exactly: targets empty = all three; rarities empty = common only.
+// defaults exactly: targets empty = all; rarities empty = common only.
 //   → { targets[], rarities[], count, text }
 // e.g. "Runes · weapon/ring · common · weapon ≤8, ring ≤10 · 14 eligible runes".
 export function runeOfferingSummary(ware, runes) {

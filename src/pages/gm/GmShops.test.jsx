@@ -457,6 +457,8 @@ describe('GmShops', () => {
       { id: 'ready', type: 'property', target: 'armor', name: 'Ready', level: 6, price: 200 }, // armor
       { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 }, // ring
       { id: 'fearsome', type: 'property', name: 'Fearsome', level: 5, price: 160, rarity: 'uncommon' }, // weapon, uncommon
+      { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50 }, // accessory (#1033 S4)
+      { id: 'called', type: 'property', target: 'accessory', name: 'Called', level: 3, price: 60, rarity: 'uncommon' }, // accessory, uncommon
     ];
     const open = (shops = { 'town-hall': { wares: [] } }) => {
       setup(shops);
@@ -481,14 +483,33 @@ describe('GmShops', () => {
       expect(lastWares()).toEqual([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
     });
 
-    it('collapses a uniform cap to a scalar and omits targets when all three are chosen', () => {
+    it('collapses a uniform cap to a scalar and omits targets when all four are chosen', () => {
       open();
-      ['weapon', 'armor', 'ring'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
-      ['weapon', 'armor', 'ring'].forEach((t) =>
+      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
+      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) =>
         fireEvent.change(screen.getByLabelText(`rune-maxlevel-${t}`), { target: { value: '12' } })
       );
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastWares()).toEqual([{ runeService: true, maxLevel: 12 }]);
+    });
+
+    it('authors an accessory-target offering and summarises its rarity-gated coverage (#1033 S4)', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-accessory'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-accessory'), { target: { value: '12' } });
+      // Common only: menacing (called is uncommon).
+      expect(screen.getByTestId('rune-summary')).toHaveTextContent(
+        'Runes · accessory · common · accessory ≤12 · 1 eligible rune'
+      );
+      fireEvent.click(screen.getByLabelText('rune-rarity-common'));
+      fireEvent.click(screen.getByLabelText('rune-rarity-uncommon'));
+      expect(screen.getByTestId('rune-summary')).toHaveTextContent(
+        'common+uncommon · accessory ≤12 · 2 eligible runes'
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { runeService: true, targets: ['accessory'], maxLevel: 12, rarities: ['common', 'uncommon'] },
+      ]);
     });
 
     it('emits a per-target object maxLevel when caps differ', () => {
