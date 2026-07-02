@@ -26,6 +26,21 @@
       "4th": "Increase the slashing damage to 3d6 on a success, 6d6 on a failure, or 9d6 on a critical failure. The spell’s range increases to 100 feet, and the unoccupied space chosen can be within 30 feet of the target.",
       "6th": "Increase the slashing damage to 4d6 on a success, 8d6 on a failure, or 12d6 on a critical failure. The spell’s range increases to 500 feet, and the unoccupied space chosen can be within 60 feet of the target."
     },
+    "damageData": {
+      "base": "4d6",
+      "type": "slashing",
+      "degrees": {
+        "criticalFailure": 1.5
+      },
+      "heightened": {
+        "4th": {
+          "base": "2d6"
+        },
+        "6th": {
+          "base": "2d6"
+        }
+      }
+    },
     "traditions": [
       "arcane",
       "occult"
@@ -330,6 +345,28 @@
     "heightened": {
       "+1": "The damage increases by 1d12 and the cylinder’s maximum height increases by 10 feet"
     },
+    "damageData": {
+      "base": "4d12",
+      "type": "bludgeoning",
+      "degrees": {
+        "criticalFailure": "full"
+      },
+      "heightened": {
+        "+1": {
+          "base": "1d12"
+        }
+      },
+      "riders": [
+        {
+          "id": "boulder-crush-prone",
+          "label": "Boulder Crush: knocked prone",
+          "condition": "knocked prone if on the ground after the fall (off-guard 1 round if still flying)",
+          "on": [
+            "criticalFailure"
+          ]
+        }
+      ]
+    },
     "traditions": [
       "arcane",
       "primal"
@@ -380,6 +417,27 @@
     "description": "You temporarily envelop your free hand in a metal casing covered with rows of whirling sawblades. Make a melee spell attack roll against your target’s AC. If you hit, you deal 2d6 slashing damage plus 2 persistent bleed damage. On a critical success, you deal double damage and double bleed damage.\nYou can Sustain the spell for up to 1 minute. Each time you do, you can attempt a melee spell attack roll against a new target. While your hand remains covered in sawblades, it can’t be used for any other purpose.",
     "heightened": {
       "+1": "The damage increases by 1d6 and the persistent bleed damage increases by 1."
+    },
+    "damageData": {
+      "base": "2d6",
+      "type": "slashing",
+      "heightened": {
+        "+1": {
+          "base": "1d6",
+          "persistent": 1
+        }
+      },
+      "riders": [
+        {
+          "id": "buzzsaw-bleed",
+          "label": "Buzzsaw: persistent bleed",
+          "persistent": {
+            "dice": "2",
+            "type": "bleed"
+          },
+          "defaultOn": true
+        }
+      ]
     },
     "traditions": [
       "arcane",
@@ -706,6 +764,59 @@
     },
     "heightened": {
       "+1": "The persistent damage increases by 1d6."
+    },
+    "damageData": {
+      "heightened": {
+        "+1": {
+          "persistent": "1d6"
+        }
+      },
+      "riders": [
+        {
+          "id": "creeping-cold-persistent",
+          "label": "Creeping Cold: persistent cold",
+          "persistent": {
+            "dice": "1d6",
+            "type": "cold"
+          },
+          "on": [
+            "success",
+            "failure"
+          ],
+          "defaultOn": true
+        },
+        {
+          "id": "creeping-cold-persistent-critfail",
+          "label": "Creeping Cold: persistent cold",
+          "persistent": {
+            "dice": "1d6",
+            "type": "cold"
+          },
+          "on": [
+            "criticalFailure"
+          ],
+          "defaultOn": true
+        },
+        {
+          "id": "creeping-cold-reflex-penalty",
+          "label": "Creeping Cold: Reflex penalty",
+          "condition": "–1 status penalty to Reflex saves (until the start of its next turn on a success; while taking the persistent damage on a failure)",
+          "on": [
+            "success",
+            "failure"
+          ],
+          "defaultOn": true
+        },
+        {
+          "id": "creeping-cold-reflex-penalty-critfail",
+          "label": "Creeping Cold: Reflex penalty",
+          "condition": "–2 status penalty to Reflex saves while taking the persistent damage",
+          "on": [
+            "criticalFailure"
+          ],
+          "defaultOn": true
+        }
+      ]
     },
     "traditions": [
       "arcane",
@@ -1074,6 +1185,23 @@
     },
     "heightened": {
       "+1": "The cold damage increases by 2d6 (or by 4d6 on a critical hit)."
+    },
+    "damageData": {
+      "base": "3d6",
+      "type": "cold",
+      "heightened": {
+        "+1": {
+          "base": "2d6"
+        }
+      },
+      "riders": [
+        {
+          "id": "eye-biting-shadow-concealed",
+          "label": "Eye-Biting Shadow: concealment",
+          "condition": "everything is concealed to the target for 1 minute (negated by darkvision on a hit; only greater darkvision negates it on a crit)",
+          "defaultOn": true
+        }
+      ]
     },
     "traditions": [
       "arcane",
@@ -2774,6 +2902,15 @@
     "description": "You stir up the air around you to propel yourself toward a foe, then slice into them with blades of air. Move up to half your speed toward a target, then make a melee spell attack roll against the target’s AC. If you hit, the target takes 2d4 slashing damage (double damage on a critical hit).",
     "heightened": {
       "+1": "The damage increases by 1d4."
+    },
+    "damageData": {
+      "base": "2d4",
+      "type": "slashing",
+      "heightened": {
+        "+1": {
+          "base": "1d4"
+        }
+      }
     },
     "traditions": [
       "arcane",
