@@ -3,7 +3,7 @@
 // resolution layer (ContentContext, SpellUtils, InventoryUtils). Runs the REAL
 // src/utils functions so any regression in resolution logic is caught here.
 import { sampleCharacters, items, spells } from './index';
-import { itemCatalogMap, resolveCharacterItems } from '../utils/contentUtils';
+import { itemCatalogMap, spellCatalogMap, resolveCharacterItems } from '../utils/contentUtils';
 import {
   findScrollItems,
   findWandItems,
@@ -14,6 +14,7 @@ import { getItemBonus } from '../utils/CharacterUtils';
 import { wornResistanceFor } from '../utils/wornGear';
 
 const catalogMap = itemCatalogMap(items);
+const spellMap = spellCatalogMap(spells);
 
 const everyEntry = (list, fn) =>
   (Array.isArray(list) ? list : []).every(
@@ -23,6 +24,22 @@ const collectRefs = (list, acc = []) => {
   (Array.isArray(list) ? list : []).forEach((e) => {
     if (e && e.ref != null) acc.push(String(e.ref));
     if (e && e.container && e.container.contents) collectRefs(e.container.contents, acc);
+  });
+  return acc;
+};
+// An inventory entry is a catalog reference — or a base-resolver scroll/wand
+// (#812): `{ scroll|wand: { spellRef } }` with no ref, the shape the shop
+// picker (#856) writes and GM reconciliation (#555) commits into the char doc.
+// resolveInventoryItem derives the full item from the spell, so these carry no
+// inline item data either.
+const isCatalogRef = (e) => e && typeof e.ref === 'string' && !!e.ref;
+const isBaseScrollWand = (e) =>
+  e && e.ref == null &&
+  (typeof e.scroll?.spellRef === 'string' || typeof e.wand?.spellRef === 'string');
+const collectSpellRefs = (list, acc = []) => {
+  (Array.isArray(list) ? list : []).forEach((e) => {
+    if (isBaseScrollWand(e)) acc.push(String(e.scroll?.spellRef ?? e.wand?.spellRef));
+    if (e && e.container && e.container.contents) collectSpellRefs(e.container.contents, acc);
   });
   return acc;
 };
@@ -45,7 +62,7 @@ describe('bundled item catalog (Slice 3)', () => {
 
   it('every bundled character inventory is pure references (no inline items)', () => {
     sampleCharacters.forEach((c) => {
-      expect(everyEntry(c.inventory, (e) => e && typeof e.ref === 'string' && e.ref)).toBe(true);
+      expect(everyEntry(c.inventory, (e) => isCatalogRef(e) || isBaseScrollWand(e))).toBe(true);
     });
   });
 
@@ -53,6 +70,10 @@ describe('bundled item catalog (Slice 3)', () => {
     sampleCharacters.forEach((c) => {
       collectRefs(c.inventory).forEach((ref) =>
         expect(catalogMap.has(ref)).toBe(true)
+      );
+      // Base-resolver scroll/wand entries reference the SPELL catalog instead.
+      collectSpellRefs(c.inventory).forEach((ref) =>
+        expect(spellMap.has(ref)).toBe(true)
       );
     });
   });
