@@ -20,6 +20,7 @@ import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
+import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
@@ -109,6 +110,7 @@ const UseAbilityModal = ({
   const { gateFor, record: recordFreqUse, clear: clearFreqLock } =
     useFrequency(character?.id || 'nobody');
   const { exploitFor } = useExploitVulnerability();
+  const { revealFiredIwr } = useIwrReveal();
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -1008,6 +1010,14 @@ const UseAbilityModal = ({
     if (damageHits.length) {
       sendUpdate('global', 'dmgapply', buildDamageApply({ hits: damageHits, sourceName: ability.name }));
     }
+
+    // Reveal-on-trigger (#1014): any monster IWR that just modified a target's
+    // applied damage is now table knowledge — stamp it into the RK record and
+    // announce first reveals. Chained strikes are untyped (no IWR) — harmless.
+    revealFiredIwr([
+      ...rayGroups.flatMap((g) => g?.results || []),
+      ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
+    ]);
 
     // Push a save request to the GM for target-save abilities. When a damage
     // profile exists (#270), the caster's entered total and rider snapshot

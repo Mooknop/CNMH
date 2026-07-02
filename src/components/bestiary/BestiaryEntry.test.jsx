@@ -58,6 +58,27 @@ describe('BestiaryEntry (#334)', () => {
     expect(screen.queryByText('fire 10')).not.toBeInTheDocument();
   });
 
+  test('partial resistance/immunity reveals render only the triggered types (#1014)', () => {
+    const foe = {
+      ...enemy,
+      defenses: {
+        ...enemy.defenses,
+        immunities: ['fire', 'poison'],
+        resistances: [{ type: 'cold', value: 10 }, { type: 'acid', value: 5 }],
+      },
+    };
+    const record = {
+      ...defaultRecord(),
+      resistancesRevealed: { cold: true },
+      immunitiesRevealed: { fire: true },
+    };
+    render(<BestiaryEntry enemy={foe} record={record} />);
+    expect(screen.getByText('cold 10')).toBeInTheDocument();
+    expect(screen.queryByText(/acid 5/)).not.toBeInTheDocument();
+    expect(screen.getByText('fire')).toBeInTheDocument();
+    expect(screen.queryByText(/poison/)).not.toBeInTheDocument();
+  });
+
   test('applies the GM descriptionOverride over the imported description', () => {
     mockMonsters = [{ id: 'goblin-warrior', descriptionOverride: 'A FEARSOME foe.' }];
     const record = { ...defaultRecord(), description: true };

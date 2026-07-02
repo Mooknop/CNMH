@@ -15,6 +15,8 @@ import {
   setRecordFieldRevealed,
   fullyRevealedRecord,
   KNOWLEDGE_SKILLS,
+  revealFromDamage,
+  newlyRevealedFromDamage,
 } from './recallKnowledge';
 
 describe('rkKeyFor', () => {
@@ -525,5 +527,78 @@ describe('revealFromExploit', () => {
     const step1 = revealFromExploit(defaultRecord(), 'success', { weaknesses: [{ type: 'cold', value: 3 }] });
     const step2 = revealFromExploit(step1, 'success', defTwo);
     expect(step2.weaknessesRevealed).toEqual({ cold: true, fire: true });
+  });
+});
+
+// ── Damage-triggered IWR reveals (#1014) ────────────────────────────────────
+
+describe('revealFromDamage', () => {
+  it('marks fired types per category, additively and idempotently', () => {
+    const fired = [
+      { kind: 'weakness', type: 'fire', amount: 5 },
+      { kind: 'resistance', type: 'cold', amount: -7 },
+      { kind: 'immunity', type: 'poison', amount: -10 },
+    ];
+    const once = revealFromDamage(null, fired);
+    expect(once.weaknessesRevealed).toEqual({ fire: true });
+    expect(once.resistancesRevealed).toEqual({ cold: true });
+    expect(once.immunitiesRevealed).toEqual({ poison: true });
+    const twice = revealFromDamage(once, fired);
+    expect(twice.weaknessesRevealed).toEqual({ fire: true });
+    // Existing reveals from other sources survive.
+    const merged = revealFromDamage(
+      { ...defaultRecord(), weaknessesRevealed: { cold: true } },
+      [{ kind: 'weakness', type: 'fire', amount: 5 }]
+    );
+    expect(merged.weaknessesRevealed).toEqual({ cold: true, fire: true });
+  });
+
+  it('ignores malformed entries and leaves the record intact', () => {
+    const rec = defaultRecord();
+    expect(revealFromDamage(rec, [{ kind: 'nope', type: 'fire' }, { kind: 'weakness' }]))
+      .toEqual(rec);
+  });
+});
+
+describe('newlyRevealedFromDamage', () => {
+  it('returns only not-yet-revealed types, deduped within the list', () => {
+    const fired = [
+      { kind: 'weakness', type: 'fire', amount: 5 },
+      { kind: 'weakness', type: 'fire', amount: 5 },
+      { kind: 'resistance', type: 'cold', amount: -7 },
+    ];
+    expect(newlyRevealedFromDamage(null, fired)).toEqual([
+      { kind: 'weakness', type: 'fire' },
+      { kind: 'resistance', type: 'cold' },
+    ]);
+  });
+
+  it('respects the per-type map and the full iwr category flag', () => {
+    const partial = { ...defaultRecord(), weaknessesRevealed: { fire: true } };
+    expect(newlyRevealedFromDamage(partial, [{ kind: 'weakness', type: 'fire' }])).toEqual([]);
+    const full = { ...defaultRecord(), iwr: { immunities: false, resistances: true, weaknesses: false } };
+    expect(newlyRevealedFromDamage(full, [{ kind: 'resistance', type: 'cold' }])).toEqual([]);
+    expect(newlyRevealedFromDamage(full, [{ kind: 'weakness', type: 'fire' }]))
+      .toEqual([{ kind: 'weakness', type: 'fire' }]);
+  });
+});
+
+describe('per-type reveal maps on the record (#1014)', () => {
+  it('defaultRecord carries empty resistance/immunity maps', () => {
+    const rec = defaultRecord();
+    expect(rec.resistancesRevealed).toEqual({});
+    expect(rec.immunitiesRevealed).toEqual({});
+  });
+
+  it('fullyRevealedRecord drops the partial maps (full flags supersede)', () => {
+    const rec = fullyRevealedRecord({
+      ...defaultRecord(),
+      weaknessesRevealed: { fire: true },
+      resistancesRevealed: { cold: true },
+      immunitiesRevealed: { poison: true },
+    });
+    expect(rec.resistancesRevealed).toEqual({});
+    expect(rec.immunitiesRevealed).toEqual({});
+    expect(rec.iwr).toEqual({ immunities: true, resistances: true, weaknesses: true });
   });
 });

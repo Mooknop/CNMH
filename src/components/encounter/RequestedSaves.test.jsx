@@ -46,12 +46,17 @@ vi.mock('../../contexts/SessionContext', () => ({
 
 // Key-aware synced-state mock (#272): capture the cnmh_persistent_global
 // setter so tests can apply its functional updater and inspect the map.
-const syncedMock = vi.hoisted(() => ({ persistentSetter: null }));
+// cnmh_knowledge_global likewise (#1014 — IWR reveal-on-trigger writes).
+const syncedMock = vi.hoisted(() => ({ persistentSetter: null, knowledgeSetter: null }));
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (key === 'cnmh_persistent_global') {
       syncedMock.persistentSetter = syncedMock.persistentSetter || vi.fn();
       return [{}, syncedMock.persistentSetter];
+    }
+    if (key === 'cnmh_knowledge_global') {
+      syncedMock.knowledgeSetter = syncedMock.knowledgeSetter || vi.fn();
+      return [{}, syncedMock.knowledgeSetter];
     }
     return [[], vi.fn()];
   },
@@ -63,6 +68,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 beforeEach(() => {
   vi.clearAllMocks();
   syncedMock.persistentSetter = null;
+  syncedMock.knowledgeSetter = null;
   useEncounter.mockReturnValue({
     encounter: makeEncounter([baseRequest]),
     appendLog: mockAppendLog,
@@ -520,6 +526,59 @@ describe('RequestedSaves', () => {
       fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
       fireEvent.click(screen.getByRole('button', { name: /log results/i }));
       expect(sessionMock.sendUpdate.mock.calls.filter(([, key]) => key === 'effects')).toHaveLength(0);
+    });
+  });
+
+  // ── monster IWR (#1014) ───────────────────────────────────────────────────
+
+  describe('monster IWR', () => {
+    const trollEntry = {
+      entryId: 'e-troll', kind: 'enemy', name: 'Troll', creatureKey: 'troll-l5',
+      defenses: {
+        ac: 20, saves: { fortitude: 8, reflex: 8, will: 5 },
+        immunities: [], resistances: [],
+        weaknesses: [{ type: 'fire', value: 5 }],
+      },
+    };
+    const fireRequest = {
+      ...baseRequest,
+      targets: [trollTarget],
+      damage: { expression: '6d6', typeLabel: 'fire', entered: 10, riders: [] },
+    };
+
+    beforeEach(() => {
+      useEncounter.mockReturnValue({
+        encounter: { ...makeEncounter([fireRequest]), order: [trollEntry] },
+        appendLog: mockAppendLog,
+        removeSaveRequest: mockRemoveSaveReq,
+      });
+    });
+
+    test('nets the target\'s weakness into the displayed damage', () => {
+      render(<RequestedSaves />);
+      // d20 8 + mod 8 = 16 vs DC 20 → failure → full 10, + weakness 5 = 15
+      fireEvent.change(screen.getByLabelText(/Troll d20/i), { target: { value: '8' } });
+      expect(screen.getByText('15 (10 +5 weakness (fire))')).toBeInTheDocument();
+    });
+
+    test('relays the RAW pre-IWR amount and stamps the reveal on resolve', () => {
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Troll d20/i), { target: { value: '8' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      // Relay: raw 10, not the netted 15 — Foundry applies IWR itself.
+      const relay = sessionMock.sendUpdate.mock.calls.find(([, key]) => key === 'dmgapply');
+      expect(relay[2].hits).toEqual([
+        { entryId: 'e-troll', name: 'Troll', amount: 10, type: 'fire' },
+      ]);
+
+      // Reveal: the fired weakness lands in the RK record under the creatureKey.
+      const next = syncedMock.knowledgeSetter.mock.calls[0][0]({});
+      expect(next['troll-l5'].weaknessesRevealed).toEqual({ fire: true });
+
+      // First reveal announced in the encounter log.
+      expect(mockAppendLog.mock.calls.map(([e]) => e.text))
+        .toContain("Troll's weakness to fire is revealed!");
     });
   });
 });

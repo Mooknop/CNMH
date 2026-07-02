@@ -100,6 +100,14 @@ const FocusBanner = ({ charId }) => {
     ? (defenses?.weaknesses || [])
     : (defenses?.weaknesses || []).filter((w) => rec.weaknessesRevealed?.[w.type]);
 
+  // Resistances/immunities — same gating (#1014: damage triggers reveal types).
+  const resistanceList = isIwrRevealed(rec, 'resistances')
+    ? (defenses?.resistances || [])
+    : (defenses?.resistances || []).filter((r) => rec.resistancesRevealed?.[r.type]);
+  const immunityList = isIwrRevealed(rec, 'immunities')
+    ? (defenses?.immunities || [])
+    : (defenses?.immunities || []).filter((t) => rec.immunitiesRevealed?.[t]);
+
   // Active Exploit Vulnerability (#454) — the persistent "which foe have I
   // exploited" signal. Matches the acting character's exploit to this foe.
   const exploit = exploitFor(charId);
@@ -129,6 +137,20 @@ const FocusBanner = ({ charId }) => {
           <span className="cmd-focus-weak-values">
             {weaknessList.map((w) => `${w.type} ${w.value}`).join(', ')}
           </span>
+        </div>
+      )}
+      {resistanceList.length > 0 && (
+        <div className="cmd-focus-weak" data-testid="cmd-focus-resist">
+          <span className="cmd-focus-stat-label">Resist</span>
+          <span className="cmd-focus-weak-values">
+            {resistanceList.map((r) => `${r.type} ${r.value}`).join(', ')}
+          </span>
+        </div>
+      )}
+      {immunityList.length > 0 && (
+        <div className="cmd-focus-weak" data-testid="cmd-focus-immune">
+          <span className="cmd-focus-stat-label">Immune</span>
+          <span className="cmd-focus-weak-values">{immunityList.join(', ')}</span>
         </div>
       )}
       {exploitText && (

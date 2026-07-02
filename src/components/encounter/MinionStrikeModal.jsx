@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import Modal from '../shared/Modal';
 import TargetRollResolver from './TargetRollResolver';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -39,6 +40,7 @@ const DEGREE_LABELS_AC = {
  */
 const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, role, themeColor }) => {
   const { encounter, appendLog } = useEncounter();
+  const { revealFiredIwr } = useIwrReveal();
   const ownerId = character?.id;
   const turnId = minionTurnId(ownerId, role);
   const { turnState, recordAttack, spendActions } = useTurnState(turnId);
@@ -143,6 +145,10 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
         : `${companionData.name} ${strike.name} vs ${r.name}: ${r.total}`;
       appendLog({ type: 'action', charId: ownerId, text });
     });
+
+    // Reveal-on-trigger (#1014): a hidden monster IWR that just modified the
+    // applied damage becomes table knowledge.
+    revealFiredIwr(results);
 
     if (isAttack) recordAttack(1);
     if (encounterMode) spendActions(1, strike.name);

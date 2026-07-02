@@ -891,3 +891,192 @@ describe('trait-conditional riders (#548 Vitalizing)', () => {
     });
   });
 });
+
+// ── Monster IWR in the outgoing damage step (#1014) ─────────────────────────
+
+describe('computeTargetDamage — monster IWR', () => {
+  const troll = {
+    immunities: [],
+    weaknesses: [{ type: 'fire', value: 5 }],
+    resistances: [],
+  };
+  const golem = {
+    immunities: ['fire'],
+    weaknesses: [],
+    resistances: [{ type: 'cold', value: 7 }],
+  };
+
+  it('no defenses / untyped profile: result shape unchanged', () => {
+    const plain = computeTargetDamage({ entered: 9, degree: 'success', entryId: 'e-gob' });
+    expect(plain.iwr).toBeUndefined();
+    expect(plain.rawFinal).toBeUndefined();
+    const untyped = computeTargetDamage({
+      entered: 9, degree: 'success', entryId: 'e-gob', defenses: golem,
+    });
+    expect(untyped.final).toBe(9);
+    expect(untyped.iwr).toBeUndefined();
+  });
+
+  it('non-matching type leaves the result untouched (exact token match)', () => {
+    const out = computeTargetDamage({
+      entered: 9, degree: 'success', entryId: 'e-troll',
+      typeLabel: 'slashing', defenses: troll,
+    });
+    expect(out.final).toBe(9);
+    expect(out.iwr).toBeUndefined();
+    expect(out.rawFinal).toBeUndefined();
+  });
+
+  it('weakness adds after the crit multiplier; rawFinal keeps the relay raw', () => {
+    const out = computeTargetDamage({
+      entered: 9, degree: 'criticalSuccess', entryId: 'e-troll',
+      typeLabel: 'fire', defenses: troll,
+    });
+    // 9 × 2 = 18 raw, + weakness 5 = 23 netted
+    expect(out.final).toBe(23);
+    expect(out.rawFinal).toBe(18);
+    expect(out.iwr).toEqual([{ kind: 'weakness', type: 'fire', amount: 5 }]);
+  });
+
+  it('resistance reduces after weakness, floored at 0', () => {
+    const out = computeTargetDamage({
+      entered: 4, degree: 'success', entryId: 'e-golem',
+      typeLabel: 'cold', defenses: golem,
+    });
+    expect(out.final).toBe(0);
+    expect(out.rawFinal).toBe(4);
+    expect(out.iwr).toEqual([{ kind: 'resistance', type: 'cold', amount: -4 }]);
+  });
+
+  it('immunity zeroes the damage outright, precedence over weakness/resistance', () => {
+    const weird = {
+      immunities: ['fire'],
+      weaknesses: [{ type: 'fire', value: 5 }],
+      resistances: [{ type: 'fire', value: 2 }],
+    };
+    const out = computeTargetDamage({
+      entered: 13, degree: 'success', entryId: 'e-x',
+      typeLabel: 'fire', defenses: weird,
+    });
+    expect(out.final).toBe(0);
+    expect(out.rawFinal).toBe(13);
+    expect(out.iwr).toEqual([{ kind: 'immunity', type: 'fire', amount: -13 }]);
+  });
+
+  it('type matching is case-insensitive on both sides', () => {
+    const out = computeTargetDamage({
+      entered: 9, degree: 'success', entryId: 'e-troll',
+      typeLabel: 'Fire', defenses: { weaknesses: [{ type: 'FIRE', value: 5 }] },
+    });
+    expect(out.final).toBe(14);
+  });
+
+  it('multi-instance: IWR applies per instance type; rawInstances stay pre-IWR', () => {
+    const out = computeTargetDamage({
+      instances: [{ amount: 13, type: 'piercing' }, { amount: 4, type: 'fire' }],
+      degree: 'success', entryId: 'e-golem', defenses: golem,
+    });
+    // piercing untouched, fire zeroed by immunity
+    expect(out.instances).toEqual([
+      { amount: 13, type: 'piercing' }, { amount: 0, type: 'fire' },
+    ]);
+    expect(out.rawInstances).toEqual([
+      { amount: 13, type: 'piercing' }, { amount: 4, type: 'fire' },
+    ]);
+    expect(out.final).toBe(13);
+    expect(out.rawFinal).toBe(17);
+    expect(out.iwr).toEqual([{ kind: 'immunity', type: 'fire', amount: -4 }]);
+  });
+
+  it('a Mortal Weakness rider dedupes the same monster weakness type (applies once)', () => {
+    const mortal = {
+      id: 'exploit-weakness', label: 'weakness (fire 5)', weakness: 5,
+      weaknessType: 'fire', appliesToEntryIds: ['e-troll'], defaultOn: true,
+    };
+    const out = computeTargetDamage({
+      entered: 9, degree: 'success', riders: [mortal], entryId: 'e-troll',
+      typeLabel: 'fire', defenses: troll,
+    });
+    // 9 + 5 (rider) and NOT another +5 from the monster weakness
+    expect(out.final).toBe(14);
+    expect(out.iwr).toBeUndefined();
+  });
+
+  it('Personal Antithesis (no weaknessType) never dedupes the monster weakness', () => {
+    const antithesis = {
+      id: 'exploit-weakness', label: 'weakness (Personal Antithesis 4)', weakness: 4,
+      appliesToEntryIds: ['e-troll'], defaultOn: true,
+    };
+    const out = computeTargetDamage({
+      entered: 9, degree: 'success', riders: [antithesis], entryId: 'e-troll',
+      typeLabel: 'fire', defenses: troll,
+    });
+    // 9 + 4 (rider) + 5 (monster fire weakness) = 18
+    expect(out.final).toBe(18);
+    expect(out.iwr).toEqual([{ kind: 'weakness', type: 'fire', amount: 5 }]);
+  });
+});
+
+describe('computeSaveDamage — monster IWR', () => {
+  const golem = {
+    immunities: ['fire'],
+    weaknesses: [],
+    resistances: [{ type: 'cold', value: 7 }],
+  };
+
+  it('nets IWR after the multiplier; rawFinal keeps the relay raw', () => {
+    const out = computeSaveDamage({
+      entered: 21, degree: 'success', entryId: 'e-golem',
+      typeLabel: 'cold', defenses: golem,
+    });
+    // 21 halved → 10 raw, − resistance 7 = 3
+    expect(out.final).toBe(3);
+    expect(out.rawFinal).toBe(10);
+    expect(out.iwr).toEqual([{ kind: 'resistance', type: 'cold', amount: -7 }]);
+  });
+
+  it('immunity zeroes save damage', () => {
+    const out = computeSaveDamage({
+      entered: 10, degree: 'criticalFailure', entryId: 'e-golem',
+      typeLabel: 'fire', defenses: golem,
+    });
+    expect(out.final).toBe(0);
+    expect(out.rawFinal).toBe(20);
+    expect(out.iwr).toEqual([{ kind: 'immunity', type: 'fire', amount: -20 }]);
+  });
+
+  it('no defenses / untyped: unchanged shape', () => {
+    const out = computeSaveDamage({
+      entered: 10, degree: 'failure', entryId: 'e-golem', defenses: golem,
+    });
+    expect(out.final).toBe(10);
+    expect(out.iwr).toBeUndefined();
+    expect(out.rawFinal).toBeUndefined();
+  });
+});
+
+describe('serializeRidersForSave — weaknessType', () => {
+  it('carries weaknessType through the snapshot', () => {
+    const out = serializeRidersForSave([{
+      id: 'exploit-weakness', label: 'weakness (fire 5)', weakness: 5,
+      weaknessType: 'fire', appliesToEntryIds: ['e-1'],
+    }], {});
+    expect(out[0].weaknessType).toBe('fire');
+  });
+});
+
+describe('formatDamageBreakdown — fired IWR', () => {
+  it('renders weakness/resistance amounts and bare immunity', () => {
+    expect(formatDamageBreakdown({
+      final: 12,
+      parts: { base: 17, riders: [], crit: false, weaknesses: [] },
+      iwr: [{ kind: 'weakness', type: 'fire', amount: 5 },
+            { kind: 'resistance', type: 'fire', amount: -10 }],
+    })).toBe('12 (17 +5 weakness (fire) -10 resistance (fire))');
+    expect(formatDamageBreakdown({
+      final: 0,
+      parts: { base: 13, riders: [], crit: false, weaknesses: [] },
+      iwr: [{ kind: 'immunity', type: 'fire', amount: -13 }],
+    })).toBe('0 (13 immune (fire))');
+  });
+});

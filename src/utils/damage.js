@@ -103,6 +103,53 @@ export const riderAmount = (rider, { expression, character } = {}) => {
 
 const HIT_DEGREES = ['success', 'criticalSuccess'];
 
+// Monster IWR (#1014) — net the target's own immunities/weaknesses/resistances
+// (`entry.defenses`, imported off Foundry actors) into typed damage instances.
+// PF2e order per instance: immunity zeroes it outright (weakness/resistance are
+// not even consulted), weakness adds, resistance subtracts last (floor 0).
+// Untyped instances pass through — the descriptor questions ('persistent',
+// 'splash') stay with #927/#929. `dedupeTypes` skips a monster weakness a
+// weakness rider already applied (Mortal Weakness IS the monster's weakness —
+// RAW a weakness applies once per instance).
+//
+// Returns { instances, fired } where `fired` lists the modifiers that actually
+// changed an amount: [{ kind: 'immunity'|'weakness'|'resistance', type, amount }]
+// (amount signed — the reveal-on-trigger hook and the breakdown both key off it).
+const applyIwr = (instances, defenses, dedupeTypes = null) => {
+  const fired = [];
+  const immunities = new Set(
+    (defenses?.immunities || []).map((t) => String(t).toLowerCase())
+  );
+  const valueFor = (list, type) => {
+    const hit = (list || []).find(
+      (e) => typeof e?.value === 'number' && String(e.type).toLowerCase() === type
+    );
+    return hit ? hit.value : 0;
+  };
+  const out = instances.map((inst) => {
+    const type = String(inst.type || '').toLowerCase();
+    if (!type || !(inst.amount > 0)) return inst;
+    if (immunities.has(type)) {
+      fired.push({ kind: 'immunity', type, amount: -inst.amount });
+      return { ...inst, amount: 0 };
+    }
+    let amount = inst.amount;
+    const weak = dedupeTypes?.has(type) ? 0 : valueFor(defenses?.weaknesses, type);
+    if (weak > 0) {
+      amount += weak;
+      fired.push({ kind: 'weakness', type, amount: weak });
+    }
+    const resist = valueFor(defenses?.resistances, type);
+    const reduce = Math.min(resist, amount);
+    if (reduce > 0) {
+      amount -= reduce;
+      fired.push({ kind: 'resistance', type, amount: -reduce });
+    }
+    return amount === inst.amount ? inst : { ...inst, amount };
+  });
+  return { instances: out, fired };
+};
+
 // Entry ids whose creature traits include `trait` (case-insensitive). Targets
 // with NO trait data — manually-added enemies that never came from Foundry/the
 // bestiary — can't be disproven, so they stay in (GM keeps the call). Drives
@@ -142,7 +189,15 @@ const riderAppliesOnDegree = (rider, degree) =>
  * result then carries `instances: [{ amount, type }]` for the typed Foundry
  * relay, and `final` is their sum — the single-total algebra unchanged.
  *
- * @returns {null|{ entered, final, parts, persistent, riderIds, instances? }}
+ * Monster IWR (#1014): pass the target's `defenses` (and the profile's
+ * `typeLabel` for single-total entry) and the target's own immunities/
+ * weaknesses/resistances net into `final`/`instances` per typed instance.
+ * When something fired, the result also carries `iwr` (the fired modifiers,
+ * for the breakdown + reveal-on-trigger) and `rawFinal`/`rawInstances` (the
+ * pre-IWR values — the Foundry relay must send RAW totals, Foundry's own
+ * applyDamage nets IWR authoritatively).
+ *
+ * @returns {null|{ entered, final, parts, persistent, riderIds, instances?, iwr?, rawFinal?, rawInstances? }}
  *   parts:      { base, riders: [{label, amount}], crit, weaknesses: [{label, amount}] }
  *   persistent: [{ dice, type, label }] — display/log only in this slice (#222 slice 3 tracks)
  */
@@ -154,6 +209,8 @@ export const computeTargetDamage = ({
   riderState = {},
   entryId,
   critDouble = true,
+  typeLabel = null,
+  defenses = null,
 }) => {
   const multi = Array.isArray(instances) && instances.length > 0;
   if (multi) {
@@ -179,10 +236,10 @@ export const computeTargetDamage = ({
   let total = entered + bonusSum;
   if (isCrit) total *= 2;
 
-  const weaknessParts = enabled
+  const weaknessRiders = enabled
     .filter((r) => typeof r.weakness === 'number'
-      && (r.appliesToEntryIds ?? []).includes(entryId))
-    .map((r) => ({ label: r.label, amount: r.weakness }));
+      && (r.appliesToEntryIds ?? []).includes(entryId));
+  const weaknessParts = weaknessRiders.map((r) => ({ label: r.label, amount: r.weakness }));
   const weaknessSum = weaknessParts.reduce((sum, p) => sum + p.amount, 0);
   total += weaknessSum;
 
@@ -194,6 +251,30 @@ export const computeTargetDamage = ({
         return { amount, type: inst.type || '' };
       })
     : null;
+
+  // Monster IWR (#1014) — the target's own defenses net into the displayed
+  // final; the pre-IWR values survive as rawFinal/rawInstances because the
+  // Foundry relay must stay raw (Foundry applies IWR itself). A weakness a
+  // rider already covers (Mortal Weakness's weaknessType) applies once.
+  let final = total;
+  let finalInstances = outInstances;
+  let iwrExtras = null;
+  if (defenses) {
+    const dedupeTypes = new Set(
+      weaknessRiders.map((r) => String(r.weaknessType || '').toLowerCase()).filter(Boolean)
+    );
+    const working = outInstances ?? [{ amount: total, type: typeLabel || '' }];
+    const { instances: netted, fired } = applyIwr(working, defenses, dedupeTypes);
+    if (fired.length) {
+      final = netted.reduce((sum, i) => sum + i.amount, 0);
+      if (multi) finalInstances = netted;
+      iwrExtras = {
+        iwr: fired,
+        rawFinal: total,
+        ...(multi ? { rawInstances: outInstances } : {}),
+      };
+    }
+  }
 
   // Crit-exclusive persistent riders (flaming's "on a critical hit, 1d10
   // persistent fire") already state their crit amount — only riders that also
@@ -219,12 +300,13 @@ export const computeTargetDamage = ({
 
   return {
     entered,
-    final: total,
+    final,
     parts: { base: entered, riders: bonusParts, crit: isCrit, weaknesses: weaknessParts },
     persistent,
     conditions,
     riderIds: enabled.map((r) => r.id),
-    ...(outInstances ? { instances: outInstances } : {}),
+    ...(finalInstances ? { instances: finalInstances } : {}),
+    ...(iwrExtras || {}),
   };
 };
 
@@ -246,6 +328,7 @@ export const serializeRidersForSave = (riders, riderState) =>
       const out = { id: r.id, label: r.label };
       if (amount !== 0) out.amount = amount;
       if (typeof r.weakness === 'number') out.weakness = r.weakness;
+      if (r.weaknessType) out.weaknessType = r.weaknessType;
       if (r.appliesToEntryIds) out.appliesToEntryIds = r.appliesToEntryIds;
       if (r.persistent?.dice) {
         out.persistent = { dice: r.persistent.dice, type: r.persistent.type || '' };
@@ -273,9 +356,20 @@ export const serializeRidersForSave = (riders, riderState) =>
  * `entered` may be null for persistent-only profiles (Polarize) — the result
  * then carries `final: null` and only the persistent entries.
  *
- * @returns {null|{ entered, final, parts, persistent, riderIds }}
+ * Monster IWR (#1014): `typeLabel` + `defenses` net the target's own IWR into
+ * `final` after the multiplier and weakness riders — same result additions as
+ * computeTargetDamage (`iwr`, `rawFinal`; saves are single-total, no instances).
+ *
+ * @returns {null|{ entered, final, parts, persistent, riderIds, iwr?, rawFinal? }}
  */
-export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => {
+export const computeSaveDamage = ({
+  entered,
+  degree,
+  riders = [],
+  entryId,
+  typeLabel = null,
+  defenses = null,
+}) => {
   if (!SAVE_DAMAGE_DEGREES.includes(degree)) return null;
   const enabled = riders.filter((r) => r.enabled !== false);
 
@@ -325,22 +419,39 @@ export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => 
   if (multiplier === 'half') total = Math.floor(total / 2);
   if (multiplier === 'double') total *= 2;
 
-  const weaknessParts = total > 0
+  const weaknessRiders = total > 0
     ? enabled
         .filter((r) => typeof r.weakness === 'number'
           && (r.on ?? SAVE_DAMAGE_DEGREES).includes(degree)
           && (r.appliesToEntryIds ?? []).includes(entryId))
-        .map((r) => ({ label: r.label, amount: r.weakness }))
     : [];
+  const weaknessParts = weaknessRiders.map((r) => ({ label: r.label, amount: r.weakness }));
   total += weaknessParts.reduce((sum, p) => sum + p.amount, 0);
+
+  // Monster IWR (#1014) — same netting as computeTargetDamage, single-total.
+  let final = total;
+  let iwrExtras = null;
+  if (defenses && total > 0) {
+    const dedupeTypes = new Set(
+      weaknessRiders.map((r) => String(r.weaknessType || '').toLowerCase()).filter(Boolean)
+    );
+    const { instances: netted, fired } = applyIwr(
+      [{ amount: total, type: typeLabel || '' }], defenses, dedupeTypes
+    );
+    if (fired.length) {
+      final = netted[0].amount;
+      iwrExtras = { iwr: fired, rawFinal: total };
+    }
+  }
 
   return {
     entered,
-    final: total,
+    final,
     parts: { base: entered, riders: bonusParts, multiplier, weaknesses: weaknessParts },
     persistent,
     conditions,
     riderIds: enabled.map((r) => r.id),
+    ...(iwrExtras || {}),
   };
 };
 
@@ -349,7 +460,9 @@ export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => 
 // ' · clumsy 1 …' per condition rider. A bare total (no riders, no crit) logs
 // as just the number. Save results render their degree multiplier
 // ('half'/'×2'); damage-less results (final: null) log just the fragments.
-export const formatDamageBreakdown = ({ final, parts, persistent = [], conditions = [] }) => {
+// Fired monster IWR (#1014) renders last: 'immune (fire)', '+5 weakness (fire)',
+// '-7 resistance (fire)' — once it fires it's revealed, so naming it is fine.
+export const formatDamageBreakdown = ({ final, parts, persistent = [], conditions = [], iwr = [] }) => {
   const persistentStr = persistent
     .map((p) => ` · ${p.dice} persistent ${p.type || 'damage'}${p.half ? ' (half)' : ''} (DC 15 flat to end)`)
     .join('')
@@ -363,6 +476,11 @@ export const formatDamageBreakdown = ({ final, parts, persistent = [], condition
   else if (parts.multiplier === 'half') bits.push('half');
   for (const w of parts.weaknesses) {
     bits.push(`+${w.amount} ${w.label}`);
+  }
+  for (const m of iwr) {
+    bits.push(m.kind === 'immunity'
+      ? `immune (${m.type})`
+      : `${m.amount > 0 ? '+' : ''}${m.amount} ${m.kind} (${m.type})`);
   }
   const breakdown = bits.length ? `${final} (${parts.base} ${bits.join(' ')})` : String(final);
   return `${breakdown}${persistentStr}`;
@@ -394,6 +512,12 @@ const exploitRider = (exploit, enemyEntries, order) => {
     id: 'exploit-weakness',
     label: `weakness (${scope})`,
     weakness: exploit.value,
+    // Mortal Weakness IS the monster's own highest weakness — carry its type so
+    // the IWR step (#1014) doesn't apply the same weakness twice on a matching
+    // damage type. Personal Antithesis is a custom weakness and never dedupes.
+    ...(exploit.type === 'mortal' && exploit.weaknessType
+      ? { weaknessType: exploit.weaknessType }
+      : {}),
     appliesToEntryIds: applies.map((e) => e.entryId),
     defaultOn: true,
   };
