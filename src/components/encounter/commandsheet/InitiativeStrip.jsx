@@ -3,7 +3,8 @@
 // lifted from TurnTrackerPanel. Tapping any combatant focuses it (toggle): an
 // enemy drives the foe stat line + offensive tiles, an ally drives the support
 // banner + ally-targeted support (#429). All the existing per-entry chips travel
-// with it (flanked / Hunt Prey / conditions / aura / omen / stance / persistent).
+// with it (flanked / Hunt Prey / conditions / aura / omen / stance / playing /
+// persistent).
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useSyncedState } from '../../../hooks/useSyncedState';
@@ -13,6 +14,7 @@ import AuraChip from '../AuraChip';
 import OmenChip from '../OmenChip';
 import StanceChip from '../StanceChip';
 import BystanderChip from '../BystanderChip';
+import PlayingChip from '../PlayingChip';
 import HuntPreyBadge from '../HuntPreyBadge';
 import EnemyConditionBadge from '../EnemyConditionBadge';
 import './InitiativeStrip.css';
@@ -39,6 +41,7 @@ const InitiativeStrip = ({ charId }) => {
       {entry.kind === 'pc' && <OmenChip entry={entry} />}
       {entry.kind === 'pc' && <StanceChip entry={entry} />}
       {entry.kind === 'pc' && <BystanderChip entry={entry} />}
+      {entry.kind === 'pc' && <PlayingChip entry={entry} />}
       <PersistentChip entry={entry} viewerCharId={charId} />
       <span className="cmd-init-init">
         {entry.initiative !== null && entry.initiative !== undefined ? entry.initiative : '?'}

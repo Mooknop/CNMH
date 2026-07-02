@@ -1,0 +1,7 @@
+/* 'While playing' (#935) — order-strip chip, AuraChip's recipe. */
+.ttp-playing-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: #e0b64d;
+  vertical-align: middle;
+}
