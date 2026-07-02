@@ -58,6 +58,21 @@
   text-align: center;
 }
 
+/* Multi-instance entry (#1019) — one labeled input per damage type. */
+.dmg-part-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
+.dmg-part-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-tertiary);
+}
+
 .dmg-riders {
   display: flex;
   flex-direction: column;

@@ -393,6 +393,34 @@ export async function applyTypedDamage(token, amount, type = '') {
   return true;
 }
 
+// Apply several typed damage instances as ONE application (#1019 — a piercing
+// sword with a flaming rune). PF2e's DamageRoll takes a comma-separated
+// multi-instance formula ('6[piercing],3[fire]'); actor.applyDamage then nets
+// the target's IWR per instance within the single application — matching how
+// the system applies its own multi-type strike damage. Non-positive instances
+// are skipped; an untyped instance contributes a bare (IWR-exempt) term. Falls
+// back to a plain summed application when DamageRoll is unavailable.
+// v14 MIGRATION: same CONFIG.Dice.rolls + actor.applyDamage surface as
+// applyTypedDamage above — re-verify against the v14-era system release.
+export async function applyDamageInstances(token, instances) {
+  const actor = token?.actor;
+  const parts = (instances || []).filter((i) => typeof i?.amount === 'number' && i.amount > 0);
+  if (!actor?.applyDamage || !parts.length) return false;
+  const tokenDoc = token.document ?? token;
+  const DamageRoll = CONFIG.Dice?.rolls?.find?.((R) => R.name === 'DamageRoll');
+  if (!DamageRoll) {
+    const total = parts.reduce((sum, i) => sum + i.amount, 0);
+    await actor.applyDamage({ damage: total, token: tokenDoc });
+    return true;
+  }
+  const formula = parts
+    .map((i) => (i.type ? `${i.amount}[${i.type}]` : `${i.amount}`))
+    .join(',');
+  const roll = await new DamageRoll(formula).evaluate();
+  await actor.applyDamage({ damage: roll, token: tokenDoc });
+  return true;
+}
+
 // Flanking (Slice 3): enumerate token-id → placed-token for all tokens in the
 // current scene. Returns an array of { id, token } only for tokens that are
 // actually placed (getActiveTokens returns a live list).

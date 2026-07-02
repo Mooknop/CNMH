@@ -135,18 +135,33 @@ const riderAppliesOnDegree = (rider, degree) =>
  * Final damage for one target. `entered` is the player's rolled total
  * (un-doubled); numeric riders add before crit doubling, weakness after.
  *
- * @returns {null|{ entered, final, parts, persistent, riderIds }}
+ * Multi-instance entry (#1019 — flaming runes): when the profile deals more
+ * than one damage type, pass `instances: [{ amount, type }]` (one per
+ * damageEntryParts part, base first) instead of `entered`. Numeric riders and
+ * weakness attach to the base instance; a crit doubles every instance. The
+ * result then carries `instances: [{ amount, type }]` for the typed Foundry
+ * relay, and `final` is their sum — the single-total algebra unchanged.
+ *
+ * @returns {null|{ entered, final, parts, persistent, riderIds, instances? }}
  *   parts:      { base, riders: [{label, amount}], crit, weaknesses: [{label, amount}] }
  *   persistent: [{ dice, type, label }] — display/log only in this slice (#222 slice 3 tracks)
  */
 export const computeTargetDamage = ({
   entered,
+  instances = null,
   degree,
   riders = [],
   riderState = {},
   entryId,
   critDouble = true,
 }) => {
+  const multi = Array.isArray(instances) && instances.length > 0;
+  if (multi) {
+    if (instances.some((i) => typeof i?.amount !== 'number' || Number.isNaN(i.amount))) {
+      return null;
+    }
+    entered = instances.reduce((sum, i) => sum + i.amount, 0);
+  }
   if (typeof entered !== 'number' || Number.isNaN(entered)) return null;
   if (!HIT_DEGREES.includes(degree)) return null;
 
@@ -159,23 +174,41 @@ export const computeTargetDamage = ({
     .filter((r) => r.bonus)
     .map((r) => ({ label: r.label, amount: riderAmount(r, r.ctx) }))
     .filter((p) => p.amount !== 0);
+  const bonusSum = bonusParts.reduce((sum, p) => sum + p.amount, 0);
 
-  let total = entered + bonusParts.reduce((sum, p) => sum + p.amount, 0);
+  let total = entered + bonusSum;
   if (isCrit) total *= 2;
 
   const weaknessParts = enabled
     .filter((r) => typeof r.weakness === 'number'
       && (r.appliesToEntryIds ?? []).includes(entryId))
     .map((r) => ({ label: r.label, amount: r.weakness }));
-  total += weaknessParts.reduce((sum, p) => sum + p.amount, 0);
+  const weaknessSum = weaknessParts.reduce((sum, p) => sum + p.amount, 0);
+  total += weaknessSum;
 
+  const outInstances = multi
+    ? instances.map((inst, idx) => {
+        let amount = inst.amount + (idx === 0 ? bonusSum : 0);
+        if (isCrit) amount *= 2;
+        if (idx === 0) amount += weaknessSum;
+        return { amount, type: inst.type || '' };
+      })
+    : null;
+
+  // Crit-exclusive persistent riders (flaming's "on a critical hit, 1d10
+  // persistent fire") already state their crit amount — only riders that also
+  // fire on a plain hit get their dice doubled (same carve-out as
+  // computeSaveDamage's crit-fail-exclusive riders).
   const persistent = enabled
     .filter((r) => r.persistent?.dice && riderMatchesEntry(r, entryId))
-    .map((r) => ({
-      dice: isCrit ? doubleDice(r.persistent.dice) : r.persistent.dice,
-      type: r.persistent.type || '',
-      label: r.label,
-    }));
+    .map((r) => {
+      const doubled = isCrit && (r.on ?? HIT_DEGREES).includes('success');
+      return {
+        dice: doubled ? doubleDice(r.persistent.dice) : r.persistent.dice,
+        type: r.persistent.type || '',
+        label: r.label,
+      };
+    });
 
   // Condition riders (#228 — Spines' clumsy 1) carry a rules note, not a
   // number. They ride the same degree gating and surface in the breakdown/log
@@ -191,6 +224,7 @@ export const computeTargetDamage = ({
     persistent,
     conditions,
     riderIds: enabled.map((r) => r.id),
+    ...(outInstances ? { instances: outInstances } : {}),
   };
 };
 
@@ -509,6 +543,34 @@ export const damageHintParts = (profile, riderState) => {
   for (const r of profile.riders || []) {
     if (r.dice && riderEnabled(r, riderState)) {
       parts.push({ dice: r.dice, typeLabel: hintTypeLabel(r.dice, r.type) });
+    }
+  }
+  return parts;
+};
+
+/**
+ * Per-instance ENTRY parts (#1019) — one rolled total per damage type when the
+ * profile mixes types (a piercing sword with a flaming rune's 1d6 fire). Part 0
+ * is the base expression; each enabled immediate extra-dice rider whose type
+ * differs from the base becomes its own part, keyed by rider id so the panel
+ * can hold one input per part. Precision riders stay folded into the base
+ * total — PF2e precision damage inherits the parent attack's type for IWR —
+ * as do untyped and same-type rider dice. A single-part result means the
+ * panel keeps the one-total entry unchanged.
+ *
+ * @returns {Array<{ key, dice, type, label? }>}
+ */
+export const damageEntryParts = (profile, riderState) => {
+  if (!profile) return [];
+  const baseType = (profile.typeLabel || '').toLowerCase();
+  const parts = profile.expression
+    ? [{ key: 'base', dice: profile.expression, type: profile.typeLabel || '' }]
+    : [];
+  for (const r of profile.riders || []) {
+    if (!r.dice || !riderEnabled(r, riderState)) continue;
+    const type = (r.type || '').toLowerCase();
+    if (type && type !== 'precision' && type !== baseType) {
+      parts.push({ key: r.id, dice: r.dice, type: r.type, label: r.label });
     }
   }
   return parts;

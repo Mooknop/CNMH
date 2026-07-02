@@ -163,6 +163,44 @@ describe('GmRunes', () => {
     });
   });
 
+  it('authors the immediate-dice + crit-persistent forms (#1019 flaming)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: '+ New rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Flaming' } });
+    fireEvent.change(within(form).getByLabelText('level'), { target: { value: '8' } });
+    fireEvent.change(within(form).getByLabelText('price'), { target: { value: '500' } });
+    fireEvent.change(within(form).getByLabelText('rider-dice'), { target: { value: '1d6' } });
+    fireEvent.change(within(form).getByLabelText('rider-critPersistent'), { target: { value: '1d10' } });
+    fireEvent.change(within(form).getByLabelText('rider-damageType'), { target: { value: 'fire' } });
+
+    fireEvent.click(within(form).getByText('Create rune'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, id, data] = saveDocument.mock.calls[0];
+    expect(id).toBe('flaming');
+    expect(data.rider).toEqual({
+      dice: '1d6',
+      damageType: 'fire',
+      onCrit: { persistent: '1d10' },
+    });
+  });
+
+  it('round-trips the immediate-dice fields back into the form', () => {
+    useContent.mockReturnValue({ runes: [
+      ...runes,
+      { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500,
+        rider: { dice: '1d6', damageType: 'fire', onCrit: { persistent: '1d10' } } },
+    ] });
+    render(<GmRunes />);
+    selectRune('Flaming');
+    const form = screen.getByTestId('rune-form-flaming');
+    expect(within(form).getByLabelText('rider-dice')).toHaveValue('1d6');
+    expect(within(form).getByLabelText('rider-critPersistent')).toHaveValue('1d10');
+    expect(within(form).getByLabelText('rider-damageType')).toHaveValue('fire');
+  });
+
   it('drops the damage type when no persistent dice are set', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { riderEnabled, formatDamageBreakdown, damageHintParts } from '../../utils/damage';
+import { riderEnabled, formatDamageBreakdown, damageHintParts, damageEntryParts } from '../../utils/damage';
 import './DamagePanel.css';
 
 /**
@@ -11,12 +11,19 @@ import './DamagePanel.css';
  * degrees exist — no hitResults, no crit toggle; the entered total and rider
  * snapshot travel with the save request and the GM derives per-target damage.
  *
+ * Multi-instance entry (#1019, attack mode only): when damageEntryParts finds
+ * more than one typed part (a piercing sword with a flaming rune's fire dice),
+ * the single total is replaced by one input per part — the resolver keys its
+ * per-part state by part key and feeds computeTargetDamage `instances`.
+ *
  * @param {string}   mode        - 'attack' (default) | 'save'
  * @param {Object}   profile     - { expression, typeLabel, riders } from buildDamageProfile
  * @param {Array}    hitResults  - resolver results with degree success/criticalSuccess,
  *                                 each already carrying its computed `damage` (or null)
- * @param {string}   entered     - raw rolled-total input value
+ * @param {string}   entered     - raw rolled-total input value (single-part entry)
  * @param {Function} onEntered
+ * @param {Object}   enteredParts  - { [partKey]: string } per-part input values (#1019)
+ * @param {Function} onEnteredPart - (partKey, value) — presence enables multi-part entry
  * @param {Object}   riderState  - { [riderId]: bool } overrides of each rider's defaultOn
  * @param {Function} onToggleRider
  * @param {boolean}  critDouble  - the built-in "crit ×2" toggle (off when the table
@@ -29,6 +36,8 @@ const DamagePanel = ({
   hitResults = [],
   entered,
   onEntered,
+  enteredParts,
+  onEnteredPart,
   riderState,
   onToggleRider,
   critDouble,
@@ -39,6 +48,19 @@ const DamagePanel = ({
 
   const anyCrit = hitResults.some((r) => r.degree === 'criticalSuccess');
   const hintParts = damageHintParts(profile, riderState);
+  const entryParts = damageEntryParts(profile, riderState);
+  const multiPart = !isSave && !!onEnteredPart && entryParts.length > 1;
+
+  const critToggle = anyCrit && (
+    <label className="dmg-rider-toggle">
+      <input
+        type="checkbox"
+        checked={critDouble}
+        onChange={(e) => onCritDouble(e.target.checked)}
+      />
+      <span>Crit ×2</span>
+    </label>
+  );
 
   return (
     <div className="dmg-panel">
@@ -54,11 +76,30 @@ const DamagePanel = ({
         <span className="dmg-hint-note">
           {isSave
             ? 'enter your rolled total — each target halves/doubles by its save'
-            : 'enter your rolled total (un-doubled)'}
+            : multiPart
+              ? 'enter each rolled total (un-doubled) by damage type'
+              : 'enter your rolled total (un-doubled)'}
         </span>
       </div>
 
-      {(!isSave || profile.expression) && (
+      {multiPart ? (
+        <div className="dmg-entry-row">
+          {entryParts.map((p) => (
+            <label key={p.key} className="dmg-part-entry">
+              <span className="dmg-part-label">{p.dice}{p.type ? ` ${p.type}` : ''}</span>
+              <input
+                type="number"
+                className="dmg-total-input"
+                placeholder="total"
+                aria-label={`rolled ${p.type || 'damage'} total`}
+                value={enteredParts?.[p.key] ?? ''}
+                onChange={(e) => onEnteredPart(p.key, e.target.value)}
+              />
+            </label>
+          ))}
+          {critToggle}
+        </div>
+      ) : (!isSave || profile.expression) && (
         <div className="dmg-entry-row">
           <input
             type="number"
@@ -68,16 +109,7 @@ const DamagePanel = ({
             value={entered}
             onChange={(e) => onEntered(e.target.value)}
           />
-          {anyCrit && (
-            <label className="dmg-rider-toggle">
-              <input
-                type="checkbox"
-                checked={critDouble}
-                onChange={(e) => onCritDouble(e.target.checked)}
-              />
-              <span>Crit ×2</span>
-            </label>
-          )}
+          {critToggle}
         </div>
       )}
 

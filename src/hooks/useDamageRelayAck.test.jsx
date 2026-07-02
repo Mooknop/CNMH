@@ -88,6 +88,26 @@ describe('useDamageRelayAck (#1016)', () => {
     expect(mockAppendLog).not.toHaveBeenCalled();
   });
 
+  it('itemizes multi-instance hits per type (#1019)', () => {
+    renderHook(() => useDamageRelayAck());
+    act(() => {
+      syncedMock.set(ack({
+        sourceName: 'Flaming Longsword',
+        applied: [{
+          entryId: 'e-1', name: 'Goblin Warrior', amount: 17, type: 'piercing',
+          instances: [
+            { amount: 13, type: 'piercing' },
+            { amount: 4, type: 'fire' },
+          ],
+        }],
+      }));
+    });
+    expect(mockAppendLog).toHaveBeenCalledWith({
+      type: 'system',
+      text: 'Foundry: Flaming Longsword: 13 piercing + 4 fire damage applied to Goblin Warrior',
+    });
+  });
+
   it('unmarked untyped damage logs without a type token', () => {
     renderHook(() => useDamageRelayAck());
     act(() => {
