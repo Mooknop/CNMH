@@ -110,4 +110,11 @@ describe('createHandoffOrder / applyRunesToGear (#857 S7a)', () => {
     expect(runed.runes.potency).toBe(1);
     expect(runed.runes.property || []).not.toContain('slick');
   });
+
+  it('folds an accessory rune into a target-less host on collect (#1033 S5)', () => {
+    const menacing = { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', price: 50, usage: ['clothing'] };
+    const runed = applyRunesToGear({ uid: 'k1', name: 'Cloak', accessoryTags: ['cloak', 'clothing'] }, [menacing]);
+    expect(runed.runes).toEqual({ accessory: 'menacing' });
+    expect(runed.uid).not.toBe('k1');
+  });
 });

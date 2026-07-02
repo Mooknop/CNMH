@@ -629,6 +629,81 @@ describe('ShopStorefront', () => {
       expect(screen.queryByLabelText(/^fill .* slot/i)).not.toBeInTheDocument();
       expect(screen.queryByTestId('picker-w1')).not.toBeInTheDocument();
     });
+
+    // ── Accessory hosts (#1033 S5) ─────────────────────────────────────────
+    const menacing = { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50, usage: ['clothing'] };
+    const cloak = { uid: 'k1', name: 'Cloak', accessoryTags: ['cloak', 'clothing'], weight: 0.1 };
+
+    it('stages an accessory rune onto a cloak and checks it out as a handoff (#1033 S5)', () => {
+      renderRunesWith({ inv: [cloak], runeDocs: [menacing], refs: ['menacing'] });
+      const gear = screen.getByTestId('gear-k1');
+      expect(gear).toHaveTextContent('Cloak');
+      expect(gear).toHaveTextContent('1 open slot · accessory');
+      fireEvent.click(within(gear).getByLabelText('fill Accessory slot on Cloak'));
+      fireEvent.click(within(screen.getByTestId('picker-k1')).getByRole('button', { name: /Menacing/ }));
+      // staged: runestone price (3 + 50) pending
+      expect(within(gear).getByTestId('staged-k1')).toHaveTextContent('53 gp');
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      const { handoffs } = mockCheckout.mock.calls[0][0];
+      expect(handoffs).toHaveLength(1);
+      expect(handoffs[0].gear.uid).toBe('k1');
+      expect(handoffs[0].runes.map((r) => r.id)).toEqual(['menacing']);
+    });
+
+    it('a dual-host card shows the accessory socket after its armor sockets (#1033 S5)', () => {
+      renderRunesWith({
+        inv: [{ uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },
+          accessoryTags: ['clothing'], runes: { potency: 1 } }],
+        runeDocs: [menacing], refs: ['menacing'],
+      });
+      const gear = screen.getByTestId('gear-e1');
+      // Armor sockets still there (an open resilient + the potency-unlocked property)…
+      expect(within(gear).getByLabelText(/fill Resilient slot/i)).toBeInTheDocument();
+      expect(within(gear).getByLabelText(/fill Property slot/i)).toBeInTheDocument();
+      // …plus the accessory socket, whose picker offers the accessory rune only.
+      fireEvent.click(within(gear).getByLabelText(/fill Accessory slot/i));
+      expect(within(screen.getByTestId('picker-e1')).getByRole('button', { name: /Menacing/ })).toBeInTheDocument();
+    });
+
+    it('an inscribed accessory socket shows its rune with no upgrade path (#1033 S5)', () => {
+      // On a dual-host (always listed via its armor target) — an inscribed
+      // accessory-ONLY host drops off the board instead: nothing left to etch.
+      renderRunesWith({
+        inv: [{ uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },
+          accessoryTags: ['clothing'], runes: { accessory: 'menacing' } }],
+        runeDocs: [menacing], refs: ['menacing'],
+      });
+      const gear = screen.getByTestId('gear-e1');
+      expect(gear).toHaveTextContent('Menacing'); // filled socket shows the rune name
+      expect(within(gear).queryByLabelText(/fill Accessory slot/i)).not.toBeInTheDocument();
+      expect(within(gear).queryByLabelText(/upgrade Accessory/i)).not.toBeInTheDocument();
+    });
+
+    it('hides an accessory-only host with nothing to etch (#1033 S5)', () => {
+      // The shop stocks a weapon rune + the cloak's own rune — but one cloak is
+      // already inscribed and the other can't take Flaming, so only gear the
+      // smith can work on stays on the board.
+      renderRunesWith({
+        inv: [
+          { ...cloak, uid: 'k2', runes: { accessory: 'menacing' } }, // inscribed — done
+          { uid: 'w1', name: 'Longsword', strikes: [{}], runes: {} },
+        ],
+        runeDocs: [{ id: 'flaming', type: 'property', name: 'Flaming', price: 500 }], refs: ['flaming'],
+      });
+      expect(screen.queryByTestId('gear-k2')).not.toBeInTheDocument();
+      expect(screen.getByTestId('gear-w1')).toBeInTheDocument();
+    });
+
+    it('hides an accessory-only host when no compatible rune is in stock (#1033 S5)', () => {
+      // The shop stocks only a weapon rune — the cloak stays off the board.
+      renderRunesWith({
+        inv: [cloak],
+        runeDocs: [{ id: 'flaming', type: 'property', name: 'Flaming', price: 500 }], refs: ['flaming'],
+      });
+      expect(screen.queryByTestId('gear-k1')).not.toBeInTheDocument();
+      expect(screen.getByText('No gear to etch.')).toBeInTheDocument();
+    });
   });
 
   describe('generative rune-service offerings (#982 G3)', () => {

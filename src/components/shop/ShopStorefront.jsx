@@ -14,7 +14,7 @@ import {
 } from '../../utils/shopUtils';
 import { resolveRunestone } from '../../utils/runestone';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
-import { gearTarget, gearSockets, compatibleRunes, projectStagedGear } from '../../utils/runeSockets';
+import { gearTarget, gearSockets, compatibleRunes, projectStagedGear, inEtchList } from '../../utils/runeSockets';
 import { isRuneItem } from '../../utils/runeClassify';
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
@@ -364,12 +364,13 @@ const CartTray = ({ cart, handoffs, gold, onSetQty, onRemove, onClear, onUnstage
 };
 
 // ── Runesmithing (#857 S6b) ──────────────────────────────────────────────────
-const SOCKET_GLYPH = { potency: 'ᚠ', striking: 'ᛋ', resilient: 'ᛞ', property: '◇' };
-const SOCKET_LABEL = { potency: 'Potency', striking: 'Striking', resilient: 'Resilient', property: 'Property' };
+const SOCKET_GLYPH = { potency: 'ᚠ', striking: 'ᛋ', resilient: 'ᛞ', property: '◇', accessory: '◈' };
+const SOCKET_LABEL = { potency: 'Potency', striking: 'Striking', resilient: 'Resilient', property: 'Property', accessory: 'Accessory' };
 // A socket's stable key within a gear card (fundamentals are singletons; a
 // property socket is keyed by its index).
 const socketKey = (s) => (s.type === 'property' ? `property:${s.index}` : s.type);
-// What an already-equipped socket shows.
+// What an already-equipped socket shows. Property and accessory sockets share
+// the rune-ref lookup (both carry `s.rune`).
 const filledLabel = (s, runeMap) => {
   if (s.type === 'potency') return `+${s.value}`;
   if (s.type === 'striking') return STRIKING[s.value]?.label || 'Striking';
@@ -405,13 +406,19 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
   const openSocket = openKey ? sockets.find((s) => socketKey(s) === openKey) : null;
   const options = openSocket ? optionsFor(openSocket.type) : [];
 
+  // An accessory-only host (a cloak, a shield — no gearTarget) is labelled by
+  // its accessory slot; shields keep the armor icon, worn hosts get their own.
+  const kind = target || 'accessory';
+  const icon = target === 'armor' ? '🛡' : target === 'ring' ? '💍' : target === 'weapon' ? '⚔'
+    : gear.shield ? '🛡' : '🧥';
+
   return (
     <div className="ps-gear" data-testid={`gear-${gear.uid}`}>
       <div className="ps-gear-head">
-        <span className="ps-gear-icon" aria-hidden="true">{target === 'armor' ? '🛡' : target === 'ring' ? '💍' : '⚔'}</span>
+        <span className="ps-gear-icon" aria-hidden="true">{icon}</span>
         <div className="ps-gear-id">
           <div className="ps-gear-name">{gear.name}</div>
-          <div className="ps-gear-sub">{openCount} open slot{openCount === 1 ? '' : 's'} · {target}</div>
+          <div className="ps-gear-sub">{openCount} open slot{openCount === 1 ? '' : 's'} · {kind}</div>
         </div>
       </div>
       <div className="ps-sockets" aria-label={`${gear.name} sockets`}>
@@ -524,7 +531,7 @@ const RunesmithingTab = ({
       </p>
       <div className="ps-section"><span className="ps-section-label">Your Gear</span></div>
       {gearList.length === 0 && benched.length === 0 ? (
-        <p className="ps-empty">{town ? 'No weapon or armor to etch.' : '—'}</p>
+        <p className="ps-empty">{town ? 'No gear to etch.' : '—'}</p>
       ) : (
         <div className="ps-gear-list">
           {gearList.map((g) => (
@@ -639,9 +646,12 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   // gearTarget → 'ring', #967 R4/R5), for the sockets. Ring imbue reuses this
   // shop flow: the socket board, staging, checkout, work order, and collect are
   // all target-generic, so a power ring hands off and etches like any gear.
+  // Accessory hosts join the list (#1033 S5) via inEtchList: target gear always,
+  // accessory-ONLY hosts (cloaks, boots, shields) only when this shop stocks a
+  // rune they could take — so trinkets don't flood the board.
   const gearList = useMemo(
-    () => (Array.isArray(charData?.inventory) ? charData.inventory.filter((it) => gearTarget(it)) : []),
-    [charData]
+    () => (Array.isArray(charData?.inventory) ? charData.inventory.filter((it) => inEtchList(it, shopRunes)) : []),
+    [charData, shopRunes]
   );
   // Buyable scrolls/wands for the Spellcasting tab (#812 generative offerings
   // expanded + deduped by wareKey, then grouped like any ware).
