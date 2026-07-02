@@ -387,7 +387,8 @@ describe('ShopStorefront', () => {
     // A weapon at +1 (one open property slot + an empty striking socket); the shop
     // stocks a weapon property rune + a striking fundamental as runestones.
     const rsRunes = [
-      { id: 'flaming', type: 'property', name: 'Flaming', price: 500 },
+      { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500,
+        description: 'Deals an extra 1d6 fire damage on a hit.' },
       { id: 'striking', type: 'fundamental', fundamental: 'striking', target: 'weapon', tierKey: 'striking', name: 'Striking', price: 65 },
     ];
     const rsStore = { rings: { keeper: '', wares: [
@@ -493,6 +494,18 @@ describe('ShopStorefront', () => {
       fireEvent.click(screen.getByRole('tab', { name: /Wares/ }));
       expect(screen.queryByLabelText('wares')).not.toBeInTheDocument(); // no general wares stocked
       expect(screen.queryByTestId('ware-runestone-flaming')).not.toBeInTheDocument();
+    });
+
+    it("previews a runestone with the held rune's effect text (#800)", () => {
+      renderRunes();
+      // Enter→onTap stands in for a tap on the draggable tile (see the wares
+      // takeover test above).
+      fireEvent.keyDown(within(screen.getByLabelText('runes for sale')).getByTestId('ware-runestone-flaming'), { key: 'Enter' });
+      const runeBlock = screen.getByTestId('ware-preview-rune');
+      expect(runeBlock).toHaveTextContent('Flaming · Level 8');
+      expect(runeBlock).toHaveTextContent('Deals an extra 1d6 fire damage on a hit.');
+      // the generic etching-stone description still follows
+      expect(within(screen.getByTestId('ware-preview')).getByText(/flat piece of hard stone/i)).toBeInTheDocument();
     });
 
     it('routes rune ITEM entries to Runes-for-sale, not Wares (#883)', () => {

@@ -256,6 +256,20 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
           <SpellMechanics spell={head.spell} />
         ) : (
           <>
+            {/* A runestone leads with the held rune's own effect text — the
+                generic etching-stone description below never says what the
+                rune actually does (#800). */}
+            {head.runestone && head.runestone.rune && (
+              <div className="ps-preview-rune" data-testid="ware-preview-rune">
+                <span className="ps-preview-rune-name">
+                  {head.runestone.rune.name}
+                  {head.runestone.rune.level != null && ` · Level ${head.runestone.rune.level}`}
+                </span>
+                {head.runestone.rune.description && (
+                  <p className="ps-preview-rune-desc">{head.runestone.rune.description}</p>
+                )}
+              </div>
+            )}
             {group.description && <p className="ps-preview-desc">{group.description}</p>}
             <ItemActivations item={head} />
           </>

@@ -275,6 +275,17 @@
   padding: 2px 7px; border-radius: 20px; border: 1px solid var(--ps-line); color: var(--ps-ink2);
 }
 .ps-preview-desc { margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2); }
+/* Runestone preview: the held rune's own effect text, framed apart from the
+   generic etching-stone description (#800). */
+.ps-preview-rune {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--ps-line);
+  border-left: 3px solid var(--ps-ware-accent, var(--gold-mid));
+  border-radius: 10px; background: var(--ps-screen);
+}
+.ps-preview-rune-name { font-weight: 600; font-size: 12.5px; }
+.ps-preview-rune-desc { margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2); }
 .ps-preview-forms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .ps-preview-form {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
