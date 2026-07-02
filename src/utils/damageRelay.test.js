@@ -85,6 +85,88 @@ describe('collectDamageHits (#1016)', () => {
     expect(collectDamageHits([], { mode: 'flurry', rolls: [null] })).toEqual([]);
     expect(collectDamageHits([{ results: null }], null)).toEqual([]);
   });
+
+  describe('multi-instance hits (#1019)', () => {
+    const instHit = (entryId, name, instances) => ({
+      entryId, name, degree: 'success',
+      damage: { final: instances.reduce((s, i) => s + i.amount, 0), instances },
+    });
+
+    it('carries typed instances onto ray-group hits, dropping non-positive ones', () => {
+      const groups = [ray([instHit('e-1', 'Goblin', [
+        { amount: 13, type: 'piercing' },
+        { amount: 4, type: 'fire' },
+        { amount: 0, type: 'cold' },
+      ])])];
+      expect(collectDamageHits(groups, null, { typeLabel: 'piercing' })).toEqual([{
+        entryId: 'e-1', name: 'Goblin', amount: 17, type: 'piercing',
+        instances: [
+          { amount: 13, type: 'piercing' },
+          { amount: 4, type: 'fire' },
+        ],
+      }]);
+    });
+
+    it('single-total results stay instance-less (bridge takes the #1016 path)', () => {
+      const hits = collectDamageHits([ray([hit('e-1', 'Goblin', 8)])], null, { typeLabel: 'fire' });
+      expect(hits[0].instances).toBeUndefined();
+    });
+
+    it('flurry merges instances per type into the combined hit', () => {
+      const chain = {
+        mode: 'flurry',
+        rolls: [
+          [instHit('e-1', 'Goblin', [{ amount: 6, type: 'bludgeoning' }, { amount: 3, type: 'fire' }])],
+          [instHit('e-1', 'Goblin', [{ amount: 4, type: 'bludgeoning' }, { amount: 2, type: 'fire' }])],
+        ],
+      };
+      expect(collectDamageHits([], chain, {})).toEqual([{
+        entryId: 'e-1', name: 'Goblin', amount: 15, type: '',
+        instances: [
+          { amount: 10, type: 'bludgeoning' },
+          { amount: 5, type: 'fire' },
+        ],
+      }]);
+    });
+
+    it('a flurry mixing typed and instance-less rolls folds the latter into an untyped instance', () => {
+      const chain = {
+        mode: 'flurry',
+        rolls: [
+          [instHit('e-1', 'Goblin', [{ amount: 6, type: 'bludgeoning' }])],
+          [hit('e-1', 'Goblin', 4)],
+        ],
+      };
+      expect(collectDamageHits([], chain, {})).toEqual([{
+        entryId: 'e-1', name: 'Goblin', amount: 10, type: '',
+        instances: [
+          { amount: 6, type: 'bludgeoning' },
+          { amount: 4, type: '' },
+        ],
+      }]);
+    });
+
+    it('an all-untyped flurry stays instance-less (#1016 behavior unchanged)', () => {
+      const chain = { mode: 'flurry', rolls: [[hit('e-1', 'Goblin', 6)], [hit('e-1', 'Goblin', 4)]] };
+      expect(collectDamageHits([], chain, {})).toEqual([
+        { entryId: 'e-1', name: 'Goblin', amount: 10, type: '' },
+      ]);
+    });
+
+    it('non-flurry chain rolls keep their typed instances per hit', () => {
+      const chain = {
+        mode: 'single',
+        rolls: [[instHit('e-1', 'Goblin', [{ amount: 6, type: 'slashing' }, { amount: 3, type: 'fire' }])]],
+      };
+      expect(collectDamageHits([], chain, {})).toEqual([{
+        entryId: 'e-1', name: 'Goblin', amount: 9, type: '',
+        instances: [
+          { amount: 6, type: 'slashing' },
+          { amount: 3, type: 'fire' },
+        ],
+      }]);
+    });
+  });
 });
 
 describe('buildDamageApply', () => {

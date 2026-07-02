@@ -12,7 +12,11 @@ import './gm.css';
 
 // Property-rune catalog editor (#548 Slice 3b). Rune shape (src/data/pf2eRunes.js):
 //   { id, type:'property', name, level, price, description,
-//     rider: { vsTrait?, persistent?, damageType?, onCrit?: { conditions: [{name,value,duration}] } } }
+//     rider: { vsTrait?, dice?, persistent?, damageType?,
+//              onCrit?: { persistent?, conditions?: [{name,value,duration}] } } }
+// `dice` is the immediate extra-dice form (#1019 — flaming's 1d6 fire, its own
+// damage instance); `onCrit.persistent` is crit-only persistent damage
+// (flaming's 1d10 persistent fire). Both share `damageType`.
 // The rich rider is folded into the #222 damage step by
 // weaponRunes.translatePropertyRider — this editor authors it with structured
 // controls (no raw-JSON box). Potency/striking tiers are NOT runes here; they
@@ -35,7 +39,9 @@ const toForm = (r) => {
     price: src.price != null ? String(src.price) : '',
     description: src.description || '',
     vsTrait: rd.vsTrait || '',
+    dice: rd.dice || '',
     persistent: rd.persistent || '',
+    critPersistent: rd.onCrit?.persistent || '',
     damageType: rd.damageType || '',
     conditions: Array.isArray(rd.onCrit?.conditions)
       ? rd.onCrit.conditions.map((c) => ({
@@ -55,9 +61,12 @@ const fromForm = (f) => {
 
   const rider = {};
   if (f.vsTrait.trim()) rider.vsTrait = f.vsTrait.trim().toLowerCase();
-  if (f.persistent.trim()) {
-    rider.persistent = f.persistent.trim();
-    if (f.damageType.trim()) rider.damageType = f.damageType.trim();
+  if (f.dice.trim()) rider.dice = f.dice.trim();
+  if (f.persistent.trim()) rider.persistent = f.persistent.trim();
+  // damageType rides any of the damage forms (immediate dice, persistent,
+  // crit persistent) — translatePropertyRider stamps it on each.
+  if ((rider.dice || rider.persistent || f.critPersistent.trim()) && f.damageType.trim()) {
+    rider.damageType = f.damageType.trim();
   }
   const conditions = f.conditions
     .filter((c) => c.name.trim())
@@ -68,7 +77,10 @@ const fromForm = (f) => {
       if (c.duration.trim()) out.duration = c.duration.trim();
       return out;
     });
-  if (conditions.length) rider.onCrit = { conditions };
+  const onCrit = {};
+  if (f.critPersistent.trim()) onCrit.persistent = f.critPersistent.trim();
+  if (conditions.length) onCrit.conditions = conditions;
+  if (Object.keys(onCrit).length) rider.onCrit = onCrit;
 
   const out = { type: 'property', name: f.name.trim() };
   const level = parseInt(f.level, 10);
@@ -192,6 +204,15 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             />
           </div>
           <div className="form-group">
+            <label>extra damage dice (optional)</label>
+            <input
+              aria-label="rider-dice"
+              placeholder="e.g. 1d6"
+              value={e.dice}
+              onChange={(ev) => set({ dice: ev.target.value })}
+            />
+          </div>
+          <div className="form-group">
             <label>persistent damage (optional)</label>
             <input
               aria-label="rider-persistent"
@@ -201,11 +222,20 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             />
           </div>
           <div className="form-group">
+            <label>on crit — persistent damage (optional)</label>
+            <input
+              aria-label="rider-critPersistent"
+              placeholder="e.g. 1d10"
+              value={e.critPersistent}
+              onChange={(ev) => set({ critPersistent: ev.target.value })}
+            />
+          </div>
+          <div className="form-group">
             <label>damage type</label>
             <select
               aria-label="rider-damageType"
               value={e.damageType}
-              disabled={!e.persistent.trim()}
+              disabled={!e.dice.trim() && !e.persistent.trim() && !e.critPersistent.trim()}
               onChange={(ev) => set({ damageType: ev.target.value })}
             >
               <option value="">—</option>

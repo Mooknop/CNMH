@@ -47,4 +47,72 @@ describe('DamagePanel extra-dice rider', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: /Hidden/ }));
     expect(onToggleRider).toHaveBeenCalledWith('gloaming-hidden-precision', true);
   });
+
+  it('precision keeps the single-total entry — it folds into the parent instance', () => {
+    render(
+      <DamagePanel
+        profile={gloamingProfile}
+        hitResults={hit}
+        entered=""
+        onEntered={() => {}}
+        enteredParts={{}}
+        onEnteredPart={() => {}}
+        riderState={{ 'gloaming-hidden-precision': true }}
+        onToggleRider={() => {}}
+        critDouble={false}
+        onCritDouble={() => {}}
+      />
+    );
+    expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
+  });
+});
+
+// Multi-instance entry (#1019) — a mixed-type profile takes one total per part.
+describe('DamagePanel multi-instance entry', () => {
+  const flamingProfile = {
+    expression: '2d8+4',
+    typeLabel: 'piercing',
+    riders: [{
+      id: 'rune-flaming-dice', label: 'Flaming',
+      dice: '1d6', type: 'fire', defaultOn: true,
+    }],
+  };
+
+  const renderMulti = (props = {}) => render(
+    <DamagePanel
+      profile={flamingProfile}
+      hitResults={hit}
+      entered=""
+      onEntered={() => {}}
+      enteredParts={props.enteredParts ?? {}}
+      onEnteredPart={props.onEnteredPart ?? (() => {})}
+      riderState={props.riderState ?? {}}
+      onToggleRider={() => {}}
+      critDouble={false}
+      onCritDouble={() => {}}
+    />
+  );
+
+  it('renders one labeled input per typed part instead of the single total', () => {
+    renderMulti();
+    expect(screen.queryByLabelText('rolled damage total')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('rolled piercing total')).toBeInTheDocument();
+    expect(screen.getByLabelText('rolled fire total')).toBeInTheDocument();
+    expect(screen.getByText('2d8+4 piercing')).toBeInTheDocument();
+    // the fire dice appear both as the part label and on the rider toggle line
+    expect(screen.getAllByText(/1d6 fire/).length).toBeGreaterThan(0);
+  });
+
+  it('reports per-part entry through onEnteredPart with the part key', () => {
+    const onEnteredPart = vi.fn();
+    renderMulti({ onEnteredPart });
+    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    expect(onEnteredPart).toHaveBeenCalledWith('rune-flaming-dice', '4');
+  });
+
+  it('falls back to the single total once the typed rider is toggled off', () => {
+    renderMulti({ riderState: { 'rune-flaming-dice': false } });
+    expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
+    expect(screen.queryByLabelText('rolled fire total')).not.toBeInTheDocument();
+  });
 });

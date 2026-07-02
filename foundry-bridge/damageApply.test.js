@@ -134,6 +134,54 @@ describe('handleDamageApply', () => {
     expect(ack.applied).toEqual([expect.objectContaining({ entryId: 'cbt-troll' })]);
   });
 
+  test('multi-instance hits build ONE comma-joined DamageRoll (#1019)', async () => {
+    const { goblin } = setupCombat();
+
+    await handleDamageApply({
+      id: 'dmg-10',
+      sourceName: 'Flaming Longsword',
+      hits: [{
+        entryId: 'cbt-gob', name: 'Goblin Warrior', amount: 17, type: 'piercing',
+        instances: [
+          { amount: 13, type: 'piercing' },
+          { amount: 4, type: 'fire' },
+        ],
+      }],
+    });
+
+    expect(goblin.applyDamage).toHaveBeenCalledTimes(1);
+    const arg = goblin.applyDamage.mock.calls[0][0];
+    expect(arg.damage.formula).toBe('13[piercing],4[fire]');
+    expect(arg.damage.evaluated).toBe(true);
+    const ack = sendUpdate.mock.calls[0][2];
+    expect(ack.applied).toEqual([expect.objectContaining({
+      entryId: 'cbt-gob', amount: 17,
+      instances: [
+        { amount: 13, type: 'piercing' },
+        { amount: 4, type: 'fire' },
+      ],
+    })]);
+  });
+
+  test('an untyped instance contributes a bare term; non-positive instances are skipped', async () => {
+    const { goblin } = setupCombat();
+
+    await handleDamageApply({
+      id: 'dmg-11',
+      hits: [{
+        entryId: 'cbt-gob', name: 'Goblin Warrior', amount: 10, type: '',
+        instances: [
+          { amount: 6, type: 'bludgeoning' },
+          { amount: 4, type: '' },
+          { amount: 0, type: 'fire' },
+        ],
+      }],
+    });
+
+    const arg = goblin.applyDamage.mock.calls[0][0];
+    expect(arg.damage.formula).toBe('6[bludgeoning],4');
+  });
+
   test('does nothing (no ack) for empty / missing hits', async () => {
     setupCombat();
     await handleDamageApply({ id: 'dmg-7', hits: [] });

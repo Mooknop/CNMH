@@ -29,7 +29,10 @@ export function useDamageRelayAck() {
 
     const source = done.sourceName ? `${done.sourceName}: ` : '';
     (done.applied || []).forEach((a) => {
-      const typed = a.type ? `${a.amount} ${a.type}` : `${a.amount}`;
+      // Multi-instance hits (#1019) itemize per type: '13 piercing + 4 fire'.
+      const typed = Array.isArray(a.instances) && a.instances.length
+        ? a.instances.map((i) => (i.type ? `${i.amount} ${i.type}` : `${i.amount}`)).join(' + ')
+        : a.type ? `${a.amount} ${a.type}` : `${a.amount}`;
       appendLog({
         type: 'system',
         text: `Foundry: ${source}${typed} damage applied to ${a.name || a.entryId}`,
