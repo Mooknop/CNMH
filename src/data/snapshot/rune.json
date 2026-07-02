@@ -56,6 +56,44 @@
     "description": "Sharp needles impale anyone who attempts to wield this weapon other than its rightful owner. If any other creature wields the weapon, needles erupt from the hilt or shaft, dealing 1d8 piercing damage plus 1d4 persistent bleed damage to that wielder (increasing to 1d8 piercing and 1d4 persistent bleed per damage die if the weapon has a striking rune). When the rune is crafted, the crafter can broaden who may safely wield it (e.g. a particular bloodline, patron deity, or sanctification)."
   },
   {
+    "id": "corrosive",
+    "type": "property",
+    "name": "Corrosive",
+    "level": 8,
+    "price": 500,
+    "description": "Acid sizzles across the surface of the weapon. When you hit with the weapon, add 1d6 acid damage to the damage dealt. In addition, on a critical hit, the target's armor (if any) takes 3d6 acid damage (before applying Hardness); if the target has a shield raised, the shield takes this damage instead.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "acid",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "target's armor takes 3d6 acid damage (before Hardness); a raised shield takes it instead"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "corrosive-greater",
+    "type": "property",
+    "name": "Corrosive (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "Acid sizzles across the surface of the weapon. When you hit with the weapon, add 1d6 acid damage to the damage dealt. In addition, on a critical hit, the target's armor (if any) takes 6d6 acid damage (before applying Hardness); if the target has a shield raised, the shield takes this damage instead. The acid damage dealt by this weapon ignores the target's acid resistance.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "acid",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "target's armor takes 6d6 acid damage (before Hardness); a raised shield takes it instead"
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "crushing",
     "type": "property",
     "name": "Crushing",
@@ -137,12 +175,93 @@
     }
   },
   {
+    "id": "flaming",
+    "type": "property",
+    "name": "Flaming",
+    "level": 8,
+    "price": 500,
+    "description": "A weapon with this rune is empowered by flickering flame. The weapon deals an additional 1d6 fire damage on a successful Strike, plus 1d10 persistent fire damage on a critical hit.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "fire",
+      "onCrit": {
+        "persistent": "1d10"
+      }
+    }
+  },
+  {
+    "id": "flaming-greater",
+    "type": "property",
+    "name": "Flaming (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "A weapon with this rune is empowered by flickering flame. The weapon deals an additional 1d6 fire damage on a successful Strike, plus 2d10 persistent fire damage on a critical hit. Fire damage dealt by this weapon (including the persistent fire damage) ignores the target's fire resistance.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "fire",
+      "onCrit": {
+        "persistent": "2d10"
+      }
+    }
+  },
+  {
+    "id": "frost",
+    "type": "property",
+    "name": "Frost",
+    "level": 8,
+    "price": 500,
+    "description": "This weapon is empowered with freezing ice. It deals an additional 1d6 cold damage on a successful Strike. On a critical hit, the target is also slowed 1 until the end of your next turn unless it succeeds at a DC 24 Fortitude save.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "cold",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "slowed",
+            "value": 1,
+            "duration": "until the end of your next turn unless it succeeds at a DC 24 Fortitude save"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "frost-greater",
+    "type": "property",
+    "name": "Frost (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "This weapon is empowered with freezing ice. It deals an additional 1d6 cold damage on a successful Strike. On a critical hit, the target is also slowed 1 until the end of your next turn unless it succeeds at a DC 34 Fortitude save. Cold damage dealt by this weapon ignores the target's cold resistance.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "cold",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "slowed",
+            "value": 1,
+            "duration": "until the end of your next turn unless it succeeds at a DC 34 Fortitude save"
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "ghost-touch",
     "type": "property",
     "name": "Ghost Touch",
     "level": 4,
     "price": 75,
     "description": "This rune enables a weapon to damage non-physical beings, and it's exceptionally potent against incorporeal creatures, which typically have a specific weakness to ghost touch weapons. Incorporeal creatures can also touch, hold, and wield a ghost touch weapon, unlike most physical objects."
+  },
+  {
+    "id": "glamered",
+    "type": "property",
+    "armorRune": true,
+    "name": "Glamered",
+    "level": 5,
+    "price": 140,
+    "description": "This armor can be disguised with a mere thought. You can Activate the armor (envision) to change its appearance to that of ordinary or fine clothes of your imagining. The armor's statistics don't change, only its appearance. Activating the armor again returns it to its original form."
   },
   {
     "id": "greater-resilient",
@@ -602,6 +721,44 @@
     ]
   },
   {
+    "id": "shock",
+    "type": "property",
+    "name": "Shock",
+    "level": 8,
+    "price": 500,
+    "description": "Electric arcs crisscross shock weapons, dealing an extra 1d6 electricity damage on a hit. On a critical hit, electricity arcs out to deal an equal amount of electricity damage to up to two other creatures of your choice within 10 feet of the target.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "electricity",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "electricity arcs: equal electricity damage to up to two other creatures within 10 feet of the target"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "shock-greater",
+    "type": "property",
+    "name": "Shock (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "Electric arcs crisscross shock weapons, dealing an extra 1d6 electricity damage on a hit. On a critical hit, electricity arcs out to deal an equal amount of electricity damage to up to two other creatures of your choice within 10 feet of the target. Electricity damage dealt by this weapon ignores the target's electricity resistance (and the other creatures' on a critical hit).",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "electricity",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "electricity arcs: equal electricity damage to up to two other creatures within 10 feet of the target"
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "slick",
     "type": "property",
     "armorRune": true,
@@ -672,6 +829,44 @@
         "description": "The armor attacks the immobilizing creature again, as the Grow Spikes reaction."
       }
     ]
+  },
+  {
+    "id": "thundering",
+    "type": "property",
+    "name": "Thundering",
+    "level": 8,
+    "price": 500,
+    "description": "A thundering weapon lets out a peal of thunder when it hits, dealing an extra 1d6 sonic damage on a successful Strike. On a critical hit, the target must succeed at a DC 24 Fortitude save or be deafened for 1 minute (or 1 hour on a critical failure).",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "sonic",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "DC 24 Fortitude save or deafened for 1 minute (1 hour on a critical failure)"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "thundering-greater",
+    "type": "property",
+    "name": "Thundering (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "A thundering weapon lets out a peal of thunder when it hits, dealing an extra 1d6 sonic damage on a successful Strike. On a critical hit, the target must succeed at a DC 34 Fortitude save or be permanently deafened. Sonic damage dealt by this weapon ignores the target's sonic resistance.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "sonic",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "DC 34 Fortitude save or permanently deafened"
+          }
+        ]
+      }
+    }
   },
   {
     "id": "vitalizing",
