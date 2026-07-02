@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useShield } from '../../hooks/useShield';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
+import { accessoryRuneOf } from '../../utils/accessoryRunes';
 import './ShieldBlockBar.css';
 
 /**
@@ -21,6 +22,16 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
 
   if (!heldShield || !raised) return null;
 
+  // An accessory rune on the blocking shield (#1033 S2) — Retaliation, Catching
+  // — declares an `onBlock` reminder. heldShield is the normalized shield view,
+  // so the rune doc is read off the full inventory entry by uid. The app only
+  // SURFACES the follow-up (enemy HP lives in Foundry); the activation itself is
+  // spent from the item modal's frequency-gated card.
+  const blockRune = accessoryRuneOf(
+    (inventory || []).find((e) => e && e.uid === heldShield.uid)
+  );
+  const onBlock = blockRune?.onBlock || null;
+
   const { reactionAvailable, reactionSpent, hasStartedFirstTurn } = turnState;
 
   const canShieldBlock =
@@ -37,7 +48,8 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     const detail = result.broken
       ? `shield broke! (${result.prevented} prevented)`
       : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
-    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}` });
+    const runeNote = onBlock ? ` · ${blockRune.name}: ${onBlock}` : '';
+    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${runeNote}` });
   };
 
   return (
@@ -64,6 +76,11 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
       >
         🛡 Block ↩
       </button>
+      {onBlock && (
+        <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">
+          ✦ {blockRune.name}: {onBlock}
+        </div>
+      )}
     </div>
   );
 };

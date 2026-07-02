@@ -87,4 +87,51 @@ describe('ShieldBlockBar', () => {
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
     expect(screen.getByLabelText('Shield Block')).toBeDisabled();
   });
+
+  // ── Accessory-rune onBlock rider (#1033 S2) ──
+  describe('accessory-rune onBlock rider (#1033)', () => {
+    const retaliationShield = {
+      uid: 'u1',
+      name: 'Steel Shield',
+      shield: { hardness: 5, hp: 20 },
+      runes: {
+        accessory: {
+          id: 'retaliation-lesser', name: 'Retaliation (Lesser)', type: 'property', target: 'accessory',
+          onBlock: 'activate to deal 1d6 force damage to the attacker (once per hour)',
+        },
+      },
+    };
+    const setupWithRune = () =>
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={[retaliationShield]} />);
+
+    it('shows the follow-up reminder while the runed shield is raised', () => {
+      setupWithRune();
+      expect(screen.getByTestId('shieldblock-rune-rider')).toHaveTextContent(
+        'Retaliation (Lesser): activate to deal 1d6 force damage'
+      );
+    });
+
+    it('appends the rune note to the block log line', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
+      setupWithRune();
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('· Retaliation (Lesser): activate to deal 1d6 force damage'),
+      }));
+    });
+
+    it('renders no rider for a rune without onBlock, or when the entry is absent', () => {
+      render(
+        <ShieldBlockBar
+          charId="Pellias"
+          characterName="Pellias"
+          inventory={[{ uid: 'u1', name: 'Steel Shield', shield: {}, runes: { accessory: { id: 'x', name: 'X' } } }]}
+        />
+      );
+      expect(screen.queryByTestId('shieldblock-rune-rider')).not.toBeInTheDocument();
+      setup(); // empty inventory — heldShield uid unmatched
+      expect(screen.queryByTestId('shieldblock-rune-rider')).not.toBeInTheDocument();
+    });
+  });
 });
