@@ -49,6 +49,8 @@ const damageFor = (req, degree, entryId, defenses = null) => {
     // final (the relay below stays raw via rawFinal).
     typeLabel: req.damage.typeLabel,
     defenses,
+    // Per-degree multiplier overrides (#987 — Boulder Crush's full-on-crit-fail).
+    degrees: req.damage.degrees ?? null,
   });
   return dmg ? { dmg } : null;
 };

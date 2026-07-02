@@ -1038,6 +1038,7 @@ const UseAbilityModal = ({
             expression: damageProfile.expression ?? null,
             typeLabel: damageProfile.typeLabel ?? null,
             riders: savedRiders,
+            ...(damageProfile.degrees && { degrees: damageProfile.degrees }),
           };
         }
       }
