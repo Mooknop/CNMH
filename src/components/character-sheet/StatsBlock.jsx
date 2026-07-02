@@ -10,6 +10,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useResolvedEffects } from '../../hooks/useResolvedEffects';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
+import { usePlaying } from '../../hooks/usePlaying';
 import { characterHasKineticAura } from '../../utils/kineticAura';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
@@ -75,6 +76,9 @@ const StatsBlock = ({ character, characterColor }) => {
 
   // Kinetic aura (#228) — badge + out-of-encounter Dismiss for kineticists.
   const { active: auraActive, deactivate: deactivateAura } = useAura(characterKey);
+
+  // 'While playing' (#935) — Composition-sustained performance flag.
+  const { playing, stop: stopPlaying } = usePlaying(characterKey);
 
   // Harrow omen (#227) — read-only badge for harrowers; the suit picker
   // lives in the Harrowing panel.
@@ -526,6 +530,24 @@ const StatsBlock = ({ character, characterColor }) => {
               Dismiss
             </button>
           )}
+        </div>
+      )}
+
+      {/* 'While playing' (#935) — transient row while a Composition performance
+          is sustained. Normally lapses on the turn-boundary sweep / encounter
+          end; Stop is the manual override for table rulings. */}
+      {playing && (
+        <div className="aura-row">
+          <span className="aura-label">Playing</span>
+          <span className="aura-pill aura-pill--active">♪ Playing</span>
+          <button
+            type="button"
+            className="aura-dismiss-btn"
+            onClick={stopPlaying}
+            aria-label="Stop playing"
+          >
+            Stop
+          </button>
         </div>
       )}
 

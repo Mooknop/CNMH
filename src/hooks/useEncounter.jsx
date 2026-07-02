@@ -310,6 +310,17 @@ export const useEncounter = () => {
           sendUpdate(entry.charId, 'bystander', idle);
         }
 
+        // The playing state is turn-bound (#935) — no turns outside an
+        // encounter, so the performance lapses when the fight ends.
+        const playingKey = `cnmh_playing_${entry.charId}`;
+        let playing;
+        try { playing = JSON.parse(window.localStorage.getItem(playingKey)); } catch { playing = null; }
+        if (playing?.active) {
+          const idle = { active: false, ts: 0 };
+          window.localStorage.setItem(playingKey, JSON.stringify(idle));
+          sendUpdate(entry.charId, 'playing', idle);
+        }
+
         // Encounter-scoped effects (#275) — drop turn/round-bound leftovers and
         // catalog-flagged states like eld-charged so they don't linger past the
         // fight. Manual effects and clock-based immunities are kept.

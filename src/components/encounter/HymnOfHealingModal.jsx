@@ -6,6 +6,7 @@ import { useTurnState } from '../../hooks/useTurnState';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useContent } from '../../contexts/ContentContext';
 import { registerSustain } from '../../utils/sustain';
+import { markPlayingOnCast } from '../../utils/playing';
 import { hymnRank, hymnAmounts, applyHymnTempHp } from '../../utils/hymnHealing';
 import './HymnOfHealingModal.css';
 
@@ -79,6 +80,9 @@ const HymnOfHealingModal = ({ isOpen, onClose, spell, character, themeColor }) =
       charId: character?.id,
       text: `${character?.name} cast Hymn of Healing on ${target.name} — fast healing ${amounts.fastHealing}, +${amounts.tempHp} temp HP`,
     });
+
+    // 'While playing' (#935) — Hymn is a Composition cast (no-op out of combat).
+    markPlayingOnCast({ ability: spell, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
 
     setResolved({ targetName: target.name });
   };

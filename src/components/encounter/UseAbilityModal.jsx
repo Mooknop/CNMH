@@ -32,6 +32,7 @@ import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicke
 import { buildChainSelfEffect } from '../../utils/spellshapeTransform';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
+import { markPlayingOnCast } from '../../utils/playing';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { immunityConfigFor } from '../../utils/immunity';
 import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
@@ -638,6 +639,10 @@ const UseAbilityModal = ({
           : `${character.name} ${effectiveVerb} ${ability.name}`,
       });
 
+      // A Composition reaction (Counter Performance) is still a cast — it
+      // marks the caster playing (#935) whatever the opposed check said.
+      markPlayingOnCast({ ability, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
+
       if (effectiveCost === 'reaction') {
         spendReaction(`${verb} ${ability.name}`);
       }
@@ -806,6 +811,10 @@ const UseAbilityModal = ({
         appendLog,
       });
     }
+
+    // 'While playing' (#935) — a Composition cast marks the caster playing
+    // through the end of their next turn; the turn-boundary sweep lapses it.
+    markPlayingOnCast({ ability, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
 
     // Per-spell counters (#220) — Mirror Image images, Bless emanation radius.
     // Not turn-bound, so registered on any cast (the EffectsPanel surfaces them).

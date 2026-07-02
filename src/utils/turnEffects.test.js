@@ -52,6 +52,32 @@ describe('sweepExpiredOnBoundaries', () => {
     expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Reactive Strike expired for Ashka' }));
   });
 
+  it('lapses the playing state on its expiry boundary (#935)', () => {
+    localStorage.setItem('cnmh_playing_Ashka', JSON.stringify({
+      active: true, expireAt: turnEnd, ts: 1,
+    }));
+    const sendUpdate = vi.fn();
+    const appendLog = vi.fn();
+
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog, effectCatalog: [] });
+
+    expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'playing', expect.objectContaining({ active: false }));
+    expect(JSON.parse(localStorage.getItem('cnmh_playing_Ashka'))).toMatchObject({ active: false });
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Ashka stops playing' }));
+  });
+
+  it('keeps a re-upped playing state whose expiry is not yet crossed (#935)', () => {
+    localStorage.setItem('cnmh_playing_Ashka', JSON.stringify({
+      active: true, expireAt: { round: 2, entryId: 'e-ashka', boundary: 'turn-end' }, ts: 1,
+    }));
+    const sendUpdate = vi.fn();
+
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog: vi.fn(), effectCatalog: [] });
+
+    expect(sendUpdate).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem('cnmh_playing_Ashka')).active).toBe(true);
+  });
+
   it('skips enemy entries (PC keys only)', () => {
     const sendUpdate = vi.fn();
     sweepExpiredOnBoundaries({
