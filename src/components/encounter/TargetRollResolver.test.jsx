@@ -306,6 +306,74 @@ describe('TargetRollResolver', () => {
     expect(ref.current.getResults()[0].damage).toBeNull();
   });
 
+  // ── multi-instance entry (#1019) ──────────────────────────────────────────
+
+  const flamingProfile = {
+    expression: '2d8+4',
+    typeLabel: 'piercing',
+    riders: [
+      { id: 'rune-flaming-dice', label: 'Flaming', dice: '1d6', type: 'fire', defaultOn: true },
+      { id: 'ie', label: "Implement's Empowerment", bonus: { flat: 4 }, defaultOn: true },
+    ],
+  };
+
+  test('mixed-type profile: per-part totals flow into typed instances', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={flamingProfile}
+      />
+    );
+    enterD20(10); // hit
+    fireEvent.change(screen.getByLabelText('rolled piercing total'), { target: { value: '9' } });
+    // fire part still empty → damage stays null
+    expect(ref.current.getResults()[0].damage).toBeNull();
+    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    const dmg = ref.current.getResults()[0].damage;
+    // base 9 + 4 rider = 13 piercing, 4 fire
+    expect(dmg.final).toBe(17);
+    expect(dmg.instances).toEqual([
+      { amount: 13, type: 'piercing' },
+      { amount: 4, type: 'fire' },
+    ]);
+  });
+
+  test('crit doubles each typed instance separately', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={flamingProfile}
+      />
+    );
+    enterD20(20); // crit
+    fireEvent.change(screen.getByLabelText('rolled piercing total'), { target: { value: '9' } });
+    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    const dmg = ref.current.getResults()[0].damage;
+    expect(dmg.instances).toEqual([
+      { amount: 26, type: 'piercing' },
+      { amount: 8, type: 'fire' },
+    ]);
+    expect(dmg.final).toBe(34);
+  });
+
+  test('toggling the typed rider off reverts to single-total entry', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={flamingProfile}
+      />
+    );
+    enterD20(10);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Flaming/ }));
+    enterDamage(9);
+    const dmg = ref.current.getResults()[0].damage;
+    expect(dmg.final).toBe(13); // 9 + 4 rider
+    expect(dmg.instances).toBeUndefined();
+  });
+
   // ── range increments (#530) ───────────────────────────────────────────────
 
   const at2nd = { 'cbt-goblin': { feet: 150, increments: 2, penalty: -2, beyondMaxRange: false } };

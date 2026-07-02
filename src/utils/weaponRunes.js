@@ -73,8 +73,12 @@ const conditionPhrase = (c) => {
 
 /**
  * Translate one property rune's rich `rider` schema into flat #222 damage-step
- * riders. A rune yields up to: one persistent-damage rider (any hit) plus one
- * rider per crit-triggered condition (criticalSuccess only). A `vsTrait` gate is
+ * riders. A rune yields up to: one immediate typed extra-dice rider (#1019 —
+ * flaming's 1d6 fire on every hit, entered as its own damage instance), one
+ * persistent-damage rider (any hit), one crit-only persistent rider
+ * (`onCrit.persistent` — flaming's 1d10 persistent fire; crit-exclusive
+ * riders keep their authored dice, never re-doubled), plus one rider per
+ * crit-triggered condition (criticalSuccess only). A `vsTrait` gate is
  * carried as `appliesVsTrait` for the damage step to resolve against real target
  * traits. Property entries that already carry a flat #222 rider (an inline
  * `{ rider: { persistent: {dice,type} | condition | bonus } }`) pass through.
@@ -97,11 +101,34 @@ export const translatePropertyRider = (rune) => {
   const gate = vsTrait ? { appliesVsTrait: vsTrait } : {};
   const out = [];
 
+  if (rider.dice) {
+    out.push({
+      id: `${baseId}-dice`,
+      label: `${rune.name}${vsLabel}`,
+      dice: rider.dice,
+      type: rider.damageType || '',
+      ...gate,
+    });
+  }
+
   if (rider.persistent) {
     out.push({
       id: `${baseId}-persistent`,
       label: `${rune.name}${vsLabel}`,
       persistent: { dice: rider.persistent, type: rider.damageType || '' },
+      ...gate,
+    });
+  }
+
+  if (rider.onCrit?.persistent) {
+    out.push({
+      id: `${baseId}-crit-persistent`,
+      label: `${rune.name} (crit)${vsLabel}`,
+      persistent: {
+        dice: rider.onCrit.persistent,
+        type: rider.onCrit.damageType || rider.damageType || '',
+      },
+      on: ['criticalSuccess'],
       ...gate,
     });
   }

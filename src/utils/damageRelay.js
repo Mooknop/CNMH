@@ -16,6 +16,15 @@ export const DMGDONE_KEY  = 'cnmh_dmgdone_global';
 export const newDamageApplyId = () =>
   `dmg-${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
 
+// Positive typed instances off a computeTargetDamage result (#1019), or null
+// when the result was single-total entry (no instances field).
+const positiveInstances = (damage) => {
+  const list = Array.isArray(damage?.instances)
+    ? damage.instances.filter((i) => i?.amount > 0)
+    : null;
+  return list?.length ? list.map((i) => ({ amount: i.amount, type: i.type || '' })) : null;
+};
+
 /**
  * Per-target damage hits out of the confirm-time results, mirroring
  * persistentDamage.collectFromResults: ray groups ([{ rayIndex, results }])
@@ -23,13 +32,16 @@ export const newDamageApplyId = () =>
  *
  * - Ray-group hits carry the profile's `typeLabel`. Each ray is its own damage
  *   application (PF2e applies IWR per instance).
+ * - Multi-instance results (#1019 — a flaming rune's fire beside the base
+ *   piercing) additionally carry `instances: [{ amount, type }]`; the bridge
+ *   builds ONE multi-instance DamageRoll from them so PF2e nets IWR per
+ *   instance within a single application. `amount` stays the summed total.
  * - Flurry of Blows combines its damage BEFORE resistances/weaknesses, so
- *   flurry rolls merge into ONE hit per target; other chained strikes stay
- *   separate. Chain results carry no damage type today, so they relay untyped
- *   (flat application — no IWR netting until strikes carry a type).
+ *   flurry rolls merge into ONE hit per target (instances merged per type);
+ *   other chained strikes stay separate.
  * - `allowedEntryIds` (a Set) filters to enemy combatants; null allows all.
  *
- * @returns {Array<{ entryId, name, amount, type }>} hits with amount > 0
+ * @returns {Array<{ entryId, name, amount, type, instances? }>} hits with amount > 0
  */
 export const collectDamageHits = (rayGroups, chainResults, {
   typeLabel = null,
@@ -37,11 +49,18 @@ export const collectDamageHits = (rayGroups, chainResults, {
 } = {}) => {
   const allowed = (entryId) => !allowedEntryIds || allowedEntryIds.has(entryId);
   const hits = [];
+  const pushHit = (r, type) => {
+    const instances = positiveInstances(r.damage);
+    hits.push({
+      entryId: r.entryId, name: r.name || '', amount: r.damage.final, type,
+      ...(instances ? { instances } : {}),
+    });
+  };
 
   (rayGroups || []).forEach((g) => {
     (g?.results || []).forEach((r) => {
       if (r?.entryId && r.damage?.final > 0 && allowed(r.entryId)) {
-        hits.push({ entryId: r.entryId, name: r.name || '', amount: r.damage.final, type: typeLabel || '' });
+        pushHit(r, typeLabel || '');
       }
     });
   });
@@ -52,17 +71,29 @@ export const collectDamageHits = (rayGroups, chainResults, {
     rolls.forEach((rollSet) => {
       (rollSet || []).forEach((r) => {
         if (!r?.entryId || !(r.damage?.final > 0) || !allowed(r.entryId)) return;
-        const cur = sums.get(r.entryId) || { entryId: r.entryId, name: r.name || '', amount: 0, type: '' };
+        const cur = sums.get(r.entryId)
+          || { entryId: r.entryId, name: r.name || '', amount: 0, type: '', typeSums: new Map() };
         cur.amount += r.damage.final;
+        // Merge typed instances per type; an instance-less roll folds into ''.
+        const instances = positiveInstances(r.damage)
+          ?? [{ amount: r.damage.final, type: '' }];
+        instances.forEach((i) => {
+          cur.typeSums.set(i.type, (cur.typeSums.get(i.type) || 0) + i.amount);
+        });
         sums.set(r.entryId, cur);
       });
     });
-    hits.push(...sums.values());
+    sums.forEach(({ typeSums, ...hit }) => {
+      // Only carry instances when something in the flurry was actually typed.
+      const merged = [...typeSums].map(([type, amount]) => ({ amount, type }));
+      const typed = merged.some((i) => i.type);
+      hits.push(typed ? { ...hit, instances: merged } : hit);
+    });
   } else {
     rolls.forEach((rollSet) => {
       (rollSet || []).forEach((r) => {
         if (r?.entryId && r.damage?.final > 0 && allowed(r.entryId)) {
-          hits.push({ entryId: r.entryId, name: r.name || '', amount: r.damage.final, type: '' });
+          pushHit(r, '');
         }
       });
     });

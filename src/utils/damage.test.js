@@ -15,6 +15,7 @@ import {
   formatDamageBreakdown,
   buildDamageProfile,
   damageHintParts,
+  damageEntryParts,
   hintTypeLabel,
   traitGatedEntryIds,
 } from './damage';
@@ -211,6 +212,98 @@ describe('computeTargetDamage', () => {
       entered: 9, degree: 'criticalSuccess', riders: [bleed], entryId: 'e-gob',
     });
     expect(crit.persistent).toEqual([{ dice: '2d4', type: 'bleed', label: 'Persistent bleed' }]);
+  });
+
+  it('a crit-exclusive persistent rider keeps its authored dice (flaming, #1019)', () => {
+    const flamingCrit = {
+      id: 'rune-flaming-crit-persistent', label: 'Flaming (crit)',
+      persistent: { dice: '1d10', type: 'fire' }, on: ['criticalSuccess'], defaultOn: true,
+    };
+    const hit = computeTargetDamage({
+      entered: 9, degree: 'success', riders: [flamingCrit], entryId: 'e-gob',
+    });
+    expect(hit.persistent).toEqual([]);
+    const crit = computeTargetDamage({
+      entered: 9, degree: 'criticalSuccess', riders: [flamingCrit], entryId: 'e-gob',
+    });
+    // the authored 1d10 IS the crit amount — never re-doubled
+    expect(crit.persistent).toEqual([{ dice: '1d10', type: 'fire', label: 'Flaming (crit)' }]);
+  });
+
+  describe('multi-instance entry (#1019)', () => {
+    const inst = [
+      { amount: 9, type: 'piercing' },
+      { amount: 4, type: 'fire' },
+    ];
+
+    it('sums the instances into final and echoes them typed', () => {
+      const out = computeTargetDamage({ instances: inst, degree: 'success', entryId: 'e-gob' });
+      expect(out.final).toBe(13);
+      expect(out.entered).toBe(13);
+      expect(out.instances).toEqual([
+        { amount: 9, type: 'piercing' },
+        { amount: 4, type: 'fire' },
+      ]);
+    });
+
+    it('crit doubles each instance; numeric riders and weakness attach to the base instance', () => {
+      const out = computeTargetDamage({
+        instances: inst, degree: 'criticalSuccess',
+        riders: [empowerment, weakness], entryId: 'e-gob',
+      });
+      // base: (9 + 4) × 2 + 5 = 31, fire: 4 × 2 = 8
+      expect(out.instances).toEqual([
+        { amount: 31, type: 'piercing' },
+        { amount: 8, type: 'fire' },
+      ]);
+      expect(out.final).toBe(39);
+    });
+
+    it('an unfilled instance keeps the result null until every part is entered', () => {
+      expect(computeTargetDamage({
+        instances: [{ amount: 9, type: 'piercing' }, { amount: NaN, type: 'fire' }],
+        degree: 'success', entryId: 'e-gob',
+      })).toBeNull();
+    });
+
+    it('single-total entry carries no instances field', () => {
+      const out = computeTargetDamage({ entered: 9, degree: 'success', entryId: 'e-gob' });
+      expect(out.instances).toBeUndefined();
+    });
+  });
+});
+
+describe('damageEntryParts', () => {
+  const flaming = { id: 'rune-flaming-dice', label: 'Flaming', dice: '1d6', type: 'fire', defaultOn: true };
+  const precision = { id: 'gb', label: 'Hidden precision', dice: '6d4', type: 'precision', defaultOn: true };
+  const profile = {
+    expression: '2d8+4', typeLabel: 'piercing',
+    riders: [flaming, precision, { id: 'ie', label: 'flat', bonus: { flat: 4 } }],
+  };
+
+  it('splits distinct-typed rider dice into their own parts', () => {
+    expect(damageEntryParts(profile, {})).toEqual([
+      { key: 'base', dice: '2d8+4', type: 'piercing' },
+      { key: 'rune-flaming-dice', dice: '1d6', type: 'fire', label: 'Flaming' },
+    ]);
+  });
+
+  it('precision, untyped, and same-type rider dice fold into the base part', () => {
+    const sameType = { id: 'x', label: 'more fire', dice: '1d6', type: 'Fire', defaultOn: true };
+    const parts = damageEntryParts(
+      { expression: '1d8', typeLabel: 'fire', riders: [sameType, precision] }, {}
+    );
+    expect(parts).toEqual([{ key: 'base', dice: '1d8', type: 'fire' }]);
+  });
+
+  it('a toggled-off rider drops its part', () => {
+    expect(damageEntryParts(profile, { 'rune-flaming-dice': false })).toEqual([
+      { key: 'base', dice: '2d8+4', type: 'piercing' },
+    ]);
+  });
+
+  it('null profile → empty list', () => {
+    expect(damageEntryParts(null, {})).toEqual([]);
   });
 });
 

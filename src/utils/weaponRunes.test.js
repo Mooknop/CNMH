@@ -181,6 +181,41 @@ describe('translatePropertyRider', () => {
     expect(out.every((r) => r.appliesVsTrait === 'undead')).toBe(true);
   });
 
+  test('immediate dice + crit-only persistent (#1019 flaming)', () => {
+    const flaming = {
+      id: 'flaming',
+      name: 'Flaming',
+      rider: {
+        dice: '1d6',
+        damageType: 'fire',
+        onCrit: { persistent: '1d10' },
+      },
+    };
+    expect(translatePropertyRider(flaming)).toEqual([
+      {
+        id: 'rune-flaming-dice',
+        label: 'Flaming',
+        dice: '1d6',
+        type: 'fire',
+      },
+      {
+        id: 'rune-flaming-crit-persistent',
+        label: 'Flaming (crit)',
+        persistent: { dice: '1d10', type: 'fire' },
+        on: ['criticalSuccess'],
+      },
+    ]);
+  });
+
+  test('onCrit.damageType overrides the shared damageType for the crit persistent', () => {
+    const out = translatePropertyRider({
+      id: 'odd',
+      name: 'Odd',
+      rider: { dice: '1d6', damageType: 'cold', onCrit: { persistent: '1d8', damageType: 'bleed' } },
+    });
+    expect(out[1].persistent).toEqual({ dice: '1d8', type: 'bleed' });
+  });
+
   test('passes a flat #222 rider through untouched', () => {
     const flat = { rider: { persistent: { dice: '1d4', type: 'bleed' } } };
     expect(translatePropertyRider(flat)).toEqual([flat.rider]);

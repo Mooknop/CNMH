@@ -3,7 +3,7 @@ import DamagePanel from './DamagePanel';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
 import { formatModifier } from '../../utils/CharacterUtils';
-import { computeTargetDamage } from '../../utils/damage';
+import { computeTargetDamage, damageEntryParts } from '../../utils/damage';
 import './TargetRollResolver.css';
 
 // Degree labels differ by context: AC uses attack terminology, saves use save terminology.
@@ -91,7 +91,10 @@ const TargetRollResolver = forwardRef(({
     setToggledIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   // Damage step state (#222) — only meaningful when a damage profile is passed.
+  // Multi-instance profiles (#1019) collect one total per typed part in
+  // dmgParts (keyed by part key) instead of the single dmgInput.
   const [dmgInput,   setDmgInput]   = useState('');
+  const [dmgParts,   setDmgParts]   = useState({});
   const [riderState, setRiderState] = useState({});
   const [critDouble, setCritDouble] = useState(true);
 
@@ -119,6 +122,15 @@ const TargetRollResolver = forwardRef(({
 
   const enteredDamage = parseInt(dmgInput, 10);
 
+  // Multi-instance entry (#1019): more than one typed part → per-part totals
+  // feed computeTargetDamage as instances (base part first). Any unfilled part
+  // parses NaN and the compute stays null until every input is entered.
+  const entryParts = damage ? damageEntryParts(damage, riderState) : [];
+  const multiPart = entryParts.length > 1;
+  const enteredInstances = multiPart
+    ? entryParts.map((p) => ({ amount: parseInt(dmgParts[p.key], 10), type: p.type || '' }))
+    : null;
+
   const computeResults = () => {
     if (!hasD20) return null;
     return enemyTargets.map((entry) => {
@@ -135,6 +147,7 @@ const TargetRollResolver = forwardRef(({
       const dmg = damage
         ? computeTargetDamage({
             entered: isNaN(enteredDamage) ? null : enteredDamage,
+            instances: enteredInstances,
             degree,
             riders: damage.riders,
             riderState,
@@ -288,6 +301,8 @@ const TargetRollResolver = forwardRef(({
           )}
           entered={dmgInput}
           onEntered={setDmgInput}
+          enteredParts={dmgParts}
+          onEnteredPart={(key, value) => setDmgParts((cur) => ({ ...cur, [key]: value }))}
           riderState={riderState}
           onToggleRider={(id, on) => setRiderState((cur) => ({ ...cur, [id]: on }))}
           critDouble={critDouble}
