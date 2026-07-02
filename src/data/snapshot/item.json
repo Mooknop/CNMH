@@ -1110,6 +1110,32 @@
     "playingEffect": "coda-bagpipes-playing"
   },
   {
+    "id": "battle-axe",
+    "name": "Battle Axe",
+    "description": "These axes are designed explicitly as weapons, rather than tools. They typically weigh less than tree-felling axes, with a shaft reinforced with metal bands and a sharper blade, making them ideal for chopping limbs rather than wood.",
+    "traits": [
+      "Sweep"
+    ],
+    "price": 1,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Battle Axe Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "ammunition": {
       "types": [
         "arrow",
@@ -1510,6 +1536,20 @@
     "id": "bracelet-of-dashing"
   },
   {
+    "id": "breastplate",
+    "name": "Breastplate",
+    "description": "Though referred to as a breastplate, this type of armor consists of several pieces of plate or half-plate armor that protect the torso, chest, neck, and sometimes the hips and lower legs. It strategically grants some of the protection of plate while allowing greater flexibility and speed.",
+    "price": 8,
+    "weight": 2,
+    "armor": {
+      "category": "medium",
+      "acBonus": 4,
+      "dexCap": 1,
+      "strength": 16,
+      "group": "plate"
+    }
+  },
+  {
     "name": "Brooch of Shielding",
     "description": "This piece of silver or gold jewelry, adorned with miniature images of kite shields, can be used to fasten a cloak or cape. The brooch automatically absorbs magic missile spells targeting you. A brooch of shielding can absorb 30 individual magic missiles before it melts and becomes useless. Sometimes when found, a brooch of shielding has already absorbed a number of missiles.",
     "traits": [
@@ -1521,6 +1561,19 @@
     "price": 30,
     "weight": 0,
     "id": "brooch-of-shielding"
+  },
+  {
+    "id": "buckler",
+    "name": "Buckler",
+    "description": "This very small shield is a favorite of duelists and quick, lithe warriors. It's typically made of steel and strapped to your forearm. You can Raise a Shield with your buckler as long as you have that hand free or are holding a light object that's not a weapon in that hand.",
+    "price": 1,
+    "weight": 0.1,
+    "shield": {
+      "health": 6,
+      "breakThreshold": 3,
+      "hardness": 3,
+      "bonus": 1
+    }
   },
   {
     "name": "Cape of Illumination",
@@ -1646,6 +1699,42 @@
     ]
   },
   {
+    "id": "chain-mail",
+    "name": "Chain Mail",
+    "description": "A suit of chainmail consists of several pieces of armor composed of small metal rings linked together in a protective mesh. It typically includes a chain shirt, leggings, a pair of arms, and a coif, covering most of the body.",
+    "traits": [
+      "Flexible",
+      "Noisy"
+    ],
+    "price": 6,
+    "weight": 2,
+    "armor": {
+      "category": "medium",
+      "acBonus": 4,
+      "dexCap": 1,
+      "strength": 16,
+      "group": "chain"
+    }
+  },
+  {
+    "id": "chain-shirt",
+    "name": "Chain Shirt",
+    "description": "Sometimes called a hauberk, this is a long shirt constructed of the same metal rings as chainmail. However, it is much lighter than chainmail and protects only the torso, upper arms, and upper legs of its wearer.",
+    "traits": [
+      "Flexible",
+      "Noisy"
+    ],
+    "price": 5,
+    "weight": 1,
+    "armor": {
+      "category": "light",
+      "acBonus": 2,
+      "dexCap": 3,
+      "strength": 12,
+      "group": "chain"
+    }
+  },
+  {
     "name": "Chalk",
     "description": "Suitable for marking hard surfaces temporarily.",
     "image": "img_8f6168fb-f26b-4711-87fa-6f60c12c0172.jpg",
@@ -1740,6 +1829,44 @@
       }
     ],
     "id": "cloak-of-repute"
+  },
+  {
+    "id": "club",
+    "name": "Club",
+    "description": "This is a simple piece of stout wood shaped or repurposed to bludgeon an enemy. Clubs can be intricately carved pieces of martial art or as simple as a tree branch or piece of wood. It is light enough to throw.",
+    "traits": [
+      "Thrown 10ft"
+    ],
+    "price": 0,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Club Strike",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      },
+      {
+        "name": "Club (Thrown)",
+        "proficiency": "simple",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "10ft",
+        "traits": [
+          "Attack",
+          "Thrown"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
   },
   {
     "name": "Cognitive Mutagen",
@@ -1905,6 +2032,31 @@
     "id": "crescent-cross"
   },
   {
+    "id": "crossbow",
+    "name": "Crossbow",
+    "description": "This ranged weapon has a bow-like assembly mounted on a handled frame called a tiller. The tiller has a mechanism to lock the bowstring in place, attached to a trigger mechanism that releases the tension and launches a bolt. Reloading takes 1 Interact action.",
+    "traits": [],
+    "price": 3,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Crossbow",
+        "proficiency": "simple",
+        "type": "ranged",
+        "damage": "1d8",
+        "range": "120ft",
+        "reload": 1,
+        "traits": [
+          "Attack",
+          "Ranged"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "actions": [
       {
         "name": "Shield the Companion",
@@ -1933,6 +2085,52 @@
       1
     ],
     "id": "crown-of-the-companion"
+  },
+  {
+    "id": "dagger",
+    "name": "Dagger",
+    "description": "This small, bladed weapon is held in one hand and used to stab a creature in close combat. It can also be thrown.",
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Thrown 10ft",
+      "Versatile S"
+    ],
+    "price": 0.2,
+    "weight": 0.1,
+    "strikes": [
+      {
+        "name": "Dagger Strike",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d4",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Versatile S",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      },
+      {
+        "name": "Dagger (Thrown)",
+        "proficiency": "simple",
+        "type": "ranged",
+        "damage": "1d4",
+        "range": "10ft",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Versatile S",
+          "Thrown"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
   },
   {
     "actions": [
@@ -2735,6 +2933,23 @@
     "id": "everyneed-pack"
   },
   {
+    "id": "explorers-clothing",
+    "name": "Explorer's Clothing",
+    "description": "Adventurers who don't wear armor travel in durable clothing. Though it's not armor and uses your unarmored defense proficiency, it still has a Dex cap and can be etched with runes.",
+    "traits": [
+      "Comfort"
+    ],
+    "price": 0.1,
+    "weight": 0.1,
+    "armor": {
+      "category": "unarmored",
+      "acBonus": 0,
+      "dexCap": 5,
+      "strength": 10,
+      "group": "cloth"
+    }
+  },
+  {
     "name": "Eye Garnets",
     "description": "Large red rubies you pried from a statue of Xar-Azmak.",
     "image": "img_6f901c3d-945d-4592-b25f-08f42f8a1231.jpg",
@@ -2758,6 +2973,36 @@
     ],
     "usage": "held in one hand",
     "weight": 0.1
+  },
+  {
+    "id": "flail",
+    "name": "Flail",
+    "description": "This weapon consists of a wooden handle attached to a spiked ball or cylinder by a chain, rope, or strap of leather.",
+    "traits": [
+      "Disarm",
+      "Sweep",
+      "Trip"
+    ],
+    "price": 0.8,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Flail Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Disarm",
+          "Sweep",
+          "Trip",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
   },
   {
     "id": "flask-of-fellowship",
@@ -3332,6 +3577,58 @@
     "id": "gourd-head"
   },
   {
+    "id": "greataxe",
+    "name": "Greataxe",
+    "description": "This large battle axe is too heavy to wield with only one hand. Many greataxes incorporate two blades, and they are often \"bearded,\" having a hook at the bottom to increase the strength of their chopping power.",
+    "traits": [
+      "Sweep"
+    ],
+    "price": 2,
+    "weight": 2,
+    "strikes": [
+      {
+        "name": "Greataxe Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d12",
+        "traits": [
+          "Attack",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "runes": {}
+  },
+  {
+    "id": "greatsword",
+    "name": "Greatsword",
+    "description": "This massive two-handed sword is nearly 5 feet in length. Its lower blade is often somewhat dulled to allow it to be gripped for extra leverage in close-quarter fights.",
+    "traits": [
+      "Versatile P"
+    ],
+    "price": 2,
+    "weight": 2,
+    "strikes": [
+      {
+        "name": "Greatsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d12",
+        "traits": [
+          "Attack",
+          "Versatile P",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "reactions": [
       {
         "name": "Drain Reversal",
@@ -3354,6 +3651,48 @@
     "weight": 0,
     "price": 150,
     "id": "grim-ring"
+  },
+  {
+    "id": "halberd",
+    "name": "Halberd",
+    "description": "This polearm has a relatively short, 5-foot shaft. The business end is a long spike with an axe blade attached. Its reach lets you Strike enemies up to 10 feet away.",
+    "traits": [
+      "Reach",
+      "Versatile S"
+    ],
+    "price": 2,
+    "weight": 2,
+    "strikes": [
+      {
+        "name": "Halberd Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d10",
+        "traits": [
+          "Attack",
+          "Reach",
+          "Versatile S",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
+    "id": "half-plate",
+    "name": "Half Plate",
+    "description": "Half plate consists of most of the upper-body plates used in full plate, with lighter or sparser steel plate protection for the arms and legs. This provides some of the protection of full plate with greater flexibility and speed.",
+    "price": 18,
+    "weight": 3,
+    "armor": {
+      "category": "heavy",
+      "acBonus": 5,
+      "dexCap": 1,
+      "strength": 16,
+      "group": "plate"
+    }
   },
   {
     "actions": [
@@ -3455,6 +3794,20 @@
       "note": "Restores HP — enter your rolled total"
     },
     "id": "healing-potion"
+  },
+  {
+    "id": "hide-armor",
+    "name": "Hide Armor",
+    "description": "A mix of thick furs and patches of stiff hide, hide armor provides protection due to its layers of leather, although its bulkiness slows the wearer down and decreases mobility.",
+    "price": 2,
+    "weight": 2,
+    "armor": {
+      "category": "medium",
+      "acBonus": 3,
+      "dexCap": 2,
+      "strength": 14,
+      "group": "leather"
+    }
   },
   {
     "name": "Holy Water",
@@ -3773,6 +4126,20 @@
     ]
   },
   {
+    "id": "leather-armor",
+    "name": "Leather Armor",
+    "description": "A mix of flexible and molded boiled leather, a suit of this type of armor provides some protection with maximum flexibility.",
+    "price": 2,
+    "weight": 1,
+    "armor": {
+      "category": "light",
+      "acBonus": 1,
+      "dexCap": 4,
+      "strength": 10,
+      "group": "leather"
+    }
+  },
+  {
     "name": "Longbow",
     "strikes": [
       {
@@ -3803,6 +4170,58 @@
     "price": 6,
     "weight": 2,
     "id": "longbow"
+  },
+  {
+    "id": "longsword",
+    "name": "Longsword",
+    "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length.",
+    "traits": [
+      "Versatile P"
+    ],
+    "price": 1,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Longsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Versatile P",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "runes": {}
+  },
+  {
+    "id": "mace",
+    "name": "Mace",
+    "description": "With a stout haft and a heavy metal head, a mace is sturdy and reliable. Its weight and balance make it well suited to Shoving enemies off balance.",
+    "traits": [
+      "Shove"
+    ],
+    "price": 1,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Mace Strike",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Shove",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
   },
   {
     "id": "magic-scroll",
@@ -3840,6 +4259,32 @@
     "usage": "worn",
     "price": 30,
     "weight": 0
+  },
+  {
+    "id": "maul",
+    "name": "Maul",
+    "description": "Mauls are massive warhammers that must be swung with two hands.",
+    "traits": [
+      "Shove"
+    ],
+    "price": 3,
+    "weight": 2,
+    "strikes": [
+      {
+        "name": "Maul Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d12",
+        "traits": [
+          "Attack",
+          "Shove",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
   },
   {
     "name": "Midnight Milk",
@@ -5047,6 +5492,36 @@
     "id": "ragario-tattoo"
   },
   {
+    "id": "rapier",
+    "name": "Rapier",
+    "description": "The rapier is a long and thin piercing blade with a basket hilt. It is prized among many as a dueling weapon.",
+    "traits": [
+      "Deadly d8",
+      "Disarm",
+      "Finesse"
+    ],
+    "price": 2,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Rapier Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Deadly d8",
+          "Disarm",
+          "Finesse",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "name": "Rations",
     "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day.",
     "image": "img_13576d45-892f-40bc-920b-aea37a84403c.jpg",
@@ -5556,6 +6031,20 @@
     "id": "sanitizing-pin"
   },
   {
+    "id": "scale-mail",
+    "name": "Scale Mail",
+    "description": "Scale mail consists of many metal scales sewn onto a reinforced leather backing, often in overlapping rows. The individual pieces are approximately the size of fish scales.",
+    "price": 4,
+    "weight": 2,
+    "armor": {
+      "category": "medium",
+      "acBonus": 3,
+      "dexCap": 2,
+      "strength": 14,
+      "group": "composite"
+    }
+  },
+  {
     "name": "Scepter of Energy Ablation",
     "description": "Scepters of this type are often made of heavy iron and have large hand guards similar to some swords.",
     "traits": [
@@ -6046,6 +6535,63 @@
     "id": "shark-tooth-charm"
   },
   {
+    "id": "shortbow",
+    "name": "Shortbow",
+    "description": "This smaller bow is made of a single piece of wood and favored by skirmishers and cavalry.",
+    "traits": [
+      "Deadly d10"
+    ],
+    "price": 3,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Shortbow",
+        "proficiency": "martial",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "60ft",
+        "traits": [
+          "Attack",
+          "Deadly d10",
+          "Ranged"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
+    "id": "shortsword",
+    "name": "Shortsword",
+    "description": "These blades come in a variety of shapes and styles, but they are typically 2 feet long.",
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Versatile S"
+    ],
+    "price": 0.9,
+    "weight": 0.1,
+    "strikes": [
+      {
+        "name": "Shortsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Versatile S",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "name": "Shuriken",
     "strikes": {
       "proficiency": "simple",
@@ -6324,6 +6870,34 @@
     "description": "The defenses provided by this rune make it harder for foes to grab you. While wearing the etched armor, you gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze."
   },
   {
+    "id": "sling",
+    "name": "Sling",
+    "description": "Little more than a leather cup attached to a pair of straps, a sling can be used to fling smooth stones or sling bullets at a range. Propulsive: add half your Strength modifier (if positive) to damage. Reloading takes 1 Interact action.",
+    "traits": [
+      "Propulsive"
+    ],
+    "price": 0,
+    "weight": 0.1,
+    "strikes": [
+      {
+        "name": "Sling",
+        "proficiency": "simple",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "50ft",
+        "reload": 1,
+        "traits": [
+          "Attack",
+          "Propulsive",
+          "Ranged"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "name": "Soap",
     "description": "Scrub a dub dub",
     "image": "img_9593c3f4-28d3-4b6a-ba2b-22f1e50ee08c.jpg",
@@ -6489,6 +7063,44 @@
     ]
   },
   {
+    "id": "spear",
+    "name": "Spear",
+    "description": "A long metal shaft ending with a metal spike, a spear can be used one-handed as a melee weapon and can be thrown.",
+    "traits": [
+      "Thrown 20ft"
+    ],
+    "price": 0.1,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Spear Strike",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      },
+      {
+        "name": "Spear (Thrown)",
+        "proficiency": "simple",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "actions": [
       {
         "name": "Comprehend Writing",
@@ -6583,6 +7195,20 @@
     }
   },
   {
+    "id": "splint-mail",
+    "name": "Splint Mail",
+    "description": "This type of armor is chainmail augmented with pauldrons to protect the shoulders and faulds around the waist. The pauldrons are made up of overlapping steel plates or splints of metal similar to scale mail.",
+    "price": 13,
+    "weight": 3,
+    "armor": {
+      "category": "heavy",
+      "acBonus": 5,
+      "dexCap": 1,
+      "strength": 16,
+      "group": "composite"
+    }
+  },
+  {
     "id": "spoiling-buckler",
     "name": "Spoiling Buckler",
     "price": 150,
@@ -6609,6 +7235,32 @@
         "description": "Frequency once per day; Effect the buckler spawns a spherical wicker cage that tumbles at one creature within 30 feet. The creature must succeed at a DC 19 Reflex save or be carried 15 feet in a direction of your choice."
       }
     ]
+  },
+  {
+    "id": "staff",
+    "name": "Staff",
+    "description": "This long piece of wood can aid in walking and deliver a mighty blow. When gripped in two hands (Two-Hand d8), its Strikes deal 1d8 damage.",
+    "traits": [
+      "Two-Hand d8"
+    ],
+    "price": 0,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Staff Strike",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d4",
+        "traits": [
+          "Attack",
+          "Two-Hand d8",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
   },
   {
     "id": "staff-of-the-unblinking-eye",
@@ -6888,6 +7540,19 @@
       }
     ],
     "id": "star-grenade"
+  },
+  {
+    "id": "steel-shield",
+    "name": "Steel Shield",
+    "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
+    "price": 2,
+    "weight": 1,
+    "shield": {
+      "health": 20,
+      "breakThreshold": 10,
+      "hardness": 5,
+      "bonus": 2
+    }
   },
   {
     "id": "sterling-artisans-tools-talismans",
@@ -7538,6 +8203,19 @@
     "id": "torch"
   },
   {
+    "id": "tower-shield",
+    "name": "Tower Shield",
+    "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
+    "price": 10,
+    "weight": 4,
+    "shield": {
+      "health": 20,
+      "breakThreshold": 10,
+      "hardness": 5,
+      "bonus": 2
+    }
+  },
+  {
     "name": "Trickster's Mandolin",
     "description": "This ever-changing mandolin is as slippery and protean as the trickster who carries it. While playing the mandolin, you gain a +1 item bonus to Deception and Performance checks. You can Activate the mandolin to Cast a Spell from its staff spell list.",
     "traits": [
@@ -8005,6 +8683,32 @@
     "id": "war-blood-mutagen"
   },
   {
+    "id": "warhammer",
+    "name": "Warhammer",
+    "description": "This weapon has a wooden shaft ending in a large, heavy metal head. The head of the hammer might be single-sided or double-sided, but it's always capable of delivering powerful bludgeoning blows.",
+    "traits": [
+      "Shove"
+    ],
+    "price": 1,
+    "weight": 1,
+    "strikes": [
+      {
+        "name": "Warhammer Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Shove",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "runes": {}
+  },
+  {
     "freeActions": [
       {
         "name": "Warrior's Insight",
@@ -8282,6 +8986,19 @@
     "price": 3,
     "weight": 0,
     "id": "wolf-fang"
+  },
+  {
+    "id": "wooden-shield",
+    "name": "Wooden Shield",
+    "description": "Though they come in a variety of shapes and sizes, the protection offered by wooden shields comes from the stoutness of their materials. While wooden shields are less expensive than steel shields, they break more easily.",
+    "price": 1,
+    "weight": 1,
+    "shield": {
+      "health": 12,
+      "breakThreshold": 6,
+      "hardness": 3,
+      "bonus": 2
+    }
   },
   {
     "id": "wordreaper",
