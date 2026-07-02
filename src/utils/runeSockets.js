@@ -18,6 +18,7 @@ import { newEntryUid } from './uid';
 import { isArmor } from './InventoryUtils';
 import { propertySlotCapacity } from './weaponRunes';
 import { armorPropertySlotCapacity } from './armorRunes';
+import { accessoryEligible } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
@@ -126,8 +127,20 @@ export const compatibleRunes = (item, socketType, stock) => {
  * the owner's tree re-derives placement.
  */
 export const applyRune = (gear, rune) => {
+  if (!gear || !rune) return null;
+
+  // Accessory runes (#1033 S1) bypass the single-target model entirely: the
+  // host is classified by usage tags (accessoryEligible), not gearTarget, so a
+  // cloak (no target) and an armor-runed Explorer's Clothing (target 'armor')
+  // both take the one accessory slot the same way.
+  if (runeTarget(rune) === 'accessory') {
+    if (rune.type !== 'property' || !accessoryEligible(gear, rune)) return null;
+    const { state, hand, ...rest } = gear;
+    return { ...rest, uid: newEntryUid(), runes: { ...runesOf(gear), accessory: rune.id } };
+  }
+
   const target = gearTarget(gear);
-  if (!gear || !rune || !target || runeTarget(rune) !== target) return null;
+  if (!target || runeTarget(rune) !== target) return null;
   const runes = runesOf(gear);
   const property = Array.isArray(runes.property) ? runes.property : [];
   let nextRunes;

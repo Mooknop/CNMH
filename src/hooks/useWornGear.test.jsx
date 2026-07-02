@@ -194,3 +194,26 @@ describe('useWornGear', () => {
     });
   });
 });
+
+// ── Accessory-runed hosts (#1033 S1): an inscribed item is invested magic ────
+describe('useWornGear — accessory runes (#1033)', () => {
+  const menacingCloak = {
+    uid: 'k1',
+    name: 'Cloak',
+    accessoryTags: ['clothing'],
+    runes: {
+      accessory: {
+        id: 'menacing', name: 'Menacing', type: 'property', target: 'accessory',
+        modifiers: [{ stat: 'intimidation', kind: 'item', amount: 1 }],
+      },
+    },
+  };
+
+  it('contributes the rune modifiers only once the host is invested', () => {
+    expect(setup([menacingCloak])).toHaveLength(0); // inscribed but not invested
+    investedSet.add('k1');
+    const out = setup([menacingCloak]);
+    expect(out).toHaveLength(1);
+    expect(out[0].def.modifiers).toEqual([{ stat: 'intimidation', kind: 'item', amount: 1 }]);
+  });
+});

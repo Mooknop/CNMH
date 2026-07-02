@@ -5,6 +5,7 @@
 import { DEFAULT_ITEM_STATE } from './itemState';
 import { isInvestable } from './InventoryUtils';
 import { hasArmorRuneBlock, resolveArmorItem } from './armorRunes';
+import { accessoryRuneOf } from './accessoryRunes';
 
 // Damage resistance/weakness/immunity (#900/#918/#919) are special, non-bonus
 // modifiers — `{ stat: 'resistance'|'weakness'|'immunity', vs, amount? }`. They
@@ -28,8 +29,18 @@ export const isWornDefault = (e) => e?.state == null || e.state === DEFAULT_ITEM
 // uniformly without authors hand-writing the modifier shape. `type` is the `vs`
 // descriptor (e.g. 'fire', 'persistent-bleed,persistent-poison').
 export const itemModifiers = (e) => {
-  const base = hasArmorRuneBlock(e) ? resolveArmorItem(e).modifiers : e?.modifiers;
+  // Only route through the armor-rune resolver when the block actually carries
+  // armor runes — an accessory-only `runes` block (#1033: a Menacing cloak is
+  // `runes: { accessory }`) must not swallow the item's own authored modifiers.
+  const armorRuned =
+    hasArmorRuneBlock(e) &&
+    !!(e.runes.potency || e.runes.resilient || (Array.isArray(e.runes.property) && e.runes.property.length));
+  const base = armorRuned ? resolveArmorItem(e).modifiers : e?.modifiers;
   const mods = Array.isArray(base) ? [...base] : [];
+  // An inscribed accessory rune's modifiers ride on top — additive with the
+  // armor delta on a dual-host (armor runes + accessory on Explorer's Clothing).
+  const accessory = accessoryRuneOf(e);
+  if (accessory && Array.isArray(accessory.modifiers)) mods.push(...accessory.modifiers);
   const r = e?.resistance;
   if (r && typeof r.amount === 'number' && r.type) {
     mods.push({ stat: 'resistance', amount: r.amount, vs: String(r.type) });

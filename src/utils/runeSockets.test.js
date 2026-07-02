@@ -172,3 +172,43 @@ describe('power ring sockets (#967 R4)', () => {
     expect(compatibleRunes(ring(2, {}), 'property', stock).map((r) => r.id)).toEqual(['ring-energy', 'ring-calling']);
   });
 });
+
+// ── Accessory runes (#1033 S1) ────────────────────────────────────────────────
+// The one-per-item accessory slot is orthogonal to gearTarget: hosts qualify by
+// usage tags (accessoryEligible), so target-less gear (a cloak) and armor-runed
+// armor (Explorer's Clothing) both take the slot through the same applyRune.
+describe('applyRune — accessory slot (#1033)', () => {
+  const menacing = {
+    id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing',
+    price: 50, usage: ['clothing'],
+  };
+  const cloak = { uid: 'k1', name: 'Cloak', accessoryTags: ['cloak', 'clothing'] };
+
+  it('inscribes an eligible target-less host, minting a fresh uid + dropping loadout fields', () => {
+    const out = applyRune({ ...cloak, state: 'worn' }, menacing);
+    expect(out.runes).toEqual({ accessory: 'menacing' });
+    expect(out.uid).not.toBe('k1');
+    expect(out.state).toBeUndefined();
+  });
+
+  it('dual-hosts: keeps existing armor runes alongside the accessory slot', () => {
+    const explorers = {
+      uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },
+      accessoryTags: ['clothing'], runes: { potency: 1, property: ['slick'] },
+    };
+    const out = applyRune(explorers, menacing);
+    expect(out.runes).toEqual({ potency: 1, property: ['slick'], accessory: 'menacing' });
+  });
+
+  it('rejects a second accessory rune, a usage mismatch, and an invested host', () => {
+    const called = { id: 'called', type: 'property', target: 'accessory', usage: ['light'] };
+    expect(applyRune({ ...cloak, runes: { accessory: 'menacing' } }, called)).toBeNull(); // slot taken
+    expect(applyRune(cloak, called)).toBeNull(); // usage mismatch (no light tag)
+    expect(applyRune({ ...cloak, traits: ['Invested'] }, menacing)).toBeNull(); // invested magic
+  });
+
+  it('non-accessory gear paths are unchanged: an accessory rune never lands in weapon/armor sockets', () => {
+    expect(applyRune(weapon({ potency: 1 }), { ...menacing, usage: ['clothing'] })).toBeNull();
+    expect(applyRune(armor({ potency: 1 }), menacing)).toBeNull(); // armor without the clothing tag
+  });
+});

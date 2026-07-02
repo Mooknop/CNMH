@@ -15,6 +15,7 @@ import {
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
+import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName } from '../../utils/accessoryRunes';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
@@ -178,10 +179,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
   // Runed display name: armor folds potency/resilient/property into its name
   // (#727); weapons use their own rune resolver. Un-runed items pass through.
-  const displayName =
+  // An inscribed accessory rune (#1033) prefixes its name onto whatever the
+  // target-specific resolver derived (dual-host: "Menacing +1 Explorer's
+  // Clothing"); resolveAccessoryItem also grants the Magical/Invested trait
+  // chips and the rune's rider lines for display.
+  const accessory = hasAccessoryRune(item) ? resolveAccessoryItem(item) : null;
+  const displayName = accessoryDisplayName(
+    item,
     isArmor(item) ? armorDisplayName(item)
     : (item.scroll || item.wand) ? spellItemDisplayName(item)
-    : weaponDisplayName(item);
+    : weaponDisplayName(item)
+  );
 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
@@ -330,10 +338,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
       {/* ── scrollable body: every existing detail section ── */}
       <div className="loot-scroll">
-      {/* Display traits if they exist */}
-      {item.traits && item.traits.length > 0 && (
+      {/* Display traits if they exist — an inscribed accessory rune grants
+          derived Magical + Invested chips on top of the authored traits */}
+      {((accessory ? accessory.traits : item.traits) || []).length > 0 && (
         <div className="item-traits">
-          {item.traits.map((trait, i) => (
+          {(accessory ? accessory.traits : item.traits).map((trait, i) => (
             <TraitTag key={i} trait={trait} />
           ))}
         </div>
@@ -387,12 +396,12 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           </div>
         )}
 
-        {item.price && (
+        {(accessory ? accessory.price : item.price) ? (
           <div className="item-detail">
             <span className="item-detail-label">Price</span>
-            <span className="item-detail-value">{item.price} gp</span>
+            <span className="item-detail-value">{accessory ? accessory.price : item.price} gp</span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Shield properties */}
@@ -533,6 +542,27 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               {rune.description && <p className="item-rune-desc">{rune.description}</p>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Accessory rune (#1033): the one inscribed rune's name, flavor, and any
+          rider reminder lines. Rendered whether the host is a plain cloak or a
+          dual-host armor (armor runes render above in their own section). */}
+      {accessory?.rune && (
+        <div className="item-runes" data-testid="item-modal-accessory-rune">
+          <h3>Accessory Rune</h3>
+          <div className="item-rune">
+            <span className="item-rune-name">{accessory.rune.name}</span>
+            {accessory.rune.level != null && (
+              <span className="item-rune-level"> · Level {accessory.rune.level}</span>
+            )}
+            {accessory.rune.description && (
+              <p className="item-rune-desc">{accessory.rune.description}</p>
+            )}
+            {accessory.riders.map((rider) => (
+              <p key={rider.id || rider.text} className="item-rune-desc">{rider.text}</p>
+            ))}
+          </div>
         </div>
       )}
 
