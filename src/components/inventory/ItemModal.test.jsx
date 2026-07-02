@@ -1323,4 +1323,39 @@ describe('ItemModal — attunement (#invest)', () => {
     expect(mockItemAct.repair.withAction).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
   });
+
+  // ── Cost-free activation card (#1033 S2) — accessory-rune actuated ──
+  const callActuated = { name: 'Call Item', frequency: 'once per hour', actionCount: 1, cost: 'none' };
+  const whistle = { uid: 'k1', name: 'Whistle', weight: 0 };
+  const freeAct = (over = {}) =>
+    makeItemAct({ actuated: callActuated, cost: 'none', slotOptions: [], ...over });
+
+  it('renders the free activation card: Activation heading, frequency line, no slot wording', () => {
+    mockItemAct = freeAct({ activation: { ...makeItemAct().activation, canActivate: true } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={whistle} />);
+    const card = screen.getByTestId('item-actuated');
+    expect(card).toHaveTextContent('Activation');
+    expect(card).toHaveTextContent('Call Item');
+    expect(card).toHaveTextContent('Frequency: once per hour');
+    expect(card).not.toHaveTextContent('sacrifice a spell slot');
+  });
+
+  it('activating a free card records, logs without a slot label, and closes', () => {
+    const onClose = vi.fn();
+    mockItemAct = freeAct({ activation: { ...makeItemAct().activation, canActivate: true, activate: vi.fn(() => ({ ok: true })) } });
+    render(<ItemModal isOpen onClose={onClose} item={whistle} character={{ id: 'wiz', name: 'Wizzo' }} />);
+    fireEvent.click(screen.getByTestId('actuated-activate-free'));
+    expect(mockItemAct.activation.activate).toHaveBeenCalled();
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Wizzo activated Whistle — Call Item',
+    }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('a spent free activation shows the frequency lock hint — never the Overload rail', () => {
+    mockItemAct = freeAct({ gate: { available: false } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={whistle} />);
+    expect(screen.getByTestId('actuated-unavailable')).toHaveTextContent('once per hour');
+    expect(screen.queryByText(/Overload/)).not.toBeInTheDocument();
+  });
 });

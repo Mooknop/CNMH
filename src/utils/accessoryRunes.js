@@ -135,3 +135,26 @@ export const accessoryDisplayName = (item, innerName = item?.name) => {
   const rune = accessoryRuneOf(item);
   return rune?.name && innerName ? `${rune.name} ${innerName}` : innerName;
 };
+
+// The three display-only activation lists ItemActivations renders.
+const ACTIVATION_KEYS = ['actions', 'reactions', 'freeActions'];
+
+/**
+ * Project an item with its inscribed rune's display activations merged in
+ * (#1033 S2): a rune doc may carry `actions` / `reactions` / `freeActions`
+ * (Dragon's Breath's free-action metamagic, Soft-Landing's reaction), which
+ * append to the host's own lists for the shared ItemActivations renderer.
+ * Identity when the host is un-inscribed or the rune declares none — so
+ * un-runed items pass through the modal untouched.
+ */
+export const withAccessoryActivations = (item) => {
+  const rune = accessoryRuneOf(item);
+  if (!rune || !ACTIVATION_KEYS.some((k) => Array.isArray(rune[k]) && rune[k].length)) return item;
+  const merged = { ...item };
+  ACTIVATION_KEYS.forEach((k) => {
+    if (Array.isArray(rune[k]) && rune[k].length) {
+      merged[k] = [...(Array.isArray(item[k]) ? item[k] : []), ...rune[k]];
+    }
+  });
+  return merged;
+};

@@ -154,4 +154,55 @@ describe('useItemActivation', () => {
     expect(result.current.activation.canActivate).toBe(false);
     expect(result.current.overload.canOverload).toBe(false);
   });
+
+  // ── Cost-free activations (#1033 S2) — accessory-rune actuated blocks ──
+  describe('cost: none (accessory runes, #1033 S2)', () => {
+    const callItem = {
+      uid: 'k1',
+      name: 'Whistle',
+      runes: {
+        accessory: {
+          id: 'called', name: 'Called', type: 'property', target: 'accessory',
+          actuated: { name: 'Call Item', frequency: 'once per hour', actionCount: 1, cost: 'none' },
+        },
+      },
+    };
+    const setupFree = () => renderHook(() => useItemActivation(character, callItem, { nowSecs: 100 }));
+
+    it('sources the actuated block from the inscribed rune doc', () => {
+      const { result } = setupFree();
+      expect(result.current.actuated?.name).toBe('Call Item');
+      expect(result.current.cost).toBe('none');
+    });
+
+    it('activates without any slot: no sacrifice, use recorded, ok without a rank', () => {
+      slotCanSacrifice = false; // even with NO eligible slot at all
+      const { result } = setupFree();
+      expect(result.current.activation.canActivate).toBe(true);
+      expect(result.current.activation.disabledReason).toBeNull();
+      let out;
+      act(() => { out = result.current.activation.activate(); });
+      expect(sacrificeSpy).not.toHaveBeenCalled();
+      expect(recordSpy).toHaveBeenCalledTimes(1);
+      expect(out).toEqual({ ok: true });
+    });
+
+    it('is frequency-gated, with NO Overload escape once spent', () => {
+      gateAvailable = false;
+      const { result } = setupFree();
+      expect(result.current.activation.canActivate).toBe(false);
+      expect(result.current.overload.canOverload).toBe(false);
+      let out;
+      act(() => { out = result.current.activation.activate(); });
+      expect(out.ok).toBe(false);
+      expect(recordSpy).not.toHaveBeenCalled();
+    });
+
+    it("the item's own actuated block still wins over the rune's", () => {
+      const { result } = renderHook(() =>
+        useItemActivation(character, { ...callItem, actuated: { name: 'Own Block', minRank: 2 } }, { nowSecs: 100 }));
+      expect(result.current.actuated?.name).toBe('Own Block');
+      expect(result.current.cost).toBe('slot');
+    });
+  });
 });

@@ -15,11 +15,18 @@
 // Overload to fire it again — a DC 10 flat check that breaks the item either way
 // (S4). Broken blocks the ability until repaired; repair (Repair action or a
 // minimum-rank slot sacrifice) is gated until the next daily prep unlocks it.
+//
+// Cost-free variant (#1033 S2): an actuated block with `cost: 'none'` — an
+// accessory rune's activation (Called, Retaliation, …), sourced from the
+// inscribed rune doc when the item itself has no block — is gated by the
+// frequency ledger ONLY. No slot sacrifice, and no Overload/repair surface
+// (overloading is the scepter escape hatch for a spent SLOT cost).
 import { useCallback, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useFrequency } from './useFrequency';
 import { useSlotSacrifice } from './useSlotSacrifice';
 import { itemUidOf } from '../utils/affix';
+import { accessoryRuneOf } from '../utils/accessoryRunes';
 import {
   itemBrokenKey, isItemBroken, isRepairable, breakItem, repairItem,
 } from '../utils/itemBroken';
@@ -32,7 +39,10 @@ import { rollOverload } from '../utils/overload';
  */
 export const useItemActivation = (character, item, { nowSecs } = {}) => {
   const charId = character?.id || 'unknown';
-  const actuated = item?.actuated || null;
+  // The item's own block wins; an inscribed accessory rune's block (#1033 S2)
+  // is the fallback so runed hosts activate without re-authoring the item.
+  const actuated = item?.actuated || accessoryRuneOf(item)?.actuated || null;
+  const free = actuated?.cost === 'none';
   const uid = itemUidOf(item);
   const minRank = actuated?.minRank || 1;
 
@@ -60,22 +70,27 @@ export const useItemActivation = (character, item, { nowSecs } = {}) => {
     [slots.options]
   );
 
-  const canActivate = !!actuated && !isBroken && gate.available && slots.canSacrifice;
+  const canActivate = !!actuated && !isBroken && gate.available && (free || slots.canSacrifice);
   const activate = useCallback(
     (rank) => {
       if (!actuated || isBroken || !gate.available) return { ok: false };
+      if (free) {
+        record(freqAbility, { nowSecs });
+        return { ok: true };
+      }
       const sac = slots.sacrifice(chooseRank(rank));
       if (!sac.ok) return { ok: false };
       record(freqAbility, { nowSecs });
       return { ok: true, rank: sac.rank, label: sac.label };
     },
-    [actuated, isBroken, gate.available, slots, chooseRank, record, freqAbility, nowSecs]
+    [actuated, free, isBroken, gate.available, slots, chooseRank, record, freqAbility, nowSecs]
   );
 
   // Overload is offered only after the daily use is spent. The slot cost is paid
   // up front (attempting the actuated effect); the item breaks on success AND on
-  // failure — `success` says whether the effect actually resolves.
-  const canOverload = !!actuated && !isBroken && !gate.available && slots.canSacrifice;
+  // failure — `success` says whether the effect actually resolves. Cost-free
+  // activations have no slot to overload, so the surface never opens for them.
+  const canOverload = !free && !!actuated && !isBroken && !gate.available && slots.canSacrifice;
   const overload = useCallback(
     (rank, rng) => {
       if (!actuated || isBroken || gate.available) return { ok: false };
@@ -107,12 +122,13 @@ export const useItemActivation = (character, item, { nowSecs } = {}) => {
 
   return {
     actuated,
+    cost: free ? 'none' : 'slot',
     minRank,
     gate,
     broken: isBroken,
     repairable,
     slotOptions: slots.options,
-    activation: { canActivate, activate, disabledReason: slots.disabledReason },
+    activation: { canActivate, activate, disabledReason: free ? null : slots.disabledReason },
     overload: { canOverload, overload },
     repair: { repairable, minRankSlotAvailable, withAction: repairWithAction, withSlot: repairWithSlot },
   };

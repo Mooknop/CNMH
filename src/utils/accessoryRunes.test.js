@@ -5,6 +5,7 @@ import {
   accessoryEligible,
   resolveAccessoryItem,
   accessoryDisplayName,
+  withAccessoryActivations,
 } from './accessoryRunes';
 
 // Fixtures — minimal hosts + rune docs (#1033 S1).
@@ -133,5 +134,27 @@ describe('accessoryDisplayName', () => {
   it('wraps a caller-derived inner name (dual-host armor)', () => {
     const item = { name: "Explorer's Clothing", runes: { accessory: menacing, potency: 1 } };
     expect(accessoryDisplayName(item, "+1 Explorer's Clothing")).toBe("Menacing +1 Explorer's Clothing");
+  });
+});
+
+describe('withAccessoryActivations (#1033 S2)', () => {
+  const dragonsBreath = {
+    id: 'dragons-breath-1', name: "Dragon's Breath", type: 'property', target: 'accessory',
+    freeActions: [{ name: "Dragon's Breath", trigger: 'Your next action is to Cast a Spell…', description: 'Widen the spell.' }],
+  };
+
+  it('merges the rune display activations onto the host lists', () => {
+    const host = { name: 'Dueling Cape', accessoryTags: ['dueling-cape'], actions: [{ name: 'Flourish' }], runes: { accessory: dragonsBreath } };
+    const out = withAccessoryActivations(host);
+    expect(out.actions).toEqual([{ name: 'Flourish' }]); // untouched list
+    expect(out.freeActions).toEqual(dragonsBreath.freeActions);
+    expect(host.freeActions).toBeUndefined(); // never mutates the input
+  });
+
+  it('is identity for un-inscribed hosts and runes with no display activations', () => {
+    const plain = { name: 'Cloak' };
+    expect(withAccessoryActivations(plain)).toBe(plain);
+    const runedNoActs = { name: 'Cloak', runes: { accessory: menacing } };
+    expect(withAccessoryActivations(runedNoActs)).toBe(runedNoActs);
   });
 });

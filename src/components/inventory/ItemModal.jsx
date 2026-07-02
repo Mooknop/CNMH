@@ -15,7 +15,7 @@ import {
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
-import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName } from '../../utils/accessoryRunes';
+import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
@@ -107,14 +107,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   };
 
   // Actuated activation (#957 S4) — scepter-style once/day effect paid with a
-  // spell-slot sacrifice, with Overload + broken/repair. Only items carrying an
-  // `actuated` block render this surface.
-  const actuated = item.actuated || null;
+  // spell-slot sacrifice, with Overload + broken/repair. Items carrying an
+  // `actuated` block render this surface, as do accessory-runed hosts whose
+  // rune declares one (#1033 S2, cost:'none' — frequency-gated, no slot).
+  const actuated = itemAct.actuated || item.actuated || null;
+  const freeActuated = itemAct.cost === 'none';
   const who = character?.name || 'Someone';
   const doActuate = (rank) => {
     const r = itemAct.activation.activate(rank);
     if (r.ok) {
-      appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${actuated.name} (spent ${r.label})` });
+      const spent = r.label ? ` (spent ${r.label})` : '';
+      appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${actuated.name}${spent}` });
       onClose();
     }
   };
@@ -601,14 +604,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Actions / Reactions / Free Actions (shared with the shop preview, #882) */}
-      <ItemActivations item={item} />
+      {/* Actions / Reactions / Free Actions (shared with the shop preview, #882);
+          an inscribed rune's display activations merge in (#1033 S2) */}
+      <ItemActivations item={withAccessoryActivations(item)} />
 
       {/* Actuated activation (#957 S4) — interactive once/day + Overload +
           broken/repair for scepter-style items that declare an `actuated` block. */}
       {actuated && (
         <div className="item-actuated" data-testid="item-actuated">
-          <h3>Actuated</h3>
+          <h3>{freeActuated ? 'Activation' : 'Actuated'}</h3>
           <div className="item-action actuated-card">
             <div className="action-header">
               <span className="action-name">{actuated.name}</span>
@@ -623,7 +627,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             )}
             {actuated.description && <p className="action-description">{actuated.description}</p>}
             <p className="actuated-cost">
-              Cost: sacrifice a spell slot of rank {itemAct.minRank}+ · once per day
+              {freeActuated
+                ? `Frequency: ${actuated.frequency || 'once per day'}`
+                : `Cost: sacrifice a spell slot of rank ${itemAct.minRank}+ · once per day`}
             </p>
 
             {itemAct.broken ? (
@@ -657,6 +663,18 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                 )}
               </div>
             ) : itemAct.activation.canActivate ? (
+              freeActuated ? (
+                <div className="actuated-controls">
+                  <button
+                    type="button"
+                    className="btn-small btn-primary"
+                    data-testid="actuated-activate-free"
+                    onClick={() => doActuate()}
+                  >
+                    Activate
+                  </button>
+                </div>
+              ) : (
               <div className="actuated-controls">
                 <span className="actuated-label">Activate — spend a slot:</span>
                 <div className="actuated-ranks">
@@ -673,6 +691,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                   ))}
                 </div>
               </div>
+              )
             ) : itemAct.overload.canOverload ? (
               <div className="actuated-controls">
                 <p className="actuated-hint">
@@ -695,7 +714,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             ) : (
               <p className="actuated-hint" data-testid="actuated-unavailable">
                 {!itemAct.gate.available
-                  ? 'Daily use spent — no spell slot left to Overload.'
+                  ? freeActuated
+                    ? `Used — ${actuated.frequency || 'once per day'}; the clock frees it up.`
+                    : 'Daily use spent — no spell slot left to Overload.'
                   : itemAct.activation.disabledReason || 'Unavailable.'}
               </p>
             )}

@@ -3,7 +3,15 @@
   display: flex;
   gap: var(--space-2);
   align-items: center;
+  flex-wrap: wrap;
   margin-top: var(--space-2);
+}
+
+/* Accessory-rune follow-up reminder (#1033 S2) — full-width line under the bar. */
+.ttp-shieldblock-rider {
+  flex-basis: 100%;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
 }
 
 .ttp-shieldblock-input {
