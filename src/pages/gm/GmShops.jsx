@@ -10,6 +10,7 @@ import {
   shopOffersRunes,
   isRuneServiceWare,
   runeOfferingSummary,
+  eligibleHostItems,
   maxLevelForTarget,
   RUNE_TARGETS,
 } from '../../utils/shopUtils';
@@ -683,7 +684,7 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
 // and allowed rarities; a live summary shows coverage (off the G1 selector).
 // Targets empty = none (unlike traditions, a rune offering needs ≥1 target);
 // rarities empty = common only.
-const RunesmithingSection = ({ config, runes, onChange }) => {
+const RunesmithingSection = ({ config, runes, items, onChange }) => {
   const setField = (patch) => onChange({ ...config, ...patch });
   const toggleTarget = (t) => setField({ [t]: !config[t] });
   const setLevel = (t, v) => setField({ levels: { ...config.levels, [t]: v } });
@@ -693,16 +694,19 @@ const RunesmithingSection = ({ config, runes, onChange }) => {
   };
   const enabled = RUNE_TARGET_LABELS.filter(([t]) => config[t]);
 
-  const summary = useMemo(() => {
-    if (enabled.length === 0) return null;
+  // The live coverage summary + the base gear this offering auto-stocks in the
+  // player storefront (#1044 — specific-target services only; the all-target
+  // general runesmith expands to none).
+  const { summary, hosts } = useMemo(() => {
+    if (enabled.length === 0) return { summary: null, hosts: [] };
     const ware = {
       runeService: true,
       targets: enabled.map(([t]) => t),
       maxLevel: Object.fromEntries(enabled.map(([t]) => [t, parseInt(config.levels?.[t], 10) || 1])),
       rarities: config.rarities,
     };
-    return runeOfferingSummary(ware, runes);
-  }, [enabled, config, runes]);
+    return { summary: runeOfferingSummary(ware, runes), hosts: eligibleHostItems(ware, items, runes) };
+  }, [enabled, config, runes, items]);
 
   return (
     <div className="gm-shop-offers" data-testid="rune-offerings">
@@ -759,7 +763,18 @@ const RunesmithingSection = ({ config, runes, onChange }) => {
           Not selling runes. Choose a target above to offer runesmithing services.
         </p>
       ) : (
-        <p className="gm-shop-offer-summary" data-testid="rune-summary">{summary.text}</p>
+        <>
+          <p className="gm-shop-offer-summary" data-testid="rune-summary">{summary.text}</p>
+          {hosts.length > 0 ? (
+            <p className="gm-count gm-shop-offer-hosts" data-testid="rune-host-summary">
+              Also auto-stocks {hosts.length} base gear item{hosts.length === 1 ? '' : 's'} these runes etch onto (shown in the player Wares tab).
+            </p>
+          ) : enabled.length === RUNE_TARGET_LABELS.length ? (
+            <p className="gm-count gm-shop-offer-hosts" data-testid="rune-host-summary">
+              General runesmith (every target) — base gear is not auto-stocked.
+            </p>
+          ) : null}
+        </>
       )}
     </div>
   );
@@ -768,7 +783,7 @@ const RunesmithingSection = ({ config, runes, onChange }) => {
 // The per-location authoring surface. `onBack` is supplied only by finders that
 // hide the list (the Command finder, S5); inside PageEditorShell the list stays
 // visible, so no back button renders.
-const Workspace = ({ location, shops, spells, runes, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
+const Workspace = ({ location, shops, spells, runes, items, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
   const loreId = location.id;
   const entry = shops[loreId];
   const [setUp, setSetUp] = useState(() => isSetUp(loreId, shops));
@@ -966,6 +981,7 @@ const Workspace = ({ location, shops, spells, runes, catalog, chips, catalogMap,
           <RunesmithingSection
             config={runeConfig}
             runes={runes}
+            items={items}
             onChange={editRuneConfig}
           />
         </>
@@ -1133,6 +1149,7 @@ const GmShops = () => {
             shops={shops}
             spells={spells}
             runes={runes}
+            items={items}
             catalog={catalog}
             chips={chips}
             catalogMap={catalogMap}

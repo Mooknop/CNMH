@@ -756,6 +756,45 @@ describe('ShopStorefront', () => {
     });
   });
 
+  describe('rune-service base gear in Wares (#1044)', () => {
+    const svcRunes = [
+      { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50, usage: ['clothing'] },
+      { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 }, // weapon
+    ];
+    const svcItems = [
+      ...items,
+      { id: 'cloak', name: 'Cloak', price: 0.5, weight: 0.1, accessoryTags: ['cloak', 'clothing'] },
+      { id: 'longsword', name: 'Longsword', price: 1, strikes: [{}], runes: {} },
+    ];
+    const renderSvc = (wares) => {
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', wares } }}
+          items={svcItems} runes={svcRunes} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+    };
+
+    it('a specific-target service stocks its base gear as buyable wares', () => {
+      renderSvc([{ runeService: true, targets: ['accessory'], maxLevel: 5 }]);
+      const grid = screen.getByLabelText('wares');
+      expect(within(grid).getByTestId('ware-cloak')).toBeInTheDocument();
+      // The weapon target is off — no base weapons.
+      expect(within(grid).queryByTestId('ware-longsword')).not.toBeInTheDocument();
+    });
+
+    it('a hand-stocked ware wins over the derived host (shows once)', () => {
+      renderSvc([{ ref: 'cloak' }, { runeService: true, targets: ['accessory'], maxLevel: 5 }]);
+      expect(screen.getAllByTestId('ware-cloak')).toHaveLength(1);
+    });
+
+    it('the general runesmith (no explicit targets) stocks no base gear', () => {
+      renderSvc([{ ref: 'antidote' }, { runeService: true, maxLevel: 20 }]);
+      expect(screen.getByLabelText('wares')).toBeInTheDocument(); // antidote still sells
+      expect(screen.queryByTestId('ware-cloak')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('ware-longsword')).not.toBeInTheDocument();
+    });
+  });
+
   describe('multi-shop picker', () => {
     const second = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
     it('lists shops and opens one, with Back returning to the picker', () => {
