@@ -12,7 +12,13 @@ vi.mock('./contentUtils', async () => {
         { id: 'q1', title: 'A' }, // unchanged in live
         { id: 'q2', title: 'B' }, // absent from live -> added
       ],
-      item: [{ id: 'i1', name: 'X', traits: ['a', 'b'] }], // diverged in live -> changed
+      item: [
+        { id: 'i1', name: 'X', traits: ['a', 'b'] }, // diverged in live -> changed
+        { id: 'i2', name: 'Y' }, // live has GM-assigned image only -> unchanged
+        { id: 'i3', name: 'Z-new' }, // diverged AND live has an image -> changed, image preserved
+        { id: 'i4', name: 'W', image: 'img_stale.jpg', imagePosition: { x: 10, y: 10 } }, // stale seed image, GM removed it live -> unchanged
+        { id: 'i5', name: 'V', image: 'img_seed.jpg' }, // absent from live -> added whole, seed image kept
+      ],
       character: [{ id: 'Pellias', name: 'P', authored: true }], // excluded -> never written
       theme: [{ id: 'campaign', preset: 'ember' }], // excluded -> never written
       // Stale seed lore (no parent/related) — excluded so it can't clobber the
@@ -30,7 +36,18 @@ const LIVE = {
     { id: 'q1', title: 'A' }, // matches bundle (id key reordered to prove order-insensitivity)
     { id: 'qOld', title: 'gone from bundle' }, // live-only -> reported, not deleted
   ],
-  item: [{ name: 'X-changed', id: 'i1', traits: ['a', 'b'] }], // changed value
+  item: [
+    { name: 'X-changed', id: 'i1', traits: ['a', 'b'] }, // changed value
+    // GM assigned art after the last snapshot pull — the only drift vs the
+    // bundle. The apply must NOT revert it (2026-07-02 incident) nor even
+    // count the doc as changed.
+    { id: 'i2', name: 'Y', image: 'img_y.jpg', imagePosition: { x: 30, y: 60 } },
+    // Authored change in the bundle AND a live image assignment: the write
+    // must carry the bundled name but keep the live image.
+    { id: 'i3', name: 'Z', image: 'img_z.jpg', imagePosition: { x: 50, y: 50 } },
+    // GM removed the image live; the stale seed copy must not resurrect it.
+    { id: 'i4', name: 'W' },
+  ],
   character: [{ id: 'Pellias', name: 'P', liveInventory: ['sword'] }], // must survive untouched
   // Vault-authored lore: parent/related exist only here, never in the seed. A
   // content apply must not touch it or those edges would be wiped (#849).
@@ -54,6 +71,11 @@ const installFetch = ({ envelope = true } = {}) => {
 const putCalls = (fn) =>
   fn.mock.calls.filter(([, opts]) => opts && opts.method === 'PUT').map(([url]) => url);
 
+const putBody = (fn, url) => {
+  const call = fn.mock.calls.find(([u, opts]) => u === url && opts && opts.method === 'PUT');
+  return call ? JSON.parse(call[1].body) : undefined;
+};
+
 afterEach(() => vi.restoreAllMocks());
 
 describe('applyContentDiff', () => {
@@ -63,8 +85,10 @@ describe('applyContentDiff', () => {
     const puts = putCalls(fn);
     expect(puts).toContain('/api/gm/quest/q2'); // added
     expect(puts).toContain('/api/gm/item/i1'); // changed
+    expect(puts).toContain('/api/gm/item/i3'); // changed (authored drift)
+    expect(puts).toContain('/api/gm/item/i5'); // added
     expect(puts).not.toContain('/api/gm/quest/q1'); // unchanged — skipped
-    expect(puts).toHaveLength(2);
+    expect(puts).toHaveLength(4);
   });
 
   it('reports added / changed / unchanged / live-only per collection', async () => {
@@ -77,10 +101,45 @@ describe('applyContentDiff', () => {
       liveOnly: ['qOld'],
     });
     expect(report.item).toEqual({
-      added: [],
-      changed: ['i1'],
-      unchanged: 0,
+      added: ['i5'],
+      changed: ['i1', 'i3'],
+      unchanged: 2, // i2 (live image only) and i4 (stale seed image) — see below
       liveOnly: [],
+    });
+  });
+
+  describe('live image preservation (LIVE_IMAGE_FIELDS)', () => {
+    it('does not write a doc whose only drift is a GM-assigned image', async () => {
+      const fn = installFetch();
+      await applyContentDiff();
+      expect(putCalls(fn)).not.toContain('/api/gm/item/i2');
+    });
+
+    it('keeps the live image/imagePosition when writing an authored change', async () => {
+      const fn = installFetch();
+      await applyContentDiff();
+      expect(putBody(fn, '/api/gm/item/i3')).toEqual({
+        id: 'i3',
+        name: 'Z-new', // authored change from the bundle
+        image: 'img_z.jpg', // live GM assignment preserved
+        imagePosition: { x: 50, y: 50 },
+      });
+    });
+
+    it('does not resurrect a stale seed image the GM removed live', async () => {
+      const fn = installFetch();
+      await applyContentDiff();
+      expect(putCalls(fn)).not.toContain('/api/gm/item/i4');
+    });
+
+    it('writes a brand-new doc whole, seed image included', async () => {
+      const fn = installFetch();
+      await applyContentDiff();
+      expect(putBody(fn, '/api/gm/item/i5')).toEqual({
+        id: 'i5',
+        name: 'V',
+        image: 'img_seed.jpg',
+      });
     });
   });
 
