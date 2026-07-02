@@ -74,6 +74,18 @@ const hasAuthoredInvestedTrait = (item) =>
   item.traits.some((t) => String(t).toLowerCase() === 'invested');
 
 /**
+ * Whether an item can carry the accessory slot AT ALL (#1033 S5): it satisfies
+ * at least one usage tag and isn't pre-existing invested magic. The host-level
+ * counterpart of accessoryEligible (which additionally matches a specific rune
+ * and requires the slot empty) — a host with a filled slot is still a host, so
+ * the socket board keeps rendering its inscription.
+ */
+export const isAccessoryHost = (item) =>
+  !!item && typeof item === 'object' &&
+  !hasAuthoredInvestedTrait(item) &&
+  accessoryUsageTags(item).length > 0;
+
+/**
  * Whether `rune` can be inscribed onto `item`: an accessory rune whose usage
  * list intersects the host's tags, onto a host that is neither invested magic
  * nor already inscribed (max one).

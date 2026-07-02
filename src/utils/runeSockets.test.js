@@ -1,4 +1,4 @@
-import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune, projectStagedGear, ringSocketCapacity } from './runeSockets';
+import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune, projectStagedGear, ringSocketCapacity, inEtchList } from './runeSockets';
 
 // Fixtures — minimal gear + rune docs.
 const weapon = (runes) => ({ uid: 'w1', name: 'Longsword', strikes: [{}], runes });
@@ -210,5 +210,58 @@ describe('applyRune — accessory slot (#1033)', () => {
   it('non-accessory gear paths are unchanged: an accessory rune never lands in weapon/armor sockets', () => {
     expect(applyRune(weapon({ potency: 1 }), { ...menacing, usage: ['clothing'] })).toBeNull();
     expect(applyRune(armor({ potency: 1 }), menacing)).toBeNull(); // armor without the clothing tag
+  });
+});
+
+// The S5 storefront surface (#1033): the accessory socket on the board, its
+// usage-tag picker, and the etch-list predicate that keeps trinkets off the
+// board until a shop actually stocks something they could take.
+describe('accessory socket + etch list (#1033 S5)', () => {
+  const menacing = { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', usage: ['clothing'] };
+  const catching = { id: 'catching', type: 'property', target: 'accessory', name: 'Catching', usage: ['shield'] };
+  const preserving = { id: 'preserving', type: 'property', target: 'accessory', name: 'Preserving', usage: ['container'] };
+  const cloak = { uid: 'k1', name: 'Cloak', accessoryTags: ['cloak', 'clothing'], weight: 0.1 };
+
+  it('an accessory-only host carries just the one accessory socket', () => {
+    expect(gearSockets(cloak)).toEqual([
+      { type: 'accessory', target: 'accessory', filled: false, rune: null },
+    ]);
+  });
+
+  it('an inscribed host shows its rune in a filled accessory socket', () => {
+    const sockets = gearSockets({ ...cloak, runes: { accessory: 'menacing' } });
+    expect(sockets).toEqual([
+      { type: 'accessory', target: 'accessory', filled: true, rune: 'menacing' },
+    ]);
+  });
+
+  it('a dual-host lists the accessory socket after its armor sockets', () => {
+    const explorers = {
+      uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },
+      accessoryTags: ['clothing'], runes: { potency: 1 },
+    };
+    expect(gearSockets(explorers).map((s) => s.type)).toEqual(['potency', 'resilient', 'property', 'accessory']);
+  });
+
+  it('derived tags open the socket too (a shield); invested/untagged gear gets none', () => {
+    expect(gearSockets({ uid: 'b1', name: 'Buckler', shield: { hardness: 3 } }).map((s) => s.type)).toEqual(['accessory']);
+    expect(gearSockets({ uid: 'x1', name: 'Cloak of Repute', accessoryTags: ['cloak'], traits: ['Invested'] })).toEqual([]);
+    expect(gearSockets({ name: 'Rope', weight: 1 })).toEqual([]);
+  });
+
+  it('compatibleRunes matches the accessory socket by usage tags and closes once inscribed', () => {
+    const stock = [menacing, catching, vitalizing];
+    expect(compatibleRunes(cloak, 'accessory', stock)).toEqual([menacing]); // catching needs a shield; vitalizing is a weapon rune
+    expect(compatibleRunes({ ...cloak, runes: { accessory: 'menacing' } }, 'accessory', stock)).toEqual([]); // one rune, no upgrade path
+  });
+
+  it('inEtchList: target gear always; accessory-only hosts need a compatible rune in stock', () => {
+    expect(inEtchList(weapon({}), [])).toBe(true); // weapons list regardless of stock
+    expect(inEtchList(cloak, [menacing])).toBe(true);
+    expect(inEtchList(cloak, [catching])).toBe(false); // stocked, but nothing a cloak can take
+    expect(inEtchList(cloak, [])).toBe(false);
+    expect(inEtchList({ ...cloak, runes: { accessory: 'menacing' } }, [menacing])).toBe(false); // inscribed — nothing left to etch
+    expect(inEtchList({ uid: 'p1', name: 'Backpack', container: { capacity: 4 } }, [preserving])).toBe(true); // derived container tag
+    expect(inEtchList({ name: 'Rope', weight: 1 }, [menacing])).toBe(false);
   });
 });

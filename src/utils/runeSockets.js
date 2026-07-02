@@ -18,7 +18,7 @@ import { newEntryUid } from './uid';
 import { isArmor } from './InventoryUtils';
 import { propertySlotCapacity } from './weaponRunes';
 import { armorPropertySlotCapacity } from './armorRunes';
-import { accessoryEligible } from './accessoryRunes';
+import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
@@ -51,31 +51,40 @@ const propertyCapacity = (item, target) =>
 /**
  * Derive the socket view for a piece of gear, in display order: potency, the
  * target's second fundamental (striking | resilient), then one property socket
- * per potency tier. Each socket: { type, target, filled, value?/rune?, index? }.
- * Returns [] for non-runesmithable gear.
+ * per potency tier, then — on any usage-tagged host (#1033 S5) — the single
+ * accessory socket. Each socket: { type, target, filled, value?/rune?, index? }.
+ * Returns [] for gear that is neither runesmithable nor an accessory host; an
+ * accessory-ONLY host (a cloak, a shield — no gearTarget) carries just the one
+ * accessory socket.
  */
 export const gearSockets = (item) => {
   const target = gearTarget(item);
-  if (!target) return [];
   const runes = runesOf(item);
-  const property = Array.isArray(runes.property) ? runes.property : [];
-  const cap = propertyCapacity(item, target);
-
-  // A power ring has NO fundamental sockets — its imbue capacity is fixed by
-  // grade (ringSockets), so every socket is a property (imbue) socket. Weapon
-  // and armor lead with their two fundamentals (potency + striking|resilient)
-  // before the potency-gated property sockets.
   const sockets = [];
-  if (target !== 'ring') {
-    sockets.push({ type: 'potency', target, filled: (runes.potency || 0) > 0, value: runes.potency || 0 });
-    if (target === 'weapon') {
-      sockets.push({ type: 'striking', target, filled: !!runes.striking, value: runes.striking || null });
-    } else {
-      sockets.push({ type: 'resilient', target, filled: !!runes.resilient, value: runes.resilient || null });
+  if (target) {
+    const property = Array.isArray(runes.property) ? runes.property : [];
+    const cap = propertyCapacity(item, target);
+
+    // A power ring has NO fundamental sockets — its imbue capacity is fixed by
+    // grade (ringSockets), so every socket is a property (imbue) socket. Weapon
+    // and armor lead with their two fundamentals (potency + striking|resilient)
+    // before the potency-gated property sockets.
+    if (target !== 'ring') {
+      sockets.push({ type: 'potency', target, filled: (runes.potency || 0) > 0, value: runes.potency || 0 });
+      if (target === 'weapon') {
+        sockets.push({ type: 'striking', target, filled: !!runes.striking, value: runes.striking || null });
+      } else {
+        sockets.push({ type: 'resilient', target, filled: !!runes.resilient, value: runes.resilient || null });
+      }
+    }
+    for (let i = 0; i < cap; i += 1) {
+      sockets.push({ type: 'property', target, index: i, filled: property[i] != null, rune: property[i] != null ? property[i] : null });
     }
   }
-  for (let i = 0; i < cap; i += 1) {
-    sockets.push({ type: 'property', target, index: i, filled: property[i] != null, rune: property[i] != null ? property[i] : null });
+  // The one accessory slot rides AFTER the target sockets — orthogonal to
+  // gearTarget, so a dual-host (armor-runed Explorer's Clothing) shows both.
+  if (isAccessoryHost(item)) {
+    sockets.push({ type: 'accessory', target: 'accessory', filled: runes.accessory != null, rune: runes.accessory != null ? runes.accessory : null });
   }
   return sockets;
 };
@@ -104,9 +113,14 @@ export const projectStagedGear = (gear, stagedRunes) => {
  * for a fundamental socket — the matching fundamental kind. A potency rune only
  * qualifies if it raises the current tier (an upgrade, never a side- or down-
  * grade); a striking/resilient rune only if it differs from what's equipped.
- * `stock` is an array of rune docs (property or fundamental).
+ * The accessory socket (#1033 S5) matches by usage tags instead (and closes
+ * once inscribed — one rune, no upgrade path). `stock` is an array of rune docs
+ * (property or fundamental).
  */
 export const compatibleRunes = (item, socketType, stock) => {
+  if (socketType === 'accessory') {
+    return (Array.isArray(stock) ? stock : []).filter((r) => accessoryEligible(item, r));
+  }
   const target = gearTarget(item);
   if (!target) return [];
   const runes = runesOf(item);
@@ -166,3 +180,18 @@ export const applyRune = (gear, rune) => {
   const { state, hand, ...rest } = gear;
   return { ...rest, uid: newEntryUid(), runes: nextRunes };
 };
+
+/**
+ * Whether a piece of gear belongs on the storefront etch list (#1033 S5).
+ * Target gear (weapon / armor / power ring) always shows, as before. An
+ * accessory-ONLY host (a cloak, boots, a shield — no target sockets) shows
+ * only when the shop stocks at least one rune it could actually take, so
+ * every light-bulk trinket in a full inventory doesn't flood the board — and
+ * an already-inscribed one drops off again (one rune per item, nothing left
+ * to etch; its inscription still shows on any dual-host card and in the
+ * inventory ItemModal). `stock` is the shop's rune-doc list (the same one
+ * the socket picker reads).
+ */
+export const inEtchList = (item, stock) =>
+  !!gearTarget(item) ||
+  (isAccessoryHost(item) && compatibleRunes(item, 'accessory', stock).length > 0);
