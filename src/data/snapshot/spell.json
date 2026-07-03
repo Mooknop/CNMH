@@ -596,6 +596,25 @@
     ]
   },
   {
+    "id": "clairaudience",
+    "name": "Clairaudience",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Scrying"
+    ],
+    "actions": "1 Minute",
+    "range": "500 feet",
+    "duration": "10 minutes",
+    "description": "You create an invisible floating ear at a location within range (even if it's outside your line of sight or line of effect). It can't move, but you can hear through the ear as if using your normal auditory senses.",
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "clairvoyance",
     "name": "Clairvoyance",
     "level": 4,
@@ -1077,6 +1096,30 @@
     },
     "traditions": [
       "arcane",
+      "occult"
+    ]
+  },
+  {
+    "id": "dream-message",
+    "name": "Dream Message",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Mental"
+    ],
+    "actions": "10 Minutes",
+    "range": "planetary",
+    "targets": "1 creature you know by name and have met in person",
+    "duration": "until your next daily preparations",
+    "description": "You send a message to your target's dream. The message is one-way, up to 1 minute of speech (roughly 150 words). If the target is asleep, they receive the message instantly. If not, they receive it the next time they sleep. As soon as they receive it, the spell ends, and you know the message was sent.",
+    "heightened": {
+      "4th": "You can target up to 10 creatures you know by name and have met in person. You must send the same message to all of them; the spell ends for each creature individually."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
       "occult"
     ]
   },
@@ -1595,6 +1638,38 @@
     },
     "traditions": [
       "occult"
+    ]
+  },
+  {
+    "id": "heal",
+    "name": "Heal",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Healing",
+      "Manipulate",
+      "Vitality"
+    ],
+    "actions": "One to Three Actions",
+    "range": "varies",
+    "targets": "1 willing living creature or 1 undead",
+    "defense": "basic Fortitude",
+    "description": "You channel vital energy to heal the living or damage the undead. If the target is a willing living creature, you restore 1d8 Hit Points. If the target is undead, you deal that amount of vitality damage to it, and it gets a basic Fortitude save. The number of actions you spend when Casting this Spell determines its targets, range, area, and other parameters.\n\nOne action: The spell has a range of touch.\n\nTwo actions (concentrate): The spell has a range of 30 feet. If you're healing a living creature, increase the Hit Points restored by 8.\n\nThree actions (concentrate): You disperse vital energy in a 30-foot emanation. This targets all living and undead creatures in the burst.",
+    "damageData": {
+      "base": "1d8",
+      "type": "vitality",
+      "heightened": {
+        "+1": {
+          "base": "1d8"
+        }
+      }
+    },
+    "heightened": {
+      "+1": "The amount of healing or damage increases by 1d8, and the extra healing for the 2-action version increases by 8."
+    },
+    "traditions": [
+      "divine",
+      "primal"
     ]
   },
   {
@@ -3386,6 +3461,33 @@
     ]
   },
   {
+    "id": "stinking-cloud",
+    "name": "Stinking Cloud",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Poison"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "area": "20-foot burst",
+    "defense": "Fortitude",
+    "duration": "1 minute",
+    "description": "You create a cloud of putrid mist in the area. The cloud functions as mist except it sickens creatures that end their turns within the cloud. (The concealed condition is not a poison effect.)",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature is sickened 1.",
+      "Failure": "The creature is sickened 1 and slowed 1 while in the cloud.",
+      "Critical Failure": "The creature is sickened 2 and slowed 1 until it leaves the cloud."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "stupefy",
     "name": "Stupefy",
     "level": 2,
@@ -3904,6 +4006,37 @@
     ]
   },
   {
+    "id": "wall-of-fire",
+    "name": "Wall of Fire",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Fire",
+      "Manipulate"
+    ],
+    "actions": "Three Actions",
+    "range": "120 feet",
+    "duration": "1 minute",
+    "description": "You raise a blazing wall that burns creatures passing through it. You create either a 5-foot-thick wall of flame in a straight line up to 60 feet long and 10 feet high, or a 5-foot-thick, 10-foot-radius ring of flame with the same height. The wall stands vertically in either form; if you wish, the wall can be of a shorter length or height. Everything on each side of the wall is concealed from creatures on the opposite side. Any creature that crosses the wall or is occupying the wall's area at the start of its turn takes 4d6 fire damage.",
+    "damageData": {
+      "base": "4d6",
+      "type": "fire",
+      "heightened": {
+        "+1": {
+          "base": "1d6"
+        }
+      }
+    },
+    "heightened": {
+      "+1": "The fire damage increases by 1d6."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "wall-of-time",
     "name": "Wall of Time",
     "level": 5,
@@ -3951,6 +4084,32 @@
     "traditions": [
       "arcane",
       "occult"
+    ]
+  },
+  {
+    "id": "weapon-storm",
+    "name": "Weapon Storm",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "defense": "Reflex",
+    "description": "You swing a weapon you're holding, and the weapon magically multiplies into duplicates that swipe at all creatures in either a cone or an emanation. This flurry deals four dice of damage to creatures in the area. This damage has the same type as the weapon and uses the same die size. Determine the die size as if you were attacking with the weapon; for instance, if you were wielding a two-hand weapon in both hands, you'd use its two-hand damage die.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The target takes half damage.",
+      "Failure": "The target takes full damage.",
+      "Critical Failure": "The target takes double damage and is subject to the weapon's critical specialization effect."
+    },
+    "heightened": {
+      "+1": "Add another damage die."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {
