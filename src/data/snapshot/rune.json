@@ -1319,6 +1319,15 @@
     ]
   },
   {
+    "id": "raiment",
+    "type": "property",
+    "armorRune": true,
+    "name": "Raiment",
+    "level": 5,
+    "price": 140,
+    "description": "This armor can be disguised with a mere thought. Activate—Costume Change (concentrate): you change the shape and appearance of this armor to appear as ordinary or fine clothes of your imagining. The armor’s statistics don’t change. Only a creature benefiting from truesight or a similar effect can attempt to disbelieve this illusion, with a DC of 25."
+  },
+  {
     "id": "ready",
     "type": "property",
     "armorRune": true,
@@ -2135,5 +2144,17 @@
     "level": 16,
     "price": 8935,
     "description": "A fundamental rune that grants a +3 item bonus to attack rolls and unlocks 3 property-rune slots."
+  },
+  {
+    "id": "wounding",
+    "type": "property",
+    "name": "Wounding",
+    "level": 7,
+    "price": 340,
+    "description": "A weapon etched with this rune deals an additional 1d6 persistent bleed damage on a successful Strike. On a critical hit, the target instead takes 1d12 persistent bleed damage.",
+    "rider": {
+      "persistent": "1d6",
+      "damageType": "bleed"
+    }
   }
 ]
