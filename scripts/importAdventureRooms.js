@@ -195,11 +195,77 @@ function coinValueGp(v) {
   return (v.pp || 0) * 10 + (v.gp || 0) + (v.sp || 0) / 10 + (v.cp || 0) / 100;
 }
 
+// --- specific-ref emission (#1093 code PR 2) --------------------------------
+// The PF2e dump slug doesn't always map 1:1 onto the app catalog id, so a raw
+// `ref = slug` would collide or never resolve. Four rewrites run in
+// classifyLootItem so every emitted ref points at the right catalog doc once
+// the T2 content lands:
+//   1. Generic scroll/wand slugs (`scroll-of-3rd-rank-spell`) are shared by
+//      EVERY rank-N scroll — Heal and Mind Reading can't both be
+//      `scroll-of-3rd-rank-spell`. Rewrite to a spell-specific id from the
+//      embedded spell. A `-<rank>` suffix is added only when the scroll is
+//      heightened above the spell's base rank (mirrors resolveScroll's own
+//      "(Rank N)" naming in src/utils/spellItems.js), so unheightened scrolls
+//      keep the existing `scroll-of-<spell>` convention.
+//   2. One slug shared across item variants that differ by element/type is
+//      split by item name (elemental-gem Fire/Air; charm-of-resistance-greater
+//      Fire/Acid).
+//   3. Per-variant PF2e slugs collapse onto our single base doc plus a
+//      `variant` label the catalog already carries (antiplague / elixir-of-life
+//      grades). The label rides on the entry so the T4/T5 claim flow can write
+//      the right acquired line.
+//   4. Straight slug→id aliases for consolidated docs (spacious-pouch-type-i).
+// `ghost-stone` isn't a lootable item at all — its dump "description" is the
+// room prose for the Ghost Stone crystal — so it's reclassified as a story
+// entry (no ref).
+
+const SCROLL_SLUG_RE = /^scroll-of-\d+\w\w-rank-spell$/;
+const WAND_SLUG_RE = /^magic-wand-\d+\w\w-rank-spell$/;
+
+// Item name → specific catalog id, for one slug shared across variants.
+const REF_BY_NAME = {
+  'Fire Elemental Gem': 'elemental-gem-fire',
+  'Air Elemental Gem': 'elemental-gem-air',
+  'Charm of Fire Resistance (Greater)': 'charm-of-fire-resistance-greater',
+  'Charm of Acid Resistance (Greater)': 'charm-of-acid-resistance-greater',
+};
+
+// Per-variant PF2e slug → { ref: base catalog id, variant: catalog label }.
+const VARIANT_SLUGS = {
+  'antiplague-lesser': { ref: 'antiplague', variant: 'Lesser' },
+  'antiplague-moderate': { ref: 'antiplague', variant: 'Moderate' },
+  'elixir-of-life-lesser': { ref: 'elixir-of-life', variant: 'Lesser' },
+  'elixir-of-life-moderate': { ref: 'elixir-of-life', variant: 'Moderate' },
+};
+
+// Straight slug → catalog id aliases (renamed / consolidated docs).
+const SLUG_ALIASES = {
+  'spacious-pouch-type-i': 'spacious-pouch',
+};
+
+// Slugs that are room prose masquerading as items, never a lootable ref.
+const STORY_SLUGS = new Set(['ghost-stone']);
+
+// Build a spell-specific scroll/wand ref from the item's embedded spell:
+// `scroll-of-<spell>` / `wand-of-<spell>`, with a `-<rank>` suffix only for a
+// heightened cast (rank above the spell's base rank). Null when the item
+// carries no embedded spell (leaves the generic slug in place as a fallback).
+function spellItemRef(kind, spell) {
+  const sys = spell && spell.system;
+  const spSlug = sys && sys.slug;
+  if (!spSlug) return null;
+  const base = sys.level?.value ?? null;
+  const rank = sys.location?.heightenedLevel ?? base;
+  const suffix = rank != null && base != null && rank > base ? `-${rank}` : '';
+  return `${kind}-of-${spSlug}${suffix}`;
+}
+
 // Classify one embedded loot-actor item into a cache contribution:
 //   { kind:'coin', gp }        — folds into the cache gold total
-//   { kind:'item', entry }     — real item, ref = PF2e slug (resolved in-app)
+//   { kind:'item', entry }     — real item, ref = catalog id (resolved in-app)
 //   { kind:'valuable', entry } — art/gem, no ref, per-unit gp `value`
 //   { kind:'story', entry }    — slug-less plot item (key/collection/map)
+// See the specific-ref block above for how the emitted ref is derived.
 function classifyLootItem(it) {
   const sys = it.system || {};
   const qty = sys.quantity ?? 1;
@@ -208,7 +274,24 @@ function classifyLootItem(it) {
     if (COIN_RE.test(it.name || '')) return { kind: 'coin', gp: unitGp * qty };
     return { kind: 'valuable', entry: { name: it.name, qty, value: Math.round(unitGp) } };
   }
-  if (sys.slug) return { kind: 'item', entry: { ref: sys.slug, name: it.name, qty } };
+  const rawSlug = sys.slug;
+  // Room prose carrying a slug — not a real item.
+  if (rawSlug && STORY_SLUGS.has(rawSlug)) return { kind: 'story', entry: { name: it.name, qty } };
+  // Generic scroll/wand slug → spell-specific ref.
+  if (rawSlug && (SCROLL_SLUG_RE.test(rawSlug) || WAND_SLUG_RE.test(rawSlug))) {
+    const ref = spellItemRef(SCROLL_SLUG_RE.test(rawSlug) ? 'scroll' : 'wand', sys.spell);
+    if (ref) return { kind: 'item', entry: { ref, name: it.name, qty } };
+  }
+  // One slug shared across variants → split by item name.
+  if (REF_BY_NAME[it.name]) return { kind: 'item', entry: { ref: REF_BY_NAME[it.name], name: it.name, qty } };
+  // Per-variant slug → base doc + variant label.
+  if (rawSlug && VARIANT_SLUGS[rawSlug]) {
+    const { ref, variant } = VARIANT_SLUGS[rawSlug];
+    return { kind: 'item', entry: { ref, name: it.name, qty, variant } };
+  }
+  // Consolidated-doc alias.
+  if (rawSlug && SLUG_ALIASES[rawSlug]) return { kind: 'item', entry: { ref: SLUG_ALIASES[rawSlug], name: it.name, qty } };
+  if (rawSlug) return { kind: 'item', entry: { ref: rawSlug, name: it.name, qty } };
   return { kind: 'story', entry: { name: it.name, qty } };
 }
 

@@ -174,6 +174,75 @@ describe('classifyLootItem', () => {
       entry: { name: 'Iron Key to B5', qty: 1 },
     });
   });
+
+  // A scroll/wand dump item as the macro emits it: the generic rank slug plus
+  // the real spell embedded in system.spell (#1093 code PR 2).
+  function spellItem(type, name, slug, spellSlug, spellLevel, heightenedLevel) {
+    return {
+      type,
+      name,
+      system: {
+        slug,
+        quantity: 1,
+        price: { value: {} },
+        spell: { system: { slug: spellSlug, level: { value: spellLevel }, location: { heightenedLevel } } },
+      },
+    };
+  }
+
+  it('rewrites a generic scroll slug to a spell-specific ref (no suffix at base rank)', () => {
+    // Every rank-3 scroll shares `scroll-of-3rd-rank-spell`, so the ref must
+    // come from the embedded spell to keep Heal and Mind Reading distinct.
+    expect(
+      classifyLootItem(spellItem('consumable', 'Scroll of Mind Reading (Rank 3)', 'scroll-of-3rd-rank-spell', 'mind-reading', 3, 3)),
+    ).toEqual({ kind: 'item', entry: { ref: 'scroll-of-mind-reading', name: 'Scroll of Mind Reading (Rank 3)', qty: 1 } });
+  });
+
+  it('adds a rank suffix only when the scroll is heightened above the spell base rank', () => {
+    // Heal is a rank-1 spell in a rank-3 scroll → scroll-of-heal-3.
+    expect(
+      classifyLootItem(spellItem('consumable', 'Scroll of Heal (Rank 3)', 'scroll-of-3rd-rank-spell', 'heal', 1, 3)),
+    ).toEqual({ kind: 'item', entry: { ref: 'scroll-of-heal-3', name: 'Scroll of Heal (Rank 3)', qty: 1 } });
+  });
+
+  it('rewrites a generic wand slug to a spell-specific ref, preserving a name override', () => {
+    // Hezrou Crystal is mechanically a wand of Stinking Cloud (rank 3).
+    expect(
+      classifyLootItem(spellItem('consumable', 'Hezrou Crystal', 'magic-wand-3rd-rank-spell', 'stinking-cloud', 3, 3)),
+    ).toEqual({ kind: 'item', entry: { ref: 'wand-of-stinking-cloud', name: 'Hezrou Crystal', qty: 1 } });
+  });
+
+  it('splits a slug shared across variants by item name', () => {
+    expect(classifyLootItem(embItem('consumable', 'Fire Elemental Gem', { slug: 'elemental-gem', gp: 200 }))).toEqual({
+      kind: 'item',
+      entry: { ref: 'elemental-gem-fire', name: 'Fire Elemental Gem', qty: 1 },
+    });
+    expect(classifyLootItem(embItem('equipment', 'Charm of Acid Resistance (Greater)', { slug: 'charm-of-resistance-greater' }))).toEqual({
+      kind: 'item',
+      entry: { ref: 'charm-of-acid-resistance-greater', name: 'Charm of Acid Resistance (Greater)', qty: 1 },
+    });
+  });
+
+  it('collapses a per-variant slug onto the base doc + a variant label', () => {
+    expect(classifyLootItem(embItem('consumable', 'Antiplague (Moderate)', { slug: 'antiplague-moderate', gp: 35 }))).toEqual({
+      kind: 'item',
+      entry: { ref: 'antiplague', name: 'Antiplague (Moderate)', qty: 1, variant: 'Moderate' },
+    });
+  });
+
+  it('resolves a consolidated-doc alias', () => {
+    expect(classifyLootItem(embItem('backpack', 'Spacious Pouch (Type I)', { slug: 'spacious-pouch-type-i', gp: 75 }))).toEqual({
+      kind: 'item',
+      entry: { ref: 'spacious-pouch', name: 'Spacious Pouch (Type I)', qty: 1 },
+    });
+  });
+
+  it('reclassifies the ghost-stone prose slug as a story entry', () => {
+    expect(classifyLootItem(embItem('equipment', 'Ghost Stone', { slug: 'ghost-stone' }))).toEqual({
+      kind: 'story',
+      entry: { name: 'Ghost Stone', qty: 1 },
+    });
+  });
 });
 
 describe('extractTreasureCache', () => {
