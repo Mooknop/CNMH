@@ -4462,29 +4462,39 @@
     "runes": {}
   },
   {
-    "id": "magic-scroll",
+    "usage": "held in 1 hand",
+    "source": "GM Core pg. 262",
     "name": "Magic Scroll",
+    "description": "A scroll is a spell stored in written form. Casting the spell from a scroll requires Activating it (Cast a Spell), after which the scroll is consumed. A specific scroll is named for the spell it holds (Scroll of Heal, Scroll of Web), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared scroll artwork that every such scroll displays.",
+    "image": "img_1e0f48f0-fee6-4eb9-9fa0-2b5f52555a7e.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Consumable",
       "Magical",
       "Scroll"
     ],
-    "usage": "held in 1 hand",
     "weight": 0.1,
-    "source": "GM Core pg. 262",
-    "description": "A scroll is a spell stored in written form. Casting the spell from a scroll requires Activating it (Cast a Spell), after which the scroll is consumed. A specific scroll is named for the spell it holds (Scroll of Heal, Scroll of Web), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared scroll artwork that every such scroll displays."
+    "id": "magic-scroll"
   },
   {
-    "id": "magic-wand",
+    "usage": "held in 1 hand",
+    "source": "GM Core pg. 282",
     "name": "Magic Wand",
+    "description": "A magic wand holds a single spell, which you can cast once per day by Activating it (Cast a Spell), with the option to overcharge it for an additional casting at some risk. A specific wand is named for the spell it holds (Wand of Heal), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared wand artwork that every such wand displays.",
+    "image": "img_a49ba3a7-e722-4b8f-959c-e03f04d98693.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Magical",
       "Wand"
     ],
-    "usage": "held in 1 hand",
     "weight": 0.1,
-    "source": "GM Core pg. 282",
-    "description": "A magic wand holds a single spell, which you can cast once per day by Activating it (Cast a Spell), with the option to overcharge it for an additional casting at some risk. A specific wand is named for the spell it holds (Wand of Heal), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared wand artwork that every such wand displays."
+    "id": "magic-wand"
   },
   {
     "id": "masquerade-scarf",
@@ -6669,6 +6679,12 @@
     ]
   },
   {
+    "id": "scroll-of-clairaudience",
+    "scroll": {
+      "spellRef": "clairaudience"
+    }
+  },
+  {
     "id": "scroll-of-cleanse-affliction",
     "scroll": {
       "spellRef": "cleanse-affliction"
@@ -6681,15 +6697,34 @@
     }
   },
   {
+    "id": "scroll-of-dream-message",
+    "scroll": {
+      "spellRef": "dream-message"
+    }
+  },
+  {
     "id": "scroll-of-friendfetch",
     "scroll": {
       "spellRef": "friendfetch"
     }
   },
   {
+    "id": "scroll-of-heal-3",
+    "scroll": {
+      "spellRef": "heal",
+      "rank": 3
+    }
+  },
+  {
     "id": "scroll-of-mind-games",
     "scroll": {
       "spellRef": "mind-games"
+    }
+  },
+  {
+    "id": "scroll-of-mind-reading",
+    "scroll": {
+      "spellRef": "mind-reading"
     }
   },
   {
@@ -6705,9 +6740,33 @@
     }
   },
   {
+    "id": "scroll-of-see-the-unseen",
+    "scroll": {
+      "spellRef": "see-the-unseen"
+    }
+  },
+  {
     "id": "scroll-of-sleep",
     "scroll": {
       "spellRef": "sleep"
+    }
+  },
+  {
+    "id": "scroll-of-translate",
+    "scroll": {
+      "spellRef": "translate"
+    }
+  },
+  {
+    "id": "scroll-of-wall-of-fire",
+    "scroll": {
+      "spellRef": "wall-of-fire"
+    }
+  },
+  {
+    "id": "scroll-of-weapon-storm",
+    "scroll": {
+      "spellRef": "weapon-storm"
     }
   },
   {
@@ -8900,6 +8959,12 @@
     "id": "wand-of-grease",
     "wand": {
       "spellRef": "grease"
+    }
+  },
+  {
+    "id": "wand-of-stinking-cloud",
+    "wand": {
+      "spellRef": "stinking-cloud"
     }
   },
   {
