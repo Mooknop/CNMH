@@ -22,6 +22,17 @@
   margin-bottom: var(--space-1);
 }
 
+/* Check-bonus talisman opt-in (Sneaky Key, #1093) */
+.scm-talisman {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
 /* Skill / circumstance pickers */
 .scm-picks {
   display: flex;

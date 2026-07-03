@@ -31,10 +31,16 @@ const wandKeyFor = (spell) => spell.wandName || spell.id;
  */
 export const useCastingResources = (character) => {
   const charId = character?.id || 'unknown';
-  const { staff, scrollItems, wandSpells } = useCharacter(character) || {};
+  const { staff, scrollItems, wandSpells, spellSlotTotals } = useCharacter(character) || {};
 
+  // Effective totals (#1093): authored spell_slots plus worn-and-invested
+  // bonusSlots gear, computed once in useCharacter. Raw fallback keeps callers
+  // that hand in a bare character object (tests) working.
   const rawSlots = character?.spellcasting?.spell_slots;
-  const spellSlots = useMemo(() => rawSlots || EMPTY_SLOTS, [rawSlots]);
+  const spellSlots = useMemo(
+    () => spellSlotTotals || rawSlots || EMPTY_SLOTS,
+    [spellSlotTotals, rawSlots]
+  );
   const focusInfo = getFocusInfo(character);
   const focusMax = focusInfo?.max ?? 0;
   const chargesMax = staff?.charges?.max ?? 0;

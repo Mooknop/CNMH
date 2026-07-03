@@ -13,6 +13,8 @@ import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
 import { itemUidOf } from '../utils/affix';
+import { applyItemModes } from '../utils/itemModes';
+import { wornBonusSlots } from '../utils/wornGear';
 import { listStaves } from '../utils/staffPrep';
 import { itemCatalogMap, spellCatalogMap, runeCatalogMap, resolveInventory } from '../utils/contentUtils';
 
@@ -87,7 +89,16 @@ export const useCharacter = (character) => {
   // rune is inscribed (currently just Dragon's Breath's depicted dragon type).
   // Read-only here; ItemModal's picker is the writer. Empty ⇒ no effect.
   const [runeConfig] = useSyncedState(`cnmh_runeconfig_${character?.id || 'none'}`, {});
+  // Item-mode choices (#1093) — per-uid toggle state for items with a `modes`
+  // block (Gloom Blade's light states, a hood up/down). Read-only here;
+  // ItemModal's toggle is the writer. Empty ⇒ every item at its authored
+  // default mode (defaults still apply — see applyItemModes).
+  const [itemModeState] = useSyncedState(`cnmh_itemmode_${character?.id || 'none'}`, {});
 
+  // Attunement overlay (uid ⇒ invested) — worn magic gear only contributes its
+  // bonus spell slots (#1093) while invested; same gate useWornGear applies to
+  // modifiers. Read-only here; the Attuned slots are the writer.
+  const [investedMap] = useSyncedState(`cnmh_invested_${character?.id || 'none'}`, {});
   // Additive runtime inventory (crafted items, loot, purchases, GM grants).
   // Authored `character.inventory` arrives already resolved; acquired entries
   // are unresolved refs, so resolve them against the live catalog the same way
@@ -148,11 +159,32 @@ export const useCharacter = (character) => {
       charisma     : getAbilityModifier(character.abilities?.charisma     || 10),
     };
 
+    // ── Effective inventory ─────────────────────────────────────────────────
+    // The single source of truth for placement + state: authored (resolved)
+    // tree plus the acquired overlay, minus anything given away, merged with the
+    // live loadout. Bulk and the inventory passthrough both read this so a
+    // dropped/retrieved/stowed/given item is consistent for everyone. With empty
+    // overlays this equals the authored tree. Each entry's active item mode
+    // (#1093) is applied here — before ANY derivation — so strikes, worn-gear
+    // modifiers and the armor path all see the same moded item.
+    const present = applyRemovedOverlay(
+      [...(character.inventory || []), ...resolvedAcquired],
+      removed,
+    );
+    const effectiveInventory = applyItemModes(
+      buildEffectiveInventory(present, loadout),
+      itemModeState,
+    );
+    // Skill item bonuses read the effective tree (not the authored inventory),
+    // so a claimed/purchased item carrying `bonus: [skill, n]` — and a mode
+    // that swaps the bonus — actually grants it.
+    const charSkills = { ...character, inventory: effectiveInventory };
+
     // ── Skills ──────────────────────────────────────────────────────────────
     const skillModifiers = Object.fromEntries(
       Object.keys(SKILL_ABILITY_MAP).map(skillId => [
         skillId,
-        getSkillModifier(character, skillId),
+        getSkillModifier(charSkills, skillId),
       ])
     );
 
@@ -169,7 +201,7 @@ export const useCharacter = (character) => {
     const itemBonuses = Object.fromEntries(
       Object.keys(SKILL_ABILITY_MAP).map(skillId => [
         skillId,
-        getItemBonus(character, skillId),
+        getItemBonus(charSkills, skillId),
       ])
     );
 
@@ -193,18 +225,6 @@ export const useCharacter = (character) => {
         },
       ])
     );
-
-    // ── Effective inventory ─────────────────────────────────────────────────
-    // The single source of truth for placement + state: authored (resolved)
-    // tree plus the acquired overlay, minus anything given away, merged with the
-    // live loadout. Bulk and the inventory passthrough both read this so a
-    // dropped/retrieved/stowed/given item is consistent for everyone. With empty
-    // overlays this equals the authored tree.
-    const present = applyRemovedOverlay(
-      [...(character.inventory || []), ...resolvedAcquired],
-      removed,
-    );
-    const effectiveInventory = buildEffectiveInventory(present, loadout);
 
     // Item-granted abilities (weapon strikes, item actions, scroll/wand/staff
     // spells) are gated on the item being held in a hand. The derivation utils
@@ -276,6 +296,25 @@ export const useCharacter = (character) => {
     // ── Spellcasting ────────────────────────────────────────────────────────
     const spellcasting = character.spellcasting || {};
     const spellStats   = calculateSpellStats(character);
+
+    // Effective daily slot totals (#1093): the authored spell_slots plus any
+    // worn-and-invested bonusSlots gear (Ring of Wizardry). THE display/spend
+    // source of truth — useCastingResources and the repertoire pips both read
+    // this, never spell_slots directly, so they can't drift apart.
+    const baseSlots = spellcasting.spell_slots || {};
+    const bonusSlotRanks = wornBonusSlots(
+      effectiveInventory,
+      (itemUid) => !!(investedMap || {})[itemUid],
+      spellcasting.tradition,
+    );
+    const spellSlotTotals = Object.keys(bonusSlotRanks).length
+      ? Object.fromEntries(
+          [...new Set([...Object.keys(baseSlots), ...Object.keys(bonusSlotRanks)])].map((r) => [
+            r,
+            (baseSlots[r] || 0) + (bonusSlotRanks[r] || 0),
+          ])
+        )
+      : baseSlots;
 
     // Tradition gating (epic #645, S3): a scroll/wand spell is only castable if
     // it shares a tradition with the caster — wrong-tradition copies are hidden
@@ -423,6 +462,7 @@ export const useCharacter = (character) => {
 
       // Spellcasting
       spellcasting,
+      spellSlotTotals,
       spellStats,
       scrollItems,
       scrollSpells,
@@ -448,7 +488,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, staffPrep, runeConfig, resolvedAcquired, removed, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, blade, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

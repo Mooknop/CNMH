@@ -1,4 +1,4 @@
-import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, specialModifiers, itemModifiers } from './wornGear';
+import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, wornBonusSlots, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -202,5 +202,47 @@ describe('itemModifiers — accessory runes (#1033)', () => {
       { stat: 'acrobatics', kind: 'item', amount: 1 },
       { stat: 'intimidation', kind: 'item', amount: 1 },
     ]);
+  });
+});
+
+describe('wornBonusSlots (#1093 — Ring of Wizardry)', () => {
+  const ring = (overrides = {}) => ({
+    uid: 'ring',
+    name: 'Ring of Wizardry (Type I)',
+    traits: ['Invested', 'Magical'],
+    bonusSlots: { tradition: 'arcane', ranks: { 1: 2 } },
+    ...overrides,
+  });
+
+  it('grants its ranks while worn + invested and traditions match', () => {
+    expect(wornBonusSlots([ring()], yes, 'arcane')).toEqual({ 1: 2 });
+  });
+
+  it('grants nothing to a non-caster or mismatched tradition', () => {
+    expect(wornBonusSlots([ring()], yes, undefined)).toEqual({});
+    expect(wornBonusSlots([ring()], yes, 'divine')).toEqual({});
+  });
+
+  it('a tradition-less block grants to any caster', () => {
+    const generic = ring({ bonusSlots: { ranks: { 2: 1 } } });
+    expect(wornBonusSlots([generic], yes, 'occult')).toEqual({ 2: 1 });
+  });
+
+  it('requires investment on investable gear, and worn placement', () => {
+    expect(wornBonusSlots([ring()], no, 'arcane')).toEqual({});
+    expect(wornBonusSlots([ring({ state: 'held1' })], yes, 'arcane')).toEqual({});
+    expect(wornBonusSlots([ring({ state: 'stowed' })], yes, 'arcane')).toEqual({});
+  });
+
+  it('sums across contributing items and drops malformed rank counts', () => {
+    const items = [
+      ring(),
+      ring({ uid: 'r2', bonusSlots: { ranks: { 1: 1, 3: 1, bad: -2 } } }),
+    ];
+    expect(wornBonusSlots(items, yes, 'arcane')).toEqual({ 1: 3, 3: 1 });
+  });
+
+  it('ignores items without a bonusSlots block', () => {
+    expect(wornBonusSlots([robe()], yes, 'arcane')).toEqual({});
   });
 });

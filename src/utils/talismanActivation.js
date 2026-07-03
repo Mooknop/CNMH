@@ -7,8 +7,9 @@
 //     cost: 'free'|'reaction'|<number>,
 //     trigger: '<reminder text>',
 //     effect:
-//       { kind: 'damage',     amount: 'str-mod', damageType: 'bludgeoning', onManeuver: 'trip' }
-//     | { kind: 'save-bonus', save: 'fortitude', bonus: 2, value: 'status', critFailToFail: true }
+//       { kind: 'damage',      amount: 'str-mod', damageType: 'bludgeoning', onManeuver: 'trip' }
+//     | { kind: 'save-bonus',  save: 'fortitude', bonus: 2, value: 'status', critFailToFail: true }
+//     | { kind: 'check-bonus', skill: 'thievery', bonus: 1, value: 'status', note: '<rider text>' }
 //   }
 //
 // React-free; the consume/unaffix writes live in affix.js (deactivateTalisman).
@@ -43,6 +44,14 @@ export const activationSummary = (item, character) => {
     return `${sign} ${effect.value || ''} to ${save} save`.replace(/\s+/g, ' ').trim()
       + (effect.critFailToFail ? '; critical failure becomes failure' : '');
   }
+  if (effect?.kind === 'check-bonus') {
+    const skill = effect.skill
+      ? effect.skill.charAt(0).toUpperCase() + effect.skill.slice(1)
+      : '';
+    const sign = effect.bonus >= 0 ? `+${effect.bonus}` : `${effect.bonus}`;
+    return `${sign} ${effect.value || ''} to ${skill} checks`.replace(/\s+/g, ' ').trim()
+      + (effect.note ? ` — ${effect.note}` : '');
+  }
   return act?.trigger || 'Activate';
 };
 
@@ -51,6 +60,13 @@ export const saveBonusTalisman = (affixedTalismans, save) =>
   (Array.isArray(affixedTalismans) ? affixedTalismans : []).find((t) => {
     const e = activationOf(t)?.effect;
     return e?.kind === 'save-bonus' && e.save === save;
+  }) || null;
+
+/** First affixed talisman whose effect adds a bonus to checks with a skill (#1093). */
+export const checkBonusTalisman = (affixedTalismans, skill) =>
+  (Array.isArray(affixedTalismans) ? affixedTalismans : []).find((t) => {
+    const e = activationOf(t)?.effect;
+    return e?.kind === 'check-bonus' && e.skill === skill;
   }) || null;
 
 /** First affixed talisman whose effect deals damage triggered by a maneuver. */
