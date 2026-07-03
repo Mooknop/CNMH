@@ -10,7 +10,11 @@
 // count) is untouched, matching PF2e: you get the full spell for fewer actions.
 //
 // transform shape (extensible; unknown keys are ignored here):
-//   { actionDelta?: number, minActions?: number }
+//   { actionDelta?: number, minActions?: number, rankDelta?: number, widenArea?: boolean }
+//
+// `widenArea` (Dragon's Breath, #1055 S4) is the Widen Spell feat's effect — a
+// larger area on the chained spell. The app doesn't model area geometry, so this
+// is a DISPLAY transform: it computes the widened area string for the cast card.
 //
 // selfEffect shape (Energy Ablation — resistance to a chosen energy type = the
 // chained spell's rank, until the end of your next turn):
@@ -77,6 +81,43 @@ export function chainRankNote(castRank, transform) {
   if (eff === (Number(castRank) || 0)) return null;
   const delta = transform.rankDelta;
   return `Spellshape: numeric effects at rank ${eff} (${delta > 0 ? '+' : '−'}${Math.abs(delta)} rank${Math.abs(delta) === 1 ? '' : 's'}, cast/counteract stays rank ${castRank})`;
+}
+
+/**
+ * The area a spell covers after Widen Spell (#1055 S4). Parses a leading
+ * "<n>-foot <shape>" area string and increases the size per PF2e Remaster Widen
+ * Spell: bursts/emanations grow +5 ft; cones/lines grow +5 ft when 15 ft or
+ * smaller, +10 ft when 20 ft or larger. Returns the rewritten area string, or
+ * null when the area can't be parsed (non-standard shapes pass through).
+ *
+ * @param {string} area - the spell's area (e.g. "15-foot cone")
+ * @returns {string|null}
+ */
+export function widenedArea(area) {
+  if (typeof area !== 'string') return null;
+  const m = area.match(/(\d+)(\s*-?\s*foot\s+)(cone|line|burst|emanation|radius)/i);
+  if (!m) return null;
+  const size = parseInt(m[1], 10);
+  const shape = m[3].toLowerCase();
+  const inc = shape === 'cone' || shape === 'line' ? (size <= 15 ? 5 : 10) : 5;
+  return area.replace(m[1] + m[2], `${size + inc}${m[2]}`);
+}
+
+/**
+ * A note describing a Widen Spell transform's effect on the chained spell's
+ * area, or null when the transform doesn't widen. Used for the chained-cast
+ * area hint.
+ *
+ * @param {string} area - the chained spell's area
+ * @param {{ widenArea?: boolean }|null} [transform]
+ * @returns {string|null}
+ */
+export function widenAreaNote(area, transform) {
+  if (!transform || transform.widenArea !== true) return null;
+  const widened = widenedArea(area);
+  return widened
+    ? `Widen Spell: area ${area} → ${widened}.`
+    : 'Widen Spell: the spell affects a larger area.';
 }
 
 /**

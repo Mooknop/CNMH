@@ -83,6 +83,10 @@ export const useCharacter = (character) => {
   // charge count for the day. null ⇒ no staff prepared (so any held staff has 0
   // charges). Read-only here; DailyPrepModal / performDailyPrep is the writer.
   const [staffPrep] = useSyncedState(`cnmh_staffprep_${character?.id || 'none'}`, null);
+  // Etch-time accessory-rune config (#1055 S4) — per-uid choices baked when a
+  // rune is inscribed (currently just Dragon's Breath's depicted dragon type).
+  // Read-only here; ItemModal's picker is the writer. Empty ⇒ no effect.
+  const [runeConfig] = useSyncedState(`cnmh_runeconfig_${character?.id || 'none'}`, {});
 
   // Additive runtime inventory (crafted items, loot, purchases, GM grants).
   // Authored `character.inventory` arrives already resolved; acquired entries
@@ -208,7 +212,19 @@ export const useCharacter = (character) => {
     // inventory — via this state-aware view. Effective entries keep every
     // resolved field (name/scroll/wand/strikes/actions/noHandRequired) plus
     // the live `state`/`hand`, so it is a drop-in replacement.
-    const charEff = { ...character, inventory: effectiveInventory };
+    // Bake etch-time accessory-rune config (#1055 S4) onto the inscribed entry
+    // so the derived free action (Dragon's Breath) carries the depicted dragon
+    // type. Keyed by uid; only touches entries that actually hold an accessory
+    // rune, so an empty overlay leaves the tree byte-identical.
+    const configuredInventory = (runeConfig && Object.keys(runeConfig).length)
+      ? effectiveInventory.map((e) => {
+          const cfg = e && runeConfig[itemUidOf(e)];
+          return cfg && e.runes && typeof e.runes.accessory === 'object'
+            ? { ...e, runes: { ...e.runes, accessoryConfig: cfg } }
+            : e;
+        })
+      : effectiveInventory;
+    const charEff = { ...character, inventory: configuredInventory };
 
     // ── Armor Class (AC3, #749 / AC4, #750) ───────────────────────────────────
     // Derive base AC (10 + proficiency + capped Dex + armor item bonus) from the
@@ -432,7 +448,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, staffPrep, resolvedAcquired, removed, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, blade, staffPrep, runeConfig, resolvedAcquired, removed, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

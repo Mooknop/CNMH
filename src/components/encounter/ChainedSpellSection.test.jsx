@@ -1086,3 +1086,49 @@ describe('ChainedSpellSection — Split Shot (#227)', () => {
     expect(ref.current.getResults().splitShot).toBeNull();
   });
 });
+
+// ── Dragon's Breath: Widen Spellshape (#1055 S4) ──
+describe('ChainedSpellSection — dragon-breath-area', () => {
+  const BREATHE_FIRE = { id: 'breathe-fire', name: 'Breathe Fire', actions: 'Two Actions', level: 1, area: '15-foot cone', traits: ['Fire'], defense: 'Reflex' };
+  const FIRE_STORM   = { id: 'fire-storm',   name: 'Fire Storm',   actions: 'Three Actions', level: 8, area: '20-foot burst', traits: ['Fire'], defense: 'Reflex' };
+  const GUST         = { id: 'gust',         name: 'Gust of Wind', actions: 'Two Actions', level: 1, area: '60-foot line', traits: ['Air'] };
+  const MAGIC_MISSILE = { id: 'mm', name: 'Magic Missile', actions: 'One Action', level: 1, traits: ['Force'] }; // no area
+  const dragonChar = { id: 'D', name: 'Dragonheir', spellcasting: { spells: [BREATHE_FIRE, FIRE_STORM, GUST, MAGIC_MISSILE] } };
+  const dbChain = (over = {}) => ({ into: 'spell', spellFilter: 'dragon-breath-area', transform: { widenArea: true }, dragonType: 'fire', maxRank: 3, ...over });
+
+  const renderDB = (chain) => render(
+    <ChainedSpellSection character={dragonChar} chain={chain} parentCost={0} enemyTargets={[]} conditions={[]} effects={[]} />
+  );
+
+  it('filters to area spells of the matching damage type within the rank cap', () => {
+    renderDB(dbChain());
+    const opts = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.text);
+    expect(opts.some((t) => t.includes('Breathe Fire'))).toBe(true); // fire area, rank 1
+    expect(opts.some((t) => t.includes('Fire Storm'))).toBe(false);  // fire area but rank 8 > cap 3
+    expect(opts.some((t) => t.includes('Gust'))).toBe(false);        // area but not fire
+    expect(opts.some((t) => t.includes('Magic Missile'))).toBe(false); // fire-ish but no area
+  });
+
+  it('raising the rank cap admits the higher-rank area spell', () => {
+    renderDB(dbChain({ maxRank: 8 }));
+    const opts = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.text);
+    expect(opts.some((t) => t.includes('Fire Storm'))).toBe(true);
+  });
+
+  it('a different etched dragon type re-scopes the list', () => {
+    renderDB(dbChain({ dragonType: 'air' }));
+    const opts = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.text);
+    expect(opts.some((t) => t.includes('Gust'))).toBe(true);
+    expect(opts.some((t) => t.includes('Breathe Fire'))).toBe(false);
+  });
+
+  it('shows the widened-area note for the selected spell', () => {
+    renderDB(dbChain());
+    expect(screen.getByTestId('chain-area-note')).toHaveTextContent('area 15-foot cone → 20-foot cone');
+  });
+
+  it('shows the empty-list message when no spell qualifies', () => {
+    renderDB(dbChain({ dragonType: 'cold' }));
+    expect(screen.getByText(/No qualifying spells/)).toBeInTheDocument();
+  });
+});

@@ -37,6 +37,10 @@ vi.mock('../../hooks/useCharacter', () => ({
 let mockItemEffects = [];
 let mockAffixed = {};
 let mockConsumed = {};
+let mockRuneConfig = {};
+const mockSetRuneConfig = vi.fn((next) => {
+  mockRuneConfig = typeof next === 'function' ? next(mockRuneConfig) : next;
+});
 const mockSetItemEffects = vi.fn((next) => {
   mockItemEffects = typeof next === 'function' ? next(mockItemEffects) : next;
 });
@@ -55,6 +59,7 @@ vi.mock('../../hooks/useSyncedState', () => ({
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
+    if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
     return [mockItemEffects, mockSetItemEffects];
   },
 }));
@@ -123,10 +128,12 @@ beforeEach(() => {
   mockAffixed = {};
   mockConsumed = {};
   mockInvested = {};
+  mockRuneConfig = {};
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
   mockSetConsumed.mockClear();
   mockSetInvested.mockClear();
+  mockSetRuneConfig.mockClear();
   mockAppendEvent.mockClear();
   mockGive.mockClear();
   mockGive.mockReturnValue(true);
@@ -1441,5 +1448,47 @@ describe('ItemModal — attunement (#invest)', () => {
     // no resolved spell → generic free-activation button, not a cast button
     expect(screen.queryByTestId('actuated-cast-spell')).not.toBeInTheDocument();
     expect(screen.getByTestId('actuated-activate-free')).toBeInTheDocument();
+  });
+});
+
+// ── Dragon's Breath etch-time dragon picker (#1055 S4) ──
+describe('ItemModal — accessory-rune dragon-type picker', () => {
+  const dragonChoice = {
+    key: 'dragonType', label: 'Depicted dragon',
+    options: [
+      { value: 'fire', label: 'Fire' },
+      { value: 'cold', label: 'Cold' },
+      { value: 'acid', label: 'Acid' },
+    ],
+  };
+  const dbRune = { id: 'dragons-breath-3', name: "Dragon's Breath (3rd-Rank Spell)", level: 8, dragonChoice };
+  const cape = (over = {}) => ({ uid: 'cape1', name: 'Dueling Cape', traits: [], runes: { accessory: dbRune }, ...over });
+  const char = { id: 'p', name: 'P' };
+
+  it('renders the dragon picker for a rune carrying a dragonChoice, defaulting to the first option', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={cape()} character={char} />);
+    const select = screen.getByLabelText('Depicted dragon');
+    expect(select).toBeInTheDocument();
+    expect(select.value).toBe('fire');
+    expect(Array.from(select.options).map((o) => o.text)).toEqual(['Fire', 'Cold', 'Acid']);
+  });
+
+  it('reflects a previously chosen dragon type from the overlay', () => {
+    mockRuneConfig = { cape1: { dragonType: 'cold' } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={cape()} character={char} />);
+    expect(screen.getByLabelText('Depicted dragon').value).toBe('cold');
+  });
+
+  it('writes the chosen dragon type to the overlay keyed by item uid', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={cape()} character={char} />);
+    fireEvent.change(screen.getByLabelText('Depicted dragon'), { target: { value: 'acid' } });
+    expect(mockSetRuneConfig).toHaveBeenCalled();
+    expect(mockRuneConfig).toEqual({ cape1: { dragonType: 'acid' } });
+  });
+
+  it('shows no picker for an accessory rune without a dragonChoice', () => {
+    const plainRune = { id: 'menacing-greater', name: 'Menacing (Greater)' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={cape({ runes: { accessory: plainRune } })} character={char} />);
+    expect(screen.queryByTestId('accessory-rune-choice')).not.toBeInTheDocument();
   });
 });

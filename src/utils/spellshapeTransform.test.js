@@ -1,7 +1,44 @@
 import {
   applyChainTransform, chainTransformCostNote, buildChainSelfEffect, selfEffectDescriptor,
-  effectiveNumericRank, chainRankNote,
+  effectiveNumericRank, chainRankNote, widenedArea, widenAreaNote,
 } from './spellshapeTransform';
+
+describe('widenedArea', () => {
+  it('grows a small cone/line by 5 feet (≤ 15 ft)', () => {
+    expect(widenedArea('15-foot cone')).toBe('20-foot cone');
+    expect(widenedArea('15-foot line')).toBe('20-foot line');
+  });
+  it('grows a large cone/line by 10 feet (≥ 20 ft)', () => {
+    expect(widenedArea('30-foot line')).toBe('40-foot line');
+    expect(widenedArea('60-foot cone')).toBe('70-foot cone');
+  });
+  it('grows a burst/emanation radius by 5 feet regardless of size', () => {
+    expect(widenedArea('20-foot burst')).toBe('25-foot burst');
+    expect(widenedArea('10-foot emanation')).toBe('15-foot emanation');
+    expect(widenedArea('5-foot radius')).toBe('10-foot radius');
+  });
+  it('returns null for an unparseable or non-string area', () => {
+    expect(widenedArea('a whole room')).toBeNull();
+    expect(widenedArea(undefined)).toBeNull();
+    expect(widenedArea(null)).toBeNull();
+  });
+});
+
+describe('widenAreaNote', () => {
+  it('describes the widened area when the transform widens', () => {
+    expect(widenAreaNote('15-foot cone', { widenArea: true }))
+      .toBe('Widen Spell: area 15-foot cone → 20-foot cone.');
+  });
+  it('falls back to a generic note when the area cannot be parsed', () => {
+    expect(widenAreaNote('some shape', { widenArea: true }))
+      .toBe('Widen Spell: the spell affects a larger area.');
+  });
+  it('is null without a widening transform', () => {
+    expect(widenAreaNote('15-foot cone', null)).toBeNull();
+    expect(widenAreaNote('15-foot cone', { actionDelta: -1 })).toBeNull();
+    expect(widenAreaNote('15-foot cone', { widenArea: false })).toBeNull();
+  });
+});
 
 describe('effectiveNumericRank', () => {
   it('adds a positive rankDelta (Heighten +2)', () => {

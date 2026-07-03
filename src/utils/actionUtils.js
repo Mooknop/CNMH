@@ -23,6 +23,23 @@ const runeAbilities = (item, key) => {
     );
 };
 
+// A single-slot accessory rune (#1055 S4) — resolved to a doc on
+// `runes.accessory` — can carry its own actions/reactions/freeActions, e.g.
+// Dragon's Breath's Widen Spellshape free action. Its `chain` is authored on the
+// rune, but the depicted dragon's damage type is an etch-time choice stored on
+// the gear entry (`runes.accessoryConfig.dragonType`); inject it so the chain's
+// spell filter can match qualifying spells by damage type.
+const accessoryRuneAbilities = (item, key) => {
+  const rune = item && item.runes && typeof item.runes.accessory === 'object' ? item.runes.accessory : null;
+  if (!rune || !Array.isArray(rune[key]) || !rune[key].length) return [];
+  const equipped = isEquipped(item);
+  const dragonType = item.runes.accessoryConfig?.dragonType || null;
+  return rune[key].map((a) => {
+    const withChain = a.chain && dragonType ? { ...a, chain: { ...a.chain, dragonType } } : a;
+    return { ...withChain, source: `${item.name} (${rune.name})`, active: equipped };
+  });
+};
+
 const hasTrait = (action, name) =>
   (action?.traits || []).some((t) => String(t).toLowerCase() === name);
 
@@ -171,7 +188,12 @@ export const getFreeActions = (character) => {
           active: itemAbilitiesActive(item),
         }))
       );
-    allFreeActions = [...allFreeActions, ...inventoryFreeActions];
+    // Accessory-rune free actions (#1055 S4): Dragon's Breath's Widen Spellshape,
+    // which chains into a Cast a Spell. Sourced from the inscribed rune doc.
+    const runeFreeActions = character.inventory.flatMap((item) =>
+      accessoryRuneAbilities(item, 'freeActions')
+    );
+    allFreeActions = [...allFreeActions, ...inventoryFreeActions, ...runeFreeActions];
   }
 
   if (character.feats) {
