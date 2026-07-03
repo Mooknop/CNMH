@@ -12,6 +12,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--shell-text-primary);
   background-color: var(--shell-bg);
+  /* The app is dark throughout. Declaring the color scheme makes the browser
+     render native controls — crucially the <select> option popup — with a dark
+     palette, fixing the recurring light-text-on-white dropdown glitch app-wide
+     (native popups can't be reliably styled via CSS, so this is the real fix). */
+  color-scheme: dark;
 }
 
 code {

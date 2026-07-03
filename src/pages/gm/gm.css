@@ -174,7 +174,10 @@
   box-shadow: 0 0 0 2px var(--accent-tint);
 }
 
-.gm-shell .form-group select option {
+/* Every GM-shell select's option list (not just .form-group ones) — belt and
+   suspenders alongside the root color-scheme:dark, for browsers that still
+   paint option backgrounds from CSS. */
+.gm-shell select option {
   background: var(--shell-surface);
   color: var(--shell-text-primary);
 }
