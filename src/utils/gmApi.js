@@ -26,6 +26,17 @@ export const deleteDocument = (collection, id) =>
     credentials: 'include',
   }).then(json);
 
+// Bulk import into a collection (the adventure-room guide, #1074/#1075). The
+// browser's Cloudflare Access cookie rides along; the Worker re-verifies it.
+// Per-doc upsert by id — reports { created, updated, unchanged, skipped }.
+export const importRooms = (docs) =>
+  fetch('/api/gm/import/room', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ docs }),
+  }).then(json);
+
 export const seedDefaults = (force = false) =>
   fetch('/api/gm/seed', {
     method: 'POST',

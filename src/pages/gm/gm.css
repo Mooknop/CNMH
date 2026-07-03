@@ -2381,3 +2381,18 @@ p.gm-live-note {
   align-items: center;
   gap: var(--space-3);
 }
+
+/* Adventure-room import button (#1074 in-app upload) */
+.gm-rooms-import { display: flex; flex-direction: column; gap: var(--space-2); }
+.gm-rooms-import-file { display: none; }
+.gm-rooms-empty .gm-rooms-import { margin-top: var(--space-3); align-items: flex-start; }
+.gm-rooms-reimport {
+  margin-bottom: var(--space-2);
+  font-size: 0.8rem;
+}
+.gm-rooms-reimport > summary {
+  cursor: pointer;
+  color: var(--shell-text-tertiary);
+  padding: 4px 0;
+}
+.gm-rooms-reimport .gm-rooms-import { margin-top: var(--space-2); }
