@@ -1,0 +1,74 @@
+import React, { useRef, useState } from 'react';
+import { useContent } from '../../contexts/ContentContext';
+import { importRooms } from '../../utils/gmApi';
+import { transformDump, mergeNotes } from '../../../scripts/importAdventureRooms';
+
+// One-click import of a Foundry adventure-module export (#1074). The GM picks
+// the raw journal dump downloaded by scripts/exportAdventureJournals.foundryMacro.js;
+// the transform runs in the browser (the same pure parser the CLI uses), GM
+// notes already in the store are preserved, and the docs upload to the live DO
+// via the Access-gated endpoint — no command line, no service token.
+const RoomsImportButton = ({ label = 'Import rooms from Foundry export' }) => {
+  const { rooms, refresh } = useContent();
+  const fileRef = useRef(null);
+  const [state, setState] = useState('idle'); // idle | working | done | error
+  const [message, setMessage] = useState(null);
+
+  const onPick = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (fileRef.current) fileRef.current.value = ''; // allow re-picking the same file
+    if (!file) return;
+
+    setState('working');
+    setMessage(null);
+    try {
+      const dump = JSON.parse(await file.text());
+      const { rooms: parsedRooms, features } = transformDump(dump);
+      const docs = mergeNotes([...features, ...parsedRooms], rooms);
+      if (!docs.length) {
+        setState('error');
+        setMessage('That file has no adventure rooms in it — is it the journal dump from the export macro?');
+        return;
+      }
+      const res = await importRooms(docs);
+      await refresh();
+      setState('done');
+      setMessage(
+        `Imported ${docs.length} rooms — ${res.created} new, ${res.updated} updated, ${res.unchanged} unchanged.`,
+      );
+    } catch (err) {
+      setState('error');
+      setMessage(
+        err instanceof SyntaxError
+          ? "Couldn't read that file — make sure it's the .json the export macro downloaded."
+          : `Import failed: ${err.message}`,
+      );
+    }
+  };
+
+  return (
+    <div className="gm-rooms-import">
+      <button
+        type="button"
+        className="btn-primary"
+        disabled={state === 'working'}
+        onClick={() => fileRef.current && fileRef.current.click()}
+      >
+        {state === 'working' ? 'Importing…' : label}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        aria-label="Adventure journal dump file"
+        className="gm-rooms-import-file"
+        onChange={onPick}
+      />
+      {message && (
+        <p className={state === 'error' ? 'gm-warn' : 'gm-ok'} role="status">{message}</p>
+      )}
+    </div>
+  );
+};
+
+export default RoomsImportButton;

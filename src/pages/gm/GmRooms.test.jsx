@@ -5,6 +5,11 @@ import { MemoryRouter } from 'react-router-dom';
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useCurrentRoom', () => ({ useCurrentRoom: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({ saveDocument: vi.fn() }));
+// The import button pulls in the transform (imported from scripts/); stub it so
+// GmRooms tests stay focused on browsing/notes. It has its own test file.
+vi.mock('../../components/gm/RoomsImportButton', () => ({
+  default: () => <div data-testid="rooms-import-button" />,
+}));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';

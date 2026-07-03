@@ -4,6 +4,7 @@ import { useCurrentRoom } from '../../hooks/useCurrentRoom';
 import { groupRoomsBySite, roomMatches } from '../../utils/rooms';
 import { saveDocument } from '../../utils/gmApi';
 import RoomDetail from '../../components/gm/RoomDetail';
+import RoomsImportButton from '../../components/gm/RoomsImportButton';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -89,11 +90,11 @@ const GmRooms = () => {
       <div className="gm-rooms gm-rooms-empty">
         <h1>Rooms</h1>
         <p className="gm-help">
-          No adventure rooms imported yet. Export the module journals with
-          <code> scripts/exportAdventureJournals.foundryMacro.js</code>, then run
-          <code> node scripts/importAdventureRooms.js &lt;dump&gt; --post &lt;baseUrl&gt;</code>
-          {' '}to load them into the live store.
+          No adventure rooms imported yet. In Foundry, run the export macro
+          (<code>scripts/exportAdventureJournals.foundryMacro.js</code>) as GM to
+          download the module&apos;s journal dump, then import that file here:
         </p>
+        <RoomsImportButton />
       </div>
     );
   }
@@ -101,6 +102,10 @@ const GmRooms = () => {
   return (
     <div className="gm-rooms">
       <aside className="gm-rooms-rail" aria-label="Rooms by site">
+        <details className="gm-rooms-reimport">
+          <summary>Import / update from Foundry export</summary>
+          <RoomsImportButton label="Choose export file…" />
+        </details>
         <input
           type="search"
           className="gm-rooms-search"
