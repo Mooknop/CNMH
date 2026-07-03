@@ -4,6 +4,7 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
 import ItemActivations from '../shared/ItemActivations';
+import RuneMechanics from '../shared/RuneMechanics';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
@@ -569,8 +570,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Runestone (#800): the held rune + an inert reminder. A runestone grants
-          no mechanical effect until its rune is transferred onto a weapon. */}
+      {/* Runestone (#800): the held rune's FULL effect (#1055 S1) + an inert
+          reminder. A runestone grants no mechanical effect until its rune is
+          transferred onto gear. */}
       {item.runestone && (
         <div className="item-runestone" data-testid="item-modal-runestone">
           <h3>Runestone</h3>
@@ -581,13 +583,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                 {item.runestone.rune.level != null && (
                   <span className="item-rune-level"> · Level {item.runestone.rune.level}</span>
                 )}
-                {item.runestone.rune.description && (
-                  <p className="item-rune-desc">{item.runestone.rune.description}</p>
-                )}
+                <RuneMechanics rune={item.runestone.rune} />
               </div>
               <p className="item-runestone-note">
-                Grants no effect while unattached — transfer the rune onto a weapon to
-                use it (the stone is destroyed).
+                Grants no effect while unattached — transfer the rune onto gear it
+                etches to use it (the stone is destroyed).
               </p>
             </>
           ) : (

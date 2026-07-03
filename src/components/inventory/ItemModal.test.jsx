@@ -804,6 +804,30 @@ describe('ItemModal', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={blank} />);
     expect(screen.getByTestId('item-modal-runestone')).toHaveTextContent('empty etching stone');
   });
+
+  // #1055 S1 — a held accessory rune's runestone shows its FULL effect (usage
+  // tags + actuated activation), not just the flavor description.
+  it("renders a runestone with the rune's full mechanics (#1055 S1)", () => {
+    const runestone = {
+      name: 'Paired Runestone', quantity: 1, weight: 0.1, price: 153, traits: ['Consumable', 'Magical'],
+      runestone: {
+        runeRef: 'paired',
+        rune: {
+          id: 'paired', type: 'property', target: 'accessory', name: 'Paired', level: 5,
+          rarity: 'uncommon', usage: ['pocketed'],
+          description: 'These runes always come in pairs.',
+          actuated: { cost: 'none', name: 'Paired Exchange', actionCount: 1, frequency: 'once per day',
+            traits: ['Command'], description: 'Items in the pockets trade places via teleportation.' },
+        },
+      },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={runestone} />);
+    const section = screen.getByTestId('item-modal-runestone');
+    expect(section).toHaveTextContent('Etches onto pocketed items');
+    expect(section).toHaveTextContent('Paired Exchange');
+    expect(section).toHaveTextContent('Frequency once per day');
+    expect(section).toHaveTextContent('Items in the pockets trade places via teleportation.');
+  });
 });
 
 describe('ItemModal — Use button (#217)', () => {

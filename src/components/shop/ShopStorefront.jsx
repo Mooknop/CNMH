@@ -24,6 +24,7 @@ import { useShopCheckout } from '../../hooks/useShopCheckout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import ItemActivations from '../shared/ItemActivations';
+import RuneMechanics from '../shared/RuneMechanics';
 import SpellMechanics from '../spells/SpellMechanics';
 import './ShopStorefront.css';
 
@@ -257,18 +258,17 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
           <SpellMechanics spell={head.spell} />
         ) : (
           <>
-            {/* A runestone leads with the held rune's own effect text — the
+            {/* A runestone leads with the held rune's FULL effect — modifiers,
+                riders, activations, what it etches onto (#800, #1055 S1) — the
                 generic etching-stone description below never says what the
-                rune actually does (#800). */}
+                rune actually does. */}
             {head.runestone && head.runestone.rune && (
               <div className="ps-preview-rune" data-testid="ware-preview-rune">
                 <span className="ps-preview-rune-name">
                   {head.runestone.rune.name}
                   {head.runestone.rune.level != null && ` · Level ${head.runestone.rune.level}`}
                 </span>
-                {head.runestone.rune.description && (
-                  <p className="ps-preview-rune-desc">{head.runestone.rune.description}</p>
-                )}
+                <RuneMechanics rune={head.runestone.rune} />
               </div>
             )}
             {group.description && <p className="ps-preview-desc">{group.description}</p>}
@@ -386,6 +386,10 @@ const filledLabel = (s, runeMap) => {
 // until checkout (S7) — staged runes show here as a pending summary.
 const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, onUnstage, readOnly }) => {
   const [openKey, setOpenKey] = useState(null);
+  // Which picker option's full effect is expanded (#1055 S1) — one at a time,
+  // reset whenever a different socket's picker opens.
+  const [infoKey, setInfoKey] = useState(null);
+  useEffect(() => { setInfoKey(null); }, [openKey]);
   const target = gearTarget(gear);
   // Derive the socket board from a staged projection (#879): staged fundamentals
   // are applied first, so staging +1 potency reveals the property slot it unlocks
@@ -474,15 +478,30 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
             <p className="ps-empty">None in stock here for this slot.</p>
           ) : (
             <ul className="ps-runeopts" aria-label="rune options">
-              {options.map((r) => (
-                <li key={r.wareKey || r.id}>
-                  <button type="button" className="ps-runeopt"
-                    onClick={() => { onStage(gear.uid, openKey, r); setOpenKey(null); }}>
-                    <span className="ps-runeopt-name">{r.name}</span>
-                    <span className="ps-runeopt-price">{r.price} gp</span>
-                  </button>
-                </li>
-              ))}
+              {options.map((r) => {
+                const optKey = r.wareKey || r.id;
+                return (
+                  <li key={optKey}>
+                    <div className="ps-runeopt-row">
+                      <button type="button" className="ps-runeopt" aria-label={`etch ${r.name}`}
+                        onClick={() => { onStage(gear.uid, openKey, r); setOpenKey(null); }}>
+                        <span className="ps-runeopt-name">{r.name}</span>
+                        <span className="ps-runeopt-price">{r.price} gp</span>
+                      </button>
+                      {/* Full effect on demand (#1055 S1) — you shouldn't have
+                          to buy a rune to learn what it does. */}
+                      <button type="button" className="ps-runeopt-info" aria-expanded={infoKey === optKey}
+                        aria-label={`${r.name} details`}
+                        onClick={() => setInfoKey(infoKey === optKey ? null : optKey)}>ⓘ</button>
+                    </div>
+                    {infoKey === optKey && (
+                      <div className="ps-runeopt-detail" data-testid={`runeopt-detail-${r.id}`}>
+                        <RuneMechanics rune={r} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
           <button type="button" className="ps-runepicker-cancel" onClick={() => setOpenKey(null)}>Cancel</button>

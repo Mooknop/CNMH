@@ -241,6 +241,36 @@
 .loot-scroll .item-rune-tier { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--accent-text); margin: 0 0 0.5rem; }
 .loot-scroll .item-rune-level { font-family: var(--font-mono); font-size: 0.78rem; color: var(--shell-text-tertiary); }
 .loot-scroll .item-runestone-note { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; color: var(--shell-text-tertiary); font-style: italic; margin: 0.5rem 0 0; }
+/* Full rune effect in the runestone block (#1055 S1) — shared RuneMechanics. */
+.loot-scroll .rune-mech { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
+.loot-scroll .rune-mech-desc,
+.loot-scroll .rune-mech-act-desc { font-family: var(--font-body); font-size: 0.96rem; line-height: 1.55; color: var(--shell-text-secondary); margin: 0; }
+.loot-scroll .rune-mech-usage {
+  margin: 0; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--shell-text-tertiary);
+}
+.loot-scroll .rune-mech-rarity {
+  padding: 1px 7px; border-radius: 20px; font-size: 0.66rem; font-weight: 700;
+  border: 1px solid var(--rar, var(--shell-border)); color: var(--shell-text-secondary);
+}
+.loot-scroll .rune-mech-mods,
+.loot-scroll .rune-mech-riders {
+  margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 2px;
+  font-family: var(--font-body); font-size: 0.9rem; line-height: 1.45;
+}
+.loot-scroll .rune-mech-mods li { font-weight: 600; color: var(--shell-text-primary); }
+.loot-scroll .rune-mech-riders li { font-style: italic; color: var(--shell-text-secondary); }
+.loot-scroll .rune-mech-act {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  padding: 0.7rem 0.8rem; border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md); background: var(--surface-inset);
+}
+.loot-scroll .rune-mech-act-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.loot-scroll .rune-mech-act-name { font-weight: 600; color: var(--shell-text-primary); }
+.loot-scroll .rune-mech-act-traits { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.loot-scroll .rune-mech-act-freq,
+.loot-scroll .rune-mech-onblock,
+.loot-scroll .rune-mech-note { margin: 0; font-family: var(--font-body); font-size: 0.82rem; line-height: 1.4; color: var(--shell-text-tertiary); }
 .loot-scroll .item-rune-name,
 .loot-scroll .action-name,
 .loot-scroll .reaction-name,

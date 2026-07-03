@@ -443,7 +443,7 @@ describe('ShopStorefront', () => {
       fireEvent.click(upgrade);
       const picker = screen.getByTestId('picker-w1');
       expect(within(picker).getByText('Greater Potency')).toBeInTheDocument();
-      fireEvent.click(within(picker).getByRole('button', { name: /Greater Potency/ }));
+      fireEvent.click(within(picker).getByRole('button', { name: /^etch Greater Potency/ }));
       expect(within(gear).getByLabelText('un-stage Greater Potency')).toBeInTheDocument();
     });
 
@@ -458,11 +458,11 @@ describe('ShopStorefront', () => {
       expect(within(gear).queryByLabelText(/fill Property slot/i)).not.toBeInTheDocument();
       // Stage +1 potency through the empty potency socket.
       fireEvent.click(within(gear).getByLabelText(/fill Potency slot/i));
-      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Potency/ }));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /^etch Potency/ }));
       // The unlocked property socket is now present and tappable.
       const propSocket = within(gear).getByLabelText(/fill Property slot/i);
       fireEvent.click(propSocket);
-      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Flaming/ }));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /^etch Flaming/ }));
       // Both runes staged, priced as runestones (each + the 3 gp stone base).
       expect(within(gear).getByTestId('staged-w1')).toHaveTextContent('541 gp');
     });
@@ -483,7 +483,7 @@ describe('ShopStorefront', () => {
       expect(fillBtns.length).toBe(1);
       // The open socket offers the stocked ring rune (Calling), not weapon/armor runes.
       fireEvent.click(fillBtns[0]);
-      expect(within(screen.getByTestId('picker-pr1')).getByRole('button', { name: /Calling/ })).toBeInTheDocument();
+      expect(within(screen.getByTestId('picker-pr1')).getByRole('button', { name: /^etch Calling/ })).toBeInTheDocument();
     });
 
     it('moves runestones out of Wares and into the Runesmithing "for sale" section', () => {
@@ -506,6 +506,43 @@ describe('ShopStorefront', () => {
       expect(runeBlock).toHaveTextContent('Deals an extra 1d6 fire damage on a hit.');
       // the generic etching-stone description still follows
       expect(within(screen.getByTestId('ware-preview')).getByText(/flat piece of hard stone/i)).toBeInTheDocument();
+    });
+
+    // #1055 S1 — the preview carries the rune's WHOLE effect, not just flavor:
+    // an actuated accessory rune (Paired) shows its activation + usage tags.
+    it("previews a runestone with the rune's full mechanics (#1055 S1)", () => {
+      const paired = {
+        id: 'paired', type: 'property', target: 'accessory', name: 'Paired', level: 5, price: 150,
+        rarity: 'uncommon', usage: ['pocketed'],
+        description: 'These runes always come in pairs.',
+        actuated: { cost: 'none', name: 'Paired Exchange', actionCount: 1, frequency: 'once per day',
+          traits: ['Command'], description: 'Items in the pockets trade places via teleportation.' },
+      };
+      renderRunesWith({ inv: [], runeDocs: [paired], refs: ['paired'] });
+      fireEvent.keyDown(within(screen.getByLabelText('runes for sale')).getByTestId('ware-runestone-paired'), { key: 'Enter' });
+      const runeBlock = screen.getByTestId('ware-preview-rune');
+      expect(runeBlock).toHaveTextContent('Etches onto pocketed items');
+      expect(runeBlock).toHaveTextContent('Paired Exchange');
+      expect(runeBlock).toHaveTextContent('Frequency once per day');
+      expect(runeBlock).toHaveTextContent('Items in the pockets trade places via teleportation.');
+      expect(runeBlock).toHaveTextContent('holds at most one accessory rune');
+    });
+
+    // #1055 S1 — the socket picker's ⓘ expands the rune's full effect without
+    // staging it; the etch button still stages.
+    it('expands a picker option into the full rune effect via its details toggle', () => {
+      renderRunes();
+      fireEvent.click(within(screen.getByTestId('gear-w1')).getByLabelText(/fill Property slot/i));
+      const picker = screen.getByTestId('picker-w1');
+      expect(screen.queryByTestId('runeopt-detail-flaming')).not.toBeInTheDocument();
+      fireEvent.click(within(picker).getByRole('button', { name: 'Flaming details' }));
+      const detail = screen.getByTestId('runeopt-detail-flaming');
+      expect(detail).toHaveTextContent('Deals an extra 1d6 fire damage on a hit.');
+      // nothing staged by peeking
+      expect(within(screen.getByTestId('gear-w1')).queryByLabelText(/un-stage/)).not.toBeInTheDocument();
+      // toggle closes
+      fireEvent.click(within(picker).getByRole('button', { name: 'Flaming details' }));
+      expect(screen.queryByTestId('runeopt-detail-flaming')).not.toBeInTheDocument();
     });
 
     it('routes rune ITEM entries to Runes-for-sale, not Wares (#883)', () => {
@@ -553,7 +590,7 @@ describe('ShopStorefront', () => {
       const picker = screen.getByTestId('picker-w1');
       expect(within(picker).getByText('Flaming')).toBeInTheDocument();
       expect(within(picker).queryByText('Striking')).not.toBeInTheDocument(); // wrong socket
-      fireEvent.click(within(picker).getByRole('button', { name: /Flaming/ }));
+      fireEvent.click(within(picker).getByRole('button', { name: /^etch Flaming/ }));
       // staged: socket shows the rune + a pending note (runestone price 3+500)
       expect(within(gear).getByTestId('staged-w1')).toHaveTextContent('503 gp');
       expect(within(gear).getByLabelText('un-stage Flaming')).toBeInTheDocument();
@@ -563,7 +600,7 @@ describe('ShopStorefront', () => {
       renderRunes();
       const gear = screen.getByTestId('gear-w1');
       fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
-      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /^etch Striking/ }));
       expect(within(gear).getByLabelText('un-stage Striking')).toBeInTheDocument();
       fireEvent.click(within(gear).getByLabelText('un-stage Striking'));
       expect(within(gear).queryByTestId('staged-w1')).not.toBeInTheDocument();
@@ -572,7 +609,7 @@ describe('ShopStorefront', () => {
     const stageStriking = () => {
       const gear = screen.getByTestId('gear-w1');
       fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
-      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /^etch Striking/ }));
     };
 
     it('a staged rune shows as a handoff line in the cart and checks out (#878)', () => {
@@ -640,7 +677,7 @@ describe('ShopStorefront', () => {
       expect(gear).toHaveTextContent('Cloak');
       expect(gear).toHaveTextContent('1 open slot · accessory');
       fireEvent.click(within(gear).getByLabelText('fill Accessory slot on Cloak'));
-      fireEvent.click(within(screen.getByTestId('picker-k1')).getByRole('button', { name: /Menacing/ }));
+      fireEvent.click(within(screen.getByTestId('picker-k1')).getByRole('button', { name: /^etch Menacing/ }));
       // staged: runestone price (3 + 50) pending
       expect(within(gear).getByTestId('staged-k1')).toHaveTextContent('53 gp');
       fireEvent.click(screen.getByTestId('cart-bar'));
@@ -663,7 +700,7 @@ describe('ShopStorefront', () => {
       expect(within(gear).getByLabelText(/fill Property slot/i)).toBeInTheDocument();
       // …plus the accessory socket, whose picker offers the accessory rune only.
       fireEvent.click(within(gear).getByLabelText(/fill Accessory slot/i));
-      expect(within(screen.getByTestId('picker-e1')).getByRole('button', { name: /Menacing/ })).toBeInTheDocument();
+      expect(within(screen.getByTestId('picker-e1')).getByRole('button', { name: /^etch Menacing/ })).toBeInTheDocument();
     });
 
     it('an inscribed accessory socket shows its rune with no upgrade path (#1033 S5)', () => {
@@ -738,7 +775,7 @@ describe('ShopStorefront', () => {
       renderG3([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
       const gear = screen.getByTestId('gear-w1');
       fireEvent.click(within(gear).getByLabelText(/fill Property slot/i));
-      expect(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Flaming/ })).toBeInTheDocument();
+      expect(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /^etch Flaming/ })).toBeInTheDocument();
     });
 
     it('surfaces the Runes tab for an offering-only shop with no hand-stocked runes', () => {
