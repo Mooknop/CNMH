@@ -181,6 +181,67 @@ function extractHazards(html, hazardIndex) {
   return out;
 }
 
+// --- treasure (#1085) --------------------------------------------------------
+
+// Coins are named exactly "<Metal> Pieces" with the denomination in the unit
+// price ({gp:1}/{sp:1}/{cp:1}/{pp:1}); everything else of type "treasure" is a
+// valuable (art/gem/jewelry) with a gp price. stackGroup is absent in this
+// module, so match by name.
+const COIN_RE = /^(?:Gold|Silver|Copper|Platinum) Pieces$/i;
+
+// A price {gp,sp,cp,pp} → its value in gp.
+function coinValueGp(v) {
+  if (!v || typeof v !== 'object') return 0;
+  return (v.pp || 0) * 10 + (v.gp || 0) + (v.sp || 0) / 10 + (v.cp || 0) / 100;
+}
+
+// Classify one embedded loot-actor item into a cache contribution:
+//   { kind:'coin', gp }        — folds into the cache gold total
+//   { kind:'item', entry }     — real item, ref = PF2e slug (resolved in-app)
+//   { kind:'valuable', entry } — art/gem, no ref, per-unit gp `value`
+//   { kind:'story', entry }    — slug-less plot item (key/collection/map)
+function classifyLootItem(it) {
+  const sys = it.system || {};
+  const qty = sys.quantity ?? 1;
+  const unitGp = coinValueGp(sys.price?.value);
+  if (it.type === 'treasure') {
+    if (COIN_RE.test(it.name || '')) return { kind: 'coin', gp: unitGp * qty };
+    return { kind: 'valuable', entry: { name: it.name, qty, value: Math.round(unitGp) } };
+  }
+  if (sys.slug) return { kind: 'item', entry: { ref: sys.slug, name: it.name, qty } };
+  return { kind: 'story', entry: { name: it.name, qty } };
+}
+
+// Actor ids referenced inside a room's Treasure paragraph(s) — the loot chests
+// whose contents make up the cache. (Uses the raw paragraph HTML, before the
+// UUID flattening that `extractLabeledParagraph` does.)
+function extractTreasureActorRefs(html) {
+  const refs = [];
+  for (const m of html.matchAll(/<p[^>]*>\s*<strong>Treasure:<\/strong>([\s\S]*?)<\/p>/gi)) {
+    for (const u of m[1].matchAll(/@UUID\[Actor\.([A-Za-z0-9]+)\]/g)) refs.push(u[1]);
+  }
+  return [...new Set(refs)];
+}
+
+// Build a room's structured treasure cache by merging every referenced loot
+// actor's embedded items: coins → gold, real items → refs, valuables/story →
+// name entries. Always returns { gold, items } (empty for prose-only rooms,
+// which the GM fills in the T3 editor).
+function extractTreasureCache(html, lootIndex) {
+  let gold = 0;
+  const items = [];
+  for (const id of extractTreasureActorRefs(html)) {
+    const actor = lootIndex[id];
+    if (!actor) continue;
+    for (const it of actor.items || []) {
+      const c = classifyLootItem(it);
+      if (c.kind === 'coin') gold += c.gp;
+      else items.push(c.entry);
+    }
+  }
+  return { gold: Math.round(gold), items };
+}
+
 // Body = the page HTML minus its heading and read-aloud blocks, cleaned.
 function extractBody(html) {
   const stripped = html
@@ -208,6 +269,13 @@ function buildHazardIndex(dump) {
   return idx;
 }
 
+// loot-actor id → the actor (with its embedded `items`), for treasure caches.
+function buildLootIndex(dump) {
+  const idx = {};
+  for (const la of dump.lootActors || []) idx[la._id] = la;
+  return idx;
+}
+
 const isFeaturesPage = (name) => /\bFeatures$/i.test(name || '');
 const isRoomPage = (page, moduleId) =>
   page.flags?.[moduleId]?.pageNumberClass === 'location' || /^[A-Z]\d*\.\s/.test(page.name || '');
@@ -215,6 +283,7 @@ const isRoomPage = (page, moduleId) =>
 function transformDump(dump) {
   const moduleId = dump.module;
   const hazardIndex = buildHazardIndex(dump);
+  const lootIndex = buildLootIndex(dump);
   const rooms = [];
   const features = [];
 
@@ -259,12 +328,14 @@ function transformDump(dump) {
         creatures: extractCreatures(html, hazardIndex),
         hazards: extractHazards(html, hazardIndex),
         treasure: extractLabeledParagraph(html, 'Treasure'),
+        treasureCache: extractTreasureCache(html, lootIndex),
         reward: extractLabeledParagraph(html, 'Reward'),
         notes: '',
       });
     }
   }
 
+  const cachesWithLoot = rooms.filter((r) => r.treasureCache.gold || r.treasureCache.items.length).length;
   return {
     rooms,
     features,
@@ -273,26 +344,45 @@ function transformDump(dump) {
       rooms: rooms.length,
       features: features.length,
       hazards: Object.keys(hazardIndex).length,
+      lootActors: Object.keys(lootIndex).length,
       checks: rooms.reduce((n, r) => n + r.checks.length, 0),
+      treasureCaches: cachesWithLoot,
     },
   };
 }
 
-// Preserve GM-authored `notes` (campaign significance, #1078) across a
-// re-import: the transform always emits notes:'' , so without this a re-run
-// would wipe every note the GM wrote. Carries over the existing non-empty note
-// for any doc id that still exists; new/renamed ids just keep their empty note.
-function mergeNotes(docs, existingDocs) {
+// Preserve GM-authored fields across a re-import. The transform re-derives
+// notes ('') and treasureCache (from the dump) every run, so without this a
+// re-run would wipe the GM's campaign notes (#1078) and any curated or
+// already-distributed treasure cache (#1085). For every doc id that still
+// exists, carry over the existing `notes` (if non-empty), `treasureCache` (the
+// GM's copy wins once a room has been imported — even an empty one is a GM
+// decision), and `distributedAt` (never regress distribution state). New ids
+// keep the freshly transformed values.
+function mergeGmFields(docs, existingDocs) {
   const byId = new Map();
   for (const d of existingDocs || []) {
-    if (d && d.id != null && d.notes) byId.set(String(d.id), d.notes);
+    if (d && d.id != null) byId.set(String(d.id), d);
   }
-  return docs.map((d) => (byId.has(d.id) ? { ...d, notes: byId.get(d.id) } : d));
+  return docs.map((d) => {
+    const ex = byId.get(d.id);
+    if (!ex) return d;
+    const merged = { ...d };
+    if (ex.notes) merged.notes = ex.notes;
+    if (ex.treasureCache) merged.treasureCache = ex.treasureCache;
+    if (ex.distributedAt != null) merged.distributedAt = ex.distributedAt;
+    return merged;
+  });
 }
 
 module.exports = {
   transformDump,
-  mergeNotes,
+  mergeGmFields,
+  buildLootIndex,
+  classifyLootItem,
+  coinValueGp,
+  extractTreasureActorRefs,
+  extractTreasureCache,
   parseCheck,
   deriveCheckLabel,
   extractChecks,

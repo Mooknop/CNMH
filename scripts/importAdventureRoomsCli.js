@@ -19,7 +19,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { transformDump, mergeNotes } = require('./importAdventureRooms');
+const { transformDump, mergeGmFields } = require('./importAdventureRooms');
 
 const args = process.argv.slice(2);
 const dumpPath = args.find((a) => !a.startsWith('--'));
@@ -33,7 +33,7 @@ if (!dumpPath) {
 const dump = JSON.parse(fs.readFileSync(dumpPath, 'utf8'));
 const { rooms, features, stats } = transformDump(dump);
 const docs = [...features, ...rooms];
-console.log(`Parsed ${stats.rooms} rooms + ${stats.features} site features from ${stats.journals} journals (${stats.checks} checks, ${stats.hazards} hazards).`);
+console.log(`Parsed ${stats.rooms} rooms + ${stats.features} site features from ${stats.journals} journals (${stats.checks} checks, ${stats.hazards} hazards, ${stats.treasureCaches} treasure caches).`);
 
 const post = postIdx !== -1 ? args[postIdx + 1] : null;
 if (post) {
@@ -52,7 +52,7 @@ if (post) {
       if (contentRes.ok) {
         const content = await contentRes.json();
         const existing = (content.payload || content).room || [];
-        toPost = mergeNotes(docs, existing);
+        toPost = mergeGmFields(docs, existing);
         const kept = toPost.filter((d) => d.notes).length;
         if (kept) console.log(`Preserved ${kept} existing GM note(s).`);
       }

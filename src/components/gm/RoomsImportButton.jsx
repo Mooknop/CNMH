@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { importRooms } from '../../utils/gmApi';
-import { transformDump, mergeNotes } from '../../../scripts/importAdventureRooms';
+import { transformDump, mergeGmFields } from '../../../scripts/importAdventureRooms';
 
 // One-click import of a Foundry adventure-module export (#1074). The GM picks
 // the raw journal dump downloaded by scripts/exportAdventureJournals.foundryMacro.js;
@@ -24,7 +24,7 @@ const RoomsImportButton = ({ label = 'Import rooms from Foundry export' }) => {
     try {
       const dump = JSON.parse(await file.text());
       const { rooms: parsedRooms, features } = transformDump(dump);
-      const docs = mergeNotes([...features, ...parsedRooms], rooms);
+      const docs = mergeGmFields([...features, ...parsedRooms], rooms);
       if (!docs.length) {
         setState('error');
         setMessage('That file has no adventure rooms in it — is it the journal dump from the export macro?');
