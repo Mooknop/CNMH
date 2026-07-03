@@ -5,6 +5,7 @@ import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
+import CastSpellModal from '../encounter/CastSpellModal';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
@@ -17,6 +18,7 @@ import {
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
+import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
@@ -51,7 +53,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Player-to-player item transfer (#656/#657) — out of combat only.
   const { give, giveConsumable } = useGiveItem(character?.id);
   const { mode } = usePlayMode();
-  const { characters } = useContent();
+  const { characters, spells } = useContent();
+  // Rune-granted spell cast (#1055 S3) — Menacing (Greater) fear / Presentable
+  // (Greater) suggestion. Open state for the hosted cast modal.
+  const [castingRune, setCastingRune] = useState(false);
   // Actuated-item activation state machine (#957 S4) — once/day + Overload +
   // broken/repair, driven by an item's optional `actuated` block.
   const { gameDate, time } = useGameDate();
@@ -114,7 +119,18 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const actuated = itemAct.actuated || item.actuated || null;
   const freeActuated = itemAct.cost === 'none';
   const who = character?.name || 'Someone';
+  // A spellRef actuation (#1055 S3) casts a catalog spell instead of just
+  // logging. It routes through the shared cast flow, which records the
+  // once/day use itself (same `${uid}:actuated` frequency key), so the card's
+  // Activate button just opens the modal — no direct itemAct spend.
+  const runeSpellDoc = actuatedCastsSpell(actuated)
+    ? (spells || []).find((s) => s.id === actuated.spellRef) || null
+    : null;
+  const runeCastSpell = runeSpellDoc
+    ? buildRuneCastSpell(actuated, runeSpellDoc, itemUidOf(item))
+    : null;
   const doActuate = (rank) => {
+    if (runeCastSpell) { setCastingRune(true); return; }
     const r = itemAct.activation.activate(rank);
     if (r.ok) {
       const spent = r.label ? ` (spent ${r.label})` : '';
@@ -668,10 +684,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                   <button
                     type="button"
                     className="btn-small btn-primary"
-                    data-testid="actuated-activate-free"
+                    data-testid={runeCastSpell ? 'actuated-cast-spell' : 'actuated-activate-free'}
                     onClick={() => doActuate()}
                   >
-                    Activate
+                    {runeCastSpell ? `Cast ${runeSpellDoc.name}` : 'Activate'}
                   </button>
                 </div>
               ) : (
@@ -722,6 +738,21 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             )}
           </div>
         </div>
+      )}
+
+      {/* Rune-granted spell cast (#1055 S3): the fixed-rank/DC spell resolved
+          from the actuated block, cast through the shared flow. It records the
+          once/day use itself (shared frequency key), so the actuated card
+          reflects it as spent on close. */}
+      {runeCastSpell && (
+        <CastSpellModal
+          isOpen={castingRune}
+          onClose={() => setCastingRune(false)}
+          spell={runeCastSpell}
+          castSource="innate"
+          character={character}
+          themeColor={themeColor}
+        />
       )}
 
       {/* Strikes */}
