@@ -110,7 +110,17 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         </div>
       </div>
 
-      <DndProvider renderGhost={(item) => <IconTile item={item} size={56} glow={false} />}>
+      {/* The ghost renders outside the `.inventory-grid` subtree (the provider
+          portals it to the root), so wrap it in the same scope or none of the
+          `.inventory-grid .icon-tile` sizing applies and the raw <img> balloons
+          to its natural resolution. */}
+      <DndProvider
+        renderGhost={(item) => (
+          <span className="inventory-grid">
+            <IconTile item={item} size={56} glow={false} />
+          </span>
+        )}
+      >
         <div className="inventory-grid">
           <BulkBar
             bulkUsed={bulkUsed}
