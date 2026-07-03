@@ -37,6 +37,12 @@ vi.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ isGm: false, email: null, loading: false }),
 }));
 
+// ShieldBlockBar's rune follow-up reads the game clock for its hourly
+// frequency gate (#1055 S2).
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({ gameDate: {}, time: {} }),
+}));
+
 import { __reset, useSyncedState } from '../../hooks/useSyncedState';
 import TurnTrackerPanel from './TurnTrackerPanel';
 import { useEncounter } from '../../hooks/useEncounter';

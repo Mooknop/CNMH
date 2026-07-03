@@ -6,6 +6,7 @@ import {
   resolveAccessoryItem,
   accessoryDisplayName,
   withAccessoryActivations,
+  runeOnBlock,
 } from './accessoryRunes';
 
 // Fixtures — minimal hosts + rune docs (#1033 S1).
@@ -156,5 +157,30 @@ describe('withAccessoryActivations (#1033 S2)', () => {
     expect(withAccessoryActivations(plain)).toBe(plain);
     const runedNoActs = { name: 'Cloak', runes: { accessory: menacing } };
     expect(withAccessoryActivations(runedNoActs)).toBe(runedNoActs);
+  });
+});
+
+describe('runeOnBlock (#1055 S2)', () => {
+  it('wraps a legacy prose rider as summary-only', () => {
+    expect(runeOnBlock({ onBlock: 'deal 4d4 force to the attacker' }))
+      .toEqual({ summary: 'deal 4d4 force to the attacker' });
+  });
+
+  it('passes a structured rider through', () => {
+    const ob = {
+      summary: '4d4 force (DC 20 basic Reflex).',
+      damage: { expression: '4d4', typeLabel: 'force' },
+      save: 'reflex', dc: 20, basic: true,
+    };
+    expect(runeOnBlock({ onBlock: ob })).toBe(ob);
+    const check = { summary: 'Disarm.', check: { skill: 'athletics', action: 'Disarm', bonus: 1 } };
+    expect(runeOnBlock({ onBlock: check })).toBe(check);
+  });
+
+  it('returns null when absent, junk, or an empty object', () => {
+    expect(runeOnBlock(null)).toBeNull();
+    expect(runeOnBlock({})).toBeNull();
+    expect(runeOnBlock({ onBlock: 42 })).toBeNull();
+    expect(runeOnBlock({ onBlock: {} })).toBeNull();
   });
 });

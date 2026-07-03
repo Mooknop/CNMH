@@ -3,6 +3,7 @@ import TraitTag from './TraitTag';
 import ActionSymbol from './ActionSymbol';
 import ItemActivations from './ItemActivations';
 import { runeModifierText, runeUsageText, ACCESSORY_RUNE_NOTE } from '../../utils/runeDisplay';
+import { runeOnBlock } from '../../utils/accessoryRunes';
 import { runeTarget } from '../../utils/runeClassify';
 
 // Shared, display-only render of a rune doc's FULL effect (#1055 S1): flavor
@@ -57,10 +58,10 @@ const RuneMechanics = ({ rune }) => {
           {actuated.description && <p className="rune-mech-act-desc">{actuated.description}</p>}
         </div>
       )}
-      {/* The onBlock string is the actuated card's one-line summary on the
+      {/* The onBlock rider is the actuated card's one-line summary on the
           three shield runes that declare both — only render it alone. */}
-      {!actuated && rune.onBlock && (
-        <p className="rune-mech-onblock"><strong>On Shield Block</strong> {rune.onBlock}</p>
+      {!actuated && runeOnBlock(rune)?.summary && (
+        <p className="rune-mech-onblock"><strong>On Shield Block</strong> {runeOnBlock(rune).summary}</p>
       )}
       {runeTarget(rune) === 'accessory' && (
         <p className="rune-mech-note">{ACCESSORY_RUNE_NOTE}</p>
