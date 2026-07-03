@@ -27,3 +27,44 @@
 .ttp-shieldblock {
   white-space: nowrap;
 }
+
+.ttp-shieldblock-rider-spent {
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+/* Armed rider follow-up (#1055 S2) — attacker pick + roll entry + fire/skip. */
+.ttp-shieldblock-followup {
+  flex-basis: 100%;
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ttp-shieldblock-followup select,
+.ttp-shieldblock-followup input {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+  font-size: var(--text-sm);
+}
+
+.ttp-shieldblock-followup input {
+  width: 90px;
+}
+
+.ttp-shieldblock-fire {
+  white-space: nowrap;
+}
+
+.ttp-shieldblock-skip {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
