@@ -366,10 +366,26 @@ describe('ActionsUtils', () => {
       };
 
       const result = getReactions(character);
-      
+
       expect(result).toHaveLength(2);
       expect(result.some(r => r.source === 'Feat1')).toBe(true);
       expect(result.some(r => r.source === 'Item1')).toBe(true);
+    });
+
+    // #1055 S5 — an inscribed accessory rune's reaction (Soft-Landing) surfaces.
+    it('surfaces an accessory-rune reaction, sourced as "Item (Rune)"', () => {
+      const boots = {
+        name: 'Boots',
+        runes: { accessory: { id: 'soft-landing', name: 'Soft-Landing', reactions: [{ name: 'Soft Landing', triggerType: 'fall' }] } },
+      };
+      const result = getReactions({ inventory: [boots] });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ name: 'Soft Landing', triggerType: 'fall', source: 'Boots (Soft-Landing)', active: true });
+    });
+
+    it('does not surface a still-string accessory rune ref', () => {
+      const result = getReactions({ inventory: [{ name: 'Boots', runes: { accessory: 'soft-landing' } }] });
+      expect(result).toHaveLength(0);
     });
   });
 

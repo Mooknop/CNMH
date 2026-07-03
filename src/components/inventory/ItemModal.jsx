@@ -34,6 +34,7 @@ import { useItemActivation } from '../../hooks/useItemActivation';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds } from '../../utils/gameTime';
+import { buildEffectEntry } from '../../utils/applyAbility';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
@@ -53,6 +54,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
   // when it derives the rune's Widen Spellshape free action.
   const [runeConfig, setRuneConfig] = useSyncedState(`cnmh_runeconfig_${character?.id}`, {});
+  // Active-effects store (#1055 S5) — an actuated block may apply a lasting
+  // self-effect on activation (Trackless (Greater)'s 8-hour emanation). Written
+  // here on activate; EffectsPanel renders it with a Dismiss ×.
+  const [, setEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
   const { appendEvent } = useSessionLog();
   // Player-to-player item transfer (#656/#657) — out of combat only.
   const { give, giveConsumable } = useGiveItem(character?.id);
@@ -138,6 +143,21 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     const r = itemAct.activation.activate(rank);
     if (r.ok) {
       const spent = r.label ? ` (spent ${r.label})` : '';
+      // Actuated self-effect (#1055 S5): Trackless (Greater) applies an 8-hour
+      // emanation on activation. Built at the current clock so its expiry sweeps
+      // out; a self-scoped write means no encounter/order is needed.
+      if (actuated.effect && character?.id) {
+        const entry = buildEffectEntry({
+          eff: actuated.effect,
+          caster: { id: character.id, name: who },
+          abilityName: actuated.name,
+          encounter: null,
+          casterEntryId: null,
+          targetEntryId: null,
+          nowSecs,
+        });
+        setEffects((cur) => [...(Array.isArray(cur) ? cur : []), entry]);
+      }
       appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${actuated.name}${spent}` });
       onClose();
     }
