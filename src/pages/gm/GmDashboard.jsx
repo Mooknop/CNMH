@@ -392,6 +392,10 @@ const GmDashboard = () => {
               characters={characters}
             />
           )}
+
+          {/* Current Room — under the mode/movement controls; hidden until
+              rooms are imported */}
+          <CurrentRoomPanel />
         </div>
 
         {/* Right column: party HP roster + quick actions */}
@@ -490,9 +494,6 @@ const GmDashboard = () => {
           </section>
         </div>
       </div>
-
-      {/* Current Room — full-width GM aid; hidden until rooms are imported */}
-      <CurrentRoomPanel />
 
       {/* Session Log — full-width, above maintenance */}
       <SessionLogPanel />
