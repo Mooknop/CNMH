@@ -98,7 +98,14 @@
       ],
       "description": "Free action. Trigger You Shield Block a melee Strike made with a held weapon. Effect You attempt to Disarm the creature whose attack you blocked of the weapon they attacked you with, with a +1 circumstance bonus. You can do so even if you don't have a hand free."
     },
-    "onBlock": "Free action (once per hour): attempt to Disarm the weapon you blocked — +1 circumstance bonus, no free hand needed."
+    "onBlock": {
+      "summary": "Free action (once per hour): attempt to Disarm the weapon you blocked — +1 circumstance bonus, no free hand needed.",
+      "check": {
+        "skill": "athletics",
+        "action": "Disarm",
+        "bonus": 1
+      }
+    }
   },
   {
     "id": "clothing-acid-resistant",
@@ -1061,7 +1068,16 @@
       ],
       "description": "Free action. Trigger You Shield Block a melee Strike. Effect You unleash force damage against the creature that made the triggering attack: 4d4 force damage, DC 20 basic Reflex save."
     },
-    "onBlock": "Free action (once per hour): 4d4 force damage to the attacker (DC 20 basic Reflex)."
+    "onBlock": {
+      "summary": "Free action (once per hour): 4d4 force damage to the attacker (DC 20 basic Reflex).",
+      "damage": {
+        "expression": "4d4",
+        "typeLabel": "force"
+      },
+      "save": "reflex",
+      "dc": 20,
+      "basic": true
+    }
   },
   {
     "id": "retaliation-moderate",
@@ -1083,7 +1099,16 @@
       ],
       "description": "Free action. Trigger You Shield Block a melee Strike. Effect You unleash force damage against the creature that made the triggering attack: 8d4 force damage, DC 27 basic Reflex save."
     },
-    "onBlock": "Free action (once per hour): 8d4 force damage to the attacker (DC 27 basic Reflex)."
+    "onBlock": {
+      "summary": "Free action (once per hour): 8d4 force damage to the attacker (DC 27 basic Reflex).",
+      "damage": {
+        "expression": "8d4",
+        "typeLabel": "force"
+      },
+      "save": "reflex",
+      "dc": 27,
+      "basic": true
+    }
   },
   {
     "id": "returning",
