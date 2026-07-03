@@ -285,7 +285,44 @@
   border-radius: 10px; background: var(--ps-screen);
 }
 .ps-preview-rune-name { font-weight: 600; font-size: 12.5px; }
-.ps-preview-rune-desc { margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2); }
+
+/* Full rune effect (#1055 S1): the shared RuneMechanics themed for the dark
+   storefront — the ware preview's rune block and the etch picker's detail. */
+.ps-preview .rune-mech, .ps-runeopt-detail .rune-mech { display: flex; flex-direction: column; gap: var(--space-2); }
+.ps-preview .rune-mech-desc, .ps-runeopt-detail .rune-mech-desc,
+.ps-preview .rune-mech-act-desc, .ps-runeopt-detail .rune-mech-act-desc {
+  margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2);
+}
+.ps-preview .rune-mech-usage, .ps-runeopt-detail .rune-mech-usage {
+  margin: 0; display: flex; align-items: center; gap: var(--space-2);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ps-ink3);
+}
+.ps-preview .rune-mech-rarity, .ps-runeopt-detail .rune-mech-rarity {
+  padding: 1px 7px; border-radius: 20px; font-size: 9.5px; font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--gold-mid) 55%, transparent); color: var(--gold-light);
+}
+.ps-preview .rune-mech-mods, .ps-runeopt-detail .rune-mech-mods,
+.ps-preview .rune-mech-riders, .ps-runeopt-detail .rune-mech-riders {
+  margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 2px;
+  font-family: var(--font-body); font-size: 12.5px; line-height: 1.45;
+}
+.ps-preview .rune-mech-mods li, .ps-runeopt-detail .rune-mech-mods li { font-weight: 600; color: var(--ps-ink); }
+.ps-preview .rune-mech-riders li, .ps-runeopt-detail .rune-mech-riders li { font-style: italic; color: var(--ps-ink2); }
+.ps-preview .rune-mech-act, .ps-runeopt-detail .rune-mech-act {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line);
+  border-radius: 10px; background: var(--ps-screen);
+}
+.ps-preview .rune-mech-act-head, .ps-runeopt-detail .rune-mech-act-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+}
+.ps-preview .rune-mech-act-name, .ps-runeopt-detail .rune-mech-act-name { font-weight: 600; font-size: 12.5px; color: var(--ps-ink); }
+.ps-preview .rune-mech-act-traits, .ps-runeopt-detail .rune-mech-act-traits { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.ps-preview .rune-mech-act-freq, .ps-runeopt-detail .rune-mech-act-freq,
+.ps-preview .rune-mech-onblock, .ps-runeopt-detail .rune-mech-onblock,
+.ps-preview .rune-mech-note, .ps-runeopt-detail .rune-mech-note {
+  margin: 0; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--ps-ink3);
+}
 .ps-preview-forms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .ps-preview-form {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
@@ -296,47 +333,74 @@
 .ps-preview-note { margin: 0; font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ps-ink3); }
 
 /* Item activations in the preview — shared markup with the inventory ItemModal
-   (#882), themed for the dark storefront. */
+   (#882), themed for the dark storefront (also inside the etch picker's rune detail, #1055 S1). */
 .ps-preview .item-actions h3,
+.ps-runeopt-detail .item-actions h3,
 .ps-preview .item-reactions h3,
-.ps-preview .item-free-actions h3 {
+.ps-runeopt-detail .item-reactions h3,
+.ps-preview .item-free-actions h3,
+.ps-runeopt-detail .item-free-actions h3 {
   margin: var(--space-2) 0 0; font-size: 9px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.13em; color: var(--ps-ink3);
 }
 .ps-preview .item-actions-list,
+.ps-runeopt-detail .item-actions-list,
 .ps-preview .item-reactions-list,
-.ps-preview .item-free-actions-list {
+.ps-runeopt-detail .item-reactions-list,
+.ps-preview .item-free-actions-list,
+.ps-runeopt-detail .item-free-actions-list {
   display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2);
 }
 .ps-preview .item-action,
+.ps-runeopt-detail .item-action,
 .ps-preview .item-reaction,
-.ps-preview .item-free-action {
+.ps-runeopt-detail .item-reaction,
+.ps-preview .item-free-action,
+.ps-runeopt-detail .item-free-action {
   padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line);
   border-radius: 10px; background: var(--ps-screen);
 }
 .ps-preview .action-header,
+.ps-runeopt-detail .action-header,
 .ps-preview .reaction-header,
-.ps-preview .free-action-header {
+.ps-runeopt-detail .reaction-header,
+.ps-preview .free-action-header,
+.ps-runeopt-detail .free-action-header {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
 }
 .ps-preview .action-name,
+.ps-runeopt-detail .action-name,
 .ps-preview .reaction-name,
-.ps-preview .free-action-name { font-weight: 600; font-size: 12.5px; color: var(--ps-ink); }
+.ps-runeopt-detail .reaction-name,
+.ps-preview .free-action-name,
+.ps-runeopt-detail .free-action-name { font-weight: 600; font-size: 12.5px; color: var(--ps-ink); }
 .ps-preview .action-icon,
+.ps-runeopt-detail .action-icon,
 .ps-preview .reaction-icon,
-.ps-preview .free-action-icon { font-size: 12px; color: var(--ps-ink2); }
+.ps-runeopt-detail .reaction-icon,
+.ps-preview .free-action-icon,
+.ps-runeopt-detail .free-action-icon { font-size: 12px; color: var(--ps-ink2); }
 .ps-preview .action-traits,
+.ps-runeopt-detail .action-traits,
 .ps-preview .reaction-traits,
-.ps-preview .free-action-traits { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: 4px; }
+.ps-runeopt-detail .reaction-traits,
+.ps-preview .free-action-traits,
+.ps-runeopt-detail .free-action-traits { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: 4px; }
 .ps-preview .reaction-trigger,
-.ps-preview .free-action-trigger { margin-top: 4px; font-size: 11.5px; color: var(--ps-ink2); }
-.ps-preview .trigger-label {
+.ps-runeopt-detail .reaction-trigger,
+.ps-preview .free-action-trigger,
+.ps-runeopt-detail .free-action-trigger { margin-top: 4px; font-size: 11.5px; color: var(--ps-ink2); }
+.ps-preview .trigger-label,
+.ps-runeopt-detail .trigger-label {
   font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
   color: var(--ps-ink3); margin-right: 6px;
 }
 .ps-preview .action-description,
+.ps-runeopt-detail .action-description,
 .ps-preview .reaction-description,
-.ps-preview .free-action-description {
+.ps-runeopt-detail .reaction-description,
+.ps-preview .free-action-description,
+.ps-runeopt-detail .free-action-description {
   margin: 4px 0 0; font-family: var(--font-body); font-size: 12.5px; line-height: 1.5; color: var(--ps-ink2);
 }
 
@@ -461,6 +525,20 @@
 .ps-runeopt-name { font-weight: 600; font-size: 12.5px; }
 .ps-runeopt-price { font-family: var(--font-display); font-weight: 700; color: var(--gold-light); }
 .ps-runepicker-cancel { background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 11px; color: var(--ps-ink2); }
+/* Full rune effect on demand in the picker (#1055 S1). */
+.ps-runeopt-row { display: flex; align-items: stretch; gap: var(--space-2); }
+.ps-runeopt-row .ps-runeopt { flex: 1; min-width: 0; }
+.ps-runeopt-info {
+  flex: none; width: 34px; display: grid; place-items: center; cursor: pointer;
+  font-size: 14px; color: var(--ps-ink2);
+  border: 1px solid var(--ps-line); border-radius: var(--radius-md); background: var(--ps-screen);
+}
+.ps-runeopt-info:hover, .ps-runeopt-info[aria-expanded='true'] { border-color: var(--ps-a-line); background: var(--ps-a-soft); color: var(--ps-ink); }
+.ps-runeopt-detail {
+  margin-top: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--ps-line); border-left: 3px solid var(--gold-mid);
+  border-radius: var(--radius-md); background: var(--ps-screen);
+}
 .ps-staged-note { margin: var(--space-3) 0 0; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--gold-light); }
 
 /* Handoff cart line (#878) — staged gear in the pull-up tray. */
