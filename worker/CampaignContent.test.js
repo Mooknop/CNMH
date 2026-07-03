@@ -37,6 +37,12 @@ function makeSqlStorage() {
         const [collection] = params;
         return result([{ n: documents.filter((d) => d.collection === collection).length }]);
       }
+      if (q.startsWith('SELECT id, data FROM documents WHERE collection = ?')) {
+        const [collection] = params;
+        return result(
+          documents.filter((d) => d.collection === collection).map((d) => ({ id: d.id, data: d.data })),
+        );
+      }
       if (q.startsWith('SELECT id FROM documents WHERE collection = ?')) {
         const [collection] = params;
         return result(documents.filter((d) => d.collection === collection).map((d) => ({ id: d.id })));
@@ -216,5 +222,82 @@ describe('CampaignContent capture-only collections (#760)', () => {
     const snap = await content.fetch(makeReq('GET', '/api/content'));
     const ids = snap.payload.payload.monster.map((d) => d.id);
     expect(ids).toEqual(['goblin-warrior']); // survived the reseed
+  });
+});
+
+describe('CampaignContent bulk import (#1075)', () => {
+  const importDocs = (content, collection, docs) =>
+    content.fetch(makeReq('POST', `/api/gm/import/${collection}`, { docs }));
+
+  test('creates new docs and reports the counts', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+    const res = await importDocs(content, 'room', [
+      { id: 'sd4s-a1', name: 'Entrance' },
+      { id: 'sd4s-a2', name: 'Dining Hall' },
+    ]);
+
+    expect(res.payload).toMatchObject({ ok: true, created: 2, updated: 0, unchanged: 0, skipped: 0 });
+    const snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.room.map((d) => d.id).sort()).toEqual(['sd4s-a1', 'sd4s-a2']);
+  });
+
+  test('is the write path for capture-only room (seed refuses it, import does not)', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+
+    // The seed route must skip `room` (public repo — never bundled).
+    const seeded = await seed(content, { room: [{ id: 'seeded', name: 'Nope' }] }, { force: true });
+    expect(seeded.payload.seeded.room).toBe('skipped (capture-only, never seeded)');
+    let snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.room).toEqual([]);
+
+    // The import route is how the same collection actually gets populated.
+    await importDocs(content, 'room', [{ id: 'a3', name: 'Shrine to Kabriri' }]);
+    snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.room.map((d) => d.id)).toEqual(['a3']);
+  });
+
+  test('re-running an unchanged import writes nothing and churns no history', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+    await importDocs(content, 'room', [{ id: 'a3', name: 'Shrine', dc: 19 }]);
+
+    const res = await importDocs(content, 'room', [{ id: 'a3', name: 'Shrine', dc: 19 }]);
+    expect(res.payload).toMatchObject({ created: 0, updated: 0, unchanged: 1 });
+    expect(historyIds(state, 'room')).toEqual([]); // no-op left no archived version
+  });
+
+  test('a changed doc is archived then overwritten (restorable)', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+    await importDocs(content, 'room', [{ id: 'a3', name: 'Shrine', dc: 19 }]);
+
+    const res = await importDocs(content, 'room', [{ id: 'a3', name: 'Shrine', dc: 21 }]);
+    expect(res.payload).toMatchObject({ created: 0, updated: 1, unchanged: 0 });
+
+    const snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.room[0].dc).toBe(21); // live reflects the update
+
+    const hist = await content.fetch(makeReq('GET', '/api/gm/history/room/a3'));
+    expect(hist.payload.history[0].data).toEqual({ id: 'a3', name: 'Shrine', dc: 19 }); // prior restorable
+  });
+
+  test('docs without an id are skipped, not written', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+    const res = await importDocs(content, 'room', [{ name: 'no id here' }, { id: 'ok', name: 'fine' }]);
+    expect(res.payload).toMatchObject({ created: 1, skipped: 1 });
+  });
+
+  test('rejects an unknown collection and a malformed body', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+
+    const bad = await importDocs(content, 'nonsense', [{ id: 'x' }]);
+    expect(bad.init.status).toBe(404);
+
+    const noDocs = await content.fetch(makeReq('POST', '/api/gm/import/room', { nope: true }));
+    expect(noDocs.init.status).toBe(400);
   });
 });
