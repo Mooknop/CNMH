@@ -482,9 +482,67 @@
           "Envision",
           "Spellshape"
         ],
-        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 1st rank or lower."
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 1st rank or lower.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "dragon-breath-area",
+          "transform": {
+            "widenArea": true
+          },
+          "maxRank": 1
+        }
       }
-    ]
+    ],
+    "dragonChoice": {
+      "key": "dragonType",
+      "label": "Depicted dragon (damage type)",
+      "options": [
+        {
+          "value": "fire",
+          "label": "Fire"
+        },
+        {
+          "value": "cold",
+          "label": "Cold"
+        },
+        {
+          "value": "electricity",
+          "label": "Electricity"
+        },
+        {
+          "value": "acid",
+          "label": "Acid"
+        },
+        {
+          "value": "poison",
+          "label": "Poison"
+        },
+        {
+          "value": "sonic",
+          "label": "Sonic"
+        },
+        {
+          "value": "force",
+          "label": "Force"
+        },
+        {
+          "value": "mental",
+          "label": "Mental"
+        },
+        {
+          "value": "spirit",
+          "label": "Spirit"
+        },
+        {
+          "value": "vitality",
+          "label": "Vitality"
+        },
+        {
+          "value": "void",
+          "label": "Void"
+        }
+      ]
+    }
   },
   {
     "id": "dragons-breath-2",
@@ -506,9 +564,67 @@
           "Envision",
           "Spellshape"
         ],
-        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 2nd rank or lower."
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 2nd rank or lower.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "dragon-breath-area",
+          "transform": {
+            "widenArea": true
+          },
+          "maxRank": 2
+        }
       }
-    ]
+    ],
+    "dragonChoice": {
+      "key": "dragonType",
+      "label": "Depicted dragon (damage type)",
+      "options": [
+        {
+          "value": "fire",
+          "label": "Fire"
+        },
+        {
+          "value": "cold",
+          "label": "Cold"
+        },
+        {
+          "value": "electricity",
+          "label": "Electricity"
+        },
+        {
+          "value": "acid",
+          "label": "Acid"
+        },
+        {
+          "value": "poison",
+          "label": "Poison"
+        },
+        {
+          "value": "sonic",
+          "label": "Sonic"
+        },
+        {
+          "value": "force",
+          "label": "Force"
+        },
+        {
+          "value": "mental",
+          "label": "Mental"
+        },
+        {
+          "value": "spirit",
+          "label": "Spirit"
+        },
+        {
+          "value": "vitality",
+          "label": "Vitality"
+        },
+        {
+          "value": "void",
+          "label": "Void"
+        }
+      ]
+    }
   },
   {
     "id": "dragons-breath-3",
@@ -530,9 +646,67 @@
           "Envision",
           "Spellshape"
         ],
-        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 3rd rank or lower."
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 3rd rank or lower.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "dragon-breath-area",
+          "transform": {
+            "widenArea": true
+          },
+          "maxRank": 3
+        }
       }
-    ]
+    ],
+    "dragonChoice": {
+      "key": "dragonType",
+      "label": "Depicted dragon (damage type)",
+      "options": [
+        {
+          "value": "fire",
+          "label": "Fire"
+        },
+        {
+          "value": "cold",
+          "label": "Cold"
+        },
+        {
+          "value": "electricity",
+          "label": "Electricity"
+        },
+        {
+          "value": "acid",
+          "label": "Acid"
+        },
+        {
+          "value": "poison",
+          "label": "Poison"
+        },
+        {
+          "value": "sonic",
+          "label": "Sonic"
+        },
+        {
+          "value": "force",
+          "label": "Force"
+        },
+        {
+          "value": "mental",
+          "label": "Mental"
+        },
+        {
+          "value": "spirit",
+          "label": "Spirit"
+        },
+        {
+          "value": "vitality",
+          "label": "Vitality"
+        },
+        {
+          "value": "void",
+          "label": "Void"
+        }
+      ]
+    }
   },
   {
     "id": "dragons-breath-4",
@@ -554,9 +728,67 @@
           "Envision",
           "Spellshape"
         ],
-        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 4th rank or lower."
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 4th rank or lower.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "dragon-breath-area",
+          "transform": {
+            "widenArea": true
+          },
+          "maxRank": 4
+        }
       }
-    ]
+    ],
+    "dragonChoice": {
+      "key": "dragonType",
+      "label": "Depicted dragon (damage type)",
+      "options": [
+        {
+          "value": "fire",
+          "label": "Fire"
+        },
+        {
+          "value": "cold",
+          "label": "Cold"
+        },
+        {
+          "value": "electricity",
+          "label": "Electricity"
+        },
+        {
+          "value": "acid",
+          "label": "Acid"
+        },
+        {
+          "value": "poison",
+          "label": "Poison"
+        },
+        {
+          "value": "sonic",
+          "label": "Sonic"
+        },
+        {
+          "value": "force",
+          "label": "Force"
+        },
+        {
+          "value": "mental",
+          "label": "Mental"
+        },
+        {
+          "value": "spirit",
+          "label": "Spirit"
+        },
+        {
+          "value": "vitality",
+          "label": "Vitality"
+        },
+        {
+          "value": "void",
+          "label": "Void"
+        }
+      ]
+    }
   },
   {
     "id": "dragons-breath-5",
@@ -578,9 +810,67 @@
           "Envision",
           "Spellshape"
         ],
-        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 5th rank or lower."
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 5th rank or lower.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "dragon-breath-area",
+          "transform": {
+            "widenArea": true
+          },
+          "maxRank": 5
+        }
       }
-    ]
+    ],
+    "dragonChoice": {
+      "key": "dragonType",
+      "label": "Depicted dragon (damage type)",
+      "options": [
+        {
+          "value": "fire",
+          "label": "Fire"
+        },
+        {
+          "value": "cold",
+          "label": "Cold"
+        },
+        {
+          "value": "electricity",
+          "label": "Electricity"
+        },
+        {
+          "value": "acid",
+          "label": "Acid"
+        },
+        {
+          "value": "poison",
+          "label": "Poison"
+        },
+        {
+          "value": "sonic",
+          "label": "Sonic"
+        },
+        {
+          "value": "force",
+          "label": "Force"
+        },
+        {
+          "value": "mental",
+          "label": "Mental"
+        },
+        {
+          "value": "spirit",
+          "label": "Spirit"
+        },
+        {
+          "value": "vitality",
+          "label": "Vitality"
+        },
+        {
+          "value": "void",
+          "label": "Void"
+        }
+      ]
+    }
   },
   {
     "id": "dread",
