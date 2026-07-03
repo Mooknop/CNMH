@@ -207,6 +207,17 @@ describe('applyRune — accessory slot (#1033)', () => {
     expect(applyRune({ ...cloak, traits: ['Invested'] }, menacing)).toBeNull(); // invested magic
   });
 
+  it('bakes an etch-time config onto the entry (#1059 — Dragon\'s Breath dragon type)', () => {
+    const dbRune = { id: 'dragons-breath-3', type: 'property', target: 'accessory', usage: ['cloak'], etchConfig: { dragonType: 'fire' } };
+    const out = applyRune(cloak, dbRune);
+    expect(out.runes).toEqual({ accessory: 'dragons-breath-3', accessoryConfig: { dragonType: 'fire' } });
+  });
+
+  it('omits accessoryConfig when the staged rune carries no etchConfig', () => {
+    const out = applyRune(cloak, menacing);
+    expect(out.runes.accessoryConfig).toBeUndefined();
+  });
+
   it('non-accessory gear paths are unchanged: an accessory rune never lands in weapon/armor sockets', () => {
     expect(applyRune(weapon({ potency: 1 }), { ...menacing, usage: ['clothing'] })).toBeNull();
     expect(applyRune(armor({ potency: 1 }), menacing)).toBeNull(); // armor without the clothing tag
