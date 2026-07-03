@@ -4,9 +4,11 @@ import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useCurrentRoom', () => ({ useCurrentRoom: vi.fn() }));
+vi.mock('../../utils/gmApi', () => ({ saveDocument: vi.fn() }));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';
+import { saveDocument } from '../../utils/gmApi';
 import GmRooms from './GmRooms';
 
 const rooms = [
@@ -20,6 +22,7 @@ const renderPage = () => render(<MemoryRouter><GmRooms /></MemoryRouter>);
 
 beforeEach(() => {
   useCurrentRoom.mockReturnValue({ pinnedId: null, pinRoom });
+  saveDocument.mockResolvedValue({ ok: true });
 });
 
 describe('GmRooms', () => {
@@ -62,5 +65,20 @@ describe('GmRooms', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Features' }));
     expect(screen.queryByRole('button', { name: /Pin to dashboard/ })).not.toBeInTheDocument();
+  });
+
+  it('edits and saves GM significance notes on the selected room', async () => {
+    useContent.mockReturnValue({ rooms });
+    renderPage();
+    const box = screen.getByLabelText('Campaign significance (GM notes)');
+    const saveBtn = screen.getByRole('button', { name: 'Save notes' });
+    expect(saveBtn).toBeDisabled(); // nothing dirty yet
+
+    fireEvent.change(box, { target: { value: 'Ambush the party here.' } });
+    expect(saveBtn).toBeEnabled();
+    fireEvent.click(saveBtn);
+
+    expect(saveDocument).toHaveBeenCalledWith('room', 'a1', expect.objectContaining({ notes: 'Ambush the party here.' }));
+    expect(await screen.findByText('Saved.')).toBeInTheDocument();
   });
 });

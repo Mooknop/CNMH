@@ -286,8 +286,21 @@ function transformDump(dump) {
   };
 }
 
+// Preserve GM-authored `notes` (campaign significance, #1078) across a
+// re-import: the transform always emits notes:'' , so without this a re-run
+// would wipe every note the GM wrote. Carries over the existing non-empty note
+// for any doc id that still exists; new/renamed ids just keep their empty note.
+function mergeNotes(docs, existingDocs) {
+  const byId = new Map();
+  for (const d of existingDocs || []) {
+    if (d && d.id != null && d.notes) byId.set(String(d.id), d.notes);
+  }
+  return docs.map((d) => (byId.has(d.id) ? { ...d, notes: byId.get(d.id) } : d));
+}
+
 module.exports = {
   transformDump,
+  mergeNotes,
   parseCheck,
   deriveCheckLabel,
   extractChecks,
@@ -333,7 +346,22 @@ if (require.main === module) {
       headers['CF-Access-Client-Secret'] = process.env.CF_ACCESS_CLIENT_SECRET;
     }
     (async () => {
-      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ docs }) });
+      // Preserve any GM notes already in the live store (#1078) before POSTing.
+      // /api/content is public (read), so no auth is needed for this fetch.
+      let toPost = docs;
+      try {
+        const contentRes = await fetch(`${post.replace(/\/$/, '')}/api/content`);
+        if (contentRes.ok) {
+          const content = await contentRes.json();
+          const existing = (content.payload || content).room || [];
+          toPost = mergeNotes(docs, existing);
+          const kept = toPost.filter((d) => d.notes).length;
+          if (kept) console.log(`Preserved ${kept} existing GM note(s).`);
+        }
+      } catch {
+        console.warn('Could not read existing rooms to preserve notes — proceeding without merge.');
+      }
+      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ docs: toPost }) });
       const text = await res.text();
       console.log(`POST ${url} → ${res.status}: ${text}`);
       if (!res.ok) process.exit(1);

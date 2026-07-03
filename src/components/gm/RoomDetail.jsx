@@ -11,7 +11,7 @@ const Html = ({ html, className, as: Tag = 'div', ...rest }) => (
   <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} {...rest} />
 );
 
-const RoomDetail = ({ room, showBody = true }) => {
+const RoomDetail = ({ room, showBody = true, showNotes = true }) => {
   if (!room) return null;
   const {
     code,
@@ -24,6 +24,7 @@ const RoomDetail = ({ room, showBody = true }) => {
     treasure,
     reward,
     body,
+    notes,
   } = room;
 
   return (
@@ -85,6 +86,13 @@ const RoomDetail = ({ room, showBody = true }) => {
 
       {treasure && <Html as="p" className="gm-room-loot" html={`<strong>Treasure:</strong> ${treasure}`} />}
       {reward && <Html as="p" className="gm-room-loot" html={`<strong>Reward:</strong> ${reward}`} />}
+
+      {showNotes && notes && (
+        <div className="gm-room-section gm-room-notes-display">
+          <h4>Campaign significance</h4>
+          <p className="gm-room-notes-text">{notes}</p>
+        </div>
+      )}
 
       {showBody && body && (
         <details className="gm-room-body">

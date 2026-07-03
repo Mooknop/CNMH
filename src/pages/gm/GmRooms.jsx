@@ -2,9 +2,52 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';
 import { groupRoomsBySite, roomMatches } from '../../utils/rooms';
+import { saveDocument } from '../../utils/gmApi';
 import RoomDetail from '../../components/gm/RoomDetail';
 import GmIcon from './GmIcon';
 import './gm.css';
+
+// Editable GM "campaign significance" note for one room (#1078). Saves the full
+// room doc with the new notes via the single-doc PUT (archives the prior
+// version). Remounted per room (key) so the draft resets when the GM switches
+// rooms. The live re-import preserves this field, so authoring survives a
+// re-run of the import script.
+const RoomNotesEditor = ({ room }) => {
+  const [notes, setNotes] = useState(room.notes || '');
+  const [state, setState] = useState('idle'); // idle | saving | saved | error
+  const dirty = notes !== (room.notes || '');
+
+  const save = async () => {
+    setState('saving');
+    try {
+      await saveDocument('room', room.id, { ...room, notes });
+      setState('saved');
+    } catch {
+      setState('error');
+    }
+  };
+
+  return (
+    <div className="gm-room-notes-edit">
+      <label htmlFor="gm-room-notes">Campaign significance (GM notes)</label>
+      <textarea
+        id="gm-room-notes"
+        className="gm-room-notes-input"
+        rows={4}
+        placeholder="Private GM notes — significance, callbacks, reminders…"
+        value={notes}
+        onChange={(e) => { setNotes(e.target.value); setState('idle'); }}
+      />
+      <div className="gm-room-notes-actions">
+        <button type="button" className="btn-primary" disabled={!dirty || state === 'saving'} onClick={save}>
+          {state === 'saving' ? 'Saving…' : 'Save notes'}
+        </button>
+        {state === 'saved' && <span className="gm-ok">Saved.</span>}
+        {state === 'error' && <span className="gm-warn">Save failed — try again.</span>}
+      </div>
+    </div>
+  );
+};
 
 // World → Rooms: the read-only adventure-room browser (#1077). Site rail on the
 // left, room detail on the right, plus a "Pin to dashboard" action that sets the
@@ -110,7 +153,8 @@ const GmRooms = () => {
                 </button>
               )}
             </div>
-            <RoomDetail room={selected} />
+            <RoomDetail room={selected} showNotes={false} />
+            <RoomNotesEditor key={selected.id} room={selected} />
           </>
         ) : (
           <p className="gm-help">Select a room.</p>

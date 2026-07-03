@@ -31,11 +31,26 @@ describe('groupRoomsBySite', () => {
 });
 
 describe('roomMatches', () => {
-  const doc = { code: 'A3', name: 'Shrine to Kabriri' };
+  const doc = {
+    code: 'A3',
+    name: 'Shrine to Kabriri',
+    notes: 'callback to the prologue',
+    creatures: ['Glorkus'],
+    hazards: [{ name: 'Fires of Abraxas' }],
+    checks: [{ label: 'Force Open', statistic: 'athletics' }],
+    body: '<p>A hidden <strong>secret door</strong> lurks.</p>',
+  };
   it('matches on code or name, case-insensitively', () => {
     expect(roomMatches(doc, 'a3')).toBe(true);
     expect(roomMatches(doc, 'kabriri')).toBe(true);
-    expect(roomMatches(doc, 'goblin')).toBe(false);
+    expect(roomMatches(doc, 'zzz')).toBe(false);
+  });
+  it('matches creatures, hazards, checks, notes, and body prose', () => {
+    expect(roomMatches(doc, 'glorkus')).toBe(true);
+    expect(roomMatches(doc, 'abraxas')).toBe(true);
+    expect(roomMatches(doc, 'athletics')).toBe(true);
+    expect(roomMatches(doc, 'prologue')).toBe(true);
+    expect(roomMatches(doc, 'secret door')).toBe(true); // body HTML flattened
   });
   it('matches everything when the term is empty', () => {
     expect(roomMatches(doc, '')).toBe(true);
