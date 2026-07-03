@@ -2267,6 +2267,22 @@
     "id": "crown-of-the-companion"
   },
   {
+    "id": "cultist-cowl",
+    "name": "Cultist Cowl",
+    "level": 3,
+    "traits": [
+      "Divine",
+      "Magical"
+    ],
+    "price": 60,
+    "weight": 0.1,
+    "bonus": [
+      "religion",
+      1
+    ],
+    "description": "The fabric of a cultist cowl is either raspy burlap, durable cotton, or fine silk, depending on the item's power. When a character who worships a single deity dons a cultist cowl, the cowl's colors change to match those sacred to that deity, and the deity's symbol appears on the front. While worn, you gain a +1 item bonus to Religion checks. You also gain a +1 item bonus to all skill checks attempted to aid a ritual by being a secondary caster."
+  },
+  {
     "id": "dagger",
     "name": "Dagger",
     "description": "This small, bladed weapon is held in one hand and used to stab a creature in close combat. It can also be thrown.",
@@ -2316,6 +2332,18 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "devils-breath-incense",
+    "name": "Devil's Breath Incense",
+    "level": 7,
+    "traits": [
+      "Consumable",
+      "Divine"
+    ],
+    "price": 70,
+    "weight": 0.1,
+    "description": "This 6-inch stick of gray-green incense has an unsettling, oily look. Activate (Interact): When burned, it emits a brimstone-like stink and burns for 10 minutes. A creature within 10 feet must succeed at a Fortitude save or become sickened 1 (sickened 2 on a critical failure), after which it is temporarily immune for 1 hour. While the stick burns, an adjacent creature can inhale forcefully (Interact), consuming the entire stick and becoming sickened 3; on its next turn it can exhale a 15-foot cone of foul-smelling smoke that sickens creatures in the area."
   },
   {
     "actions": [
@@ -4535,6 +4563,26 @@
     "runes": {}
   },
   {
+    "id": "mesmerizing-opal",
+    "name": "Mesmerizing Opal",
+    "level": 2,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "price": 7,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "armor",
+      "activation": {
+        "cost": 1,
+        "trigger": "You activate the opal and attempt a Deception check to Feint"
+      }
+    },
+    "description": "This silver-bound opal pendant is afire with iridescence. When you activate it, attempt a Deception check to Feint. If the outcome is a success, you get a critical success instead; if it is a critical failure, you get a failure instead."
+  },
+  {
     "name": "Midnight Milk",
     "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands.",
     "image": "img_34fe1aba-bbd1-4dc4-bfe7-57ff9d357e19.jpg",
@@ -5433,6 +5481,25 @@
     "description": "A sturdy vest lined with pockets. Paired runes need one pocketed garment for each rune of the pair."
   },
   {
+    "id": "potion-of-flying-standard",
+    "name": "Potion of Flying (Standard)",
+    "level": 8,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Potion"
+    ],
+    "price": 100,
+    "weight": 0.1,
+    "consumable": {
+      "kind": "effect",
+      "effectId": "potion-of-flying",
+      "durationMinutes": 1,
+      "note": "Fly Speed 40 ft (1 min)"
+    },
+    "description": "Upon drinking this effervescent concoction, you gain a fly Speed of 40 feet for 1 minute."
+  },
+  {
     "name": "Potion of Waterbreathing",
     "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour.",
     "image": "img_4d7a8046-ce24-444d-abac-9856fc4a99a5.jpg",
@@ -5641,6 +5708,22 @@
       }
     ],
     "id": "pressure-bomb"
+  },
+  {
+    "id": "primeval-mistletoe",
+    "name": "Primeval Mistletoe",
+    "level": 6,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 230,
+    "weight": 0.1,
+    "bonus": [
+      "nature",
+      1
+    ],
+    "description": "This sprig of berry-festooned holly and mistletoe doesn't wilt or rot. It can be used as a primal locus, and it grants a +1 item bonus to Nature checks while you wear it.\n\nActivate—Anoint (two actions, manipulate; once per 10 minutes): Smear berry juice onto a wooden weapon to cast runic weapon on it, or onto a creature to cast runic body on it.\n\nActivate—Bind (two actions, manipulate; once per day): Touch the sprig, then a tree, to cast one with plants upon yourself, turning into a vine on the touched tree."
   },
   {
     "name": "Psychopomp Mask",
@@ -6135,6 +6218,28 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "ring-of-wizardry-type-i",
+    "name": "Ring of Wizardry (Type I)",
+    "level": 7,
+    "traits": [
+      "Arcane",
+      "Invested"
+    ],
+    "price": 360,
+    "weight": 0,
+    "bonus": [
+      "arcana",
+      1
+    ],
+    "bonusSlots": {
+      "tradition": "arcane",
+      "ranks": {
+        "1": 2
+      }
+    },
+    "description": "This ring is made from the purest platinum and is covered in esoteric arcane symbols. It does nothing unless you have a spellcasting class feature with the arcane tradition. While wearing the ring, you gain a +1 item bonus to Arcana checks and have two additional 1st-rank arcane spell slots each day, which you can prepare or cast spontaneously as you normally cast your spells. If you take off the ring, you lose the additional spell slots. You can't gain spell slots from more than one ring of wizardry per day."
   },
   {
     "name": "Rope (50ft)",
@@ -7160,6 +7265,20 @@
     "id": "skinstitch-salve"
   },
   {
+    "id": "sleep-arrow",
+    "name": "Sleep Arrow",
+    "level": 3,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Mental",
+      "Sleep"
+    ],
+    "price": 11,
+    "weight": 0,
+    "description": "Sleep arrows often have shafts of deep blue or black, and their fletching is exceptionally soft and downy. An activated sleep arrow deals no damage, but a living creature hit by it is subject to the effects of a sleep spell (DC 17)."
+  },
+  {
     "name": "Sleeves of Storage",
     "description": "This loose robe has wide, voluminous sleeves that each contain an extradimensional space. These spaces each function as a spacious pouch that can hold up to 5 Bulk of items (for a total of 10 Bulk), though no individual item can be of more than 1 Bulk; the sleeves grow slightly heavy as you reach maximum capacity. You can add or remove an item from a sleeve with a single hand free as an Interact action.\n\nIf a sleeve is completely empty, you can place your own familiar into that extradimensional space. It can survive comfortably in your sleeve for up to 1 hour, after which it begins to suffocate. While in your sleeve, it can't be affected or targeted by any effects, but you don't benefit from any master abilities. A familiar can exit the sleeve of its own volition with a single action that has the manipulate and move traits. You can't place any other creature into your sleeves, nor can you place your familiar in a sleeve if it's larger than Tiny. If your familiar is in your sleeve, you can't place any items in the sleeve.",
     "traits": [
@@ -7234,6 +7353,33 @@
       }
     ],
     "runes": {}
+  },
+  {
+    "id": "sneaky-key",
+    "name": "Sneaky Key",
+    "level": 5,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "price": 22,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "armor",
+      "activation": {
+        "cost": 1,
+        "trigger": "You turn the key to activate it",
+        "effect": {
+          "kind": "check-bonus",
+          "skill": "thievery",
+          "bonus": 1,
+          "value": "status",
+          "note": "to Pick a Lock for 1 minute; your first success also grants an additional success toward opening a complex lock"
+        }
+      }
+    },
+    "description": "This small silver skeleton key can be pinned to armor or a sleeve. When you turn the key to activate it, you gain a +1 status bonus to Thievery checks to Pick a Lock for 1 minute. The first time you get a success or critical success to Pick a Lock, you achieve one additional success toward opening a complex lock.\n\nRequirements You are trained in Thievery."
   },
   {
     "name": "Soap",
@@ -7356,6 +7502,22 @@
       "ignored": 25
     },
     "id": "spacious-pouch"
+  },
+  {
+    "id": "spacious-pouch-type-ii",
+    "name": "Spacious Pouch (Type II)",
+    "level": 7,
+    "traits": [
+      "Extradimensional",
+      "Magical"
+    ],
+    "price": 300,
+    "weight": 1,
+    "container": {
+      "capacity": 50,
+      "ignored": 50
+    },
+    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag does not change the Bulk of the pouch itself. You can Interact with the pouch to stow items in it or remove them just like a mundane sack, though an object still needs to fit through the opening. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. A living creature placed inside has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13."
   },
   {
     "id": "sparkblade",
@@ -8092,6 +8254,20 @@
     "id": "stone-body-mutagen-lesser"
   },
   {
+    "id": "storm-arrow",
+    "name": "Storm Arrow",
+    "level": 9,
+    "traits": [
+      "Air",
+      "Consumable",
+      "Electricity",
+      "Magical"
+    ],
+    "price": 130,
+    "weight": 0,
+    "description": "The head of this arrow is made from gleaming copper. When an activated storm arrow hits a target, it is buffeted by raging winds and struck by a bolt of lightning that deals 3d12 electricity damage, and the target attempts a basic Reflex save (the DC increases to 27 if the arrow is shot from a weapon with a shock property rune). On a failure, the foe is also buffeted by winds for 1 round, taking a –2 circumstance penalty to ranged attack rolls and a –10-foot circumstance penalty to its fly Speed."
+  },
+  {
     "id": "storm-hammer",
     "name": "Storm Hammer",
     "description": "This +1 warhammer crackles with electricity, dealing 1 extra electricity damage on a hit.",
@@ -8756,6 +8932,22 @@
     "id": "vangloris-tattoo"
   },
   {
+    "id": "ventriloquists-ring",
+    "name": "Ventriloquist's Ring",
+    "level": 3,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 60,
+    "weight": 0,
+    "bonus": [
+      "deception",
+      1
+    ],
+    "description": "This elegant copper ring has miniature images of songbirds engraved around its circumference. You gain a +1 item bonus to Deception checks.\n\nActivate—Throw Voice (two actions, manipulate; once per day): Twisting the ring around your finger lets you magically throw your voice, with the effects of a ventriloquism spell."
+  },
+  {
     "name": "Vexing Vapor",
     "description": "A bomb of disorienting vapor that fogs the mind. Deals 1d6 mental and 1 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit).",
     "traits": [
@@ -9270,6 +9462,20 @@
       "ignored": 0.4
     },
     "id": "wig-of-holding"
+  },
+  {
+    "id": "wind-ocarina",
+    "name": "Wind Ocarina",
+    "level": 6,
+    "traits": [
+      "Air",
+      "Aura",
+      "Consumable",
+      "Magical"
+    ],
+    "price": 50,
+    "weight": 0.1,
+    "description": "A blue finish decorates the ceramic body of a wind ocarina. Activate (Interact): When you play a note, for 1 minute strong gusts sweep into a 15-foot emanation around you. Ammunition from physical ranged attacks can't pass through the area, and larger thrown weapons take a –2 circumstance penalty to attack rolls if their path crosses it. The area is difficult terrain, and gases—including creatures in gaseous form—can't pass through the emanation."
   },
   {
     "id": "wisp-chain",

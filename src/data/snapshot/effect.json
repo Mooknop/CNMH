@@ -1156,6 +1156,12 @@
     ]
   },
   {
+    "id": "potion-of-flying",
+    "name": "Potion of Flying (Standard)",
+    "description": "You have a fly Speed of 40 feet. Lasts 1 minute.",
+    "modifiers": []
+  },
+  {
     "id": "quicksilver-mutagen-greater",
     "name": "Quicksilver Mutagen (Greater)",
     "description": "+3 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +15-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 hour.",
