@@ -1880,7 +1880,18 @@
           "Envision"
         ],
         "trigger": "You begin to fall.",
-        "description": "Frequency once per day. Effect You gain the effects of feather fall for 1 minute or until you stop falling, whichever comes first."
+        "description": "Frequency once per day. Effect You gain the effects of feather fall for 1 minute or until you stop falling, whichever comes first.",
+        "triggerType": "fall",
+        "frequency": "once per day",
+        "effects": [
+          {
+            "effectId": "feather-fall",
+            "applyTo": "self",
+            "duration": {
+              "minutes": 1
+            }
+          }
+        ]
       }
     ]
   },
@@ -2015,7 +2026,13 @@
       "traits": [
         "Concentrate"
       ],
-      "description": "Effect You extend the effect of your rune out to a 20-foot emanation. The emanation remains for 8 hours, affecting up to 10 creatures of your choice within the area. You can Dismiss this effect."
+      "description": "Effect You extend the effect of your rune out to a 20-foot emanation. The emanation remains for 8 hours, affecting up to 10 creatures of your choice within the area. You can Dismiss this effect.",
+      "effect": {
+        "effectId": "trackless-emanation",
+        "duration": {
+          "minutes": 480
+        }
+      }
     }
   },
   {

@@ -721,6 +721,12 @@
     "modifiers": []
   },
   {
+    "id": "feather-fall",
+    "name": "Feather Fall",
+    "description": "You take no damage from the fall and land upright. Lasts 1 minute or until you stop falling, whichever comes first.",
+    "modifiers": []
+  },
+  {
     "id": "fly-spell",
     "name": "Fly (spell)",
     "description": "Character gains a fly Speed equal to their land Speed. Track manually.",
@@ -2035,6 +2041,12 @@
         "amount": -1
       }
     ]
+  },
+  {
+    "id": "trackless-emanation",
+    "name": "Trackless Emanation",
+    "description": "Your vanishing tracks extend to a 20-foot emanation for 8 hours, affecting up to 10 creatures of your choice within the area. You can Dismiss this effect.",
+    "modifiers": []
   },
   {
     "id": "treat-poison-resist",
