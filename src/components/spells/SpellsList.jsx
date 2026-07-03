@@ -48,6 +48,7 @@ const SpellsList = ({ character, characterColor }) => {
   // Data layer — all character reads go through this hook
   const {
     spellcasting,
+    spellSlotTotals,
     scrollSpells,
     wandSpells,
     innateSpells,
@@ -267,7 +268,7 @@ const SpellsList = ({ character, characterColor }) => {
       {viewMode === 'spells' && hasSpellcasting && (
         <SpellsRepertoire
           spells={spellcasting.spells || []}
-          spellSlots={spellcasting.spell_slots || {}}
+          spellSlots={spellSlotTotals || spellcasting.spell_slots || {}}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}

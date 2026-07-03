@@ -16,6 +16,7 @@ import {
   affix, unaffix, affixedKey, itemUidOf, deactivateTalisman,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
+import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
@@ -54,6 +55,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
   // when it derives the rune's Widen Spellshape free action.
   const [runeConfig, setRuneConfig] = useSyncedState(`cnmh_runeconfig_${character?.id}`, {});
+  // Item-mode toggle (#1093) — the player-facing switch between an item's
+  // authored states (Gloom Blade's light, a hood up/down). This modal is the
+  // sole writer; useCharacter applies the choice to the effective inventory.
+  const [itemModeState, setItemModeState] = useSyncedState(`cnmh_itemmode_${character?.id}`, {});
   // Active-effects store (#1055 S5) — an actuated block may apply a lasting
   // self-effect on activation (Trackless (Greater)'s 8-hour emanation). Written
   // here on activate; EffectsPanel renders it with a Dismiss ×.
@@ -242,6 +247,22 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // reflects the status as a chip.
   const invested = isInvested(uid);
 
+  // ── Item modes (#1093) ──
+  // The grid hands us the effective entry (mode already applied), so
+  // activeModeId is normally stamped; the util fallback covers an item
+  // arriving un-moded (PartyWealth, tests).
+  const modes = itemModesOf(item);
+  const activeModeId = item.activeModeId ?? activeItemMode(item, itemModeState)?.id ?? null;
+  const setItemMode = (optionId) => {
+    if (optionId === activeModeId) return;
+    setItemModeState((cur) => ({ ...(cur || {}), [itemUidOf(item)]: optionId }));
+    const opt = modes.options.find((o) => o.id === optionId);
+    appendEvent({
+      type: 'action',
+      text: `${character?.name || 'Someone'} switched ${item.name}${modes.label ? ` (${modes.label})` : ''} to ${opt?.label || optionId}`,
+    });
+  };
+
   // ── Give to another PC (#656/#657) — exploration/downtime only ──
   // Worn/stowed gear, containers (with their contents), and consumables (with
   // stack-splitting) are all givable. Held/dropped items, talismans, and any
@@ -396,6 +417,27 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {invested && (
         <div className="item-invested" data-testid="item-invested-chip">
           <span className="item-invested-chip">✶ Invested</span>
+        </div>
+      )}
+
+      {/* Item-mode toggle (#1093) — player-switchable authored states */}
+      {modes && (
+        <div className="item-modes" data-testid="item-modes">
+          <span className="item-modes-label">{modes.label || 'Mode'}</span>
+          <div className="item-modes-toggle" role="group" aria-label={modes.label || 'Item mode'}>
+            {modes.options.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                className={`item-mode-btn${o.id === activeModeId ? ' is-active' : ''}`}
+                data-testid={`item-mode-${o.id}`}
+                aria-pressed={o.id === activeModeId}
+                onClick={() => setItemMode(o.id)}
+              >
+                {o.label || o.id}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

@@ -45,6 +45,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
 
   const {
     spellcasting,
+    spellSlotTotals,
     scrollSpells,
     wandSpells,
     innateSpells,
@@ -98,7 +99,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
             {hasSpellcasting && <SpellsHeader character={character} themeColor={themeColor} />}
             <SpellsRepertoire
               spells={spellcasting.spells || []}
-              spellSlots={spellcasting.spell_slots || {}}
+              spellSlots={spellSlotTotals || spellcasting.spell_slots || {}}
               themeColor={themeColor}
               characterLevel={level}
               defenseFilter="all"

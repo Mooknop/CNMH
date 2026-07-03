@@ -78,6 +78,34 @@ const highestWornSpecial = (inventory, isInvested, stat, vsType) => {
 };
 
 /**
+ * Extra daily spell slots granted by worn gear (#1093 — Ring of Wizardry).
+ * An item authors `bonusSlots: { tradition?, ranks: { <rank>: n } }`; it
+ * contributes while worn (and invested, when investable), and only to a
+ * caster — when the block names a tradition, the character's must match
+ * (the Ring of Wizardry does nothing for a divine caster). Sums across
+ * contributing items into a { rank: n } map ({} when none apply).
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @param {string}   tradition  - the character's spellcasting tradition
+ * @returns {Object} summed bonus slots per rank
+ */
+export const wornBonusSlots = (inventory, isInvested, tradition) => {
+  const out = {};
+  if (!tradition) return out;
+  for (const e of Array.isArray(inventory) ? inventory : []) {
+    const block = e?.bonusSlots;
+    if (!block || typeof block !== 'object') continue;
+    if (!contributes(e, isInvested)) continue;
+    if (block.tradition && String(block.tradition) !== String(tradition)) continue;
+    for (const [rank, n] of Object.entries(block.ranks || {})) {
+      if (typeof n === 'number' && n > 0) out[rank] = (out[rank] || 0) + n;
+    }
+  }
+  return out;
+};
+
+/**
  * Highest worn-gear resistance to a damage descriptor (#900/#922). Reduces
  * matching incoming/persistent damage.
  *

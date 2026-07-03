@@ -58,6 +58,10 @@ let mockEffects = [];
 const mockSetEffects = vi.fn((next) => {
   mockEffects = typeof next === 'function' ? next(mockEffects) : next;
 });
+let mockItemModes = {};
+const mockSetItemModes = vi.fn((next) => {
+  mockItemModes = typeof next === 'function' ? next(mockItemModes) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
@@ -65,6 +69,7 @@ vi.mock('../../hooks/useSyncedState', () => ({
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
     if (String(key).startsWith('cnmh_effects_')) return [mockEffects, mockSetEffects];
+    if (String(key).startsWith('cnmh_itemmode_')) return [mockItemModes, mockSetItemModes];
     return [mockItemEffects, mockSetItemEffects];
   },
 }));
@@ -135,6 +140,8 @@ beforeEach(() => {
   mockInvested = {};
   mockRuneConfig = {};
   mockEffects = [];
+  mockItemModes = {};
+  mockSetItemModes.mockClear();
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
   mockSetConsumed.mockClear();
@@ -1533,5 +1540,59 @@ describe('ItemModal — accessory-rune dragon-type picker', () => {
     const plainRune = { id: 'menacing-greater', name: 'Menacing (Greater)' };
     render(<ItemModal isOpen onClose={vi.fn()} item={cape({ runes: { accessory: plainRune } })} character={char} />);
     expect(screen.queryByTestId('accessory-rune-choice')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — item-mode toggle (#1093)', () => {
+  const char = { id: 'hero', name: 'Hero' };
+  const gloomBlade = (over = {}) => ({
+    uid: 'gloom-1',
+    name: 'Gloom Blade',
+    quantity: 1,
+    weight: 0.1,
+    activeModeId: 'dim',
+    modes: {
+      label: 'Light',
+      default: 'dim',
+      options: [
+        { id: 'bright', label: 'Bright light', overrides: { runes: { potency: 1 } } },
+        { id: 'dim', label: 'Dim / darkness', overrides: { runes: { potency: 2, striking: 'striking' } } },
+      ],
+    },
+    ...over,
+  });
+
+  it('renders the segmented toggle with the active mode pressed', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={gloomBlade()} character={char} />);
+    expect(screen.getByTestId('item-modes')).toBeInTheDocument();
+    expect(screen.getByTestId('item-mode-dim')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('item-mode-bright')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('writes the overlay and session-logs on switch', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={gloomBlade()} character={char} />);
+    fireEvent.click(screen.getByTestId('item-mode-bright'));
+    expect(mockItemModes).toEqual({ 'gloom-1': 'bright' });
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('switched Gloom Blade (Light) to Bright light') })
+    );
+  });
+
+  it('re-clicking the active mode is a no-op', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={gloomBlade()} character={char} />);
+    fireEvent.click(screen.getByTestId('item-mode-dim'));
+    expect(mockSetItemModes).not.toHaveBeenCalled();
+    expect(mockAppendEvent).not.toHaveBeenCalled();
+  });
+
+  it('falls back to overlay/default resolution when activeModeId is unstamped', () => {
+    mockItemModes = { 'gloom-1': 'bright' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={gloomBlade({ activeModeId: undefined })} character={char} />);
+    expect(screen.getByTestId('item-mode-bright')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('shows no toggle for mode-less items', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={{ name: 'Rope', quantity: 1, weight: 0.1 }} character={char} />);
+    expect(screen.queryByTestId('item-modes')).not.toBeInTheDocument();
   });
 });

@@ -8,6 +8,9 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/CharacterUtils';
 import { getCondition } from '../../data/pf2eConditions';
+import { flattenInventory } from '../../utils/InventoryUtils';
+import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
+import { checkBonusTalisman } from '../../utils/talismanActivation';
 import './SkillCheckModal.css';
 
 const DEGREE_LABELS = {
@@ -58,11 +61,18 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
 
+  // Affixed-talisman overlay (#254) + consumed overlay — a check-bonus talisman
+  // (Sneaky Key, #1093) is offered as an opt-in on matching checks and consumed
+  // only when actually used, mirroring SavePrompt's save-bonus flow.
+  const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id || 'none'), {});
+  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || 'none'}`, {});
+
   const [d20, setD20] = useState('');
   const [dcInput, setDcInput] = useState('');
   const [pickedSkill, setPickedSkill] = useState(null);
   const [toggledIds, setToggledIds] = useState([]); // declared circumstance toggles, active
   const [circumstance, setCircumstance] = useState(''); // free-form "+N" entry
+  const [talismanOn, setTalismanOn] = useState(false);
 
   // Skill choice — actions with skillOptions let the player pick; default to the
   // option with the higher modifier. The special 'unarmed' option rolls the
@@ -95,6 +105,14 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
 
   const baseMod = rollProfile?.bonus ?? null;
 
+  // A check-bonus talisman (Sneaky Key) affixed to this PC matching the rolled
+  // skill. Opt-in, like SavePrompt's pin — it usually applies only to a specific
+  // use (Pick a Lock), which the player/GM judges.
+  const affixedTalismans = affixedTalismanItems(affixed, flattenInventory(characterModel?.inventory));
+  const talisman = activeSkill !== 'unarmed' ? checkBonusTalisman(affixedTalismans, activeSkill) : null;
+  const talismanEffect = talisman?.talisman?.activation?.effect || null;
+  const talismanBonus = talismanOn && talismanEffect ? talismanEffect.bonus || 0 : 0;
+
   // Circumstance: feat-declared toggles (Hunt Prey vs prey, conditional effects)
   // plus a free-form "+N" for table rulings (Aid, GM-granted bonuses).
   const declaredToggles = action?.toggles || [];
@@ -103,7 +121,7 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
     .reduce((sum, t) => sum + (t.bonus || 0), 0);
   const freeform = /^-?\d+$/.test(circumstance) ? parseInt(circumstance, 10) : 0;
   const circumstanceBonus = toggleBonus + freeform;
-  const netMod = baseMod != null ? baseMod + circumstanceBonus : null;
+  const netMod = baseMod != null ? baseMod + circumstanceBonus + talismanBonus : null;
 
   const dcVal = dcInput !== '' ? parseInt(dcInput, 10) : null;
   const d20Val = parseInt(d20, 10);
@@ -124,11 +142,16 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   };
 
   const handleClose = () => {
+    // Consume the talisman only when it was actually used on a roll.
+    if (talismanOn && talisman && d20 !== '') {
+      deactivateTalisman({ talisman, setConsumed, setAffixed });
+    }
     setD20('');
     setDcInput('');
     setPickedSkill(null);
     setToggledIds([]);
     setCircumstance('');
+    setTalismanOn(false);
     onClose();
   };
 
@@ -199,6 +222,21 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
                 </button>
               ))}
             </div>
+          </div>
+        )}
+        {/* Check-bonus talisman opt-in (Sneaky Key, #1093) */}
+        {talisman && (
+          <div className="scm-field">
+            <label className="scm-talisman">
+              <input
+                type="checkbox"
+                checked={talismanOn}
+                onChange={(e) => setTalismanOn(e.target.checked)}
+                aria-label={`${talisman.name} (+${talismanEffect?.bonus || 0} ${talismanEffect?.value || ''})`}
+              />
+              {talisman.name} (+{talismanEffect?.bonus || 0} {talismanEffect?.value || 'bonus'}
+              {talismanEffect?.note ? ` — ${talismanEffect.note}` : ''})
+            </label>
           </div>
         )}
         <div className="scm-field">

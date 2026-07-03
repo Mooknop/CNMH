@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   activationOf, computeAmount, activationSummary,
-  saveBonusTalisman, maneuverDamageTalisman,
+  saveBonusTalisman, maneuverDamageTalisman, checkBonusTalisman,
 } from './talismanActivation';
 
 const wolfFang = {
@@ -13,6 +13,10 @@ const pin = {
   talisman: { affixTo: 'armor', activation: { cost: 'reaction', trigger: 'A save vs an affliction', effect: { kind: 'save-bonus', save: 'fortitude', bonus: 2, value: 'status', critFailToFail: true } } },
 };
 const plainTalisman = { name: 'Plain', talisman: { affixTo: 'weapon', activation: { cost: 'free', trigger: 'Some trigger' } } };
+const sneakyKey = {
+  name: 'Sneaky Key',
+  talisman: { affixTo: 'armor', activation: { cost: 1, trigger: 'You attempt to Pick a Lock', effect: { kind: 'check-bonus', skill: 'thievery', bonus: 1, value: 'status', note: 'to Pick a Lock for 1 minute' } } },
+};
 const str18 = { abilities: { strength: 18 } }; // +4
 
 describe('talismanActivation (#254/#339)', () => {
@@ -41,6 +45,9 @@ describe('talismanActivation (#254/#339)', () => {
     it('falls back to the trigger for an effect-less / unknown activation', () => {
       expect(activationSummary(plainTalisman, str18)).toBe('Some trigger');
     });
+    it('summarizes a check-bonus effect with its rider note (#1093)', () => {
+      expect(activationSummary(sneakyKey, str18)).toBe('+1 status to Thievery checks — to Pick a Lock for 1 minute');
+    });
   });
 
   it('saveBonusTalisman finds a matching affixed save-bonus talisman', () => {
@@ -52,5 +59,11 @@ describe('talismanActivation (#254/#339)', () => {
   it('maneuverDamageTalisman finds a damage talisman for the maneuver', () => {
     expect(maneuverDamageTalisman([wolfFang, pin], 'trip')).toBe(wolfFang);
     expect(maneuverDamageTalisman([wolfFang, pin], 'grapple')).toBeNull();
+  });
+
+  it('checkBonusTalisman finds a matching affixed check-bonus talisman (#1093)', () => {
+    expect(checkBonusTalisman([wolfFang, pin, sneakyKey], 'thievery')).toBe(sneakyKey);
+    expect(checkBonusTalisman([wolfFang, pin, sneakyKey], 'stealth')).toBeNull();
+    expect(checkBonusTalisman(undefined, 'thievery')).toBeNull();
   });
 });
