@@ -37,6 +37,14 @@ describe('reactionTriggers', () => {
     expect(eventById('nope')).toBeNull();
   });
 
+  it('exposes a fall trigger (#1055 S5 — Soft-Landing) matching only fall reactions', () => {
+    expect(TRIGGER_TYPES.some((t) => t.id === 'fall')).toBe(true);
+    expect(eventById('fall')).toMatchObject({ matches: ['fall'] });
+    const softLanding = { name: 'Soft Landing', triggerType: 'fall', active: true };
+    expect(matchingReactions([softLanding], 'fall')).toEqual([softLanding]);
+    expect(matchingReactions([softLanding], 'ranged-attack')).toEqual([]);
+  });
+
   describe('matchingReactions', () => {
     const all = [deflect, wing, turtle, oversell, retributive, upstage, untyped];
 

@@ -54,12 +54,17 @@ let mockInvested = {};
 const mockSetInvested = vi.fn((next) => {
   mockInvested = typeof next === 'function' ? next(mockInvested) : next;
 });
+let mockEffects = [];
+const mockSetEffects = vi.fn((next) => {
+  mockEffects = typeof next === 'function' ? next(mockEffects) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
+    if (String(key).startsWith('cnmh_effects_')) return [mockEffects, mockSetEffects];
     return [mockItemEffects, mockSetItemEffects];
   },
 }));
@@ -129,11 +134,13 @@ beforeEach(() => {
   mockConsumed = {};
   mockInvested = {};
   mockRuneConfig = {};
+  mockEffects = [];
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
   mockSetConsumed.mockClear();
   mockSetInvested.mockClear();
   mockSetRuneConfig.mockClear();
+  mockSetEffects.mockClear();
   mockAppendEvent.mockClear();
   mockGive.mockClear();
   mockGive.mockReturnValue(true);
@@ -1401,6 +1408,29 @@ describe('ItemModal — attunement (#invest)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={whistle} />);
     expect(screen.getByTestId('actuated-unavailable')).toHaveTextContent('once per hour');
     expect(screen.queryByText(/Overload/)).not.toBeInTheDocument();
+  });
+
+  // ── Actuated self-effect (#1055 S5) — Trackless (Greater) emanation ──
+  const tracklessActuated = {
+    name: 'Trackless Emanation', frequency: 'once per day', actionCount: 2, cost: 'none',
+    effect: { effectId: 'trackless-emanation', duration: { minutes: 480 } },
+  };
+  const tracklessBoots = { uid: 'boots1', name: 'Trackless Boots', weight: 0 };
+
+  it('applies the actuated self-effect on activation (dismissible emanation)', () => {
+    mockItemAct = freeAct({ actuated: tracklessActuated, activation: { ...makeItemAct().activation, canActivate: true, activate: vi.fn(() => ({ ok: true })) } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={tracklessBoots} character={{ id: 'rog', name: 'Rogue' }} />);
+    fireEvent.click(screen.getByTestId('actuated-activate-free'));
+    expect(mockSetEffects).toHaveBeenCalled();
+    expect(mockEffects).toHaveLength(1);
+    expect(mockEffects[0]).toMatchObject({ effectId: 'trackless-emanation', appliedBy: 'rog', source: 'Trackless Emanation' });
+  });
+
+  it('does not write an effect when the actuated block declares none', () => {
+    mockItemAct = freeAct({ activation: { ...makeItemAct().activation, canActivate: true, activate: vi.fn(() => ({ ok: true })) } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={whistle} character={{ id: 'wiz', name: 'Wizzo' }} />);
+    fireEvent.click(screen.getByTestId('actuated-activate-free'));
+    expect(mockSetEffects).not.toHaveBeenCalled();
   });
 
   // ── Rune-granted spell cast (#1055 S3) — Menacing (Greater) casts fear ──

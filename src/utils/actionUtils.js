@@ -156,7 +156,13 @@ export const getReactions = (character) => {
     const runeReactions = character.inventory.flatMap((item) =>
       runeAbilities(item, 'reactions')
     );
-    allReactions = [...allReactions, ...inventoryReactions, ...runeReactions];
+    // Accessory-rune reactions (#1055 S5): Soft-Landing's "You begin to fall"
+    // reaction, sourced from the inscribed rune doc (Retaliation/Catching carry
+    // no reactions[] — they ride the shield-block path — so nothing double-lists).
+    const accessoryReactions = character.inventory.flatMap((item) =>
+      accessoryRuneAbilities(item, 'reactions')
+    );
+    allReactions = [...allReactions, ...inventoryReactions, ...runeReactions, ...accessoryReactions];
   }
 
   if (character.feats) {
