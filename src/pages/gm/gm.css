@@ -2122,3 +2122,223 @@ p.gm-live-note {
   opacity: 0.6;
   margin-left: 0.35em;
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * Adventure Rooms (#1077): World → Rooms browser, shared RoomDetail,
+ * and the dashboard Current Room panel.
+ * ───────────────────────────────────────────────────────────── */
+
+/* Browser: site rail + detail */
+.gm-rooms {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+.gm-rooms-empty { display: block; }
+.gm-rooms-empty code {
+  display: inline-block;
+  background: var(--surface-inset);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  font-size: 0.85em;
+}
+
+.gm-rooms-rail {
+  position: sticky;
+  top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+.gm-rooms-search {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+}
+.gm-rooms-site { margin-top: var(--space-2); }
+.gm-rooms-site-name {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  padding: var(--space-2) 4px 4px;
+}
+.gm-rooms-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+.gm-rooms-link:hover { background: var(--surface-inset); }
+.gm-rooms-link.active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+.gm-rooms-link.is-features {
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+.gm-rooms-code {
+  flex: none;
+  min-width: 2.4em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-tertiary);
+}
+.gm-rooms-link.active .gm-rooms-code { color: var(--accent-text); }
+.gm-rooms-name { flex: 1; }
+.gm-rooms-pinned { width: 15px; height: 15px; color: var(--gold-mid); flex: none; }
+
+.gm-rooms-detail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.gm-rooms-detail-site {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* Shared RoomDetail */
+.gm-room-detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.gm-room-detail-head h3 { margin: 0; color: var(--shell-text-primary); }
+.gm-room-budget {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--peril-light);
+  color: #fff;
+}
+.gm-room-readaloud {
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--gold-mid);
+  background: var(--surface-inset);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-style: italic;
+  color: var(--shell-text-primary);
+}
+.gm-room-section { margin: var(--space-3) 0; }
+.gm-room-section h4 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.gm-room-checks {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.gm-room-checks th {
+  text-align: left;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  border-bottom: 1px solid var(--shell-border);
+  padding: 3px 8px;
+}
+.gm-room-checks td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+.gm-room-checks .gm-room-dc {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-primary);
+}
+.gm-room-checks tr.is-secret .gm-room-dc { color: var(--peril-light); }
+.gm-room-secret-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--peril-light);
+  color: #fff;
+}
+.gm-room-hazards { margin: var(--space-2) 0 0; padding-left: 1.2em; }
+.gm-room-hazards li { color: var(--shell-text-secondary); margin: 2px 0; }
+.gm-room-loot { color: var(--shell-text-secondary); }
+.gm-room-body { margin-top: var(--space-3); }
+.gm-room-body summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.gm-room-body-html {
+  margin-top: var(--space-3);
+  color: var(--shell-text-secondary);
+  line-height: 1.55;
+}
+.gm-room-body-html strong { color: var(--shell-text-primary); }
+
+/* Dashboard Current Room panel */
+.gm-current-room-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.gm-current-room-head h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.gm-current-room-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.gm-current-room-select {
+  padding: 5px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  max-width: 260px;
+}
+.gm-current-room-browse {
+  font-size: 0.78rem;
+  color: var(--accent-text);
+}
