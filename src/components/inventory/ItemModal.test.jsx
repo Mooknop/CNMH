@@ -1509,6 +1509,19 @@ describe('ItemModal — accessory-rune dragon-type picker', () => {
     expect(screen.getByLabelText('Depicted dragon').value).toBe('cold');
   });
 
+  it('defaults to the dragon type baked in at etch (#1059) when no overlay override exists', () => {
+    const baked = cape({ runes: { accessory: dbRune, accessoryConfig: { dragonType: 'acid' } } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={baked} character={char} />);
+    expect(screen.getByLabelText('Depicted dragon').value).toBe('acid');
+  });
+
+  it('the overlay override wins over the baked-in etch config (#1059)', () => {
+    mockRuneConfig = { cape1: { dragonType: 'fire' } };
+    const baked = cape({ runes: { accessory: dbRune, accessoryConfig: { dragonType: 'acid' } } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={baked} character={char} />);
+    expect(screen.getByLabelText('Depicted dragon').value).toBe('fire');
+  });
+
   it('writes the chosen dragon type to the overlay keyed by item uid', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={cape()} character={char} />);
     fireEvent.change(screen.getByLabelText('Depicted dragon'), { target: { value: 'acid' } });

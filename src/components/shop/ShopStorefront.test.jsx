@@ -688,6 +688,42 @@ describe('ShopStorefront', () => {
       expect(handoffs[0].runes.map((r) => r.id)).toEqual(['menacing']);
     });
 
+    // ── Etch-time dragon picker (#1059) ────────────────────────────────────
+    const dbRune = {
+      id: 'dragons-breath-3', type: 'property', target: 'accessory',
+      name: "Dragon's Breath (3rd-Rank Spell)", level: 8, price: 500, usage: ['cloak'],
+      dragonChoice: { key: 'dragonType', label: 'Depicted dragon', options: [
+        { value: 'fire', label: 'Fire' }, { value: 'cold', label: 'Cold' },
+      ] },
+    };
+
+    it('offers a dragon-type picker when staging a Dragon\'s Breath rune, and carries the choice to checkout (#1059)', () => {
+      mockGold = 600; // the 3rd-rank rune handoff is 503 gp
+      renderRunesWith({ inv: [cloak], runeDocs: [dbRune], refs: ['dragons-breath-3'] });
+      const gear = screen.getByTestId('gear-k1');
+      fireEvent.click(within(gear).getByLabelText('fill Accessory slot on Cloak'));
+      fireEvent.click(within(screen.getByTestId('picker-k1')).getByRole('button', { name: /^etch Dragon's Breath/ }));
+      // A dragon selector appears, defaulted to the first option.
+      const picker = within(gear).getByTestId('etch-choice-k1');
+      const select = within(gear).getByLabelText(/Dragon's Breath.*[Dd]epicted dragon/);
+      expect(picker).toBeInTheDocument();
+      expect(select.value).toBe('fire');
+      // Change it, then check out — the handoff rune carries the etch config.
+      fireEvent.change(select, { target: { value: 'cold' } });
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      const { handoffs } = mockCheckout.mock.calls[0][0];
+      expect(handoffs[0].runes[0]).toMatchObject({ id: 'dragons-breath-3', etchConfig: { dragonType: 'cold' } });
+    });
+
+    it('stages a non-choice accessory rune without a dragon picker (#1059)', () => {
+      renderRunesWith({ inv: [cloak], runeDocs: [menacing], refs: ['menacing'] });
+      const gear = screen.getByTestId('gear-k1');
+      fireEvent.click(within(gear).getByLabelText('fill Accessory slot on Cloak'));
+      fireEvent.click(within(screen.getByTestId('picker-k1')).getByRole('button', { name: /^etch Menacing/ }));
+      expect(within(gear).queryByTestId('etch-choice-k1')).not.toBeInTheDocument();
+    });
+
     it('a dual-host card shows the accessory socket after its armor sockets (#1033 S5)', () => {
       renderRunesWith({
         inv: [{ uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },

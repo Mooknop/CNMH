@@ -384,7 +384,7 @@ const filledLabel = (s, runeMap) => {
 // (lifted to ShopStorefront); this card reads `stagedFor` (socketKey→rune) and a
 // per-socket picker stages/un-stages. No gold moves and nothing is handed over
 // until checkout (S7) — staged runes show here as a pending summary.
-const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, onUnstage, readOnly }) => {
+const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, onUnstage, onConfigure, readOnly }) => {
   const [openKey, setOpenKey] = useState(null);
   // Which picker option's full effect is expanded (#1055 S1) — one at a time,
   // reset whenever a different socket's picker opens.
@@ -484,7 +484,16 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
                   <li key={optKey}>
                     <div className="ps-runeopt-row">
                       <button type="button" className="ps-runeopt" aria-label={`etch ${r.name}`}
-                        onClick={() => { onStage(gear.uid, openKey, r); setOpenKey(null); }}>
+                        onClick={() => {
+                          // A Dragon's Breath rune (#1059) is staged with its
+                          // depicted dragon type defaulted to the first option;
+                          // the player can change it below before checkout.
+                          const staging = r.dragonChoice
+                            ? { ...r, etchConfig: { dragonType: r.dragonChoice.options?.[0]?.value } }
+                            : r;
+                          onStage(gear.uid, openKey, staging);
+                          setOpenKey(null);
+                        }}>
                         <span className="ps-runeopt-name">{r.name}</span>
                         <span className="ps-runeopt-price">{r.price} gp</span>
                       </button>
@@ -507,6 +516,25 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
           <button type="button" className="ps-runepicker-cancel" onClick={() => setOpenKey(null)}>Cancel</button>
         </div>
       )}
+
+      {/* Etch-time choice (#1059): a staged Dragon's Breath rune fixes its
+          depicted dragon (damage type) at purchase. */}
+      {!readOnly && stagedEntries
+        .filter(([, r]) => r.dragonChoice)
+        .map(([key, r]) => (
+          <label key={`cfg-${key}`} className="ps-etch-choice" data-testid={`etch-choice-${gear.uid}`}>
+            {r.name} — {r.dragonChoice.label || 'Depicted dragon'}:{' '}
+            <select
+              aria-label={`${r.name} ${r.dragonChoice.label || 'depicted dragon'}`}
+              value={r.etchConfig?.dragonType ?? r.dragonChoice.options?.[0]?.value ?? ''}
+              onChange={(e) => onConfigure(gear.uid, key, { dragonType: e.target.value })}
+            >
+              {(r.dragonChoice.options || []).map((o) => (
+                <option key={o.value} value={o.value}>{o.label || o.value}</option>
+              ))}
+            </select>
+          </label>
+        ))}
 
       {stagedEntries.length > 0 && (
         <p className="ps-staged-note" data-testid={`staged-${gear.uid}`}>
@@ -539,7 +567,7 @@ const BenchedTicket = ({ order, nowSeconds }) => (
 // the shop offersRunes (S1).
 const RunesmithingTab = ({
   gearList, shopRunes, runeMap, runeGroups, stagedFor, keeperName, town, qtyByKey,
-  onStage, onUnstage, onSelect, onAdd, readOnly, orders, nowSeconds,
+  onStage, onUnstage, onConfigure, onSelect, onAdd, readOnly, orders, nowSeconds,
 }) => {
   const benched = (Array.isArray(orders) ? orders : []);
   return (
@@ -557,7 +585,7 @@ const RunesmithingTab = ({
           {gearList.map((g) => (
             <GearCard key={g.uid} gear={g} shopRunes={shopRunes} runeMap={runeMap}
               stagedFor={stagedFor(g.uid)} keeperName={keeperName}
-              onStage={onStage} onUnstage={onUnstage} readOnly={readOnly} />
+              onStage={onStage} onUnstage={onUnstage} onConfigure={onConfigure} readOnly={readOnly} />
           ))}
           {benched.map((o) => <BenchedTicket key={o.id} order={o} nowSeconds={nowSeconds} />)}
         </div>
@@ -767,6 +795,14 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     setStaged((s) => ({ ...s, [`${gearUid}::${sKey}`]: rune }));
   const unstageRune = (gearUid, sKey) =>
     setStaged((s) => { const next = { ...s }; delete next[`${gearUid}::${sKey}`]; return next; });
+  // Patch a staged rune's etch-time config (#1059) — the depicted dragon type on
+  // a Dragon's Breath rune, chosen before checkout. Baked onto the gear entry
+  // when the order is collected (applyRune).
+  const configureStagedRune = (gearUid, sKey, patch) =>
+    setStaged((s) => {
+      const k = `${gearUid}::${sKey}`;
+      return s[k] ? { ...s, [k]: { ...s[k], etchConfig: { ...s[k].etchConfig, ...patch } } } : s;
+    });
   // Remove a whole gear's staging (the handoff cart line's ✕).
   const unstageGear = (gearUid) =>
     setStaged((s) => Object.fromEntries(Object.entries(s).filter(([k]) => !k.startsWith(`${gearUid}::`))));
@@ -821,6 +857,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
           qtyByKey={qtyByKey}
           onStage={stageRune}
           onUnstage={unstageRune}
+          onConfigure={configureStagedRune}
           onSelect={setSelectedGroup}
           onAdd={addForm}
           readOnly={readOnly}

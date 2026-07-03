@@ -615,7 +615,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                 {accessory.rune.dragonChoice.label || 'Depicted dragon'}:{' '}
                 <select
                   aria-label={accessory.rune.dragonChoice.label || 'Depicted dragon'}
-                  value={runeConfig?.[uid]?.dragonType ?? accessory.rune.dragonChoice.options?.[0]?.value ?? ''}
+                  value={runeConfig?.[uid]?.dragonType
+                    ?? item.runes?.accessoryConfig?.dragonType
+                    ?? accessory.rune.dragonChoice.options?.[0]?.value ?? ''}
                   onChange={(e) => setRuneConfig((cur) => ({
                     ...cur,
                     [uid]: { ...(cur?.[uid] || {}), dragonType: e.target.value },

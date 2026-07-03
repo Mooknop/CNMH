@@ -150,7 +150,15 @@ export const applyRune = (gear, rune) => {
   if (runeTarget(rune) === 'accessory') {
     if (rune.type !== 'property' || !accessoryEligible(gear, rune)) return null;
     const { state, hand, ...rest } = gear;
-    return { ...rest, uid: newEntryUid(), runes: { ...runesOf(gear), accessory: rune.id } };
+    const nextRunes = { ...runesOf(gear), accessory: rune.id };
+    // Etch-time config (#1059): a Dragon's Breath rune staged with a chosen
+    // dragon type bakes it onto the entry as `accessoryConfig`, so the depicted
+    // damage type is fixed at purchase (useCharacter reads it; the ItemModal
+    // picker can still override via the runeconfig overlay).
+    if (rune.etchConfig && typeof rune.etchConfig === 'object') {
+      nextRunes.accessoryConfig = { ...rune.etchConfig };
+    }
+    return { ...rest, uid: newEntryUid(), runes: nextRunes };
   }
 
   const target = gearTarget(gear);
