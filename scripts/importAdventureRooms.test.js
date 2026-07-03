@@ -13,8 +13,24 @@ import {
   extractHazards,
   buildHazardIndex,
   transformDump,
-  mergeNotes,
+  mergeGmFields,
+  classifyLootItem,
+  coinValueGp,
+  extractTreasureCache,
 } from './importAdventureRooms.js';
+
+// Build a loot-actor as the export macro dumps it (embedded items).
+function lootActor(id, name, items) {
+  return { _id: id, name, type: 'loot', items };
+}
+function embItem(type, name, { slug, gp, sp, cp, pp, qty = 1 } = {}) {
+  const value = {};
+  if (gp) value.gp = gp;
+  if (sp) value.sp = sp;
+  if (cp) value.cp = cp;
+  if (pp) value.pp = pp;
+  return { type, name, system: { slug, quantity: qty, price: { value } } };
+}
 
 // All text below is synthetic — it mirrors the premium-module markup shapes
 // (verified in the S0 dump) without reproducing any Paizo book content, so the
@@ -121,20 +137,97 @@ describe('creature vs hazard classification', () => {
   });
 });
 
-describe('mergeNotes', () => {
+describe('coinValueGp', () => {
+  it('converts all denominations to gp', () => {
+    expect(coinValueGp({ gp: 5 })).toBe(5);
+    expect(coinValueGp({ sp: 10 })).toBe(1);
+    expect(coinValueGp({ cp: 100 })).toBe(1);
+    expect(coinValueGp({ pp: 1 })).toBe(10);
+    expect(coinValueGp(undefined)).toBe(0);
+  });
+});
+
+describe('classifyLootItem', () => {
+  it('folds coins into gold by denomination × quantity', () => {
+    expect(classifyLootItem(embItem('treasure', 'Gold Pieces', { gp: 1, qty: 120 }))).toEqual({ kind: 'coin', gp: 120 });
+    expect(classifyLootItem(embItem('treasure', 'Silver Pieces', { sp: 1, qty: 50 }))).toEqual({ kind: 'coin', gp: 5 });
+  });
+
+  it('treats non-coin treasure as a valuable with a per-unit gp value', () => {
+    // "Crystal Game Pieces" ends in Pieces but is NOT coins — must be a valuable.
+    expect(classifyLootItem(embItem('treasure', 'Crystal Game Pieces', { gp: 35 }))).toEqual({
+      kind: 'valuable',
+      entry: { name: 'Crystal Game Pieces', qty: 1, value: 35 },
+    });
+  });
+
+  it('emits a ref = slug for a real item', () => {
+    expect(classifyLootItem(embItem('weapon', 'Longspear', { slug: 'longspear', sp: 5, qty: 2 }))).toEqual({
+      kind: 'item',
+      entry: { ref: 'longspear', name: 'Longspear', qty: 2 },
+    });
+  });
+
+  it('treats a slug-less item as a story item', () => {
+    expect(classifyLootItem(embItem('equipment', 'Iron Key to B5', {}))).toEqual({
+      kind: 'story',
+      entry: { name: 'Iron Key to B5', qty: 1 },
+    });
+  });
+});
+
+describe('extractTreasureCache', () => {
+  const lootIndex = {
+    chest: lootActor('chest', 'Chest', [
+      embItem('treasure', 'Gold Pieces', { gp: 1, qty: 30 }),
+      embItem('consumable', 'Acid Flask', { slug: 'acid-flask', gp: 3, qty: 2 }),
+      embItem('treasure', 'Garnet', { gp: 20, qty: 1 }),
+    ]),
+    urn: lootActor('urn', 'Urn', [
+      embItem('treasure', 'Silver Pieces', { sp: 1, qty: 100 }), // 10 gp
+      embItem('equipment', 'Old Deed', {}), // story
+    ]),
+  };
+
+  it('merges every referenced loot actor: coins → gold, items by kind', () => {
+    const html = '<p><strong>Treasure:</strong> @UUID[Actor.chest]{Chest} and @UUID[Actor.urn]{Urn}</p>';
+    const cache = extractTreasureCache(html, lootIndex);
+    expect(cache.gold).toBe(40); // 30 + 10
+    expect(cache.items).toEqual([
+      { ref: 'acid-flask', name: 'Acid Flask', qty: 2 },
+      { name: 'Garnet', qty: 1, value: 20 },
+      { name: 'Old Deed', qty: 1 },
+    ]);
+  });
+
+  it('returns an empty cache when the paragraph has no loot-actor ref', () => {
+    expect(extractTreasureCache('<p><strong>Treasure:</strong> just prose.</p>', lootIndex)).toEqual({ gold: 0, items: [] });
+  });
+});
+
+describe('mergeGmFields', () => {
   const fresh = [
-    { id: 'a1', name: 'Entrance', notes: '' },
-    { id: 'a2', name: 'Hall', notes: '' },
+    { id: 'a1', name: 'Entrance', notes: '', treasureCache: { gold: 5, items: [] } },
+    { id: 'a2', name: 'Hall', notes: '', treasureCache: { gold: 0, items: [] } },
   ];
 
   it('carries over an existing non-empty note by id', () => {
-    const merged = mergeNotes(fresh, [{ id: 'a1', notes: 'Ambush here!' }]);
+    const merged = mergeGmFields(fresh, [{ id: 'a1', notes: 'Ambush here!' }]);
     expect(merged.find((d) => d.id === 'a1').notes).toBe('Ambush here!');
     expect(merged.find((d) => d.id === 'a2').notes).toBe(''); // untouched
   });
 
-  it('ignores empty existing notes and unknown ids', () => {
-    const merged = mergeNotes(fresh, [{ id: 'a1', notes: '' }, { id: 'gone', notes: 'stale' }]);
+  it('preserves a GM-curated treasureCache and distributedAt over the fresh transform', () => {
+    const existing = [{ id: 'a1', treasureCache: { gold: 999, items: [{ ref: 'rope', name: 'Rope', qty: 1 }] }, distributedAt: 1720000000000 }];
+    const merged = mergeGmFields(fresh, existing);
+    const a1 = merged.find((d) => d.id === 'a1');
+    expect(a1.treasureCache.gold).toBe(999); // GM's copy wins, not the fresh 5
+    expect(a1.distributedAt).toBe(1720000000000);
+  });
+
+  it('leaves fresh values for ids with no existing doc', () => {
+    const merged = mergeGmFields(fresh, [{ id: 'gone', notes: 'stale' }]);
+    expect(merged.find((d) => d.id === 'a1').treasureCache.gold).toBe(5);
     expect(merged.every((d) => d.notes === '')).toBe(true);
   });
 });
@@ -143,6 +236,12 @@ describe('transformDump', () => {
   const dump = {
     module: MODULE,
     hazards: [hazard('haz1', 'Web Deadfall', 13, 3)],
+    lootActors: [
+      lootActor('chestA3', 'Reliquary', [
+        embItem('treasure', 'Gold Pieces', { gp: 1, qty: 25 }),
+        embItem('consumable', 'Acid Flask', { slug: 'acid-flask', gp: 3, qty: 2 }),
+      ]),
+    ],
     journals: [
       {
         name: 'Ch 1: Test',
@@ -155,7 +254,7 @@ describe('transformDump', () => {
               '<p class="read-aloud">A grim altar.</p>' +
               '<p>Force it with a @Check[athletics|dc:19|traits:skill,action:force-open|name:Force Open] check.</p>' +
               '<section class="encounter"><div class="header"><span class="link">@UUID[Actor.mob1]{Glorkus}</span></div></section>' +
-              '<p><strong>Treasure:</strong> a charm.</p><p><strong>Reward:</strong> 80 XP.</p>',
+              '<p><strong>Treasure:</strong> @UUID[Actor.chestA3]{Reliquary} holds a charm.</p><p><strong>Reward:</strong> 80 XP.</p>',
             { pageNumber: 'A3', pageNumberClass: 'location' },
           ),
           page('Getting Started', 900, '<p>Some narrative that is not a room.</p>'),
@@ -190,12 +289,20 @@ describe('transformDump', () => {
       encounterLabel: 'Trivial 4',
       readAloud: 'A grim altar.',
       creatures: ['Glorkus'],
-      treasure: 'a charm.',
+      treasure: 'Reliquary holds a charm.',
       reward: '80 XP.',
     });
     expect(a3.checks).toHaveLength(1);
     expect(a3.checks[0]).toMatchObject({ statistic: 'athletics', dc: 19, label: 'Force Open' });
     expect(a3.notes).toBe('');
+  });
+
+  it('builds a structured treasure cache from the referenced loot actor', () => {
+    const a3 = rooms.find((r) => r.code === 'A3');
+    expect(a3.treasureCache).toEqual({ gold: 25, items: [{ ref: 'acid-flask', name: 'Acid Flask', qty: 2 }] });
+    // A room with no loot ref (Ch 9 K) still gets an empty cache, not undefined.
+    expect(rooms.find((r) => r.code === 'K').treasureCache).toEqual({ gold: 0, items: [] });
+    expect(stats.treasureCaches).toBe(1); // only A3 has loot
   });
 
   it('applies the Ch 9 name-prefix + chapter-site fallback and links the hazard', () => {
