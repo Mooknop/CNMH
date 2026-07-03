@@ -17,6 +17,10 @@ foundry-bridge/coverage
 /build
 /dist
 
+# Raw adventure-module dumps (Paizo book text — the repo is public, so these
+# must never be committed; the transform script reads them from here)
+/adventure-dumps
+
 # wrangler local secrets / dev vars (never commit — may hold the GM bypass)
 .dev.vars
 .wrangler
