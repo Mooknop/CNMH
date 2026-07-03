@@ -82,6 +82,14 @@ describe('RuneMechanics (#1055 S1)', () => {
     const onBlock = 'Free action (once per hour): 4d4 force damage to the attacker.';
     const { rerender } = render(<RuneMechanics rune={{ target: 'accessory', usage: ['shield'], onBlock }} />);
     expect(screen.getByText(new RegExp('4d4 force damage'))).toBeInTheDocument();
+    // structured riders (#1055 S2) render their summary line
+    rerender(
+      <RuneMechanics
+        rune={{ target: 'accessory', usage: ['shield'],
+          onBlock: { summary: 'Disarm the weapon you blocked.', check: { skill: 'athletics' } } }}
+      />
+    );
+    expect(screen.getByText(/Disarm the weapon you blocked\./)).toBeInTheDocument();
     rerender(
       <RuneMechanics
         rune={{ target: 'accessory', usage: ['shield'], onBlock, actuated: { name: 'Retaliation', description: 'Unleash force damage.' } }}

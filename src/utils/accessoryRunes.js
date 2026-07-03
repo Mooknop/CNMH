@@ -148,6 +148,24 @@ export const accessoryDisplayName = (item, innerName = item?.name) => {
   return rune?.name && innerName ? `${rune.name} ${innerName}` : innerName;
 };
 
+/**
+ * A rune's shield-block rider, normalized (#1055 S2). Legacy content authored
+ * `onBlock` as a prose string — display-only. Structured content additionally
+ * drives the live follow-up in ShieldBlockBar:
+ *   { summary,                              // one-line reminder text
+ *     damage?: { expression, typeLabel },   // Retaliation: player-rolled dice
+ *     save?, dc?, basic?,                   // …resolved via a GM save request
+ *     check?: { skill, action, bonus } }    // Catching: player-rolled check
+ * Returns null when the rune declares no rider.
+ */
+export const runeOnBlock = (rune) => {
+  const ob = rune?.onBlock;
+  if (!ob) return null;
+  if (typeof ob === 'string') return { summary: ob };
+  if (typeof ob !== 'object') return null;
+  return ob.summary || ob.damage || ob.check ? ob : null;
+};
+
 // The three display-only activation lists ItemActivations renders.
 const ACTIVATION_KEYS = ['actions', 'reactions', 'freeActions'];
 
