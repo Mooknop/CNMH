@@ -77,8 +77,20 @@ vi.mock('../../hooks/usePlayMode', () => ({
   usePlayMode: () => ({ mode: mockMode }),
 }));
 let mockCharacters = [];
+let mockSpells = [];
 vi.mock('../../contexts/ContentContext', () => ({
-  useContent: () => ({ characters: mockCharacters }),
+  useContent: () => ({ characters: mockCharacters, spells: mockSpells }),
+}));
+
+// CastSpellModal (#1055 S3) is a heavy encounter component; stub it so the
+// ItemModal test drives only the rune-cast wiring (open state + spell handed in).
+vi.mock('../encounter/CastSpellModal', () => ({
+  default: ({ isOpen, spell, castSource }) =>
+    isOpen ? (
+      <div data-testid="cast-spell-modal" data-source={castSource}>
+        casting {spell?.name} · rank {spell?.level} · dc {spell?.roll?.bonus} · id {spell?.id}
+      </div>
+    ) : null,
 }));
 
 // Game clock (once/day gate) — a stub is enough; freq math is tested elsewhere.
@@ -122,6 +134,7 @@ beforeEach(() => {
   mockGiveConsumable.mockReturnValue(true);
   mockMode = 'exploration';
   mockCharacters = [];
+  mockSpells = [];
   mockItemAct = makeItemAct();
 });
 
@@ -1381,5 +1394,52 @@ describe('ItemModal — attunement (#invest)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={whistle} />);
     expect(screen.getByTestId('actuated-unavailable')).toHaveTextContent('once per hour');
     expect(screen.queryByText(/Overload/)).not.toBeInTheDocument();
+  });
+
+  // ── Rune-granted spell cast (#1055 S3) — Menacing (Greater) casts fear ──
+  const fearDoc = { id: 'fear', name: 'Fear', level: 1, defense: 'Will', degrees: { Failure: 'Frightened 2.' } };
+  const menacingActuated = {
+    cost: 'none', name: 'Fear', actionCount: 2, frequency: 'once per day',
+    traits: ['Concentrate', 'Manipulate'],
+    description: 'The rune casts a 3rd-rank fear spell (DC 25).',
+    spellRef: 'fear', castRank: 3, dc: 25,
+  };
+  const menacingCloak = { uid: 'cloak1', name: "Explorer's Clothing", weight: 1 };
+  const spellAct = (over = {}) =>
+    makeItemAct({ actuated: menacingActuated, cost: 'none', slotOptions: [],
+      activation: { ...makeItemAct().activation, canActivate: true }, ...over });
+
+  it('labels the activate button "Cast <spell>" for a spellRef actuation', () => {
+    mockSpells = [fearDoc];
+    mockItemAct = spellAct();
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('actuated-cast-spell')).toHaveTextContent('Cast Fear');
+    expect(screen.queryByTestId('actuated-activate-free')).not.toBeInTheDocument();
+  });
+
+  it('opens the cast flow with a fixed-rank, fixed-DC, no-slot innate spell — without a direct itemAct spend', () => {
+    mockSpells = [fearDoc];
+    const activate = vi.fn(() => ({ ok: true }));
+    mockItemAct = spellAct({ activation: { ...makeItemAct().activation, canActivate: true, activate } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.queryByTestId('cast-spell-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('actuated-cast-spell'));
+    const modal = screen.getByTestId('cast-spell-modal');
+    expect(modal).toHaveAttribute('data-source', 'innate');
+    // fixed rank 3, fixed DC 25, shared frequency key — the cast flow records
+    // the once/day use itself, so the card must not double-spend via itemAct.
+    expect(modal).toHaveTextContent('rank 3');
+    expect(modal).toHaveTextContent('dc 25');
+    expect(modal).toHaveTextContent('id cloak1:actuated');
+    expect(activate).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the plain Activate flow when the spellRef can not be resolved', () => {
+    mockSpells = []; // fear not in catalog
+    mockItemAct = spellAct();
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} character={{ id: 'p', name: 'P' }} />);
+    // no resolved spell → generic free-activation button, not a cast button
+    expect(screen.queryByTestId('actuated-cast-spell')).not.toBeInTheDocument();
+    expect(screen.getByTestId('actuated-activate-free')).toBeInTheDocument();
   });
 });
