@@ -20,6 +20,7 @@ import SkillChallengeModal from '../../components/gm/SkillChallengeModal';
 import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
+import CurrentRoomPanel from '../../components/gm/CurrentRoomPanel';
 import BestiaryEditor from '../../components/gm/BestiaryEditor';
 import Modal from '../../components/shared/Modal';
 import GmIcon from './GmIcon';
@@ -489,6 +490,9 @@ const GmDashboard = () => {
           </section>
         </div>
       </div>
+
+      {/* Current Room — full-width GM aid; hidden until rooms are imported */}
+      <CurrentRoomPanel />
 
       {/* Session Log — full-width, above maintenance */}
       <SessionLogPanel />

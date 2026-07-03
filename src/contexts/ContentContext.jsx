@@ -158,6 +158,7 @@ export const ContentProvider = ({ children }) => {
   const serverImages = serverList('image');
   const serverTheme = serverList('theme');
   const serverMonsters = serverList('monster');
+  const serverRooms = serverList('room');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -239,6 +240,10 @@ export const ContentProvider = ({ children }) => {
     images,
     theme,
     monsters: serverMonsters,
+    // Adventure-room guide (#1074). Capture-only + live-DO-only (Paizo text,
+    // public repo), so there's no bundled fallback — an empty array until the
+    // GM imports rooms via scripts/importAdventureRooms.js.
+    rooms: serverRooms,
     refresh: loadSnapshot,
   };
 
@@ -265,6 +270,7 @@ const NOOP_CONTENT = {
   images: FALLBACK.image,
   theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
   monsters: [],
+  rooms: [],
   refresh: () => Promise.resolve(),
 };
 

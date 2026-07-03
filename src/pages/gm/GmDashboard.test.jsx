@@ -31,6 +31,9 @@ vi.mock('../../components/encounter/RequestedSaves', () => ({
 vi.mock('../../components/character-sheet/EffectsModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="effects-modal" /> : null),
 }));
+vi.mock('../../components/gm/CurrentRoomPanel', () => ({
+  default: () => <div data-testid="current-room-panel" />,
+}));
 
 // ─── imports after mocks ──────────────────────────────────────────────────────
 import { useContent } from '../../contexts/ContentContext';

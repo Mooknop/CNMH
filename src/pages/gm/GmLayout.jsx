@@ -25,6 +25,7 @@ const SUBNAV = {
     { id: 'reputation', label: 'Reputation', icon: 'flag', countKey: 'reputation' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar' },
     { id: 'lore', label: 'Lore', icon: 'book', countKey: 'allLoreEntries' },
+    { id: 'rooms', label: 'Rooms', icon: 'map', countKey: 'rooms' },
     { id: 'shops', label: 'Shops', icon: 'bag' },
   ],
   catalog: [
