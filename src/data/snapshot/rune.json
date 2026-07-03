@@ -822,7 +822,10 @@
         "Concentrate",
         "Manipulate"
       ],
-      "description": "The rune casts a 3rd-rank fear spell (DC 25)."
+      "description": "The rune casts a 3rd-rank fear spell (DC 25).",
+      "spellRef": "fear",
+      "castRank": 3,
+      "dc": 25
     }
   },
   {
@@ -957,7 +960,10 @@
         "Envision",
         "Interact"
       ],
-      "description": "You cast suggestion."
+      "description": "You cast a 4th-rank suggestion spell (DC 27).",
+      "spellRef": "suggestion",
+      "castRank": 4,
+      "dc": 27
     }
   },
   {
