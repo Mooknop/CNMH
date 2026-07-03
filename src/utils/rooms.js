@@ -19,12 +19,17 @@ export const groupRoomsBySite = (docs) => {
   return groups;
 };
 
-// Case-insensitive match of a room doc against a search term (code or name).
+// Case-insensitive match of a room doc against a search term. Covers code and
+// name plus the things a GM actually searches for mid-session — a check label
+// or skill ("stealth"), a creature/hazard name, GM notes, and the body prose
+// ("that room with the secret door"). Body HTML is flattened to text first.
 export const roomMatches = (doc, term) => {
   if (!term) return true;
   const t = term.toLowerCase();
-  return (
-    (doc.code || '').toLowerCase().includes(t) ||
-    (doc.name || '').toLowerCase().includes(t)
-  );
+  const hit = (s) => (s || '').toLowerCase().includes(t);
+  if (hit(doc.code) || hit(doc.name) || hit(doc.notes)) return true;
+  if ((doc.creatures || []).some(hit)) return true;
+  if ((doc.hazards || []).some((h) => hit(h.name))) return true;
+  if ((doc.checks || []).some((c) => hit(c.label) || hit(c.statistic))) return true;
+  return hit((doc.body || '').replace(/<[^>]+>/g, ' '));
 };

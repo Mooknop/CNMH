@@ -13,6 +13,7 @@ import {
   extractHazards,
   buildHazardIndex,
   transformDump,
+  mergeNotes,
 } from './importAdventureRooms.js';
 
 // All text below is synthetic — it mirrors the premium-module markup shapes
@@ -117,6 +118,24 @@ describe('creature vs hazard classification', () => {
   it('enriches every referenced hazard by id, deduped', () => {
     const html = '<span class="link">@UUID[Actor.haz1]{Fires of Abraxas}</span> … @UUID[Actor.haz1] again';
     expect(extractHazards(html, hazardIndex)).toEqual([{ name: 'Fires of Abraxas', level: 5, stealthDc: 8, complex: false }]);
+  });
+});
+
+describe('mergeNotes', () => {
+  const fresh = [
+    { id: 'a1', name: 'Entrance', notes: '' },
+    { id: 'a2', name: 'Hall', notes: '' },
+  ];
+
+  it('carries over an existing non-empty note by id', () => {
+    const merged = mergeNotes(fresh, [{ id: 'a1', notes: 'Ambush here!' }]);
+    expect(merged.find((d) => d.id === 'a1').notes).toBe('Ambush here!');
+    expect(merged.find((d) => d.id === 'a2').notes).toBe(''); // untouched
+  });
+
+  it('ignores empty existing notes and unknown ids', () => {
+    const merged = mergeNotes(fresh, [{ id: 'a1', notes: '' }, { id: 'gone', notes: 'stale' }]);
+    expect(merged.every((d) => d.notes === '')).toBe(true);
   });
 });
 

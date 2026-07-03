@@ -47,6 +47,16 @@ describe('RoomDetail', () => {
     expect(screen.getByText('Full room text')).toBeInTheDocument(); // <summary>
   });
 
+  it('shows GM significance notes, and honors showNotes={false}', () => {
+    const withNotes = { ...room, notes: 'Ties back to the prologue murder.' };
+    const { rerender } = render(<RoomDetail room={withNotes} />);
+    expect(screen.getByText('Campaign significance')).toBeInTheDocument();
+    expect(screen.getByText('Ties back to the prologue murder.')).toBeInTheDocument();
+
+    rerender(<RoomDetail room={withNotes} showNotes={false} />);
+    expect(screen.queryByText('Campaign significance')).not.toBeInTheDocument();
+  });
+
   it('hides the body when showBody is false and renders nothing for no room', () => {
     const { rerender, container } = render(<RoomDetail room={room} showBody={false} />);
     expect(screen.queryByText('Full room text')).not.toBeInTheDocument();

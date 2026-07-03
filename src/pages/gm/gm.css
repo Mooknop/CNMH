@@ -2342,3 +2342,42 @@ p.gm-live-note {
   font-size: 0.78rem;
   color: var(--accent-text);
 }
+
+/* GM campaign-significance notes (#1078) */
+.gm-room-notes-display h4 { color: var(--gold-mid); }
+.gm-room-notes-text {
+  white-space: pre-wrap;
+  color: var(--shell-text-secondary);
+  margin: 0;
+}
+.gm-room-notes-edit {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.gm-room-notes-edit label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}
+.gm-room-notes-input {
+  width: 100%;
+  resize: vertical;
+  padding: 8px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+  line-height: 1.5;
+}
+.gm-room-notes-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
