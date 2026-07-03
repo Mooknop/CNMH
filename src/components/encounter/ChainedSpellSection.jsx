@@ -19,7 +19,7 @@ import { isAttackAbility } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/actionIconUtils';
 import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
 import { HARROW_SUITS, HARROW_CAST_DC, harrowCastEffect } from '../../utils/harrow';
-import { applyChainTransform, chainTransformCostNote, effectiveNumericRank, chainRankNote } from '../../utils/spellshapeTransform';
+import { applyChainTransform, chainTransformCostNote, effectiveNumericRank, chainRankNote, widenAreaNote } from '../../utils/spellshapeTransform';
 
 // Same parser as UseAbilityModal — avoids a circular import.
 const parseSpellCost = (actionsText) => {
@@ -77,6 +77,19 @@ const ChainedSpellSection = forwardRef(({
         (s) => isBasicDefense(s.defense) && mapSpellDefense(s.defense) === 'fortitude'
       );
     }
+    // Dragon's Breath (#1055 S4): the rune's Widen Spellshape only affects a Cast
+    // a Spell with an AREA that deals the depicted dragon's damage type, of rank
+    // ≤ the rune's tier. Damage type is carried on spell traits (there's no
+    // discrete field); the etched dragon type rides on `chain.dragonType`.
+    if (chain.spellFilter === 'dragon-breath-area') {
+      const dtype = String(chain.dragonType || '').toLowerCase();
+      const maxRank = typeof chain.maxRank === 'number' ? chain.maxRank : Infinity;
+      return spells.filter(
+        (s) => s.area && String(s.area).trim() !== ''
+          && (s.level ?? 0) <= maxRank
+          && (s.traits || []).some((t) => String(t).toLowerCase() === dtype)
+      );
+    }
     // Split Shot (#227): ranged single-target attack spells without a duration.
     if (chain.spellFilter === 'single-target-attack') {
       return spells.filter(
@@ -87,7 +100,7 @@ const ChainedSpellSection = forwardRef(({
       );
     }
     return spells;
-  }, [character, chain.spellFilter]);
+  }, [character, chain.spellFilter, chain.dragonType, chain.maxRank]);
 
   const [selectedSpellId, setSelectedSpellId] = useState(
     filteredSpells.length > 0 ? filteredSpells[0].id : ''
@@ -131,6 +144,9 @@ const ChainedSpellSection = forwardRef(({
     : 0;
   const castActionCost = applyChainTransform(spellCost, chain.transform);
   const transformNote = chainTransformCostNote(spellCost, chain.transform);
+  // Dragon's Breath (#1055 S4): Widen Spell enlarges the chained spell's area —
+  // a display note, since the app doesn't model area geometry.
+  const areaNote = widenAreaNote(selectedSpell?.area, chain.transform);
   const parentNum = typeof parentCost === 'number' ? parentCost : 1;
   const totalCost = typeof castActionCost === 'number' ? parentNum + castActionCost : parentCost;
 
@@ -505,6 +521,9 @@ const ChainedSpellSection = forwardRef(({
       )}
       {rankNote && (
         <div className="uam-variant-note" data-testid="chain-rank-note">{rankNote}</div>
+      )}
+      {areaNote && (
+        <div className="uam-variant-note" data-testid="chain-area-note">{areaNote}</div>
       )}
 
       <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>

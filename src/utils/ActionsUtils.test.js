@@ -404,8 +404,51 @@ describe('ActionsUtils', () => {
       };
 
       const result = getFreeActions(character);
-      
+
       expect(result).toHaveLength(2);
+    });
+  });
+
+  // ── Accessory-rune free actions (#1055 S4 — Dragon's Breath) ──
+  describe('getFreeActions — accessory-rune free actions', () => {
+    const dbFreeAction = {
+      name: "Dragon's Breath",
+      traits: ['Envision', 'Spellshape'],
+      chain: { into: 'spell', spellFilter: 'dragon-breath-area', transform: { widenArea: true }, maxRank: 3 },
+    };
+    const cape = (extra = {}) => ({
+      name: 'Dueling Cape',
+      runes: { accessory: { id: 'dragons-breath-3', name: "Dragon's Breath (3rd-Rank Spell)", freeActions: [dbFreeAction] }, ...extra.runes },
+      ...extra,
+    });
+
+    it('surfaces the inscribed accessory rune free action, sourced as "Item (Rune)"', () => {
+      const fa = getFreeActions({ inventory: [cape()] });
+      expect(fa).toHaveLength(1);
+      expect(fa[0].name).toBe("Dragon's Breath");
+      expect(fa[0].source).toBe("Dueling Cape (Dragon's Breath (3rd-Rank Spell))");
+      expect(fa[0].active).toBe(true);
+    });
+
+    it('injects the etched dragon type into the chain from accessoryConfig', () => {
+      const item = cape({ runes: { accessory: { id: 'dragons-breath-3', name: 'DB', freeActions: [dbFreeAction] }, accessoryConfig: { dragonType: 'fire' } } });
+      const fa = getFreeActions({ inventory: [item] });
+      expect(fa[0].chain).toMatchObject({ spellFilter: 'dragon-breath-area', dragonType: 'fire', maxRank: 3 });
+    });
+
+    it('leaves the chain untouched when no dragon type is configured', () => {
+      const fa = getFreeActions({ inventory: [cape()] });
+      expect(fa[0].chain.dragonType).toBeUndefined();
+    });
+
+    it('ignores a still-string (unresolved) accessory rune ref', () => {
+      const fa = getFreeActions({ inventory: [{ name: 'Cape', runes: { accessory: 'dragons-breath-3' } }] });
+      expect(fa).toHaveLength(0);
+    });
+
+    it('marks the free action inactive when the host is stowed', () => {
+      const fa = getFreeActions({ inventory: [cape({ state: 'stowed' })] });
+      expect(fa[0].active).toBe(false);
     });
   });
 

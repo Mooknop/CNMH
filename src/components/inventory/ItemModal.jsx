@@ -49,6 +49,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Affixed-talisman overlay (#254/#339) + consumed overlay for activation.
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  // Etch-time accessory-rune config (#1055 S4) — the depicted dragon type for a
+  // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
+  // when it derives the rune's Widen Spellshape free action.
+  const [runeConfig, setRuneConfig] = useSyncedState(`cnmh_runeconfig_${character?.id}`, {});
   const { appendEvent } = useSessionLog();
   // Player-to-player item transfer (#656/#657) — out of combat only.
   const { give, giveConsumable } = useGiveItem(character?.id);
@@ -582,6 +586,27 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             {accessory.riders.map((rider) => (
               <p key={rider.id || rider.text} className="item-rune-desc">{rider.text}</p>
             ))}
+            {/* Etch-time dragon-type choice (#1055 S4): the rune depicts one
+                dragon, fixing the damage type its Widen Spellshape can affect.
+                Chosen here on the inscribed item; useCharacter bakes it into the
+                derived free action's chain. */}
+            {accessory.rune.dragonChoice && uid != null && (
+              <label className="item-rune-choice" data-testid="accessory-rune-choice">
+                {accessory.rune.dragonChoice.label || 'Depicted dragon'}:{' '}
+                <select
+                  aria-label={accessory.rune.dragonChoice.label || 'Depicted dragon'}
+                  value={runeConfig?.[uid]?.dragonType ?? accessory.rune.dragonChoice.options?.[0]?.value ?? ''}
+                  onChange={(e) => setRuneConfig((cur) => ({
+                    ...cur,
+                    [uid]: { ...(cur?.[uid] || {}), dragonType: e.target.value },
+                  }))}
+                >
+                  {(accessory.rune.dragonChoice.options || []).map((o) => (
+                    <option key={o.value} value={o.value}>{o.label || o.value}</option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         </div>
       )}

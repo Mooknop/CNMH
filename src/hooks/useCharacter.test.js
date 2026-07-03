@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { useCharacter } from './useCharacter';
+import { getFreeActions } from '../utils/ActionsUtils';
 import { resolveCharacterItems } from '../utils/contentUtils';
 import { items, spells } from '../data';
 
@@ -27,7 +28,7 @@ vi.mock('../utils/ActionsUtils', () => ({
   getStrikes: () => [],
   getActions: () => [],
   getReactions: () => [],
-  getFreeActions: () => [],
+  getFreeActions: vi.fn(() => []),
 }));
 
 vi.mock('../utils/SpellUtils', () => ({
@@ -57,6 +58,39 @@ describe('useCharacter', () => {
   it('should return null when character is undefined', () => {
     const { result } = renderHook(() => useCharacter(undefined));
     expect(result.current).toBeNull();
+  });
+
+  // Etch-time accessory-rune config (#1055 S4): the per-uid overlay is baked onto
+  // the inscribed entry so the derived free action carries the depicted dragon.
+  describe('accessory-rune etch config injection', () => {
+    const runedCape = {
+      id: 'dragoncaster',
+      name: 'Dragoncaster',
+      maxHp: 10,
+      inventory: [
+        { uid: 'cape1', name: 'Dueling Cape', runes: { accessory: { id: 'dragons-breath-3', name: 'DB' } } },
+      ],
+    };
+
+    afterEach(() => {
+      window.localStorage.clear();
+      getFreeActions.mockClear();
+    });
+
+    it('bakes the chosen dragon type onto the inscribed entry passed to getFreeActions', () => {
+      window.localStorage.setItem('cnmh_runeconfig_dragoncaster', JSON.stringify({ cape1: { dragonType: 'fire' } }));
+      renderHook(() => useCharacter(runedCape));
+      const passed = getFreeActions.mock.calls.at(-1)[0];
+      const entry = passed.inventory.find((e) => e.uid === 'cape1');
+      expect(entry.runes.accessoryConfig).toEqual({ dragonType: 'fire' });
+    });
+
+    it('leaves the entry untouched when no config overlay is set', () => {
+      renderHook(() => useCharacter(runedCape));
+      const passed = getFreeActions.mock.calls.at(-1)[0];
+      const entry = passed.inventory.find((e) => e.uid === 'cape1');
+      expect(entry.runes.accessoryConfig).toBeUndefined();
+    });
   });
 
   it('should return computed character object', () => {
