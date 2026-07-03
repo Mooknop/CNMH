@@ -9,14 +9,17 @@
 // combined) and character sheets (30-50 KB each) exceed the 128 KiB
 // per-value key-value cap. One row per entity keyed by (collection, id).
 
-const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster'];
+const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster', 'room'];
 
-// Capture-only collections are written at runtime by the app (never bundled in
-// the seed) — the persistent bestiary is built up by `useBestiaryCapture` as the
-// party fights. The seed pipeline must never manage them: a force reseed ships
-// these as empty arrays, and the destructive force path would wipe every
-// captured creature. They are exempt from ALL seed modes here (#760).
-const CAPTURE_ONLY = ['monster'];
+// Capture-only collections are written at runtime — never bundled in the seed.
+// `monster` is the persistent bestiary, built up by `useBestiaryCapture` as the
+// party fights. `room` is the adventure-room guide (#1074): its docs are Paizo
+// book text imported into the live DO via the /api/gm/import route below, and
+// this repo is PUBLIC, so that text must never live in the committed seed. The
+// seed pipeline must never manage either: a force reseed ships these as empty
+// arrays, and the destructive force path would wipe every captured/imported
+// doc. They are exempt from ALL seed modes here (#760).
+const CAPTURE_ONLY = ['monster', 'room'];
 
 // Versions kept per (collection, id). Deliberately small: character sheets are
 // 30-50 KB, so unbounded history would blow the free-tier SQLite budget for a
@@ -87,6 +90,18 @@ export class CampaignContent {
         .exec('SELECT id FROM documents WHERE collection = ?', collection)
         .toArray()
         .map((r) => r.id)
+    );
+  }
+
+  // id -> raw stored `data` string for a collection. Lets the bulk import
+  // detect no-op docs with one string compare (no parse/re-stringify), so a
+  // re-run of an unchanged import writes nothing and churns no history.
+  currentDataById(collection) {
+    return new Map(
+      this.state.storage.sql
+        .exec('SELECT id, data FROM documents WHERE collection = ?', collection)
+        .toArray()
+        .map((r) => [r.id, r.data])
     );
   }
 
@@ -284,6 +299,61 @@ export class CampaignContent {
       }
       this.broadcast({ type: 'FULL_CONTENT', payload: this.snapshot() });
       return Response.json({ ok: true, seeded });
+    }
+
+    // GM bulk import: POST /api/gm/import/:collection   { docs: [...] }
+    //   Per-doc upsert by id, re-runnable: unchanged docs are skipped (no write,
+    //   no history churn), changed docs are archived then overwritten, new docs
+    //   are inserted. Never deletes — a doc dropped from a later import stays.
+    //   This is the write path for CAPTURE_ONLY collections (`room`, #1074),
+    //   which the seed route deliberately refuses to touch; unlike `seed` it is
+    //   NOT exempt for them. Reports { created, updated, unchanged, skipped }.
+    if (
+      request.method === 'POST' &&
+      parts[0] === 'api' && parts[1] === 'gm' && parts[2] === 'import' && parts.length === 4
+    ) {
+      const collection = parts[3];
+      if (!COLLECTIONS.includes(collection)) {
+        return new Response('Unknown collection', { status: 404 });
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return new Response('Bad JSON', { status: 400 });
+      }
+      const docs = Array.isArray(body.docs) ? body.docs : null;
+      if (!docs) {
+        return new Response('Expected { docs: [...] }', { status: 400 });
+      }
+      let created = 0;
+      let updated = 0;
+      let unchanged = 0;
+      let skipped = 0;
+      const existing = this.currentDataById(collection);
+      for (const doc of docs) {
+        if (!doc || doc.id == null) {
+          skipped++;
+          continue;
+        }
+        const id = String(doc.id);
+        const stored = { ...doc, id };
+        const incoming = JSON.stringify(stored);
+        if (!existing.has(id)) {
+          this.upsert(collection, id, stored);
+          created++;
+        } else if (existing.get(id) === incoming) {
+          unchanged++;
+        } else {
+          // archive=true: a changed import is restorable, same as a GM PUT.
+          this.upsert(collection, id, stored, true);
+          updated++;
+        }
+      }
+      if (created || updated) {
+        this.broadcast({ type: 'FULL_CONTENT', payload: this.snapshot() });
+      }
+      return Response.json({ ok: true, collection, created, updated, unchanged, skipped });
     }
 
     // GM history: GET /api/gm/history/:collection/:id
