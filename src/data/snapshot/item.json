@@ -229,6 +229,11 @@
   {
     "name": "Aeon Stone (Agate Ellipsoid)",
     "description": "This banded agate orbits your head. You can cast augury as a 2nd-rank divine innate spell once per day. Resonant Power The augury spell from this aeon stone always succeeds at its DC 6 flat check.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -241,6 +246,11 @@
   {
     "name": "Aeon Stone (Azure Briolette)",
     "description": "This deep blue, teardrop-cut gem orbits your head. Whenever an enemy fails a save against one of your mental spells, you gain temporary Hit Points equal to twice the spell's rank until the start of your next turn. Resonant Power You can cast chill touch as an occult innate spell once per day using a two-action activation.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -253,6 +263,11 @@
   {
     "name": "Aeon Stone (Clear Quartz Octagon)",
     "description": "This clear, octagonal stone orbits your head. When a non-magical item in your possession worth 90 gp or less and of 1 Bulk or less would become broken, this aeon stone automatically activates, preventing the item from breaking. The aeon stone then becomes consumed. Resonant Power You can cast mending as a 1st-rank arcane innate spell once per day.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -265,6 +280,11 @@
   {
     "name": "Aeon Stone (Consumed)",
     "description": "This dull lump has lost its magical properties. It still rotates around your head like any other aeon stone, and can thus serve as a stylish, hands-free option for spells that target an object. This aeon stone has no resonant power.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Magical"
@@ -276,6 +296,11 @@
   {
     "name": "Aeon Stone (Dusty Rose Prism)",
     "description": "This faintly glowing pink prism orbits your head. While the stone is invested, you can cast the shield cantrip as a 1st-rank arcane innate spell, conjuring a barrier of pink energy. Resonant Power The resonant power increases the damage prevented by your aeon stone's shield spell from 5 to 10.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -286,8 +311,17 @@
     "id": "aeon-stone-dusty-rose-prism"
   },
   {
+    "bonus": [
+      "crafting",
+      1
+    ],
     "name": "Aeon Stone (Formulating)",
     "description": "This faceted stone orbits your head and contains the formulas of a basic crafter's book; while you have this knowledge, you can write the formulas down for later use. You gain a +1 item bonus to checks made to Craft. Resonant Power You can cast phantasmal minion as an occult innate spell once per day.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -295,16 +329,16 @@
     ],
     "price": 75,
     "weight": 0,
-    "bonus": [
-      "crafting",
-      1
-    ],
     "id": "aeon-stone-formulating"
   },
   {
-    "id": "aeon-stone-gold-nodule",
     "name": "Aeon Stone (Gold Nodule)",
     "description": "This gold nodule orbits your head when invested. When the stone is created, its creator chooses a language they know to store within it; while you invest the stone, you can understand, speak, and write that language. Resonant Power You can cast comprehend language as an occult innate spell once per day.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -312,11 +346,17 @@
       "Transmutation"
     ],
     "price": 230,
-    "weight": 0
+    "weight": 0,
+    "id": "aeon-stone-gold-nodule"
   },
   {
     "name": "Aeon Stone (Pearly White Spindle)",
     "description": "This pale, spindle-shaped stone orbits your head. While it's invested, it slowly heals your wounds, restoring 1 Hit Point every minute. Resonant Power You gain resistance 1 to void damage.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -329,6 +369,11 @@
   {
     "name": "Aeon Stone (Polished Pebble)",
     "description": "This smooth, river-worn pebble orbits your head. While invested, you gain a +1 item bonus to saves and DCs against attempts to Grapple or Swallow you. Resonant Power You can cast grease as a primal innate spell once per day, but only to target a surface.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Earth",
@@ -342,6 +387,11 @@
   {
     "name": "Aeon Stone (Preserving)",
     "description": "This translucent stone orbits your head. You gain resistance 3 to persistent damage. At the end of any turn when persistent damage you're taking can't overcome this resistance, that persistent damage ends. Resonant Power You can cast stabilize as a divine innate spell.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -352,8 +402,17 @@
     "id": "aeon-stone-preserving"
   },
   {
+    "bonus": [
+      "crafting",
+      1
+    ],
     "name": "Aeon Stone (Repairing)",
     "description": "This polished stone orbits your head. You gain a +1 item bonus to checks made to Craft, and when you Repair an item you restore an additional 5 Hit Points. Resonant Power You can cast mending as an arcane innate spell once per day.",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -361,10 +420,6 @@
     ],
     "price": 75,
     "weight": 0,
-    "bonus": [
-      "crafting",
-      1
-    ],
     "id": "aeon-stone-repairing"
   },
   {
@@ -585,21 +640,28 @@
         ]
       }
     ],
-    "id": "alchemists-fire"
+    "id": "alchemists-fire",
+    "image": "img_e5244d9e-78fc-40d2-af44-a215890f28ea.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
-    "id": "alicorn-lance",
-    "name": "Alicorn Lance",
-    "description": "This white +1 striking lance is carved from a unicorn's horn. In addition to its normal damage, it deals 1 spirit damage. You can use a single action (concentrate) to make it glow like a torch or to extinguish that light.",
-    "traits": [
-      "Uncommon",
-      "Holy",
-      "Magical"
+    "actions": [
+      {
+        "name": "Shining Charge",
+        "actionCount": 2,
+        "traits": [
+          "Concentrate"
+        ],
+        "description": "Frequency once per hour; Effect You evoke the spirit of the unicorn whose horn forms the lance and ride a shining charge: Stride up to twice your Speed and make a Strike with the alicorn lance, gaining the benefits of the lance's jousting trait on the Strike. If you're already mounted, the unicorn spirit takes shape around your steed instead, granting it a +10-foot status bonus to its Speed for the charge."
+      }
     ],
-    "price": 150,
-    "weight": 2,
+    "name": "Alicorn Lance",
     "strikes": [
       {
+        "damageType": "piercing",
         "name": "Alicorn Lance",
         "proficiency": "martial",
         "type": "melee",
@@ -611,36 +673,42 @@
           "Reach",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "piercing"
+        "actionCount": 1
       }
     ],
     "runes": {
       "potency": 1,
       "striking": "striking"
     },
-    "actions": [
-      {
-        "name": "Shining Charge",
-        "actionCount": 2,
-        "traits": [
-          "Concentrate"
-        ],
-        "description": "Frequency once per hour; Effect You evoke the spirit of the unicorn whose horn forms the lance and ride a shining charge: Stride up to twice your Speed and make a Strike with the alicorn lance, gaining the benefits of the lance's jousting trait on the Strike. If you're already mounted, the unicorn spirit takes shape around your steed instead, granting it a +10-foot status bonus to its Speed for the charge."
-      }
-    ]
-  },
-  {
-    "name": "Amphisbaena Handwraps",
-    "description": "These handwraps are made from amphisbaena skin, with venomous mouths that your hands fit through. Your unarmed strikes gain the versatile P trait. Amphisbaena handwraps can have weapon runes etched onto them, similar to handwraps of mighty blows.",
+    "description": "This white +1 striking lance is carved from a unicorn's horn. In addition to its normal damage, it deals 1 spirit damage. You can use a single action (concentrate) to make it glow like a torch or to extinguish that light.",
+    "image": "img_dca19461-150d-470e-88ca-84f921dc1093.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
-      "Invested",
+      "Holy",
       "Magical"
     ],
     "price": 150,
-    "weight": 0,
+    "weight": 2,
+    "id": "alicorn-lance"
+  },
+  {
+    "actions": [
+      {
+        "name": "Twin Venom Strike",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Frequency once per hour; Effect You make two unarmed Strikes. Both Strikes count toward your multiple attack penalty, but the penalty doesn't increase until after you've made both attacks. Each Strike deals an additional 1d6 poison damage."
+      }
+    ],
+    "name": "Amphisbaena Handwraps",
     "strikes": {
+      "damageType": "bludgeoning",
       "name": "Amphisbaena Strike",
       "proficiency": "unarmed",
       "type": "melee",
@@ -653,19 +721,21 @@
         "Unarmed",
         "Versatile P"
       ],
-      "actionCount": 1,
-      "damageType": "bludgeoning"
+      "actionCount": 1
     },
-    "actions": [
-      {
-        "name": "Twin Venom Strike",
-        "actionCount": 2,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per hour; Effect You make two unarmed Strikes. Both Strikes count toward your multiple attack penalty, but the penalty doesn't increase until after you've made both attacks. Each Strike deals an additional 1d6 poison damage."
-      }
+    "description": "These handwraps are made from amphisbaena skin, with venomous mouths that your hands fit through. Your unarmed strikes gain the versatile P trait. Amphisbaena handwraps can have weapon runes etched onto them, similar to handwraps of mighty blows.",
+    "image": "img_85e3ce4a-9e00-4699-8a07-1c2616ac1aa1.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "traits": [
+      "Uncommon",
+      "Invested",
+      "Magical"
     ],
+    "price": 150,
+    "weight": 0,
     "id": "amphisbaena-handwraps"
   },
   {
@@ -765,8 +835,19 @@
     "id": "antiplague"
   },
   {
+    "actions": [
+      {
+        "name": "Release Cantrip",
+        "description": "Activate (varies); Effect Activating an archaic wayfinder is the same as the casting for the relevant cantrip stored within it. Once it has been activated, it becomes empty again until another cantrip is cast into it."
+      }
+    ],
     "name": "Archaic Wayfinder",
     "description": "This antique compass acts as a repository for one cantrip cast into it. To fill an archaic wayfinder, a spellcaster casts the chosen cantrip into the empty device, providing any necessary cost; the spell can't be one that's normally cast as a free action or reaction. An archaic wayfinder can also hold an aeon stone and activate its resonant power, counting against the limit of one wayfinder with a slotted resonant aeon stone.",
+    "image": "img_7b6cdea6-0fcf-45fd-9853-79ef481680d7.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Evocation",
@@ -775,12 +856,6 @@
     ],
     "price": 30,
     "weight": 0,
-    "actions": [
-      {
-        "name": "Release Cantrip",
-        "description": "Activate (varies); Effect Activating an archaic wayfinder is the same as the casting for the relevant cantrip stored within it. Once it has been activated, it becomes empty again until another cantrip is cast into it."
-      }
-    ],
     "id": "archaic-wayfinder"
   },
   {
@@ -867,9 +942,45 @@
     "id": "avidais-tattoo"
   },
   {
-    "id": "axe-musket",
     "name": "Axe Musket",
+    "strikes": [
+      {
+        "damageType": "slashing",
+        "name": "Axe Musket (Axe)",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Forceful",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1
+      },
+      {
+        "reload": 1,
+        "damageType": "piercing",
+        "name": "Axe Musket (Firearm)",
+        "proficiency": "martial",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "50ft",
+        "traits": [
+          "Attack",
+          "Concussive",
+          "Fatal d10",
+          "Ranged"
+        ],
+        "actionCount": 1
+      }
+    ],
     "description": "A sturdy musket with an axeblade attached near the muzzle, this combination weapon is favored by firearm-using dwarves and barbarians. As a combination weapon, you can attack with either its melee axe or its ranged firearm.",
+    "image": "img_e88fa881-7329-4a8a-8322-52cb3cf5dd37.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Combination",
@@ -881,38 +992,7 @@
     ],
     "price": 10,
     "weight": 2,
-    "strikes": [
-      {
-        "name": "Axe Musket (Axe)",
-        "proficiency": "martial",
-        "type": "melee",
-        "damage": "1d8",
-        "traits": [
-          "Attack",
-          "Forceful",
-          "Sweep",
-          "Melee"
-        ],
-        "actionCount": 1,
-        "damageType": "slashing"
-      },
-      {
-        "name": "Axe Musket (Firearm)",
-        "proficiency": "martial",
-        "type": "ranged",
-        "damage": "1d6",
-        "range": "50ft",
-        "reload": 1,
-        "traits": [
-          "Attack",
-          "Concussive",
-          "Fatal d10",
-          "Ranged"
-        ],
-        "actionCount": 1,
-        "damageType": "piercing"
-      }
-    ]
+    "id": "axe-musket"
   },
   {
     "name": "Backfire Mantle",
@@ -952,7 +1032,12 @@
         }
       }
     ],
-    "id": "backfire-mantle"
+    "id": "backfire-mantle",
+    "image": "img_496e01ab-a38f-415a-a151-c0c766df82f8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Backpack",
@@ -1107,7 +1192,12 @@
       }
     ],
     "id": "bagpipes-of-turmoil",
-    "playingEffect": "coda-bagpipes-playing"
+    "playingEffect": "coda-bagpipes-playing",
+    "image": "img_f7bcf271-b17e-4915-9a97-7ec9d3827947.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "battle-axe",
@@ -1133,7 +1223,12 @@
         "damageType": "slashing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_40ed7b28-4a11-4544-a68e-4bff6ca38ad0.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "ammunition": {
@@ -1176,14 +1271,19 @@
     "id": "bedroll"
   },
   {
-    "id": "belt",
-    "name": "Belt",
-    "price": 0.1,
-    "weight": 0,
     "accessoryTags": [
       "belt"
     ],
-    "description": "A sturdy leather belt."
+    "name": "Belt",
+    "description": "A sturdy leather belt.",
+    "image": "img_0965e539-46a3-435e-a6b2-21cf40c3c38f.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "price": 0.1,
+    "weight": 0,
+    "id": "belt"
   },
   {
     "actions": [
@@ -1333,11 +1433,22 @@
         ]
       }
     ],
-    "id": "blight-bomb"
+    "id": "blight-bomb",
+    "image": "img_82f96395-3d23-4652-9cf5-2cde5e02e711.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
+    "level": 5,
     "name": "Blindpepper Bomb",
     "description": "A burst of caustic pepper dust that blinds those caught in the cloud. Thrown to a range of 30 feet, it bursts in a 15-foot radius; each creature in the area must attempt a DC 18 Reflex save. On a failure the creature is blinded for 1 round, then dazzled for 1 round; on a critical failure it is blinded for 1 round, sickened 1, and dazzled until the sickened condition ends.",
+    "image": "img_d0011327-e1cc-49df-8086-e0689c5772fb.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Alchemical",
@@ -1346,8 +1457,7 @@
     ],
     "price": 40,
     "weight": 0.1,
-    "id": "blindpepper-bomb",
-    "level": 5
+    "id": "blindpepper-bomb"
   },
   {
     "name": "Blood Booster",
@@ -1404,14 +1514,19 @@
     "id": "blood-booster"
   },
   {
-    "id": "boots",
-    "name": "Boots",
-    "price": 0.5,
-    "weight": 0.1,
     "accessoryTags": [
       "footwear"
     ],
-    "description": "Sturdy leather footwear, made for long roads."
+    "name": "Boots",
+    "description": "Sturdy leather footwear, made for long roads.",
+    "image": "img_7eaaa680-4469-4033-9ee7-abec23bcfd11.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "price": 0.5,
+    "weight": 0.1,
+    "id": "boots"
   },
   {
     "name": "Bottled Lightning",
@@ -1528,7 +1643,12 @@
         ]
       }
     ],
-    "id": "bottled-lightning"
+    "id": "bottled-lightning",
+    "image": "img_d640f38a-4641-4223-a4b2-115cc6c76dd3.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -1556,9 +1676,13 @@
     "id": "bracelet-of-dashing"
   },
   {
-    "id": "breastplate",
     "name": "Breastplate",
     "description": "Though referred to as a breastplate, this type of armor consists of several pieces of plate or half-plate armor that protect the torso, chest, neck, and sometimes the hips and lower legs. It strategically grants some of the protection of plate while allowing greater flexibility and speed.",
+    "image": "img_0e246235-3f03-4926-b8a0-fc3092ba0168.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "price": 8,
     "weight": 2,
     "armor": {
@@ -1567,11 +1691,17 @@
       "dexCap": 1,
       "strength": 16,
       "group": "plate"
-    }
+    },
+    "id": "breastplate"
   },
   {
     "name": "Brooch of Shielding",
     "description": "This piece of silver or gold jewelry, adorned with miniature images of kite shields, can be used to fasten a cloak or cape. The brooch automatically absorbs magic missile spells targeting you. A brooch of shielding can absorb 30 individual magic missiles before it melts and becomes useless. Sometimes when found, a brooch of shielding has already absorbed a number of missiles.",
+    "image": "img_fdda7c13-21e4-4850-b02e-4790920f4e95.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Abjuration",
@@ -1583,27 +1713,37 @@
     "id": "brooch-of-shielding"
   },
   {
-    "id": "buckler",
-    "name": "Buckler",
-    "description": "This very small shield is a favorite of duelists and quick, lithe warriors. It's typically made of steel and strapped to your forearm. You can Raise a Shield with your buckler as long as you have that hand free or are holding a light object that's not a weapon in that hand.",
-    "price": 1,
-    "weight": 0.1,
     "shield": {
       "health": 6,
       "breakThreshold": 3,
       "hardness": 3,
       "bonus": 1
-    }
+    },
+    "name": "Buckler",
+    "description": "This very small shield is a favorite of duelists and quick, lithe warriors. It's typically made of steel and strapped to your forearm. You can Raise a Shield with your buckler as long as you have that hand free or are holding a light object that's not a weapon in that hand.",
+    "image": "img_6f5f1883-52df-4412-8101-ed6c5b0dde69.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "price": 1,
+    "weight": 0.1,
+    "id": "buckler"
   },
   {
-    "id": "cape",
-    "name": "Cape",
-    "price": 0.5,
-    "weight": 0.1,
     "accessoryTags": [
       "cape"
     ],
-    "description": "A shoulder-fastened cape."
+    "name": "Cape",
+    "description": "A shoulder-fastened cape.",
+    "image": "img_989b374d-366d-437f-9ee7-5733ea37e84f.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "price": 0.5,
+    "weight": 0.1,
+    "id": "cape"
   },
   {
     "name": "Cape of Illumination",
@@ -2170,7 +2310,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_8ee17826-4f29-4bff-affc-63f13edb3a40.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -2269,7 +2414,12 @@
         "effect": "The rings also replicate property runes from the gold-ring weapon, so long as the iron-ring weapon meets all the prerequisites for a given rune and is not a specific weapon. All the iron-ring weapon's own runes are suppressed. When you invest the rings, you can elect to transfer only fundamental runes, functioning as standard doubling rings."
       }
     ],
-    "id": "doubling-rings"
+    "id": "doubling-rings",
+    "image": "img_e5a85165-b777-413f-8095-c750c4443d26.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "speedPenalty": [
@@ -2789,7 +2939,12 @@
         }
       }
     ],
-    "id": "energy-robe"
+    "id": "energy-robe",
+    "image": "img_d20f3b44-8fe1-43c9-9ea6-ec50c3391a2e.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Entertainer's Lute",
@@ -2943,7 +3098,12 @@
       }
     ],
     "id": "entertainers-lute",
-    "playingEffect": "coda-lute-playing"
+    "playingEffect": "coda-lute-playing",
+    "image": "img_c609122c-73a8-4748-a4eb-5e9e7a0c4f49.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Everyneed Pack",
@@ -3015,17 +3175,22 @@
     "id": "eye-garnets"
   },
   {
-    "id": "fan-of-the-four-winds",
+    "usage": "held in one hand",
     "name": "Fan of the Four Winds",
     "description": "This ornate fan once belonged to a sage of Gozreh. Activate it (two actions, concentrate, manipulate; once per day) to fan in a direction and cast gust of wind; if directed at a ship's sail, the vessel instead gains a +10-foot circumstance bonus to its Speed for 8 hours. As a relic, the fan can awaken further gifts: feather step and wind barrier (minor), lightning storm and propelling winds (major), and living storm (grand).",
+    "image": "img_1e0b6154-3a10-47f7-99bb-b15729492719.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Unique",
       "Air",
       "Magical",
       "Relic"
     ],
-    "usage": "held in one hand",
-    "weight": 0.1
+    "weight": 0.1,
+    "id": "fan-of-the-four-winds"
   },
   {
     "id": "fine-clothing",
@@ -3068,16 +3233,21 @@
     "runes": {}
   },
   {
-    "id": "flask-of-fellowship",
+    "usage": "held in two hands",
     "name": "Flask of Fellowship",
     "description": "This metal drinking flask is 4 inches in diameter and 10 inches tall, with a screw top covered by four nested metal cups. When you share drinks as part of a Make an Impression action, the drink that pours out is exactly what the target would most like to have a dram or two of, and you gain a +1 item bonus to that Diplomacy check. The drinks are purely social and provide no nourishment or intoxication. The GM might prevent its use when sharing a drink would be inappropriate.",
+    "image": "img_b60996b8-fadd-4c3b-8d4e-868bcf714550.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Conjuration",
       "Magical"
     ],
-    "usage": "held in two hands",
     "price": 25,
-    "weight": 0.1
+    "weight": 0.1,
+    "id": "flask-of-fellowship"
   },
   {
     "name": "Flint & Steel",
@@ -4010,15 +4180,20 @@
     "id": "idolis-tattoo"
   },
   {
-    "id": "inventors-chair",
     "name": "Inventor's Chair",
     "description": "A traveler's chair crafted by a gifted inventor who lost the use of their legs, it is a marvel of clockwork engineering that maneuvers about on its own, equipped with wheel blades and built-in sterling artisan's tools. As a relic it awakens further gifts: emotion surge and a Crafting muse (minor), emotion conduit and enthralling (major), and artistic perfection in Crafting (grand).",
+    "image": "img_9c154fcc-85b9-45db-b9b7-945e9593bdaf.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Unique",
       "Magical",
       "Relic"
     ],
-    "weight": 3
+    "weight": 3,
+    "id": "inventors-chair"
   },
   {
     "name": "Juggernaut Mutagen",
@@ -5229,7 +5404,12 @@
       }
     ],
     "id": "pipes-of-compulsion",
-    "playingEffect": "coda-pipes-playing"
+    "playingEffect": "coda-pipes-playing",
+    "image": "img_3fa2c7bb-8ef7-4d38-bb1e-7bee1813c3d0.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "pocketed-vest",
@@ -5939,7 +6119,12 @@
         "effect": "The ring deals 3d6 force damage per action spent and the save DC is 32. When activated with 3 actions, you can disperse the force into multiple rams, targeting all creatures in a 30-foot cone instead of one target within 60 feet."
       }
     ],
-    "id": "ring-of-the-ram"
+    "id": "ring-of-the-ram",
+    "image": "img_cca6081b-e624-4b56-ad88-bda72b47f4a2.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Rope (50ft)",
