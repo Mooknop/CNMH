@@ -56,4 +56,19 @@ describe('resolveRunestone', () => {
     expect(r.id).toBe('runestone-cheap');
     expect(r.price).toBe(13);
   });
+
+  it('inherits the shared base artwork from the runestone catalog doc', () => {
+    const catalogMap = new Map([
+      ['runestone', { id: 'runestone', image: 'img_stone.jpg', imagePosition: { x: 40, y: 60 } }],
+    ]);
+    const r = resolveRunestone({ ref: 'runestone', runeRef: 'flaming' }, runeMap, catalogMap);
+    expect(r.image).toBe('img_stone.jpg');
+    expect(r.imagePosition).toEqual({ x: 40, y: 60 });
+  });
+
+  it('has no image when the base doc carries none, and never crashes without a catalog', () => {
+    expect(resolveRunestone({ ref: 'runestone', runeRef: 'flaming' }, runeMap).image).toBeUndefined();
+    const emptyBase = new Map([['runestone', { id: 'runestone' }]]);
+    expect(resolveRunestone({ ref: 'runestone' }, runeMap, emptyBase).image).toBeUndefined();
+  });
 });
