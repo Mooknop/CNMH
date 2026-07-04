@@ -18,6 +18,7 @@ import {
   runeOfferingSummary,
   eligibleHostItems,
   isShopExcluded,
+  shopHostKind,
   RUNE_TARGETS,
   groupWares,
   traitAccent,
@@ -877,6 +878,25 @@ describe('eligibleHostItems (#1044)', () => {
   it('never offers a GM-excluded (noShop) item, even valid base gear (#1105)', () => {
     // cursed-blade is a perfectly good base weapon but flagged never-sell.
     expect(ids({ runeService: true, targets: ['weapon'], maxLevel: 10 })).toEqual(['longsword']);
+  });
+
+  describe('shopHostKind (#1105)', () => {
+    const kind = (id) => shopHostKind(hostItems.find((i) => i.id === id));
+    it('classifies base gear by target, null for non-hosts', () => {
+      expect(kind('longsword')).toBe('weapon');
+      expect(kind('breastplate')).toBe('armor');
+      expect(kind('explorers-clothing')).toBe('armor'); // armor wins over its accessory role
+      expect(kind('cloak')).toBe('accessory');
+      expect(kind('buckler')).toBe('shield');
+      expect(kind('power-ring')).toBe('ring');
+      expect(kind('cold-iron-longsword')).toBeNull(); // pre-runed
+      expect(kind('sparkblade')).toBeNull(); // magic
+      expect(kind('acid-flask')).toBeNull(); // bomb
+      expect(kind('chalk')).toBeNull(); // light trinket, no deliberate host tag
+    });
+    it('is orthogonal to noShop — a flagged item keeps its kind', () => {
+      expect(kind('cursed-blade')).toBe('weapon');
+    });
   });
 
   it('accessory hosts match the ADMITTED runes by usage; the derived light tag never sweeps trinkets in', () => {
