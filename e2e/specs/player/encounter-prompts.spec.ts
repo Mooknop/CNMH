@@ -2,7 +2,9 @@
  * Encounter prompt surface (#318, part of #316/#295): the GM/bridge requests an
  * action, the player is prompted on their sheet, resolves it, and the result
  * syncs. Covers SavePrompt, SkillPrompt (Recall Knowledge), and the #221
- * triggerType-driven ReactionPrompt.
+ * triggerType-driven ReactionPrompt — both its Pass (#318) and its Use/accept
+ * path (#345): "Use" opens UseAbilityModal at reaction cost, resolving spends
+ * the reaction and clears the prompt.
  *
  * All three render in the encounter play tab, so each test seeds an active
  * encounter + the per-character prompt key via mockSession (#293), then drives
@@ -12,7 +14,7 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { activeEncounter } from '../../helpers/encounter';
+import { activeEncounter, readyTurnState } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -118,5 +120,49 @@ test.describe('Encounter prompts', () => {
     await prompt.getByRole('button', { name: 'Pass on reaction' }).click();
     await session.expectSent('cnmh_reactprompt_e2e-fighter', (v) => v === null);
     await expect(page.getByRole('region', { name: 'Reaction trigger prompt' })).toBeHidden();
+  });
+
+  test('reaction trigger: Use opens the resolver, spends the reaction, and clears the prompt', async ({ page, seed }) => {
+    await seed({
+      character: [{
+        id: CHAR_ID,
+        name: CHAR_NAME,
+        level: 5,
+        reactions: [{ name: 'E2E Riposte', actions: 'Reaction', triggerType: 'attack-any', description: 'Strike back.' }],
+      }],
+    });
+    const session = await mockSession(page, {
+      seed: {
+        cnmh_encounter_global: activeEncounter(CHAR_ID, CHAR_NAME), // in-progress, round 1
+        'cnmh_turnstate_e2e-fighter': readyTurnState(), // reaction ready, first turn started
+        'cnmh_reactprompt_e2e-fighter': { eventId: 'melee-attack', label: 'Goblin strikes!', round: 1 },
+      },
+    });
+
+    await gotoSheet(page);
+
+    const prompt = page.getByRole('region', { name: 'Reaction trigger prompt' });
+    await expect(prompt).toBeVisible();
+
+    // Accept: "Use" opens UseAbilityModal at reaction cost (no targeting → straight
+    // to confirm), unlike Pass which just dismisses.
+    await prompt.getByRole('button', { name: 'Use E2E Riposte' }).click();
+    const confirm = page.getByLabel('confirm-cast');
+    await expect(confirm).toBeVisible();
+
+    // Resolving spends the reaction on the turn state and logs the use.
+    await confirm.click();
+    await session.expectSent(
+      'cnmh_turnstate_e2e-fighter',
+      (v) => v?.reactionSpent === true,
+    );
+    await session.expectSent(
+      'cnmh_encounter_global',
+      (v) => Array.isArray(v?.log) && v.log.some((e: any) => String(e.text).includes('E2E Riposte')),
+    );
+
+    // Spending the reaction clears the synced prompt for good and removes the region.
+    await session.expectSent('cnmh_reactprompt_e2e-fighter', (v) => v === null);
+    await expect(prompt).toBeHidden();
   });
 });
