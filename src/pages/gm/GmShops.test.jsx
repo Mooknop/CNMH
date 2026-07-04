@@ -606,6 +606,141 @@ describe('GmShops', () => {
     });
   });
 
+  describe('sale shelf (#1136)', () => {
+    // A weapon host + an in-window weapon rune so a rune roll always lands.
+    const longsword = { id: 'longsword', name: 'Longsword', price: 1, strikes: [{ name: 'Longsword', damage: '1d8' }] };
+    const flaming = { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 };
+    const saleContent = { allLoreEntries, items: [longsword], runes: [flaming], spells };
+
+    const open = (shops = { 'town-hall': { wares: [] } }, content = saleContent) => {
+      setup(shops);
+      useContent.mockReturnValue(content);
+      render(<GmShops />);
+      select('Town Hall');
+    };
+    const section = () => screen.getByTestId('sale-shelf');
+    const lastWares = () => lastSave()[1].wares;
+    const lastShelf = () => lastSave()[1].saleShelf;
+
+    it('prompts to enable a service before any sale controls show', () => {
+      open();
+      expect(within(section()).getByTestId('sale-shelf-noservice')).toBeInTheDocument();
+      expect(screen.queryByLabelText('sale-rune-count')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('sale-scroll-packs')).not.toBeInTheDocument();
+    });
+
+    it('reveals rune sale controls once a rune target is enabled', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      expect(within(section()).getByLabelText('sale-rune-count')).toBeInTheDocument();
+      expect(within(section()).getByLabelText('sale-rune-discount')).toBeInTheDocument();
+      expect(screen.queryByLabelText('sale-scroll-packs')).not.toBeInTheDocument();
+    });
+
+    it('reveals the scroll-pack control once scrolls are offered', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
+      expect(within(section()).getByLabelText('sale-scroll-packs')).toBeInTheDocument();
+      expect(screen.queryByLabelText('sale-rune-count')).not.toBeInTheDocument();
+    });
+
+    it('persists saleCount + a fractional saleDiscount on the rune offering', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '20' } });
+      fireEvent.change(screen.getByLabelText('sale-rune-count'), { target: { value: '2' } });
+      fireEvent.change(screen.getByLabelText('sale-rune-discount'), { target: { value: '25' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 2, saleDiscount: 0.25 },
+      ]);
+    });
+
+    it('persists salePacks on the scroll offering only', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
+      fireEvent.click(screen.getByLabelText('spell-kind-wand'));
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '5' } });
+      fireEvent.change(screen.getByLabelText('sale-scroll-packs'), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { spellItem: 'scroll', maxLevel: 5, salePacks: 3 },
+        { spellItem: 'wand', maxLevel: 5 },
+      ]);
+    });
+
+    it('backfills stored sale config into the controls (fraction → percent)', () => {
+      open({
+        'town-hall': {
+          wares: [
+            { runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 2, saleDiscount: 0.2 },
+            { spellItem: 'scroll', maxLevel: 5, salePacks: 4 },
+          ],
+        },
+      });
+      expect(within(section()).getByLabelText('sale-rune-count')).toHaveValue(2);
+      expect(within(section()).getByLabelText('sale-rune-discount')).toHaveValue(20);
+      expect(within(section()).getByLabelText('sale-scroll-packs')).toHaveValue(4);
+    });
+
+    it('gates the roll button on a configured count', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '20' } });
+      expect(screen.getByRole('button', { name: 'Roll sale shelf' })).toBeDisabled();
+      fireEvent.change(screen.getByLabelText('sale-rune-count'), { target: { value: '2' } });
+      expect(screen.getByRole('button', { name: 'Roll sale shelf' })).not.toBeDisabled();
+    });
+
+    it('rolls saleCount rune items and publishes them onto the entry', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '20' } });
+      fireEvent.change(screen.getByLabelText('sale-rune-count'), { target: { value: '2' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Roll sale shelf' }));
+      const shelf = lastShelf();
+      expect(shelf).toHaveLength(2);
+      shelf.forEach((w) => {
+        expect(w.sale).toBe('rune');
+        expect(w.ref).toBe('longsword');
+        expect(w.saleId).toBeTruthy();
+      });
+      // The roll publishes the offering config alongside the shelf.
+      expect(lastWares()).toEqual([{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 2 }]);
+    });
+
+    it('rolls salePacks scroll packs', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '5' } });
+      fireEvent.change(screen.getByLabelText('sale-scroll-packs'), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Roll sale shelf' }));
+      const shelf = lastShelf();
+      expect(shelf).toHaveLength(3);
+      shelf.forEach((w) => expect(w.sale).toBe('scrollpack'));
+    });
+
+    it('previews a stored shelf with a discounted price + struck-through full price, and clears it', () => {
+      open({
+        'town-hall': {
+          wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 1 }],
+          saleShelf: [
+            { sale: 'rune', saleId: 'w1', ref: 'longsword', runes: { potency: 1, property: ['flaming'] }, fullPrice: 1000, price: 800 },
+          ],
+        },
+      });
+      const preview = screen.getByLabelText('sale shelf');
+      const item = within(preview).getByTestId('sale-item-sale-w1');
+      expect(item).toHaveTextContent('Longsword');
+      expect(within(item).getByText('1000 gp')).toBeInTheDocument();
+      expect(within(item).getByText('800 gp')).toBeInTheDocument();
+      // The reroll label reflects an existing shelf; Clear empties it.
+      expect(screen.getByRole('button', { name: 'Reroll sale shelf' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Clear shelf' }));
+      expect(lastSave()).toEqual(['town-hall', { saleShelf: [] }]);
+    });
+  });
+
   describe('service offerings (#857 S1)', () => {
     // The Spellcasting/Runesmithing toggles share "Offered"/"None" button text,
     // so scope each lookup to its labelled group.

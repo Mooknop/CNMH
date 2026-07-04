@@ -440,6 +440,22 @@
   font-weight: 600;
 }
 
+/* Sale Shelf preview (#1136) */
+.gm-shop-sale-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gm-shop-sale-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+}
+.gm-shop-sale-name { flex: 1; font-size: 0.86rem; }
+.gm-shop-sale-price { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.gm-shop-sale-full { color: var(--shell-text-secondary); text-decoration: line-through; font-size: 0.78rem; }
+.gm-shop-sale-now { color: var(--gold-mid); font-weight: 700; }
+.gm-shop-sale-actions { align-items: center; gap: 10px; margin-top: 12px; }
+
 @media (max-width: 760px) {
   .gm-shop-panes { flex-direction: column; height: auto; }
   .gm-shop-catalog { flex: none; max-height: 340px; }
