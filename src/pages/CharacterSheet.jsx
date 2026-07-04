@@ -11,6 +11,7 @@ import OfflineModeSwitcher from '../components/playmode/OfflineModeSwitcher';
 import { usePlayMode } from '../hooks/usePlayMode';
 import { PLAY_MODES } from '../data/playModes';
 import DowntimeSummaryModal from '../components/actions/DowntimeSummaryModal';
+import LootClaimSheet from '../components/loot/LootClaimSheet';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
@@ -413,6 +414,7 @@ const CharacterSheet = () => {
 
       {/* ── Global overlays ─────────────────────────────────────── */}
       <DowntimeSummaryModal />
+      <LootClaimSheet character={character} characterColor={characterColor} />
 
       {/* ── Modals ───────────────────────────────────────────────── */}
       <FamiliarModal

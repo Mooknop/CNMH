@@ -1,0 +1,77 @@
+/* Party treasure claim sheet (#1091) — a themed fly-up on the player sheet,
+   same family as the Take 10 prompt. Accent comes from --loot-theme. */
+.loot-claim {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--loot-theme, var(--color-theme));
+  border-radius: var(--radius-md);
+  background: var(--surface-inset, rgba(0, 0, 0, 0.2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.loot-claim-head { display: flex; align-items: baseline; gap: var(--space-2); }
+.loot-claim-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--loot-theme, var(--color-theme));
+}
+.loot-claim-room { color: var(--text-secondary, #cfcfcf); font-size: 0.85rem; }
+.loot-claim-offline {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--peril-light, #e6a);
+}
+.loot-claim-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.loot-claim-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-sm);
+}
+.loot-claim-line.is-mine { border-color: var(--loot-theme, var(--color-theme)); }
+.loot-claim-line-main { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.loot-claim-name { color: var(--text-primary, #fff); }
+.loot-claim-qty { margin-left: 6px; color: var(--text-tertiary, #999); font-variant-numeric: tabular-nums; }
+.loot-claim-others { font-size: 0.74rem; color: var(--text-tertiary, #999); }
+
+.loot-claim-toggle {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary, #fff);
+  font: inherit;
+  cursor: pointer;
+}
+.loot-claim-toggle.is-mine {
+  border-color: var(--loot-theme, var(--color-theme));
+  background: var(--loot-theme, var(--color-theme));
+  color: #111;
+}
+.loot-claim-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.loot-claim-stepper { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.loot-claim-step {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary, #fff);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.loot-claim-step:disabled { opacity: 0.4; cursor: not-allowed; }
+.loot-claim-mine { min-width: 1.4em; text-align: center; font-variant-numeric: tabular-nums; }
+
+.loot-claim-gold { margin: 0; color: var(--text-primary, #fff); }
+.loot-claim-gold strong { color: var(--gold-mid, #d4af37); font-variant-numeric: tabular-nums; }
+.loot-claim-gold-note { color: var(--text-tertiary, #999); font-size: 0.8rem; }
+.loot-claim-foot { margin: 0; font-size: 0.8rem; color: var(--text-tertiary, #999); }
