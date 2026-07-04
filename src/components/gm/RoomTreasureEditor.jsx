@@ -20,6 +20,11 @@ import CatalogPickerModal from './CatalogPickerModal';
 // locked read-only behind a "Reopen cache" guard so a room can't be distributed
 // twice by accident.
 
+// The generic Treasure Item (see utils/treasure.js): a cache line bound to it
+// keeps its own name + gp value, so it can stand in for gems/jewelry/art with a
+// shared icon. Its lines are name/value-editable inline rather than catalog-fixed.
+const TREASURE_ITEM_ID = 'treasure-item';
+
 const catalogLine = (item) => ({ ref: item.id, name: item.name || item.id, qty: 1 });
 
 const normalize = (gold, items) => ({ gold: Number(gold) || 0, items });
@@ -59,20 +64,44 @@ const RoomTreasureEditor = ({ room }) => {
     touch();
   };
 
+  const setName = (i, name) => {
+    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, name } : l)));
+    touch();
+  };
+
+  const setValue = (i, raw) => {
+    const v = raw === '' ? null : Math.max(0, Number(raw) || 0);
+    setLines((prev) =>
+      prev.map((l, idx) => {
+        if (idx !== i) return l;
+        const next = { ...l };
+        if (v == null) delete next.value;
+        else next.value = v;
+        return next;
+      }),
+    );
+    touch();
+  };
+
   const onPick = (picked) => {
     if (!picker) return;
     if (picker.mode === 'add') {
       setLines((prev) => [...prev, ...picked.map(catalogLine)]);
     } else {
       const item = picked[0];
-      // Bind the placeholder to the chosen catalog item: canonical name + ref,
-      // keep the qty, drop the stale coin `value` (it's a real item now).
       setLines((prev) =>
-        prev.map((l, idx) =>
-          idx === picker.index
-            ? { ref: item.id, name: item.name || item.id, qty: l.qty, ...(l.variant ? { variant: l.variant } : {}) }
-            : l,
-        ),
+        prev.map((l, idx) => {
+          if (idx !== picker.index) return l;
+          // Binding to the generic Treasure Item keeps the placeholder's identity
+          // (name + gp value) — only the ref is added, so it's catalogued (icon,
+          // no "not in catalog" flag) but still reads as "Garnet Beads / 5 gp".
+          if (item.id === TREASURE_ITEM_ID) {
+            return { ref: TREASURE_ITEM_ID, name: l.name, qty: l.qty, ...(l.value != null ? { value: l.value } : {}) };
+          }
+          // Otherwise adopt the catalog item's canonical name + ref, keep qty,
+          // drop the stale coin `value` (it's a real item now).
+          return { ref: item.id, name: item.name || item.id, qty: l.qty, ...(l.variant ? { variant: l.variant } : {}) };
+        }),
       );
     }
     setPicker(null);
@@ -139,39 +168,73 @@ const RoomTreasureEditor = ({ room }) => {
 
       <ul className="gm-room-treasure-lines" aria-label="Treasure cache items">
         {lines.length === 0 && <li className="gm-count gm-room-treasure-empty">No items yet.</li>}
-        {lines.map((line, i) => (
-          <li key={i} className={`gm-room-treasure-line${line.ref ? '' : ' is-unmatched'}`}>
-            <span className="gm-room-treasure-name">
-              {line.name}{line.variant ? ` (${line.variant})` : ''}
-            </span>
-            {!line.ref && <span className="gm-room-treasure-flag">not in catalog</span>}
-            <input
-              type="number"
-              min="1"
-              className="gm-room-treasure-qty"
-              aria-label={`Quantity for ${line.name}`}
-              value={line.qty}
-              onChange={(e) => setQty(i, e.target.value)}
-            />
-            {!line.ref && (
+        {lines.map((line, i) => {
+          const isTreasure = line.ref === TREASURE_ITEM_ID;
+          const label = line.name || 'treasure';
+          return (
+            <li
+              key={i}
+              className={`gm-room-treasure-line${line.ref ? '' : ' is-unmatched'}${isTreasure ? ' is-treasure' : ''}`}
+            >
+              {isTreasure ? (
+                <>
+                  <input
+                    type="text"
+                    className="gm-room-treasure-name-input"
+                    aria-label={`Treasure name for line ${i + 1}`}
+                    placeholder="Treasure name"
+                    value={line.name || ''}
+                    onChange={(e) => setName(i, e.target.value)}
+                  />
+                  <span className="gm-room-treasure-value">
+                    <input
+                      type="number"
+                      min="0"
+                      className="gm-room-treasure-value-input"
+                      aria-label={`Value (gp) for line ${i + 1}`}
+                      placeholder="0"
+                      value={line.value ?? ''}
+                      onChange={(e) => setValue(i, e.target.value)}
+                    />
+                    <span className="gm-room-treasure-value-unit">gp</span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="gm-room-treasure-name">
+                    {line.name}{line.variant ? ` (${line.variant})` : ''}
+                  </span>
+                  {!line.ref && <span className="gm-room-treasure-flag">not in catalog</span>}
+                </>
+              )}
+              <input
+                type="number"
+                min="1"
+                className="gm-room-treasure-qty"
+                aria-label={`Quantity for ${label}`}
+                value={line.qty}
+                onChange={(e) => setQty(i, e.target.value)}
+              />
+              {!line.ref && (
+                <button
+                  type="button"
+                  className="btn-small btn-secondary"
+                  onClick={() => setPicker({ mode: 'resolve', index: i })}
+                >
+                  Resolve…
+                </button>
+              )}
               <button
                 type="button"
-                className="btn-small btn-secondary"
-                onClick={() => setPicker({ mode: 'resolve', index: i })}
+                className="gm-room-treasure-remove"
+                aria-label={`Remove ${label}`}
+                onClick={() => removeLine(i)}
               >
-                Resolve…
+                ✕
               </button>
-            )}
-            <button
-              type="button"
-              className="gm-room-treasure-remove"
-              aria-label={`Remove ${line.name}`}
-              onClick={() => removeLine(i)}
-            >
-              ✕
-            </button>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <div className="gm-room-treasure-actions">

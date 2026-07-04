@@ -21,6 +21,7 @@ import bootstrapRunes from '../data/pf2eRunes';
 import bootstrapArmorRunes from '../data/armorRunes';
 import { FUNDAMENTAL_RUNES } from '../data/fundamentalRunes';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
+import { isTreasureEntry, resolveTreasure } from './treasure';
 import { resolveScroll, resolveWand } from './spellItems';
 import { baseSpellItemArt } from './InventoryUtils';
 
@@ -494,6 +495,10 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
   // A runestone is an unattached rune (#800): resolve it from the rune catalog
   // into an inert display item (no strikes/runes), bypassing the item catalog.
   if (isRunestoneEntry(entry)) return resolveRunestone(entry, runeMap);
+
+  // A generic Treasure Item: fold per-instance name/worth/Bulk/image overrides
+  // onto the shared base (inherits its art), bypassing normal catalog lookup.
+  if (isTreasureEntry(entry)) return resolveTreasure(entry, catalogMap);
 
   const quantity = entry.quantity != null ? entry.quantity : 1;
   const cat = catalogMap.get(String(entry.ref));

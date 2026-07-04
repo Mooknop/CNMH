@@ -2415,6 +2415,7 @@ p.gm-live-note {
   font-size: 0.85rem;
 }
 .gm-room-cache-chip-qty { color: var(--shell-text-tertiary); font-variant-numeric: tabular-nums; }
+.gm-room-cache-chip-value { color: var(--gold-mid); font-variant-numeric: tabular-nums; }
 .gm-room-cache-chip.is-unmatched { border-color: var(--peril-light); border-style: dashed; }
 .gm-room-cache-chip-flag {
   font-size: 0.62rem;
@@ -2470,6 +2471,30 @@ p.gm-live-note {
 }
 .gm-room-treasure-line.is-unmatched { border-color: var(--peril-light); border-style: dashed; }
 .gm-room-treasure-name { flex: 1; color: var(--shell-text-primary); }
+.gm-room-treasure-name-input {
+  flex: 1;
+  min-width: 6em;
+  padding: 5px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+.gm-room-treasure-value { display: inline-flex; align-items: center; gap: 4px; }
+.gm-room-treasure-value-input {
+  width: 5em;
+  padding: 5px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.gm-room-treasure-value-unit { color: var(--shell-text-tertiary); font-size: 0.85rem; }
+.gm-room-treasure-line.is-treasure { border-color: var(--gold-mid); }
 .gm-room-treasure-flag {
   font-size: 0.62rem;
   font-weight: 700;

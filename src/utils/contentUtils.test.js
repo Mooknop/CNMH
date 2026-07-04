@@ -430,6 +430,21 @@ describe('contentUtils', () => {
       expect(out.runes).toBeUndefined();
     });
 
+    it('routes a treasure-item ref through the treasure resolver, overrides folded in', () => {
+      const treasureCatalog = itemCatalogMap([
+        { id: 'treasure-item', name: 'Treasure', weight: 0, image: 'img_t.jpg' },
+      ]);
+      const out = resolveInventoryItem(
+        { ref: 'treasure-item', name: 'Garnet Beads', value: 5, quantity: 10 },
+        treasureCatalog,
+      );
+      expect(out.name).toBe('Garnet Beads');
+      expect(out.price).toBe(5); // value → price
+      expect(out.quantity).toBe(10);
+      expect(out.image).toBe('img_t.jpg'); // inherited base art
+      expect(out.strikes).toBeUndefined();
+    });
+
     it('merges a ref over its catalog definition with per-character scalars', () => {
       const out = resolveInventoryItem({ ref: 'elixir', quantity: 2, invested: true }, catalog);
       expect(out).toMatchObject({
