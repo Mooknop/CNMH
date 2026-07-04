@@ -73,11 +73,20 @@ export const idleEncounter = () => ({
 // A turn state with the reaction available — defaultTurnState (useTurnState.jsx)
 // has the reaction unavailable until a first turn, so tests that exercise
 // reaction-cost actions (Shield Block, reaction prompts) seed this.
-export const readyTurnState = () => ({
+//
+// `turnToken` (#1131): TurnTrackerPanel's turn-begin effect compares the
+// persisted turnState.turnToken against `${round}:${currentTurnIndex}`; on a
+// mismatch it treats the mount as the START of the PC's turn and sweeps —
+// resetting turnstate, clearing cnmh_readied_<id>, zeroing minion granted-action
+// pools. Seeding a turn already in progress (a standing readied action, a
+// Command-granted familiar pool) therefore MUST pass the matching token
+// (activeEncounter's default position is '1:0') or the sweep wipes the seed.
+export const readyTurnState = (turnToken?: string) => ({
   actionsSpent: 0,
   attacksMade: 0,
   reactionAvailable: true,
   reactionSpent: false,
   hasStartedFirstTurn: true,
   actionsLog: [], // spendReaction/spendActions spread this — must be present
+  ...(turnToken ? { turnToken } : {}),
 });

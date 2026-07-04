@@ -60,6 +60,34 @@ describe('useCharacter', () => {
     expect(result.current).toBeNull();
   });
 
+  // #1131: hasFamiliar/hasAnimalCompanion derive from the authored data block,
+  // not a feat lookup (hasFeat is mocked false here — a feat-gated derivation
+  // would return false and split the surfaces that read the raw field).
+  describe('minion feature flags', () => {
+    it('flags familiar/companion from the data block and passes it through', () => {
+      const character = {
+        id: 'minion-owner',
+        name: 'Minion Owner',
+        level: 5,
+        familiar: { name: 'Squox' },
+        animalCompanion: { name: 'Wolf' },
+      };
+      const { result } = renderHook(() => useCharacter(character));
+      expect(result.current.flags.hasFamiliar).toBe(true);
+      expect(result.current.flags.hasAnimalCompanion).toBe(true);
+      expect(result.current.familiar).toEqual({ name: 'Squox' });
+      expect(result.current.animalCompanion).toEqual({ name: 'Wolf' });
+    });
+
+    it('stays false with no data block', () => {
+      const { result } = renderHook(() => useCharacter({ id: 'bare', name: 'Bare', level: 1 }));
+      expect(result.current.flags.hasFamiliar).toBe(false);
+      expect(result.current.flags.hasAnimalCompanion).toBe(false);
+      expect(result.current.familiar).toBeNull();
+      expect(result.current.animalCompanion).toBeNull();
+    });
+  });
+
   // Etch-time accessory-rune config (#1055 S4): the per-uid overlay is baked onto
   // the inscribed entry so the derived free action carries the depicted dragon.
   describe('accessory-rune etch config injection', () => {

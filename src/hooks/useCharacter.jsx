@@ -383,8 +383,14 @@ export const useCharacter = (character) => {
     // Centralises all "does this character have X?" checks so components
     // don't need to inspect raw JSON structure.
     const flags = {
-      hasFamiliar              : hasFeat(character, FEAT_NAMES.FAMILIAR),
-      hasAnimalCompanion       : hasFeat(character, FEAT_NAMES.ANIMAL_COMPANION),
+      // Data-driven, not feat-gated (#1131): the authored familiar/companion
+      // block is what every surface renders from, and other consumers
+      // (ActionsList, TurnTrackerPanel) already key off it — a feat named
+      // differently (Improved Familiar) or a feat without the data block would
+      // otherwise split the surfaces (Command section without masthead button,
+      // or a dead button with nothing to open).
+      hasFamiliar              : !!character.familiar,
+      hasAnimalCompanion       : !!character.animalCompanion,
       hasHeftyHauler           : hasFeat(character, FEAT_NAMES.HEFTY_HAULER),
       hasUntrainedImprovisation: hasFeat(character, FEAT_NAMES.UNTRAINED_IMPROVISATION),
       hasHarrowing             : hasFeat(character, FEAT_NAMES.HARROWER_DEDICATION),
@@ -412,8 +418,8 @@ export const useCharacter = (character) => {
     // the player files is only known to this hook.
     const feats           = character.feats || [];
     const inventory       = effectiveInventory;
-    const familiar        = flags.hasFamiliar ? (character.familiar || null) : null;
-    const animalCompanion = flags.hasAnimalCompanion ? (character.animalCompanion || null) : null;
+    const familiar        = character.familiar || null;
+    const animalCompanion = character.animalCompanion || null;
     const thaumaturge     = character.thaumaturge || null;
     const champion        = character.champion || null;
     const monk            = character.monk || null;
