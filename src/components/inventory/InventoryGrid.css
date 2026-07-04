@@ -416,6 +416,11 @@
   height: 100%;
   object-fit: cover;
   position: relative;
+  /* Suppress the browser's native image-drag ghost — the tiles use our own
+     pointer-based DnD, and the full-res native drag image balloons over the
+     page. */
+  -webkit-user-drag: none;
+  user-select: none;
 }
 .inventory-grid .icon-tile-qty {
   position: absolute;

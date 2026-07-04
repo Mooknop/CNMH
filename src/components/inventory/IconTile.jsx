@@ -35,7 +35,12 @@ const IconTile = ({ item, size = 52, glow = true }) => {
   return (
     <span className={cls} style={{ '--tile': `${size}px` }}>
       {item?.image ? (
-        <img className="icon-tile-img" src={`/api/images/${item.image}`} alt="" />
+        <img
+          className="icon-tile-img"
+          src={`/api/images/${item.image}`}
+          alt=""
+          draggable={false}
+        />
       ) : (
         <span className="icon-tile-code">{itemCode(item?.name)}</span>
       )}
