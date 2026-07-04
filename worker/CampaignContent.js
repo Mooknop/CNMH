@@ -9,17 +9,18 @@
 // combined) and character sheets (30-50 KB each) exceed the 128 KiB
 // per-value key-value cap. One row per entity keyed by (collection, id).
 
-const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster', 'room'];
+const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster', 'room', 'event'];
 
 // Capture-only collections are written at runtime — never bundled in the seed.
 // `monster` is the persistent bestiary, built up by `useBestiaryCapture` as the
-// party fights. `room` is the adventure-room guide (#1074): its docs are Paizo
-// book text imported into the live DO via the /api/gm/import route below, and
-// this repo is PUBLIC, so that text must never live in the committed seed. The
-// seed pipeline must never manage either: a force reseed ships these as empty
-// arrays, and the destructive force path would wipe every captured/imported
-// doc. They are exempt from ALL seed modes here (#760).
-const CAPTURE_ONLY = ['monster', 'room'];
+// party fights. `room` is the adventure-room guide (#1074) and `event` is the
+// chapter-event tracker (#1112): both hold Paizo book text imported into the
+// live DO via the /api/gm/import route below, and this repo is PUBLIC, so that
+// text must never live in the committed seed. The seed pipeline must never
+// manage any of them: a force reseed ships these as empty arrays, and the
+// destructive force path would wipe every captured/imported doc. They are
+// exempt from ALL seed modes here (#760).
+const CAPTURE_ONLY = ['monster', 'room', 'event'];
 
 // Versions kept per (collection, id). Deliberately small: character sheets are
 // 30-50 KB, so unbounded history would blow the free-tier SQLite budget for a

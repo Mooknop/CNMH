@@ -363,15 +363,34 @@ const isFeaturesPage = (name) => /\bFeatures$/i.test(name || '');
 const isRoomPage = (page, moduleId) =>
   page.flags?.[moduleId]?.pageNumberClass === 'location' || /^[A-Z]\d*\.\s/.test(page.name || '');
 
+// Chapter journals ("Ch 2: Strange Times in Sandpoint") hold the scripted
+// events the GM Event Tracker (#1112) surfaces. Frontmatter, the Gazetteer,
+// handouts, and the Art Gallery are excluded — they aren't event-shaped.
+const isChapterJournal = (name) => /^Ch\s*\d+\s*:/i.test(name || '');
+
+// Fresh GM-tracking defaults stamped on every newly imported event doc. The
+// merge below (mergeGmFields) preserves the GM's copy across a re-import so
+// tracking progress is never regressed.
+const freshEventGmFields = () => ({
+  tracked: true, // default on; the GM hides connective pages (opt-out) in S3.
+  status: 'upcoming', // upcoming | active | resolved | skipped
+  steps: [], // party-progress checklist, GM-authored per event
+  scheduledFor: '', // game date → "due" highlight vs the campaign clock
+  outcome: '', // what actually happened
+  notes: '', // campaign significance, same field the rooms use
+});
+
 function transformDump(dump) {
   const moduleId = dump.module;
   const hazardIndex = buildHazardIndex(dump);
   const lootIndex = buildLootIndex(dump);
   const rooms = [];
   const features = [];
+  const events = [];
 
   for (const journal of dump.journals || []) {
     const chapter = journal.name;
+    const chapterEvents = isChapterJournal(chapter);
     const pages = [...(journal.pages || [])].sort((a, b) => (a.sort || 0) - (b.sort || 0));
     let currentSite = null;
 
@@ -392,7 +411,31 @@ function transformDump(dump) {
         });
         continue;
       }
-      if (!isRoomPage(page, moduleId)) continue;
+      if (!isRoomPage(page, moduleId)) {
+        // A non-room, non-Features page in a chapter journal is a scripted
+        // event (#1112) — rumor threads, social scenes, the murder arc. Same
+        // extractors as rooms; GM-tracking fields default fresh (preserved on
+        // re-import by mergeGmFields). Non-chapter journals (Gazetteer, etc.)
+        // are ignored here.
+        if (chapterEvents) {
+          // The page name is the canonical event title. Unlike a room page
+          // (whose first <h2> is "A3. Name"), an event page often leads with a
+          // sub-heading or statblock, so parsing the first <h2> mislabels it.
+          events.push({
+            id: `${ID_PREFIX}-event-${slug(page.name)}`,
+            name: page.name,
+            chapter,
+            sort: page.sort || 0,
+            readAloud: extractReadAloud(html),
+            body: extractBody(html),
+            checks: extractChecks(html),
+            creatures: extractCreatures(html, hazardIndex),
+            hazards: extractHazards(html, hazardIndex),
+            ...freshEventGmFields(),
+          });
+        }
+        continue;
+      }
 
       const flagCode = page.flags?.[moduleId]?.pageNumber || null;
       const heading = parseHeading(html, page.name);
@@ -422,10 +465,12 @@ function transformDump(dump) {
   return {
     rooms,
     features,
+    events,
     stats: {
       journals: (dump.journals || []).length,
       rooms: rooms.length,
       features: features.length,
+      events: events.length,
       hazards: Object.keys(hazardIndex).length,
       lootActors: Object.keys(lootIndex).length,
       checks: rooms.reduce((n, r) => n + r.checks.length, 0),
@@ -434,14 +479,22 @@ function transformDump(dump) {
   };
 }
 
+// GM-tracking fields on an event doc (#1112). The transform re-stamps these
+// fresh every run, so they must be carried over from the live doc on re-import
+// or a re-run would reset the party's tracked progress. Presence-checked (not
+// truthiness) so a deliberately falsy value survives: `tracked: false` (a hidden
+// connective page), `status: 'skipped'`, an empty `steps` the GM cleared, etc.
+const EVENT_GM_FIELDS = ['tracked', 'status', 'steps', 'scheduledFor', 'outcome'];
+
 // Preserve GM-authored fields across a re-import. The transform re-derives
 // notes ('') and treasureCache (from the dump) every run, so without this a
 // re-run would wipe the GM's campaign notes (#1078) and any curated or
 // already-distributed treasure cache (#1085). For every doc id that still
 // exists, carry over the existing `notes` (if non-empty), `treasureCache` (the
 // GM's copy wins once a room has been imported — even an empty one is a GM
-// decision), and `distributedAt` (never regress distribution state). New ids
-// keep the freshly transformed values.
+// decision), `distributedAt` (never regress distribution state), and every
+// event-tracking field (#1112). New ids keep the freshly transformed values.
+// Rooms carry none of the event fields, so this stays a no-op for them.
 function mergeGmFields(docs, existingDocs) {
   const byId = new Map();
   for (const d of existingDocs || []) {
@@ -454,6 +507,9 @@ function mergeGmFields(docs, existingDocs) {
     if (ex.notes) merged.notes = ex.notes;
     if (ex.treasureCache) merged.treasureCache = ex.treasureCache;
     if (ex.distributedAt != null) merged.distributedAt = ex.distributedAt;
+    for (const f of EVENT_GM_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(ex, f)) merged[f] = ex[f];
+    }
     return merged;
   });
 }
@@ -461,6 +517,7 @@ function mergeGmFields(docs, existingDocs) {
 module.exports = {
   transformDump,
   mergeGmFields,
+  isChapterJournal,
   buildLootIndex,
   classifyLootItem,
   coinValueGp,

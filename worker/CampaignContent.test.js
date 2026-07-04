@@ -223,6 +223,22 @@ describe('CampaignContent capture-only collections (#760)', () => {
     const ids = snap.payload.payload.monster.map((d) => d.id);
     expect(ids).toEqual(['goblin-warrior']); // survived the reseed
   });
+
+  // The chapter-event tracker (#1112) is capture-only like room/monster: Paizo
+  // text, public repo, so the seed must refuse it and the import route owns it.
+  test('force reseed refuses the capture-only event collection; import populates it', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+
+    const seeded = await seed(content, { event: [{ id: 'seeded', name: 'Nope' }] }, { force: true });
+    expect(seeded.payload.seeded.event).toBe('skipped (capture-only, never seeded)');
+    let snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.event).toEqual([]);
+
+    await content.fetch(makeReq('POST', '/api/gm/import/event', { docs: [{ id: 'sd4s-event-town-rumors', name: 'Town Rumors' }] }));
+    snap = await content.fetch(makeReq('GET', '/api/content'));
+    expect(snap.payload.payload.event.map((d) => d.id)).toEqual(['sd4s-event-town-rumors']);
+  });
 });
 
 describe('CampaignContent bulk import (#1075)', () => {
