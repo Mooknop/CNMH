@@ -152,26 +152,31 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
           <MinionSpawnButton ownerId={character.id} role={MINION_FAMILIAR} />
           <MinionMove ownerId={character.id} role={MINION_FAMILIAR} />
 
-          <div className="familiar-defenses">
-            <div className="defense">
-              <span className="defense-label">Fortitude</span>
-              <span className="defense-value">
-                <PenaltyDisplay base={character.saves.fortitude} penalty={effects.fort} format="modifier" />
-              </span>
+          {/* Familiars use their master's saves. Guard the block: this modal is
+              mounted even while closed, so a master with no `saves` object would
+              otherwise crash the whole sheet on an unguarded `.fortitude` read. */}
+          {character.saves && (
+            <div className="familiar-defenses">
+              <div className="defense">
+                <span className="defense-label">Fortitude</span>
+                <span className="defense-value">
+                  <PenaltyDisplay base={character.saves.fortitude} penalty={effects.fort} format="modifier" />
+                </span>
+              </div>
+              <div className="defense">
+                <span className="defense-label">Reflex</span>
+                <span className="defense-value">
+                  <PenaltyDisplay base={character.saves.reflex} penalty={effects.reflex} format="modifier" />
+                </span>
+              </div>
+              <div className="defense">
+                <span className="defense-label">Will</span>
+                <span className="defense-value">
+                  <PenaltyDisplay base={character.saves.will} penalty={effects.will} format="modifier" />
+                </span>
+              </div>
             </div>
-            <div className="defense">
-              <span className="defense-label">Reflex</span>
-              <span className="defense-value">
-                <PenaltyDisplay base={character.saves.reflex} penalty={effects.reflex} format="modifier" />
-              </span>
-            </div>
-            <div className="defense">
-              <span className="defense-label">Will</span>
-              <span className="defense-value">
-                <PenaltyDisplay base={character.saves.will} penalty={effects.will} format="modifier" />
-              </span>
-            </div>
-          </div>
+          )}
 
           <div className="familiar-details">
             {familiarData.skills && (
