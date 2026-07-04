@@ -472,6 +472,25 @@ const isDeliberateHost = (item) =>
   !!item.shield || !!item.container;
 
 /**
+ * The base-gear category an item can be generatively offered as (#1105) —
+ * weapon | armor | accessory | shield | ring, or null when a shop never
+ * auto-surfaces it. Mirrors eligibleHostItems' own classification so the GM
+ * host-management panel groups the catalog exactly as the shop sees it (a
+ * dual-role item like Explorer's Clothing resolves to armor first). The
+ * `noShop` flag is orthogonal — an excluded item still has a host kind; the
+ * panel shows the kind and the exclusion toggle side by side.
+ */
+export const shopHostKind = (item) => {
+  if (!item || item.id == null) return null;
+  if (item.powerRing) return 'ring';
+  if (!isMundaneBase(item)) return null;
+  if (item.strikes) return 'weapon';
+  if (item.armor) return 'armor';
+  if (isDeliberateHost(item)) return item.shield ? 'shield' : 'accessory';
+  return null;
+};
+
+/**
  * The catalog items a rune-service offering implies as buyable base gear, in
  * catalog order, deduped by id (Explorer's Clothing is both base armor and an
  * accessory host). Returns [] for a non-service ware and for the exempt
