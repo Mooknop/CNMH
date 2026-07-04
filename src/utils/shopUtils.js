@@ -362,8 +362,9 @@ export function isRuneServiceWare(w) {
 }
 
 // Target filter: an explicit non-empty list, else every target. (Empty/unset =
-// all, mirroring offeringTraditions.)
-const offeringTargets = (ware) => {
+// all, mirroring offeringTraditions.) Exported for the Sale Shelf roller (#1135),
+// which picks a target uniformly among an offering's admissible targets.
+export const offeringTargets = (ware) => {
   const t = Array.isArray(ware.targets) ? ware.targets.filter(Boolean) : [];
   return t.length ? t.map((x) => String(x).toLowerCase()) : RUNE_TARGETS;
 };
