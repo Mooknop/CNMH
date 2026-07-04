@@ -4,6 +4,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';
 import { groupRoomsBySite } from '../../utils/rooms';
 import RoomDetail from './RoomDetail';
+import RoomDistributeControl from './RoomDistributeControl';
 
 // Dashboard "Current Room" panel (#1077): the at-the-table surface. The GM pins
 // a room (here or from World → Rooms) and its read-aloud, hidden-check DCs, and
@@ -48,7 +49,10 @@ const CurrentRoomPanel = () => {
       </header>
 
       {room ? (
-        <RoomDetail room={room} />
+        <>
+          <RoomDetail room={room} />
+          <RoomDistributeControl room={room} />
+        </>
       ) : (
         <p className="gm-help">
           No room pinned. Pick one above, or open <Link to="/gm/world/rooms">World → Rooms</Link> to browse.

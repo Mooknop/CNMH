@@ -5,6 +5,7 @@ import { groupRoomsBySite, roomMatches, roomTreasureCache } from '../../utils/ro
 import { saveDocument } from '../../utils/gmApi';
 import RoomDetail from '../../components/gm/RoomDetail';
 import RoomTreasureEditor from '../../components/gm/RoomTreasureEditor';
+import RoomDistributeControl from '../../components/gm/RoomDistributeControl';
 import RoomsImportButton from '../../components/gm/RoomsImportButton';
 import GmIcon from './GmIcon';
 import './gm.css';
@@ -169,6 +170,7 @@ const GmRooms = () => {
             </div>
             <RoomDetail room={selected} showNotes={false} showTreasure={false} />
             {!selected.isFeatures && <RoomTreasureEditor key={`treasure-${selected.id}`} room={selected} />}
+            {!selected.isFeatures && <RoomDistributeControl key={`distribute-${selected.id}`} room={selected} />}
             <RoomNotesEditor key={`notes-${selected.id}`} room={selected} />
           </>
         ) : (

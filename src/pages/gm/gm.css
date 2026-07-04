@@ -2671,6 +2671,55 @@ p.gm-live-note {
 .gm-room-treasure-actions { display: flex; align-items: center; gap: var(--space-3); }
 .gm-room-treasure-locked { margin: 0; color: var(--shell-text-secondary); font-size: 0.85rem; }
 
+/* Treasure distribution — loot drop lifecycle (#1090) */
+.gm-distribute {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+.gm-distribute-hint { margin: 0; }
+.gm-distribute-title { margin: 0; font-weight: 600; color: var(--shell-text-primary); }
+.gm-distribute-confirm { align-items: stretch; }
+.gm-loot-drop {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--gold-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.gm-loot-drop-head { display: flex; align-items: baseline; gap: var(--space-2); }
+.gm-loot-drop-head strong {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}
+.gm-loot-drop-room { color: var(--shell-text-secondary); font-size: 0.85rem; }
+.gm-loot-drop-gold { margin: 0; color: var(--gold-mid); font-variant-numeric: tabular-nums; }
+.gm-loot-drop-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gm-loot-drop-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 6px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+}
+.gm-loot-drop-line.is-claimed { border-color: var(--gold-mid); }
+.gm-loot-drop-line-name { flex: 1; color: var(--shell-text-primary); }
+.gm-loot-drop-line-qty { color: var(--shell-text-tertiary); font-variant-numeric: tabular-nums; }
+.gm-loot-drop-line-claim { font-size: 0.78rem; color: var(--shell-text-tertiary); }
+.gm-loot-drop-line.is-claimed .gm-loot-drop-line-claim { color: var(--gold-mid); }
+.gm-loot-drop-actions { display: flex; align-items: center; gap: var(--space-3); }
+
 /* Adventure-room import button (#1074 in-app upload) */
 .gm-rooms-import { display: flex; flex-direction: column; gap: var(--space-2); }
 .gm-rooms-import-file { display: none; }
