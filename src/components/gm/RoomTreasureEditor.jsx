@@ -25,7 +25,15 @@ const catalogLine = (item) => ({ ref: item.id, name: item.name || item.id, qty: 
 const normalize = (gold, items) => ({ gold: Number(gold) || 0, items });
 
 const RoomTreasureEditor = ({ room }) => {
-  const { items: catalog = [], refresh } = useContent();
+  const { items = [], runes = [], refresh } = useContent();
+  // Cache lines can bind to a loose property/fundamental rune (raiment, etc.)
+  // as well as a catalog item — those live in `rune.json`, a separate
+  // collection. Merge both so add/resolve can reach either (item id wins on the
+  // rare id collision).
+  const catalog = useMemo(() => {
+    const seen = new Set(items.map((i) => i.id));
+    return [...items, ...runes.filter((r) => !seen.has(r.id))];
+  }, [items, runes]);
   const [gold, setGold] = useState(room.treasureCache?.gold ?? 0);
   const [lines, setLines] = useState(() => (room.treasureCache?.items || []).map((it) => ({ ...it })));
   const [picker, setPicker] = useState(null); // null | { mode:'add' } | { mode:'resolve', index }

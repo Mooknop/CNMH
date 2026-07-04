@@ -40,7 +40,11 @@ const baseRoom = {
 const renderEditor = (room = baseRoom) => render(<RoomTreasureEditor room={room} />);
 
 beforeEach(() => {
-  useContent.mockReturnValue({ items: [{ id: 'acid-flask', name: 'Acid Flask' }], refresh });
+  useContent.mockReturnValue({
+    items: [{ id: 'acid-flask', name: 'Acid Flask' }],
+    runes: [{ id: 'raiment', name: 'Raiment' }], // merged into the picker catalog
+    refresh,
+  });
   saveDocument.mockResolvedValue({ ok: true });
   refresh.mockResolvedValue();
 });
