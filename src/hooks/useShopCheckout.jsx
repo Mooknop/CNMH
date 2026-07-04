@@ -7,7 +7,7 @@ import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { toGameSeconds } from '../utils/gameTime';
 import { createHandoffOrder } from '../utils/runeWorkOrder';
-import { reuid, lineQty } from '../utils/shopPurchase';
+import { expandWare, lineQty } from '../utils/shopPurchase';
 
 // Unified shop checkout (#878). One hook that owns ALL the overlays a single
 // storefront transaction touches — gold, acquired, removed, and rune work orders
@@ -40,6 +40,10 @@ export const useShopCheckout = (charId) => {
   const [, setRemoved] = useSyncedState(`cnmh_removed_${charId || 'none'}`, []);
   const [orders, setOrders] = useSyncedState(`cnmh_runework_${charId || 'none'}`, []);
   const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
+  // Sale Shelf decrement (#1138): the shop store, so a bought one-of-a-kind sale
+  // ware is struck from its shelf in the same transaction. The ONLY purchase-time
+  // write to this key today — regular stocked wares stay cap-only (follow-up).
+  const [shops, setShops] = useSyncedState('cnmh_shops_global', {});
 
   const offline = connected && !foundryConnected;
   const nowSeconds = toGameSeconds({ ...gameDate, ...time });
@@ -53,7 +57,7 @@ export const useShopCheckout = (charId) => {
   // ONCE. Returns a receipt, or null when rejected (offline, empty, over balance)
   // — nothing is written on rejection.
   const checkout = useCallback(
-    ({ purchases, handoffs, shopTitle } = {}) => {
+    ({ purchases, handoffs, shopTitle, loreId } = {}) => {
       if (offline || !charId) return null;
 
       const lines = (Array.isArray(purchases) ? purchases : [])
@@ -64,14 +68,26 @@ export const useShopCheckout = (charId) => {
       );
       if (lines.length === 0 && hs.length === 0) return null;
 
+      // Sale Shelf lines (#1138): a bought one-of-a-kind ware carries a saleId.
+      // Stale-shelf guard — re-check each against the shop's CURRENT shelf, so a
+      // deal already gone (another buyer, or a GM reroll mid-browse) rejects the
+      // whole checkout and writes nothing, like the over-balance case.
+      const saleIds = lines.map(({ item }) => item.saleId).filter((id) => id != null);
+      if (saleIds.length) {
+        const shelf = (loreId && Array.isArray(shops?.[loreId]?.saleShelf)) ? shops[loreId].saleShelf : [];
+        const live = new Set(shelf.map((w) => w && w.saleId));
+        if (saleIds.some((id) => !live.has(id))) return { rejected: 'stale-shelf' };
+      }
+
       const wareTotal = lines.reduce((sum, p) => sum + (Number(p.item.price) || 0) * p.qty, 0);
       const handoffTotal = hs.reduce((sum, h) => sum + h.runes.reduce((x, r) => x + (Number(r?.price) || 0), 0), 0);
       const total = wareTotal + handoffTotal;
       if (total > gold) return null;
 
-      // Ware copies (a fresh-uid entry per unit) to credit.
+      // Ware copies to credit — one entry per unit, expanded by kind (#1138: a
+      // scroll pack lands as four scrolls, a rune item as a ref+runes entry).
       const additions = [];
-      lines.forEach(({ item, qty }) => { for (let i = 0; i < qty; i += 1) additions.push(reuid(item)); });
+      lines.forEach(({ item, qty }) => { for (let i = 0; i < qty; i += 1) additions.push(...expandWare(item)); });
 
       // Split handed-over gear: a bought (acquired) entry is spliced from the
       // acquired overlay; an authored one is masked via removed. Decided against
@@ -103,6 +119,17 @@ export const useShopCheckout = (charId) => {
 
       setGold((g) => (Number.isFinite(g) ? g : gold) - total);
 
+      // Strike the bought sale wares from the shop's shelf — one composed write.
+      if (saleIds.length && loreId) {
+        const bought = new Set(saleIds);
+        setShops((cur) => {
+          const store = cur && typeof cur === 'object' ? cur : {};
+          const entry = store[loreId];
+          if (!entry || !Array.isArray(entry.saleShelf)) return cur;
+          return { ...store, [loreId]: { ...entry, saleShelf: entry.saleShelf.filter((w) => !(w && bought.has(w.saleId))) } };
+        });
+      }
+
       const parts = [];
       if (lines.length) parts.push(lines.map(({ item, qty }) => `${qty}× ${item.name}`).join(', '));
       if (hs.length) parts.push(`${hs.length} item${hs.length === 1 ? '' : 's'} left to be runed`);
@@ -113,7 +140,7 @@ export const useShopCheckout = (charId) => {
 
       return { total, wareCount: additions.length, handoffCount: hs.length };
     },
-    [offline, charId, gold, acquired, gameDate, time, locationId, setAcquired, setOrders, setRemoved, setGold, appendEvent, byId],
+    [offline, charId, gold, acquired, gameDate, time, locationId, shops, setAcquired, setOrders, setRemoved, setGold, setShops, appendEvent, byId],
   );
 
   return { myGold: gold, orders: orderList, nowSeconds, locationId, checkout };

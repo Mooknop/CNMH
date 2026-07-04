@@ -521,6 +521,13 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
     const variant = cat.variants.find((v) => v.level === entry.level);
     if (variant) applyVariant(resolved, variant);
   }
+  // A runed item bought from a Sale Shelf (#1138) lands as a minimal ref entry
+  // carrying its rune block (ids); overlay it onto the resolved base — applied
+  // AFTER the grade variant so a ring's socketed runes ride its chosen tier — so
+  // finishItem inlines the rune refs and the display re-derives the runed name,
+  // mirroring the etch flow's inline entry. (Ordinary catalog refs never carry a
+  // rune block, so this is inert for them.)
+  if (entry.runes && typeof entry.runes === 'object') resolved.runes = entry.runes;
   // Read `resolved.container` (not `cat.container`) so a variant's
   // `overrides.container` (#907 S2 — e.g. Sleeves of Storage Greater's larger
   // capacity) is honored; it equals the catalog's container when no override.

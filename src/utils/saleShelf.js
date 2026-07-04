@@ -330,6 +330,7 @@ const resolveRuneSaleWare = (w, catalogMap, runeMap) => {
     ...base,
     id: `sale-${w.saleId}`,
     ref: String(w.ref),
+    saleId: w.saleId,
     name,
     price: Number.isFinite(w.price) ? w.price : 0,
     saleFullPrice: w.fullPrice,
@@ -350,6 +351,7 @@ const resolveScrollPackWare = (w, catalogMap, spells) => {
   const art = baseSpellItemArt('scroll', catalogMap);
   return {
     id: `sale-${w.saleId}`,
+    saleId: w.saleId,
     name: `Scroll Pack (Rank ${w.rank})`,
     description: `A pack of four scrolls: ${names.join(', ')}.`,
     traits: [...SCROLL_PACK_TRAITS],

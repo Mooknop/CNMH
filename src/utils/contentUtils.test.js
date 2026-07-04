@@ -384,6 +384,38 @@ describe('contentUtils', () => {
       expect(out.runes.potency).toBe(2); // other rune keys preserved
     });
 
+    it('overlays a rune block carried on the ENTRY onto the base item, then inlines it (#1138)', () => {
+      // A Sale Shelf rune item lands as a minimal ref entry carrying its runes;
+      // resolveInventoryItem overlays them so finishItem inlines the property ref.
+      const flaming = { id: 'flaming', name: 'Flaming', type: 'property', target: 'weapon', price: 500 };
+      const runeMap = runeCatalogMap([flaming]);
+      const weaponCatalog = itemCatalogMap([{ id: 'longsword', name: 'Longsword', price: 15, strikes: { type: 'melee', damage: '1d8' } }]);
+      const out = resolveInventoryItem(
+        { ref: 'longsword', runes: { potency: 1, striking: 'striking', property: ['flaming'] }, uid: 'u1' },
+        weaponCatalog, undefined, undefined, runeMap
+      );
+      expect(out.runes.potency).toBe(1);
+      expect(out.runes.striking).toBe('striking');
+      expect(out.runes.property).toEqual([flaming]); // inlined from the id
+      expect(out.name).toBe('Longsword'); // base name kept — display derives the runed name
+    });
+
+    it('overlays entry runes onto a graded ring variant, keeping its grade name (#1138)', () => {
+      const spellstoring = { id: 'spellstoring', name: 'Spellstoring', type: 'property', target: 'ring', price: 2700 };
+      const runeMap = runeCatalogMap([spellstoring]);
+      const ringCatalog = itemCatalogMap([{
+        id: 'power-ring', name: 'Power Ring', powerRing: true,
+        variants: [{ level: 5, name: 'Power Ring (Iron)', price: 125 }, { level: 11, name: 'Power Ring (Silver)', price: 1400 }],
+      }]);
+      const out = resolveInventoryItem(
+        { ref: 'power-ring', level: 5, runes: { property: ['spellstoring'] }, uid: 'u1' },
+        ringCatalog, undefined, undefined, runeMap
+      );
+      expect(out.name).toBe('Power Ring (Iron)'); // grade variant applied first
+      expect(out.price).toBe(125);
+      expect(out.runes.property).toEqual([spellstoring]); // then runes overlaid + inlined
+    });
+
     it('drops a dangling rune ref (#548)', () => {
       const weaponCatalog = itemCatalogMap([
         { id: 'axe', name: 'Greataxe', runes: { property: ['nope'] } },

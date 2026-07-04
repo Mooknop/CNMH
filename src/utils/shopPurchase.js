@@ -32,6 +32,33 @@ export const reuid = (item) => {
   return next;
 };
 
+// Expand one bought ware into the inventory entries it grants (#1138). Most wares
+// grant one copy (reuid). A GM Sale Shelf ware (#1134) grants more shape:
+//   • scroll pack → FOUR loose scroll entries (the same minimal, re-resolvable
+//     `{ scroll:{spellRef,rank?}, uid }` a bought scroll lands as), from the
+//     ware's carried `scrolls`;
+//   • rune item → ONE ref entry carrying the `runes` block (rune IDS) + the ring
+//     grade `level`, minting a fresh uid and dropping every sale/ware-only field.
+//     resolveInventoryItem re-derives the base item, applies the grade variant,
+//     and overlays the runes so the runed name/summary derive exactly as they do
+//     for an item runed through the etch flow — no baked display name to go stale.
+export const expandWare = (item) => {
+  if (!item || typeof item !== 'object') return [];
+  if (item.sale === 'scrollpack' && Array.isArray(item.scrolls)) {
+    return item.scrolls.map((s) => {
+      const scroll = { spellRef: s.spellRef };
+      if (s.rank != null) scroll.rank = s.rank;
+      return { uid: newEntryUid(), scroll };
+    });
+  }
+  if (item.sale === 'rune' && item.ref != null) {
+    const entry = { ref: String(item.ref), runes: item.runes || {}, uid: newEntryUid() };
+    if (item.level != null) entry.level = item.level;
+    return [entry];
+  }
+  return [reuid(item)];
+};
+
 // A purchase line: { item: <resolved ware>, qty }. Returns the floored, positive
 // qty or 0 when the line is unusable.
 export const lineQty = (p) => {
