@@ -21,6 +21,28 @@ export function findInCollection(
     | undefined;
 }
 
+// Import docs into a capture-only collection (e.g. `room`, `event`), the write
+// path the seed fixture deliberately refuses to touch (#1074/#1112). Mirrors the
+// app's importDocs (POST /api/gm/import/:collection) and, like the seed fixture,
+// blocks on a propagation barrier so a spec can't navigate ahead of its own data.
+export async function importDocs(
+  request: APIRequestContext,
+  collection: string,
+  docs: Array<Record<string, unknown> & { id: string }>,
+) {
+  const res = await request.post(`/api/gm/import/${collection}`, { data: { docs } });
+  if (!res.ok()) {
+    throw new Error(`import ${collection} failed: ${res.status()} ${await res.text()}`);
+  }
+  const ct = res.headers()['content-type'] || '';
+  if (!ct.includes('application/json')) {
+    throw new Error(`import ${collection} returned non-JSON (likely Access interstitial): ${ct}`);
+  }
+  for (const doc of docs) {
+    await waitForContent(request, collection, doc.id, (entry) => !!entry);
+  }
+}
+
 // Poll /api/content until `match(entry)` returns truthy or the timeout elapses.
 //
 // Read-after-write should be guaranteed within a single Durable Object, but
