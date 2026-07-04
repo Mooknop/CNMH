@@ -10,6 +10,11 @@ vi.mock('../../utils/gmApi', () => ({ saveDocument: vi.fn() }));
 vi.mock('../../components/gm/RoomsImportButton', () => ({
   default: () => <div data-testid="rooms-import-button" />,
 }));
+// The treasure editor pulls in the catalog picker; stub it — it has its own
+// test file. GmRooms tests only assert it's mounted for rooms (not Features).
+vi.mock('../../components/gm/RoomTreasureEditor', () => ({
+  default: () => <div data-testid="room-treasure-editor" />,
+}));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';
@@ -19,7 +24,7 @@ import GmRooms from './GmRooms';
 const rooms = [
   { id: 'featw', name: 'Warren Features', site: 'Warren', sort: 1500, isFeatures: true, body: '<p>Cramped.</p>', checks: [] },
   { id: 'a1', code: 'A1', name: 'Entrance', site: 'Warren', sort: 1600, readAloud: 'A tunnel.', checks: [], creatures: [], hazards: [] },
-  { id: 'b1', code: 'B1', name: 'Catacomb', site: 'Catacombs', sort: 2100, readAloud: 'Bones.', checks: [], creatures: [], hazards: [] },
+  { id: 'b1', code: 'B1', name: 'Catacomb', site: 'Catacombs', sort: 2100, readAloud: 'Bones.', checks: [], creatures: [], hazards: [], treasureCache: { gold: 25, items: [] } },
 ];
 
 const pinRoom = vi.fn();
@@ -70,6 +75,23 @@ describe('GmRooms', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'Features' }));
     expect(screen.queryByRole('button', { name: /Pin to dashboard/ })).not.toBeInTheDocument();
+  });
+
+  it('flags rooms that have a treasure cache in the rail', () => {
+    useContent.mockReturnValue({ rooms });
+    renderPage();
+    const rail = screen.getByLabelText('Rooms by site');
+    // B1 has a cache; A1 does not.
+    expect(within(rail).getByTitle('Has treasure cache')).toBeInTheDocument();
+    expect(within(within(rail).getByRole('button', { name: /Entrance/ })).queryByTitle(/treasure/i)).toBeNull();
+  });
+
+  it('mounts the treasure editor for a room but not for a Features doc', () => {
+    useContent.mockReturnValue({ rooms });
+    renderPage();
+    expect(screen.getByTestId('room-treasure-editor')).toBeInTheDocument(); // A1 default
+    fireEvent.click(screen.getByRole('button', { name: 'Features' }));
+    expect(screen.queryByTestId('room-treasure-editor')).not.toBeInTheDocument();
   });
 
   it('edits and saves GM significance notes on the selected room', async () => {
