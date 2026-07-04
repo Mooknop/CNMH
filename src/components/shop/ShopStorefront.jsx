@@ -246,10 +246,25 @@ const SpellcastingTab = ({ groups, town, qtyByKey, onSelect, onAdd }) => {
   );
 };
 
+// The property/accessory rune DOCS a Sale Shelf rune item carries (#1138) — its
+// `runes` block holds ids. Weapons/armor bake their runes into the derived name,
+// but a ring keeps its graded base name, so its ring runes are otherwise
+// invisible in the shop; resolve them all here so the preview can show what the
+// player is actually buying. Fundamentals (potency/striking) are already in the
+// name, so only property + accessory runes (the ones with real effects) surface.
+const saleRuneDocs = (item, runeMap) => {
+  if (!item || item.sale !== 'rune' || !item.runes || !runeMap) return [];
+  const toDoc = (r) => (r && typeof r === 'object' ? r : runeMap.get(String(r)));
+  const out = (Array.isArray(item.runes.property) ? item.runes.property : []).map(toDoc);
+  if (item.runes.accessory != null) out.push(toDoc(item.runes.accessory));
+  return out.filter(Boolean);
+};
+
 // Takeover preview: per-form rows. In town each row adds that form (disabled at
 // stock cap, "×N in cart" once added); read-only shows the not-here-to-buy note.
-const Takeover = ({ group, town, qtyByKey, spellMap, onAdd, onBack }) => {
+const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) => {
   const head = group.forms[0];
+  const saleRunes = saleRuneDocs(head, runeMap);
   return (
     <div className="ps-takeover" data-testid="ware-preview">
       <button type="button" className="ps-takeover-back" onClick={onBack}>‹ Back</button>
@@ -298,6 +313,27 @@ const Takeover = ({ group, town, qtyByKey, spellMap, onAdd, onBack }) => {
               </div>
             ) : (
               group.description && <p className="ps-preview-desc">{group.description}</p>
+            )}
+            {/* A Sale Shelf runed item (#1138): show the effect of each rune it
+                carries. Essential for rings — their ring runes aren't in the
+                graded name — and a nice bonus for runed weapons/armor. */}
+            {saleRunes.length > 0 && (
+              <div className="ps-preview-runes" data-testid="ware-preview-runes">
+                <span className="ps-preview-runes-label">
+                  Rune{saleRunes.length === 1 ? '' : 's'} on this item
+                </span>
+                <ul className="ps-preview-runes-list" aria-label="item runes">
+                  {saleRunes.map((r) => (
+                    <li key={r.id} className="ps-preview-rune">
+                      <span className="ps-preview-rune-name">
+                        {r.name}
+                        {r.level != null && ` · Level ${r.level}`}
+                      </span>
+                      <RuneMechanics rune={r} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             <ItemActivations item={head} />
           </>
@@ -1036,7 +1072,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
             )}
 
             {selectedGroup && (
-              <Takeover group={selectedGroup} town={town} qtyByKey={qtyByKey} spellMap={spellMap} onAdd={addForm}
+              <Takeover group={selectedGroup} town={town} qtyByKey={qtyByKey} spellMap={spellMap} runeMap={runeMap} onAdd={addForm}
                 onBack={() => setSelectedGroup(null)} />
             )}
           </>

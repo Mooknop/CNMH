@@ -231,12 +231,19 @@ describe('resolveSaleWares', () => {
     expect(wpn.runes).toEqual({ potency: 1, striking: 'striking', property: ['flaming'] });
   });
 
-  it('resolves a power ring to its graded name and drops the variants array', () => {
+  it('resolves a power ring to its rune-prefixed graded name and drops the variants array', () => {
     const out = resolveSaleWares('smithy', shops, catalogMap, runeMapFull, spells);
     const ring = out.find((w) => w.ref === 'power-ring');
-    expect(ring.name).toBe('Power Ring (Iron)');
+    // Ring runes aren't in the graded name, so prefix them (#1138).
+    expect(ring.name).toBe('Spellstoring Power Ring (Iron)');
     expect(ring.variants).toBeUndefined();
     expect(ring.price).toBe(2260);
+  });
+
+  it('leaves a runeless power ring at its bare graded name', () => {
+    const bare = { s: { saleShelf: [{ sale: 'rune', saleId: 'r0', ref: 'power-ring', level: 5, runes: {}, fullPrice: 125, price: 100 }] } };
+    const ring = resolveSaleWares('s', bare, catalogMap, runeMapFull, spells)[0];
+    expect(ring.name).toBe('Power Ring (Iron)');
   });
 
   it('resolves an accessory to the rune-prefixed host name', () => {
