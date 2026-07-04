@@ -14,6 +14,7 @@ import {
   maxLevelForTarget,
   RUNE_TARGETS,
 } from '../../utils/shopUtils';
+import { rollSaleShelf, resolveSaleWares } from '../../utils/saleShelf';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -121,7 +122,7 @@ const SPELL_ITEM_MAX_LEVEL = 19;
 // shops set up under the old model (no migration; re-saving normalises them).
 const toSpellConfig = (wares) => {
   const offerings = (Array.isArray(wares) ? wares : []).filter(isSpellItemWare);
-  const config = { scroll: false, wand: false, maxLevel: '1', traditions: [], rarities: [], priceMod: '' };
+  const config = { scroll: false, wand: false, maxLevel: '1', traditions: [], rarities: [], priceMod: '', salePacks: '' };
   let maxLevel = 0;
   const trads = new Set();
   const rars = new Set();
@@ -133,6 +134,8 @@ const toSpellConfig = (wares) => {
     (Array.isArray(o.traditions) ? o.traditions : []).filter(Boolean).forEach((t) => trads.add(t));
     (Array.isArray(o.rarities) ? o.rarities : []).filter(Boolean).forEach((x) => rars.add(x));
     if (config.priceMod === '' && o.priceMod != null) config.priceMod = String(o.priceMod);
+    // Sale Shelf pack count (#1136) rides the scroll offering only.
+    if (o.spellItem === 'scroll' && o.salePacks != null) config.salePacks = String(o.salePacks);
   });
   if (maxLevel > 0) config.maxLevel = String(maxLevel);
   config.traditions = [...trads];
@@ -157,10 +160,17 @@ const offeringWare = (kind, config) => {
   return w;
 };
 
-// Unified config → stored spell-item wares: one per enabled kind (#884).
+// Unified config → stored spell-item wares: one per enabled kind (#884). The
+// Sale Shelf pack count (#1136) is stored on the scroll offering only (packs are
+// always scrolls); omitted when 0 so specs stay clean.
 const fromSpellConfig = (config) => {
   const out = [];
-  if (config.scroll) out.push(offeringWare('scroll', config));
+  if (config.scroll) {
+    const w = offeringWare('scroll', config);
+    const packs = parseInt(config.salePacks, 10);
+    if (!Number.isNaN(packs) && packs > 0) w.salePacks = packs;
+    out.push(w);
+  }
   if (config.wand) out.push(offeringWare('wand', config));
   return out;
 };
@@ -179,7 +189,9 @@ const RUNE_MAX_LEVEL = 20;
 // carries its own max-level cap (from a scalar or per-target maxLevel).
 const toRuneConfig = (wares) => {
   const off = (Array.isArray(wares) ? wares : []).find(isRuneServiceWare);
-  const config = { levels: {}, rarities: [] };
+  // Sale Shelf (#1136) rides the rune offering: `saleCount` items at a stored
+  // `saleDiscount` FRACTION, surfaced here as a whole-number percent.
+  const config = { levels: {}, rarities: [], saleCount: '', saleDiscount: '' };
   RUNE_TARGETS.forEach((t) => { config[t] = false; config.levels[t] = ''; });
   if (!off) return config;
   const targets = Array.isArray(off.targets) && off.targets.length
@@ -192,6 +204,8 @@ const toRuneConfig = (wares) => {
     if (cap > 0) config.levels[t] = String(cap);
   });
   config.rarities = (Array.isArray(off.rarities) ? off.rarities : []).filter(Boolean);
+  if (off.saleCount != null) config.saleCount = String(off.saleCount);
+  if (off.saleDiscount != null) config.saleDiscount = String(Math.round(Number(off.saleDiscount) * 100));
   return config;
 };
 
@@ -215,6 +229,12 @@ const fromRuneConfig = (config) => {
   w.maxLevel = uniq.length === 1 ? uniq[0] : caps;
   const rars = (config.rarities || []).filter(Boolean);
   if (!(rars.length === 0 || (rars.length === 1 && rars[0] === 'common'))) w.rarities = rars;
+  // Sale Shelf config (#1136): omitted when unset so specs round-trip clean; the
+  // percent input is stored back as a [0,0.99] fraction the roller reads.
+  const saleCount = parseInt(config.saleCount, 10);
+  if (!Number.isNaN(saleCount) && saleCount > 0) w.saleCount = saleCount;
+  const pct = parseFloat(config.saleDiscount);
+  if (!Number.isNaN(pct) && pct > 0) w.saleDiscount = Math.min(99, pct) / 100;
   return [w];
 };
 
@@ -780,6 +800,128 @@ const RunesmithingSection = ({ config, runes, items, onChange }) => {
   );
 };
 
+// ── Sale Shelf (#1134 / S2 #1136) ────────────────────────────────────────────
+// A GM-rolled shelf of one-of-a-kind discounted goods layered on the shop's
+// existing services: `saleCount` randomly-runed items from the Runesmithing
+// window (at `saleDiscount`) + `salePacks` four-scroll packs from the Scroll
+// window. The counts/discount are authored here but persist ON the offering
+// wares (so they round-trip through toRune/SpellConfig); "Roll sale shelf" bakes
+// concrete wares into shops[loreId].saleShelf via the #1135 engine — a reroll
+// replaces the shelf wholesale. The preview resolves the stored shelf exactly as
+// the storefront will render it (discounted price + struck-through full price).
+const SaleShelfSection = ({
+  runeConfig, spellConfig, editRuneConfig, editSpellConfig, preview, canRoll, hasShelf, onRoll, onClear,
+}) => {
+  const hasRuneOffering = RUNE_TARGETS.some((t) => runeConfig[t]);
+  const hasScrollOffering = !!spellConfig.scroll;
+
+  return (
+    <div className="gm-shop-offers" data-testid="sale-shelf">
+      <div className="gm-shop-offers-head">
+        <div className="gm-shop-pane-title">Sale Shelf</div>
+      </div>
+      <p className="gm-count gm-shop-offers-intro">
+        Roll a shelf of one-of-a-kind discounted goods from this shop’s services — randomly-runed
+        gear and four-scroll packs, priced and baked when you roll.
+      </p>
+      {!hasRuneOffering && !hasScrollOffering ? (
+        <p className="gm-count gm-shop-offers-empty" data-testid="sale-shelf-noservice">
+          Enable a Runesmithing target or Scrolls above to stock a Sale Shelf.
+        </p>
+      ) : (
+        <>
+          <div className="gm-shop-offer-filters">
+            {hasRuneOffering && (
+              <>
+                <div className="form-group gm-shop-offer-rank">
+                  <label htmlFor="sale-rune-count">discounted rune items</label>
+                  <input
+                    id="sale-rune-count"
+                    aria-label="sale-rune-count"
+                    type="number"
+                    min="0"
+                    max="20"
+                    placeholder="0"
+                    value={runeConfig.saleCount ?? ''}
+                    onChange={(e) => editRuneConfig({ ...runeConfig, saleCount: e.target.value })}
+                  />
+                </div>
+                <div className="form-group gm-shop-offer-rank">
+                  <label htmlFor="sale-rune-discount">discount %</label>
+                  <input
+                    id="sale-rune-discount"
+                    aria-label="sale-rune-discount"
+                    type="number"
+                    min="0"
+                    max="99"
+                    placeholder="0"
+                    value={runeConfig.saleDiscount ?? ''}
+                    onChange={(e) => editRuneConfig({ ...runeConfig, saleDiscount: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            {hasScrollOffering && (
+              <div className="form-group gm-shop-offer-rank">
+                <label htmlFor="sale-scroll-packs">scroll packs (¾ price)</label>
+                <input
+                  id="sale-scroll-packs"
+                  aria-label="sale-scroll-packs"
+                  type="number"
+                  min="0"
+                  max="20"
+                  placeholder="0"
+                  value={spellConfig.salePacks ?? ''}
+                  onChange={(e) => editSpellConfig({ ...spellConfig, salePacks: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+
+          {preview.length > 0 ? (
+            <ul className="gm-shop-sale-list" aria-label="sale shelf">
+              {preview.map((w) => (
+                <li key={w.id} className="gm-shop-sale-item" data-testid={`sale-item-${w.id}`}>
+                  <span className="gm-shop-sale-name">{w.name}</span>
+                  <span className="gm-shop-sale-price">
+                    {w.saleFullPrice != null && w.saleFullPrice !== w.price && (
+                      <span className="gm-shop-sale-full">{w.saleFullPrice} gp</span>
+                    )}
+                    <span className="gm-shop-sale-now">{w.price} gp</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="gm-count gm-shop-offers-empty" data-testid="sale-shelf-empty">
+              No shelf rolled yet. Set counts above, then roll.
+            </p>
+          )}
+
+          <div className="gm-actions gm-shop-sale-actions">
+            <span className="gm-count gm-shop-tally">
+              {preview.length} item{preview.length === 1 ? '' : 's'} on the shelf
+            </span>
+            {hasShelf && (
+              <button type="button" className="btn-small btn-secondary" onClick={onClear}>
+                Clear shelf
+              </button>
+            )}
+            <button type="button" className="btn-primary" disabled={!canRoll} onClick={onRoll}>
+              {hasShelf ? 'Reroll sale shelf' : 'Roll sale shelf'}
+            </button>
+          </div>
+          {!canRoll && (
+            <p className="gm-count gm-shop-offers-empty">
+              Set “discounted rune items” or “scroll packs” above 0 to roll.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 // The per-location authoring surface. `onBack` is supplied only by finders that
 // hide the list (the Command finder, S5); inside PageEditorShell the list stays
 // visible, so no back button renders.
@@ -851,18 +993,37 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
     setJustSaved(false);
   };
 
-  const save = () => {
+  // Publish the whole entry (meta + wares), optionally with an extra patch (the
+  // rolled `saleShelf`, #1136). One writer for Save & publish and Roll.
+  const buildWares = () => [...fromRows(rows), ...fromSpellConfig(spellConfig), ...fromRuneConfig(runeConfig)];
+  const publish = (extra) => {
     setShop(loreId, {
       keeper,
       open,
       revealed,
       offersSpellcasting,
       offersRunes,
-      wares: [...fromRows(rows), ...fromSpellConfig(spellConfig), ...fromRuneConfig(runeConfig)],
+      wares: buildWares(),
+      ...(extra || {}),
     });
     setDirty(false);
     setJustSaved(true);
   };
+  const save = () => publish();
+
+  // Sale Shelf (#1136): a roll bakes concrete wares off the CURRENT config (so an
+  // unsaved count still rolls) and publishes them alongside the entry; a reroll
+  // replaces the shelf wholesale. Clear just empties it.
+  const rollShelf = () => publish({ saleShelf: rollSaleShelf({ wares: buildWares() }, items, runes, spells) });
+  const clearShelf = () => setShop(loreId, { saleShelf: [] });
+  const salePreview = useMemo(
+    () => resolveSaleWares(loreId, shops, catalogMap, runeMap, spells),
+    [loreId, shops, catalogMap, runeMap, spells]
+  );
+  const hasShelf = Array.isArray(entry?.saleShelf) && entry.saleShelf.length > 0;
+  const saleConfigured =
+    (RUNE_TARGETS.some((t) => runeConfig[t]) && (parseInt(runeConfig.saleCount, 10) || 0) > 0) ||
+    (!!spellConfig.scroll && (parseInt(spellConfig.salePacks, 10) || 0) > 0);
 
   const removeShopHere = () => {
     removeShop(loreId);
@@ -983,6 +1144,18 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
             runes={runes}
             items={items}
             onChange={editRuneConfig}
+          />
+
+          <SaleShelfSection
+            runeConfig={runeConfig}
+            spellConfig={spellConfig}
+            editRuneConfig={editRuneConfig}
+            editSpellConfig={editSpellConfig}
+            preview={salePreview}
+            canRoll={saleConfigured}
+            hasShelf={hasShelf}
+            onRoll={rollShelf}
+            onClear={clearShelf}
           />
         </>
       )}
