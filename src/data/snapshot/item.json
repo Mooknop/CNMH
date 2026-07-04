@@ -6517,6 +6517,20 @@
     "id": "rope-50ft"
   },
   {
+    "name": "Runestone",
+    "price": 3,
+    "weight": 0.1,
+    "usage": "held in 1 hand",
+    "source": "GM Core pg. 269",
+    "traits": [
+      "Consumable",
+      "Magical"
+    ],
+    "description": "This flat piece of hard stone is specially prepared for etching a magical fundamental rune or property rune. You can etch only one rune upon a stone. When a rune is transferred from the runestone to another object, the runestone cracks and is destroyed. The Price listed is for an empty stone; a stone holding a rune adds the Price of the rune. This base entry carries the shared runestone artwork that every runestone displays.",
+    "noShop": true,
+    "id": "runestone"
+  },
+  {
     "name": "Rust Scrub",
     "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known.",
     "image": "img_55200abc-e1cc-404f-81ab-2b0e729d19a7.jpg",
@@ -8991,6 +9005,16 @@
       "hardness": 5,
       "bonus": 2
     }
+  },
+  {
+    "name": "Treasure",
+    "weight": 0,
+    "traits": [
+      "Treasure"
+    ],
+    "description": "A valuable object with no mechanical use — gems, jewelry, art objects, and other miscellany. Reference this base and override the name, Bulk, and value per item. This base entry carries the shared treasure artwork.",
+    "noShop": true,
+    "id": "treasure-item"
   },
   {
     "name": "Trickster's Mandolin",
