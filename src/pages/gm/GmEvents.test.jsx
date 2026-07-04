@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
@@ -7,6 +7,7 @@ vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: vi.fn(() => ({ gameDate: { day: 15, month: 8, year: 4725 } })), // 15 Rova 4725
 }));
+vi.mock('../../utils/gmApi', () => ({ saveDocument: vi.fn() }));
 // The import button pulls in the transform (imported from scripts/); stub it so
 // GmEvents tests stay focused on browsing. It has its own test file.
 vi.mock('../../components/gm/RoomsImportButton', () => ({
@@ -19,6 +20,7 @@ vi.mock('../../components/gm/EventTracker', () => ({
 }));
 
 import { useContent } from '../../contexts/ContentContext';
+import { saveDocument } from '../../utils/gmApi';
 import GmEvents from './GmEvents';
 
 const events = [
@@ -65,6 +67,8 @@ const renderPage = (path = '/gm/world/events') =>
   );
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  saveDocument.mockResolvedValue({});
   useContent.mockReturnValue({ events });
 });
 
@@ -142,5 +146,54 @@ describe('GmEvents', () => {
     });
     renderPage();
     expect(screen.queryByText('Due')).toBeNull();
+  });
+
+  describe('bulk show/hide', () => {
+    it('queues an edit, shows the pending count, and saves it as one batch', async () => {
+      renderPage();
+      const check = screen.getByLabelText('Show Off to the Pit in tracker');
+      expect(check).toBeChecked();
+      fireEvent.click(check); // untick → hide
+      expect(check).not.toBeChecked();
+      expect(screen.getByText(/1 pending change/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() =>
+        expect(saveDocument).toHaveBeenCalledWith(
+          'event',
+          'sd4s-event-off-to-the-pit',
+          expect.objectContaining({ tracked: false }),
+        ));
+    });
+
+    it('batches a re-show (hidden→shown) and a hide together', async () => {
+      renderPage();
+      fireEvent.click(screen.getByLabelText(/Show hidden/)); // reveal the hidden "Preparing"
+      fireEvent.click(screen.getByLabelText('Show Preparing for Adventure in tracker')); // show it
+      fireEvent.click(screen.getByLabelText('Show Ripnugget Rumors in tracker')); // hide it
+      expect(screen.getByText(/2 pending changes/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalledTimes(2));
+      expect(saveDocument).toHaveBeenCalledWith('event', 'sd4s-event-preparing', expect.objectContaining({ tracked: true }));
+      expect(saveDocument).toHaveBeenCalledWith('event', 'sd4s-event-ripnugget-rumors', expect.objectContaining({ tracked: false }));
+    });
+
+    it('un-queues an edit toggled back to its saved value', () => {
+      renderPage();
+      const check = screen.getByLabelText('Show Off to the Pit in tracker');
+      fireEvent.click(check); // hide
+      fireEvent.click(check); // show again → matches the live doc
+      expect(screen.queryByText(/pending change/)).toBeNull();
+    });
+
+    it('discards queued edits without saving', () => {
+      renderPage();
+      fireEvent.click(screen.getByLabelText('Show Off to the Pit in tracker'));
+      expect(screen.getByText(/1 pending change/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+      expect(screen.queryByText(/pending change/)).toBeNull();
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
   });
 });

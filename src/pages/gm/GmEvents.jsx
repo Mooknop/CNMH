@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { groupEventsByChapter, eventMatches, eventStatus, isEventHidden, isEventDue, STATUS_META } from '../../utils/events';
+import { saveDocument } from '../../utils/gmApi';
 import RoomDetail from '../../components/gm/RoomDetail';
 import RoomsImportButton from '../../components/gm/RoomsImportButton';
 import EventTracker from '../../components/gm/EventTracker';
@@ -26,23 +27,39 @@ const GmEvents = () => {
   // Deep link from the dashboard Events panel: /gm/world/events?event=<id>.
   const [selectedId, setSelectedId] = useState(searchParams.get('event'));
   const [showHidden, setShowHidden] = useState(false);
+  // Queued show/hide edits: eventId → desired `tracked`, holding only genuine
+  // changes vs the live doc (toggling back to the live value drops the entry).
+  // Nothing is written until the GM hits Save, so a bulk pass is one batch.
+  const [draft, setDraft] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const groups = useMemo(() => groupEventsByChapter(events), [events]);
   const hiddenCount = useMemo(() => (events || []).filter(isEventHidden).length, [events]);
 
+  const draftHas = (e) => Object.prototype.hasOwnProperty.call(draft, e.id);
+  // Effective tracked state = the queued value if one is pending, else the doc's.
+  const effTracked = (e) => (draftHas(e) ? draft[e.id] : !isEventHidden(e));
+  const pendingCount = Object.keys(draft).length;
+
   // Chapters keep only events that pass the search and the hidden filter; a
-  // chapter with nothing left drops out entirely.
+  // chapter with nothing left drops out. A pending edit (draftHas) always keeps
+  // its row visible so it can be re-toggled before saving, even once queued hidden.
   const visibleGroups = useMemo(
     () =>
       groups
         .map((g) => ({
           ...g,
           events: g.events.filter(
-            (e) => (showHidden || !isEventHidden(e)) && eventMatches(e, search),
+            (e) =>
+              (showHidden
+                || !isEventHidden(e)
+                || Object.prototype.hasOwnProperty.call(draft, e.id))
+              && eventMatches(e, search),
           ),
         }))
         .filter((g) => g.events.length),
-    [groups, search, showHidden],
+    [groups, search, showHidden, draft],
   );
 
   // Default selection: the first event still visible in book order.
@@ -50,6 +67,39 @@ const GmEvents = () => {
   const allEvents = useMemo(() => groups.flatMap((g) => g.events), [groups]);
   const effectiveId = selectedId || firstId;
   const selected = allEvents.find((e) => e.id === effectiveId) || null;
+
+  // Queue (or un-queue) a show/hide edit for one event without saving.
+  const toggleTracked = (e) => {
+    const live = !isEventHidden(e);
+    const next = !effTracked(e);
+    setDraft((d) => {
+      const nd = { ...d };
+      if (next === live) delete nd[e.id]; // back to the live value → no pending change
+      else nd[e.id] = next;
+      return nd;
+    });
+  };
+
+  // Commit every queued edit as its own PUT (each archives the prior version).
+  // Succeeded ids are dropped from the draft as they land, so a mid-batch
+  // failure leaves only the unsaved ones queued for a retry.
+  const saveDraft = async () => {
+    setSaving(true);
+    setSaveError(false);
+    const remaining = { ...draft };
+    try {
+      for (const [id, tracked] of Object.entries(draft)) {
+        const ev = allEvents.find((x) => x.id === id);
+        if (ev) await saveDocument('event', id, { ...ev, tracked });
+        delete remaining[id];
+      }
+    } catch {
+      setSaveError(true);
+    } finally {
+      setDraft(remaining);
+      setSaving(false);
+    }
+  };
 
   if (!events.length) {
     return (
@@ -91,22 +141,57 @@ const GmEvents = () => {
             Show hidden ({hiddenCount})
           </label>
         )}
+        <p className="gm-help gm-events-track-hint">
+          Tick to keep an event in the tracker; untick to hide connective pages. Toggle
+          several, then Save.
+        </p>
+        {pendingCount > 0 && (
+          <div className="gm-events-bulk-bar" role="group" aria-label="Save tracker changes">
+            <span className="gm-events-bulk-count">
+              {pendingCount} pending change{pendingCount === 1 ? '' : 's'}
+            </span>
+            <button type="button" className="btn-primary" disabled={saving} onClick={saveDraft}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              disabled={saving}
+              onClick={() => { setDraft({}); setSaveError(false); }}
+            >
+              Discard
+            </button>
+            {saveError && <span className="gm-warn">Some saves failed — try again.</span>}
+          </div>
+        )}
         {visibleGroups.map((g) => (
           <div key={g.chapter} className="gm-rooms-site">
             <div className="gm-rooms-site-name">{g.chapter}</div>
             {g.events.map((e) => (
-              <button
+              <div
                 key={e.id}
-                type="button"
-                className={`gm-rooms-link ${effectiveId === e.id ? 'active' : ''}${isEventHidden(e) ? ' is-hidden' : ''}`}
-                onClick={() => setSelectedId(e.id)}
+                className={`gm-rooms-link-row${!effTracked(e) ? ' is-hidden' : ''}${draftHas(e) ? ' is-pending' : ''}`}
               >
-                <span className={`gm-event-dot ${STATUS_META[eventStatus(e)].className}`} aria-hidden="true" />
-                <span className="gm-rooms-name">{e.name}</span>
-                {eventStatus(e) !== 'resolved' && eventStatus(e) !== 'skipped' && isEventDue(e, gameDate) && (
-                  <span className="gm-events-due" title={`Scheduled for ${e.scheduledFor}`}>Due</span>
-                )}
-              </button>
+                <button
+                  type="button"
+                  className={`gm-rooms-link ${effectiveId === e.id ? 'active' : ''}`}
+                  onClick={() => setSelectedId(e.id)}
+                >
+                  <span className={`gm-event-dot ${STATUS_META[eventStatus(e)].className}`} aria-hidden="true" />
+                  <span className="gm-rooms-name">{e.name}</span>
+                  {eventStatus(e) !== 'resolved' && eventStatus(e) !== 'skipped' && isEventDue(e, gameDate) && (
+                    <span className="gm-events-due" title={`Scheduled for ${e.scheduledFor}`}>Due</span>
+                  )}
+                </button>
+                <input
+                  type="checkbox"
+                  className="gm-events-track-check"
+                  checked={effTracked(e)}
+                  onChange={() => toggleTracked(e)}
+                  aria-label={`Show ${e.name} in tracker`}
+                  title={effTracked(e) ? 'Shown in tracker — untick to hide' : 'Hidden — tick to show'}
+                />
+              </div>
             ))}
           </div>
         ))}
