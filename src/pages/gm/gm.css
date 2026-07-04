@@ -2261,6 +2261,109 @@ p.gm-live-note {
   --status-border: var(--d-fail-border);
 }
 
+/* Event tracking editor (#1112, S3) */
+.gm-event-tracker {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.gm-event-track-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}
+.gm-event-track-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.gm-event-status-picker { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.gm-event-status-opt {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--shell-text-secondary);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  cursor: pointer;
+}
+.gm-event-status-opt:hover { border-color: var(--status-border, var(--shell-border)); }
+.gm-event-status-opt.active {
+  color: var(--status-fg, var(--accent-text));
+  background: var(--status-bg, var(--accent-tint));
+  border-color: var(--status-border, var(--accent-outline));
+}
+.gm-event-track-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+.gm-help-inline { color: var(--shell-text-tertiary); font-size: 0.8rem; }
+.gm-event-sched-input {
+  flex: 1;
+  min-width: 8em;
+  padding: 6px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+.gm-event-steps { display: flex; flex-direction: column; gap: var(--space-2); }
+.gm-event-steps-count { color: var(--shell-text-tertiary); font-weight: 600; }
+.gm-event-step { display: flex; align-items: center; gap: var(--space-2); }
+.gm-event-step-label {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+.gm-event-step-remove {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: none;
+  color: var(--shell-text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.gm-event-step-remove:hover { color: var(--peril-light); border-color: var(--peril-light); }
+.gm-event-step-add { align-self: flex-start; }
+.gm-event-textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 8px 10px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+  line-height: 1.5;
+}
+.gm-event-track-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .gm-rooms-detail-bar {
   display: flex;
   align-items: center;
