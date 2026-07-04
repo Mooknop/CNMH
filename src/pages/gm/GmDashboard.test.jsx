@@ -34,6 +34,9 @@ vi.mock('../../components/character-sheet/EffectsModal', () => ({
 vi.mock('../../components/gm/CurrentRoomPanel', () => ({
   default: () => <div data-testid="current-room-panel" />,
 }));
+vi.mock('../../components/gm/EventsPanel', () => ({
+  default: () => <div data-testid="events-panel" />,
+}));
 
 // ─── imports after mocks ──────────────────────────────────────────────────────
 import { useContent } from '../../contexts/ContentContext';

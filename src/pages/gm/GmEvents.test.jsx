@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
+// Campaign clock — a fixed date so "due" highlighting is deterministic.
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: vi.fn(() => ({ gameDate: { day: 15, month: 8, year: 4725 } })), // 15 Rova 4725
+}));
 // The import button pulls in the transform (imported from scripts/); stub it so
 // GmEvents tests stay focused on browsing. It has its own test file.
 vi.mock('../../components/gm/RoomsImportButton', () => ({
@@ -52,7 +57,12 @@ const events = [
   },
 ];
 
-const renderPage = () => render(<GmEvents />);
+const renderPage = (path = '/gm/world/events') =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <GmEvents />
+    </MemoryRouter>,
+  );
 
 beforeEach(() => {
   useContent.mockReturnValue({ events });
@@ -106,5 +116,31 @@ describe('GmEvents', () => {
   it('mounts the tracking editor for the selected event', () => {
     renderPage();
     expect(screen.getByTestId('event-tracker')).toHaveTextContent('sd4s-event-off-to-the-pit');
+  });
+
+  it('preselects the event named in the ?event= query param (dashboard deep link)', () => {
+    renderPage('/gm/world/events?event=sd4s-event-ripnugget-rumors');
+    expect(screen.getByLabelText('Read-aloud text')).toHaveTextContent('Ask around town.');
+  });
+
+  it('flags a scheduled event whose date has arrived as "Due"', () => {
+    useContent.mockReturnValue({
+      events: [
+        { ...events[1], scheduledFor: 'Rova 12' }, // 12 Rova ≤ 15 Rova (clock) → due
+      ],
+    });
+    renderPage();
+    const rail = screen.getByLabelText('Events by chapter');
+    expect(within(rail).getByText('Due')).toBeInTheDocument();
+  });
+
+  it('does not flag a future scheduled event as "Due"', () => {
+    useContent.mockReturnValue({
+      events: [
+        { ...events[1], scheduledFor: 'Rova 20' }, // 20 Rova > 15 Rova (clock)
+      ],
+    });
+    renderPage();
+    expect(screen.queryByText('Due')).toBeNull();
   });
 });

@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
-import { groupEventsByChapter, eventMatches, eventStatus, isEventHidden, STATUS_META } from '../../utils/events';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { groupEventsByChapter, eventMatches, eventStatus, isEventHidden, isEventDue, STATUS_META } from '../../utils/events';
 import RoomDetail from '../../components/gm/RoomDetail';
 import RoomsImportButton from '../../components/gm/RoomsImportButton';
 import EventTracker from '../../components/gm/EventTracker';
@@ -18,8 +20,11 @@ const StatusBadge = ({ status }) => {
 // until then. Editing tracking state (status, steps, outcome, schedule) is S3.
 const GmEvents = () => {
   const { events } = useContent();
+  const { gameDate } = useGameDate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
+  // Deep link from the dashboard Events panel: /gm/world/events?event=<id>.
+  const [selectedId, setSelectedId] = useState(searchParams.get('event'));
   const [showHidden, setShowHidden] = useState(false);
 
   const groups = useMemo(() => groupEventsByChapter(events), [events]);
@@ -98,6 +103,9 @@ const GmEvents = () => {
               >
                 <span className={`gm-event-dot ${STATUS_META[eventStatus(e)].className}`} aria-hidden="true" />
                 <span className="gm-rooms-name">{e.name}</span>
+                {eventStatus(e) !== 'resolved' && eventStatus(e) !== 'skipped' && isEventDue(e, gameDate) && (
+                  <span className="gm-events-due" title={`Scheduled for ${e.scheduledFor}`}>Due</span>
+                )}
               </button>
             ))}
           </div>
@@ -111,6 +119,9 @@ const GmEvents = () => {
             <div className="gm-rooms-detail-bar">
               <span className="gm-rooms-detail-site">{selected.chapter}</span>
               <StatusBadge status={eventStatus(selected)} />
+              {eventStatus(selected) !== 'resolved' && eventStatus(selected) !== 'skipped' && isEventDue(selected, gameDate) && (
+                <span className="gm-events-due" title={`Scheduled for ${selected.scheduledFor}`}>Due</span>
+              )}
             </div>
             <RoomDetail room={selected} showNotes={false} showTreasure={false} />
             <EventTracker key={`track-${selected.id}`} event={selected} />
