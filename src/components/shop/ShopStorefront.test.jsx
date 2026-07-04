@@ -964,6 +964,28 @@ describe('ShopStorefront', () => {
       expect(screen.getByLabelText('increase +1 Striking Flaming Longsword')).toBeDisabled();
     });
 
+    it('names a ring sale item after its rune and shows the rune effect in the preview (#1138)', () => {
+      const powerRing = {
+        id: 'power-ring', name: 'Power Ring', powerRing: true, weight: 0.1, traits: ['Invested', 'Magical'],
+        variants: [{ level: 5, name: 'Power Ring (Iron)', price: 125, overrides: { ringSockets: 1 } }],
+      };
+      const spellstoring = { id: 'spellstoring', name: 'Spellstoring', type: 'property', target: 'ring', level: 13, price: 2700, description: 'Cast a spell stored in the ring.' };
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[forgeShop]}
+          waresStore={{ forge: { wares: [{ runeService: true, targets: ['ring'], maxLevel: 20 }],
+            saleShelf: [{ sale: 'rune', saleId: 'r1', ref: 'power-ring', level: 5, runes: { property: ['spellstoring'] }, fullPrice: 2825, price: 2260 }] } }}
+          items={[powerRing]} runes={[spellstoring]} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+      // The name carries the rune, not a bare "Power Ring (Iron)".
+      const tile = within(screen.getByLabelText('wares')).getByTestId('ware-sale-r1');
+      expect(tile).toHaveTextContent('Spellstoring Power Ring (Iron)');
+      // The preview spells out what the rune does.
+      fireEvent.keyDown(tile, { key: 'Enter' });
+      const runeBlock = within(screen.getByTestId('ware-preview')).getByTestId('ware-preview-runes');
+      expect(within(runeBlock).getByText(/Spellstoring/)).toBeInTheDocument();
+      expect(within(runeBlock).getByText(/Cast a spell stored in the ring/)).toBeInTheDocument();
+    });
+
     it('a shop with no sale shelf shows no sale badges', () => {
       renderShop();
       expect(screen.queryAllByTestId(/^sale-badge-/)).toHaveLength(0);
