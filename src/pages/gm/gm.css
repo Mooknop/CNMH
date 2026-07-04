@@ -2208,6 +2208,59 @@ p.gm-live-note {
 .gm-rooms-name { flex: 1; }
 .gm-rooms-pinned { width: 15px; height: 15px; color: var(--gold-mid); flex: none; }
 
+/* Chapter-event tracker (#1112). Status dot in the rail, status pill in the
+   detail bar, and the "show hidden" toggle. Colors reuse the degree-of-success
+   pairs so the palette stays consistent. */
+.gm-events-showhidden {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 0.78rem;
+  color: var(--shell-text-tertiary);
+  cursor: pointer;
+}
+.gm-rooms-link.is-hidden .gm-rooms-name { color: var(--shell-text-tertiary); font-style: italic; }
+.gm-event-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-fg, var(--shell-text-tertiary));
+}
+.gm-event-status {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--status-fg, var(--shell-text-secondary));
+  background: var(--status-bg, var(--surface-inset));
+  border: 1px solid var(--status-border, transparent);
+}
+.gm-event-dot.is-upcoming, .gm-event-status.is-upcoming {
+  --status-fg: var(--shell-text-tertiary);
+  --status-bg: var(--surface-inset);
+  --status-border: var(--shell-border, transparent);
+}
+.gm-event-dot.is-active, .gm-event-status.is-active {
+  --status-fg: var(--d-succ-fg);
+  --status-bg: var(--d-succ-bg);
+  --status-border: var(--d-succ-border);
+}
+.gm-event-dot.is-resolved, .gm-event-status.is-resolved {
+  --status-fg: var(--d-crit-fg);
+  --status-bg: var(--d-crit-bg);
+  --status-border: var(--d-crit-border);
+}
+.gm-event-dot.is-skipped, .gm-event-status.is-skipped {
+  --status-fg: var(--d-fail-fg);
+  --status-bg: var(--d-fail-bg);
+  --status-border: var(--d-fail-border);
+}
+
 .gm-rooms-detail-bar {
   display: flex;
   align-items: center;
