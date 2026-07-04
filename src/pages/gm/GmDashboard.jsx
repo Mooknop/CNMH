@@ -21,6 +21,7 @@ import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
 import CurrentRoomPanel from '../../components/gm/CurrentRoomPanel';
+import EventsPanel from '../../components/gm/EventsPanel';
 import BestiaryEditor from '../../components/gm/BestiaryEditor';
 import Modal from '../../components/shared/Modal';
 import GmIcon from './GmIcon';
@@ -396,6 +397,10 @@ const GmDashboard = () => {
           {/* Current Room — under the mode/movement controls; hidden until
               rooms are imported */}
           <CurrentRoomPanel />
+
+          {/* Events — active/upcoming chapter events + game-date due highlight;
+              hidden until events are imported */}
+          <EventsPanel />
         </div>
 
         {/* Right column: party HP roster + quick actions */}

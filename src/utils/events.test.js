@@ -4,6 +4,9 @@ import {
   eventMatches,
   eventStatus,
   isEventHidden,
+  parseScheduledDate,
+  isEventDue,
+  stepProgress,
   EVENT_STATUSES,
   STATUS_META,
 } from './events';
@@ -74,5 +77,61 @@ describe('eventMatches', () => {
   it('an empty term matches everything; a miss returns false', () => {
     expect(eventMatches(event, '')).toBe(true);
     expect(eventMatches(event, 'dragon')).toBe(false);
+  });
+});
+
+describe('parseScheduledDate', () => {
+  it('parses "Month Day" and "Day Month" orderings', () => {
+    expect(parseScheduledDate('Rova 12')).toEqual({ day: 12, month: 8, year: null });
+    expect(parseScheduledDate('12 Rova')).toEqual({ day: 12, month: 8, year: null });
+  });
+  it('is case-insensitive and picks up an explicit 4-digit year', () => {
+    expect(parseScheduledDate('rova 12, 4726')).toEqual({ day: 12, month: 8, year: 4726 });
+  });
+  it('does not mistake the year digits for the day', () => {
+    expect(parseScheduledDate('Rova 12, 4725')).toEqual({ day: 12, month: 8, year: 4725 });
+    // a month + year but no day is unparseable — no due date without a day
+    expect(parseScheduledDate('Kuthona 4725')).toBeNull();
+  });
+  it('returns null for blanks and unparseable notes', () => {
+    expect(parseScheduledDate('')).toBeNull();
+    expect(parseScheduledDate('early next month')).toBeNull(); // no month name
+    expect(parseScheduledDate(null)).toBeNull();
+  });
+});
+
+describe('isEventDue', () => {
+  const now = { day: 15, month: 8, year: 4725 }; // 15 Rova 4725
+
+  it('is due when the scheduled date is on or before the campaign date', () => {
+    expect(isEventDue({ scheduledFor: 'Rova 12' }, now)).toBe(true);
+    expect(isEventDue({ scheduledFor: 'Rova 15' }, now)).toBe(true); // same day
+    expect(isEventDue({ scheduledFor: 'Gozran 20' }, now)).toBe(true); // earlier month
+  });
+  it('is not due when the scheduled date is still in the future', () => {
+    expect(isEventDue({ scheduledFor: 'Rova 20' }, now)).toBe(false);
+    expect(isEventDue({ scheduledFor: 'Kuthona 1' }, now)).toBe(false); // later month
+  });
+  it('defaults an omitted year to the campaign year, honoring an explicit past/future one', () => {
+    expect(isEventDue({ scheduledFor: 'Rova 12, 4726' }, now)).toBe(false); // next year
+    expect(isEventDue({ scheduledFor: 'Rova 20, 4724' }, now)).toBe(true); // last year
+  });
+  it('is not due with no schedule, an unparseable one, or no game date', () => {
+    expect(isEventDue({ scheduledFor: '' }, now)).toBe(false);
+    expect(isEventDue({ scheduledFor: 'sometime soon' }, now)).toBe(false);
+    expect(isEventDue({ scheduledFor: 'Rova 12' }, null)).toBe(false);
+    expect(isEventDue(null, now)).toBe(false);
+  });
+});
+
+describe('stepProgress', () => {
+  it('counts done and total steps', () => {
+    expect(stepProgress({ steps: [{ done: true }, { done: false }, { done: true }] }))
+      .toEqual({ done: 2, total: 3 });
+  });
+  it('tolerates a missing or non-array steps field', () => {
+    expect(stepProgress({})).toEqual({ done: 0, total: 0 });
+    expect(stepProgress({ steps: null })).toEqual({ done: 0, total: 0 });
+    expect(stepProgress(null)).toEqual({ done: 0, total: 0 });
   });
 });

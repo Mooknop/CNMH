@@ -2502,6 +2502,81 @@ p.gm-live-note {
   color: var(--accent-text);
 }
 
+/* Dashboard Events panel (#1112, S4) */
+.gm-events-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.gm-events-panel-head h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.gm-events-browse { font-size: 0.78rem; color: var(--accent-text); }
+.gm-events-group + .gm-events-group { margin-top: var(--space-3); }
+.gm-events-group-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+  margin-bottom: var(--space-2);
+}
+.gm-events-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.gm-events-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+.gm-events-row.is-due {
+  background: var(--d-succ-bg);
+  border-color: var(--d-succ-border);
+}
+.gm-events-row-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--shell-text-primary);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gm-events-row-name:hover { color: var(--accent-text); }
+.gm-events-due {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--d-succ-fg);
+  background: var(--d-succ-bg);
+  border: 1px solid var(--d-succ-border);
+}
+.gm-events-steps { flex: none; font-size: 0.78rem; color: var(--shell-text-tertiary); font-weight: 600; }
+.gm-events-resolve {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--d-crit-fg);
+  background: var(--d-crit-bg);
+  border: 1px solid var(--d-crit-border);
+  cursor: pointer;
+}
+.gm-events-resolve:disabled { opacity: 0.6; cursor: default; }
+
 /* GM campaign-significance notes (#1078) */
 .gm-room-notes-display h4 { color: var(--gold-mid); }
 .gm-room-notes-text {
