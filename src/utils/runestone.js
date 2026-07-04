@@ -37,7 +37,13 @@ const dedupe = (arr) => [...new Set(arr.filter(Boolean))];
 // rune's name/value/traits folded in (value = stone price + rune price) and a
 // `runestone: { runeRef, rune }` marker the UI reads. Never produces a `runes`
 // or `strikes` block — a runestone grants no effect while unattached.
-export const resolveRunestone = (entry, runeMap) => {
+//
+// `catalogMap` (optional) supplies the shared runestone artwork: the base stone
+// lives in code (mechanics/price), but its image is carried by the `runestone`
+// catalog doc so a GM can assign it through the image tools — mirrors the
+// magic-scroll/magic-wand base-art inheritance (#812/#936). Every stone displays
+// that image unless it authored its own.
+export const resolveRunestone = (entry, runeMap, catalogMap) => {
   const quantity = entry && entry.quantity != null ? entry.quantity : 1;
   const runeRef = entry ? entry.runeRef : null;
   const rune = runeRef != null && runeMap ? runeMap.get(String(runeRef)) : null;
@@ -49,6 +55,12 @@ export const resolveRunestone = (entry, runeMap) => {
     runestone: { runeRef: runeRef != null ? runeRef : null, rune: rune || null },
   };
   if (entry && entry.uid != null) resolved.uid = entry.uid;
+
+  const base = catalogMap && typeof catalogMap.get === 'function' ? catalogMap.get(RUNESTONE_BASE.id) : null;
+  if (resolved.image == null && base && base.image != null) {
+    resolved.image = base.image;
+    if (resolved.imagePosition == null && base.imagePosition != null) resolved.imagePosition = base.imagePosition;
+  }
 
   if (rune) {
     resolved.name = `${rune.name} Runestone`;
