@@ -100,6 +100,7 @@ const RoomDetail = ({ room, showBody = true, showNotes = true, showTreasure = tr
                     {it.name}{it.variant ? ` (${it.variant})` : ''}
                   </span>
                   {it.qty > 1 && <span className="gm-room-cache-chip-qty">×{it.qty}</span>}
+                  {it.value != null && <span className="gm-room-cache-chip-value">{it.value} gp</span>}
                   {!it.ref && <span className="gm-room-cache-chip-flag">not in catalog</span>}
                 </li>
               ))}
