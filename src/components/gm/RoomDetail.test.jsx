@@ -77,6 +77,18 @@ describe('RoomDetail', () => {
     expect(within(unmatched).getByText('not in catalog')).toBeInTheDocument();
   });
 
+  it('shows the gp worth of a valuable/treasure cache line', () => {
+    const withTreasure = {
+      ...room,
+      treasureCache: { gold: 0, items: [{ ref: 'treasure-item', name: 'Garnet Beads', qty: 10, value: 5 }] },
+    };
+    render(<RoomDetail room={withTreasure} />);
+    const line = screen.getByText('Garnet Beads').closest('li');
+    expect(line).toHaveTextContent('×10');
+    expect(line).toHaveTextContent('5 gp');
+    expect(line).not.toHaveClass('is-unmatched'); // has a ref
+  });
+
   it('marks a distributed cache and honors showTreasure={false}', () => {
     const distributed = {
       ...room,

@@ -14,6 +14,9 @@ vi.mock('./CatalogPickerModal', () => ({
         <button type="button" onClick={() => onSelect([{ id: 'acid-flask', name: 'Acid Flask' }])}>
           pick-acid
         </button>
+        <button type="button" onClick={() => onSelect([{ id: 'treasure-item', name: 'Treasure' }])}>
+          pick-treasure
+        </button>
       </div>
     ) : null,
 }));
@@ -120,6 +123,44 @@ describe('RoomTreasureEditor', () => {
     renderEditor();
     fireEvent.click(screen.getByRole('button', { name: 'Remove Healing Potion' }));
     expect(screen.queryByText('Healing Potion')).not.toBeInTheDocument();
+  });
+
+  it('resolving a valuable to the Treasure Item keeps its name and value', () => {
+    renderEditor();
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve…' })); // the Shark Tooth Charm line
+    fireEvent.click(screen.getByRole('button', { name: 'pick-treasure' }));
+
+    // Now an editable treasure line: name preserved, no "not in catalog" flag.
+    expect(screen.queryByText('not in catalog')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Treasure name for line 2')).toHaveValue('Shark Tooth Charm');
+    expect(screen.getByLabelText('Value (gp) for line 2')).toHaveValue(5);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save cache' }));
+    expect(saveDocument).toHaveBeenCalledWith('room', 'a3', expect.objectContaining({
+      treasureCache: expect.objectContaining({
+        items: expect.arrayContaining([
+          { ref: 'treasure-item', name: 'Shark Tooth Charm', qty: 1, value: 5 },
+        ]),
+      }),
+    }));
+  });
+
+  it('edits a treasure line name and value inline', () => {
+    renderEditor();
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'pick-treasure' }));
+
+    fireEvent.change(screen.getByLabelText('Treasure name for line 2'), { target: { value: 'Silver Bowl' } });
+    fireEvent.change(screen.getByLabelText('Value (gp) for line 2'), { target: { value: '25' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save cache' }));
+
+    expect(saveDocument).toHaveBeenCalledWith('room', 'a3', expect.objectContaining({
+      treasureCache: expect.objectContaining({
+        items: expect.arrayContaining([
+          { ref: 'treasure-item', name: 'Silver Bowl', qty: 1, value: 25 },
+        ]),
+      }),
+    }));
   });
 
   it('locks a distributed cache and reopens it by clearing the stamp', async () => {
