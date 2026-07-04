@@ -100,6 +100,13 @@ export function getShopsForLocation(locationId, entries, shops) {
 // A rune sold as a Runestone (#801) is a `{ ref: 'runestone', runeRef }` ware:
 // resolved from the rune catalog (`runeMap`) via R1's resolveRunestone into a
 // runestone display item (name/value = stone + rune), with a per-rune wareKey.
+// A GM-flagged "never sell" catalog item (#1105): unique / racial / story gear
+// (Izzy's Gourd Head, a quest McGuffin) the shop must never surface — neither
+// generatively (rune-service base gear) nor through a stale explicit ware.
+// Toggled from the GM shop host-management panel; a plain `noShop` boolean on
+// the item doc so it round-trips through the content DO like any other field.
+export const isShopExcluded = (item) => !!(item && item.noShop);
+
 export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
   const wares = shops && loreId != null ? shops[loreId]?.wares : null;
   if (!Array.isArray(wares) || !catalogMap) return [];
@@ -124,7 +131,9 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
       }
 
       const item = catalogMap.get(String(w.ref));
-      if (!item) return null;
+      // Drop a stale explicit ware for a now-excluded item — the flag is an
+      // absolute "never sell", so it wins over an authored ref too.
+      if (!item || isShopExcluded(item)) return null;
 
       let resolved = { ...item };
       let wareKey = String(w.ref);
@@ -496,7 +505,9 @@ export function eligibleHostItems(ware, items, runes) {
     if (!seen.has(id)) { seen.add(id); out.push(item); }
   };
   for (const item of Array.isArray(items) ? items : []) {
-    if (!item || item.id == null) continue;
+    // A GM-excluded item (#1105) is never offered as base gear — this is where
+    // Izzy's Gourd Head (a racial container) used to leak into accessory hosts.
+    if (!item || item.id == null || isShopExcluded(item)) continue;
     // The Power Ring is magic (so not "mundane base"), but it IS the ring
     // target's base gear — the blank a ring rune imbues into.
     if (item.powerRing) {

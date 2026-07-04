@@ -17,6 +17,7 @@ import {
   eligibleRunes,
   runeOfferingSummary,
   eligibleHostItems,
+  isShopExcluded,
   RUNE_TARGETS,
   groupWares,
   traitAccent,
@@ -52,6 +53,9 @@ const catalogMap = new Map([
   ['antidote', { id: 'antidote', name: 'Antidote', price: 3, weight: 0 }],
   ['spellbook', { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1 }],
   ['tonic', potionLadder],
+  // A GM-flagged "never sell" item (#1105) — must be dropped even from an
+  // explicit ware.
+  ['cursed-idol', { id: 'cursed-idol', name: 'Cursed Idol', price: 50, weight: 0, noShop: true }],
 ]);
 
 const runeMap = new Map([
@@ -325,6 +329,23 @@ const spellCatalog = [
 ];
 
 const keysOf = (list) => list.map((e) => e.wareKey).sort();
+
+describe('isShopExcluded (#1105)', () => {
+  it('is true only for an item with a truthy noShop flag', () => {
+    expect(isShopExcluded({ id: 'x', noShop: true })).toBe(true);
+    expect(isShopExcluded({ id: 'x' })).toBe(false);
+    expect(isShopExcluded({ id: 'x', noShop: false })).toBe(false);
+    expect(isShopExcluded(null)).toBe(false);
+    expect(isShopExcluded(undefined)).toBe(false);
+  });
+});
+
+describe('resolveShopWares drops GM-excluded items (#1105)', () => {
+  it('never resolves a noShop item, even when explicitly stocked', () => {
+    const s = { s: { wares: [{ ref: 'cursed-idol' }, { ref: 'spellbook' }] } };
+    expect(resolveShopWares('s', s, catalogMap).map((w) => w.id)).toEqual(['spellbook']);
+  });
+});
 
 describe('isSpellItemWare', () => {
   it('detects scroll/wand offerings, not flat or runestone wares', () => {
@@ -839,6 +860,8 @@ describe('eligibleHostItems (#1044)', () => {
     { id: 'buckler', name: 'Buckler', price: 1, weight: 0.1, shield: { hardness: 3 } },
     { id: 'chalk', name: 'Chalk', price: 0.01, weight: 0 }, // light, but no deliberate host tag
     { id: 'power-ring', name: 'Power Ring', powerRing: true, traits: ['Invested', 'Magical'] },
+    // Valid base weapon, but GM-flagged never-sell (#1105) — never a host.
+    { id: 'cursed-blade', name: 'Cursed Blade', price: 5, strikes: [{}], runes: {}, noShop: true },
   ];
   const ids = (ware) => eligibleHostItems(ware, hostItems, hostRunes).map((i) => i.id);
 
@@ -849,6 +872,11 @@ describe('eligibleHostItems (#1044)', () => {
   it('the general runesmith is exempt: unset targets and an explicit all-target list stock nothing', () => {
     expect(ids({ runeService: true, maxLevel: 20 })).toEqual([]);
     expect(ids({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 20 })).toEqual([]);
+  });
+
+  it('never offers a GM-excluded (noShop) item, even valid base gear (#1105)', () => {
+    // cursed-blade is a perfectly good base weapon but flagged never-sell.
+    expect(ids({ runeService: true, targets: ['weapon'], maxLevel: 10 })).toEqual(['longsword']);
   });
 
   it('accessory hosts match the ADMITTED runes by usage; the derived light tag never sweeps trinkets in', () => {
