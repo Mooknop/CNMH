@@ -54,6 +54,21 @@ describe('FamiliarModal', () => {
     expect(screen.getByText('Whiskers')).toBeInTheDocument();
   });
 
+  it('does not crash when the master has no saves (guards the defenses block)', () => {
+    const noSaves = { name: 'Aria', level: 4 }; // familiar owner missing `saves`
+    render(
+      <FamiliarModal
+        isOpen={true}
+        onClose={vi.fn()}
+        familiar={baseFamiliar}
+        character={noSaves}
+      />
+    );
+    expect(screen.getByText('Whiskers')).toBeInTheDocument();
+    // The master-saves block is omitted rather than throwing on `saves.fortitude`.
+    expect(screen.queryByText('Fortitude')).not.toBeInTheDocument();
+  });
+
   it('renders type and size', () => {
     render(
       <FamiliarModal
