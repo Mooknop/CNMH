@@ -2720,6 +2720,32 @@ p.gm-live-note {
 .gm-loot-drop-line.is-claimed .gm-loot-drop-line-claim { color: var(--gold-mid); }
 .gm-loot-drop-actions { display: flex; align-items: center; gap: var(--space-3); }
 
+/* GM gold-split override (#1091) */
+.gm-loot-drop-gold-split { display: flex; flex-direction: column; gap: var(--space-2); }
+.gm-loot-drop-gold-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.gm-loot-drop-shares { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.gm-loot-drop-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+}
+.gm-loot-drop-share-name { color: var(--shell-text-secondary); font-size: 0.82rem; }
+.gm-loot-drop-share-input {
+  width: 4.5em;
+  padding: 3px 6px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.gm-loot-drop-share-unit { color: var(--shell-text-tertiary); font-size: 0.8rem; }
+
 /* Adventure-room import button (#1074 in-app upload) */
 .gm-rooms-import { display: flex; flex-direction: column; gap: var(--space-2); }
 .gm-rooms-import-file { display: none; }

@@ -2,15 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useLootDrop } from '../../hooks/useLootDrop';
 import { roomTreasureCache } from '../../utils/rooms';
-import { buildLootDrop, cacheHasUnmatched } from '../../utils/lootDrop';
+import { buildLootDrop, cacheHasUnmatched, lineClaimedQty } from '../../utils/lootDrop';
 
-// Distribute a room's treasure cache to the party (#1090, epic #1085 T4). Shown
-// under a room in the dashboard Current Room panel and in World → Rooms. Three
-// states in one place:
+// Distribute a room's treasure cache to the party (#1090/#1091, epic #1085
+// T4/T5). Shown under a room in the dashboard Current Room panel and in
+// World → Rooms. Three states in one place:
 //   • Distribute button — cache with content, no unmatched lines, not yet
 //     distributed, and no drop open elsewhere.
 //   • Confirm/preview — what's about to drop, before it's written.
-//   • Active drop panel — the live drop for THIS room, with Cancel / Finalize.
+//   • Active drop panel — the live drop for THIS room: claims filling in from
+//     the players, editable gold split, with Cancel / Finalize.
 // One drop at a time is enforced session-wide by useLootDrop; a drop open on a
 // different room disables the button with a pointer to it.
 const LootLine = ({ name, variant, qty, claim }) => (
@@ -23,9 +24,16 @@ const LootLine = ({ name, variant, qty, claim }) => (
   </li>
 );
 
+// Who has claimed a line, condensed: "Aria ×2, Vestri". Empty ⇒ unclaimed.
+const claimLabel = (line, nameById) =>
+  (line.claims || [])
+    .filter((c) => c.qty > 0)
+    .map((c) => `${nameById[c.charId] || 'a player'}${c.qty > 1 ? ` ×${c.qty}` : ''}`)
+    .join(', ');
+
 const RoomDistributeControl = ({ room }) => {
   const { characters = [] } = useContent();
-  const { drop, isOpen, openDrop, cancelDrop, finalizeDrop } = useLootDrop();
+  const { drop, isOpen, shares, openDrop, setGoldSplit, cancelDrop, finalizeDrop } = useLootDrop();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -52,15 +60,19 @@ const RoomDistributeControl = ({ room }) => {
         setBusy(false);
       }
     };
+    // GM gold override: edit one character's share → write the full map as
+    // goldSplit. "Reset" drops back to the even split (goldSplit = null).
+    const overrideShare = (charId, raw) => {
+      const next = { ...shares, [charId]: raw === '' ? 0 : Math.max(0, Number(raw) || 0) };
+      setGoldSplit(next);
+    };
+    const anyClaims = (drop.items || []).some((it) => lineClaimedQty(it) > 0);
     return (
       <div className="gm-loot-drop" aria-label="Active treasure distribution">
         <div className="gm-loot-drop-head">
           <strong>Distributing treasure</strong>
           <span className="gm-loot-drop-room">{drop.roomName}</span>
         </div>
-        {drop.gold > 0 && (
-          <p className="gm-loot-drop-gold">{drop.gold} gp <span className="gm-count">· even split</span></p>
-        )}
         {drop.items.length > 0 && (
           <ul className="gm-loot-drop-items">
             {drop.items.map((it) => (
@@ -69,14 +81,43 @@ const RoomDistributeControl = ({ room }) => {
                 name={it.name}
                 variant={it.variant}
                 qty={it.qty}
-                claim={it.claimedBy ? `claimed by ${nameById[it.claimedBy] || 'a player'}` : ''}
+                claim={claimLabel(it, nameById)}
               />
             ))}
           </ul>
         )}
+        {drop.gold > 0 && (
+          <div className="gm-loot-drop-gold-split">
+            <div className="gm-loot-drop-gold-head">
+              <span className="gm-loot-drop-gold">{drop.gold} gp</span>
+              <span className="gm-count">{drop.goldSplit ? '· custom split' : '· even split'}</span>
+              {drop.goldSplit && (
+                <button type="button" className="btn-small btn-secondary" onClick={() => setGoldSplit(null)}>
+                  Reset to even
+                </button>
+              )}
+            </div>
+            <ul className="gm-loot-drop-shares">
+              {characters.map((c) => (
+                <li key={c.id} className="gm-loot-drop-share">
+                  <span className="gm-loot-drop-share-name">{c.name}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    className="gm-loot-drop-share-input"
+                    aria-label={`${c.name} gold share`}
+                    value={Math.max(0, Math.floor(Number(shares[c.id]) || 0))}
+                    onChange={(e) => overrideShare(c.id, e.target.value)}
+                  />
+                  <span className="gm-loot-drop-share-unit">gp</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="gm-help">
-          Players claim on their sheets. Finalize hands out the claimed loot and locks this cache;
-          Cancel discards the drop with nothing given out.
+          Players claim on their sheets. Finalize hands out the claimed loot and gold shares and locks
+          this cache; anything unclaimed returns to the cache. Cancel discards the drop with nothing given out.
         </p>
         <div className="gm-loot-drop-actions">
           <button type="button" className="btn-secondary" disabled={busy} onClick={cancelDrop}>
@@ -85,6 +126,7 @@ const RoomDistributeControl = ({ room }) => {
           <button type="button" className="btn-primary" disabled={busy} onClick={onFinalize}>
             {busy ? 'Finalizing…' : 'Finalize'}
           </button>
+          {!anyClaims && !error && <span className="gm-count">no claims yet</span>}
           {error && <span className="gm-warn">{error}</span>}
         </div>
       </div>

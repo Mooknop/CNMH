@@ -2,13 +2,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 vi.mock('../../contexts/ContentContext', () => ({
   __esModule: true,
-  useContent: () => ({ characters: [{ id: 'a', name: 'Aria' }] }),
+  useContent: () => ({ characters: [{ id: 'a', name: 'Aria' }, { id: 'b', name: 'Vestri' }] }),
 }));
 
 const hook = {
   drop: null,
   isOpen: false,
+  shares: { a: 13, b: 12 },
   openDrop: vi.fn(),
+  setGoldSplit: vi.fn(),
   cancelDrop: vi.fn(),
   finalizeDrop: vi.fn(() => Promise.resolve(true)),
 };
@@ -33,6 +35,7 @@ const unmatchedRoom = {
 beforeEach(() => {
   hook.drop = null;
   hook.isOpen = false;
+  hook.shares = { a: 13, b: 12 };
   vi.clearAllMocks();
 });
 
@@ -76,17 +79,28 @@ describe('RoomDistributeControl', () => {
     expect(hook.openDrop).toHaveBeenCalledWith(boundRoom);
   });
 
-  it('shows the live drop panel for this room with Cancel and Finalize', () => {
+  it('shows the live drop panel for this room with claims, shares, Cancel and Finalize', () => {
     hook.isOpen = true;
     hook.drop = {
-      roomId: 'sd4s-a3', roomName: 'A3. Shrine to Kabriri', gold: 25,
-      items: [{ lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 2, claimedBy: 'a' }],
+      roomId: 'sd4s-a3', roomName: 'A3. Shrine to Kabriri', gold: 25, goldSplit: null,
+      items: [{ lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 2, claims: [{ charId: 'a', qty: 2 }] }],
     };
     render(<RoomDistributeControl room={boundRoom} />);
     expect(screen.getByText('Distributing treasure')).toBeInTheDocument();
-    expect(screen.getByText('claimed by Aria')).toBeInTheDocument();
+    expect(screen.getByText('Aria ×2')).toBeInTheDocument();
+    // Per-character gold-share inputs from the even split.
+    expect(screen.getByLabelText('Aria gold share')).toHaveValue(13);
+    expect(screen.getByLabelText('Vestri gold share')).toHaveValue(12);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(hook.cancelDrop).toHaveBeenCalled();
+  });
+
+  it('writes a gold-split override when the GM edits a share', () => {
+    hook.isOpen = true;
+    hook.drop = { roomId: 'sd4s-a3', roomName: 'A3', gold: 25, goldSplit: null, items: [] };
+    render(<RoomDistributeControl room={boundRoom} />);
+    fireEvent.change(screen.getByLabelText('Aria gold share'), { target: { value: '25' } });
+    expect(hook.setGoldSplit).toHaveBeenCalledWith({ a: 25, b: 12 });
   });
 
   it('finalizes the drop and surfaces a failure', async () => {

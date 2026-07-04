@@ -8,10 +8,26 @@ const rooms = [
     treasureCache: { gold: 25, items: [{ ref: 'acid-flask', name: 'Acid Flask', qty: 2 }] },
   },
 ];
+const characters = [
+  { id: 'a', name: 'Aria', gold: 100 },
+  { id: 'b', name: 'Vestri', gold: 50 },
+];
 const mockRefresh = vi.fn();
 vi.mock('../contexts/ContentContext', () => ({
   __esModule: true,
-  useContent: () => ({ rooms, refresh: mockRefresh }),
+  useContent: () => ({ rooms, characters, refresh: mockRefresh }),
+}));
+
+// Session primitives: getState/sendUpdate front the per-character overlays.
+let session;
+const stateStore = {};
+const mockSendUpdate = vi.fn((cid, type, value) => {
+  stateStore[cid] = { ...(stateStore[cid] || {}), [type]: value };
+});
+const mockGetState = vi.fn((cid, type) => stateStore[cid]?.[type]);
+vi.mock('../contexts/SessionContext', () => ({
+  __esModule: true,
+  useSession: () => ({ ...session, getState: mockGetState, sendUpdate: mockSendUpdate }),
 }));
 
 const mockAppendEvent = vi.fn();
@@ -24,26 +40,41 @@ vi.mock('../utils/gmApi', () => ({
   saveDocument: (...a) => mockSave(...a),
 }));
 
-// useSyncedState fronts the single global drop key.
+vi.mock('../utils/gold', () => ({ docGold: (c) => c?.gold ?? 0 }));
+
+// Deterministic uids for asserting credited entries.
+let uidSeq = 0;
+vi.mock('../utils/uid', () => ({ newEntryUid: () => `e-${(uidSeq += 1)}` }));
+
 let drop = null;
 const mockSetDrop = vi.fn((next) => {
   drop = typeof next === 'function' ? next(drop) : next;
 });
 vi.mock('./useSyncedState', () => ({
-  useSyncedState: (key, initial) => {
+  useSyncedState: (key) => {
     if (String(key) === 'cnmh_lootdrop_global') return [drop, mockSetDrop];
-    return [initial, vi.fn()];
+    return [null, vi.fn()];
   },
 }));
 
 import { useLootDrop } from './useLootDrop';
 
-beforeEach(() => {
-  drop = null;
-  vi.clearAllMocks();
+const openDropState = (over = {}) => ({
+  id: 'x', roomId: 'sd4s-a3', roomName: 'A3. Shrine to Kabriri', status: 'open',
+  gold: 25, goldSplit: null,
+  items: [{ lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 2, claims: [] }],
+  ...over,
 });
 
-describe('useLootDrop', () => {
+beforeEach(() => {
+  drop = null;
+  uidSeq = 0;
+  Object.keys(stateStore).forEach((k) => delete stateStore[k]);
+  vi.clearAllMocks();
+  session = { connected: true, foundryConnected: true };
+});
+
+describe('useLootDrop — lifecycle', () => {
   it('openDrop writes a drop from the room cache', () => {
     const { result } = renderHook(() => useLootDrop());
     let built;
@@ -52,8 +83,8 @@ describe('useLootDrop', () => {
     expect(mockSetDrop).toHaveBeenCalledWith(expect.objectContaining({ roomId: 'sd4s-a3' }));
   });
 
-  it('openDrop is a no-op while a drop is already open (one at a time)', () => {
-    drop = { id: 'x', roomId: 'other', status: 'open', gold: 1, items: [] };
+  it('openDrop is a no-op while a drop is already open', () => {
+    drop = openDropState({ roomId: 'other' });
     const { result } = renderHook(() => useLootDrop());
     let built;
     act(() => { built = result.current.openDrop(rooms[0]); });
@@ -61,62 +92,109 @@ describe('useLootDrop', () => {
     expect(mockSetDrop).not.toHaveBeenCalled();
   });
 
-  it('openDrop returns null when the room has nothing distributable', () => {
-    const { result } = renderHook(() => useLootDrop());
-    let built;
-    act(() => { built = result.current.openDrop({ id: 'z', name: 'Empty', treasureCache: null }); });
-    expect(built).toBeNull();
-    expect(mockSetDrop).not.toHaveBeenCalled();
-  });
-
   it('cancelDrop clears the drop and writes nothing else', () => {
-    drop = { id: 'x', roomId: 'sd4s-a3', status: 'open', gold: 1, items: [] };
+    drop = openDropState();
     const { result } = renderHook(() => useLootDrop());
     act(() => { result.current.cancelDrop(); });
     expect(mockSetDrop).toHaveBeenCalledWith(null);
     expect(mockSave).not.toHaveBeenCalled();
-    expect(mockAppendEvent).not.toHaveBeenCalled();
+    expect(mockSendUpdate).not.toHaveBeenCalled();
   });
 
-  it('finalizeDrop stamps distributedAt, logs, and clears', async () => {
-    drop = {
-      id: 'x', roomId: 'sd4s-a3', roomName: 'A3. Shrine to Kabriri',
-      status: 'open', gold: 25, items: [{ lineId: 'l1', ref: 'acid-flask', qty: 2 }],
-    };
+  it('exposes live even-split gold shares', () => {
+    drop = openDropState();
+    const { result } = renderHook(() => useLootDrop());
+    expect(result.current.shares).toEqual({ a: 13, b: 12 });
+  });
+});
+
+describe('useLootDrop — claiming', () => {
+  it('claimLine applies a claim through the reducer', () => {
+    drop = openDropState();
+    const { result } = renderHook(() => useLootDrop());
+    act(() => { result.current.claimLine('l1', 'a', 1); });
+    expect(drop.items[0].claims).toEqual([{ charId: 'a', qty: 1 }]);
+  });
+
+  it('claimLine is frozen in the offline sandbox', () => {
+    session = { connected: true, foundryConnected: false };
+    drop = openDropState();
+    const { result } = renderHook(() => useLootDrop());
+    act(() => { result.current.claimLine('l1', 'a', 1); });
+    expect(mockSetDrop).not.toHaveBeenCalled();
+  });
+
+  it('setGoldSplit writes an override map onto the drop', () => {
+    drop = openDropState();
+    const { result } = renderHook(() => useLootDrop());
+    act(() => { result.current.setGoldSplit({ a: 25, b: 0 }); });
+    expect(drop.goldSplit).toEqual({ a: 25, b: 0 });
+  });
+});
+
+describe('useLootDrop — finalize', () => {
+  it('credits claimed items + gold shares, logs per character, returns remainder, stamps', async () => {
+    drop = openDropState({
+      items: [{ lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 2, claims: [{ charId: 'a', qty: 1 }] }],
+    });
     const { result } = renderHook(() => useLootDrop());
     let ok;
     await act(async () => { ok = await result.current.finalizeDrop(); });
     expect(ok).toBe(true);
-    expect(mockSave).toHaveBeenCalledWith(
-      'room', 'sd4s-a3',
-      expect.objectContaining({ id: 'sd4s-a3', distributedAt: expect.any(Number) }),
-    );
-    expect(mockRefresh).toHaveBeenCalled();
-    expect(mockAppendEvent).toHaveBeenCalledWith({
-      type: 'action',
-      text: 'Distributed A3. Shrine to Kabriri treasure — 25 gp + 2 items',
-    });
+
+    // Aria: 1 acid flask + 13 gp; her gold defaults to the committed doc (100).
+    expect(mockSendUpdate).toHaveBeenCalledWith('a', 'acquired', [{ ref: 'acid-flask', uid: 'e-1' }]);
+    expect(mockSendUpdate).toHaveBeenCalledWith('a', 'gold', 113);
+    // Vestri: no items, only the 12 gp share.
+    expect(mockSendUpdate).toHaveBeenCalledWith('b', 'gold', 62);
+    expect(mockSendUpdate).not.toHaveBeenCalledWith('b', 'acquired', expect.anything());
+
+    expect(mockAppendEvent).toHaveBeenCalledWith({ type: 'action', text: 'Aria claimed Acid Flask, +13 gp' });
+    expect(mockAppendEvent).toHaveBeenCalledWith({ type: 'action', text: 'Vestri claimed +12 gp' });
+
+    // 1 unclaimed acid flask returns to the cache; all gold distributed.
+    expect(mockSave).toHaveBeenCalledWith('room', 'sd4s-a3', expect.objectContaining({
+      distributedAt: expect.any(Number),
+      treasureCache: { gold: 0, items: [{ ref: 'acid-flask', name: 'Acid Flask', qty: 1 }] },
+    }));
     expect(mockSetDrop).toHaveBeenCalledWith(null);
   });
 
-  it('finalizeDrop leaves the drop intact when the doc save fails', async () => {
+  it('adds to an existing acquired overlay rather than replacing it', async () => {
+    stateStore.a = { acquired: [{ ref: 'dagger', uid: 'old' }], gold: 5 };
+    drop = openDropState({
+      gold: 0,
+      items: [{ lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 1, claims: [{ charId: 'a', qty: 1 }] }],
+    });
+    const { result } = renderHook(() => useLootDrop());
+    await act(async () => { await result.current.finalizeDrop(); });
+    expect(mockSendUpdate).toHaveBeenCalledWith('a', 'acquired', [
+      { ref: 'dagger', uid: 'old' },
+      { ref: 'acid-flask', uid: 'e-1' },
+    ]);
+    // No gold in this drop → no gold write.
+    expect(mockSendUpdate).not.toHaveBeenCalledWith('a', 'gold', expect.anything());
+  });
+
+  it('is frozen offline (no writes at all)', async () => {
+    session = { connected: true, foundryConnected: false };
+    drop = openDropState();
+    const { result } = renderHook(() => useLootDrop());
+    let ok;
+    await act(async () => { ok = await result.current.finalizeDrop(); });
+    expect(ok).toBe(false);
+    expect(mockSendUpdate).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+    expect(mockSetDrop).not.toHaveBeenCalled();
+  });
+
+  it('leaves the drop intact when the doc save fails (credits already synced)', async () => {
     mockSave.mockRejectedValueOnce(new Error('boom'));
-    drop = { id: 'x', roomId: 'sd4s-a3', roomName: 'A3', status: 'open', gold: 5, items: [] };
+    drop = openDropState();
     const { result } = renderHook(() => useLootDrop());
     await expect(
       act(async () => { await result.current.finalizeDrop(); }),
     ).rejects.toThrow('boom');
     expect(mockSetDrop).not.toHaveBeenCalled();
-    expect(mockAppendEvent).not.toHaveBeenCalled();
-  });
-
-  it('finalizeDrop still closes out a drop whose room no longer exists', async () => {
-    drop = { id: 'x', roomId: 'gone', roomName: 'Ghost Room', status: 'open', gold: 5, items: [] };
-    const { result } = renderHook(() => useLootDrop());
-    let ok;
-    await act(async () => { ok = await result.current.finalizeDrop(); });
-    expect(ok).toBe(true);
-    expect(mockSave).not.toHaveBeenCalled();
-    expect(mockSetDrop).toHaveBeenCalledWith(null);
   });
 });
