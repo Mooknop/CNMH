@@ -2385,6 +2385,111 @@ p.gm-live-note {
   gap: var(--space-3);
 }
 
+/* Treasure cache — RoomDetail display (#1089) */
+.gm-rooms-treasure { width: 15px; height: 15px; color: var(--gold-mid); flex: none; display: inline-flex; }
+.gm-rooms-treasure .gm-ico { width: 15px; height: 15px; }
+.gm-rooms-treasure.is-distributed { color: var(--shell-text-tertiary); }
+.gm-room-cache-gold {
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+  color: var(--gold-mid);
+  font-variant-numeric: tabular-nums;
+}
+.gm-room-cache-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.gm-room-cache-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-size: 0.85rem;
+}
+.gm-room-cache-chip-qty { color: var(--shell-text-tertiary); font-variant-numeric: tabular-nums; }
+.gm-room-cache-chip.is-unmatched { border-color: var(--peril-light); border-style: dashed; }
+.gm-room-cache-chip-flag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--peril-light);
+}
+.gm-room-cache-stamp {
+  margin: var(--space-2) 0 0;
+  font-size: 0.78rem;
+  color: var(--shell-text-tertiary);
+}
+
+/* Treasure cache — GM editor (#1089) */
+.gm-room-treasure-edit {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.gm-room-treasure-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}
+.gm-room-treasure-gold { display: flex; align-items: center; gap: var(--space-2); }
+.gm-room-treasure-gold label { font-size: 0.85rem; color: var(--shell-text-secondary); }
+.gm-room-treasure-gold-input { width: 6em; }
+.gm-room-treasure-gold-input,
+.gm-room-treasure-qty {
+  padding: 5px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+.gm-room-treasure-qty { width: 4em; text-align: right; font-variant-numeric: tabular-nums; }
+.gm-room-treasure-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gm-room-treasure-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 6px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+}
+.gm-room-treasure-line.is-unmatched { border-color: var(--peril-light); border-style: dashed; }
+.gm-room-treasure-name { flex: 1; color: var(--shell-text-primary); }
+.gm-room-treasure-flag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--peril-light);
+}
+.gm-room-treasure-remove {
+  background: none;
+  border: none;
+  color: var(--shell-text-tertiary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.gm-room-treasure-remove:hover { color: var(--peril-light); }
+.gm-room-treasure-actions { display: flex; align-items: center; gap: var(--space-3); }
+.gm-room-treasure-locked { margin: 0; color: var(--shell-text-secondary); font-size: 0.85rem; }
+
 /* Adventure-room import button (#1074 in-app upload) */
 .gm-rooms-import { display: flex; flex-direction: column; gap: var(--space-2); }
 .gm-rooms-import-file { display: none; }

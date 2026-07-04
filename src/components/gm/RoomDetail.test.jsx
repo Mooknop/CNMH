@@ -57,6 +57,40 @@ describe('RoomDetail', () => {
     expect(screen.queryByText('Campaign significance')).not.toBeInTheDocument();
   });
 
+  it('renders a structured treasure cache with gold and an unmatched flag', () => {
+    const withCache = {
+      ...room,
+      treasureCache: {
+        gold: 25,
+        items: [
+          { ref: 'healing-potion', name: 'Healing Potion', qty: 2 },
+          { name: 'Shark Tooth Charm', qty: 1 }, // no ref → unmatched
+        ],
+      },
+    };
+    render(<RoomDetail room={withCache} />);
+    expect(screen.getByText('Treasure cache')).toBeInTheDocument();
+    expect(screen.getByText('25 gp')).toBeInTheDocument();
+    expect(screen.getByText('Healing Potion').closest('li')).toHaveTextContent('×2');
+    const unmatched = screen.getByText('Shark Tooth Charm').closest('li');
+    expect(unmatched).toHaveClass('is-unmatched');
+    expect(within(unmatched).getByText('not in catalog')).toBeInTheDocument();
+  });
+
+  it('marks a distributed cache and honors showTreasure={false}', () => {
+    const distributed = {
+      ...room,
+      distributedAt: 1720000000000,
+      treasureCache: { gold: 0, items: [{ ref: 'healing-potion', name: 'Healing Potion', qty: 1 }] },
+    };
+    const { rerender } = render(<RoomDetail room={distributed} />);
+    expect(screen.getByText(/Treasure cache · distributed/)).toBeInTheDocument();
+    expect(screen.getByText(/^Distributed /)).toBeInTheDocument();
+
+    rerender(<RoomDetail room={distributed} showTreasure={false} />);
+    expect(screen.queryByText(/Treasure cache/)).not.toBeInTheDocument();
+  });
+
   it('hides the body when showBody is false and renders nothing for no room', () => {
     const { rerender, container } = render(<RoomDetail room={room} showBody={false} />);
     expect(screen.queryByText('Full room text')).not.toBeInTheDocument();

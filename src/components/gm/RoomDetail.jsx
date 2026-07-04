@@ -1,4 +1,5 @@
 import React from 'react';
+import { roomTreasureCache } from '../../utils/rooms';
 
 // Shared renderer for one imported adventure room (or a site "Features" doc),
 // used by both the World → Rooms browser and the dashboard's Current Room
@@ -11,7 +12,7 @@ const Html = ({ html, className, as: Tag = 'div', ...rest }) => (
   <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} {...rest} />
 );
 
-const RoomDetail = ({ room, showBody = true, showNotes = true }) => {
+const RoomDetail = ({ room, showBody = true, showNotes = true, showTreasure = true }) => {
   if (!room) return null;
   const {
     code,
@@ -26,6 +27,9 @@ const RoomDetail = ({ room, showBody = true, showNotes = true }) => {
     body,
     notes,
   } = room;
+
+  const cache = roomTreasureCache(room);
+  const distributed = room.distributedAt != null;
 
   return (
     <div className="gm-room-detail">
@@ -80,6 +84,31 @@ const RoomDetail = ({ room, showBody = true, showNotes = true }) => {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+      )}
+
+      {showTreasure && (cache || distributed) && (
+        <div className="gm-room-section gm-room-cache">
+          <h4>Treasure cache{distributed ? ' · distributed' : ''}</h4>
+          {cache && cache.gold > 0 && <p className="gm-room-cache-gold">{cache.gold} gp</p>}
+          {cache && cache.items.length > 0 && (
+            <ul className="gm-room-cache-items">
+              {cache.items.map((it, i) => (
+                <li key={i} className={`gm-room-cache-chip${it.ref ? '' : ' is-unmatched'}`}>
+                  <span className="gm-room-cache-chip-name">
+                    {it.name}{it.variant ? ` (${it.variant})` : ''}
+                  </span>
+                  {it.qty > 1 && <span className="gm-room-cache-chip-qty">×{it.qty}</span>}
+                  {!it.ref && <span className="gm-room-cache-chip-flag">not in catalog</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+          {distributed && (
+            <p className="gm-room-cache-stamp">
+              Distributed {new Date(room.distributedAt).toLocaleDateString()}
+            </p>
           )}
         </div>
       )}

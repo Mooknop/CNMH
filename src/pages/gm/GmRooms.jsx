@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useCurrentRoom } from '../../hooks/useCurrentRoom';
-import { groupRoomsBySite, roomMatches } from '../../utils/rooms';
+import { groupRoomsBySite, roomMatches, roomTreasureCache } from '../../utils/rooms';
 import { saveDocument } from '../../utils/gmApi';
 import RoomDetail from '../../components/gm/RoomDetail';
+import RoomTreasureEditor from '../../components/gm/RoomTreasureEditor';
 import RoomsImportButton from '../../components/gm/RoomsImportButton';
 import GmIcon from './GmIcon';
 import './gm.css';
@@ -135,6 +136,14 @@ const GmRooms = () => {
               >
                 {r.code && <span className="gm-rooms-code">{r.code}</span>}
                 <span className="gm-rooms-name">{r.name}</span>
+                {roomTreasureCache(r) && (
+                  <span
+                    className={`gm-rooms-treasure${r.distributedAt ? ' is-distributed' : ''}`}
+                    title={r.distributedAt ? 'Treasure distributed' : 'Has treasure cache'}
+                  >
+                    <GmIcon name="bag" />
+                  </span>
+                )}
                 {pinnedId === r.id && <GmIcon name="flag" className="gm-rooms-pinned" />}
               </button>
             ))}
@@ -158,8 +167,9 @@ const GmRooms = () => {
                 </button>
               )}
             </div>
-            <RoomDetail room={selected} showNotes={false} />
-            <RoomNotesEditor key={selected.id} room={selected} />
+            <RoomDetail room={selected} showNotes={false} showTreasure={false} />
+            {!selected.isFeatures && <RoomTreasureEditor key={`treasure-${selected.id}`} room={selected} />}
+            <RoomNotesEditor key={`notes-${selected.id}`} room={selected} />
           </>
         ) : (
           <p className="gm-help">Select a room.</p>

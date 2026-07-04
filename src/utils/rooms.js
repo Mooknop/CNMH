@@ -19,6 +19,19 @@ export const groupRoomsBySite = (docs) => {
   return groups;
 };
 
+// A room's structured treasure cache (#1085), normalized, or null when there's
+// nothing to show. Both the browser rail indicator and RoomDetail treat a
+// `treasureCache` with no gold and no items as "no cache" — an empty object
+// (e.g. a GM who cleared a room) shouldn't light up the sweep indicator.
+export const roomTreasureCache = (room) => {
+  const c = room && room.treasureCache;
+  if (!c) return null;
+  const items = Array.isArray(c.items) ? c.items : [];
+  const gold = Number(c.gold) || 0;
+  if (!gold && items.length === 0) return null;
+  return { gold, items };
+};
+
 // Case-insensitive match of a room doc against a search term. Covers code and
 // name plus the things a GM actually searches for mid-session — a check label
 // or skill ("stealth"), a creature/hazard name, GM notes, and the body prose
