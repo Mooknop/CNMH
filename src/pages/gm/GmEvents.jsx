@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { groupEventsByChapter, eventMatches, eventStatus, isEventHidden, STATUS_META } from '../../utils/events';
 import RoomDetail from '../../components/gm/RoomDetail';
 import RoomsImportButton from '../../components/gm/RoomsImportButton';
+import EventTracker from '../../components/gm/EventTracker';
 import './gm.css';
 
 // A small status pill for an event, in the rail and the detail bar.
@@ -112,6 +113,7 @@ const GmEvents = () => {
               <StatusBadge status={eventStatus(selected)} />
             </div>
             <RoomDetail room={selected} showNotes={false} showTreasure={false} />
+            <EventTracker key={`track-${selected.id}`} event={selected} />
           </>
         ) : (
           <p className="gm-help">Select an event.</p>

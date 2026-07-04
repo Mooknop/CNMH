@@ -7,6 +7,11 @@ vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../components/gm/RoomsImportButton', () => ({
   default: () => <div data-testid="rooms-import-button" />,
 }));
+// The tracking editor has its own test file; stub it here so its status buttons
+// don't collide with the detail-bar status badge in these browsing tests.
+vi.mock('../../components/gm/EventTracker', () => ({
+  default: ({ event }) => <div data-testid="event-tracker">{event.id}</div>,
+}));
 
 import { useContent } from '../../contexts/ContentContext';
 import GmEvents from './GmEvents';
@@ -96,5 +101,10 @@ describe('GmEvents', () => {
     renderPage();
     // Default selection "Off to the Pit" is active.
     expect(screen.getByText('Active')).toBeInTheDocument();
+  });
+
+  it('mounts the tracking editor for the selected event', () => {
+    renderPage();
+    expect(screen.getByTestId('event-tracker')).toHaveTextContent('sd4s-event-off-to-the-pit');
   });
 });
