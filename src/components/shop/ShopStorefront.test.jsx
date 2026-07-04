@@ -890,4 +890,94 @@ describe('ShopStorefront', () => {
       expect(screen.getByLabelText('shops')).toBeInTheDocument();
     });
   });
+
+  describe('sale shelf (#1137)', () => {
+    // A weapon host so a rolled rune item resolves to a runed name; the shelf is
+    // stored as concrete wares (S1) on a shop that also stocks a regular ware.
+    const longsword = { id: 'longsword', name: 'Longsword', price: 15, strikes: [{ name: 'Longsword', damage: '1d8' }], traits: ['Weapon'] };
+    const saleItems = [...items, longsword];
+    const saleStore = {
+      forge: {
+        keeper: 'The smith nods at the bargain bin.',
+        wares: [
+          { ref: 'antidote' },
+          { runeService: true, targets: ['weapon'], maxLevel: 20 },
+          { spellItem: 'scroll', maxLevel: 3 },
+        ],
+        saleShelf: [
+          { sale: 'rune', saleId: 'w1', ref: 'longsword', runes: { potency: 1, striking: 'striking', property: ['flaming'] }, fullPrice: 1000, price: 800 },
+          { sale: 'scrollpack', saleId: 'p1', rank: 1, scrolls: [{ spellRef: 'heal' }, { spellRef: 'heal' }, { spellRef: 'sleep' }, { spellRef: 'heal' }], fullPrice: 16, price: 12 },
+        ],
+      },
+    };
+    const forgeShop = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
+    const renderSaleShop = (props = {}) =>
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[forgeShop]} waresStore={saleStore}
+          items={saleItems} runes={runes} spells={spells} character={{ id: 'pellias', name: 'Pellias' }} {...props} />
+      );
+    const wares = () => screen.getByLabelText('wares');
+
+    it('renders a rune sale item with its derived name, Sale badge, and struck-through full price', () => {
+      renderSaleShop();
+      const tile = within(wares()).getByTestId('ware-sale-w1');
+      expect(tile).toHaveTextContent('+1 Striking Flaming Longsword');
+      expect(within(tile).getByTestId('sale-badge-sale-w1')).toHaveTextContent('Sale');
+      expect(within(tile).getByText('800 gp')).toBeInTheDocument();
+      const was = tile.querySelector('.ps-tile-was');
+      expect(was).toHaveTextContent('1000 gp');
+    });
+
+    it('leads the Wares grid with the sale wares (the deal is the draw)', () => {
+      renderSaleShop();
+      const tiles = wares().querySelectorAll('[data-testid^="ware-"]');
+      expect(tiles[0]).toHaveAttribute('data-testid', 'ware-sale-w1');
+      expect(tiles[1]).toHaveAttribute('data-testid', 'ware-sale-p1');
+    });
+
+    it('renders a scroll pack whose preview lists the four bundled scrolls', () => {
+      renderSaleShop();
+      const tile = within(wares()).getByTestId('ware-sale-p1');
+      expect(tile).toHaveTextContent('Scroll Pack (Rank 1)');
+      expect(within(tile).getByTestId('sale-badge-sale-p1')).toBeInTheDocument();
+      fireEvent.keyDown(tile, { key: 'Enter' });
+      const pack = within(screen.getByTestId('ware-preview')).getByTestId('ware-preview-pack');
+      const list = within(pack).getByLabelText('pack scrolls');
+      expect(within(list).getAllByText('Heal')).toHaveLength(3);
+      expect(within(list).getByText('Sleep')).toBeInTheDocument();
+    });
+
+    it('shows the discounted + struck-through price in the preview form row', () => {
+      renderSaleShop();
+      fireEvent.keyDown(within(wares()).getByTestId('ware-sale-w1'), { key: 'Enter' });
+      const forms = within(screen.getByTestId('ware-preview')).getByLabelText('forms');
+      expect(within(forms).getByText('800 gp')).toBeInTheDocument();
+      expect(forms.querySelector('.ps-preview-form-was')).toHaveTextContent('1000 gp');
+    });
+
+    it('caps a one-of-a-kind sale ware at stock 1 in the cart', () => {
+      renderSaleShop();
+      fireEvent.click(within(wares()).getByLabelText('add +1 Striking Flaming Longsword'));
+      expect(within(wares()).getByTestId('incart-sale-w1')).toHaveTextContent('in cart ×1');
+      // The cart tray's increase is disabled at the stock:1 cap.
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      expect(screen.getByLabelText('increase +1 Striking Flaming Longsword')).toBeDisabled();
+    });
+
+    it('a shop with no sale shelf shows no sale badges', () => {
+      renderShop();
+      expect(screen.queryAllByTestId(/^sale-badge-/)).toHaveLength(0);
+      expect(within(screen.getByLabelText('wares')).getByTestId('ware-antidote')).toBeInTheDocument();
+    });
+
+    it('browses correctly when the shelf sits alongside just an offering ware', () => {
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[forgeShop]}
+          waresStore={{ forge: { wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20 }], saleShelf: [saleStore.forge.saleShelf[0]] } }}
+          items={saleItems} runes={runes} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+      expect(within(screen.getByLabelText('wares')).getByTestId('ware-sale-w1')).toBeInTheDocument();
+      expect(screen.queryByText(/nothing for sale/i)).toBeNull();
+    });
+  });
 });

@@ -240,8 +240,27 @@
   display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2);
   padding: 4px var(--space-2) var(--space-2);
 }
-.ps-tile-price { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--gold-light); }
+.ps-tile-price {
+  display: flex; align-items: baseline; gap: 6px;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--gold-light);
+}
 .ps-tile-forms { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ps-ink3); }
+
+/* Sale Shelf ware (#1137): an ember ribbon top-left (clear of the top-right add
+   badge) + the full price struck through beside the discounted one. */
+.ps-tile-sale {
+  position: absolute; top: 6px; left: 6px; z-index: 1;
+  font-family: var(--font-ui); font-size: 9.5px; font-weight: 800; line-height: 1;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-radius: var(--radius-sm); padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--ember-base) 60%, transparent);
+  background: color-mix(in srgb, var(--ember-base) 22%, transparent);
+  color: var(--ember-light, var(--gold-light));
+}
+.ps-tile-was {
+  font-family: var(--font-body); font-weight: 500; font-size: 10px;
+  color: var(--ps-ink3); text-decoration: line-through;
+}
 
 /* ── Takeover preview ─────────────────────────────────────────────────────── */
 .ps-takeover {
@@ -329,8 +348,24 @@
   padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line); border-radius: 10px; background: var(--ps-screen);
 }
 .ps-preview-form-label { font-weight: 600; font-size: 12.5px; }
-.ps-preview-form-price { font-family: var(--font-display); font-weight: 700; color: var(--gold-light); }
+.ps-preview-form-price {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--font-display); font-weight: 700; color: var(--gold-light);
+}
+.ps-preview-form-was {
+  font-family: var(--font-body); font-weight: 500; font-size: 12px;
+  color: var(--ps-ink3); text-decoration: line-through;
+}
 .ps-preview-note { margin: 0; font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ps-ink3); }
+
+/* Sale Shelf scroll-pack card (#1137): the four bundled scrolls listed by name. */
+.ps-preview-pack { margin: 0; }
+.ps-preview-pack-label {
+  display: block; font-family: var(--font-ui); font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--ps-ink3);
+}
+.ps-preview-pack-list { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.ps-preview-pack-scroll { font-family: var(--font-body); font-size: 13px; line-height: 1.4; color: var(--ps-ink2); }
 
 /* Item activations in the preview — shared markup with the inventory ItemModal
    (#882), themed for the dark storefront (also inside the etch picker's rune detail, #1055 S1). */

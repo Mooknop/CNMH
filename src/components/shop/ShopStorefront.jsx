@@ -13,6 +13,7 @@ import {
   eligibleRunes,
   eligibleHostItems,
 } from '../../utils/shopUtils';
+import { resolveSaleWares } from '../../utils/saleShelf';
 import { resolveRunestone } from '../../utils/runestone';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
 import { gearTarget, gearSockets, compatibleRunes, projectStagedGear, inEtchList } from '../../utils/runeSockets';
@@ -81,17 +82,27 @@ const WareCrest = ({ group, imgClass, caseClass }) =>
     <span className={caseClass} aria-hidden="true">{firstLetter(group.name)}</span>
   );
 
-// Tile inner content, shared by the draggable (town) and static (read-only) tiles.
-const TileInner = ({ group }) => (
-  <>
-    <WareCrest group={group} imgClass="ps-tile-img" caseClass="ps-tile-case" />
-    <span className="ps-tile-name">{group.name}</span>
-    <span className="ps-tile-foot">
-      <span className="ps-tile-price">{group.formCount > 1 ? `from ${group.from}` : group.from} gp</span>
-      {group.formCount > 1 && <span className="ps-tile-forms">{group.formCount} forms</span>}
-    </span>
-  </>
-);
+// Tile inner content, shared by the draggable (town) and static (read-only)
+// tiles. A Sale Shelf ware (#1137) wears a "Sale" ribbon and shows its full
+// price struck through beside the discounted one.
+const TileInner = ({ group }) => {
+  const head = group.forms[0];
+  const onSale = !!head.sale && head.saleFullPrice != null && head.saleFullPrice !== group.from;
+  return (
+    <>
+      <WareCrest group={group} imgClass="ps-tile-img" caseClass="ps-tile-case" />
+      {head.sale && <span className="ps-tile-sale" data-testid={`sale-badge-${group.ref}`}>Sale</span>}
+      <span className="ps-tile-name">{group.name}</span>
+      <span className="ps-tile-foot">
+        <span className="ps-tile-price">
+          {onSale && <span className="ps-tile-was">{head.saleFullPrice} gp</span>}
+          {group.formCount > 1 ? `from ${group.from}` : group.from} gp
+        </span>
+        {group.formCount > 1 && <span className="ps-tile-forms">{group.formCount} forms</span>}
+      </span>
+    </>
+  );
+};
 
 // Town tile: drag to the cart bar (drops the cheapest form) or tap to preview.
 const DraggableTile = ({ group, onSelect }) => {
@@ -237,7 +248,7 @@ const SpellcastingTab = ({ groups, town, qtyByKey, onSelect, onAdd }) => {
 
 // Takeover preview: per-form rows. In town each row adds that form (disabled at
 // stock cap, "×N in cart" once added); read-only shows the not-here-to-buy note.
-const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
+const Takeover = ({ group, town, qtyByKey, spellMap, onAdd, onBack }) => {
   const head = group.forms[0];
   return (
     <div className="ps-takeover" data-testid="ware-preview">
@@ -271,7 +282,23 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
                 <RuneMechanics rune={head.runestone.rune} />
               </div>
             )}
-            {group.description && <p className="ps-preview-desc">{group.description}</p>}
+            {/* A Sale Shelf scroll pack (#1137) lists its four scrolls by name +
+                rank — no full spell-mechanics (the Spellcasting tab covers that);
+                its bundle description is subsumed by the list. */}
+            {head.scrolls ? (
+              <div className="ps-preview-pack" data-testid="ware-preview-pack">
+                <span className="ps-preview-pack-label">A pack of four scrolls</span>
+                <ul className="ps-preview-pack-list" aria-label="pack scrolls">
+                  {head.scrolls.map((s, i) => (
+                    <li key={`${s.spellRef}-${i}`} className="ps-preview-pack-scroll">
+                      {(spellMap && spellMap.get(String(s.spellRef))?.name) || '(unknown spell)'}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              group.description && <p className="ps-preview-desc">{group.description}</p>
+            )}
             <ItemActivations item={head} />
           </>
         )}
@@ -281,7 +308,12 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
             return (
               <li key={f.wareKey} className="ps-preview-form">
                 <span className="ps-preview-form-label">{formLabel(f)}</span>
-                <span className="ps-preview-form-price">{f.price} gp</span>
+                <span className="ps-preview-form-price">
+                  {f.sale && f.saleFullPrice != null && f.saleFullPrice !== f.price && (
+                    <span className="ps-preview-form-was">{f.saleFullPrice} gp</span>
+                  )}
+                  {f.price} gp
+                </span>
                 {town && (
                   qty > 0 ? (
                     <span className="ps-preview-form-incart">in cart ×{qty}</span>
@@ -663,9 +695,22 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     );
     return out;
   }, [selected, waresStore, resolved, items, runes, catalogMap]);
+  // GM-rolled Sale Shelf wares (#1137): one-of-a-kind discounted goods baked into
+  // the shop entry (S1 engine). They LEAD the Wares grid — the deal is the draw —
+  // each a distinct id so groupWares keeps it a single-form group, capped at its
+  // stock:1 by the existing cart logic. Live in Wares, never the service tabs.
+  const saleWares = useMemo(
+    () => (selected ? resolveSaleWares(selected.id, waresStore, catalogMap, runeMap, spells) : []),
+    [selected, waresStore, catalogMap, runeMap, spells]
+  );
   const wareGroups = useMemo(
-    () => groupWares([...resolved.filter((w) => !isRuneWare(w)), ...hostWares]),
-    [resolved, isRuneWare, hostWares]
+    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares]),
+    [saleWares, resolved, isRuneWare, hostWares]
+  );
+  // Spell docs by id — for the scroll-pack preview card (names + rank, #1137).
+  const spellMap = useMemo(
+    () => new Map((Array.isArray(spells) ? spells : []).map((s) => [String(s.id), s])),
+    [spells]
   );
   // Rune wares for the Runesmithing tab = hand-stocked runes (resolved) PLUS the
   // generative rune-service offerings (#982 G3) expanded into runestones and
@@ -986,7 +1031,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
             )}
 
             {selectedGroup && (
-              <Takeover group={selectedGroup} town={town} qtyByKey={qtyByKey} onAdd={addForm}
+              <Takeover group={selectedGroup} town={town} qtyByKey={qtyByKey} spellMap={spellMap} onAdd={addForm}
                 onBack={() => setSelectedGroup(null)} />
             )}
           </>
