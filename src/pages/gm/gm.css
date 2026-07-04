@@ -2220,7 +2220,32 @@ p.gm-live-note {
   color: var(--shell-text-tertiary);
   cursor: pointer;
 }
-.gm-rooms-link.is-hidden .gm-rooms-name { color: var(--shell-text-tertiary); font-style: italic; }
+.gm-rooms-link-row.is-hidden .gm-rooms-name { color: var(--shell-text-tertiary); font-style: italic; }
+/* Rail row = selection button + a bulk show/hide checkbox (#1112). */
+.gm-rooms-link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.gm-rooms-link-row .gm-rooms-link { flex: 1; min-width: 0; }
+.gm-events-track-check { flex: none; cursor: pointer; margin-right: 4px; }
+.gm-rooms-link-row.is-pending { background: var(--accent-tint); border-radius: var(--radius-sm); }
+.gm-events-track-hint { margin: var(--space-2) 0 0; }
+/* Batch save bar for queued show/hide edits. */
+.gm-events-bulk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-inset);
+  border: 1px solid var(--accent-outline);
+  border-radius: var(--radius-sm);
+}
+.gm-events-bulk-count { font-size: 0.8rem; font-weight: 600; color: var(--shell-text-secondary); }
+.gm-events-bulk-bar .btn-primary,
+.gm-events-bulk-bar .btn-secondary { padding: 4px 12px; font-size: 0.8rem; }
 .gm-event-dot {
   flex: none;
   width: 8px;
