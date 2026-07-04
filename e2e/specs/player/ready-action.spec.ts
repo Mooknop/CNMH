@@ -63,4 +63,52 @@ test.describe('Ready an Action', () => {
     await page.getByRole('button', { name: 'Cancel readied action' }).click();
     await session.expectSent(`cnmh_readied_${CHAR_ID}`, (v) => v === null);
   });
+
+  // #1131 item 1 resolution: cnmh_readied DOES hydrate from FULL_STATE. The
+  // earlier "didn't hydrate" observation was TurnTrackerPanel's turn-begin
+  // sweep: seeding the PC as current turn WITHOUT a matching turnState.turnToken
+  // reads as a turn that just began, which lapses the readied action by design.
+  // These two tests pin both halves.
+  test('a standing readied action hydrates mid-turn (reconnect shape)', async ({ page }) => {
+    await mockSession(page, {
+      seed: {
+        cnmh_encounter_global: activeEncounter(CHAR_ID, CHAR_NAME),
+        // Matching token = the turn was already in progress, as a real client
+        // rejoining mid-turn would have persisted.
+        [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState('1:0'),
+        [`cnmh_readied_${CHAR_ID}`]: { actionName: 'Raise a Shield', trigger: '', round: 1, ts: 1 },
+      },
+    });
+
+    await page.goto(`/character/${CHAR_ID}`);
+    await expectSheet(page);
+    await openEncounterTab(page);
+
+    const status = page.getByRole('status');
+    await expect(status).toContainText('Readied');
+    await expect(status).toContainText('Raise a Shield');
+  });
+
+  test('a readied action lapses when the owner\'s turn begins (token mismatch)', async ({ page }) => {
+    const session = await mockSession(page, {
+      seed: {
+        cnmh_encounter_global: activeEncounter(CHAR_ID, CHAR_NAME),
+        // No turnToken → the panel treats this as the turn starting NOW; a
+        // declaration left over from last round expires (#501).
+        [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState(),
+        [`cnmh_readied_${CHAR_ID}`]: { actionName: 'Raise a Shield', trigger: '', round: 1, ts: 1 },
+      },
+    });
+
+    await page.goto(`/character/${CHAR_ID}`);
+    await expectSheet(page);
+    await openEncounterTab(page);
+
+    await session.expectSent(`cnmh_readied_${CHAR_ID}`, (v) => v === null);
+    await session.expectSent(
+      'cnmh_encounter_global',
+      (v) => Array.isArray(v?.log) && v.log.some((e: any) => String(e.text).includes('readied action (Raise a Shield) expired')),
+    );
+    await expect(page.getByRole('button', { name: 'Ready an action' })).toBeVisible();
+  });
 });
