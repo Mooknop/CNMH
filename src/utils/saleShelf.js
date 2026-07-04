@@ -321,6 +321,11 @@ const resolveRuneSaleWare = (w, catalogMap, runeMap) => {
     name = buildWeaponName({ potency: runes.potency || 0, striking: runes.striking, properties: propNames, material: base.material, base: base.name });
   } else if (kind === 'armor') {
     name = buildArmorName({ potency: runes.potency || 0, resilient: runes.resilient, properties: propNames, material: base.material, base: base.name });
+  } else if (kind === 'ring' && propNames.length) {
+    // A ring has no fundamental potency, so its runes never enter a #548-style
+    // name. Prefix them onto the graded base so the shelf reads what it is —
+    // e.g. "Spellstoring Power Ring (Iron)".
+    name = `${propNames.join(' ')} ${base.name}`;
   } else if (kind === 'accessory' && runes.accessory != null) {
     const rn = runeName(runes.accessory, runeMap, fundMap);
     if (rn) name = `${rn} ${base.name}`;
