@@ -14,6 +14,7 @@ import {
   buildHazardIndex,
   transformDump,
   mergeGmFields,
+  isChapterJournal,
   classifyLootItem,
   coinValueGp,
   extractTreasureCache,
@@ -299,6 +300,46 @@ describe('mergeGmFields', () => {
     expect(merged.find((d) => d.id === 'a1').treasureCache.gold).toBe(5);
     expect(merged.every((d) => d.notes === '')).toBe(true);
   });
+
+  it('preserves every event-tracking field over the fresh transform (#1112)', () => {
+    // A re-import re-stamps fresh tracking defaults; the GM's live progress
+    // must win — including deliberately falsy values (tracked:false, an empty
+    // steps the GM cleared) that a truthiness check would drop.
+    const freshEvents = [
+      { id: 'e1', name: 'Rumors', tracked: true, status: 'upcoming', steps: [], scheduledFor: '', outcome: '', notes: '' },
+    ];
+    const existing = [
+      {
+        id: 'e1',
+        tracked: false, // GM hid this connective page
+        status: 'resolved',
+        steps: [{ label: 'Find the witness', done: true }],
+        scheduledFor: 'Rova 12',
+        outcome: 'The PCs uncovered the copycat.',
+        notes: 'Ties back to Ch 1.',
+      },
+    ];
+    const merged = mergeGmFields(freshEvents, existing);
+    expect(merged[0]).toMatchObject({
+      tracked: false,
+      status: 'resolved',
+      steps: [{ label: 'Find the witness', done: true }],
+      scheduledFor: 'Rova 12',
+      outcome: 'The PCs uncovered the copycat.',
+      notes: 'Ties back to Ch 1.',
+    });
+  });
+});
+
+describe('isChapterJournal', () => {
+  it('matches "Ch N:" chapter journals only', () => {
+    expect(isChapterJournal('Ch 2: Strange Times in Sandpoint')).toBe(true);
+    expect(isChapterJournal('Ch 9: The Red Bishop’s Gift')).toBe(true);
+    expect(isChapterJournal('Sandpoint Gazetteer A Doomed Town')).toBe(false);
+    expect(isChapterJournal('Frontmatter')).toBe(false);
+    expect(isChapterJournal('Art Gallery')).toBe(false);
+    expect(isChapterJournal('')).toBe(false);
+  });
 });
 
 describe('transformDump', () => {
@@ -327,6 +368,13 @@ describe('transformDump', () => {
             { pageNumber: 'A3', pageNumberClass: 'location' },
           ),
           page('Getting Started', 900, '<p>Some narrative that is not a room.</p>'),
+          // A non-room, non-Features page in a chapter journal → an event.
+          page(
+            'Town Rumors',
+            2000,
+            '<h2 class="no-toc">Town Rumors</h2>' +
+              '<p>Ask around with a @Check[diplomacy|dc:15|traits:secret,action:gather-information|name:Gather Information] check.</p>',
+          ),
         ],
       },
       {
@@ -337,10 +385,15 @@ describe('transformDump', () => {
           page('K. Abandoned Village', 5000, '<h2 class="no-toc">K. Abandoned Village</h2><p>A ruin with a @UUID[Actor.haz1]{Web Deadfall}.</p>'),
         ],
       },
+      {
+        // A non-chapter journal: its narrative pages must NOT become events.
+        name: 'Sandpoint Gazetteer A Doomed Town',
+        pages: [page('The Rusty Dragon', 7000, '<h2 class="no-toc">The Rusty Dragon</h2><p>A famous inn.</p>')],
+      },
     ],
   };
 
-  const { rooms, features, stats } = transformDump(dump);
+  const { rooms, features, events, stats } = transformDump(dump);
 
   it('emits a features doc per site and skips non-room narrative pages', () => {
     expect(features).toHaveLength(1);
@@ -378,5 +431,34 @@ describe('transformDump', () => {
     const k = rooms.find((r) => r.code === 'K');
     expect(k).toMatchObject({ id: 'sd4s-k', name: 'Abandoned Village', site: 'Ch 9: Finale' });
     expect(k.hazards).toEqual([{ name: 'Web Deadfall', level: 3, stealthDc: 13, complex: false }]);
+  });
+
+  it('emits chapter-journal events (not rooms/features) with fresh tracking defaults', () => {
+    // "Getting Started" (narrative) and "Town Rumors" — both non-room,
+    // non-Features pages in a chapter journal. The Gazetteer inn is excluded.
+    expect(stats.events).toBe(2);
+    expect(events.map((e) => e.name).sort()).toEqual(['Getting Started', 'Town Rumors']);
+    expect(events.some((e) => e.name === 'The Rusty Dragon')).toBe(false); // non-chapter journal
+
+    const rumors = events.find((e) => e.name === 'Town Rumors');
+    expect(rumors).toMatchObject({
+      id: 'sd4s-event-town-rumors',
+      chapter: 'Ch 1: Test',
+      sort: 2000,
+      tracked: true,
+      status: 'upcoming',
+      steps: [],
+      scheduledFor: '',
+      outcome: '',
+      notes: '',
+    });
+    // The shared extractors run on event bodies too — the secret check parses.
+    expect(rumors.checks).toHaveLength(1);
+    expect(rumors.checks[0]).toMatchObject({ statistic: 'diplomacy', dc: 15, secret: true, label: 'Gather Information' });
+  });
+
+  it('does not classify a room or a Features page as an event', () => {
+    expect(events.some((e) => e.name === 'Shrine')).toBe(false); // it's a room
+    expect(events.some((e) => /Features/.test(e.name))).toBe(false);
   });
 });

@@ -159,6 +159,7 @@ export const ContentProvider = ({ children }) => {
   const serverTheme = serverList('theme');
   const serverMonsters = serverList('monster');
   const serverRooms = serverList('room');
+  const serverEvents = serverList('event');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -244,6 +245,9 @@ export const ContentProvider = ({ children }) => {
     // public repo), so there's no bundled fallback — an empty array until the
     // GM imports rooms via scripts/importAdventureRooms.js.
     rooms: serverRooms,
+    // Chapter-event tracker (#1112). Same capture-only, live-DO-only shape as
+    // rooms — imported from the same Foundry journal dump, empty until then.
+    events: serverEvents,
     refresh: loadSnapshot,
   };
 
@@ -271,6 +275,7 @@ const NOOP_CONTENT = {
   theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
   monsters: [],
   rooms: [],
+  events: [],
   refresh: () => Promise.resolve(),
 };
 
