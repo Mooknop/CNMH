@@ -18,10 +18,12 @@ let acquired = [];
 let removed = [];
 let orders = [];
 let campaign = { locationLoreId: 'sandpoint' };
+let shops = {};
 const setGold = vi.fn((n) => { gold = typeof n === 'function' ? n(gold) : n; });
 const setAcquired = vi.fn((n) => { acquired = typeof n === 'function' ? n(acquired) : n; });
 const setRemoved = vi.fn((n) => { removed = typeof n === 'function' ? n(removed) : n; });
 const setOrders = vi.fn((n) => { orders = typeof n === 'function' ? n(orders) : n; });
+const setShops = vi.fn((n) => { shops = typeof n === 'function' ? n(shops) : n; });
 vi.mock('./useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_gold_')) return [gold, setGold];
@@ -29,6 +31,7 @@ vi.mock('./useSyncedState', () => ({
     if (String(key).startsWith('cnmh_removed_')) return [removed, setRemoved];
     if (String(key).startsWith('cnmh_runework_')) return [orders, setOrders];
     if (String(key) === 'cnmh_campaign_global') return [campaign, vi.fn()];
+    if (String(key) === 'cnmh_shops_global') return [shops, setShops];
     return [null, vi.fn()];
   },
 }));
@@ -41,10 +44,28 @@ const flaming = { id: 'flaming', type: 'property', name: 'Flaming', price: 500 }
 const potency = { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 };
 
 beforeEach(() => {
-  gold = 1000; acquired = []; removed = []; orders = []; uidSeq = 0;
+  gold = 1000; acquired = []; removed = []; orders = []; uidSeq = 0; shops = {};
   campaign = { locationLoreId: 'sandpoint' };
   vi.clearAllMocks();
   session = { connected: true, foundryConnected: true };
+});
+
+// A resolved Sale Shelf ware as it reaches checkout (carries a saleId + wareKey).
+const saleWare = (over) => ({
+  item: {
+    sale: 'rune', saleId: 'w1', ref: 'longsword', name: '+1 Flaming Longsword',
+    runes: { potency: 1, property: ['flaming'] }, price: 800, saleFullPrice: 1000, stock: 1, wareKey: 'sale:w1',
+    ...over,
+  },
+  qty: 1,
+});
+const packWare = () => ({
+  item: {
+    sale: 'scrollpack', saleId: 'p1', name: 'Scroll Pack (Rank 1)',
+    scrolls: [{ spellRef: 'heal' }, { spellRef: 'heal' }, { spellRef: 'bless' }, { spellRef: 'heal' }],
+    price: 12, saleFullPrice: 16, stock: 1, wareKey: 'sale:p1',
+  },
+  qty: 1,
 });
 
 describe('useShopCheckout', () => {
@@ -103,5 +124,45 @@ describe('useShopCheckout', () => {
     session = { connected: true, foundryConnected: false };
     const { result: r2 } = renderHook(() => useShopCheckout('a'));
     expect(r2.current.checkout({ purchases: [ware(3)] })).toBeNull();
+  });
+
+  describe('Sale Shelf (#1138)', () => {
+    it('expands a bought scroll pack into four loose scroll entries', () => {
+      shops = { forge: { saleShelf: [{ sale: 'scrollpack', saleId: 'p1' }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [packWare()], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ total: 12, wareCount: 4 });
+      expect(acquired).toHaveLength(4);
+      acquired.forEach((e) => expect(e.scroll).toBeTruthy());
+      expect(gold).toBe(988);
+    });
+
+    it('lands a runed sale item as one ref+runes entry and strikes it from the shelf', () => {
+      shops = { forge: { saleShelf: [{ sale: 'rune', saleId: 'w1' }, { sale: 'rune', saleId: 'w2' }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [saleWare()], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ total: 800, wareCount: 1 });
+      expect(acquired[0]).toMatchObject({ ref: 'longsword', runes: { potency: 1, property: ['flaming'] } });
+      expect(acquired[0]).not.toHaveProperty('sale');
+      // Only the bought saleId leaves the shelf; the other deal stays.
+      expect(setShops).toHaveBeenCalledTimes(1);
+      expect(shops.forge.saleShelf).toEqual([{ sale: 'rune', saleId: 'w2' }]);
+    });
+
+    it('rejects (writes nothing) when a bought deal is already gone from the shelf', () => {
+      shops = { forge: { saleShelf: [{ sale: 'rune', saleId: 'other' }] } }; // w1 already gone
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [saleWare()], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toEqual({ rejected: 'stale-shelf' });
+      expect(setGold).not.toHaveBeenCalled();
+      expect(setAcquired).not.toHaveBeenCalled();
+      expect(setShops).not.toHaveBeenCalled();
+    });
+
+    it('does not touch the shop store for a regular (non-sale) checkout', () => {
+      const { result } = renderHook(() => useShopCheckout('a'));
+      result.current.checkout({ purchases: [ware(3)], shopTitle: 'Shop', loreId: 'forge' });
+      expect(setShops).not.toHaveBeenCalled();
+    });
   });
 });

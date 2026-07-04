@@ -979,5 +979,26 @@ describe('ShopStorefront', () => {
       expect(within(screen.getByLabelText('wares')).getByTestId('ware-sale-w1')).toBeInTheDocument();
       expect(screen.queryByText(/nothing for sale/i)).toBeNull();
     });
+
+    it('passes the shop loreId through checkout (for the shelf decrement)', () => {
+      mockGold = 2000; // afford the 800 gp sale weapon
+      renderSaleShop();
+      fireEvent.click(within(wares()).getByLabelText('add +1 Striking Flaming Longsword'));
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      expect(mockCheckout).toHaveBeenCalledWith(expect.objectContaining({ loreId: 'forge' }));
+    });
+
+    it('surfaces a stale-shelf rejection without clearing the cart', () => {
+      mockGold = 2000; // afford it, so only the stale guard can reject
+      mockCheckout.mockReturnValueOnce({ rejected: 'stale-shelf' });
+      renderSaleShop();
+      fireEvent.click(within(wares()).getByLabelText('add +1 Striking Flaming Longsword'));
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      expect(screen.getByTestId('shop-toast')).toHaveTextContent(/that deal is gone/i);
+      // Cart kept — the rejected buy didn't empty it.
+      expect(screen.getByTestId('cart-bar')).toHaveTextContent('1 item');
+    });
   });
 });

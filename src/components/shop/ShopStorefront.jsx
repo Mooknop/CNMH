@@ -864,7 +864,12 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   // work orders, pulls the handed-over gear.
   const checkout = () => {
     const purchases = cart.map((l) => ({ item: formsByKey.get(l.id), qty: l.qty })).filter((p) => p.item);
-    const result = commitCheckout({ purchases, handoffs: stagedHandoffs, shopTitle: selected?.title });
+    const result = commitCheckout({ purchases, handoffs: stagedHandoffs, shopTitle: selected?.title, loreId: selected?.id });
+    // A Sale Shelf deal bought out from under you (#1138) — reject, keep the cart.
+    if (result && result.rejected === 'stale-shelf') {
+      setToast('That deal is gone — someone grabbed it first. Refresh your cart.');
+      return;
+    }
     if (result) {
       setCart([]);
       setStaged({});
