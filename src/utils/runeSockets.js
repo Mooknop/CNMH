@@ -20,18 +20,23 @@ import { propertySlotCapacity } from './weaponRunes';
 import { armorPropertySlotCapacity } from './armorRunes';
 import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
+import { REINFORCING } from './shieldRunes';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
 // socket helpers + their callers keep importing it from one place.
 export { runeTarget };
 
-/** What a piece of gear is for rune purposes: 'weapon' (has Strikes), 'armor'
- *  (has an armor block), 'ring' (a power ring — #967 R4), else null (not
- *  runesmithable). The power ring is neither weapon nor armor, so it's detected
- *  by the explicit `powerRing` marker the R1 catalog item carries. */
+/** What a piece of gear is for rune purposes: 'shield' (has a shield block),
+ *  'weapon' (has Strikes), 'armor' (has an armor block), 'ring' (a power ring —
+ *  #967 R4), else null (not runesmithable). The power ring is neither weapon nor
+ *  armor, so it's detected by the explicit `powerRing` marker the R1 catalog item
+ *  carries. Shield is checked BEFORE strikes (#1165 S2): a shield with a bash
+ *  `strikes` block is a shield target (one reinforcing socket), NOT a weapon —
+ *  its bash no longer surfaces weapon potency/striking sockets. */
 export const gearTarget = (item) => {
   if (!item || typeof item !== 'object') return null;
   if (item.powerRing) return 'ring';
+  if (item.shield) return 'shield';
   if (item.strikes) return 'weapon';
   if (isArmor(item)) return 'armor';
   return null;
@@ -46,7 +51,8 @@ const runesOf = (item) => (item && item.runes && typeof item.runes === 'object' 
 const propertyCapacity = (item, target) =>
   target === 'armor' ? armorPropertySlotCapacity(runesOf(item))
     : target === 'ring' ? ringSocketCapacity(item)
-      : propertySlotCapacity(runesOf(item));
+      : target === 'shield' ? 0 // shields hold no property runes — only reinforcing
+        : propertySlotCapacity(runesOf(item));
 
 /**
  * Derive the socket view for a piece of gear, in display order: potency, the
@@ -61,7 +67,11 @@ export const gearSockets = (item) => {
   const target = gearTarget(item);
   const runes = runesOf(item);
   const sockets = [];
-  if (target) {
+  if (target === 'shield') {
+    // A shield has exactly ONE fundamental socket — reinforcing — and no potency
+    // or property sockets (#1165). The accessory socket (below) rides orthogonally.
+    sockets.push({ type: 'reinforcing', target: 'shield', filled: !!runes.reinforcing, value: runes.reinforcing || null });
+  } else if (target) {
     const property = Array.isArray(runes.property) ? runes.property : [];
     const cap = propertyCapacity(item, target);
 
@@ -102,7 +112,7 @@ export const gearSockets = (item) => {
  */
 export const projectStagedGear = (gear, stagedRunes) => {
   if (!gear || !stagedRunes || typeof stagedRunes !== 'object') return gear;
-  return ['potency', 'striking', 'resilient'].reduce((g, key) => {
+  return ['potency', 'striking', 'resilient', 'reinforcing'].reduce((g, key) => {
     const rune = stagedRunes[key];
     return rune ? applyRune(g, rune) || g : g;
   }, gear);
@@ -129,6 +139,12 @@ export const compatibleRunes = (item, socketType, stock) => {
     if (socketType === 'property') return r.type === 'property';
     if (r.type !== 'fundamental' || r.fundamental !== socketType) return false;
     if (socketType === 'potency') return (r.tier || 0) > (runes.potency || 0);
+    if (socketType === 'reinforcing') {
+      // Reinforcing upgrades by RANK (like potency), not by !== — a higher grade
+      // replaces a lower one; same/lower grades don't qualify.
+      const cur = REINFORCING[runes.reinforcing]?.rank || 0;
+      return (REINFORCING[r.tierKey]?.rank || 0) > cur;
+    }
     return runes[socketType] !== r.tierKey; // striking | resilient differs from equipped
   });
 };
@@ -181,6 +197,11 @@ export const applyRune = (gear, rune) => {
   } else if (rune.type === 'fundamental' && rune.fundamental === 'resilient' && target === 'armor') {
     if (runes.resilient === rune.tierKey) return null;
     nextRunes = { ...runes, resilient: rune.tierKey };
+  } else if (rune.type === 'fundamental' && rune.fundamental === 'reinforcing' && target === 'shield') {
+    // Reinforcing sets the single fundamental socket; only a rank upgrade applies.
+    const cur = REINFORCING[runes.reinforcing]?.rank || 0;
+    if ((REINFORCING[rune.tierKey]?.rank || 0) <= cur) return null;
+    nextRunes = { ...runes, reinforcing: rune.tierKey };
   } else {
     return null;
   }

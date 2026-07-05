@@ -24,6 +24,56 @@ describe('gearTarget / runeTarget', () => {
     expect(runeTarget(vitalizing)).toBe('weapon');
     expect(runeTarget(slick)).toBe('armor');
   });
+  it('classifies a shield as target "shield" — even one carrying a bash strikes block', () => {
+    expect(gearTarget({ name: 'Steel Shield', shield: { hardness: 5 } })).toBe('shield');
+    // A shield-bash weapon block no longer wins: shield is checked before strikes.
+    expect(gearTarget({ name: 'Spiked Steel Shield', shield: { hardness: 5 }, strikes: [{}] })).toBe('shield');
+    expect(runeTarget(reinfMinor)).toBe('shield');
+  });
+});
+
+// Reinforcing (shield fundamental) rune docs — S5 authors the real catalog; these
+// fixtures mirror their shape: fundamental + explicit target 'shield' + tierKey.
+const reinfMinor = { id: 'reinforcing-minor', type: 'fundamental', fundamental: 'reinforcing', target: 'shield', tierKey: 'minor' };
+const reinfModerate = { id: 'reinforcing-moderate', type: 'fundamental', fundamental: 'reinforcing', target: 'shield', tierKey: 'moderate' };
+
+describe('shield reinforcing socket (#1165 S2)', () => {
+  const shield = (runes) => ({ uid: 's1', name: 'Steel Shield', shield: { hardness: 5, health: 20, breakThreshold: 10 }, runes });
+
+  it('gearSockets: one reinforcing socket (+ the orthogonal accessory socket), no potency/property', () => {
+    // A shield is a dual host: reinforcing (its only fundamental) + the accessory
+    // socket every shield carries (#1033). No potency or property sockets.
+    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
+    const filled = gearSockets(shield({ reinforcing: 'lesser' }))[0];
+    expect(filled).toMatchObject({ type: 'reinforcing', target: 'shield', filled: true, value: 'lesser' });
+  });
+
+  it('compatibleRunes: rank-based upgrade only (higher grade replaces lower)', () => {
+    const stock = [reinfMinor, reinfModerate, striking, slick];
+    // Empty shield: any reinforcing grade qualifies; weapon/armor runes never do.
+    expect(compatibleRunes(shield({}), 'reinforcing', stock)).toEqual([reinfMinor, reinfModerate]);
+    // A moderate shield: minor is a downgrade (excluded), moderate is same rank (excluded).
+    expect(compatibleRunes(shield({ reinforcing: 'moderate' }), 'reinforcing', stock)).toEqual([]);
+    // A minor shield: only the higher grade qualifies.
+    expect(compatibleRunes(shield({ reinforcing: 'minor' }), 'reinforcing', stock)).toEqual([reinfModerate]);
+  });
+
+  it('applyRune: sets/upgrades reinforcing, rejects non-upgrades and wrong-target runes', () => {
+    const applied = applyRune(shield({}), reinfMinor);
+    expect(applied.runes).toEqual({ reinforcing: 'minor' });
+    expect(applied.uid).not.toBe('s1'); // fresh uid
+    // Upgrade minor → moderate.
+    expect(applyRune(shield({ reinforcing: 'minor' }), reinfModerate).runes).toEqual({ reinforcing: 'moderate' });
+    // Downgrade / same-grade / weapon rune all reject.
+    expect(applyRune(shield({ reinforcing: 'moderate' }), reinfMinor)).toBeNull();
+    expect(applyRune(shield({ reinforcing: 'moderate' }), reinfModerate)).toBeNull();
+    expect(applyRune(shield({}), striking)).toBeNull();
+  });
+
+  it('projectStagedGear folds a staged reinforcing rune onto the socket board', () => {
+    const projected = projectStagedGear(shield({}), { reinforcing: reinfModerate });
+    expect(gearSockets(projected)[0]).toMatchObject({ filled: true, value: 'moderate' });
+  });
 });
 
 describe('gearSockets', () => {
@@ -254,8 +304,10 @@ describe('accessory socket + etch list (#1033 S5)', () => {
     expect(gearSockets(explorers).map((s) => s.type)).toEqual(['potency', 'resilient', 'property', 'accessory']);
   });
 
-  it('derived tags open the socket too (a shield); invested/untagged gear gets none', () => {
-    expect(gearSockets({ uid: 'b1', name: 'Buckler', shield: { hardness: 3 } }).map((s) => s.type)).toEqual(['accessory']);
+  it('a shield is a dual host: reinforcing socket + the accessory socket; invested/untagged gear gets none', () => {
+    // Shield now classifies as gearTarget 'shield' (#1165), so a buckler carries
+    // its reinforcing socket AND — as a derived accessory host — the accessory socket.
+    expect(gearSockets({ uid: 'b1', name: 'Buckler', shield: { hardness: 3 } }).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
     expect(gearSockets({ uid: 'x1', name: 'Cloak of Repute', accessoryTags: ['cloak'], traits: ['Invested'] })).toEqual([]);
     expect(gearSockets({ name: 'Rope', weight: 1 })).toEqual([]);
   });
