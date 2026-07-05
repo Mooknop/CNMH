@@ -9,7 +9,7 @@
 
 // Buyable fundamental-rune ITEM-catalog entries (the +1 counterparts) whose ids
 // don't carry `armorRune` — listed so isRuneItem still catches them.
-export const FUNDAMENTAL_RUNE_ITEM_IDS = new Set(['weapon-potency', 'striking', 'armor-potency', 'resilient']);
+export const FUNDAMENTAL_RUNE_ITEM_IDS = new Set(['weapon-potency', 'striking', 'armor-potency', 'resilient', 'reinforcing']);
 
 // A rune's target slot: explicit `target` wins; else armor when `armorRune`, else
 // weapon. Returns null for a non-object.
