@@ -1068,4 +1068,61 @@ describe('GmItems', () => {
       });
     });
   });
+
+  describe('shield runes (#1165 S3)', () => {
+    const steelShield = {
+      id: 'steel-shield', name: 'Steel Shield', price: 2,
+      shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 },
+    };
+    const spikedShield = {
+      id: 'spiked-steel-shield', name: 'Spiked Steel Shield', price: 5,
+      shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 },
+      strikes: { name: 'Shield Bash', damage: '1d6', damageType: 'piercing', proficiency: 'martial', type: 'melee', actionCount: 1 },
+    };
+    const shieldContent = (extra = []) =>
+      useContent.mockReturnValue({ items: [steelShield, ...extra], spells, images: [], runes: [] });
+
+    it('shows the reinforcing dropdown, not the weapon/armor rune UI', () => {
+      shieldContent();
+      render(<GmItems />);
+      selectItem('Steel Shield');
+      const form = screen.getByTestId('item-form-steel-shield');
+      expect(within(form).getByTestId('item-shield-rune')).toBeInTheDocument();
+      expect(within(form).getByLabelText('rune-reinforcing')).toBeInTheDocument();
+      // No potency/striking/resilient sockets on a shield.
+      expect(within(form).queryByLabelText('rune-potency')).not.toBeInTheDocument();
+      expect(within(form).queryByLabelText('rune-striking')).not.toBeInTheDocument();
+      expect(within(form).queryByTestId('item-runes')).not.toBeInTheDocument();
+    });
+
+    it('previews resolved name + durability and saves runes.reinforcing', async () => {
+      shieldContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Steel Shield');
+      const form = screen.getByTestId('item-form-steel-shield');
+      fireEvent.change(within(form).getByLabelText('rune-reinforcing'), { target: { value: 'minor' } });
+      // Additive-with-cap over the steel base → H8/HP64/BT32, Remaster name.
+      expect(within(form).getByTestId('item-shield-preview'))
+        .toHaveTextContent('Minor Reinforcing Steel Shield · Hardness 8 / HP 64 / BT 32 · 77 gp');
+
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const saved = saveDocument.mock.calls[0][2];
+      expect(saved.runes).toEqual({ reinforcing: 'minor' });
+      // The base shield stat block round-trips via the raw-JSON box.
+      expect(saved.shield).toEqual({ hardness: 5, health: 20, breakThreshold: 10, bonus: 2 });
+    });
+
+    it('classifies a bash-carrying shield as a shield (reinforcing UI, no weapon runes)', () => {
+      shieldContent([spikedShield]);
+      render(<GmItems />);
+      selectItem('Spiked Steel Shield');
+      const form = screen.getByTestId('item-form-spiked-steel-shield');
+      expect(within(form).getByLabelText('rune-reinforcing')).toBeInTheDocument();
+      // The bash strikes block must NOT surface the weapon-rune UI.
+      expect(within(form).queryByTestId('item-runes')).not.toBeInTheDocument();
+      expect(within(form).queryByLabelText('rune-striking')).not.toBeInTheDocument();
+    });
+  });
 });
