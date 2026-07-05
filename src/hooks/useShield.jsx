@@ -3,7 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
-import { resolveShieldBlock } from '../utils/shieldRunes';
+import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -51,7 +51,9 @@ export const useShield = (charId, inventory = []) => {
     // Overlay the session HP if a block has been recorded.
     const liveHp = shieldState?.[entry.uid]?.hp;
     const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
-    return { uid: entry.uid, name: entry.name, shield, maxHp: base.hp };
+    // Resolved Remaster name ("Minor Reinforcing Steel Shield") for every held-
+    // shield surface; a non-reinforced shield keeps its own name (#1165 S4).
+    return { uid: entry.uid, name: shieldDisplayName(entry), shield, maxHp: base.hp };
   }, [inventory, shieldState]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;

@@ -18,6 +18,7 @@ import {
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
+import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing } from '../../utils/shieldRunes';
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
@@ -195,8 +196,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
   const themeColor = characterColor || 'var(--color-primary)';
   // Normalize so legacy { health, breakThreshold } and canonical
-  // { hp, brokenThreshold } shields both display correctly.
-  const shield = normalizeShield(item.shield);
+  // { hp, brokenThreshold } shields both display correctly. resolveShieldBlock
+  // folds any reinforcing rune in first, so the displayed Hardness/HP/BT are the
+  // resolved values (#1165 S4); a non-reinforced shield passes through unchanged.
+  const shield = normalizeShield(resolveShieldBlock(item));
 
   // ── Loadout actions, scoped to the item's current ownership state ──
   const uid = item.uid;
@@ -235,7 +238,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const accessory = hasAccessoryRune(item) ? resolveAccessoryItem(item) : null;
   const displayName = accessoryDisplayName(
     item,
-    isArmor(item) ? armorDisplayName(item)
+    item.shield ? shieldDisplayName(item)
+    : isArmor(item) ? armorDisplayName(item)
     : (item.scroll || item.wand) ? spellItemDisplayName(item)
     : weaponDisplayName(item)
   );
@@ -494,6 +498,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {shield && (
         <div className="shield-properties">
           <h3>Shield Properties</h3>
+          {hasReinforcing(item) && (
+            <p className="shield-rune-tier" data-testid="shield-rune-tier">
+              {shieldRuneTierSummary(item.runes)} rune — Hardness/HP/BT reinforced
+            </p>
+          )}
           <div className="item-detail-grid is-block">
             {shield.bonus !== undefined && (
               <div className="item-detail">
