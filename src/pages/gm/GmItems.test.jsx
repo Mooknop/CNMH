@@ -574,6 +574,51 @@ describe('GmItems', () => {
       ]);
     });
 
+    it('round-trips unmanaged variant keys (name + overrides) on Save', async () => {
+      // A tiered item whose variants carry a per-tier `name` and `overrides`
+      // block — neither has a dedicated form field. Editing an unrelated field
+      // (here, image via a re-save) must not strip them (regression: #1165 S5).
+      const cloak = {
+        id: 'cloak-of-repute',
+        name: 'Cloak of Repute',
+        traits: ['Invested', 'Magical'],
+        variants: [
+          { level: 6, label: 'Standard', price: 250, overrides: { bonus: ['diplomacy', 1] } },
+          {
+            level: 12,
+            label: 'Greater',
+            price: 2000,
+            name: 'Greater Cloak of Repute',
+            overrides: { bonus: ['diplomacy', 2] },
+          },
+        ],
+      };
+      useContent.mockReturnValue({ items: [cloak], spells: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Cloak of Repute');
+      const form = screen.getByTestId('item-form-cloak-of-repute');
+      // The preserved keys are surfaced so the GM knows they carry through.
+      expect(within(form).getByTestId('item-variant-1-preserved')).toHaveTextContent(
+        /Preserved on save: name, overrides/
+      );
+      // Edit only the managed price of the Standard tier.
+      fireEvent.change(within(form).getByLabelText('item-variant-0-price'), { target: { value: '300' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [, , data] = saveDocument.mock.calls[0];
+      expect(data.variants).toEqual([
+        { level: 6, label: 'Standard', price: 300, overrides: { bonus: ['diplomacy', 1] } },
+        {
+          level: 12,
+          label: 'Greater',
+          price: 2000,
+          name: 'Greater Cloak of Repute',
+          overrides: { bonus: ['diplomacy', 2] },
+        },
+      ]);
+    });
+
     it('adds and removes variants', async () => {
       useContent.mockReturnValue({ items: [antidoteItem], spells: [] });
       saveDocument.mockResolvedValue({ ok: true });
