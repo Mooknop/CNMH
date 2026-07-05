@@ -74,7 +74,7 @@ const discounted = (fullPrice, discount) => Math.round(fullPrice * (1 - discount
 // The window-admitted PROPERTY runes (ring + accessory runes are `type:'property'`
 // too), grouped by lowercased target — reusing eligibleRunes so the level/rarity/
 // target window is honored exactly as the Runesmithing tab sees it.
-const admittedRunesByTarget = (offering, runes) => {
+export const admittedRunesByTarget = (offering, runes) => {
   const byId = new Map((Array.isArray(runes) ? runes : []).map((r) => [String(r.id), r]));
   const map = new Map();
   eligibleRunes(offering, runes).forEach((spec) => {
@@ -91,10 +91,40 @@ const admittedRunesByTarget = (offering, runes) => {
 // shopHostKind directly (bypassing eligibleHostItems' general-runesmith exemption
 // — the shelf is generated goods, so a general runesmith rolls across all targets)
 // and honoring the #1105 never-sell flag.
-const hostsOfKind = (items, kind) =>
+export const hostsOfKind = (items, kind) =>
   (Array.isArray(items) ? items : []).filter(
     (it) => it && it.id != null && !isShopExcluded(it) && shopHostKind(it) === kind
   );
+
+// The rune-target a base item resolves as, keyed off its own fields (the same
+// classification saleRuneKind applies to a resolved base). Used by both the
+// display resolver and the manual builder.
+const runeHostKind = (item) =>
+  item.powerRing ? 'ring' : item.strikes ? 'weapon' : item.armor ? 'armor' : 'accessory';
+
+// The fundamental tiers that fit a level cap for a weapon/armor target:
+// `potency` (required) and `second` (striking | resilient, optional). Empty for
+// ring/accessory targets, which carry no fundamentals.
+export const fundamentalTiersForTarget = (target, cap) => {
+  if (target !== 'weapon' && target !== 'armor') return { potency: [], second: [] };
+  const isWeapon = target === 'weapon';
+  return {
+    potency: (isWeapon ? WEAPON_POTENCY_TIERS : ARMOR_POTENCY_TIERS).filter((t) => t.level <= cap),
+    second: (isWeapon ? WEAPON_STRIKING_TIERS : ARMOR_RESILIENT_TIERS).filter((t) => t.level <= cap),
+  };
+};
+
+// The baked full price of a runed base, shared by the random roll and the manual
+// builder so both price identically. `base` carries `price` (+ name/material/
+// traits for weapon/armor); `propDocs` are the resolved property/accessory rune
+// DOCS (weapon/armor feed the #548 resolvers; ring/accessory sum base + rune).
+const priceRuneWare = (kind, base, runeBlock, propDocs) => {
+  if (kind === 'weapon' || kind === 'armor') {
+    const resolveFn = kind === 'weapon' ? resolveWeapon : resolveArmor;
+    return resolveFn(base, { ...runeBlock, property: propDocs }).price;
+  }
+  return (Number(base.price) || 0) + propDocs.reduce((s, p) => s + (Number(p.price) || 0), 0);
+};
 
 // ── Roll: rune sale item ─────────────────────────────────────────────────────
 /**
@@ -157,8 +187,7 @@ export function rollRuneSaleItem(offering, items, runes, rng = Math.random) {
     if (props.length) runeBlock.property = props.map((p) => String(p.id));
 
     const base = { name: host.name, price: host.price, material: host.material, traits: host.traits };
-    const resolveFn = isWeapon ? resolveWeapon : resolveArmor;
-    const fullPrice = resolveFn(base, { ...runeBlock, property: props }).price;
+    const fullPrice = priceRuneWare(target, base, runeBlock, props);
     return { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
   }
 
@@ -176,7 +205,7 @@ export function rollRuneSaleItem(offering, items, runes, rng = Math.random) {
 
     const runeBlock = {};
     if (props.length) runeBlock.property = props.map((p) => String(p.id));
-    const fullPrice = (Number(grade.price) || 0) + props.reduce((s, p) => s + (Number(p.price) || 0), 0);
+    const fullPrice = priceRuneWare('ring', grade, runeBlock, props);
     return { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), level: grade.level, runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
   }
 
@@ -186,7 +215,7 @@ export function rollRuneSaleItem(offering, items, runes, rng = Math.random) {
     .filter((it) => targetRunes.some((r) => accessoryEligible(it, r)));
   const host = pick(hosts, rng);
   const rune = pick(targetRunes.filter((r) => accessoryEligible(host, r)), rng);
-  const fullPrice = (Number(host.price) || 0) + (Number(rune.price) || 0);
+  const fullPrice = priceRuneWare('accessory', host, {}, [rune]);
   return { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
 }
 
@@ -282,12 +311,7 @@ export function rollSaleShelf(shopEntry, items, runes, spells, rng = Math.random
 
 // ── Resolve for display ──────────────────────────────────────────────────────
 // The rune-target a stored rune sale ware resolves as, keyed off its base item.
-const saleRuneKind = (item) => {
-  if (item.powerRing) return 'ring';
-  if (item.strikes) return 'weapon';
-  if (item.armor) return 'armor';
-  return 'accessory';
-};
+const saleRuneKind = runeHostKind;
 
 // Resolve a property/ring rune id → its display name, through the property-rune
 // catalog first, then the fundamental-rune table.
@@ -389,4 +413,203 @@ export function resolveSaleWares(loreId, shops, catalogMap, runeMap, spells) {
       return null;
     })
     .filter(Boolean);
+}
+
+// ── Manual build + per-item reroll (per-item customization) ───────────────────
+// The GM can hand-author a shelf slot instead of taking the random roll: pick a
+// base item + runes (rune gear) or a rank + four spells (scroll pack). These
+// builders emit the SAME baked shape and pricing as the roll functions (shared
+// priceRuneWare / SCROLL_BY_RANK) at the offering's discount, and preserve the
+// caller's saleId so a slot keeps its identity across an edit.
+
+/**
+ * Build one runed sale ware from explicit GM selections, or null when the base /
+ * runes don't resolve against the offering's window. `sel` is
+ * `{ ref, level?, runes:{ potency?, striking?|resilient?, property?:[ids], accessory?:id } }`;
+ * property/accessory ids must be admitted by the offering, else they're dropped.
+ */
+export function buildRuneSaleItem(offering, saleId, sel, items, runeDocs) {
+  if (!isRuneServiceWare(offering) || !sel || sel.ref == null) return null;
+  const item = (Array.isArray(items) ? items : []).find(
+    (it) => it && it.id != null && String(it.id) === String(sel.ref)
+  );
+  if (!item || isShopExcluded(item)) return null;
+
+  const kind = runeHostKind(item);
+  const discount = clampDiscount(offering.saleDiscount);
+  const admitted = admittedRunesByTarget(offering, runeDocs).get(kind) || [];
+  const byId = new Map(admitted.map((r) => [String(r.id), r]));
+  const runes = sel.runes || {};
+  const propDocs = (Array.isArray(runes.property) ? runes.property : [])
+    .map((id) => byId.get(String(id)))
+    .filter(Boolean);
+
+  const runeBlock = {};
+  if (kind === 'weapon' || kind === 'armor') {
+    if (runes.potency) runeBlock.potency = Number(runes.potency);
+    const secondKey = kind === 'weapon' ? 'striking' : 'resilient';
+    if (runes[secondKey]) runeBlock[secondKey] = runes[secondKey];
+    if (propDocs.length) runeBlock.property = propDocs.map((p) => String(p.id));
+    const base = { name: item.name, price: item.price, material: item.material, traits: item.traits };
+    const fullPrice = priceRuneWare(kind, base, runeBlock, propDocs);
+    return { sale: 'rune', saleId, ref: String(item.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+  }
+
+  if (kind === 'ring') {
+    if (!Array.isArray(item.variants)) return null;
+    const grade = item.variants.find((v) => v.level === sel.level);
+    if (!grade) return null;
+    if (propDocs.length) runeBlock.property = propDocs.map((p) => String(p.id));
+    const fullPrice = priceRuneWare('ring', grade, runeBlock, propDocs);
+    return { sale: 'rune', saleId, ref: String(item.id), level: grade.level, runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+  }
+
+  // accessory: exactly one accessory rune the host accepts.
+  const rune = byId.get(String(runes.accessory));
+  if (!rune || !accessoryEligible(item, rune)) return null;
+  const fullPrice = priceRuneWare('accessory', item, {}, [rune]);
+  return { sale: 'rune', saleId, ref: String(item.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
+}
+
+/**
+ * Build one four-scroll pack from an explicit rank + spell choices, or null when
+ * the offering isn't a scroll offering / the rank covers no eligible spells.
+ * `sel` is `{ rank, scrolls:[spellRef,…] }` (duplicates allowed); the list is
+ * padded/trimmed to four with the first eligible spell. Prices at 3/4 like the roll.
+ */
+export function buildScrollPackWare(offering, saleId, sel, spells) {
+  if (!isSpellItemWare(offering) || offering.spellItem !== 'scroll') return null;
+  const rank = Number(sel?.rank);
+  if (!Number.isInteger(rank) || !SCROLL_BY_RANK[rank]) return null;
+
+  // Eligible scroll blocks at this rank, keyed by spellRef.
+  const byRef = new Map();
+  eligibleSpellItems(offering, spells).forEach((entry) => {
+    const block = entry.scroll || {};
+    const r = block.rank != null ? Number(block.rank) : SCROLL_RANK_BY_LEVEL.get(entry.level);
+    if (r !== rank) return;
+    byRef.set(String(block.spellRef), block);
+  });
+  if (!byRef.size) return null;
+  const fallback = byRef.values().next().value;
+
+  const refs = Array.isArray(sel.scrolls) ? sel.scrolls : [];
+  const scrolls = [];
+  for (let i = 0; i < 4; i += 1) {
+    const block = byRef.get(String(refs[i])) || fallback;
+    const scroll = { spellRef: block.spellRef };
+    if (block.rank != null) scroll.rank = block.rank;
+    scrolls.push(scroll);
+  }
+  const rankPrice = SCROLL_BY_RANK[rank].price;
+  return { sale: 'scrollpack', saleId, rank, scrolls, fullPrice: 4 * rankPrice, price: 3 * rankPrice };
+}
+
+/**
+ * Reroll a single shelf slot in place: return a NEW shelf array with only the
+ * `saleId` slot replaced by a fresh roll from its originating offering (found on
+ * `shopEntry.wares`), keeping the same saleId + position. Unchanged when the slot
+ * is missing or nothing admissible rolls.
+ */
+export function rerollSaleItem(shopEntry, saleId, items, runes, spells, rng = Math.random) {
+  const shelf = Array.isArray(shopEntry?.saleShelf) ? shopEntry.saleShelf : [];
+  const wares = Array.isArray(shopEntry?.wares) ? shopEntry.wares : [];
+  const idx = shelf.findIndex((w) => w && w.saleId === saleId);
+  if (idx < 0) return shelf;
+
+  const cur = shelf[idx];
+  let next = null;
+  if (cur.sale === 'rune') {
+    const off = wares.find(isRuneServiceWare);
+    if (off) next = rollRuneSaleItem(off, items, runes, rng);
+  } else if (cur.sale === 'scrollpack') {
+    const off = wares.find((w) => isSpellItemWare(w) && w.spellItem === 'scroll');
+    if (off) next = rollScrollPack(off, spells, rng);
+  }
+  if (!next) return shelf;
+
+  const out = shelf.slice();
+  out[idx] = { ...next, saleId };
+  return out;
+}
+
+// ── Editor option enumerators ────────────────────────────────────────────────
+/**
+ * The per-target choices a rune-item editor offers, constrained to the offering's
+ * window. Keyed by target → `{ hosts, potency?, second?, properties? }` (weapon/
+ * armor carry fundamentals + property runes; ring carries graded hosts + property
+ * runes; accessory carries hosts each with the runes they accept). A target is
+ * omitted when it can't produce an item right now.
+ */
+export function saleRuneEditOptions(offering, items, runes) {
+  if (!isRuneServiceWare(offering)) return {};
+  const admitted = admittedRunesByTarget(offering, runes);
+  const out = {};
+  offeringTargets(offering).forEach((target) => {
+    const targetRunes = admitted.get(target) || [];
+    const cap = maxLevelForTarget(offering, target);
+
+    if (target === 'weapon' || target === 'armor') {
+      const hosts = hostsOfKind(items, target);
+      const { potency, second } = fundamentalTiersForTarget(target, cap);
+      if (!hosts.length || !potency.length) return;
+      out[target] = {
+        hosts: hosts.map((h) => ({ id: String(h.id), name: h.name })),
+        potency: potency.map((t) => ({ tier: t.tier, name: t.name, level: t.level })),
+        second: second.map((t) => ({ key: t.tierKey, name: t.name, level: t.level })),
+        properties: targetRunes.map((r) => ({ id: String(r.id), name: r.name })),
+      };
+    } else if (target === 'ring') {
+      const hosts = hostsOfKind(items, 'ring')
+        .filter((it) => Array.isArray(it.variants) && it.variants.some((v) => v.level <= cap));
+      if (!hosts.length) return;
+      out.ring = {
+        hosts: hosts.map((h) => ({
+          id: String(h.id),
+          name: h.name,
+          variants: h.variants.filter((v) => v.level <= cap).map((v) => ({ level: v.level, name: v.name })),
+        })),
+        properties: targetRunes.map((r) => ({ id: String(r.id), name: r.name })),
+      };
+    } else {
+      const hosts = hostsOfKind(items, 'accessory')
+        .concat(hostsOfKind(items, 'shield'))
+        .filter((it) => targetRunes.some((r) => accessoryEligible(it, r)));
+      if (!hosts.length) return;
+      out.accessory = {
+        hosts: hosts.map((h) => ({
+          id: String(h.id),
+          name: h.name,
+          runes: targetRunes.filter((r) => accessoryEligible(h, r)).map((r) => ({ id: String(r.id), name: r.name })),
+        })),
+      };
+    }
+  });
+  return out;
+}
+
+/**
+ * The scroll-pack editor's rank options: `[{ rank, spells:[{ id, name }] }]`
+ * (rank-ascending), each rank listing the eligible spells drawn from the
+ * offering's window. Empty for a non-scroll offering / no eligible spells.
+ */
+export function saleScrollPackOptions(offering, spells) {
+  if (!isSpellItemWare(offering) || offering.spellItem !== 'scroll') return [];
+  const spellMap = new Map((Array.isArray(spells) ? spells : []).map((s) => [String(s.id), s]));
+  const byRank = new Map();
+  eligibleSpellItems(offering, spells).forEach((entry) => {
+    const block = entry.scroll || {};
+    const rank = block.rank != null ? Number(block.rank) : SCROLL_RANK_BY_LEVEL.get(entry.level);
+    if (!Number.isInteger(rank) || !SCROLL_BY_RANK[rank]) return;
+    if (!byRank.has(rank)) byRank.set(rank, new Map());
+    const m = byRank.get(rank);
+    const ref = String(block.spellRef);
+    if (!m.has(ref)) m.set(ref, spellMap.get(ref)?.name || '(unknown spell)');
+  });
+  return [...byRank.keys()]
+    .sort((a, b) => a - b)
+    .map((rank) => ({
+      rank,
+      spells: [...byRank.get(rank)].map(([id, name]) => ({ id, name })),
+    }));
 }

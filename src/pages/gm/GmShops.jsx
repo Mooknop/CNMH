@@ -14,7 +14,15 @@ import {
   maxLevelForTarget,
   RUNE_TARGETS,
 } from '../../utils/shopUtils';
-import { rollSaleShelf, resolveSaleWares } from '../../utils/saleShelf';
+import {
+  rollSaleShelf,
+  resolveSaleWares,
+  buildRuneSaleItem,
+  buildScrollPackWare,
+  rerollSaleItem,
+  saleRuneEditOptions,
+  saleScrollPackOptions,
+} from '../../utils/saleShelf';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -800,6 +808,225 @@ const RunesmithingSection = ({ config, runes, items, onChange }) => {
   );
 };
 
+// ── Sale Shelf per-item editors ──────────────────────────────────────────────
+// The rune target the editor's "second" fundamental slot fills, per base kind.
+const RUNE_SECOND_LABEL = { weapon: 'striking', armor: 'resilient' };
+
+// The kind (rune target) a base item resolves as — mirrors saleShelf's runeHostKind
+// so the editor can seed its target selector from a stored ware's base.
+const saleHostKindOf = (item) =>
+  !item ? 'accessory' : item.powerRing ? 'ring' : item.strikes ? 'weapon' : item.armor ? 'armor' : 'accessory';
+
+// Inline editor for one runed sale item: pick target → base → runes, all
+// constrained to `options` (saleRuneEditOptions). Emits a selection to onApply;
+// Workspace bakes + prices it via buildRuneSaleItem. `items` supplies the ring
+// grade / socket structure the options list doesn't carry.
+const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
+  const targets = Object.keys(options);
+  const itemById = useMemo(
+    () => new Map((Array.isArray(items) ? items : []).map((it) => [String(it.id), it])),
+    [items]
+  );
+  const r0 = ware.runes || {};
+  const seedKind = saleHostKindOf(itemById.get(String(ware.ref)));
+  const [target, setTarget] = useState(targets.includes(seedKind) ? seedKind : targets[0]);
+  const [ref, setRef] = useState(String(ware.ref));
+  const [level, setLevel] = useState(ware.level ?? null);
+  const [potency, setPotency] = useState(r0.potency != null ? String(r0.potency) : '');
+  const [second, setSecond] = useState(r0.striking ?? r0.resilient ?? '');
+  const [property, setProperty] = useState(Array.isArray(r0.property) ? r0.property.map(String) : []);
+  const [accessory, setAccessory] = useState(r0.accessory != null ? String(r0.accessory) : '');
+
+  const opt = options[target] || { hosts: [] };
+  const host = itemById.get(String(ref));
+  const ringGrade =
+    target === 'ring' && host && Array.isArray(host.variants)
+      ? host.variants.find((v) => v.level === level)
+      : null;
+  // Property-slot cap: weapon/armor = potency tier; ring = grade sockets.
+  let propCap = 0;
+  if (target === 'weapon' || target === 'armor') propCap = Number(potency) || 0;
+  else if (target === 'ring') propCap = Number(ringGrade?.overrides?.ringSockets ?? host?.ringSockets) || 0;
+
+  const chooseTarget = (t) => {
+    const o = options[t] || { hosts: [] };
+    const first = o.hosts[0];
+    setTarget(t);
+    setRef(first ? String(first.id) : '');
+    setLevel(t === 'ring' && first?.variants?.length ? first.variants[0].level : null);
+    setPotency(t === 'weapon' || t === 'armor' ? (o.potency?.[0]?.tier != null ? String(o.potency[0].tier) : '') : '');
+    setSecond('');
+    setProperty([]);
+    setAccessory(t === 'accessory' ? String(first?.runes?.[0]?.id ?? '') : '');
+  };
+
+  const chooseRef = (id) => {
+    setRef(id);
+    setProperty([]);
+    const it = itemById.get(String(id));
+    if (target === 'ring') setLevel(it?.variants?.length ? it.variants[0].level : null);
+    if (target === 'accessory') {
+      const h = (opt.hosts || []).find((x) => String(x.id) === String(id));
+      setAccessory(String(h?.runes?.[0]?.id ?? ''));
+    }
+  };
+
+  const toggleProp = (id) =>
+    setProperty((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length < propCap ? [...cur, id] : cur));
+
+  const apply = () => {
+    const runes = {};
+    if (target === 'weapon' || target === 'armor') {
+      if (potency) runes.potency = Number(potency);
+      if (second) runes[target === 'weapon' ? 'striking' : 'resilient'] = second;
+      if (property.length) runes.property = property;
+    } else if (target === 'ring') {
+      if (property.length) runes.property = property;
+    } else if (accessory) {
+      runes.accessory = accessory;
+    }
+    const sel = { ref, runes };
+    if (target === 'ring') sel.level = level;
+    onApply(ware.saleId, sel);
+  };
+
+  const hostRunes = (opt.hosts.find((h) => String(h.id) === String(ref))?.runes) || [];
+  const hostVariants = (opt.hosts.find((h) => String(h.id) === String(ref))?.variants) || [];
+
+  return (
+    <div className="gm-shop-sale-edit" data-testid={`sale-editor-${ware.saleId}`}>
+      {targets.length > 1 && (
+        <div className="form-group gm-shop-offer-field">
+          <label htmlFor={`sale-target-${ware.saleId}`}>type</label>
+          <select id={`sale-target-${ware.saleId}`} aria-label="sale-target" value={target} onChange={(e) => chooseTarget(e.target.value)}>
+            {targets.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+      )}
+      <div className="form-group gm-shop-offer-field">
+        <label htmlFor={`sale-base-${ware.saleId}`}>base item</label>
+        <select id={`sale-base-${ware.saleId}`} aria-label="sale-base" value={ref} onChange={(e) => chooseRef(e.target.value)}>
+          {(opt.hosts || []).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+        </select>
+      </div>
+
+      {target === 'ring' && hostVariants.length > 0 && (
+        <div className="form-group gm-shop-offer-field">
+          <label htmlFor={`sale-grade-${ware.saleId}`}>grade</label>
+          <select id={`sale-grade-${ware.saleId}`} aria-label="sale-grade" value={level ?? ''} onChange={(e) => setLevel(Number(e.target.value))}>
+            {hostVariants.map((v) => <option key={v.level} value={v.level}>{v.name || `Level ${v.level}`}</option>)}
+          </select>
+        </div>
+      )}
+
+      {(target === 'weapon' || target === 'armor') && (
+        <>
+          <div className="form-group gm-shop-offer-field">
+            <label htmlFor={`sale-potency-${ware.saleId}`}>potency</label>
+            <select id={`sale-potency-${ware.saleId}`} aria-label="sale-potency" value={potency} onChange={(e) => { setPotency(e.target.value); setProperty([]); }}>
+              {(opt.potency || []).map((t) => <option key={t.tier} value={t.tier}>{t.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group gm-shop-offer-field">
+            <label htmlFor={`sale-second-${ware.saleId}`}>{RUNE_SECOND_LABEL[target]}</label>
+            <select id={`sale-second-${ware.saleId}`} aria-label="sale-second" value={second} onChange={(e) => setSecond(e.target.value)}>
+              <option value="">none</option>
+              {(opt.second || []).map((t) => <option key={t.key} value={t.key}>{t.name}</option>)}
+            </select>
+          </div>
+        </>
+      )}
+
+      {(target === 'weapon' || target === 'armor' || target === 'ring') && (opt.properties || []).length > 0 && (
+        <div className="form-group gm-shop-offer-field">
+          <span className="gm-shop-offer-label">
+            property runes<span className="gm-shop-offer-hint"> · {property.length}/{propCap}</span>
+          </span>
+          <div className="gm-shop-chips" role="group" aria-label="sale-properties">
+            {(opt.properties || []).map((p) => {
+              const on = property.includes(String(p.id));
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`gm-shop-chip${on ? ' is-on' : ''}`}
+                  aria-pressed={on}
+                  aria-label={`sale-prop-${p.id}`}
+                  disabled={!on && property.length >= propCap}
+                  onClick={() => toggleProp(String(p.id))}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {target === 'accessory' && (
+        <div className="form-group gm-shop-offer-field">
+          <label htmlFor={`sale-rune-${ware.saleId}`}>rune</label>
+          <select id={`sale-rune-${ware.saleId}`} aria-label="sale-accessory" value={accessory} onChange={(e) => setAccessory(e.target.value)}>
+            {hostRunes.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+        </div>
+      )}
+
+      <div className="gm-actions gm-shop-sale-edit-actions">
+        <button type="button" className="btn-small btn-secondary" aria-label="sale-cancel" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn-small btn-primary" aria-label={`sale-apply-${ware.saleId}`} onClick={apply}>Apply</button>
+      </div>
+    </div>
+  );
+};
+
+// Inline editor for one scroll pack: pick a rank + four spells (duplicates
+// allowed), all from `options` (saleScrollPackOptions). Emits to onApply;
+// Workspace bakes + prices it via buildScrollPackWare.
+const ScrollPackEditor = ({ ware, options, onApply, onCancel }) => {
+  const ranks = Array.isArray(options) ? options : [];
+  const [rank, setRank] = useState(() => (ranks.some((r) => r.rank === ware.rank) ? ware.rank : ranks[0]?.rank ?? ''));
+  const spellsForRank = (ranks.find((r) => r.rank === rank)?.spells) || [];
+  const [scrolls, setScrolls] = useState(() => {
+    const cur = Array.isArray(ware.scrolls) ? ware.scrolls.map((s) => String(s.spellRef)) : [];
+    const valid = new Set(spellsForRank.map((s) => String(s.id)));
+    const first = spellsForRank[0]?.id != null ? String(spellsForRank[0].id) : '';
+    return [0, 1, 2, 3].map((i) => (cur[i] && valid.has(cur[i]) ? cur[i] : first));
+  });
+
+  const chooseRank = (r) => {
+    const nr = Number(r);
+    setRank(nr);
+    const list = (ranks.find((x) => x.rank === nr)?.spells) || [];
+    const first = list[0]?.id != null ? String(list[0].id) : '';
+    setScrolls([first, first, first, first]);
+  };
+  const setSlot = (i, id) => setScrolls((cur) => cur.map((v, idx) => (idx === i ? id : v)));
+
+  return (
+    <div className="gm-shop-sale-edit" data-testid={`sale-editor-${ware.saleId}`}>
+      <div className="form-group gm-shop-offer-field">
+        <label htmlFor={`sale-rank-${ware.saleId}`}>rank</label>
+        <select id={`sale-rank-${ware.saleId}`} aria-label="sale-rank" value={rank} onChange={(e) => chooseRank(e.target.value)}>
+          {ranks.map((r) => <option key={r.rank} value={r.rank}>Rank {r.rank}</option>)}
+        </select>
+      </div>
+      {[0, 1, 2, 3].map((i) => (
+        <div className="form-group gm-shop-offer-field" key={i}>
+          <label htmlFor={`sale-scroll-${ware.saleId}-${i}`}>scroll {i + 1}</label>
+          <select id={`sale-scroll-${ware.saleId}-${i}`} aria-label={`sale-scroll-${i}`} value={scrolls[i] || ''} onChange={(e) => setSlot(i, e.target.value)}>
+            {spellsForRank.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+      ))}
+      <div className="gm-actions gm-shop-sale-edit-actions">
+        <button type="button" className="btn-small btn-secondary" aria-label="sale-cancel" onClick={onCancel}>Cancel</button>
+        <button type="button" className="btn-small btn-primary" aria-label={`sale-apply-${ware.saleId}`} onClick={() => onApply(ware.saleId, { rank, scrolls })}>Apply</button>
+      </div>
+    </div>
+  );
+};
+
 // ── Sale Shelf (#1134 / S2 #1136) ────────────────────────────────────────────
 // A GM-rolled shelf of one-of-a-kind discounted goods layered on the shop's
 // existing services: `saleCount` randomly-runed items from the Runesmithing
@@ -811,9 +1038,12 @@ const RunesmithingSection = ({ config, runes, items, onChange }) => {
 // the storefront will render it (discounted price + struck-through full price).
 const SaleShelfSection = ({
   runeConfig, spellConfig, editRuneConfig, editSpellConfig, preview, canRoll, hasShelf, onRoll, onClear,
+  shelf, items, runeOptions, scrollOptions, onReroll, onRemove, onApplyRune, onApplyScroll,
 }) => {
   const hasRuneOffering = RUNE_TARGETS.some((t) => runeConfig[t]);
   const hasScrollOffering = !!spellConfig.scroll;
+  // Which shelf slot has its inline editor open (saleId), if any.
+  const [editingId, setEditingId] = useState(null);
 
   return (
     <div className="gm-shop-offers" data-testid="sale-shelf">
@@ -880,17 +1110,65 @@ const SaleShelfSection = ({
 
           {preview.length > 0 ? (
             <ul className="gm-shop-sale-list" aria-label="sale shelf">
-              {preview.map((w) => (
-                <li key={w.id} className="gm-shop-sale-item" data-testid={`sale-item-${w.id}`}>
-                  <span className="gm-shop-sale-name">{w.name}</span>
-                  <span className="gm-shop-sale-price">
-                    {w.saleFullPrice != null && w.saleFullPrice !== w.price && (
-                      <span className="gm-shop-sale-full">{w.saleFullPrice} gp</span>
-                    )}
-                    <span className="gm-shop-sale-now">{w.price} gp</span>
-                  </span>
-                </li>
-              ))}
+              {preview.map((w) => {
+                const rawWare = (Array.isArray(shelf) ? shelf : []).find((x) => x && x.saleId === w.saleId);
+                const editing = editingId === w.saleId;
+                return (
+                  <li key={w.id} className="gm-shop-sale-item" data-testid={`sale-item-${w.id}`}>
+                    <div className="gm-shop-sale-row">
+                      <span className="gm-shop-sale-name">{w.name}</span>
+                      <span className="gm-shop-sale-price">
+                        {w.saleFullPrice != null && w.saleFullPrice !== w.price && (
+                          <span className="gm-shop-sale-full">{w.saleFullPrice} gp</span>
+                        )}
+                        <span className="gm-shop-sale-now">{w.price} gp</span>
+                      </span>
+                      <span className="gm-shop-sale-item-actions">
+                        <button
+                          type="button"
+                          className="btn-small btn-secondary"
+                          aria-label={`sale-edit-${w.saleId}`}
+                          onClick={() => setEditingId(editing ? null : w.saleId)}
+                        >
+                          {editing ? 'Close' : 'Edit'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-small btn-secondary"
+                          aria-label={`sale-reroll-${w.saleId}`}
+                          onClick={() => onReroll(w.saleId)}
+                        >
+                          Reroll
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-small btn-danger"
+                          aria-label={`sale-remove-${w.saleId}`}
+                          onClick={() => onRemove(w.saleId)}
+                        >
+                          Remove
+                        </button>
+                      </span>
+                    </div>
+                    {editing && rawWare && (rawWare.sale === 'scrollpack' ? (
+                      <ScrollPackEditor
+                        ware={rawWare}
+                        options={scrollOptions}
+                        onApply={(id, sel) => { onApplyScroll(id, sel); setEditingId(null); }}
+                        onCancel={() => setEditingId(null)}
+                      />
+                    ) : (
+                      <RuneItemEditor
+                        ware={rawWare}
+                        options={runeOptions}
+                        items={items}
+                        onApply={(id, sel) => { onApplyRune(id, sel); setEditingId(null); }}
+                        onCancel={() => setEditingId(null)}
+                      />
+                    ))}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="gm-count gm-shop-offers-empty" data-testid="sale-shelf-empty">
@@ -1016,6 +1294,37 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
   // replaces the shelf wholesale. Clear just empties it.
   const rollShelf = () => publish({ saleShelf: rollSaleShelf({ wares: buildWares() }, items, runes, spells) });
   const clearShelf = () => setShop(loreId, { saleShelf: [] });
+
+  // Per-item shelf ops (per-item customization): each writes ONLY the published
+  // shelf (like clearShelf, so unsaved ware config isn't clobbered), off the
+  // current offering config. Reroll/build reuse the #1135 engine; the editors
+  // read their choices from the memoized option enumerators below.
+  const shelfNow = () => (Array.isArray(entry?.saleShelf) ? entry.saleShelf : []);
+  const writeShelf = (next) => setShop(loreId, { saleShelf: next });
+  const removeShelfItem = (id) => writeShelf(shelfNow().filter((w) => w.saleId !== id));
+  const rerollShelfItem = (id) =>
+    writeShelf(rerollSaleItem({ wares: buildWares(), saleShelf: shelfNow() }, id, items, runes, spells));
+  const putShelfItem = (id, ware) => { if (ware) writeShelf(shelfNow().map((w) => (w.saleId === id ? ware : w))); };
+  const saleWares = useMemo(
+    () => [...fromRows(rows), ...fromSpellConfig(spellConfig), ...fromRuneConfig(runeConfig)],
+    [rows, spellConfig, runeConfig]
+  );
+  const runeOffering = useMemo(() => saleWares.find(isRuneServiceWare), [saleWares]);
+  const scrollOffering = useMemo(
+    () => saleWares.find((w) => isSpellItemWare(w) && w.spellItem === 'scroll'),
+    [saleWares]
+  );
+  const applyRuneItem = (id, sel) => putShelfItem(id, buildRuneSaleItem(runeOffering, id, sel, items, runes));
+  const applyScrollItem = (id, sel) => putShelfItem(id, buildScrollPackWare(scrollOffering, id, sel, spells));
+  const runeEditOptions = useMemo(
+    () => (runeOffering ? saleRuneEditOptions(runeOffering, items, runes) : {}),
+    [runeOffering, items, runes]
+  );
+  const scrollEditOptions = useMemo(
+    () => (scrollOffering ? saleScrollPackOptions(scrollOffering, spells) : []),
+    [scrollOffering, spells]
+  );
+
   const salePreview = useMemo(
     () => resolveSaleWares(loreId, shops, catalogMap, runeMap, spells),
     [loreId, shops, catalogMap, runeMap, spells]
@@ -1156,6 +1465,14 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
             hasShelf={hasShelf}
             onRoll={rollShelf}
             onClear={clearShelf}
+            shelf={entry?.saleShelf}
+            items={items}
+            runeOptions={runeEditOptions}
+            scrollOptions={scrollEditOptions}
+            onReroll={rerollShelfItem}
+            onRemove={removeShelfItem}
+            onApplyRune={applyRuneItem}
+            onApplyScroll={applyScrollItem}
           />
         </>
       )}

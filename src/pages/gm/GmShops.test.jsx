@@ -739,6 +739,76 @@ describe('GmShops', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Clear shelf' }));
       expect(lastSave()).toEqual(['town-hall', { saleShelf: [] }]);
     });
+
+    describe('per-item customization', () => {
+      const runeWares = [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 2 }];
+      const w1 = { sale: 'rune', saleId: 'w1', ref: 'longsword', runes: { potency: 1 }, fullPrice: 100, price: 100 };
+      const w2 = { sale: 'rune', saleId: 'w2', ref: 'longsword', runes: { potency: 2 }, fullPrice: 200, price: 200 };
+
+      it('renders per-item edit / reroll / remove controls', () => {
+        open({ 'town-hall': { wares: runeWares, saleShelf: [w1] } });
+        expect(screen.getByLabelText('sale-edit-w1')).toBeInTheDocument();
+        expect(screen.getByLabelText('sale-reroll-w1')).toBeInTheDocument();
+        expect(screen.getByLabelText('sale-remove-w1')).toBeInTheDocument();
+      });
+
+      it('removes a single item, writing only the shelf', () => {
+        open({ 'town-hall': { wares: runeWares, saleShelf: [w1, w2] } });
+        fireEvent.click(screen.getByLabelText('sale-remove-w1'));
+        expect(lastSave()).toEqual(['town-hall', { saleShelf: [w2] }]);
+      });
+
+      it('rerolls a single item in place, keeping its saleId and leaving others alone', () => {
+        open({ 'town-hall': { wares: runeWares, saleShelf: [w1, w2] } });
+        fireEvent.click(screen.getByLabelText('sale-reroll-w1'));
+        const next = lastShelf();
+        expect(next).toHaveLength(2);
+        expect(next[0].saleId).toBe('w1');
+        expect(next[0].sale).toBe('rune');
+        expect(next[1]).toEqual(w2);
+      });
+
+      it('edits a rune item to a chosen potency + property and rebuilds it at the discount', () => {
+        open({
+          'town-hall': {
+            wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 1, saleDiscount: 0.5 }],
+            saleShelf: [w1],
+          },
+        });
+        fireEvent.click(screen.getByLabelText('sale-edit-w1'));
+        expect(screen.getByTestId('sale-editor-w1')).toBeInTheDocument();
+        fireEvent.change(screen.getByLabelText('sale-potency'), { target: { value: '2' } });
+        fireEvent.click(screen.getByLabelText('sale-prop-flaming'));
+        fireEvent.click(screen.getByLabelText('sale-apply-w1'));
+        const next = lastShelf();
+        expect(next).toHaveLength(1);
+        expect(next[0].saleId).toBe('w1');
+        expect(next[0].ref).toBe('longsword');
+        expect(next[0].runes.potency).toBe(2);
+        expect(next[0].runes.property).toEqual(['flaming']);
+        expect(next[0].price).toBe(Math.round(next[0].fullPrice * 0.5));
+      });
+
+      it('edits a scroll pack to a chosen rank + spells and rebuilds it', () => {
+        open({
+          'town-hall': {
+            wares: [{ spellItem: 'scroll', maxLevel: 5 }],
+            saleShelf: [{ sale: 'scrollpack', saleId: 'p1', rank: 1, scrolls: [{ spellRef: 'heal' }], fullPrice: 16, price: 12 }],
+          },
+        });
+        fireEvent.click(screen.getByLabelText('sale-edit-p1'));
+        fireEvent.change(screen.getByLabelText('sale-rank'), { target: { value: '3' } });
+        fireEvent.change(screen.getByLabelText('sale-scroll-0'), { target: { value: 'fireball' } });
+        fireEvent.change(screen.getByLabelText('sale-scroll-1'), { target: { value: 'haste' } });
+        fireEvent.click(screen.getByLabelText('sale-apply-p1'));
+        const next = lastShelf();
+        expect(next[0].saleId).toBe('p1');
+        expect(next[0].rank).toBe(3);
+        expect(next[0].scrolls).toHaveLength(4);
+        expect(next[0].scrolls[0].spellRef).toBe('fireball');
+        expect(next[0].scrolls[1].spellRef).toBe('haste');
+      });
+    });
   });
 
   describe('service offerings (#857 S1)', () => {
