@@ -443,6 +443,20 @@ export const EARN_INCOME_EMPLOYERS = [
   },
 ];
 
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Human-readable summary of the skills/lores an employer unlocks for Earn
+// Income, e.g. "Athletics, Labor Lore, Forest Lore" or "most Lore skills".
+// Shared by the GM Town Support panel and the player lore-page badge.
+export function employerSkillSummary(e) {
+  const parts = [
+    ...(e.skills || []).map(cap),
+    ...(e.lores || []).map((l) => `${l} Lore`),
+  ];
+  if (e.anyLore) parts.push(e.lores.length ? 'any Lore' : 'most Lore skills');
+  return parts.join(', ');
+}
+
 // Employers grouped by faction, in the FACTIONS declaration order, for the GM
 // Town Support panel. Returns [{ faction, employers: [...] }], factions with no
 // employers omitted.

@@ -69,7 +69,8 @@ const DowntimeResultsApproval = () => {
     }
     if (entry.kind === 'retrain') return `Retrain: ${retrainSwap(entry)}`;
     if (entry.kind === 'research') return `Research: ${entry.topic} — resolve via #206`;
-    return `${entry.skillLabel} · Lvl ${entry.taskLevel} DC ${entry.dc} · rolled ${entry.total} (${DEGREE_LABEL[entry.degree] || entry.degree})`;
+    const where = entry.locationName ? ` at ${entry.locationName}` : ' (freelance)';
+    return `${entry.skillLabel}${where} · Lvl ${entry.taskLevel} DC ${entry.dc} · rolled ${entry.total} (${DEGREE_LABEL[entry.degree] || entry.degree})`;
   };
 
   const confirmLog = (entry) =>

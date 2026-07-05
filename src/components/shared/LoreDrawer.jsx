@@ -6,7 +6,9 @@ import { CharacterContext } from '../../contexts/CharacterContext';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useShops } from '../../hooks/useShops';
+import { useLocationSupport } from '../../hooks/useLocationSupport';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { employerById, employerSkillSummary } from '../../data/earnIncomeEmployers';
 import { buildBacklinkMap, getConnectionData, buildChildrenMap, getAncestors, getChildren } from '../../utils/loreUtils';
 import { getShopsForLocation } from '../../utils/shopUtils';
 import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
@@ -21,6 +23,7 @@ const LoreDrawer = () => {
   const { recordFor } = useRecallKnowledge();
   const { isGm } = useGmAuth();
   const { shops } = useShops();
+  const { supported } = useLocationSupport();
   const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
   const { activeCharacter } = useContext(CharacterContext) || {};
   const [shopOpen, setShopOpen] = useState(false);
@@ -60,6 +63,12 @@ const LoreDrawer = () => {
   );
   const inTown = !!entry && campaign?.locationLoreId === entry.id;
   const canBuy = inTown && !!activeCharacter;
+
+  // If this location is a Sandpoint Earn Income employer the party supports,
+  // surface a badge with the skills it unlocks (#1152 S3). employerById returns
+  // null for non-employer entries, so most lore pages show nothing.
+  const employer = useMemo(() => (entry ? employerById(entry.id) : null), [entry]);
+  const supportsHere = !!employer && !!supported?.[entry.id];
 
   // Creatures the party has fought at this location (#334) — derived from the
   // captured monster docs' `locations` map, gated to the party's learned state.
@@ -118,6 +127,15 @@ const LoreDrawer = () => {
               <h2 className="lore-drawer-title">{entry.title}</h2>
               <span className="lore-drawer-category">{entry.category}</span>
             </div>
+
+            {supportsHere && (
+              <div className="lore-drawer-support" data-testid="lore-support-badge">
+                <span className="lore-drawer-support-badge">Supports the party</span>
+                <span className="lore-drawer-support-skills">
+                  Earn Income here (up to level {employer.level}): {employerSkillSummary(employer)}
+                </span>
+              </div>
+            )}
 
             {locationShops.length > 0 && (
               <div className="lore-drawer-shops">
