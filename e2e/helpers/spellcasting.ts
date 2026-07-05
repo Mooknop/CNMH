@@ -26,6 +26,7 @@ import { expectOnSheet } from './sheet';
  */
 
 const SNAPSHOT_SPELLS = path.resolve(__dirname, '../../src/data/snapshot/spell.json');
+const SNAPSHOT_ITEMS = path.resolve(__dirname, '../../src/data/snapshot/item.json');
 
 // Pull real spell docs out of the bundled seed by id. Seeding these (instead of
 // hand-written stubs) keeps id-routed flows honest: if the catalog doc a modal
@@ -37,6 +38,22 @@ export function snapshotSpells(...ids: string[]): Array<Record<string, unknown> 
   return ids.map((id) => {
     const doc = all.find((s) => s.id === id);
     if (!doc) throw new Error(`snapshotSpells: "${id}" not found in src/data/snapshot/spell.json`);
+    return doc;
+  });
+}
+
+// Pull real item docs out of the bundled seed by id — the item-catalog analogue
+// of snapshotSpells. Seeding an item and referencing it from inventory (rather
+// than inlining a hand-written stub) keeps action-derivation honest: the real
+// authored `chain`/`transform` block is what drives the spellshape cast flow, so
+// a spec can never silently drift from the production scepter it exercises.
+export function snapshotItems(...ids: string[]): Array<Record<string, unknown> & { id: string }> {
+  const all = JSON.parse(fs.readFileSync(SNAPSHOT_ITEMS, 'utf8')) as Array<
+    Record<string, unknown> & { id: string }
+  >;
+  return ids.map((id) => {
+    const doc = all.find((s) => s.id === id);
+    if (!doc) throw new Error(`snapshotItems: "${id}" not found in src/data/snapshot/item.json`);
     return doc;
   });
 }
