@@ -17,6 +17,7 @@ import TraitsField from '../../components/shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
 import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
 import { resolveArmor } from '../../utils/armorRunes';
+import { resolveShield, REINFORCING, REINFORCING_TIERS } from '../../utils/shieldRunes';
 import { resolveScroll, resolveWand, castRank } from '../../utils/spellItems';
 import { ARMOR_CATEGORIES } from '../../utils/InventoryUtils';
 import './gm.css';
@@ -105,7 +106,7 @@ const toForm = (it) => {
   // flat `potency` (no `runes`) is preserved untouched and surfaced as a notice
   // so saving never re-derives a baked weapon's name/dice — migration is Slice 4.
   const runes = it.runes && typeof it.runes === 'object' && !Array.isArray(it.runes) ? it.runes : null;
-  const RUNE_MANAGED = ['potency', 'striking', 'resilient', 'property'];
+  const RUNE_MANAGED = ['potency', 'striking', 'resilient', 'property', 'reinforcing'];
   const runeRest = runes
     ? Object.fromEntries(Object.entries(runes).filter(([k]) => !RUNE_MANAGED.includes(k)))
     : {};
@@ -126,6 +127,9 @@ const toForm = (it) => {
     runeStriking: runes && runes.striking ? runes.striking : 'none',
     // Resilient is armor's second fundamental rune (the analogue of striking).
     runeResilient: runes && runes.resilient ? runes.resilient : 'none',
+    // Reinforcing is a shield's ONLY fundamental rune (#1165). The shield stat
+    // block itself stays in the raw-JSON box for now; hasShield gates the dropdown.
+    runeReinforcing: runes && runes.reinforcing ? runes.reinforcing : 'none',
     runeProperty: runes && Array.isArray(runes.property)
       ? runes.property.map((p) => (typeof p === 'string' ? p : p?.id)).filter(Boolean)
       : [],
@@ -149,6 +153,7 @@ const toForm = (it) => {
     // derives base AC from. `category` defaults to light; an empty Dex cap means
     // uncapped (heavy armor still authors one explicitly).
     hasArmor: !!it.armor,
+    hasShield: !!it.shield,
     armorCategory: it.armor?.category || 'light',
     armorAcBonus: it.armor?.acBonus != null ? String(it.armor.acBonus) : '',
     armorDexCap: it.armor?.dexCap != null ? String(it.armor.dexCap) : '',
@@ -213,15 +218,18 @@ const itemFromForm = (f) => {
   // un-migrated legacy flat `potency` is re-emitted verbatim.
   delete out.runes;
   delete out.potency;
-  const potencyTier = parseInt(f.runePotency, 10) || 0;
+  // A shield holds ONLY a reinforcing rune (#1165) — no potency/striking/property.
+  const reinforcing = f.hasShield && f.runeReinforcing && f.runeReinforcing !== 'none' ? f.runeReinforcing : null;
+  const potencyTier = f.hasShield ? 0 : parseInt(f.runePotency, 10) || 0;
   // Armor's second fundamental is resilient; a weapon's is striking. Pick by the
-  // item's nature so an armor never carries striking (or vice versa).
-  const striking = !f.hasArmor && f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
+  // item's nature so an armor never carries striking (or vice versa), and a shield
+  // never carries either.
+  const striking = !f.hasArmor && !f.hasShield && f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
   const resilient = f.hasArmor && f.runeResilient && f.runeResilient !== 'none' ? f.runeResilient : null;
   // Property runes occupy slots equal to the potency value (#607), for armor and
   // weapons alike. Over-slotting is rejected (not silently truncated) so the GM
   // never loses a rune unawares; striking/resilient have no potency prerequisite.
-  const property = (f.runeProperty || []).filter(Boolean);
+  const property = f.hasShield ? [] : (f.runeProperty || []).filter(Boolean);
   if (property.length > potencyTier) {
     const noun = f.hasArmor ? 'armor' : 'weapon';
     throw new Error(
@@ -230,12 +238,13 @@ const itemFromForm = (f) => {
         : `This ${noun} has ${property.length} property runes but its +${potencyTier} potency grants only ${potencyTier} slot${potencyTier === 1 ? '' : 's'}. Remove the extra ${property.length - potencyTier === 1 ? 'rune' : 'runes'} or raise potency.`
     );
   }
-  if (potencyTier > 0 || striking || resilient || property.length || Object.keys(f.runeRest || {}).length) {
+  if (potencyTier > 0 || striking || resilient || reinforcing || property.length || Object.keys(f.runeRest || {}).length) {
     out.runes = {
       ...(f.runeRest || {}),
       ...(potencyTier > 0 ? { potency: potencyTier } : {}),
       ...(striking ? { striking } : {}),
       ...(resilient ? { resilient } : {}),
+      ...(reinforcing ? { reinforcing } : {}),
       ...(property.length ? { property } : {}),
     };
   } else if (f.legacyPotency != null) {
@@ -512,6 +521,23 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   // name + price and scales each strike's native dice; show what it resolves to
   // so the GM authors base name/price and sees the effect before saving.
   const isArmorRune = e.hasArmor;
+  // A shield authors only its reinforcing rune; the base shield stat block lives
+  // in the raw-JSON box, so parse it (defensively) to preview resolved H/HP/BT.
+  const isShieldItem = e.hasShield;
+  const runeReinforcingKey = isShieldItem && e.runeReinforcing !== 'none' ? e.runeReinforcing : null;
+  let shieldBase = null;
+  if (isShieldItem) {
+    try {
+      const parsed = JSON.parse(e.restJson || '{}');
+      if (parsed && parsed.shield && typeof parsed.shield === 'object') shieldBase = parsed.shield;
+    } catch { /* mid-edit invalid JSON — skip the resolved-stat preview */ }
+  }
+  const shieldPreview = isShieldItem
+    ? resolveShield(
+        { name: e.name, price: e.price.trim() !== '' ? toNum(e.price) : 0, ...(shieldBase || {}) },
+        runeReinforcingKey ? { reinforcing: runeReinforcingKey } : {}
+      )
+    : null;
   const runePotencyTier = parseInt(e.runePotency, 10) || 0;
   const runeStrikingKey = !isArmorRune && e.runeStriking !== 'none' ? e.runeStriking : null;
   const runeResilientKey = isArmorRune && e.runeResilient !== 'none' ? e.runeResilient : null;
@@ -548,7 +574,10 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         ...(runeStrikingKey ? { striking: runeStrikingKey } : {}),
         ...runeProperties,
       });
-  const showRunes = !isSpellItem && (isArmorRune || e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
+  // A shield's bash strikes block must NOT surface the weapon-rune UI — its only
+  // rune is reinforcing, authored in its own block below (#1165 S3).
+  const showRunes = !isSpellItem && !isShieldItem && (isArmorRune || e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
+  const showShieldRunes = !isSpellItem && isShieldItem;
 
   // Set one property slot (by index) within the dense id list — clearing a slot
   // removes it, picking in an empty trailing slot appends. Overflow entries are
@@ -879,6 +908,43 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             value={e.consumableNote}
             onChange={(ev) => set({ consumableNote: ev.target.value })}
           />
+        </div>
+      )}
+
+      {/* Shield rune (#1165 S3): a shield holds exactly one fundamental rune —
+          reinforcing — which raises Hardness/HP/BT on an additive-with-cap curve.
+          No potency/striking/property. The base shield stat block is authored in
+          the raw-JSON box; this dropdown emits runes.reinforcing and previews the
+          resolved name + durability. */}
+      {showShieldRunes && (
+        <div className="form-group" data-testid="item-shield-rune">
+          <label>Shield rune</label>
+          <div className="gm-row">
+            <div className="form-group">
+              <label>reinforcing</label>
+              <select
+                aria-label="rune-reinforcing"
+                value={e.runeReinforcing}
+                onChange={(ev) => set({ runeReinforcing: ev.target.value })}
+              >
+                <option value="none">none</option>
+                {REINFORCING_TIERS.map((k) => (
+                  <option key={k} value={k}>
+                    {REINFORCING[k].label.replace(' Reinforcing', '').toLowerCase()} (item {REINFORCING[k].level})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {shieldPreview && (
+            <p className="gm-hint" data-testid="item-shield-preview">
+              {runeReinforcingKey
+                ? shieldBase
+                  ? `→ ${shieldPreview.name} · Hardness ${shieldPreview.hardness} / HP ${shieldPreview.hp} / BT ${shieldPreview.brokenThreshold} · ${shieldPreview.price} gp`
+                  : `→ ${shieldPreview.name} (add a shield stat block in the raw-JSON box below to preview resolved Hardness/HP/BT)`
+                : 'No reinforcing rune — the shield uses its base Hardness/HP/BT.'}
+            </p>
+          )}
         </div>
       )}
 
