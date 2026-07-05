@@ -32,6 +32,7 @@ const LORE = [
   },
   { id: 'sandpoint', title: 'Sandpoint', category: 'Locations', content: 'A town.' },
   { id: 'general-store', title: 'General Store', category: 'Locations', content: 'Wares.', parent: 'sandpoint' },
+  { id: 'red-dog-smithy', title: 'Red Dog Smithy', category: 'Location', content: 'A hot-tempered smith.' },
 ];
 
 vi.mock('../../contexts/LoreContext', () => ({
@@ -58,6 +59,11 @@ vi.mock('../shop/ShopStorefront', () => ({
 let mockShops = {};
 vi.mock('../../hooks/useShops', () => ({ useShops: () => ({ shops: mockShops }) }));
 
+let mockSupport = {};
+vi.mock('../../hooks/useLocationSupport', () => ({
+  useLocationSupport: () => ({ supported: mockSupport }),
+}));
+
 const closeLore = vi.fn();
 const navigateTo = vi.fn();
 const goBack = vi.fn();
@@ -65,6 +71,7 @@ const goBack = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   mockShops = {};
+  mockSupport = {};
   useContent.mockReturnValue({ loreEntries: LORE, allLoreEntries: LORE, items: [], runes: [] });
   useLore.mockReturnValue({
     isOpen: true,
@@ -99,6 +106,28 @@ describe('LoreDrawer', () => {
     renderDrawer();
     expect(screen.getByText('A great god.')).toBeInTheDocument();
     expect(screen.getByText('He died mysteriously.')).toBeInTheDocument();
+  });
+
+  it('shows a support badge with unlocked skills for a supported employer location', () => {
+    mockSupport = { 'red-dog-smithy': { earnedAt: '7 Sarenith' } };
+    useLore.mockReturnValue({ isOpen: true, currentEntryId: 'red-dog-smithy', closeLore, navigateTo, goBack, canGoBack: false });
+    renderDrawer();
+    expect(screen.getByTestId('lore-support-badge')).toBeInTheDocument();
+    expect(screen.getByText(/Earn Income here \(up to level 4\): Athletics/)).toBeInTheDocument();
+  });
+
+  it('hides the support badge when the employer is not yet supported', () => {
+    mockSupport = {};
+    useLore.mockReturnValue({ isOpen: true, currentEntryId: 'red-dog-smithy', closeLore, navigateTo, goBack, canGoBack: false });
+    renderDrawer();
+    expect(screen.queryByTestId('lore-support-badge')).not.toBeInTheDocument();
+  });
+
+  it('shows no support badge on a non-employer location', () => {
+    mockSupport = { 'red-dog-smithy': { earnedAt: 'x' } };
+    useLore.mockReturnValue({ isOpen: true, currentEntryId: 'absalom', closeLore, navigateTo, goBack, canGoBack: false });
+    renderDrawer();
+    expect(screen.queryByTestId('lore-support-badge')).not.toBeInTheDocument();
   });
 
   it('renders outgoing connections grouped under Connections', () => {

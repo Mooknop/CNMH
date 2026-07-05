@@ -2,20 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useLocationSupport } from '../../hooks/useLocationSupport';
-import { employersByFaction } from '../../data/earnIncomeEmployers';
+import { employersByFaction, employerSkillSummary as unlockLabel } from '../../data/earnIncomeEmployers';
 import './GmTownSupport.css';
-
-const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
-// The skills/lores an employer unlocks, as short readable text.
-const unlockLabel = (e) => {
-  const parts = [
-    ...e.skills.map(cap),
-    ...e.lores.map((l) => `${l} Lore`),
-  ];
-  if (e.anyLore) parts.push(e.lores.length ? 'any Lore' : 'most Lore skills');
-  return parts.join(', ');
-};
 
 // World → Town Support (#1152 S1). The GM marks which Sandpoint locations
 // support the party; support unlocks that location's Earn Income tasks in the

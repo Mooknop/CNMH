@@ -6,6 +6,7 @@ import {
   FACTIONS,
   employersByFaction,
   employerById,
+  employerSkillSummary,
 } from './earnIncomeEmployers';
 
 // The 16 core PF2e skills — employer.skills entries must be one of these.
@@ -143,6 +144,22 @@ describe('employersByFaction', () => {
     employersByFaction().forEach((g) => {
       expect(g.employers.length).toBeGreaterThan(0);
     });
+  });
+});
+
+describe('employerSkillSummary', () => {
+  it('joins core skills and named Lores', () => {
+    expect(employerSkillSummary(employerById('sandpoint-shipyard')))
+      .toBe('Engineering Lore, Labor Lore, Sailing Lore');
+  });
+
+  it('renders anyLore as "most Lore skills" when no named Lores', () => {
+    expect(employerSkillSummary(employerById('turandarok-academy')))
+      .toBe('most Lore skills');
+  });
+
+  it('summarizes a core-skill employer', () => {
+    expect(employerSkillSummary(employerById('red-dog-smithy'))).toBe('Athletics');
   });
 });
 

@@ -57,12 +57,18 @@ describe('DowntimeResultsApproval', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('lists a pending Earn Income result with its payout', () => {
+  it('lists a pending Earn Income result with its payout, marked freelance', () => {
     setup([earnEntry]);
     render(<DowntimeResultsApproval />);
     expect(screen.getByText('Ashka')).toBeInTheDocument();
-    expect(screen.getByText(/Crafting · Lvl 8 DC 24 · rolled 27/)).toBeInTheDocument();
+    expect(screen.getByText(/Crafting \(freelance\) · Lvl 8 DC 24 · rolled 27/)).toBeInTheDocument();
     expect(screen.getByText('3 gp')).toBeInTheDocument();
+  });
+
+  it('names the work location when the result carries one', () => {
+    setup([{ ...earnEntry, skillLabel: 'Performance', locationName: 'The Rusty Dragon' }]);
+    render(<DowntimeResultsApproval />);
+    expect(screen.getByText(/Performance at The Rusty Dragon · Lvl 8/)).toBeInTheDocument();
   });
 
   it('Confirm on Earn Income credits gold (10 + 3), logs, and marks confirmed', () => {
