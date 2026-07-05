@@ -952,6 +952,21 @@
     }
   },
   {
+    "id": "fortification",
+    "type": "property",
+    "armorRune": true,
+    "name": "Fortification",
+    "level": 12,
+    "price": 2000,
+    "description": "This rune wards against deadly blows. Each time you're critically hit while wearing the etched armor, attempt a DC 17 flat check; on a success, the critical hit becomes a normal hit. The rune thickens the armor, increasing its Bulk by 1 and the Strength score required to reduce its check penalty by 2.",
+    "riders": [
+      {
+        "id": "fortification-reminder",
+        "text": "On a critical hit against you, attempt a DC 17 flat check; on a success it becomes a normal hit."
+      }
+    ]
+  },
+  {
     "id": "frost",
     "type": "property",
     "name": "Frost",

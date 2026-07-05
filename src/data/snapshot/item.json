@@ -2212,6 +2212,19 @@
     "id": "cloak-of-repute"
   },
   {
+    "name": "Cloak of the Bat",
+    "description": "A supple, leathery cloak. While wearing it you gain a +2 item bonus to Stealth checks and to Acrobatics checks to Maneuver in Flight, and you can hang upside down from any surface that supports your weight without a check. Activate (two actions, command, Interact; once per day) to either transform the cloak into membranous wings that grant you a fly Speed of 30 feet for 10 minutes, or turn yourself into a bat as a 4th-rank pest form spell. A draconic monk can flavor the wings as scaled dragon wings.",
+    "traits": [
+      "Uncommon",
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn cloak",
+    "price": 950,
+    "weight": 1,
+    "id": "cloak-of-the-bat"
+  },
+  {
     "id": "club",
     "name": "Club",
     "description": "This is a simple piece of stout wood shaped or repurposed to bludgeon an enemy. Clubs can be intricately carved pieces of martial art or as simple as a tree branch or piece of wood. It is light enough to throw.",
@@ -9095,6 +9108,24 @@
     "price": 100,
     "weight": 1,
     "id": "sturdy-shield-minor"
+  },
+  {
+    "name": "Sturdy Shield (Moderate)",
+    "shield": {
+      "health": 104,
+      "breakThreshold": 52,
+      "hardness": 13,
+      "bonus": 2,
+      "speedPenalty": 0
+    },
+    "description": "A heavier grade of sturdy shield, this reinforced steel shield endures punishing blows. It grants a +2 circumstance bonus to AC while raised, and its Hardness 13 lets you Shield Block against powerful strikes without breaking.",
+    "traits": [
+      "Magical"
+    ],
+    "usage": "held in one hand",
+    "price": 1000,
+    "weight": 1,
+    "id": "sturdy-shield-moderate"
   },
   {
     "name": "Sulfur Bomb",
