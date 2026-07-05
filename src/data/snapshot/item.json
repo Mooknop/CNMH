@@ -287,7 +287,12 @@
     ],
     "price": 325,
     "weight": 0,
-    "id": "aeon-stone-clear-spindle"
+    "id": "aeon-stone-clear-spindle",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Aeon Stone (Consumed)",
@@ -371,7 +376,12 @@
     ],
     "price": 2200,
     "weight": 0,
-    "id": "aeon-stone-pale-lavender-ellipsoid"
+    "id": "aeon-stone-pale-lavender-ellipsoid",
+    "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Aeon Stone (Pearly White Spindle)",
@@ -1607,7 +1617,12 @@
     ],
     "usage": "worn shoes",
     "weight": 0.1,
-    "id": "boots-of-bounding"
+    "id": "boots-of-bounding",
+    "image": "img_d00a577e-207d-4082-8757-6bd8657f3400.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Bottled Lightning",
@@ -1754,7 +1769,12 @@
       "acrobatics",
       1
     ],
-    "id": "bracelet-of-dashing"
+    "id": "bracelet-of-dashing",
+    "image": "img_704c5241-0064-490f-a19a-6bcd585c31ef.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Bracers of Missile Deflection",
@@ -1780,7 +1800,12 @@
     ],
     "usage": "worn bracers",
     "weight": 0.1,
-    "id": "bracers-of-missile-deflection"
+    "id": "bracers-of-missile-deflection",
+    "image": "img_9b05f60b-3901-40e7-ae79-24985c4a71bb.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Breastplate",
@@ -1973,7 +1998,12 @@
         ],
         "description": "Frequency once per day; Effect You pull the white thread free and whirl the sling at high speed, letting out an ear-piercing wave of sound. Each creature in a 30-foot cone takes 4d6 sonic damage (DC 21 basic Fortitude save). On a failure the creature is also deafened for 1 round; on a critical failure, deafened for 1 hour."
       }
-    ]
+    ],
+    "image": "img_5b2e99c2-7651-401d-87f3-68b6d1e33eb8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "chain-mail",
@@ -1991,6 +2021,11 @@
       "dexCap": 1,
       "strength": 16,
       "group": "chain"
+    },
+    "image": "img_2bf8502f-7573-4526-ac74-f58984edb14f.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -2009,6 +2044,11 @@
       "dexCap": 3,
       "strength": 12,
       "group": "chain"
+    },
+    "image": "img_c98edf1b-1f03-4acb-9568-3043bf68931d.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -2033,7 +2073,12 @@
     ],
     "weight": 0,
     "price": 56,
-    "id": "channel-protection-amulet"
+    "id": "channel-protection-amulet",
+    "image": "img_a5bff5a7-b072-4ebb-b52b-42c1ac617b20.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Circlet of Persuasion",
@@ -2101,6 +2146,11 @@
           }
         }
       ]
+    },
+    "image": "img_e9751b06-6848-425f-b7b9-0c5397eb8aa2.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -2111,7 +2161,12 @@
     "accessoryTags": [
       "cloak"
     ],
-    "description": "A warm hooded traveler's cloak."
+    "description": "A warm hooded traveler's cloak.",
+    "image": "img_73343c04-35f8-4999-a9df-f526f5d002dd.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Cloak of Elvenkind",
@@ -2137,7 +2192,12 @@
     ],
     "usage": "worn cloak",
     "weight": 0.1,
-    "id": "cloak-of-elvenkind"
+    "id": "cloak-of-elvenkind",
+    "image": "img_974f090f-99cd-46c3-8d24-178cd062d39a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Cloak of Feline Rest",
@@ -2149,7 +2209,12 @@
     ],
     "price": 20,
     "weight": 0.1,
-    "id": "cloak-of-feline-rest"
+    "id": "cloak-of-feline-rest",
+    "image": "img_4722b5d6-d2bb-4a6e-bb0e-a7c2cfc3b2bf.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Cloak of Repute",
@@ -2209,7 +2274,12 @@
         }
       }
     ],
-    "id": "cloak-of-repute"
+    "id": "cloak-of-repute",
+    "image": "img_2b609f21-a9ef-48c4-9f50-cd4ac48b2e90.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Cloak of the Bat",
@@ -2222,7 +2292,12 @@
     "usage": "worn cloak",
     "price": 950,
     "weight": 1,
-    "id": "cloak-of-the-bat"
+    "id": "cloak-of-the-bat",
+    "image": "img_b5c64dd8-ffab-45b1-a2c8-cc1a43b53087.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "club",
@@ -2372,7 +2447,12 @@
         "description": "Activate Interact; Frequency three times per day; Effect You become undetectable to undead creatures for 10 minutes. Undead can't see, hear, or smell you, nor detect you with senses such as scent or tremorsense. A creature can attempt a single DC 18 Will save to ignore this effect. If an undead has reason to believe an undetected opponent is present, it can still attempt to Seek or Strike you."
       }
     ],
-    "id": "corpseward-pendant"
+    "id": "corpseward-pendant",
+    "image": "img_b759fd29-fd4a-4d46-85c1-60ae1df9e2ce.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "bonus": [
@@ -2469,7 +2549,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_ae8fff23-82ea-49d5-bf39-4a9cc5f73699.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -2499,7 +2584,12 @@
       "diplomacy",
       1
     ],
-    "id": "crown-of-the-companion"
+    "id": "crown-of-the-companion",
+    "image": "img_dd326dff-e36b-4e23-ae54-4be64b780f72.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "cultist-cowl",
@@ -2603,7 +2693,12 @@
       "diplomacy",
       1
     ],
-    "id": "diplomats-badge"
+    "id": "diplomats-badge",
+    "image": "img_677434f5-62b6-487d-bfd7-2bb94caa439d.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "dog-bone-knife",
@@ -2650,6 +2745,11 @@
     "runes": {
       "potency": 1,
       "striking": "striking"
+    },
+    "image": "img_f75f3ef7-4901-4a40-a51e-afba2b549c52.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -3454,7 +3554,12 @@
     },
     "accessoryTags": [
       "clothing"
-    ]
+    ],
+    "image": "img_6dc5e3c6-235b-4235-b260-16d9cd6740c2.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Eye Garnets",
@@ -3514,7 +3619,12 @@
     "accessoryTags": [
       "clothing"
     ],
-    "description": "Fine clothing appropriate for a noble court or formal occasion."
+    "description": "Fine clothing appropriate for a noble court or formal occasion.",
+    "image": "img_e6de0b45-d346-4a98-8bc1-92131c5f7a4b.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Flail",
@@ -3694,7 +3804,12 @@
         ]
       }
     ],
-    "id": "frost-vial"
+    "id": "frost-vial",
+    "image": "img_964e6797-e8ba-421e-87ef-70065eb078e7.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "speedPenalty": [
@@ -3886,7 +4001,12 @@
         ]
       }
     ],
-    "id": "ghost-charge"
+    "id": "ghost-charge",
+    "image": "img_62645ecf-0f84-4b55-8a2e-522778275acc.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -4238,7 +4358,12 @@
         "damageType": "slashing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_58dbc373-4be1-4112-abd2-affc11536ad8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "greatsword",
@@ -4264,7 +4389,12 @@
         "damageType": "slashing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_f5fb9c36-c871-4802-b675-272d06f0dba6.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "reactions": [
@@ -4288,7 +4418,12 @@
     ],
     "weight": 0,
     "price": 150,
-    "id": "grim-ring"
+    "id": "grim-ring",
+    "image": "img_817f9a16-aab6-4d25-9c15-9901f7a22a29.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "halberd",
@@ -4316,7 +4451,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_edbb6da1-782c-4753-abfd-1eae11108813.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "half-plate",
@@ -4330,6 +4470,11 @@
       "dexCap": 1,
       "strength": 16,
       "group": "plate"
+    },
+    "image": "img_76858de6-ac46-480f-bd76-6ae9a809d0d5.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -4361,7 +4506,12 @@
     "usage": "worn gloves",
     "price": 0,
     "weight": 0,
-    "id": "handwraps-of-mighty-blows"
+    "id": "handwraps-of-mighty-blows",
+    "image": "img_85e3ce4a-9e00-4699-8a07-1c2616ac1aa1.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -4745,7 +4895,12 @@
         "actionCount": 1,
         "damageType": "slashing"
       }
-    ]
+    ],
+    "image": "img_cb4f5a4b-eb92-4221-b7ed-ef0b9b00b0a8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "kukri",
@@ -4775,7 +4930,12 @@
         "damageType": "slashing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_6cdbe2ef-1f38-4674-bcb0-3ed6e081fb92.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "ladys-knife",
@@ -4859,6 +5019,11 @@
       "dexCap": 4,
       "strength": 10,
       "group": "leather"
+    },
+    "image": "img_0181e19e-347e-47d2-9191-12bbb98c0309.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -4917,7 +5082,12 @@
         "damageType": "slashing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_e280eace-dd2b-4ada-a02a-72376788eaa8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "mace",
@@ -4943,7 +5113,12 @@
         "damageType": "bludgeoning"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_cf448639-2c8e-474b-8149-d5178b788139.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "usage": "held in 1 hand",
@@ -5217,7 +5392,12 @@
         ],
         "description": "Activate (10 minutes, envision, Interact); Frequency once per day; Requirements Monarch possesses a major gift; Effect Monarch casts dream message (heightened to 4th rank) to your specifications."
       }
-    ]
+    ],
+    "image": "img_42c793ed-b41b-4f45-94bf-ef681c448e68.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "moonlit-chain",
@@ -5529,7 +5709,12 @@
         ]
       }
     ],
-    "id": "necrotic-bomb"
+    "id": "necrotic-bomb",
+    "image": "img_1852f4cc-d20d-4808-8975-2a75ed2bf940.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "obsidian-goggles",
@@ -5541,7 +5726,12 @@
     ],
     "usage": "worn",
     "price": 150,
-    "weight": 0
+    "weight": 0,
+    "image": "img_142f054a-98e9-4956-ac9d-d466ece502ba.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Oil of Weightlessness",
@@ -5597,7 +5787,12 @@
     "accessoryTags": [
       "clothing"
     ],
-    "description": "Ordinary, everyday clothing."
+    "description": "Ordinary, everyday clothing.",
+    "image": "img_ad29206b-7cd3-4cde-8434-5ab803dc7fc5.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Padded Armor",
@@ -5635,7 +5830,12 @@
     "bonus": [
       "occultism",
       1
-    ]
+    ],
+    "image": "img_789af94e-bf05-48f5-a95e-10b5b5b27324.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Pernicious Spore Bomb",
@@ -5752,7 +5952,12 @@
         ]
       }
     ],
-    "id": "pernicious-spore-bomb"
+    "id": "pernicious-spore-bomb",
+    "image": "img_81f484bd-de61-42d8-a672-9e89742ca5ea.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Persona Mask",
@@ -5779,7 +5984,12 @@
     ],
     "usage": "worn mask",
     "weight": 0,
-    "id": "persona-mask"
+    "id": "persona-mask",
+    "image": "img_4fb2f670-1daa-4793-a50f-5166a1a098e0.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Peshpine Grenade",
@@ -6067,7 +6277,12 @@
       "clothing",
       "pocketed"
     ],
-    "description": "A sturdy vest lined with pockets. Paired runes need one pocketed garment for each rune of the pair."
+    "description": "A sturdy vest lined with pockets. Paired runes need one pocketed garment for each rune of the pair.",
+    "image": "img_7d04f948-4235-4408-a9d9-86c58528a05b.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "potion-of-flying-standard",
@@ -6086,7 +6301,12 @@
       "durationMinutes": 1,
       "note": "Fly Speed 40 ft (1 min)"
     },
-    "description": "Upon drinking this effervescent concoction, you gain a fly Speed of 40 feet for 1 minute."
+    "description": "Upon drinking this effervescent concoction, you gain a fly Speed of 40 feet for 1 minute.",
+    "image": "img_64643f58-9255-4b9d-8d69-5553b01d061e.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Potion of Waterbreathing",
@@ -6178,7 +6398,12 @@
         }
       }
     ],
-    "id": "power-ring"
+    "id": "power-ring",
+    "image": "img_2ff3a304-1164-43f0-9145-e707d5feb2c1.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Pressure Bomb",
@@ -6296,7 +6521,12 @@
         ]
       }
     ],
-    "id": "pressure-bomb"
+    "id": "pressure-bomb",
+    "image": "img_54f7864c-ac6a-4552-a177-115e9c3abd56.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "primeval-mistletoe",
@@ -6463,7 +6693,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_e1e5a4cd-e9e0-46c2-8080-b42091e46797.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "rapier",
@@ -6493,7 +6728,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_8e1caefc-df6c-4408-b253-0421e2015c67.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Rations",
@@ -6666,6 +6906,61 @@
     "noShop": true
   },
   {
+    "id": "reinforcing",
+    "name": "Reinforcing",
+    "level": 4,
+    "price": 75,
+    "weight": 0,
+    "traits": [
+      "Magical"
+    ],
+    "description": "A reinforcing rune bolsters a shield's structure, raising its Hardness, Hit Points, and Break Threshold up to a maximum for each grade. A shield can hold only a reinforcing rune — no potency or property runes.",
+    "variants": [
+      {
+        "level": 4,
+        "label": "Minor",
+        "name": "Minor Reinforcing",
+        "price": 75,
+        "description": "Hardness +3 (max 8), HP +44 (max 64), BT +22 (max 32)."
+      },
+      {
+        "level": 7,
+        "label": "Lesser",
+        "name": "Lesser Reinforcing",
+        "price": 300,
+        "description": "Hardness +3 (max 10), HP +52 (max 80), BT +26 (max 40)."
+      },
+      {
+        "level": 10,
+        "label": "Moderate",
+        "name": "Moderate Reinforcing",
+        "price": 900,
+        "description": "Hardness +3 (max 13), HP +64 (max 104), BT +32 (max 52)."
+      },
+      {
+        "level": 13,
+        "label": "Greater",
+        "name": "Greater Reinforcing",
+        "price": 2500,
+        "description": "Hardness +5 (max 15), HP +80 (max 120), BT +40 (max 60)."
+      },
+      {
+        "level": 16,
+        "label": "Major",
+        "name": "Major Reinforcing",
+        "price": 8000,
+        "description": "Hardness +5 (max 17), HP +84 (max 136), BT +42 (max 68)."
+      },
+      {
+        "level": 19,
+        "label": "Supreme",
+        "name": "Supreme Reinforcing",
+        "price": 32000,
+        "description": "Hardness +7 (max 20), HP +108 (max 160), BT +54 (max 80)."
+      }
+    ]
+  },
+  {
     "id": "resilient",
     "name": "Resilient",
     "level": 8,
@@ -6743,7 +7038,12 @@
         "effect": "The survey lasts 1 hour and detects observers within 120 feet. You can cast invisibility or 4th-rank invisibility on yourself once per day."
       }
     ],
-    "id": "ring-of-observation"
+    "id": "ring-of-observation",
+    "image": "img_995f75b5-3a2c-4fcc-a24f-8a17e71a60a6.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -6790,7 +7090,12 @@
         "effect": "Track Sigil's maximum range is 100 miles. If the sigil was placed on a living creature, you also determine whether the creature is alive, its distance from you, and any conditions affecting it."
       }
     ],
-    "id": "ring-of-sigils"
+    "id": "ring-of-sigils",
+    "image": "img_d3da4b5c-8b6b-448f-838c-a4eaec4657b8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -6857,7 +7162,12 @@
         "1": 2
       }
     },
-    "description": "This ring is made from the purest platinum and is covered in esoteric arcane symbols. It does nothing unless you have a spellcasting class feature with the arcane tradition. While wearing the ring, you gain a +1 item bonus to Arcana checks and have two additional 1st-rank arcane spell slots each day, which you can prepare or cast spontaneously as you normally cast your spells. If you take off the ring, you lose the additional spell slots. You can't gain spell slots from more than one ring of wizardry per day."
+    "description": "This ring is made from the purest platinum and is covered in esoteric arcane symbols. It does nothing unless you have a spellcasting class feature with the arcane tradition. While wearing the ring, you gain a +1 item bonus to Arcana checks and have two additional 1st-rank arcane spell slots each day, which you can prepare or cast spontaneously as you normally cast your spells. If you take off the ring, you lose the additional spell slots. You can't gain spell slots from more than one ring of wizardry per day.",
+    "image": "img_5b38db1e-a9ca-4ce4-b707-1fedd2d187bd.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Rope (50ft)",
@@ -7063,6 +7373,11 @@
       "dexCap": 2,
       "strength": 14,
       "group": "composite"
+    },
+    "image": "img_d37ae439-6fc5-4707-b8fd-11e50b4c0faf.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -7135,7 +7450,12 @@
       ],
       "description": "You grant resistance to one energy damage type of your choosing to all allies within 30 feet, equal to double the rank of the spell you expended. This lasts for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-energy-ablation"
+    "id": "scepter-of-energy-ablation",
+    "image": "img_4d427bbe-71aa-43ab-808b-3c4082179905.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Scepter of Greater Distances",
@@ -7169,7 +7489,12 @@
       ],
       "description": "You grant all allies within 30 feet a +10-foot status bonus to Speed and a +1 status bonus to DCs and checks against effects that would impart immobilized, grabbed, or restrained for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-greater-distances"
+    "id": "scepter-of-greater-distances",
+    "image": "img_7a9dfbff-a20b-4602-82b9-59bf6ec8614a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Scepter of Heightening",
@@ -7213,7 +7538,12 @@
       ],
       "description": "For the duration, you can use the Heighten spellshape from this scepter as if it had a frequency of once per round instead of once per hour. This effect lasts for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-heightening"
+    "id": "scepter-of-heightening",
+    "image": "img_0a278e4d-ede5-4e46-b027-1a654c569ec9.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Scepter of Purifying",
@@ -7248,7 +7578,12 @@
       ],
       "description": "You restore 1d8 Hit Points per rank of the spell to all creatures within a 30-foot cone. You can attempt to counteract the sickened condition of all creatures in the area, or a disease or poison affecting a single target in the area, using the rank of the spell you expended as the spell rank for your counteract modifier."
     },
-    "id": "scepter-of-purifying"
+    "id": "scepter-of-purifying",
+    "image": "img_a8cda3f9-02e0-42d7-9205-57f7105a3f44.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Scepter of Quickening",
@@ -7290,7 +7625,12 @@
       ],
       "description": "You and all allies within 30 feet are quickened for 1 minute and can use the extra action each round only to Strike and Stride."
     },
-    "id": "scepter-of-quickening"
+    "id": "scepter-of-quickening",
+    "image": "img_3f590015-8d40-4eba-b36b-2ebfc1873eb0.jpg",
+    "imagePosition": {
+      "x": 76,
+      "y": 10
+    }
   },
   {
     "name": "Scepter of Second Chances",
@@ -7325,7 +7665,12 @@
       ],
       "description": "You and allies within 30 feet can manifest a better reality for yourselves for a number of rounds equal to the rank of the spell you expended. For the duration, affected creatures can choose to reroll a single attack roll, saving throw, or skill check. They must take the new result even if it is worse. This is a fortune effect."
     },
-    "id": "scepter-of-second-chances"
+    "id": "scepter-of-second-chances",
+    "image": "img_dc9a08ad-6817-4cfc-ba40-b7d46b649d2a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Scepter of Sickening",
@@ -7386,7 +7731,12 @@
       ],
       "description": "You exude a putrid aura in a 20-foot emanation. The aura lasts a number of rounds equal to the rank of the expended spell. Creatures that end their turn within the area become sickened 1 or increase the value of their sickened condition by 1, to a maximum of sickened 4. Creatures in the area cannot reduce their sickened condition below 1."
     },
-    "id": "scepter-of-sickening"
+    "id": "scepter-of-sickening",
+    "image": "img_1af70354-db90-455c-8bfa-f407984c6614.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "scorpion-whip",
@@ -7418,7 +7768,12 @@
         "actionCount": 1,
         "damageType": "slashing"
       }
-    ]
+    ],
+    "image": "img_02753f4c-78fa-45c5-8d35-9ea4ffa7f1be.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "scroll-of-clairaudience",
@@ -7989,7 +8344,12 @@
         "damageType": "bludgeoning"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_5b2e99c2-7651-401d-87f3-68b6d1e33eb8.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "sneaky-key",
@@ -8123,7 +8483,7 @@
   {
     "name": "Spacious Pouch",
     "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
-    "image": "img_a0202de2-469b-4cfe-8d1b-8d1e9ea71df6.jpg",
+    "image": "img_ac3cc5da-bd2c-44b9-9259-ffbeb8fc21f9.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
@@ -8154,7 +8514,12 @@
       "capacity": 50,
       "ignored": 50
     },
-    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag does not change the Bulk of the pouch itself. You can Interact with the pouch to stow items in it or remove them just like a mundane sack, though an object still needs to fit through the opening. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. A living creature placed inside has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13."
+    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag does not change the Bulk of the pouch itself. You can Interact with the pouch to stow items in it or remove them just like a mundane sack, though an object still needs to fit through the opening. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. A living creature placed inside has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13.",
+    "image": "img_ac3cc5da-bd2c-44b9-9259-ffbeb8fc21f9.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "sparkblade",
@@ -8197,7 +8562,12 @@
         ],
         "description": "Frequency once per day; Effect You point the sparkblade at a foe within 30 feet and shoot an arc of lightning that can leap to a second creature within 30 feet of the first. Each target takes 2d4+4 electricity damage (DC 19 basic Reflex save)."
       }
-    ]
+    ],
+    "image": "img_2a405896-e591-4f8d-8d5d-585b01c41400.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "spear",
@@ -8235,7 +8605,12 @@
         "damageType": "piercing"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_33591313-f710-4d4e-99ae-b1d8f922ca7b.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "actions": [
@@ -8304,7 +8679,12 @@
         "actionCount": 1,
         "damageType": "slashing"
       }
-    ]
+    ],
+    "image": "img_a7dc1c2a-3354-40a0-b896-e970359c9d16.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "spiked-steel-shield",
@@ -8343,6 +8723,11 @@
       "dexCap": 1,
       "strength": 16,
       "group": "composite"
+    },
+    "image": "img_c13ebf76-6074-4ce6-bcd2-37dcbde619ec.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -8397,7 +8782,12 @@
         "damageType": "bludgeoning"
       }
     ],
-    "runes": {}
+    "runes": {},
+    "image": "img_98b3aa2c-af6e-4d63-af3e-640da4779cd4.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "staff-of-phantasms",
@@ -8478,7 +8868,12 @@
           ]
         }
       }
-    ]
+    ],
+    "image": "img_79f3aa44-68b0-461e-89bf-e22dd4ac0129.jpg",
+    "imagePosition": {
+      "x": 69,
+      "y": 10
+    }
   },
   {
     "id": "staff-of-the-unblinking-eye",
@@ -8627,7 +9022,12 @@
           ]
         }
       }
-    ]
+    ],
+    "image": "img_d6a51e6f-2222-4a47-932e-2312fdce8350.jpg",
+    "imagePosition": {
+      "x": 68,
+      "y": 1
+    }
   },
   {
     "name": "Stalwart's Ring",
@@ -8639,7 +9039,12 @@
     ],
     "weight": 0,
     "price": 160,
-    "id": "stalwarts-ring"
+    "id": "stalwarts-ring",
+    "image": "img_196419b5-4024-4bb0-9e96-f90656e10dc6.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Star Grenade",
@@ -8770,6 +9175,11 @@
       "breakThreshold": 10,
       "hardness": 5,
       "bonus": 2
+    },
+    "image": "img_49c629aa-869a-4ed4-bc13-544437e84c7e.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -9071,6 +9481,11 @@
       "dexCap": 3,
       "strength": 12,
       "group": "leather"
+    },
+    "image": "img_b2b841b3-1ada-4c2d-b426-1929956cbc2a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -9445,6 +9860,11 @@
       "breakThreshold": 10,
       "hardness": 5,
       "bonus": 2
+    },
+    "image": "img_de7e0ead-fe8d-47da-8c37-9f391b6835f6.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -9616,7 +10036,12 @@
       }
     ],
     "id": "tricksters-mandolin",
-    "playingEffect": "coda-mandolin-playing"
+    "playingEffect": "coda-mandolin-playing",
+    "image": "img_d688bffd-96bc-414d-a3df-035b546ae81a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "umbrella",
@@ -9673,7 +10098,12 @@
       "deception",
       1
     ],
-    "description": "This elegant copper ring has miniature images of songbirds engraved around its circumference. You gain a +1 item bonus to Deception checks.\n\nActivate—Throw Voice (two actions, manipulate; once per day): Twisting the ring around your finger lets you magically throw your voice, with the effects of a ventriloquism spell."
+    "description": "This elegant copper ring has miniature images of songbirds engraved around its circumference. You gain a +1 item bonus to Deception checks.\n\nActivate—Throw Voice (two actions, manipulate; once per day): Twisting the ring around your finger lets you magically throw your voice, with the effects of a ventriloquism spell.",
+    "image": "img_2262e7f8-1ed3-4f9c-9055-d54eaf0021b7.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Vexing Vapor",
@@ -10002,7 +10432,12 @@
     ],
     "weight": 0,
     "price": 160,
-    "id": "warriors-training-ring"
+    "id": "warriors-training-ring",
+    "image": "img_adcbdd8e-5624-4406-b298-2154008b4aa0.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "name": "Water Bomb",
@@ -10149,7 +10584,12 @@
     "usage": "worn",
     "price": 28,
     "weight": 0,
-    "id": "wayfinder"
+    "id": "wayfinder",
+    "image": "img_7b6cdea6-0fcf-45fd-9853-79ef481680d7.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "weapon-potency",
@@ -10201,7 +10641,12 @@
       "capacity": 0.4,
       "ignored": 0.4
     },
-    "id": "wig-of-holding"
+    "id": "wig-of-holding",
+    "image": "img_bd9c5045-5d26-4da6-add7-ab4950262889.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "wind-ocarina",
@@ -10215,7 +10660,12 @@
     ],
     "price": 50,
     "weight": 0.1,
-    "description": "A blue finish decorates the ceramic body of a wind ocarina. Activate (Interact): When you play a note, for 1 minute strong gusts sweep into a 15-foot emanation around you. Ammunition from physical ranged attacks can't pass through the area, and larger thrown weapons take a –2 circumstance penalty to attack rolls if their path crosses it. The area is difficult terrain, and gases—including creatures in gaseous form—can't pass through the emanation."
+    "description": "A blue finish decorates the ceramic body of a wind ocarina. Activate (Interact): When you play a note, for 1 minute strong gusts sweep into a 15-foot emanation around you. Ammunition from physical ranged attacks can't pass through the area, and larger thrown weapons take a –2 circumstance penalty to attack rolls if their path crosses it. The area is difficult terrain, and gases—including creatures in gaseous form—can't pass through the emanation.",
+    "image": "img_ce3ebf8a-79ba-42aa-ab3d-bed596af5819.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "wisp-chain",
@@ -10306,7 +10756,12 @@
         ],
         "description": "Activate (two actions, command, Interact); Frequency once per day; Effect You place the statue on solid ground and speak its name, transforming it into a Giant Viper (minion trait) for 8 hours or until reduced to 0 HP."
       }
-    ]
+    ],
+    "image": "img_123ec24e-b25a-4189-b2f4-4c7b15bde078.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "id": "wooden-shield",
@@ -10319,6 +10774,11 @@
       "breakThreshold": 6,
       "hardness": 3,
       "bonus": 2
+    },
+    "image": "img_c2220b24-91e3-426a-b5a9-7cd737b3628e.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
     }
   },
   {
@@ -10362,7 +10822,12 @@
         ],
         "description": "Frequency once per day; Effect You inscribe the words \"read by\" and your name inside a nonmagical literary work such as a book, scroll, or play, immediately gaining cursory knowledge of the work as though you had skimmed it for 5 minutes."
       }
-    ]
+    ],
+    "image": "img_84a27220-9198-4b02-a9ef-0e174991f60a.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    }
   },
   {
     "reactions": [

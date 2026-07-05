@@ -1026,6 +1026,17 @@
     "description": "This armor can be disguised with a mere thought. You can Activate the armor (envision) to change its appearance to that of ordinary or fine clothes of your imagining. The armor's statistics don't change, only its appearance. Activating the armor again returns it to its original form."
   },
   {
+    "id": "greater-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "greater",
+    "name": "Greater Reinforcing",
+    "level": 13,
+    "price": 2500,
+    "description": "A fundamental shield rune. Raises Hardness by 5 (max 15), HP by 80 (max 120), and Break Threshold by 40 (max 60), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+  },
+  {
     "id": "greater-resilient",
     "type": "fundamental",
     "fundamental": "resilient",
@@ -1046,6 +1057,28 @@
     "level": 12,
     "price": 1065,
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "lesser-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "lesser",
+    "name": "Lesser Reinforcing",
+    "level": 7,
+    "price": 300,
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 10), HP by 52 (max 80), and Break Threshold by 26 (max 40), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+  },
+  {
+    "id": "major-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "major",
+    "name": "Major Reinforcing",
+    "level": 16,
+    "price": 8000,
+    "description": "A fundamental shield rune. Raises Hardness by 5 (max 17), HP by 84 (max 136), and Break Threshold by 42 (max 68), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
   },
   {
     "id": "major-resilient",
@@ -1132,6 +1165,28 @@
       "castRank": 3,
       "dc": 25
     }
+  },
+  {
+    "id": "minor-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "minor",
+    "name": "Minor Reinforcing",
+    "level": 4,
+    "price": 75,
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 8), HP by 44 (max 64), and Break Threshold by 22 (max 32), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+  },
+  {
+    "id": "moderate-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "moderate",
+    "name": "Moderate Reinforcing",
+    "level": 10,
+    "price": 900,
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 13), HP by 64 (max 104), and Break Threshold by 32 (max 52), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
   },
   {
     "id": "pacifying",
@@ -1929,6 +1984,17 @@
     "level": 4,
     "price": 65,
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "supreme-reinforcing",
+    "type": "fundamental",
+    "fundamental": "reinforcing",
+    "target": "shield",
+    "tierKey": "supreme",
+    "name": "Supreme Reinforcing",
+    "level": 19,
+    "price": 32000,
+    "description": "A fundamental shield rune. Raises Hardness by 7 (max 20), HP by 108 (max 160), and Break Threshold by 54 (max 80), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
   },
   {
     "id": "swallow-spike",
