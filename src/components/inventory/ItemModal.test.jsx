@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ItemModal from './ItemModal';
 
 vi.mock('../shared/TraitTag', () => ({
@@ -327,6 +327,32 @@ describe('ItemModal', () => {
     const item = { ...baseItem, shield: { bonus: 2 } };
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
     expect(screen.queryByText('Broken Threshold')).toBeNull();
+  });
+
+  // --- reinforcing rune (#1165 S4) ---
+  it('shows resolved Hardness/HP/BT, the reinforcing-tier line, and the Remaster name for a reinforced shield', () => {
+    const item = {
+      name: 'Steel Shield',
+      shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 },
+      runes: { reinforcing: 'lesser' },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    // Additive-with-cap over the steel base → H8 / HP72 / BT36.
+    const grid = screen.getByText('Hardness').closest('.item-detail-grid');
+    expect(within(grid).getByText('8')).toBeInTheDocument();   // hardness
+    expect(within(grid).getByText('72')).toBeInTheDocument();  // hp
+    expect(within(grid).getByText('36')).toBeInTheDocument();  // broken threshold
+    expect(screen.getByTestId('shield-rune-tier')).toHaveTextContent('Lesser Reinforcing');
+    expect(screen.getByText('Lesser Reinforcing Steel Shield')).toBeInTheDocument();
+  });
+
+  it('does not show a reinforcing-tier line for a plain (non-reinforced) shield', () => {
+    const item = { ...baseItem, name: 'Steel Shield', shield: { hardness: 5, health: 20, breakThreshold: 10 } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.queryByTestId('shield-rune-tier')).toBeNull();
+    // Base values pass through unchanged.
+    const grid = screen.getByText('Hardness').closest('.item-detail-grid');
+    expect(within(grid).getByText('5')).toBeInTheDocument();
   });
 
   // --- description ---
