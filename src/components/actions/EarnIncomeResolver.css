@@ -84,6 +84,32 @@
   border-color: var(--theme-accent, var(--accent-bg));
 }
 
+.eir-override {
+  font-weight: 600;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.eir-bonus,
+.eir-risk {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+}
+
+.eir-bonus {
+  border-left-color: var(--color-success, #38a169);
+  color: var(--theme-text, var(--shell-text));
+}
+
+.eir-risk {
+  border-left-color: var(--peril-mid, #c05621);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
 .eir-roll-row {
   display: flex;
   gap: var(--space-2);

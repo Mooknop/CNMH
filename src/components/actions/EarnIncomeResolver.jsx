@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useLocationSupport } from '../../hooks/useLocationSupport';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { taskDc, payoutCp, cpToGp } from '../../utils/earnIncome';
 import { earnIncomeSkillOptions } from '../../utils/earnIncomeSkills';
 import { pendingRollSlots, buildEarnIncomeResult } from '../../utils/earnIncomeResults';
 import { getRollsForActivity, periodState } from '../../utils/downtimeUtils';
+import {
+  FREELANCE,
+  FREELANCE_ID,
+  EARN_INCOME_EMPLOYERS,
+  employerById,
+} from '../../data/earnIncomeEmployers';
 import './EarnIncomeResolver.css';
 
 const DEGREE_LABEL = {
@@ -28,19 +35,24 @@ const formatCp = (cp) => {
 };
 
 // Player-facing Earn Income resolution. Appears in the Downtime tab once the
-// player has committed at least one Earn Income day this period and the GM has
-// assigned them a task level. The player picks the skill (which selects the
-// payout column), enters their raw d20 + total, and submits a pending result
-// for the GM to confirm — no gold is credited here (Slice 3 does that).
+// player has committed at least one Earn Income day this period. The player
+// picks *where* they worked — Freelance around town (always available) or a
+// Sandpoint employer the party currently supports (#1152). The job sets the
+// task level (its own level, or 4 for freelance) and unlocks that location's
+// skills; a GM-assigned task level (cnmh_earnincometask_global) overrides the
+// job's level when present. They then enter their raw d20 + total and submit a
+// pending result for the GM to confirm — no gold is credited here.
 const EarnIncomeResolver = ({ character }) => {
   const charId = character?.id || 'unknown';
   const charData = useCharacter(character);
+  const { supported } = useLocationSupport();
 
   const [block] = useSyncedState('cnmh_downtimeblock_global', null);
   const [downtime] = useSyncedState(`cnmh_downtime_${charId}`, null);
   const [taskMap] = useSyncedState('cnmh_earnincometask_global', null);
   const [results, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
 
+  const [jobId, setJobId] = useState(FREELANCE_ID);
   const [skillKey, setSkillKey] = useState('');
   const [d20, setD20] = useState('');
   const [total, setTotal] = useState('');
@@ -59,21 +71,29 @@ const EarnIncomeResolver = ({ character }) => {
   });
   if (pending === 0) return null;
 
-  const taskLevel = taskMap?.[charId];
-  if (taskLevel == null) {
-    return (
-      <div className="eir-wrap">
-        <span className="eir-title">Earn Income</span>
-        <p className="eir-hint">
-          Waiting on the GM to assign you a task level for this job.
-        </p>
-      </div>
-    );
-  }
+  // Employers the party currently supports, in data order, plus the always-on
+  // freelance option at the top.
+  const supportedEmployers = EARN_INCOME_EMPLOYERS.filter((e) => supported?.[e.id]);
+  const job = employerById(jobId) || FREELANCE;
 
+  // Task level: a GM override for this PC wins; otherwise the job's level.
+  const gmOverride = taskMap?.[charId];
+  const hasOverride = gmOverride != null;
+  const taskLevel = hasOverride ? gmOverride : job.level;
   const dc = taskDc(taskLevel);
-  const options = earnIncomeSkillOptions(charData);
+
+  const options = earnIncomeSkillOptions(charData, job);
   const selected = options.find((o) => o.key === skillKey) || null;
+
+  // A location circumstance/item bonus covering the selected skill (reminder
+  // only — the player still enters their own total).
+  const bonus =
+    job.bonus && selected && job.bonus.skills.includes(selected.key) ? job.bonus : null;
+
+  // Risk note: always shown for an employer that carries one; for freelance the
+  // note is about Thievery, so only surface it when Thievery is the pick.
+  const riskNote =
+    job.risk && (job.id !== FREELANCE_ID || selected?.key === 'thievery') ? job.risk : null;
 
   const d20Num = parseInt(d20, 10);
   const totalNum = parseInt(total, 10);
@@ -85,6 +105,11 @@ const EarnIncomeResolver = ({ character }) => {
   const cp = canResolve
     ? payoutCp({ taskLevel, rank: selected.rank, degree })
     : null;
+
+  const changeJob = (nextId) => {
+    setJobId(nextId);
+    setSkillKey(''); // the skill list depends on the job
+  };
 
   const submit = () => {
     if (!canResolve) return;
@@ -100,6 +125,8 @@ const EarnIncomeResolver = ({ character }) => {
       total: totalNum,
       degree,
       payoutCp: cp,
+      locationId: job.id === FREELANCE_ID ? null : job.id,
+      locationName: job.id === FREELANCE_ID ? null : job.name,
       startedAt,
     });
     setResults((prev) => ({ entries: [...(prev?.entries || []), entry] }));
@@ -112,15 +139,41 @@ const EarnIncomeResolver = ({ character }) => {
     <div className="eir-wrap">
       <div className="eir-header">
         <span className="eir-title">Earn Income</span>
-        <span className="eir-task">Level {taskLevel} · DC {dc}</span>
+        <span className="eir-task">
+          Level {taskLevel} · DC {dc}
+          {hasOverride && <span className="eir-override"> · GM-set</span>}
+        </span>
       </div>
       <p className="eir-sub">
         {pending} unresolved roll{pending === 1 ? '' : 's'} — resolve each day you worked.
       </p>
 
+      <label className="eir-field">
+        Working at
+        <select
+          className="eir-select"
+          value={jobId}
+          onChange={(e) => changeJob(e.target.value)}
+          aria-label="Earn Income location"
+        >
+          <option value={FREELANCE_ID}>Freelance around Sandpoint (L4)</option>
+          {supportedEmployers.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name} (L{e.level})
+            </option>
+          ))}
+        </select>
+      </label>
+      {supportedEmployers.length === 0 && (
+        <p className="eir-hint">
+          No employers support the party yet — freelancing around town. The GM grants
+          location support in GM Tools.
+        </p>
+      )}
+
       {options.length === 0 ? (
         <p className="eir-hint">
-          No skill you&rsquo;re trained in qualifies for Earn Income.
+          No skill you&rsquo;re trained in qualifies for this job.
         </p>
       ) : (
         <>
@@ -140,6 +193,16 @@ const EarnIncomeResolver = ({ character }) => {
               ))}
             </select>
           </label>
+
+          {bonus && (
+            <p className="eir-bonus" role="note">
+              +{bonus.value} {bonus.type} bonus here — remember to include it in your total.
+              {bonus.note ? ` (${bonus.note})` : ''}
+            </p>
+          )}
+          {riskNote && (
+            <p className="eir-risk" role="note">{riskNote}</p>
+          )}
 
           <div className="eir-roll-row">
             <label className="eir-field eir-field--narrow">

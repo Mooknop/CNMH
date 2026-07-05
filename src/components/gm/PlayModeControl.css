@@ -185,6 +185,14 @@
   white-space: nowrap;
 }
 
+.pmc-downtime-hint {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
 /* Mode group: label stacked ABOVE the pills (per spec marquee-modes) */
 .pmc-modes {
   display: flex;
