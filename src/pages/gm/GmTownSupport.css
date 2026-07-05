@@ -1,0 +1,138 @@
+/* World → Town Support (#1152 S1). Faction-grouped list of Sandpoint Earn
+   Income employers with per-location support toggles. Reuses GM shell tokens. */
+
+.gm-support {
+  padding: var(--space-4);
+  max-width: 60rem;
+  color: var(--shell-text-primary);
+}
+
+.gm-support-head h1 {
+  margin: 0 0 var(--space-2);
+}
+
+.gm-support-rp-hint {
+  margin-top: calc(var(--space-2) * -0.5);
+}
+
+.gm-support-rp-hint a {
+  color: var(--gold-mid);
+}
+
+.gm-support-search {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  margin: var(--space-3) 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+
+.gm-support-count {
+  display: block;
+  color: var(--shell-text-tertiary);
+  font-size: 0.85rem;
+}
+
+.gm-support-faction {
+  margin-top: var(--space-4);
+}
+
+.gm-support-faction-name {
+  margin: 0 0 var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--shell-border);
+  font-size: 1.05rem;
+  color: var(--shell-text-secondary);
+}
+
+.gm-support-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gm-support-row {
+  padding: var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+
+.gm-support-row.is-on {
+  border-color: var(--accent-outline);
+  background: var(--accent-tint);
+}
+
+.gm-support-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.gm-support-name {
+  font-weight: 600;
+}
+
+.gm-support-level {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-full);
+  color: var(--shell-text-secondary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.gm-support-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary);
+}
+
+.gm-support-tag {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: help;
+}
+
+.gm-support-tag--bonus {
+  background: var(--d-succ-bg);
+  color: var(--d-succ-fg, var(--shell-text-primary));
+  border: 1px solid var(--d-succ-border, var(--shell-border));
+}
+
+.gm-support-tag--risk {
+  background: var(--peril-light);
+  color: var(--shell-text-primary);
+}
+
+.gm-support-since {
+  color: var(--shell-text-tertiary);
+  font-size: 0.75rem;
+}
+
+.gm-support-note {
+  margin: var(--space-2) 0 0;
+  color: var(--shell-text-tertiary);
+  font-size: 0.85rem;
+}
+
+.gm-support-risk {
+  margin: var(--space-2) 0 0;
+  color: var(--peril-light);
+  font-size: 0.82rem;
+}
