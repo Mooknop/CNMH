@@ -41,12 +41,15 @@ export function removeResult(results, id) {
   return (results || []).filter((r) => r.id !== id);
 }
 
-// Builds a pending Earn Income result entry to append to the queue.
+// Builds a pending Earn Income result entry to append to the queue. The
+// location fields (#1152 S2) record where the PC worked — null for freelance
+// jobs; S3 surfaces them in the approval/summary views.
 export function buildEarnIncomeResult({
   charId, charName,
   taskLevel, dc,
   skillKey, skillLabel, rank,
   d20, total, degree, payoutCp,
+  locationId, locationName,
   startedAt,
 }) {
   return {
@@ -63,6 +66,8 @@ export function buildEarnIncomeResult({
     total,
     degree,
     payoutCp,
+    locationId: locationId ?? null,
+    locationName: locationName ?? null,
     status: 'pending',
     periodStartedAt: startedAt ?? null,
     ts: Date.now(),

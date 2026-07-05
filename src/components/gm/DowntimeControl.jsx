@@ -161,7 +161,11 @@ const DowntimeControl = () => {
             </button>
           </div>
 
-          <span className="pmc-label">Earn Income Tasks</span>
+          <span className="pmc-label">Earn Income Task Override</span>
+          <p className="pmc-downtime-hint">
+            Optional — leave blank to let each PC use their chosen location&rsquo;s level
+            (freelance is 4). A value here caps that PC&rsquo;s task at the level you set.
+          </p>
           <div className="pmc-downtime-tasks">
             {(characters || []).map((c) => {
               const level = taskMap?.[c.id];
