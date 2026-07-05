@@ -414,6 +414,20 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
   );
 };
 
+// List row: name + a "no image" flag for items missing one, so the GM can spot
+// gaps at a glance without opening each entry.
+const ItemRow = ({ item, spells }) => {
+  const name = catalogDisplayName(item, spells) || item.id;
+  return !item.image ? (
+    <span className="gm-item-row-title">
+      {name}
+      <span className="gm-item-row-noimg" title="No image set" aria-hidden="true">No image</span>
+    </span>
+  ) : (
+    name
+  );
+};
+
 const VariantSubform = ({ variant, idPrefix, onChange }) => (
   <div className="gm-row">
     <div className="form-group">
@@ -1129,7 +1143,7 @@ const GmItems = () => {
     <div className="gm-items">
       <PageEditorShell
         entries={catalog}
-        nameOf={(it) => catalogDisplayName(it, spells) || it.id}
+        nameOf={(it) => <ItemRow item={it} spells={spells} />}
         noun="item"
         addLabel="+ New item"
         filterEntry={(it, q) =>
