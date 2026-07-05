@@ -278,6 +278,18 @@
     "id": "aeon-stone-clear-quartz-octagon"
   },
   {
+    "name": "Aeon Stone (Clear Spindle)",
+    "description": "This clear, spindle-shaped stone orbits your head. You don't need to eat or drink while it's invested by you. It doesn't function until it has been worn continuously for a week and invested each day therein; if invested by someone else, this interval starts over. Resonant Power You can cast air bubble as a primal innate spell once per day.",
+    "traits": [
+      "Uncommon",
+      "Invested",
+      "Magical"
+    ],
+    "price": 325,
+    "weight": 0,
+    "id": "aeon-stone-clear-spindle"
+  },
+  {
     "name": "Aeon Stone (Consumed)",
     "description": "This dull lump has lost its magical properties. It still rotates around your head like any other aeon stone, and can thus serve as a stylish, hands-free option for spells that target an object. This aeon stone has no resonant power.",
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
@@ -348,6 +360,18 @@
     "price": 230,
     "weight": 0,
     "id": "aeon-stone-gold-nodule"
+  },
+  {
+    "name": "Aeon Stone (Pale Lavender Ellipsoid)",
+    "description": "This pale lavender, ellipsoid stone orbits your head. It must be activated (reaction, when a spell targets you or includes you in its area) to cast a 6th-rank dispel magic that attempts to counteract the triggering spell (counteract modifier +22); it then becomes consumed. Resonant Power You can cast the read aura cantrip as an arcane innate spell.",
+    "traits": [
+      "Uncommon",
+      "Invested",
+      "Magical"
+    ],
+    "price": 2200,
+    "weight": 0,
+    "id": "aeon-stone-pale-lavender-ellipsoid"
   },
   {
     "name": "Aeon Stone (Pearly White Spindle)",
@@ -1512,6 +1536,37 @@
       }
     ],
     "id": "blood-booster"
+  },
+  {
+    "name": "Bloodseeker Beak",
+    "variants": [
+      {
+        "level": 4,
+        "label": "Standard",
+        "price": 20,
+        "effect": "Free action when you hit an off-guard creature with the affixed weapon: deal an extra 1d4 precision damage. If you deal sneak attack damage to the creature, it also takes 1d4 persistent bleed damage."
+      },
+      {
+        "level": 8,
+        "label": "Greater",
+        "name": "Bloodseeker Beak (Greater)",
+        "price": 100,
+        "effect": "As standard, but 2d4 precision damage and 2d4 persistent bleed damage."
+      }
+    ],
+    "description": "A talisman shaped like a mosquito's proboscis, affixed to a weapon. When you hit an off-guard creature, activate it to draw extra blood.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "usage": "affixed to a weapon",
+    "weight": 0,
+    "consumable": {
+      "kind": "effect",
+      "note": "+1d4 precision (2d4 greater); +bleed vs sneak-attacked targets"
+    },
+    "id": "bloodseeker-beak"
   },
   {
     "accessoryTags": [
@@ -2969,6 +3024,37 @@
     "id": "elixir-of-life"
   },
   {
+    "name": "Emerald Grasshopper",
+    "variants": [
+      {
+        "level": 5,
+        "label": "Standard",
+        "price": 30,
+        "effect": "One action (requires trained in Athletics): make a Leap up to 40 feet horizontally and 10 feet vertically. If you do not end on solid ground, you flutter until the end of your turn, then fall harmlessly at 60 feet per round."
+      },
+      {
+        "level": 9,
+        "label": "Greater",
+        "name": "Emerald Grasshopper (Greater)",
+        "price": 150,
+        "effect": "Your Leap is up to 100 feet horizontally and 30 feet vertically, and applies to any other Leaps you make before the end of your turn."
+      }
+    ],
+    "description": "A talisman shaped like a leaping grasshopper, affixed to armor. Activate it to make a prodigious Leap and drift safely to the ground.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "usage": "affixed to armor",
+    "weight": 0,
+    "consumable": {
+      "kind": "effect",
+      "note": "Leap 40 ft (100 ft greater); fall harmlessly"
+    },
+    "id": "emerald-grasshopper"
+  },
+  {
     "name": "Energy Robe",
     "description": "This brightly colored linen robe is covered in delicate embroidery depicting creatures and natural phenomena suiting its aligned energy, such as a living thunderclap, pools of acid, roaring flames, or dancing marids. The robe grants you resistance to its aligned energy type, and can be activated to call on that energy for a burst of magical mobility.",
     "traits": [
@@ -3298,6 +3384,26 @@
     "id": "fan-of-the-four-winds"
   },
   {
+    "name": "Fear Gem",
+    "description": "A talisman set with a smoky gem, affixed to a weapon. Activate it (two actions) to make a melee Strike; if you hit and deal damage, the target is frightened 1, or frightened 2 on a critical hit. If you have the Intimidating Strike feat, increase the frightened value by 1.",
+    "traits": [
+      "Consumable",
+      "Emotion",
+      "Fear",
+      "Magical",
+      "Mental",
+      "Talisman"
+    ],
+    "usage": "affixed to a weapon",
+    "price": 20,
+    "weight": 0,
+    "consumable": {
+      "kind": "effect",
+      "note": "Strike → frightened 1 (2 on crit)"
+    },
+    "id": "fear-gem"
+  },
+  {
     "id": "fine-clothing",
     "name": "Clothing (Fine)",
     "price": 2,
@@ -3308,18 +3414,10 @@
     "description": "Fine clothing appropriate for a noble court or formal occasion."
   },
   {
-    "id": "flail",
     "name": "Flail",
-    "description": "This weapon consists of a wooden handle attached to a spiked ball or cylinder by a chain, rope, or strap of leather.",
-    "traits": [
-      "Disarm",
-      "Sweep",
-      "Trip"
-    ],
-    "price": 0.8,
-    "weight": 1,
     "strikes": [
       {
+        "damageType": "bludgeoning",
         "name": "Flail Strike",
         "proficiency": "martial",
         "type": "melee",
@@ -3331,11 +3429,23 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "bludgeoning"
+        "actionCount": 1
       }
     ],
-    "runes": {}
+    "description": "This weapon consists of a wooden handle attached to a spiked ball or cylinder by a chain, rope, or strap of leather.",
+    "image": "img_51589e58-8621-4157-9e6c-95b7d9164e4b.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
+    "traits": [
+      "Disarm",
+      "Sweep",
+      "Trip"
+    ],
+    "price": 0.8,
+    "weight": 1,
+    "id": "flail"
   },
   {
     "usage": "held in two hands",
@@ -3972,7 +4082,8 @@
       "capacity": 1,
       "ignored": 0
     },
-    "id": "gourd-head"
+    "id": "gourd-head",
+    "noShop": true
   },
   {
     "id": "greataxe",
@@ -4359,6 +4470,24 @@
     ],
     "weight": 3,
     "id": "inventors-chair"
+  },
+  {
+    "name": "Jade Cat",
+    "description": "A talisman carved from jade in the shape of a cat, affixed to armor. Activate it (free action) when you fall or attempt an Acrobatics check to Balance (requires trained in Acrobatics). For 1 minute, you treat all falls as 20 feet shorter, you are not off-guard when you Balance, and narrow surfaces and uneven ground are not difficult terrain for you.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "usage": "affixed to armor",
+    "price": 6,
+    "weight": 0,
+    "consumable": {
+      "kind": "effect",
+      "durationMinutes": 1,
+      "note": "Falls 20 ft shorter; sure-footed Balance (1 min)"
+    },
+    "id": "jade-cat"
   },
   {
     "name": "Juggernaut Mutagen",
@@ -4800,6 +4929,44 @@
       }
     ],
     "id": "mirror-robe"
+  },
+  {
+    "name": "Mistform Elixir",
+    "variants": [
+      {
+        "level": 4,
+        "label": "Lesser",
+        "price": 18,
+        "effect": "A faint mist makes you concealed for 3 rounds."
+      },
+      {
+        "level": 6,
+        "label": "Moderate",
+        "price": 56,
+        "effect": "A faint mist makes you concealed for 1 minute."
+      },
+      {
+        "level": 10,
+        "label": "Greater",
+        "price": 180,
+        "effect": "A faint mist makes you concealed for 5 minutes."
+      }
+    ],
+    "description": "Upon drinking this elixir, a faint mist emanates from your skin, making you concealed for the listed duration. Concealment does not let you Hide if your position is otherwise obvious.",
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir",
+      "Illusion",
+      "Visual"
+    ],
+    "usage": "held in 1 hand",
+    "weight": 0.1,
+    "consumable": {
+      "kind": "effect",
+      "note": "Concealed (3 rounds / 1 min / 5 min)"
+    },
+    "id": "mistform-elixir"
   },
   {
     "name": "Moderate Drakeheart Mutagen",
@@ -6308,7 +6475,8 @@
     },
     "price": 85,
     "weight": 4,
-    "id": "reinforced-tower-shield"
+    "id": "reinforced-tower-shield",
+    "noShop": true
   },
   {
     "id": "resilient",
@@ -6517,17 +6685,22 @@
     "id": "rope-50ft"
   },
   {
-    "name": "Runestone",
-    "price": 3,
-    "weight": 0.1,
     "usage": "held in 1 hand",
     "source": "GM Core pg. 269",
+    "noShop": true,
+    "name": "Runestone",
+    "description": "This flat piece of hard stone is specially prepared for etching a magical fundamental rune or property rune. You can etch only one rune upon a stone. When a rune is transferred from the runestone to another object, the runestone cracks and is destroyed. The Price listed is for an empty stone; a stone holding a rune adds the Price of the rune. This base entry carries the shared runestone artwork that every runestone displays.",
+    "image": "img_557ddf64-9ae3-4e8d-a2b6-991048c2c3c2.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Consumable",
       "Magical"
     ],
-    "description": "This flat piece of hard stone is specially prepared for etching a magical fundamental rune or property rune. You can etch only one rune upon a stone. When a rune is transferred from the runestone to another object, the runestone cracks and is destroyed. The Price listed is for an empty stone; a stone holding a rune adds the Price of the rune. This base entry carries the shared runestone artwork that every runestone displays.",
-    "noShop": true,
+    "price": 3,
+    "weight": 0.1,
     "id": "runestone"
   },
   {
