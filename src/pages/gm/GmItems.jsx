@@ -76,17 +76,25 @@ const spellFromForm = (sf) => {
 // consumable metadata have dedicated UI.
 const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants', 'consumable', 'armor'];
 
+// Variant keys the form manages via dedicated fields. Everything else (e.g.
+// per-tier `name`, `overrides`, Coda staff data) is unmanaged and must survive
+// edit→save untouched, so it is stashed in `variantRest` — mirroring the
+// top-level `restJson`/`runeRest` pattern. Dropping these silently strips live
+// data (cloak-of-repute tier bonuses, boots-of-bounding names, Coda staves).
+const VARIANT_MANAGED = ['level', 'label', 'price', 'effect'];
+
 const variantToForm = (v) => ({
   level: v.level != null ? String(v.level) : '',
   label: v.label != null ? String(v.label) : '',
   price: v.price != null ? String(v.price) : '',
   effect: v.effect != null ? String(v.effect) : '',
+  rest: Object.fromEntries(Object.entries(v || {}).filter(([k]) => !VARIANT_MANAGED.includes(k))),
 });
 
-const blankVariant = () => ({ level: '', label: '', price: '', effect: '' });
+const blankVariant = () => ({ level: '', label: '', price: '', effect: '', rest: {} });
 
 const variantFromForm = (vf) => {
-  const out = {};
+  const out = { ...(vf.rest || {}) };
   const lvl = parseInt(vf.level, 10);
   if (!Number.isNaN(lvl)) out.level = lvl;
   if (vf.label.trim()) out.label = vf.label.trim();
@@ -437,44 +445,55 @@ const ItemRow = ({ item, spells }) => {
   );
 };
 
-const VariantSubform = ({ variant, idPrefix, onChange }) => (
-  <div className="gm-row">
-    <div className="form-group">
-      <label>level</label>
-      <input
-        aria-label={`${idPrefix}-level`}
-        type="number"
-        value={variant.level}
-        onChange={(e) => onChange({ ...variant, level: e.target.value })}
-      />
+const VariantSubform = ({ variant, idPrefix, onChange }) => {
+  // Unmanaged variant keys (per-tier `name`, `overrides`, Coda staff data) have
+  // no dedicated field but round-trip untouched via `rest`. Surface them so the
+  // GM knows editing this variant won't strip them.
+  const restKeys = Object.keys(variant.rest || {});
+  return (
+    <div className="gm-row">
+      <div className="form-group">
+        <label>level</label>
+        <input
+          aria-label={`${idPrefix}-level`}
+          type="number"
+          value={variant.level}
+          onChange={(e) => onChange({ ...variant, level: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>label</label>
+        <input
+          aria-label={`${idPrefix}-label`}
+          value={variant.label}
+          onChange={(e) => onChange({ ...variant, label: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>price</label>
+        <input
+          aria-label={`${idPrefix}-price`}
+          type="number"
+          value={variant.price}
+          onChange={(e) => onChange({ ...variant, price: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>effect</label>
+        <input
+          aria-label={`${idPrefix}-effect`}
+          value={variant.effect}
+          onChange={(e) => onChange({ ...variant, effect: e.target.value })}
+        />
+      </div>
+      {restKeys.length > 0 && (
+        <p className="gm-hint" data-testid={`${idPrefix}-preserved`}>
+          Preserved on save: {restKeys.join(', ')}
+        </p>
+      )}
     </div>
-    <div className="form-group">
-      <label>label</label>
-      <input
-        aria-label={`${idPrefix}-label`}
-        value={variant.label}
-        onChange={(e) => onChange({ ...variant, label: e.target.value })}
-      />
-    </div>
-    <div className="form-group">
-      <label>price</label>
-      <input
-        aria-label={`${idPrefix}-price`}
-        type="number"
-        value={variant.price}
-        onChange={(e) => onChange({ ...variant, price: e.target.value })}
-      />
-    </div>
-    <div className="form-group">
-      <label>effect</label>
-      <input
-        aria-label={`${idPrefix}-effect`}
-        value={variant.effect}
-        onChange={(e) => onChange({ ...variant, effect: e.target.value })}
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const { spells, effects, runes: runeCatalog } = useContent();
