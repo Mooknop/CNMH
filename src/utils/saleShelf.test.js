@@ -3,6 +3,11 @@ import {
   rollScrollPack,
   rollSaleShelf,
   resolveSaleWares,
+  buildRuneSaleItem,
+  buildScrollPackWare,
+  rerollSaleItem,
+  saleRuneEditOptions,
+  saleScrollPackOptions,
 } from './saleShelf';
 import { resolveWeapon } from './weaponRunes';
 import { resolveArmor } from './armorRunes';
@@ -281,5 +286,134 @@ describe('resolveSaleWares', () => {
 
   it('returns [] for a shop with no shelf', () => {
     expect(resolveSaleWares('none', shops, catalogMap, runeMapFull, spells)).toEqual([]);
+  });
+});
+
+describe('buildRuneSaleItem', () => {
+  it('bakes a weapon from an explicit base + runes, priced like the roll, at the discount, keeping saleId', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 20, saleDiscount: 0.2 };
+    const ware = buildRuneSaleItem(
+      offering, 'W1', { ref: 'longsword', runes: { potency: 2, striking: 'striking', property: ['flaming'] } }, items, runes
+    );
+    expect(ware.saleId).toBe('W1');
+    expect(ware.ref).toBe('longsword');
+    expect(ware.runes).toEqual({ potency: 2, striking: 'striking', property: ['flaming'] });
+    expect(ware.fullPrice).toBe(weaponPrice(ware));
+    expect(ware.price).toBe(Math.round(ware.fullPrice * 0.8));
+  });
+
+  it('drops a property rune the window does not admit', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+    const ware = buildRuneSaleItem(offering, 'W', { ref: 'longsword', runes: { potency: 1, property: ['nope'] } }, items, runes);
+    expect(ware.runes.property).toBeUndefined();
+  });
+
+  it('bakes a ring at a chosen grade + property, priced grade + rune', () => {
+    const offering = { runeService: true, targets: ['ring'], maxLevel: 15 };
+    const ware = buildRuneSaleItem(offering, 'R', { ref: 'power-ring', level: 5, runes: { property: ['spellstoring'] } }, items, runes);
+    expect(ware.level).toBe(5);
+    expect(ware.runes.property).toEqual(['spellstoring']);
+    const grade = powerRing.variants.find((v) => v.level === 5);
+    expect(ware.fullPrice).toBe(grade.price + ringRune.price);
+  });
+
+  it('bakes an accessory host + one accepted rune', () => {
+    const offering = { runeService: true, targets: ['accessory'], maxLevel: 20 };
+    const ware = buildRuneSaleItem(offering, 'A', { ref: 'cloak', runes: { accessory: 'presentable' } }, items, runes);
+    expect(ware.runes).toEqual({ accessory: 'presentable' });
+    expect(ware.fullPrice).toBe(cloak.price + accessoryRune.price);
+  });
+
+  it('returns null for a missing / excluded base, or an accessory rune the host rejects', () => {
+    const offering = { runeService: true, targets: ['weapon', 'accessory'], maxLevel: 20 };
+    expect(buildRuneSaleItem(offering, 'X', { ref: 'ghost', runes: {} }, items, runes)).toBeNull();
+    expect(buildRuneSaleItem(offering, 'X', { ref: 'cursed-blade', runes: { potency: 1 } }, items, runes)).toBeNull();
+    expect(buildRuneSaleItem(offering, 'X', { ref: 'cloak', runes: { accessory: 'flaming' } }, items, runes)).toBeNull();
+  });
+});
+
+describe('buildScrollPackWare', () => {
+  const scrollOffering = { spellItem: 'scroll', maxLevel: 19 };
+
+  it('bakes a pack from an explicit rank + spells, padded to 4, at 3/4 price, keeping saleId', () => {
+    const ware = buildScrollPackWare(scrollOffering, 'P', { rank: 1, scrolls: ['heal', 'bless'] }, spells);
+    expect(ware.saleId).toBe('P');
+    expect(ware.rank).toBe(1);
+    expect(ware.scrolls).toHaveLength(4);
+    expect(ware.scrolls[0].spellRef).toBe('heal');
+    expect(ware.scrolls[1].spellRef).toBe('bless');
+    ware.scrolls.forEach((s) => expect(['heal', 'bless']).toContain(s.spellRef));
+    const rankPrice = SCROLL_BY_RANK[1].price;
+    expect(ware.fullPrice).toBe(4 * rankPrice);
+    expect(ware.price).toBe(3 * rankPrice);
+  });
+
+  it('returns null for a wand offering or an unavailable rank', () => {
+    expect(buildScrollPackWare({ spellItem: 'wand', maxLevel: 19 }, 'P', { rank: 1, scrolls: ['heal'] }, spells)).toBeNull();
+    expect(buildScrollPackWare(scrollOffering, 'P', { rank: 99, scrolls: [] }, spells)).toBeNull();
+  });
+});
+
+describe('rerollSaleItem', () => {
+  const entry = {
+    wares: [
+      { runeService: true, targets: ['weapon'], maxLevel: 20 },
+      { spellItem: 'scroll', maxLevel: 19 },
+    ],
+    saleShelf: [
+      { sale: 'rune', saleId: 'w1', ref: 'longsword', runes: { potency: 1 }, fullPrice: 100, price: 100 },
+      { sale: 'scrollpack', saleId: 'p1', rank: 1, scrolls: [{ spellRef: 'heal' }], fullPrice: 16, price: 12 },
+    ],
+  };
+
+  it('replaces only the targeted slot, preserving its saleId + position, leaving others untouched', () => {
+    const next = rerollSaleItem(entry, 'w1', items, runes, spells, constRng(0.99));
+    expect(next).toHaveLength(2);
+    expect(next[0].saleId).toBe('w1');
+    expect(next[0].sale).toBe('rune');
+    expect(next[0]).not.toBe(entry.saleShelf[0]); // freshly rolled
+    expect(next[1]).toBe(entry.saleShelf[1]); // scroll slot identical reference
+  });
+
+  it('rerolls a scroll pack from the scroll offering', () => {
+    const next = rerollSaleItem(entry, 'p1', items, runes, spells, constRng(0));
+    expect(next[1].saleId).toBe('p1');
+    expect(next[1].sale).toBe('scrollpack');
+    expect(next[1].scrolls).toHaveLength(4);
+  });
+
+  it('returns the shelf unchanged when the saleId is absent', () => {
+    expect(rerollSaleItem(entry, 'nope', items, runes, spells)).toBe(entry.saleShelf);
+  });
+});
+
+describe('saleRuneEditOptions', () => {
+  it('lists per-target hosts, fundamentals + property runes, and per-host accessory runes', () => {
+    const offering = { runeService: true, targets: ['weapon', 'accessory'], maxLevel: 20 };
+    const opts = saleRuneEditOptions(offering, items, runes);
+    expect(Object.keys(opts).sort()).toEqual(['accessory', 'weapon']);
+    expect(opts.weapon.hosts.map((h) => h.id)).toContain('longsword');
+    expect(opts.weapon.potency.length).toBeGreaterThan(0);
+    expect(opts.weapon.properties.map((p) => p.id)).toEqual(expect.arrayContaining(['flaming', 'frost']));
+    const cloakOpt = opts.accessory.hosts.find((h) => h.id === 'cloak');
+    expect(cloakOpt.runes.map((r) => r.id)).toContain('presentable');
+  });
+
+  it('omits a target that cannot produce an item (no host / no fundamental fits)', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 1 };
+    expect(saleRuneEditOptions(offering, [longsword], [weaponRuneLow])).toEqual({});
+  });
+});
+
+describe('saleScrollPackOptions', () => {
+  it('groups eligible spells by rank, rank-ascending', () => {
+    const opts = saleScrollPackOptions({ spellItem: 'scroll', maxLevel: 19 }, spells);
+    expect(opts.map((o) => o.rank)).toEqual([1, 3]);
+    expect(opts.find((o) => o.rank === 1).spells.map((s) => s.id).sort()).toEqual(['bless', 'heal']);
+    expect(opts.find((o) => o.rank === 3).spells.map((s) => s.id)).toEqual(['fireball']);
+  });
+
+  it('is empty for a wand offering', () => {
+    expect(saleScrollPackOptions({ spellItem: 'wand', maxLevel: 19 }, spells)).toEqual([]);
   });
 });
