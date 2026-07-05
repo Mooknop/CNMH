@@ -1731,6 +1731,32 @@
     "id": "bracelet-of-dashing"
   },
   {
+    "name": "Bracers of Missile Deflection",
+    "variants": [
+      {
+        "level": 3,
+        "label": "Standard",
+        "price": 52,
+        "effect": "Reaction, once per day, when a ranged weapon attack hits you but doesn't critically hit and you're aware of it and not off-guard: gain a +2 circumstance bonus to AC against the triggering attack; if this turns the hit into a failure, the attack misses you."
+      },
+      {
+        "level": 9,
+        "label": "Greater",
+        "name": "Bracers of Missile Deflection (Greater)",
+        "price": 650,
+        "effect": "As standard, but usable once every 10 minutes."
+      }
+    ],
+    "description": "A pair of reinforced bracers that let you knock an incoming missile off course.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn bracers",
+    "weight": 0.1,
+    "id": "bracers-of-missile-deflection"
+  },
+  {
     "name": "Breastplate",
     "description": "Though referred to as a breastplate, this type of armor consists of several pieces of plate or half-plate armor that protect the torso, chest, neck, and sometimes the hips and lower legs. It strategically grants some of the protection of plate while allowing greater flexibility and speed.",
     "image": "img_0e246235-3f03-4926-b8a0-fc3092ba0168.jpg",
@@ -1982,6 +2008,18 @@
     "weight": 0,
     "price": 56,
     "id": "channel-protection-amulet"
+  },
+  {
+    "name": "Circlet of Persuasion",
+    "description": "This elegant circlet is worn around the head. While wearing it, you gain a +1 item bonus to Charisma-based skill checks.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn circlet",
+    "price": 340,
+    "weight": 0,
+    "id": "circlet-of-persuasion"
   },
   {
     "id": "clandestine-cloak",
@@ -3620,6 +3658,32 @@
     "id": "full-plate"
   },
   {
+    "name": "Gate Attenuator",
+    "variants": [
+      {
+        "level": 3,
+        "label": "Standard",
+        "price": 60,
+        "effect": "Grants a kineticist a +1 item bonus to impulse attack rolls. Activate (single action, envision) to cast a 1st-rank spell keyed to an element you channel (metal: thunderstrike) with a +7 spell attack modifier or DC 17."
+      },
+      {
+        "level": 11,
+        "label": "Greater",
+        "name": "Gate Attenuator (Greater)",
+        "price": 1400,
+        "effect": "The impulse attack bonus increases to +2. Activation casts a 5th-rank element spell (metal: impaling spike) at +18 / DC 28."
+      }
+    ],
+    "description": "A crystalline focus worn against the sternum that stabilizes the elemental gate a kineticist channels, sharpening their impulses.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn",
+    "weight": 0,
+    "id": "gate-attenuator"
+  },
+  {
     "name": "Gecko Potion",
     "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts.",
     "image": "img_0cdef245-0b76-4455-b68b-f8e7057165af.jpg",
@@ -4202,6 +4266,37 @@
       "strength": 16,
       "group": "plate"
     }
+  },
+  {
+    "name": "Handwraps of Mighty Blows",
+    "strikes": {
+      "damageType": "bludgeoning",
+      "name": "Fist",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "damage": "1d4",
+      "traits": [
+        "Attack",
+        "Agile",
+        "Finesse",
+        "Nonlethal",
+        "Unarmed"
+      ],
+      "actionCount": 1
+    },
+    "runes": {
+      "potency": 1,
+      "striking": "striking"
+    },
+    "description": "These strips of cloth wrap around your hands and wrists. They can have fundamental and property runes etched onto them just like a weapon, and those runes apply to all of your unarmed attacks — your monk's unarmed Strikes included, not only the fist shown here. Upgrade, add, or transfer runes exactly as you would for a weapon; property runes apply only when appropriate to the unarmed attack you're using. Etched here at +1 striking; add a Shock rune later for the electricity theme.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn gloves",
+    "price": 0,
+    "weight": 0,
+    "id": "handwraps-of-mighty-blows"
   },
   {
     "actions": [
@@ -5593,6 +5688,33 @@
       }
     ],
     "id": "pernicious-spore-bomb"
+  },
+  {
+    "name": "Persona Mask",
+    "variants": [
+      {
+        "level": 3,
+        "label": "Standard",
+        "price": 50,
+        "effect": "+1 item bonus to Performance checks while acting, orating, performing comedy, or singing. Activate (single action, concentrate) — Assume Role: transform the mask into an artistic rendition of a dramatic character you select."
+      },
+      {
+        "level": 9,
+        "label": "Greater",
+        "name": "Persona Mask (Greater)",
+        "price": 650,
+        "effect": "The bonus increases to +2, and you also gain Sacrifice Role (reaction, once per day): when you fail a Performance check benefiting from the mask, reroll and use the second result."
+      }
+    ],
+    "description": "An expressive alabaster mask that covers the whole face without hindering vision or the other senses, favored by orators and stage performers.",
+    "traits": [
+      "Fortune",
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn mask",
+    "weight": 0,
+    "id": "persona-mask"
   },
   {
     "name": "Peshpine Grenade",
@@ -8213,6 +8335,87 @@
     "runes": {}
   },
   {
+    "id": "staff-of-phantasms",
+    "name": "Staff of Phantasms",
+    "description": "An ornately designed metal staff inlaid with gold; when you Cast a Spell from it, the illusory image of something you desire flashes across its surface. While wielding the staff, you gain a +2 status bonus to checks to disbelieve an illusion.",
+    "traits": [
+      "Magical",
+      "Staff"
+    ],
+    "usage": "held in one hand",
+    "price": 230,
+    "weight": 1,
+    "staff": {
+      "name": "Staff of Phantasms",
+      "type": "Standard",
+      "itemLevel": 6,
+      "bulkValue": 1,
+      "charges": {
+        "max": 3,
+        "current": 3
+      },
+      "spells": [
+        {
+          "ref": "figment"
+        },
+        {
+          "ref": "illusory-disguise"
+        },
+        {
+          "ref": "illusory-object"
+        },
+        {
+          "ref": "illusory-creature"
+        },
+        {
+          "ref": "item-facade"
+        }
+      ]
+    },
+    "variants": [
+      {
+        "level": 6,
+        "label": "Standard",
+        "name": "Staff of Phantasms",
+        "price": 230
+      },
+      {
+        "level": 10,
+        "label": "Greater",
+        "name": "Staff of Phantasms (Greater)",
+        "price": 900,
+        "effect": "Adds 3rd- and 4th-rank castings of the staff's illusions (e.g., illusory creature at 4th rank).",
+        "staff": {
+          "name": "Staff of Phantasms",
+          "type": "Greater",
+          "itemLevel": 10,
+          "bulkValue": 1,
+          "charges": {
+            "max": 5,
+            "current": 5
+          },
+          "spells": [
+            {
+              "ref": "figment"
+            },
+            {
+              "ref": "illusory-disguise"
+            },
+            {
+              "ref": "illusory-object"
+            },
+            {
+              "ref": "illusory-creature"
+            },
+            {
+              "ref": "item-facade"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
     "id": "staff-of-the-unblinking-eye",
     "name": "Staff of the Unblinking Eye",
     "description": "The stone head of this staff is carved to look like a lidless eye. While wielding it, you gain a +1 status bonus to Perception checks for initiative, and you can Activate it to Cast a Spell from its staff spell list (detect magic; sure strike; darkvision, see the unseen, translate). Greater (item 10) and major (item 14) versions add higher-rank divination spells.",
@@ -8804,6 +9007,24 @@
       "strength": 12,
       "group": "leather"
     }
+  },
+  {
+    "name": "Sturdy Shield (Minor)",
+    "shield": {
+      "health": 64,
+      "breakThreshold": 32,
+      "hardness": 8,
+      "bonus": 2,
+      "speedPenalty": 0
+    },
+    "description": "The most basic of the sturdy shields, this reinforced steel shield is built to withstand significant punishment. It grants a +2 circumstance bonus to AC while raised, and its high Hardness lets you Shield Block far more effectively than a mundane shield.",
+    "traits": [
+      "Magical"
+    ],
+    "usage": "held in one hand",
+    "price": 100,
+    "weight": 1,
+    "id": "sturdy-shield-minor"
   },
   {
     "name": "Sulfur Bomb",
