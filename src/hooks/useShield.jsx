@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
+import { resolveShieldBlock } from '../utils/shieldRunes';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -44,7 +45,9 @@ export const useShield = (charId, inventory = []) => {
       (e) => e && e.shield && isHeldState(e.state)
     );
     if (!entry) return null;
-    const base = normalizeShield(entry.shield);
+    // Fold any reinforcing rune into the base durability stats before normalizing,
+    // so Hardness/HP/BT (and maxHp) reflect the etched rune (#1165 S1).
+    const base = normalizeShield(resolveShieldBlock(entry));
     // Overlay the session HP if a block has been recorded.
     const liveHp = shieldState?.[entry.uid]?.hp;
     const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
