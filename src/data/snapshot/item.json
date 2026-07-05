@@ -1584,6 +1584,32 @@
     "id": "boots"
   },
   {
+    "name": "Boots of Bounding",
+    "variants": [
+      {
+        "level": 7,
+        "label": "Standard",
+        "price": 340,
+        "effect": "You gain a +5-foot item bonus to your Speed and a +2 item bonus to Athletics checks to High Jump and Long Jump. When you Leap, move 5 feet farther horizontally or 3 feet higher vertically."
+      },
+      {
+        "level": 14,
+        "label": "Greater",
+        "name": "Boots of Bounding (Greater)",
+        "price": 4250,
+        "effect": "The Speed bonus is +10 feet and the High Jump / Long Jump bonus is +3."
+      }
+    ],
+    "description": "These springy boots lend a bounding lightness to every stride and leap.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn shoes",
+    "weight": 0.1,
+    "id": "boots-of-bounding"
+  },
+  {
     "name": "Bottled Lightning",
     "description": "A jar of crackling captured lightning. Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn.",
     "traits": [
@@ -2086,6 +2112,32 @@
       "cloak"
     ],
     "description": "A warm hooded traveler's cloak."
+  },
+  {
+    "name": "Cloak of Elvenkind",
+    "variants": [
+      {
+        "level": 7,
+        "label": "Standard",
+        "price": 360,
+        "effect": "Adjust the clasp (Interact) and the cloak matches your surroundings and muffles your sounds, granting a +1 item bonus to Stealth checks. Activate (single action, once per day) to draw the hood up and gain the effects of invisibility until you lower the hood (twice per day if you also wear boots of elvenkind)."
+      },
+      {
+        "level": 12,
+        "label": "Greater",
+        "name": "Cloak of Elvenkind (Greater)",
+        "price": 1750,
+        "effect": "The Stealth bonus is +2, and the hood grants 4th-rank invisibility. With boots of elvenkind, you can Sneak in forests even while observed."
+      }
+    ],
+    "description": "A green-gray cloak woven with elven artistry that blends into the wilds and hushes your footfalls.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn cloak",
+    "weight": 0.1,
+    "id": "cloak-of-elvenkind"
   },
   {
     "name": "Cloak of Feline Rest",
@@ -9009,6 +9061,24 @@
     }
   },
   {
+    "name": "Sturdy Shield (Lesser)",
+    "shield": {
+      "health": 80,
+      "breakThreshold": 40,
+      "hardness": 10,
+      "bonus": 2,
+      "speedPenalty": 0
+    },
+    "description": "A step up from the minor sturdy shield, this reinforced steel shield shrugs off heavier blows. It grants a +2 circumstance bonus to AC while raised, and its Hardness 10 lets you Shield Block against significant damage without breaking.",
+    "traits": [
+      "Magical"
+    ],
+    "usage": "held in one hand",
+    "price": 360,
+    "weight": 1,
+    "id": "sturdy-shield-lesser"
+  },
+  {
     "name": "Sturdy Shield (Minor)",
     "shield": {
       "health": 64,
@@ -10091,6 +10161,18 @@
     "price": 0.05,
     "weight": 0.1,
     "id": "waterskin"
+  },
+  {
+    "name": "Wayfinder",
+    "description": "A compact bronze compass-like device favored by the Pathfinder Society. Activate (single action, concentrate) to make it shed light like a torch. A wayfinder has a socket that can hold a single aeon stone; a stone slotted into a wayfinder still grants its normal benefits and also grants its resonant power. Removing or slotting a stone takes an Interact action.",
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "usage": "worn",
+    "price": 28,
+    "weight": 0,
+    "id": "wayfinder"
   },
   {
     "id": "weapon-potency",
