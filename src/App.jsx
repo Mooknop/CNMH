@@ -37,6 +37,7 @@ import GmRooms from './pages/gm/GmRooms';
 import GmEvents from './pages/gm/GmEvents';
 import GmShops from './pages/gm/GmShops';
 import GmShopItems from './pages/gm/GmShopItems';
+import GmTownSupport from './pages/gm/GmTownSupport';
 import GmCharacters from './pages/gm/GmCharacters';
 import GmItems from './pages/gm/GmItems';
 import GmSpells from './pages/gm/GmSpells';
@@ -124,6 +125,7 @@ function App() {
                           <Route path="world/events" element={<GmEvents />} />
                           <Route path="world/shops" element={<GmShops />} />
                           <Route path="world/shop-items" element={<GmShopItems />} />
+                          <Route path="world/town-support" element={<GmTownSupport />} />
 
                           {/* Catalog area */}
                           <Route path="catalog" element={<Navigate to="/gm/catalog/items" replace />} />
