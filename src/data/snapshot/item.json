@@ -9074,60 +9074,6 @@
     }
   },
   {
-    "name": "Sturdy Shield (Lesser)",
-    "shield": {
-      "health": 80,
-      "breakThreshold": 40,
-      "hardness": 10,
-      "bonus": 2,
-      "speedPenalty": 0
-    },
-    "description": "A step up from the minor sturdy shield, this reinforced steel shield shrugs off heavier blows. It grants a +2 circumstance bonus to AC while raised, and its Hardness 10 lets you Shield Block against significant damage without breaking.",
-    "traits": [
-      "Magical"
-    ],
-    "usage": "held in one hand",
-    "price": 360,
-    "weight": 1,
-    "id": "sturdy-shield-lesser"
-  },
-  {
-    "name": "Sturdy Shield (Minor)",
-    "shield": {
-      "health": 64,
-      "breakThreshold": 32,
-      "hardness": 8,
-      "bonus": 2,
-      "speedPenalty": 0
-    },
-    "description": "The most basic of the sturdy shields, this reinforced steel shield is built to withstand significant punishment. It grants a +2 circumstance bonus to AC while raised, and its high Hardness lets you Shield Block far more effectively than a mundane shield.",
-    "traits": [
-      "Magical"
-    ],
-    "usage": "held in one hand",
-    "price": 100,
-    "weight": 1,
-    "id": "sturdy-shield-minor"
-  },
-  {
-    "name": "Sturdy Shield (Moderate)",
-    "shield": {
-      "health": 104,
-      "breakThreshold": 52,
-      "hardness": 13,
-      "bonus": 2,
-      "speedPenalty": 0
-    },
-    "description": "A heavier grade of sturdy shield, this reinforced steel shield endures punishing blows. It grants a +2 circumstance bonus to AC while raised, and its Hardness 13 lets you Shield Block against powerful strikes without breaking.",
-    "traits": [
-      "Magical"
-    ],
-    "usage": "held in one hand",
-    "price": 1000,
-    "weight": 1,
-    "id": "sturdy-shield-moderate"
-  },
-  {
     "name": "Sulfur Bomb",
     "description": "A reeking bomb whose acrid fumes choke and sicken. Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1.",
     "traits": [
