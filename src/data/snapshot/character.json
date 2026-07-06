@@ -2547,7 +2547,7 @@
       },
       {
         "uid": "e-eb7dbofmry1f",
-        "ref": "spiked-steel-shield",
+        "ref": "steel-shield",
         "quantity": 1
       },
       {
@@ -2600,6 +2600,11 @@
         "uid": "e-4y51zbvm1xrc",
         "ref": "torch",
         "quantity": 5
+      },
+      {
+        "uid": "e-shieldspikespel1",
+        "ref": "shield-spikes",
+        "quantity": 1
       }
     ],
     "feats": [
