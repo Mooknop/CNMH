@@ -12,6 +12,7 @@ import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } fr
 import { isHeldState } from '../../utils/itemState';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
+import { attachedKey, attachedUidSet } from '../../utils/shieldAttach';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useInvested } from '../../hooks/useInvested';
@@ -49,6 +50,9 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Affixed-talisman overlay (#254/#339) — talisman uid → host uid. Affixed
   // talismans don't get their own tile (they're attached to a host).
   const [affixed] = useSyncedState(affixedKey(character?.id), {});
+  // Shield-attachment overlay (#1165 Track 2) — attached weapons render via their
+  // host shield, not as their own loose tile (like affixed talismans).
+  const [attached] = useSyncedState(attachedKey(character?.id), {});
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
   const { mode } = usePlayMode();
@@ -67,7 +71,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // affixed talismans from both levels — they render via their host, not as
   // their own tile.
   const affixedUids = affixedUidSet(affixed);
-  const notAffixed = (item) => !affixedUids.has(itemUidOf(item));
+  const attachedUids = attachedUidSet(attached);
+  const notAffixed = (item) => !affixedUids.has(itemUidOf(item)) && !attachedUids.has(itemUidOf(item));
   const prep = (items) =>
     stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects);
   const gridInventory = prep(inventory).map((item) =>

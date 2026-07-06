@@ -19,6 +19,10 @@ import { activationOf, activationSummary } from '../../utils/talismanActivation'
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing } from '../../utils/shieldRunes';
+import {
+  attachedKey, isShieldAttachment, validAttachHosts, attachedHostUid,
+  attach, unattach, attachmentsByHost,
+} from '../../utils/shieldAttach';
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
@@ -51,6 +55,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [itemEffects, setItemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   // Affixed-talisman overlay (#254/#339) + consumed overlay for activation.
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
+  // Shield-attachment overlay (#1165 Track 2) — attachmentUid → hostShieldUid.
+  const [attached, setAttached] = useSyncedState(attachedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   // Etch-time accessory-rune config (#1055 S4) — the depicted dragon type for a
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
@@ -112,6 +118,32 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} affixed ${item.name} to ${host.name} (10-minute activity)` });
     onClose();
   };
+  // Shield attachments (#1165 Track 2). An attachment (Shield Spikes/Boss) is its
+  // own weapon that binds to a shield via a 10-minute activity — reusable, never
+  // consumed. While the host shield is held its Strike is injected (useCharacter);
+  // it keeps its own weapon runes.
+  const attachment = isShieldAttachment(item);
+  const attachHosts = attachment ? validAttachHosts(flatInventory, item) : [];
+  const attachedToShield = attachment
+    ? flatInventory.find((it) => itemUidOf(it) === attachedHostUid(attached, itemUidOf(item)))
+    : null;
+  // When THIS item is a shield: the attachment(s) currently bound to it.
+  const shieldAttachments = item.shield
+    ? (attachmentsByHost(attached, flatInventory)[itemUidOf(item)] || [])
+    : [];
+
+  const doAttach = (host) => {
+    setAttached((cur) => attach(cur, itemUidOf(item), itemUidOf(host)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} attached ${item.name} to ${host.name} (10-minute activity)` });
+    onClose();
+  };
+  const doDetach = (attachmentItem) => {
+    const a = attachmentItem || item;
+    setAttached((cur) => unattach(cur, itemUidOf(a)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${a.name} from its shield (10-minute activity)` });
+    onClose();
+  };
+
   const doUnaffix = () => {
     setAffixed((cur) => unaffix(cur, itemUidOf(item)));
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${item.name} from ${affixedTo?.name || 'its item'}` });
@@ -533,6 +565,22 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <strong>Shield Rules:</strong> Raise this shield for +{shield.bonus || 0} AC.
             It has {shield.hardness || 0} Hardness and {shield.hp || 0} HP.
           </div>
+          {shieldAttachments.length > 0 && (
+            <div className="shield-attachments" data-testid="shield-attachments">
+              {shieldAttachments.map((a) => (
+                <div key={itemUidOf(a)} className="item-affix-state">
+                  <span>Attachment: <strong>{a.name}</strong> — its Strike is available while this shield is held.</span>
+                  <button
+                    type="button"
+                    className="btn-small btn-secondary"
+                    onClick={() => doDetach(a)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -619,6 +667,48 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <p className="item-affix-hint">
               No valid {affixTargetType(item) || 'item'} to affix this to.
             </p>
+          )}
+        </div>
+      )}
+
+      {/* Shield attachment (#1165 Track 2) — attach to a shield (10-min activity,
+          reusable) or, when attached, show the host + Remove. */}
+      {attachment && (
+        <div className="item-affix" data-testid="item-attach">
+          <h3>Attach</h3>
+          {attachedToShield ? (
+            <div className="item-affix-state">
+              <span>Attached to <strong>{attachedToShield.name}</strong></span>
+              <button
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid="item-action-detach"
+                onClick={() => doDetach(item)}
+              >
+                Remove
+              </button>
+            </div>
+          ) : attachHosts.length > 0 ? (
+            <>
+              <p className="item-affix-hint">
+                Attach to a shield (10-minute activity). Its Strike works while the shield is held,
+                and it keeps its own weapon runes.
+              </p>
+              <div className="item-affix-hosts">
+                {attachHosts.map((h) => (
+                  <button
+                    key={itemUidOf(h)}
+                    type="button"
+                    className="btn-small btn-secondary"
+                    onClick={() => doAttach(h)}
+                  >
+                    {h.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="item-affix-hint">No shield to attach this to.</p>
           )}
         </div>
       )}
