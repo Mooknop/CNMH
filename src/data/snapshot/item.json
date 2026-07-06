@@ -7970,6 +7970,56 @@
     "id": "shark-tooth-charm"
   },
   {
+    "id": "shield-boss",
+    "name": "Shield Boss",
+    "price": 0.5,
+    "weight": 0,
+    "traits": [
+      "Attached"
+    ],
+    "attachment": {
+      "to": "shield"
+    },
+    "description": "A thick metal knob at the center of a shield, increasing the bludgeoning damage of a shield bash. Attach it to a shield (a 10-minute activity); its Strike is available while that shield is held, and it can be etched with its own weapon runes.",
+    "strikes": {
+      "name": "Shield Boss",
+      "proficiency": "martial",
+      "type": "melee",
+      "damage": "1d6",
+      "damageType": "bludgeoning",
+      "actionCount": 1,
+      "traits": [
+        "Attack",
+        "Melee"
+      ]
+    }
+  },
+  {
+    "id": "shield-spikes",
+    "name": "Shield Spikes",
+    "price": 0.5,
+    "weight": 0,
+    "traits": [
+      "Attached"
+    ],
+    "attachment": {
+      "to": "shield"
+    },
+    "description": "Metal spikes placed on the striking face of a shield, dealing piercing damage with a shield bash. Attach it to a shield (a 10-minute activity); its Strike is available while that shield is held, and it can be etched with its own weapon runes.",
+    "strikes": {
+      "name": "Shield Spikes",
+      "proficiency": "martial",
+      "type": "melee",
+      "damage": "1d6",
+      "damageType": "piercing",
+      "actionCount": 1,
+      "traits": [
+        "Attack",
+        "Melee"
+      ]
+    }
+  },
+  {
     "id": "shortbow",
     "name": "Shortbow",
     "description": "This smaller bow is made of a single piece of wood and favored by skirmishers and cavalry.",
