@@ -73,8 +73,16 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const affixedUids = affixedUidSet(affixed);
   const attachedUids = attachedUidSet(attached);
   const notAffixed = (item) => !affixedUids.has(itemUidOf(item)) && !attachedUids.has(itemUidOf(item));
+  // Host items (the target of any affixed talisman or shield attachment) get a
+  // `hasAttachment` flag so IconTile can mark them with the attachment medallion —
+  // the visual counterpart to the child now living inside the host's card.
+  const hostUids = new Set(
+    [...Object.values(affixed || {}), ...Object.values(attached || {})].filter(Boolean),
+  );
+  const stampHosts = (items) =>
+    items.map((it) => (hostUids.has(itemUidOf(it)) ? { ...it, hasAttachment: true } : it));
   const prep = (items) =>
-    stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects);
+    stampHosts(stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects));
   const gridInventory = prep(inventory).map((item) =>
     isContainer(item)
       ? { ...item, container: { ...item.container, contents: prep(item.container.contents) } }

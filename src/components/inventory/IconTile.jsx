@@ -1,4 +1,5 @@
 import React from 'react';
+import GameGlyph from '../shared/GameGlyph';
 import { itemTint, itemCharges, isGlowy, itemRarity, itemCode } from '../../utils/inventoryTile';
 
 /**
@@ -51,6 +52,11 @@ const IconTile = ({ item, size = 52, glow = true }) => {
           aria-label="Active effect"
         >
           ✨
+        </span>
+      )}
+      {item?.hasAttachment && (
+        <span className="icon-tile-attached">
+          <GameGlyph name="attachment" title="Has an attachment" />
         </span>
       )}
       {qty > 1 && <span className="icon-tile-qty">{qty}</span>}

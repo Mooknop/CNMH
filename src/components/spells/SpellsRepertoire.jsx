@@ -1,6 +1,7 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
+import GameGlyph from '../shared/GameGlyph';
 import SpellCard from './SpellCard';
 
 /**
@@ -15,7 +16,7 @@ const RankSlotPips = ({ rank, total, remaining }) => (
     aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining`}
   >
     {Array.from({ length: total }, (_, i) => (
-      <span key={i} className={`rank-slot-pip${i < remaining ? ' filled' : ''}`} />
+      <GameGlyph key={i} name="spellSlot" className={`rank-slot-pip${i < remaining ? ' filled' : ''}`} />
     ))}
   </span>
 );
