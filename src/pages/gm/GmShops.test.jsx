@@ -483,10 +483,11 @@ describe('GmShops', () => {
       expect(lastWares()).toEqual([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
     });
 
-    it('collapses a uniform cap to a scalar and omits targets when all four are chosen', () => {
+    it('collapses a uniform cap to a scalar and omits targets when all are chosen', () => {
       open();
-      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
-      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) =>
+      const targets = ['weapon', 'armor', 'shield', 'ring', 'accessory'];
+      targets.forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
+      targets.forEach((t) =>
         fireEvent.change(screen.getByLabelText(`rune-maxlevel-${t}`), { target: { value: '12' } })
       );
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
@@ -571,7 +572,7 @@ describe('GmShops', () => {
 
     it('notes the general runesmith exemption when every target is enabled (#1044)', () => {
       open();
-      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
+      ['weapon', 'armor', 'shield', 'ring', 'accessory'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
       expect(screen.getByTestId('rune-host-summary')).toHaveTextContent('General runesmith');
     });
 
