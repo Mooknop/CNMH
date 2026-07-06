@@ -73,58 +73,89 @@ const socketContent = (s) => {
   }
 };
 
-// One rune-target item and its sockets. Each socket shows what it holds, a
-// picker of the runes that could fill/upgrade it, and — when filled — a clear
-// button. All edits are instant (onFill / onClear write straight through).
-const RuneItemCard = ({ item, stock, onFill, onClear }) => {
-  const sockets = gearSockets(item);
+// One rune socket: what it holds, a picker of the runes that could fill/upgrade
+// it, and — when filled — a clear button. A rune that carries `choices` (e.g.
+// Energy-Resistant's damage type, #1196 G3) can't apply until a choice is made,
+// so selecting it reveals a second picker; onFill fires with the chosen value.
+const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
+  const [pending, setPending] = useState(null); // a choices-rune awaiting its choice
+  const held = socketContent(socket);
+
+  const pick = (rune) => {
+    if (!rune) return;
+    if (Array.isArray(rune.choices) && rune.choices.length) setPending(rune);
+    else onFill(item, socket, rune);
+  };
+
   return (
-    <li className="cs-item gm-rune-item" data-testid={`rune-item-${item.name}`}>
-      <span className="cs-item-label gm-rune-item-name">{item.name}</span>
-      <ul className="cs-list gm-rune-sockets">
-        {sockets.map((s) => {
-          const options = compatibleRunes(item, s.type, stock);
-          const held = socketContent(s);
-          return (
-            <li key={socketKey(s)} className="cs-row" data-testid={`rune-socket-${item.name}-${socketKey(s)}`}>
-              <span className="cs-label">
-                {SOCKET_LABEL[s.type]}
-                <span className="gm-help"> — {held || 'empty'}</span>
-              </span>
-              <div className="cs-control cs-clear-row">
-                {options.length > 0 && (
-                  <select
-                    aria-label={`${s.type} rune for ${item.name}`}
-                    value=""
-                    onChange={(e) => {
-                      const rune = options.find((o) => String(o.id) === e.target.value);
-                      if (rune) onFill(item, s, rune);
-                    }}
-                  >
-                    <option value="">{s.filled ? '— upgrade —' : '— set —'}</option>
-                    {options.map((o) => (
-                      <option key={o.id} value={o.id}>{o.name}</option>
-                    ))}
-                  </select>
-                )}
-                {s.filled && (
-                  <button
-                    type="button"
-                    className="cs-item-remove"
-                    aria-label={`clear ${s.type} on ${item.name}`}
-                    onClick={() => onClear(item, s)}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+    <li className="cs-row" data-testid={`rune-socket-${item.name}-${socketKey(socket)}`}>
+      <span className="cs-label">
+        {SOCKET_LABEL[socket.type]}
+        <span className="gm-help"> — {held || 'empty'}</span>
+      </span>
+      <div className="cs-control cs-clear-row">
+        {options.length > 0 && (
+          <select
+            aria-label={`${socket.type} rune for ${item.name}`}
+            value=""
+            onChange={(e) => pick(options.find((o) => String(o.id) === e.target.value))}
+          >
+            <option value="">{socket.filled ? '— upgrade —' : '— set —'}</option>
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+        )}
+        {pending && (
+          <select
+            aria-label={`${pending.name} choice for ${item.name}`}
+            value=""
+            onChange={(e) => {
+              if (!e.target.value) return;
+              onFill(item, socket, pending, e.target.value);
+              setPending(null);
+            }}
+          >
+            <option value="">— {pending.name} type —</option>
+            {pending.choices.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        )}
+        {socket.filled && (
+          <button
+            type="button"
+            className="cs-item-remove"
+            aria-label={`clear ${socket.type} on ${item.name}`}
+            onClick={() => onClear(item, socket)}
+          >
+            ✕
+          </button>
+        )}
+      </div>
     </li>
   );
 };
+
+// One rune-target item and its sockets. All edits are instant (onFill / onClear
+// write straight through).
+const RuneItemCard = ({ item, stock, onFill, onClear }) => (
+  <li className="cs-item gm-rune-item" data-testid={`rune-item-${item.name}`}>
+    <span className="cs-item-label gm-rune-item-name">{item.name}</span>
+    <ul className="cs-list gm-rune-sockets">
+      {gearSockets(item).map((s) => (
+        <RuneSocketRow
+          key={socketKey(s)}
+          item={item}
+          socket={s}
+          options={compatibleRunes(item, s.type, stock)}
+          onFill={onFill}
+          onClear={onClear}
+        />
+      ))}
+    </ul>
+  </li>
+);
 
 const GmGearModal = ({ isOpen, onClose }) => {
   const { characters, runes: catalogRunes } = useContent();
@@ -225,8 +256,12 @@ const GmGearModal = ({ isOpen, onClose }) => {
     appendEvent({ type: 'gm', text: `GM: ${charName} — ${logText}` });
   };
 
-  const fillSocket = (item, socket, rune) =>
-    editRune(item, applyRune(item, rune), `etched ${rune.name} onto ${item.name}`);
+  const fillSocket = (item, socket, rune, choice) =>
+    editRune(
+      item,
+      applyRune(item, rune, choice ? { choice } : {}),
+      `etched ${rune.name}${choice ? ` (${choice})` : ''} onto ${item.name}`,
+    );
 
   const clearSocket = (item, socket) =>
     editRune(item, clearedGearEntry(item, socket),
