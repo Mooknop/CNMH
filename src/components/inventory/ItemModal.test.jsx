@@ -1085,6 +1085,47 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     open(); // base wolfFang has no activation
     expect(screen.queryByTestId('item-action-activate')).not.toBeInTheDocument();
   });
+
+  it('nests an affixed talisman on its HOST card (not just the talisman card)', () => {
+    mockAffixed = { t1: 'w1' };
+    open(sword); // the host weapon
+    const section = screen.getByTestId('hosted-talismans');
+    expect(section).toHaveTextContent('Wolf Fang');
+    expect(screen.getByTestId('hosted-unaffix-t1')).toBeInTheDocument();
+  });
+
+  it('removes a talisman from the host card, unaffixing it', () => {
+    mockAffixed = { t1: 'w1' };
+    open(sword);
+    fireEvent.click(screen.getByTestId('hosted-unaffix-t1'));
+    expect(mockAffixed).toEqual({});
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Ashka removed Wolf Fang from Longsword',
+    }));
+  });
+
+  it('activates an affixed talisman from the host card', () => {
+    const wolfFangActive = {
+      ...wolfFang,
+      talisman: { affixTo: 'weapon', activation: { cost: 'free', trigger: 'You successfully Trip a creature', effect: { kind: 'damage', amount: 'str-mod', damageType: 'bludgeoning', onManeuver: 'trip' } } },
+    };
+    const char = { id: 'hero', name: 'Ashka', __inventory: [wolfFangActive, sword, plate] };
+    mockAffixed = { t1: 'w1' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={sword} character={char} />);
+
+    fireEvent.click(screen.getByTestId('hosted-activate-t1'));
+    expect(mockConsumed).toEqual({ 'Wolf Fang': 1 });
+    expect(mockAffixed).toEqual({}); // consumed → unaffixed
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('activated Wolf Fang'),
+    }));
+  });
+
+  it('shows no hosted-talismans section on a host with none affixed', () => {
+    mockAffixed = {};
+    open(sword);
+    expect(screen.queryByTestId('hosted-talismans')).not.toBeInTheDocument();
+  });
 });
 
 describe('ItemModal — shield attachment (#1165 Track 2)', () => {
