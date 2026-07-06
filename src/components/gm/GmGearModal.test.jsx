@@ -8,10 +8,10 @@ const h = vi.hoisted(() => {
   const sessionApi = {
     connected: true,
     getState: (id, type) => sessionStore[id]?.[type],
-    sendUpdate: (id, type, value) => {
+    sendUpdate: (id, type, value, options) => {
       if (!sessionStore[id]) sessionStore[id] = {};
       sessionStore[id][type] = value;
-      updates.push({ id, type, value });
+      updates.push({ id, type, value, options });
     },
     subscribe: () => () => {},
   };
@@ -89,7 +89,18 @@ describe('GmGearModal', () => {
 
     fireEvent.change(sel, { target: { value: 'w1' } });
     expect(lastUpdate('affixed').value).toEqual({ t1: 'w1' });
+    // GM authoring must survive the offline-sandbox freeze — the write is forced.
+    expect(lastUpdate('affixed').options).toEqual({ force: true });
     expect(logText()).toContain('GM: Pellias — affixed Wolf Fang to Longsword');
+  });
+
+  it('forces every GM write so it persists in the offline sandbox', () => {
+    open();
+    select('runed');
+    fireEvent.change(screen.getByLabelText('property rune for Rune Blade'), { target: { value: 'flaming' } });
+    // Rune edits touch acquired + removed — both must be forced past the freeze.
+    expect(lastUpdate('acquired').options).toEqual({ force: true });
+    expect(lastUpdate('removed').options).toEqual({ force: true });
   });
 
   it('attaches a shield attachment to a shield host, instantly, and logs it', () => {

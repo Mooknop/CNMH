@@ -1,6 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { SessionProvider, useSession } from './SessionContext';
+import { SessionProvider, useSession, isSandboxWritable } from './SessionContext';
+
+describe('isSandboxWritable', () => {
+  it('allows reversible inventory organization, including affix/attach bindings', () => {
+    ['loadout', 'invested', 'affixed', 'attached'].forEach((t) => {
+      expect(isSandboxWritable(t, 'pellias')).toBe(true);
+    });
+  });
+
+  it('freezes per-character resource burns', () => {
+    ['consumed', 'gold', 'focus', 'hp', 'itemeffects'].forEach((t) => {
+      expect(isSandboxWritable(t, 'pellias')).toBe(false);
+    });
+  });
+
+  it('always allows global (GM-authored) writes', () => {
+    expect(isSandboxWritable('shops', 'global')).toBe(true);
+  });
+});
 
 // jsdom has no WebSocket — hand-rolled controllable fake (no new deps).
 class MockWS {

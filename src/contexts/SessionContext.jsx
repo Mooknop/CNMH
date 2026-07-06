@@ -7,11 +7,13 @@ import { CAMPAIGN_ID } from '../data/campaign';
 const RECONNECT_MS = 3000;
 
 // Inventory *organization* writes that stay interactive in the offline sandbox
-// (#554). Moving items, setting hands, and attuning don't consume anything, so a
-// player can manage their loadout while the live game isn't running. Resource
-// burns (consumed, itemeffects, focus, gold, …) stay frozen so nothing gets used
-// up. Keyed by the `cnmh_<type>_<id>` type segment.
-const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested']);
+// (#554). Moving items, setting hands, attuning, and binding talismans / shield
+// attachments don't consume anything (they're reversible — the consumption is a
+// separate `consumed` write on activation, which stays frozen), so a player can
+// manage their loadout while the live game isn't running. Resource burns
+// (consumed, itemeffects, focus, gold, …) stay frozen so nothing gets used up.
+// Keyed by the `cnmh_<type>_<id>` type segment.
+const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested', 'affixed', 'attached']);
 
 // Whether a synced write may proceed while the live game is offline (DO up,
 // Foundry down). Two always-live categories survive the sandbox freeze:
@@ -19,8 +21,8 @@ const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested']);
 //     mode, clock, exploration toggles — not player resource consumption. GM
 //     edits must stay on regardless of mode, so the GM can prep while Foundry's
 //     down. (characterId is the literal "global" for these keys.)
-//   • Inventory organization (loadout / invested), which a player may always
-//     manage (#554).
+//   • Inventory organization (loadout / invested / affixed / attached), which a
+//     player may always manage (#554).
 // Everything else — per-character resource burns — stays frozen.
 export const isSandboxWritable = (stateType, characterId) =>
   characterId === 'global' || SANDBOX_WRITABLE_TYPES.has(stateType);
