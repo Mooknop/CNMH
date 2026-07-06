@@ -3627,6 +3627,19 @@
     }
   },
   {
+    "name": "Fist Shield",
+    "description": "This rectangular metal shield is usually about 1 foot square and primarily used by duelists. It offers slightly more protection than the buckler at the expense of requiring the use of a hand to wield it the entire time.",
+    "price": 2,
+    "weight": 0.1,
+    "shield": {
+      "health": 10,
+      "breakThreshold": 5,
+      "hardness": 4,
+      "bonus": 1
+    },
+    "id": "fist-shield"
+  },
+  {
     "name": "Flail",
     "strikes": [
       {
@@ -4615,6 +4628,22 @@
     "id": "healing-potion"
   },
   {
+    "name": "Heater Shield",
+    "description": "This wooden or metal shield is crafted in an elongated heart shape that makes it one of the most versatile shields available. It is small enough to be used effectively from horseback, and often emblazoned with a coat of arms or heraldry on its face.",
+    "traits": [
+      "Riding Shield"
+    ],
+    "price": 4,
+    "weight": 1,
+    "shield": {
+      "health": 18,
+      "breakThreshold": 9,
+      "hardness": 5,
+      "bonus": 2
+    },
+    "id": "heater-shield"
+  },
+  {
     "id": "hide-armor",
     "name": "Hide Armor",
     "description": "A mix of thick furs and patches of stiff hide, hide armor provides protection due to its layers of leather, although its bulkiness slows the wearer down and decreases mobility.",
@@ -4660,6 +4689,20 @@
     "price": 3,
     "weight": 0.1,
     "id": "holy-water"
+  },
+  {
+    "name": "Hoplon",
+    "description": "This round metal shield affords great protection and durability. While it is the smallest of the heavy shields, its simple and durable construction makes it capable of withstanding many hits. Its smaller profile also makes it the most maneuverable of the heavy shields and unlike the other heavy shields, this prevents the use of the Take Cover action to gain an additional circumstance bonus to AC.",
+    "price": 10,
+    "weight": 2,
+    "shield": {
+      "health": 24,
+      "breakThreshold": 12,
+      "hardness": 5,
+      "bonus": 2,
+      "speedPenalty": 5
+    },
+    "id": "hoplon"
   },
   {
     "actions": [
@@ -4901,6 +4944,22 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Kite Shield",
+    "description": "The kite shield is essentially a larger version of the heater shield, usually tapering more sharply at the bottom and being longer as well. It provides more full-body protection at the expense of maneuverability.",
+    "traits": [
+      "Deflecting"
+    ],
+    "price": 5,
+    "weight": 1,
+    "shield": {
+      "health": 22,
+      "breakThreshold": 11,
+      "hardness": 4,
+      "bonus": 2
+    },
+    "id": "kite-shield"
   },
   {
     "id": "kukri",
@@ -5815,6 +5874,24 @@
       "group": "cloth"
     },
     "id": "padded-armor"
+  },
+  {
+    "name": "Pavise",
+    "description": "This enormous rectangular metal shield can be used to protect the wielder's entire body, and is often used as a source of cover for allied archers, wielded both for the defense of the user and for nearby allies. It is incredibly heavy and unwieldy.",
+    "traits": [
+      "Cumbersome"
+    ],
+    "price": 15,
+    "weight": 5,
+    "shield": {
+      "health": 28,
+      "breakThreshold": 14,
+      "hardness": 7,
+      "bonus": 2,
+      "takeCoverBonus": 4,
+      "speedPenalty": 10
+    },
+    "id": "pavise"
   },
   {
     "id": "pendant-of-the-occult",
@@ -7867,6 +7944,25 @@
     }
   },
   {
+    "name": "Scutum",
+    "description": "An ancient style of shield, but still effective, the scutum is large and rectangular, with a convex shape to help deflect incoming blows rather than absorb them into the shield. It is primarily made of wood and typically reinforced with metal bands. Famously used in shield formations, this shield is no less effective when used alone.",
+    "traits": [
+      "Cumbersome",
+      "Deflecting"
+    ],
+    "price": 12,
+    "weight": 4,
+    "shield": {
+      "health": 26,
+      "breakThreshold": 13,
+      "hardness": 6,
+      "bonus": 2,
+      "takeCoverBonus": 4,
+      "speedPenalty": 5
+    },
+    "id": "scutum"
+  },
+  {
     "name": "Serene Mutagen",
     "description": "An alchemical mutagen that calms the mind, sharpening senses and will at the cost of aggression.",
     "traits": [
@@ -7993,6 +8089,22 @@
         "Melee"
       ]
     }
+  },
+  {
+    "name": "Shield Gauntlet",
+    "description": "This gauntlet is finely crafted from thin steel plates that uniquely cover both the inside and outside of the hand. This careful construction allows for relatively fine control with the gauntleted hand, but also grants full protection for grabbing an enemy weapon by the dangerous end. You can wield weapons and carry objects in the hand that is wearing the shield gauntlet, but you aren't considered to be wielding it while you do so, nor can you Raise a Shield or use any Shield Reactions until the hand is once again free.",
+    "traits": [
+      "Finesse"
+    ],
+    "price": 3,
+    "weight": 0.1,
+    "shield": {
+      "health": 5,
+      "breakThreshold": 2,
+      "hardness": 2,
+      "bonus": 1
+    },
+    "id": "shield-gauntlet"
   },
   {
     "id": "shield-spikes",
@@ -9808,6 +9920,22 @@
     "id": "tallow-bomb"
   },
   {
+    "name": "Targe",
+    "description": "This small wooden shield is favored by close-quarters fighters. Most targes feature two thin wooden planks bolted together so that the grains are perpendicular to increase strength. It is light enough to wield a small weapon in the same hand that the targe is strapped to. You can Raise a Shield with your targe while carrying an object of light bulk, or while wielding a weapon of light bulk that has the agile trait. If you make an attack with this weapon while the shield is raised, the shield is no longer raised after the attack.",
+    "traits": [
+      "Finesse"
+    ],
+    "price": 0.2,
+    "weight": 0.1,
+    "shield": {
+      "health": 4,
+      "breakThreshold": 2,
+      "hardness": 1,
+      "bonus": 1
+    },
+    "id": "targe"
+  },
+  {
     "name": "Theatrical Mutagen",
     "description": "An alchemical mutagen that turns you into a consummate performer, demanding constant motion.",
     "traits": [
@@ -10273,6 +10401,22 @@
       }
     ],
     "id": "vexing-vapor"
+  },
+  {
+    "name": "Viking Shield",
+    "description": "A round shield usually made of layered wood. Generally between 2-3 feet in diameter, the viking shield is light and extremely mobile for the protection that it affords, but sacrifices some durability for those qualities.",
+    "traits": [
+      "Accessible"
+    ],
+    "price": 1,
+    "weight": 1,
+    "shield": {
+      "health": 15,
+      "breakThreshold": 7,
+      "hardness": 5,
+      "bonus": 2
+    },
+    "id": "viking-shield"
   },
   {
     "actions": [
