@@ -98,6 +98,20 @@ describe('FocusSpellsList', () => {
     expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 
+  it('puts a class glyph inside each bubble for a Bard', () => {
+    const bard = { ...baseCharacter, class: 'Bard' };
+    const { container } = render(<FocusSpellsList character={bard} characterColor="#333" />);
+    const bubbles = screen.getAllByRole('button');
+    expect(bubbles[0]).toHaveClass('has-glyph');
+    expect(container.querySelectorAll('.slot-bubble .game-glyph')).toHaveLength(2);
+  });
+
+  it('keeps a plain bubble (no glyph) for a class without one', () => {
+    const { container } = render(<FocusSpellsList character={baseCharacter} characterColor="#333" />);
+    expect(screen.getAllByRole('button')[0]).not.toHaveClass('has-glyph');
+    expect(container.querySelector('.slot-bubble .game-glyph')).toBeNull();
+  });
+
   it('starts with all bubbles filled when current equals max', () => {
     render(<FocusSpellsList character={baseCharacter} characterColor="#333" />);
     expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);

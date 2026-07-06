@@ -66,6 +66,22 @@
   border-color: var(--slot-pip-filled, var(--theme-arcane));
 }
 
+/* Class-flavored focus glyph — replaces the dot; color, not fill, marks state. */
+.slot-pip.glyph {
+  width: 15px;
+  height: 15px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--slot-pip-empty, var(--iron-light));
+  opacity: 0.4;
+}
+.slot-pip.glyph.filled {
+  background: transparent;
+  color: var(--color-theme, var(--slot-pip-filled, var(--theme-arcane)));
+  opacity: 1;
+}
+
 /* View Mode Toggle — pill-strip segmented control */
 .view-mode-toggle {
   display: flex;
@@ -827,16 +843,15 @@
 }
 
 .rank-slot-pip {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1.5px solid var(--slot-pip-empty, var(--iron-light));
-  background: transparent;
+  width: 15px;
+  height: 15px;
+  color: var(--slot-pip-empty, var(--iron-light));
+  opacity: 0.4;
 }
 
 .rank-slot-pip.filled {
-  background: var(--slot-pip-filled, var(--theme-arcane));
-  border-color: var(--slot-pip-filled, var(--theme-arcane));
+  color: var(--slot-pip-filled, var(--theme-arcane));
+  opacity: 1;
 }
 
 .staff-charges-section {
@@ -883,6 +898,28 @@
 
 .slot-bubble.slot-filled {
   background: var(--color-theme, var(--ember-base));
+}
+
+/* Focus bubble carrying a class glyph — the glyph replaces the ring; color +
+   opacity mark available vs spent (an empty bubble is faded, not hollow). */
+.slot-bubble.has-glyph {
+  width: 17px;
+  height: 17px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-theme, var(--ember-base));
+  opacity: 0.35;
+}
+.slot-bubble.has-glyph.slot-filled {
+  background: transparent;
+  opacity: 1;
+}
+.slot-bubble.has-glyph .game-glyph {
+  width: 100%;
+  height: 100%;
 }
 
 .wand-overcharge-btn {

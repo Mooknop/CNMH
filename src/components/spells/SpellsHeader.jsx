@@ -3,6 +3,8 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { useVeracious } from '../../hooks/useVeracious';
 import { getFocusInfo } from '../../utils/SpellUtils';
+import { focusGlyphForClass } from '../../utils/gameGlyphs';
+import GameGlyph from '../shared/GameGlyph';
 
 /**
  * Compact spellcasting stat trio: Atk · DC · Focus (focus as arcane slot pips).
@@ -31,6 +33,8 @@ const SpellsHeader = ({ character }) => {
     focusMax - (focusInfo?.current ?? focusMax)
   );
   const focusRemaining = Math.max(0, focusMax - (pointsSpent || 0));
+  // Class-flavored focus glyph (Bard/Sorcerer today); other classes keep the dot.
+  const focusGlyph = focusGlyphForClass(character?.class);
 
   return (
     <div className="spellcasting-stats">
@@ -49,10 +53,18 @@ const SpellsHeader = ({ character }) => {
           <span className="stat-label">Focus</span>
           <span className="slot-pips-row" aria-label={`${focusRemaining} of ${focusMax} focus points`}>
             {Array.from({ length: focusMax }, (_, i) => (
-              <span
-                key={i}
-                className={`slot-pip${i < focusRemaining ? ' filled' : ''}`}
-              />
+              focusGlyph ? (
+                <GameGlyph
+                  key={i}
+                  name={focusGlyph}
+                  className={`slot-pip glyph${i < focusRemaining ? ' filled' : ''}`}
+                />
+              ) : (
+                <span
+                  key={i}
+                  className={`slot-pip${i < focusRemaining ? ' filled' : ''}`}
+                />
+              )
             ))}
           </span>
         </div>

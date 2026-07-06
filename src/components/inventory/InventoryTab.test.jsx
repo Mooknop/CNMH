@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import InventoryTab from './InventoryTab';
 
 vi.mock('../../utils/InventoryUtils', async () => ({
@@ -185,6 +185,19 @@ describe('InventoryTab — shield attachments (#1165 Track 2)', () => {
     mockAttached = {};
     render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
     expect(screen.getByTestId('grid-cell-spk')).toBeInTheDocument();
+  });
+
+  it('marks the host shield with the attachment medallion', () => {
+    mockAttached = { spk: 's1' };
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    const host = screen.getByTestId('grid-cell-s1');
+    expect(within(host).getByLabelText('Has an attachment')).toBeInTheDocument();
+  });
+
+  it('shows no medallion when nothing is attached', () => {
+    mockAttached = {};
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(screen.queryByLabelText('Has an attachment')).not.toBeInTheDocument();
   });
 });
 

@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { organizeSpellsByRank, getSortedRankList, getFocusInfo } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
+import GameGlyph from '../shared/GameGlyph';
+import { focusGlyphForClass } from '../../utils/gameGlyphs';
 import { useContent } from '../../contexts/ContentContext';
 import { spellCatalogMap, resolveFocusSpells } from '../../utils/contentUtils';
 
@@ -43,6 +45,9 @@ const FocusSpellsList = ({ character, characterColor, onCast }) => {
   const focusSpells = resolveFocusSpells(getFocusSpells(), spellMap);
   const focusInfo = getFocusInfo(character);
   const focusMax = focusInfo?.max ?? 0;
+  // Class-flavored focus glyph inside each bubble (Bard/Sorcerer today); other
+  // classes keep the plain bubble.
+  const focusGlyph = focusGlyphForClass(character?.class);
 
   const [pointsSpent, setPointsSpent] = useLocalStorage(
     `cnmh_focus_${character?.id || 'unknown'}`,
@@ -85,10 +90,12 @@ const FocusSpellsList = ({ character, characterColor, onCast }) => {
                 return (
                   <button
                     key={i}
-                    className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}`}
+                    className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}${focusGlyph ? ' has-glyph' : ''}`}
                     onClick={() => handlePointClick(i)}
                     aria-label={isFilled ? 'Available slot' : 'Spent slot'}
-                  />
+                  >
+                    {focusGlyph && <GameGlyph name={focusGlyph} />}
+                  </button>
                 );
               })}
             </div>
