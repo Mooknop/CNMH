@@ -28,6 +28,17 @@
   white-space: nowrap;
 }
 
+/* Deflecting shield ranged toggle (#1196 G1) — +2 Hardness vs ranged. */
+.ttp-shieldblock-ranged {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
 .ttp-shieldblock-rider-spent {
   color: var(--shell-text-tertiary);
   font-style: italic;

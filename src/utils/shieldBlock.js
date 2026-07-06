@@ -12,6 +12,9 @@
  * @param {number} opts.hardness        - shield's Hardness value
  * @param {number} opts.shieldHp        - shield's current HP before this block
  * @param {number} opts.brokenThreshold - HP at or below which the shield breaks
+ * @param {number} [opts.hardnessBonus] - extra effective Hardness for this block
+ *   only (e.g. a deflecting shield's +2 vs a ranged attack, #1196 G1). Negative
+ *   values are clamped to 0 so a bonus never lowers Hardness. Default 0.
  * @returns {{
  *   prevented:      number,  // damage negated by Hardness
  *   characterTakes: number,  // damage to the character after Hardness
@@ -21,8 +24,9 @@
  *   destroyed:      boolean, // true when shieldHpAfter ≤ 0
  * }}
  */
-export function applyShieldBlock({ dealt, hardness, shieldHp, brokenThreshold }) {
-  const prevented      = Math.min(dealt, hardness);
+export function applyShieldBlock({ dealt, hardness, shieldHp, brokenThreshold, hardnessBonus = 0 }) {
+  const effectiveHardness = hardness + Math.max(0, hardnessBonus || 0);
+  const prevented      = Math.min(dealt, effectiveHardness);
   const remaining      = dealt - prevented;
   const shieldHpAfter  = Math.max(0, shieldHp - remaining);
   const broken         = shieldHpAfter <= brokenThreshold;

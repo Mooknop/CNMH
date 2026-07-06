@@ -292,6 +292,34 @@ describe('ItemModal', () => {
     expect(screen.getByText('+2')).toBeInTheDocument();
   });
 
+  // Take Cover +4 rider (#1196 G1) — data-driven off shield.takeCoverBonus.
+  it('surfaces the Take Cover rider when shield.takeCoverBonus is set', () => {
+    const item = { ...baseItem, shield: { bonus: 2, takeCoverBonus: 4 } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const note = screen.getByTestId('shield-take-cover');
+    expect(note).toHaveTextContent('Take Cover');
+    expect(note).toHaveTextContent('+4');
+  });
+
+  it('omits the Take Cover rider when shield.takeCoverBonus is absent', () => {
+    const item = { ...baseItem, shield: { bonus: 2 } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.queryByTestId('shield-take-cover')).toBeNull();
+  });
+
+  // Deflecting note (#1196 G1) — shown when the shield carries the trait.
+  it('surfaces the Deflecting note when the item has the Deflecting trait', () => {
+    const item = { ...baseItem, shield: { bonus: 2 }, traits: ['Deflecting'] };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.getByTestId('shield-deflecting')).toHaveTextContent('+2 Hardness');
+  });
+
+  it('omits the Deflecting note without the trait', () => {
+    const item = { ...baseItem, shield: { bonus: 2 } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.queryByTestId('shield-deflecting')).toBeNull();
+  });
+
   it('does not render AC Bonus when item.shield.bonus is absent', () => {
     const item = { ...baseItem, shield: { hardness: 3 } };
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);

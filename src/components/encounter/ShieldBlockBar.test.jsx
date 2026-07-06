@@ -79,7 +79,7 @@ describe('ShieldBlockBar', () => {
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
     fireEvent.click(screen.getByLabelText('Shield Block'));
 
-    expect(mockApplyBlock).toHaveBeenCalledWith(12);
+    expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
     expect(mockSpendReaction).toHaveBeenCalledWith('Shield Block');
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       charId: 'Pellias',
@@ -113,6 +113,46 @@ describe('ShieldBlockBar', () => {
     setup();
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
     expect(screen.getByLabelText('Shield Block')).toBeDisabled();
+  });
+
+  // ── Deflecting shields (#1196 G1) ──
+  describe('deflecting +2 Hardness vs ranged', () => {
+    const RANGED_LABEL = 'Triggering attack was ranged (deflecting +2 Hardness)';
+    // Host inventory entry carrying the Deflecting trait, matched to the held
+    // shield by uid (heldShield is the normalized view without traits).
+    const deflectingInventory = [{ uid: 'u1', name: 'Kite Shield', traits: ['Deflecting'] }];
+    const renderDeflecting = () =>
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={deflectingInventory} />);
+
+    it('shows no ranged toggle for a non-deflecting shield', () => {
+      setup(); // inventory [] → no host item → no trait
+      expect(screen.queryByLabelText(RANGED_LABEL)).not.toBeInTheDocument();
+    });
+
+    it('shows the ranged toggle when the held shield is deflecting', () => {
+      renderDeflecting();
+      expect(screen.getByLabelText(RANGED_LABEL)).toBeInTheDocument();
+    });
+
+    it('unchecked ranged toggle passes no Hardness bonus', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
+      renderDeflecting();
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
+    });
+
+    it('checking ranged passes +2 Hardness and notes it in the log', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 7, shieldHpAfter: 15, broken: false });
+      renderDeflecting();
+      fireEvent.click(screen.getByLabelText(RANGED_LABEL));
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 2 });
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('deflecting +2 Hardness (ranged)'),
+      }));
+    });
   });
 
   // ── Accessory-rune onBlock rider (#1033 S2) ──

@@ -76,8 +76,10 @@ export const useShield = (charId, inventory = []) => {
 
   // Apply a Shield Block against incoming damage. Runs the math app-side,
   // persists the new HP, and returns the full result for the caller to log.
+  // `hardnessBonus` adds effective Hardness for this block only — e.g. a
+  // deflecting shield's +2 vs a ranged attack (#1196 G1), decided by the caller.
   const applyBlock = useCallback(
-    (dealt) => {
+    (dealt, { hardnessBonus = 0 } = {}) => {
       if (!heldShield) return null;
       const { hp, hardness = 0, brokenThreshold = 0 } = heldShield.shield;
       const result = applyShieldBlock({
@@ -85,6 +87,7 @@ export const useShield = (charId, inventory = []) => {
         hardness,
         shieldHp: hp ?? 0,
         brokenThreshold,
+        hardnessBonus,
       });
       setShieldState((cur) => ({
         ...(cur || {}),
