@@ -36,6 +36,7 @@ vi.mock('../../hooks/useCharacter', () => ({
 // Item-target effects (#339) + affix + consumed (#254) overlays — key-dispatched.
 let mockItemEffects = [];
 let mockAffixed = {};
+let mockAttached = {};
 let mockConsumed = {};
 let mockRuneConfig = {};
 const mockSetRuneConfig = vi.fn((next) => {
@@ -49,6 +50,9 @@ const mockSetAffixed = vi.fn((next) => {
 });
 const mockSetConsumed = vi.fn((next) => {
   mockConsumed = typeof next === 'function' ? next(mockConsumed) : next;
+});
+const mockSetAttached = vi.fn((next) => {
+  mockAttached = typeof next === 'function' ? next(mockAttached) : next;
 });
 let mockInvested = {};
 const mockSetInvested = vi.fn((next) => {
@@ -65,6 +69,7 @@ const mockSetItemModes = vi.fn((next) => {
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
+    if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
@@ -1079,6 +1084,54 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     mockAffixed = { t1: 'w1' };
     open(); // base wolfFang has no activation
     expect(screen.queryByTestId('item-action-activate')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — shield attachment (#1165 Track 2)', () => {
+  const spikes = { uid: 'spk', name: 'Shield Spikes', attachment: { to: 'shield' }, runes: { potency: 1 }, strikes: [{ type: 'melee', damage: '1d6', damageType: 'piercing' }] };
+  const steel = { uid: 's1', name: 'Steel Shield', shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 } };
+  const sword = { uid: 'w1', name: 'Longsword', strikes: [{ damage: '1d8' }] };
+  const character = { id: 'pel', name: 'Pellias', __inventory: [spikes, steel, sword] };
+  const open = (item, char = character) => render(<ItemModal isOpen onClose={vi.fn()} item={item} character={char} />);
+
+  beforeEach(() => { mockAttached = {}; });
+
+  it('shows no Attach section for a non-attachment item', () => {
+    open(sword);
+    expect(screen.queryByTestId('item-attach')).not.toBeInTheDocument();
+  });
+
+  it('offers only shields as hosts and attaches on pick (10-min activity, logged)', () => {
+    open(spikes);
+    expect(screen.getByTestId('item-attach')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Steel Shield' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Longsword' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Steel Shield' }));
+    expect(mockAttached).toEqual({ spk: 's1' });
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Pellias attached Shield Spikes to Steel Shield (10-minute activity)',
+    }));
+  });
+
+  it('when attached, shows the host shield and Remove detaches', () => {
+    mockAttached = { spk: 's1' };
+    open(spikes);
+    expect(screen.getByText(/Attached to/)).toHaveTextContent('Steel Shield');
+    fireEvent.click(screen.getByTestId('item-action-detach'));
+    expect(mockAttached).toEqual({});
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('removed Shield Spikes from its shield'),
+    }));
+  });
+
+  it('the host shield modal lists its bound attachment with a Remove control', () => {
+    mockAttached = { spk: 's1' };
+    open(steel);
+    const box = screen.getByTestId('shield-attachments');
+    expect(box).toHaveTextContent('Shield Spikes');
+    fireEvent.click(within(box).getByRole('button', { name: 'Remove' }));
+    expect(mockAttached).toEqual({});
   });
 });
 

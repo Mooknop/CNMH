@@ -22,12 +22,14 @@ vi.mock('../../utils/InventoryUtils', async () => ({
 // gold key gets its default.
 let mockConsumed = {};
 let mockAffixed = {};
+let mockAttached = {};
 let mockInvested = {};
 let mockItemEffects = [];
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key, initialValue) => {
     if (key.startsWith('cnmh_consumed_')) return [mockConsumed, vi.fn()];
     if (key.startsWith('cnmh_affixed_')) return [mockAffixed, vi.fn()];
+    if (key.startsWith('cnmh_attached_')) return [mockAttached, vi.fn()];
     if (key.startsWith('cnmh_invested_')) return [mockInvested, vi.fn()];
     if (key.startsWith('cnmh_itemeffects_')) return [mockItemEffects, vi.fn()];
     return [initialValue, vi.fn()];
@@ -107,6 +109,18 @@ vi.mock('../../hooks/useCharacter', () => ({
         skillProficiencies: { crafting: 0 },
       };
     }
+    if (character.id === 'shieldpc') {
+      return {
+        id: 'shieldpc',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 1,
+        inventory: [
+          { uid: 's1', id: 's1', name: 'Steel Shield', weight: 1, state: 'worn', shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 } },
+          { uid: 'spk', id: 'spk', name: 'Shield Spikes', weight: 0, state: 'worn', attachment: { to: 'shield' }, strikes: [{ damage: '1d6' }] },
+        ],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
     return {
       id: 'hero',
       bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
@@ -153,9 +167,25 @@ const tapTile = (el) => {
 beforeEach(() => {
   mockConsumed = {};
   mockAffixed = {};
+  mockAttached = {};
   mockInvested = {};
   mockItemEffects = [];
   mockMode = 'exploration';
+});
+
+describe('InventoryTab — shield attachments (#1165 Track 2)', () => {
+  it('hides an attached attachment from the grid; its host shield keeps its tile', () => {
+    mockAttached = { spk: 's1' };
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(screen.getByTestId('grid-cell-s1')).toBeInTheDocument();      // host shield
+    expect(screen.queryByTestId('grid-cell-spk')).not.toBeInTheDocument(); // attachment hidden
+  });
+
+  it('shows the attachment as a normal tile when not attached', () => {
+    mockAttached = {};
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(screen.getByTestId('grid-cell-spk')).toBeInTheDocument();
+  });
 });
 
 describe('InventoryTab — affixed talismans (#254/#339)', () => {
