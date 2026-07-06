@@ -11,13 +11,21 @@ import {
 import {
   isShieldAttachment, validAttachHosts, attachedHostUid, attach, unattach,
 } from '../../utils/shieldAttach';
+import { gearSockets, compatibleRunes, applyRune } from '../../utils/runeSockets';
+import { reinforcingRuneDocs, clearedGearEntry, applyGearEntry } from '../../utils/gmRunes';
+import { STRIKING } from '../../utils/weaponRunes';
+import { RESILIENT } from '../../utils/armorRunes';
+import { REINFORCING } from '../../utils/shieldRunes';
 import './CharacterStateModal.css';
 
 // GM Gear management (#gm-gear). Bind/unbind a character's talismans and shield
-// attachments directly — exempt from the player-side 10-minute activity, and
-// (like CharacterStateModal) written via sendUpdate straight to the DO so it also
-// works in the offline sandbox where player writes are frozen. Every change logs
-// a GM audit line. Weapon/armor rune management is a follow-up slice.
+// attachments AND edit the runes on any valid rune target (weapon / armor / ring /
+// shield / accessory) directly — exempt from the player-side activities (the
+// 10-minute affix, the smith's work order + 24h + gold), and (like
+// CharacterStateModal) written via sendUpdate straight to the DO so it also works
+// in the offline sandbox where player writes are frozen. Every change logs a GM
+// audit line. Rune edits mint a runed copy onto the acquired overlay and mask the
+// original via removed (the useRuneWork / useMoveRune model).
 
 // One binding row: a host <select> (the current binding + every valid host) that
 // rebinds/unbinds on change.
@@ -42,8 +50,84 @@ const BindingRow = ({ label, sub, currentHostUid, hosts, noneLabel, onBind }) =>
   </li>
 );
 
+// Display metadata for the socket board.
+const SOCKET_LABEL = {
+  potency: 'Potency', striking: 'Striking', resilient: 'Resilient',
+  reinforcing: 'Reinforcing', property: 'Property', accessory: 'Accessory',
+};
+// Stable key for a socket within a gear card (fundamentals are singletons; a
+// property socket is keyed by its index).
+const socketKey = (s) => (s.type === 'property' ? `property-${s.index}` : s.type);
+
+// What a filled socket currently holds, as a display string (null when empty).
+const socketContent = (s) => {
+  switch (s.type) {
+    case 'potency': return s.value ? `+${s.value}` : null;
+    case 'striking': return s.value ? (STRIKING[s.value]?.label || s.value) : null;
+    case 'resilient': return s.value ? (RESILIENT[s.value]?.label || s.value) : null;
+    case 'reinforcing': return s.value ? (REINFORCING[s.value]?.label || s.value) : null;
+    case 'property':
+    case 'accessory':
+      return s.rune ? (typeof s.rune === 'string' ? s.rune : s.rune.name) : null;
+    default: return null;
+  }
+};
+
+// One rune-target item and its sockets. Each socket shows what it holds, a
+// picker of the runes that could fill/upgrade it, and — when filled — a clear
+// button. All edits are instant (onFill / onClear write straight through).
+const RuneItemCard = ({ item, stock, onFill, onClear }) => {
+  const sockets = gearSockets(item);
+  return (
+    <li className="cs-item gm-rune-item" data-testid={`rune-item-${item.name}`}>
+      <span className="cs-item-label gm-rune-item-name">{item.name}</span>
+      <ul className="cs-list gm-rune-sockets">
+        {sockets.map((s) => {
+          const options = compatibleRunes(item, s.type, stock);
+          const held = socketContent(s);
+          return (
+            <li key={socketKey(s)} className="cs-row" data-testid={`rune-socket-${item.name}-${socketKey(s)}`}>
+              <span className="cs-label">
+                {SOCKET_LABEL[s.type]}
+                <span className="gm-help"> — {held || 'empty'}</span>
+              </span>
+              <div className="cs-control cs-clear-row">
+                {options.length > 0 && (
+                  <select
+                    aria-label={`${s.type} rune for ${item.name}`}
+                    value=""
+                    onChange={(e) => {
+                      const rune = options.find((o) => String(o.id) === e.target.value);
+                      if (rune) onFill(item, s, rune);
+                    }}
+                  >
+                    <option value="">{s.filled ? '— upgrade —' : '— set —'}</option>
+                    {options.map((o) => (
+                      <option key={o.id} value={o.id}>{o.name}</option>
+                    ))}
+                  </select>
+                )}
+                {s.filled && (
+                  <button
+                    type="button"
+                    className="cs-item-remove"
+                    aria-label={`clear ${s.type} on ${item.name}`}
+                    onClick={() => onClear(item, s)}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </li>
+  );
+};
+
 const GmGearModal = ({ isOpen, onClose }) => {
-  const { characters } = useContent();
+  const { characters, runes: catalogRunes } = useContent();
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
   const [selectedId, setSelectedId] = useState('');
@@ -59,21 +143,30 @@ const GmGearModal = ({ isOpen, onClose }) => {
     [charData],
   );
 
-  // Local mirrors of the two overlays, seeded from the live snapshot; writes go
-  // straight to the DO (sandbox-exempt) and we update the mirror optimistically.
+  // Local mirrors of the overlays we write, seeded from the live snapshot; writes
+  // go straight to the DO (sandbox-exempt) and we update the mirror optimistically
+  // so chained edits (e.g. fill then upgrade) read the latest value. The runed-
+  // item display re-derives from useCharacter as the DO echoes acquired/removed.
   const [affixed, setAffixedLocal] = useState({});
   const [attached, setAttachedLocal] = useState({});
+  const [acquired, setAcquiredLocal] = useState([]);
+  const [removed, setRemovedLocal] = useState([]);
   useEffect(() => {
     if (!isOpen || !selectedId) return;
     setAffixedLocal(getState(selectedId, 'affixed') || {});
     setAttachedLocal(getState(selectedId, 'attached') || {});
+    setAcquiredLocal(getState(selectedId, 'acquired') || []);
+    setRemovedLocal(getState(selectedId, 'removed') || []);
   }, [isOpen, selectedId, getState]);
 
-  const write = (type, next, logText) => {
+  const writeState = (type, next) => {
     try {
       window.localStorage.setItem(`cnmh_${type}_${selectedId}`, JSON.stringify(next));
     } catch { /* quota — sync still carries it */ }
     sendUpdate(selectedId, type, next);
+  };
+  const write = (type, next, logText) => {
+    writeState(type, next);
     appendEvent({ type: 'gm', text: `GM: ${charName} — ${logText}` });
   };
 
@@ -102,7 +195,40 @@ const GmGearModal = ({ isOpen, onClose }) => {
       shieldUid ? `attached ${attachment.name} to ${hostName(shieldUid)}` : `removed ${attachment.name} from its shield`);
   };
 
-  const hasGear = talismans.length > 0 || attachments.length > 0;
+  // Every inventory item with at least one rune socket (weapon / armor / ring /
+  // shield / accessory host). The rune stock is the full catalog plus the shield
+  // reinforcing docs the catalog doesn't carry, so every socket has real options.
+  const runeItems = useMemo(
+    () => flatInventory.filter((it) => gearSockets(it).length > 0),
+    [flatInventory],
+  );
+  const runeStock = useMemo(
+    () => [...(Array.isArray(catalogRunes) ? catalogRunes : []), ...reinforcingRuneDocs()],
+    [catalogRunes],
+  );
+
+  // Commit a runed copy of `item`: mint it onto acquired, mask/splice the
+  // original via removed, mirror both, and log. Instant + sandbox-exempt.
+  const editRune = (item, entry, logText) => {
+    if (!entry) return;
+    const { acquired: nextAcq, removed: nextRem } = applyGearEntry(
+      acquired, removed, itemUidOf(item), entry,
+    );
+    setAcquiredLocal(nextAcq);
+    setRemovedLocal(nextRem);
+    writeState('acquired', nextAcq);
+    writeState('removed', nextRem);
+    appendEvent({ type: 'gm', text: `GM: ${charName} — ${logText}` });
+  };
+
+  const fillSocket = (item, socket, rune) =>
+    editRune(item, applyRune(item, rune), `etched ${rune.name} onto ${item.name}`);
+
+  const clearSocket = (item, socket) =>
+    editRune(item, clearedGearEntry(item, socket),
+      `cleared the ${(SOCKET_LABEL[socket.type] || socket.type).toLowerCase()} rune from ${item.name}`);
+
+  const hasGear = talismans.length > 0 || attachments.length > 0 || runeItems.length > 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Manage Gear" maxWidth="560px">
@@ -129,7 +255,7 @@ const GmGearModal = ({ isOpen, onClose }) => {
         )}
 
         {selectedId && !hasGear && (
-          <p className="cs-empty gm-help">This character has no talismans or shield attachments.</p>
+          <p className="cs-empty gm-help">This character has no talismans, shield attachments, or runable gear.</p>
         )}
 
         {selectedId && talismans.length > 0 && (
@@ -164,6 +290,23 @@ const GmGearModal = ({ isOpen, onClose }) => {
                   hosts={validAttachHosts(flatInventory, a)}
                   noneLabel="— detached —"
                   onBind={(shieldUid) => bindAttachment(a, shieldUid)}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {selectedId && runeItems.length > 0 && (
+          <section className="cs-group" aria-label="Runes">
+            <h3 className="cs-group-title">Runes</h3>
+            <ul className="cs-items gm-rune-list">
+              {runeItems.map((it) => (
+                <RuneItemCard
+                  key={itemUidOf(it)}
+                  item={it}
+                  stock={runeStock}
+                  onFill={fillSocket}
+                  onClear={clearSocket}
                 />
               ))}
             </ul>
