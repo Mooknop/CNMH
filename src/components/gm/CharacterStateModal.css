@@ -300,3 +300,31 @@
 .cs-raw-note {
   margin: 0;
 }
+
+/* Rune board (#gm-gear S2) — one card per rune-target item, sockets stacked. */
+.gm-rune-list {
+  gap: var(--space-2);
+}
+
+.gm-rune-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-2);
+}
+
+.gm-rune-item-name {
+  font-weight: 700;
+}
+
+.gm-rune-sockets {
+  gap: 0;
+}
+
+.gm-rune-sockets .cs-row {
+  padding: 0.2rem 0;
+}
+
+.gm-rune-sockets select {
+  max-width: 12rem;
+}
