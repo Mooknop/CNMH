@@ -18,7 +18,7 @@ import {
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
-import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing } from '../../utils/shieldRunes';
+import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing, shieldEffectiveTraits } from '../../utils/shieldRunes';
 import {
   attachedKey, isShieldAttachment, validAttachHosts, attachedHostUid,
   attach, unattach, attachmentsByHost,
@@ -457,14 +457,21 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {/* ── scrollable body: every existing detail section ── */}
       <div className="loot-scroll">
       {/* Display traits if they exist — an inscribed accessory rune grants
-          derived Magical + Invested chips on top of the authored traits */}
-      {((accessory ? accessory.traits : item.traits) || []).length > 0 && (
-        <div className="item-traits">
-          {(accessory ? accessory.traits : item.traits).map((trait, i) => (
-            <TraitTag key={i} trait={trait} />
-          ))}
-        </div>
-      )}
+          derived Magical + Invested chips on top of the authored traits; a
+          shield shows its effective traits (base + rune-granted, e.g. Feather →
+          Finesse, #1196 G3). */}
+      {(() => {
+        const traits = accessory
+          ? accessory.traits
+          : item.shield ? shieldEffectiveTraits(item) : item.traits;
+        return (traits || []).length > 0 ? (
+          <div className="item-traits">
+            {traits.map((trait, i) => (
+              <TraitTag key={i} trait={trait} />
+            ))}
+          </div>
+        ) : null;
+      })()}
 
       {/* Attunement status chip (#invest) */}
       {invested && (

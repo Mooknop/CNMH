@@ -105,4 +105,29 @@ describe('shieldAttach — Strike injection', () => {
     // 1d6 base + a striking rune → two dice.
     expect(strike.damage).toMatch(/2d6/);
   });
+
+  // Finesse host shield lends finesse to its attachment Strike (#1196 G3).
+  const finesseBase = (uid, state) => ({ uid, name: 'Targe', shield: { hardness: 1 }, state, traits: ['Finesse'] });
+  const featherShield = (uid, state) => ({
+    uid, name: 'Kite Shield', shield: { hardness: 4 }, state,
+    runes: { reinforcing: 'minor', property: [{ id: 'feather', type: 'property', name: 'Feather' }] },
+  });
+
+  it('adds Finesse to the attachment Strike when the host shield has finesse (base trait)', () => {
+    const heldChar = { ...character, inventory: [finesseBase('s1', 'held1'), spikes('spk')] };
+    const [strike] = attachmentStrikes(heldChar, { spk: 's1' });
+    expect(strike.traits).toContain('Finesse');
+  });
+
+  it('adds Finesse to the attachment Strike when the host has a Feather rune', () => {
+    const heldChar = { ...character, inventory: [featherShield('s1', 'held1'), spikes('spk')] };
+    const [strike] = attachmentStrikes(heldChar, { spk: 's1' });
+    expect(strike.traits).toContain('Finesse');
+  });
+
+  it('does not add Finesse when the host shield has none (no duplicate/spurious trait)', () => {
+    const heldChar = { ...character, inventory: [shield('s1', 'held1'), spikes('spk')] };
+    const [strike] = attachmentStrikes(heldChar, { spk: 's1' });
+    expect(strike.traits).not.toContain('Finesse');
+  });
 });
