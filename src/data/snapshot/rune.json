@@ -1034,7 +1034,7 @@
     "name": "Greater Reinforcing",
     "level": 13,
     "price": 2500,
-    "description": "A fundamental shield rune. Raises Hardness by 5 (max 15), HP by 80 (max 120), and Break Threshold by 40 (max 60), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 5 (max 15), HP by 80 (max 120), and Break Threshold by 40 (max 60), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "greater-resilient",
@@ -1067,7 +1067,7 @@
     "name": "Lesser Reinforcing",
     "level": 7,
     "price": 300,
-    "description": "A fundamental shield rune. Raises Hardness by 3 (max 10), HP by 52 (max 80), and Break Threshold by 26 (max 40), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 10), HP by 52 (max 80), and Break Threshold by 26 (max 40), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "major-reinforcing",
@@ -1078,7 +1078,7 @@
     "name": "Major Reinforcing",
     "level": 16,
     "price": 8000,
-    "description": "A fundamental shield rune. Raises Hardness by 5 (max 17), HP by 84 (max 136), and Break Threshold by 42 (max 68), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 5 (max 17), HP by 84 (max 136), and Break Threshold by 42 (max 68), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "major-resilient",
@@ -1175,7 +1175,7 @@
     "name": "Minor Reinforcing",
     "level": 4,
     "price": 75,
-    "description": "A fundamental shield rune. Raises Hardness by 3 (max 8), HP by 44 (max 64), and Break Threshold by 22 (max 32), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 8), HP by 44 (max 64), and Break Threshold by 22 (max 32), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "moderate-reinforcing",
@@ -1186,7 +1186,7 @@
     "name": "Moderate Reinforcing",
     "level": 10,
     "price": 900,
-    "description": "A fundamental shield rune. Raises Hardness by 3 (max 13), HP by 64 (max 104), and Break Threshold by 32 (max 52), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 3 (max 13), HP by 64 (max 104), and Break Threshold by 32 (max 52), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "pacifying",
@@ -1994,7 +1994,7 @@
     "name": "Supreme Reinforcing",
     "level": 19,
     "price": 32000,
-    "description": "A fundamental shield rune. Raises Hardness by 7 (max 20), HP by 108 (max 160), and Break Threshold by 54 (max 80), additive over the shield's base and capped at the listed maximum. A shield can hold only a reinforcing rune."
+    "description": "A fundamental shield rune. Raises Hardness by 7 (max 20), HP by 108 (max 160), and Break Threshold by 54 (max 80), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
   },
   {
     "id": "swallow-spike",
