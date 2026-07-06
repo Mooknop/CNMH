@@ -74,4 +74,33 @@ describe('applyShieldBlock', () => {
       expect(r.prevented + r.characterTakes).toBe(dealt);
     });
   });
+
+  // Deflecting (#1196 G1): +2 effective Hardness for this block only.
+  describe('hardnessBonus (deflecting vs ranged)', () => {
+    it('adds to effective Hardness so more is prevented', () => {
+      // Kite shield H4; +2 deflecting → 6 prevented of a 12 hit (vs 4 without).
+      const kite = { hardness: 4, shieldHp: 22, brokenThreshold: 11 };
+      const r = applyShieldBlock({ dealt: 12, ...kite, hardnessBonus: 2 });
+      expect(r.prevented).toBe(6);
+      expect(r.characterTakes).toBe(6);
+      expect(r.shieldHpAfter).toBe(16); // 22 - 6
+    });
+
+    it('defaults to 0 (unchanged from base behavior)', () => {
+      const withZero = applyShieldBlock({ dealt: 12, ...steel, hardnessBonus: 0 });
+      const without = applyShieldBlock({ dealt: 12, ...steel });
+      expect(withZero).toEqual(without);
+    });
+
+    it('never lowers Hardness — negative bonus clamps to 0', () => {
+      const r = applyShieldBlock({ dealt: 12, ...steel, hardnessBonus: -3 });
+      expect(r.prevented).toBe(5); // base Hardness, not 2
+    });
+
+    it('cannot prevent more than the damage dealt', () => {
+      const r = applyShieldBlock({ dealt: 3, ...steel, hardnessBonus: 2 });
+      expect(r.prevented).toBe(3);
+      expect(r.characterTakes).toBe(0);
+    });
+  });
 });

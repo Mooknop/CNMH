@@ -46,6 +46,10 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { gameDate, time } = useGameDate();
   const [blockDamage, setBlockDamage] = useState('');
+  // Deflecting shields (#1196 G1) add +2 effective Hardness against ranged
+  // attacks. There's no attack-type context on this bar, so the player flags
+  // "the triggering attack was ranged" — off by default.
+  const [ranged, setRanged] = useState(false);
   // Armed rider follow-up (#1055 S2) — set by a successful block, cleared on
   // use or dismissal.
   const [armed, setArmed] = useState(false);
@@ -83,19 +87,28 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const enemies = (encounter?.order || []).filter((e) => e && e.kind === 'enemy');
   const riderReady = liveRider && gate.available;
 
+  // A deflecting shield gets +2 effective Hardness against ranged attacks; the
+  // trait rides on the host inventory entry (heldShield is the normalized view).
+  const hasDeflecting = (hostItem?.traits || []).some(
+    (t) => String(t).toLowerCase() === 'deflecting'
+  );
+  const deflectBonus = hasDeflecting && ranged ? 2 : 0;
+
   const handleShieldBlock = () => {
     const dealt = parseInt(blockDamage, 10);
     if (!canShieldBlock || isNaN(dealt) || dealt < 0) return;
-    const result = applyBlock(dealt);
+    const result = applyBlock(dealt, { hardnessBonus: deflectBonus });
     if (!result) return;
     spendReaction('Shield Block');
     setBlockDamage('');
+    setRanged(false);
     if (result.broken) lowerShield();
     const detail = result.broken
       ? `shield broke! (${result.prevented} prevented)`
       : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
-    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${runeNote}` });
+    const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
+    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${deflectNote}${runeNote}` });
     if (riderReady) setArmed(true);
   };
 
@@ -188,6 +201,17 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
       >
         🛡 Block ↩
       </button>
+      {hasDeflecting && (
+        <label className="ttp-shieldblock-ranged" title="Deflecting: +2 Hardness against ranged attacks">
+          <input
+            type="checkbox"
+            checked={ranged}
+            onChange={(e) => setRanged(e.target.checked)}
+            aria-label="Triggering attack was ranged (deflecting +2 Hardness)"
+          />
+          ranged (+2 Hard.)
+        </label>
+      )}
       {rider && rider.summary && (
         <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">
           ✦ {blockRune.name}: {rider.summary}

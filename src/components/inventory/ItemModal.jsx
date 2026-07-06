@@ -582,6 +582,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <strong>Shield Rules:</strong> Raise this shield for +{shield.bonus || 0} AC.
             It has {shield.hardness || 0} Hardness and {shield.hp || 0} HP.
           </div>
+          {shield.takeCoverBonus !== undefined && (
+            <div className="shield-info" data-testid="shield-take-cover">
+              <strong>Take Cover:</strong> while raised, Take Cover to raise the AC
+              bonus to +{shield.takeCoverBonus}.
+            </div>
+          )}
+          {(item.traits || []).some((t) => String(t).toLowerCase() === 'deflecting') && (
+            <div className="shield-info" data-testid="shield-deflecting">
+              <strong>Deflecting:</strong> +2 Hardness when you Shield Block a ranged attack.
+            </div>
+          )}
           {shieldAttachments.length > 0 && (
             <div className="shield-attachments" data-testid="shield-attachments">
               {shieldAttachments.map((a) => (
