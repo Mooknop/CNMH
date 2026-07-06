@@ -1,5 +1,10 @@
 [
   {
+    "name": "Accessible",
+    "description": "This shield is quick to bring to hand. You can draw or stow it as easily as an accessible weapon, so it interferes less with readying or putting away your other gear.",
+    "id": "accessible"
+  },
+  {
     "name": "Agile",
     "description": "The multiple attack penalty you take with this weapon on the second attack on your turn is -4 instead of -5, and -8 instead of -10 on the third and subsequent attacks in the turn.",
     "id": "agile"
@@ -80,9 +85,19 @@
     "id": "critical-fusion-9"
   },
   {
+    "name": "Cumbersome",
+    "description": "A cumbersome shield is bulky enough to occupy your arm entirely. You can't hold or wield anything else in the hand strapped to it, and it can't benefit from abilities that require a free hand.",
+    "id": "cumbersome"
+  },
+  {
     "name": "Deadly",
     "description": "On a critical hit, the weapon adds a weapon damage die of the listed size. Roll this after doubling the weapon’s damage. This increases to two dice if the weapon has a greater striking rune and three dice if the weapon has a major striking rune.",
     "id": "deadly-11"
+  },
+  {
+    "name": "Deflecting",
+    "description": "A deflecting shield is angled to turn aside missiles. When you use the Shield Block reaction against a ranged attack, the shield gains a +2 circumstance bonus to its Hardness against that attack.",
+    "id": "deflecting"
   },
   {
     "name": "Disarm",
@@ -136,7 +151,7 @@
   },
   {
     "name": "Finesse",
-    "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage.",
+    "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage. When the finesse trait applies to a shield, it instead lets you Raise a Shield while wielding a light agile weapon in the same hand; making an attack with that weapon ends the raise.",
     "id": "finesse-15"
   },
   {
@@ -263,6 +278,11 @@
     "name": "Reach",
     "description": "This weapon is long and can be used to attack creatures up to 10 feet away instead of only adjacent creatures. For creatures that already have reach with the limb or limbs that wield the weapon, the weapon increases their reach by 5 feet.",
     "id": "reach-28"
+  },
+  {
+    "name": "Riding Shield",
+    "description": "This shield is shaped and balanced for use from horseback. It functions normally on foot, but its design makes it especially suited to mounted combat.",
+    "id": "riding-shield"
   },
   {
     "name": "Sanctified",

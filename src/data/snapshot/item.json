@@ -3627,6 +3627,19 @@
     }
   },
   {
+    "name": "Fist Shield",
+    "description": "A small, sturdy shield strapped across the knuckles and forearm, leaving the hand free. It's a light shield that can be Raised while your hand is empty or holding a light object that isn't a weapon.",
+    "price": 2,
+    "weight": 0.1,
+    "shield": {
+      "health": 10,
+      "breakThreshold": 5,
+      "hardness": 4,
+      "bonus": 1
+    },
+    "id": "fist-shield"
+  },
+  {
     "name": "Flail",
     "strikes": [
       {
@@ -4615,6 +4628,22 @@
     "id": "healing-potion"
   },
   {
+    "name": "Heater Shield",
+    "description": "A teardrop-shaped shield sized and balanced for use from horseback. Its riding shield trait suits it to mounted combat.",
+    "traits": [
+      "Riding Shield"
+    ],
+    "price": 4,
+    "weight": 1,
+    "shield": {
+      "health": 18,
+      "breakThreshold": 9,
+      "hardness": 5,
+      "bonus": 2
+    },
+    "id": "heater-shield"
+  },
+  {
     "id": "hide-armor",
     "name": "Hide Armor",
     "description": "A mix of thick furs and patches of stiff hide, hide armor provides protection due to its layers of leather, although its bulkiness slows the wearer down and decreases mobility.",
@@ -4660,6 +4689,20 @@
     "price": 3,
     "weight": 0.1,
     "id": "holy-water"
+  },
+  {
+    "name": "Hoplon",
+    "description": "A large, deeply concave round shield (an aspis). Its bulk reduces your Speed by 5 feet while you wield it, and it offers no Take Cover benefit.",
+    "price": 10,
+    "weight": 2,
+    "shield": {
+      "health": 24,
+      "breakThreshold": 12,
+      "hardness": 5,
+      "bonus": 2,
+      "speedPenalty": 5
+    },
+    "id": "hoplon"
   },
   {
     "actions": [
@@ -4901,6 +4944,22 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Kite Shield",
+    "description": "A tall shield tapering to a point, angled to turn aside missiles. Its deflecting trait grants +2 Hardness when you Shield Block a ranged attack.",
+    "traits": [
+      "Deflecting"
+    ],
+    "price": 5,
+    "weight": 1,
+    "shield": {
+      "health": 22,
+      "breakThreshold": 11,
+      "hardness": 4,
+      "bonus": 2
+    },
+    "id": "kite-shield"
   },
   {
     "id": "kukri",
@@ -5815,6 +5874,24 @@
       "group": "cloth"
     },
     "id": "padded-armor"
+  },
+  {
+    "name": "Pavise",
+    "description": "An enormous shield that can be planted to shelter behind. It's cumbersome: while it's raised you can Take Cover to raise its AC bonus to +4. Wielding it reduces your Speed by 10 feet.",
+    "traits": [
+      "Cumbersome"
+    ],
+    "price": 15,
+    "weight": 5,
+    "shield": {
+      "health": 28,
+      "breakThreshold": 14,
+      "hardness": 7,
+      "bonus": 2,
+      "takeCoverBonus": 4,
+      "speedPenalty": 10
+    },
+    "id": "pavise"
   },
   {
     "id": "pendant-of-the-occult",
@@ -7867,6 +7944,25 @@
     }
   },
   {
+    "name": "Scutum",
+    "description": "A large rectangular tower-style shield. It's cumbersome and deflecting: while it's raised you can Take Cover to raise its AC bonus to +4, and it grants +2 Hardness when you Shield Block a ranged attack. Wielding it reduces your Speed by 5 feet.",
+    "traits": [
+      "Cumbersome",
+      "Deflecting"
+    ],
+    "price": 12,
+    "weight": 4,
+    "shield": {
+      "health": 26,
+      "breakThreshold": 13,
+      "hardness": 6,
+      "bonus": 2,
+      "takeCoverBonus": 4,
+      "speedPenalty": 5
+    },
+    "id": "scutum"
+  },
+  {
     "name": "Serene Mutagen",
     "description": "An alchemical mutagen that calms the mind, sharpening senses and will at the cost of aggression.",
     "traits": [
@@ -7993,6 +8089,22 @@
         "Melee"
       ]
     }
+  },
+  {
+    "name": "Shield Gauntlet",
+    "description": "A shield built onto a heavy gauntlet, leaving the hand free to hold or manipulate objects. Its finesse trait lets you Raise a Shield while wielding a light agile weapon in that hand. The hand remains usable, but you can't Raise the shield gauntlet or use a shield reaction on any turn you use that hand to hold or wield something else.",
+    "traits": [
+      "Finesse"
+    ],
+    "price": 3,
+    "weight": 0.1,
+    "shield": {
+      "health": 5,
+      "breakThreshold": 2,
+      "hardness": 2,
+      "bonus": 1
+    },
+    "id": "shield-gauntlet"
   },
   {
     "id": "shield-spikes",
@@ -9808,6 +9920,22 @@
     "id": "tallow-bomb"
   },
   {
+    "name": "Targe",
+    "description": "A small, light shield favored by skirmishers who fight with a blade in the same hand. Its finesse trait lets you Raise a Shield with the targe while wielding a light agile weapon in that same hand; however, making an attack with that weapon ends the raise.",
+    "traits": [
+      "Finesse"
+    ],
+    "price": 0.2,
+    "weight": 0.1,
+    "shield": {
+      "health": 4,
+      "breakThreshold": 2,
+      "hardness": 1,
+      "bonus": 1
+    },
+    "id": "targe"
+  },
+  {
     "name": "Theatrical Mutagen",
     "description": "An alchemical mutagen that turns you into a consummate performer, demanding constant motion.",
     "traits": [
@@ -10273,6 +10401,22 @@
       }
     ],
     "id": "vexing-vapor"
+  },
+  {
+    "name": "Viking Shield",
+    "description": "A large round wooden shield with a central boss. Its accessible trait makes it quick to ready, so it interferes less with drawing and stowing your other gear.",
+    "traits": [
+      "Accessible"
+    ],
+    "price": 1,
+    "weight": 1,
+    "shield": {
+      "health": 15,
+      "breakThreshold": 7,
+      "hardness": 5,
+      "bonus": 2
+    },
+    "id": "viking-shield"
   },
   {
     "actions": [
