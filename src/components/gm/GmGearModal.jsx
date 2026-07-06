@@ -163,7 +163,11 @@ const GmGearModal = ({ isOpen, onClose }) => {
     try {
       window.localStorage.setItem(`cnmh_${type}_${selectedId}`, JSON.stringify(next));
     } catch { /* quota — sync still carries it */ }
-    sendUpdate(selectedId, type, next);
+    // GM authoring must survive the offline-sandbox freeze (DO up, Foundry down):
+    // `force` bypasses sendUpdate's per-character write-gate, the same way the
+    // dashboard's authoritative gold write does. Without it these affix/attach/
+    // rune writes are silently dropped and revert on reload (#gm-gear).
+    sendUpdate(selectedId, type, next, { force: true });
   };
   const write = (type, next, logText) => {
     writeState(type, next);
