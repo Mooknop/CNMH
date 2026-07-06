@@ -10,6 +10,10 @@ import {
   shieldRuneTierSummary,
   hasShieldRuneBlock,
   hasReinforcing,
+  shieldPropertyRunes,
+  shieldPropertySlotCapacity,
+  usedShieldPropertySlots,
+  freeShieldPropertySlots,
 } from './shieldRunes';
 
 const STEEL = { hardness: 5, health: 20, breakThreshold: 10, bonus: 2, speedPenalty: 0 };
@@ -112,5 +116,64 @@ describe('item-level helpers', () => {
     expect(shieldRuneTierSummary({ reinforcing: 'moderate' })).toBe('Moderate Reinforcing');
     expect(shieldRuneTierSummary({})).toBe('');
     expect(shieldRuneTierSummary(null)).toBe('');
+  });
+});
+
+// ── Property-rune slots + resolution (#1196 G2) ────────────────────────────────
+describe('shieldPropertySlotCapacity (from reinforcing grade)', () => {
+  it('maps grade → slots: minor/lesser → 1, moderate/greater → 2, major/supreme → 3', () => {
+    expect(shieldPropertySlotCapacity({ reinforcing: 'minor' })).toBe(1);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'lesser' })).toBe(1);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'moderate' })).toBe(2);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'greater' })).toBe(2);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'major' })).toBe(3);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'supreme' })).toBe(3);
+  });
+
+  it('no reinforcing rune → 0 slots', () => {
+    expect(shieldPropertySlotCapacity({})).toBe(0);
+    expect(shieldPropertySlotCapacity(null)).toBe(0);
+    expect(shieldPropertySlotCapacity({ reinforcing: 'bogus' })).toBe(0);
+  });
+});
+
+describe('used / free shield property slots', () => {
+  const energyRes = { id: 'energy-resistant', type: 'property', name: 'Energy-Resistant', price: 500 };
+  it('an accessory rune never consumes a property slot', () => {
+    // A moderate shield (2 slots) with one property + an accessory rune: 1 used, 1 free.
+    const item = { shield: {}, runes: { reinforcing: 'moderate', property: [energyRes], accessory: 'presentable' } };
+    expect(usedShieldPropertySlots(item)).toBe(1);
+    expect(freeShieldPropertySlots(item)).toBe(1);
+  });
+
+  it('counts filled slots and floors free at 0', () => {
+    const item = { shield: {}, runes: { reinforcing: 'minor', property: [energyRes, energyRes] } };
+    expect(usedShieldPropertySlots(item)).toBe(2);      // two applied
+    expect(shieldPropertySlotCapacity(item.runes)).toBe(1); // but capacity 1
+    expect(freeShieldPropertySlots(item)).toBe(0);      // floored, never negative
+  });
+
+  it('shieldPropertyRunes returns only resolved docs', () => {
+    const item = { shield: {}, runes: { reinforcing: 'moderate', property: [energyRes, 'unresolved-id'] } };
+    expect(shieldPropertyRunes(item)).toEqual([energyRes]); // the bare id is dropped
+  });
+});
+
+describe('resolveShield with property runes (name + price)', () => {
+  const base = { name: 'Kite Shield', price: 5, hardness: 4, health: 22, breakThreshold: 11, bonus: 2 };
+  const winglet = { name: 'Winglet', price: 350 };
+  const energyRes = { name: 'Energy-Resistant', price: 500 };
+
+  it('name lists properties after the reinforcing grade, price sums all', () => {
+    const r = resolveShield(base, { reinforcing: 'moderate', property: [winglet, energyRes] });
+    expect(r.name).toBe('Moderate Reinforcing Winglet Energy-Resistant Kite Shield');
+    expect(r.price).toBe(5 + 900 + 350 + 500); // base + moderate reinforcing + two properties
+    expect(r.properties).toEqual([winglet, energyRes]);
+  });
+
+  it('ignores unresolved (string) property refs in name/price', () => {
+    const r = resolveShield(base, { reinforcing: 'minor', property: ['not-a-doc'] });
+    expect(r.name).toBe('Minor Reinforcing Kite Shield');
+    expect(r.price).toBe(5 + 75); // no property price added
   });
 });

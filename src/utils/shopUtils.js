@@ -354,7 +354,7 @@ export function spellOfferingSummary(ware, spells) {
 // stocked as their own item wares; the generative service covers PROPERTY runes,
 // which is also where the ring (#967) and accessory (#1033 S4) runes live.
 
-export const RUNE_TARGETS = ['weapon', 'armor', 'ring', 'accessory'];
+export const RUNE_TARGETS = ['weapon', 'armor', 'shield', 'ring', 'accessory'];
 
 // A ware is a generative rune-service offering (not a flat item/runestone ref).
 export function isRuneServiceWare(w) {

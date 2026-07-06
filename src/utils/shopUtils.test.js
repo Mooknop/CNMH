@@ -756,7 +756,7 @@ describe('runeOfferings (#982 G1)', () => {
     };
     const offs = runeOfferings('smith', s);
     expect(offs).toHaveLength(1);
-    expect(offs[0].offeringKey).toBe('runeService:weapon:10/10/10/10:common');
+    expect(offs[0].offeringKey).toBe('runeService:weapon:10/10/10/10/10:common');
   });
   it('is empty for a shop with no rune-service ware or bad args', () => {
     expect(runeOfferings('bottled-solutions', shops)).toEqual([]);
@@ -832,7 +832,7 @@ describe('runeOfferingSummary (#982 G1)', () => {
   it('labels all-targets and reflects RUNE_TARGETS', () => {
     const sum = runeOfferingSummary({ runeService: true, maxLevel: 20 }, runeCatalog);
     expect(sum.text.startsWith('Runes · all targets ·')).toBe(true);
-    expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'ring', 'accessory']);
+    expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'shield', 'ring', 'accessory']);
   });
 });
 
