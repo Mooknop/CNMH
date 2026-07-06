@@ -320,6 +320,18 @@ describe('ItemModal', () => {
     expect(screen.queryByTestId('shield-deflecting')).toBeNull();
   });
 
+  // Rune-granted traits (#1196 G3) — a shield shows its effective traits.
+  it('shows a rune-granted trait chip (Feather → Finesse) alongside base traits', () => {
+    const item = {
+      ...baseItem, name: 'Kite Shield', traits: ['Deflecting'], shield: { bonus: 2 },
+      runes: { reinforcing: 'minor', property: [{ id: 'feather', type: 'property', name: 'Feather' }] },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const traits = document.querySelector('.item-traits');
+    expect(traits).toHaveTextContent('Deflecting');
+    expect(traits).toHaveTextContent('Finesse'); // granted by the Feather rune
+  });
+
   it('does not render AC Bonus when item.shield.bonus is absent', () => {
     const item = { ...baseItem, shield: { hardness: 3 } };
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);

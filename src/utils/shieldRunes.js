@@ -210,3 +210,42 @@ export const usedShieldPropertySlots = (item) =>
 /** Free property-rune slots on a shield (capacity − used, floored at 0). */
 export const freeShieldPropertySlots = (item) =>
   Math.max(0, shieldPropertySlotCapacity(item && item.runes) - usedShieldPropertySlots(item));
+
+// ── Rune-granted traits (#1196 G3 wiring) ──────────────────────────────────────
+// Traits a shield property rune grants to its host shield. Code-owned map (like
+// ENERGY_RESISTANT_AMOUNT): Feather grants finesse, Throwing grants thrown (its
+// returning behavior is handled descriptively).
+export const RUNE_GRANTED_TRAITS = {
+  feather: ['Finesse'],
+  throwing: ['Thrown'],
+};
+
+/**
+ * A shield's effective traits: its authored base traits plus any granted by its
+ * property runes (Feather → Finesse, Throwing → Thrown). Case-insensitive de-dupe,
+ * base traits first, granted appended in slot order. Never mutates the item.
+ * @param {Object} item
+ * @returns {string[]}
+ */
+export const shieldEffectiveTraits = (item) => {
+  const base = Array.isArray(item?.traits) ? item.traits : [];
+  const seen = new Set(base.map((t) => String(t).toLowerCase()));
+  const granted = [];
+  shieldPropertyRunes(item).forEach((rune) => {
+    (RUNE_GRANTED_TRAITS[rune.id] || []).forEach((t) => {
+      const k = String(t).toLowerCase();
+      if (!seen.has(k)) { seen.add(k); granted.push(t); }
+    });
+  });
+  return [...base, ...granted];
+};
+
+/**
+ * Whether a shield has the finesse trait — from a base trait (Targe, Shield
+ * Gauntlet) OR the Feather rune. Shield attacks and any attachment/adjustment
+ * Strikes then use the better of Str/Dex (per the finesse trait).
+ * @param {Object} item
+ * @returns {boolean}
+ */
+export const shieldHasFinesse = (item) =>
+  shieldEffectiveTraits(item).some((t) => String(t).toLowerCase() === 'finesse');

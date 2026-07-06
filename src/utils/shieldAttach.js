@@ -18,6 +18,7 @@ import { isHeldState } from './itemState';
 import { itemUidOf } from './affix';
 import { flattenInventory } from './InventoryUtils';
 import { resolveItemStrikes } from './strikeUtils';
+import { shieldHasFinesse } from './shieldRunes';
 
 /** Synced-state key for a character's shield-attachment overlay. */
 export const attachedKey = (charId) => `cnmh_attached_${charId}`;
@@ -117,8 +118,18 @@ export const attachmentStrikes = (character, overlay) => {
     if (!heldShieldUids.has(sUid)) continue;
     const attachment = byUid.get(aUid);
     if (!isShieldAttachment(attachment)) continue;
+    // A finesse host shield (Targe / Shield Gauntlet base trait, or the Feather
+    // rune, #1196 G3) lends finesse to its attachment's Strike — so it uses the
+    // better of Str/Dex (per the finesse trait; computeStrike honors it).
+    const finesse = shieldHasFinesse(byUid.get(sUid));
     const resolved = resolveItemStrikes({ ...attachment, noHandRequired: true }, character);
-    out.push(...resolved.map((s) => ({ ...s, shieldAttachment: true, hostUid: sUid })));
+    out.push(...resolved.map((s) => {
+      const traits = Array.isArray(s.traits) ? s.traits : [];
+      const withFinesse = finesse && !traits.some((t) => String(t).toLowerCase() === 'finesse')
+        ? [...traits, 'Finesse']
+        : traits;
+      return { ...s, traits: withFinesse, shieldAttachment: true, hostUid: sUid };
+    }));
   }
   return out;
 };

@@ -14,6 +14,8 @@ import {
   shieldPropertySlotCapacity,
   usedShieldPropertySlots,
   freeShieldPropertySlots,
+  shieldEffectiveTraits,
+  shieldHasFinesse,
 } from './shieldRunes';
 
 const STEEL = { hardness: 5, health: 20, breakThreshold: 10, bonus: 2, speedPenalty: 0 };
@@ -175,5 +177,36 @@ describe('resolveShield with property runes (name + price)', () => {
     const r = resolveShield(base, { reinforcing: 'minor', property: ['not-a-doc'] });
     expect(r.name).toBe('Minor Reinforcing Kite Shield');
     expect(r.price).toBe(5 + 75); // no property price added
+  });
+});
+
+// ── Rune-granted traits (#1196 G3 wiring) ──────────────────────────────────────
+describe('shieldEffectiveTraits + shieldHasFinesse', () => {
+  const feather = { id: 'feather', type: 'property', name: 'Feather' };
+  const throwing = { id: 'throwing', type: 'property', name: 'Throwing' };
+  const energyRes = { id: 'energy-resistant', type: 'property', name: 'Energy-Resistant', choice: 'fire' };
+
+  it('appends Feather → Finesse and Throwing → Thrown after base traits', () => {
+    const item = { traits: ['Cumbersome'], shield: {}, runes: { reinforcing: 'moderate', property: [feather, throwing] } };
+    expect(shieldEffectiveTraits(item)).toEqual(['Cumbersome', 'Finesse', 'Thrown']);
+  });
+
+  it('de-dupes a granted trait already present on the base (case-insensitive)', () => {
+    // A Targe (base Finesse) with a Feather rune keeps a single Finesse.
+    const item = { traits: ['Finesse'], shield: {}, runes: { reinforcing: 'minor', property: [feather] } };
+    expect(shieldEffectiveTraits(item)).toEqual(['Finesse']);
+  });
+
+  it('ignores non-trait-granting runes and returns base traits when unruned', () => {
+    expect(shieldEffectiveTraits({ traits: ['Accessible'], shield: {}, runes: { reinforcing: 'minor', property: [energyRes] } }))
+      .toEqual(['Accessible']);
+    expect(shieldEffectiveTraits({ traits: ['Deflecting'], shield: {} })).toEqual(['Deflecting']);
+    expect(shieldEffectiveTraits({ shield: {} })).toEqual([]);
+  });
+
+  it('shieldHasFinesse: base finesse OR the Feather rune', () => {
+    expect(shieldHasFinesse({ traits: ['Finesse'], shield: {} })).toBe(true); // Targe base
+    expect(shieldHasFinesse({ traits: [], shield: {}, runes: { reinforcing: 'minor', property: [feather] } })).toBe(true);
+    expect(shieldHasFinesse({ traits: ['Cumbersome'], shield: {}, runes: { reinforcing: 'minor', property: [throwing] } })).toBe(false);
   });
 });
