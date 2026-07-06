@@ -3,7 +3,7 @@ import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
-import useCharacter from '../../hooks/useCharacter';
+import { useCharacter } from '../../hooks/useCharacter';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import {
   isTalisman, validAffixHosts, affixedHostUid, affix, unaffix, itemUidOf,

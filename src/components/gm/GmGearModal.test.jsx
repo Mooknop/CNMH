@@ -34,7 +34,7 @@ const INV = {
   jade: [],
 };
 vi.mock('../../hooks/useCharacter', () => ({
-  default: (c) => (c ? { ...c, inventory: INV[c.id] || [] } : null),
+  useCharacter: (c) => (c ? { ...c, inventory: INV[c.id] || [] } : null),
 }));
 
 import { useContent } from '../../contexts/ContentContext';
