@@ -55,9 +55,10 @@ const baseStats = (base = {}) => ({
  * @param {string} parts.base          - Base shield name (e.g. "Steel Shield")
  * @returns {string}
  */
-export const buildShieldName = ({ reinforcing, material, base } = {}) => {
+export const buildShieldName = ({ reinforcing, properties = [], material, base } = {}) => {
   const segments = [];
   if (reinforcing && REINFORCING[reinforcing]) segments.push(REINFORCING[reinforcing].label);
+  segments.push(...properties.filter(Boolean));
   if (material) segments.push(material);
   if (base) segments.push(base);
   return segments.join(' ');
@@ -90,8 +91,23 @@ export const resolveShield = (base = {}, runes = {}) => {
   const hp = tier ? cap(stats.hp, tier.hp, tier.hpCap) : stats.hp;
   const brokenThreshold = tier ? cap(stats.brokenThreshold, tier.bt, tier.btCap) : stats.brokenThreshold;
 
-  const price = num(base.price) + (tier ? tier.price : 0);
-  const name = buildShieldName({ reinforcing: tierKey, material: base.material, base: base.name });
+  // Property runes (#1196 G2): shields can hold property runes up to the slot
+  // capacity their reinforcing grade unlocks. They add to the derived name and
+  // summed price; their mechanical effects are wired per-rune in G3/G4. Entries
+  // are resolved docs (contentUtils inlines runes.property ids → rune docs).
+  const properties = Array.isArray(runes?.property)
+    ? runes.property.filter((p) => p && typeof p === 'object')
+    : [];
+
+  const price = num(base.price)
+    + (tier ? tier.price : 0)
+    + properties.reduce((sum, p) => sum + num(p.price), 0);
+  const name = buildShieldName({
+    reinforcing: tierKey,
+    properties: properties.map((p) => p.name).filter(Boolean),
+    material: base.material,
+    base: base.name,
+  });
 
   return {
     name,
@@ -102,6 +118,7 @@ export const resolveShield = (base = {}, runes = {}) => {
     bonus: stats.bonus,
     speedPenalty: stats.speedPenalty,
     reinforcing: tierKey,
+    properties,
   };
 };
 
@@ -163,3 +180,33 @@ export const shieldRuneTierSummary = (runes) => {
   if (!runes || typeof runes !== 'object') return '';
   return REINFORCING[runes.reinforcing]?.label || '';
 };
+
+/** Resolved property-rune docs on a shield, in slot order ([] when none). */
+export const shieldPropertyRunes = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter((p) => p && typeof p === 'object')
+    : [];
+
+// ── Property-rune slots (#1196 G2) ─────────────────────────────────────────────
+// House rule (epic #1196): a shield's property-rune capacity comes from its
+// REINFORCING grade, not a potency rune — minor/lesser → 1, moderate/greater → 2,
+// major/supreme → 3, no reinforcing → 0 (= ceil(rank / 2)). An accessory rune on
+// the shield rides orthogonally and NEVER consumes a property slot. These mirror
+// armorRunes' armorPropertySlotCapacity / usedArmorPropertySlots / free… and back
+// the rune-socket derivation + apply guard (utils/runeSockets.js).
+
+/** Property-rune slot capacity for a shield's `runes` block (from reinforcing grade). */
+export const shieldPropertySlotCapacity = (runes) => {
+  const rank = runes && typeof runes === 'object' ? (REINFORCING[runes.reinforcing]?.rank || 0) : 0;
+  return rank > 0 ? Math.ceil(rank / 2) : 0;
+};
+
+/** Property-rune slots currently filled on a shield (counts string + doc refs). */
+export const usedShieldPropertySlots = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter(Boolean).length
+    : 0;
+
+/** Free property-rune slots on a shield (capacity − used, floored at 0). */
+export const freeShieldPropertySlots = (item) =>
+  Math.max(0, shieldPropertySlotCapacity(item && item.runes) - usedShieldPropertySlots(item));

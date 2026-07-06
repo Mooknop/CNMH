@@ -20,7 +20,8 @@ import { propertySlotCapacity } from './weaponRunes';
 import { armorPropertySlotCapacity } from './armorRunes';
 import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
-import { REINFORCING } from './shieldRunes';
+import { REINFORCING, shieldPropertySlotCapacity } from './shieldRunes';
+import { shieldCategory } from './shieldCategory';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
 // socket helpers + their callers keep importing it from one place.
@@ -51,8 +52,37 @@ const runesOf = (item) => (item && item.runes && typeof item.runes === 'object' 
 const propertyCapacity = (item, target) =>
   target === 'armor' ? armorPropertySlotCapacity(runesOf(item))
     : target === 'ring' ? ringSocketCapacity(item)
-      : target === 'shield' ? 0 // shields hold no property runes — only reinforcing
+      : target === 'shield' ? shieldPropertySlotCapacity(runesOf(item)) // #1196 G2: from reinforcing grade
         : propertySlotCapacity(runesOf(item));
+
+// A property-rune slot entry is either a bare id (string) or a { id, choice }
+// object (a choice-bearing rune like Energy-Resistant, #1196 G2). These read
+// each part regardless of shape.
+const propRuneId = (p) => (p && typeof p === 'object' ? p.id : p);
+const propRuneChoice = (p) => (p && typeof p === 'object' ? p.choice : undefined);
+
+/**
+ * Which shield size categories a property rune permits, from its `usage`
+ * restriction (e.g. "etched onto a light shield", "a light or medium shield").
+ * Returns null when unrestricted (no usage string, or none of the category words
+ * present). Shield-only — weapon/armor property runes have no category gate.
+ */
+export const runeShieldCategories = (rune) => {
+  const usage = rune && typeof rune.usage === 'string' ? rune.usage.toLowerCase() : '';
+  if (Array.isArray(rune?.shieldCategories) && rune.shieldCategories.length) {
+    return rune.shieldCategories.map((c) => String(c).toLowerCase());
+  }
+  const cats = ['light', 'medium', 'heavy'].filter((c) => usage.includes(c));
+  return cats.length ? cats : null;
+};
+
+/** Whether `rune`'s category usage restriction admits shield `item` (via its Bulk). */
+export const shieldRuneUsageAllows = (item, rune) => {
+  const cats = runeShieldCategories(rune);
+  if (!cats) return true; // unrestricted
+  const cat = shieldCategory(item?.weight);
+  return cat ? cats.includes(cat) : true; // unknown Bulk → don't block
+};
 
 /**
  * Derive the socket view for a piece of gear, in display order: potency, the
@@ -68,9 +98,16 @@ export const gearSockets = (item) => {
   const runes = runesOf(item);
   const sockets = [];
   if (target === 'shield') {
-    // A shield has exactly ONE fundamental socket — reinforcing — and no potency
-    // or property sockets (#1165). The accessory socket (below) rides orthogonally.
+    // A shield has ONE fundamental socket — reinforcing — and (per #1196 G2) a
+    // number of property sockets set by its reinforcing grade (minor/lesser → 1,
+    // moderate/greater → 2, major/supreme → 3). The accessory socket (below) rides
+    // orthogonally and never consumes a property slot.
     sockets.push({ type: 'reinforcing', target: 'shield', filled: !!runes.reinforcing, value: runes.reinforcing || null });
+    const property = Array.isArray(runes.property) ? runes.property : [];
+    const cap = propertyCapacity(item, 'shield');
+    for (let i = 0; i < cap; i += 1) {
+      sockets.push({ type: 'property', target: 'shield', index: i, filled: property[i] != null, rune: property[i] != null ? property[i] : null });
+    }
   } else if (target) {
     const property = Array.isArray(runes.property) ? runes.property : [];
     const cap = propertyCapacity(item, target);
@@ -136,7 +173,16 @@ export const compatibleRunes = (item, socketType, stock) => {
   const runes = runesOf(item);
   return (Array.isArray(stock) ? stock : []).filter((r) => {
     if (runeTarget(r) !== target) return false;
-    if (socketType === 'property') return r.type === 'property';
+    if (socketType === 'property') {
+      if (r.type !== 'property') return false;
+      // Shield property runes (#1196 G2): honor the rune's category usage gate and
+      // hide one already applied unless it's explicitly duplicable (Energy-Resistant).
+      if (target === 'shield') {
+        if (!shieldRuneUsageAllows(item, r)) return false;
+        if (!r.duplicable && (runes.property || []).some((p) => propRuneId(p) === r.id)) return false;
+      }
+      return true;
+    }
     if (r.type !== 'fundamental' || r.fundamental !== socketType) return false;
     if (socketType === 'potency') return (r.tier || 0) > (runes.potency || 0);
     if (socketType === 'reinforcing') {
@@ -156,7 +202,7 @@ export const compatibleRunes = (item, socketType, stock) => {
  * non-upgrade fundamental. Transient loadout fields (state/hand) are dropped so
  * the owner's tree re-derives placement.
  */
-export const applyRune = (gear, rune) => {
+export const applyRune = (gear, rune, opts = {}) => {
   if (!gear || !rune) return null;
 
   // Accessory runes (#1033 S1) bypass the single-target model entirely: the
@@ -185,9 +231,19 @@ export const applyRune = (gear, rune) => {
 
   if (rune.type === 'property') {
     const used = property.filter(Boolean).length;
-    const present = property.some((p) => (typeof p === 'string' ? p : p && p.id) === rune.id);
-    if (used >= propertyCapacity(gear, target) || present) return null;
-    nextRunes = { ...runes, property: [...property, rune.id] };
+    if (used >= propertyCapacity(gear, target)) return null;
+    // Shield property runes (#1196 G2) honor a category usage gate.
+    if (target === 'shield' && !shieldRuneUsageAllows(gear, rune)) return null;
+    // A duplicable rune (Energy-Resistant) may be applied more than once — but
+    // never with a choice already present. Every other property rune is unique.
+    const choice = opts && opts.choice != null ? opts.choice : undefined;
+    const sameId = property.filter((p) => propRuneId(p) === rune.id);
+    const exactDup = sameId.some((p) => (propRuneChoice(p) ?? null) === (choice ?? null));
+    if (exactDup || (sameId.length && !rune.duplicable)) return null;
+    // Store a bare id, or { id, choice } when a choice was made — the resolver
+    // (contentUtils) inlines the doc and carries the choice through.
+    const entry = choice !== undefined ? { id: rune.id, choice } : rune.id;
+    nextRunes = { ...runes, property: [...property, entry] };
   } else if (rune.type === 'fundamental' && rune.fundamental === 'potency') {
     if ((runes.potency || 0) >= (rune.tier || 0)) return null;
     nextRunes = { ...runes, potency: rune.tier };

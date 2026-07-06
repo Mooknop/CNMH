@@ -328,3 +328,85 @@ describe('accessory socket + etch list (#1033 S5)', () => {
     expect(inEtchList({ name: 'Rope', weight: 1 }, [menacing])).toBe(false);
   });
 });
+
+// ── Shield property runes (#1196 G2) ───────────────────────────────────────────
+describe('shield property sockets (#1196 G2)', () => {
+  // A steel shield with a Bulk of 1 (medium category) unless overridden.
+  const shield = (runes, extra = {}) => ({ uid: 's1', name: 'Steel Shield', weight: 1, shield: { hardness: 5, health: 20, breakThreshold: 10 }, runes, ...extra });
+
+  // Shield property runes. energyRes is duplicable (choose a damage type each time);
+  // winglet is a normal unique property. darkImbued is gated to light shields.
+  const energyRes = { id: 'energy-resistant', type: 'property', target: 'shield', name: 'Energy-Resistant', price: 500, duplicable: true };
+  const winglet = { id: 'winglet', type: 'property', target: 'shield', name: 'Winglet', price: 350 };
+  const lightOnly = { id: 'dark', type: 'property', target: 'shield', name: 'Darkness', price: 250, usage: 'etched onto a light shield' };
+  const armorProp = { id: 'slick', type: 'property', armorRune: true, name: 'Slick' };
+
+  it('gearSockets: reinforcing + N property sockets by grade + the orthogonal accessory socket', () => {
+    // No reinforcing → no property sockets (just reinforcing + accessory).
+    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
+    // Moderate (2 slots): reinforcing + 2 property + accessory.
+    const mod = gearSockets(shield({ reinforcing: 'moderate', property: [winglet] }));
+    expect(mod.map((s) => s.type)).toEqual(['reinforcing', 'property', 'property', 'accessory']);
+    expect(mod[1]).toMatchObject({ type: 'property', target: 'shield', index: 0, filled: true, rune: winglet });
+    expect(mod[2]).toMatchObject({ type: 'property', index: 1, filled: false, rune: null });
+  });
+
+  it('compatibleRunes: shield property runes fill a property socket; wrong-target excluded', () => {
+    const stock = [energyRes, winglet, armorProp];
+    expect(compatibleRunes(shield({ reinforcing: 'minor' }), 'property', stock)).toEqual([energyRes, winglet]);
+  });
+
+  it('compatibleRunes: category usage gate hides a light-only rune on a medium shield', () => {
+    const stock = [lightOnly, winglet];
+    // medium shield: lightOnly is gated out.
+    expect(compatibleRunes(shield({ reinforcing: 'minor' }), 'property', stock)).toEqual([winglet]);
+    // light shield (Bulk L): lightOnly qualifies.
+    const lightShield = shield({ reinforcing: 'minor' }, { weight: 0.1 });
+    expect(compatibleRunes(lightShield, 'property', stock)).toEqual([lightOnly, winglet]);
+  });
+
+  it('compatibleRunes: an applied unique rune drops out; a duplicable one stays', () => {
+    const stock = [energyRes, winglet];
+    const item = shield({ reinforcing: 'moderate', property: [winglet, energyRes] });
+    // winglet already applied (unique) → gone; energyRes duplicable → still offered.
+    expect(compatibleRunes(item, 'property', stock)).toEqual([energyRes]);
+  });
+
+  it('applyRune: appends a shield property rune id, respecting capacity', () => {
+    const applied = applyRune(shield({ reinforcing: 'minor' }), winglet);
+    expect(applied.runes).toEqual({ reinforcing: 'minor', property: ['winglet'] });
+    expect(applied.uid).not.toBe('s1');
+    // Capacity 1 is now full — a second unique rune is rejected.
+    expect(applyRune(applied, energyRes)).toBeNull();
+  });
+
+  it('applyRune: rejects a category-gated rune on the wrong shield size', () => {
+    expect(applyRune(shield({ reinforcing: 'minor' }), lightOnly)).toBeNull(); // medium
+    const applied = applyRune(shield({ reinforcing: 'minor' }, { weight: 0.1 }), lightOnly); // light
+    expect(applied.runes.property).toEqual(['dark']);
+  });
+
+  it('applyRune: a duplicable rune stacks only with a distinct choice', () => {
+    const one = applyRune(shield({ reinforcing: 'moderate' }), energyRes, { choice: 'fire' });
+    expect(one.runes.property).toEqual([{ id: 'energy-resistant', choice: 'fire' }]);
+    // Same rune, different damage type → allowed (fills the 2nd slot).
+    const two = applyRune(one, energyRes, { choice: 'cold' });
+    expect(two.runes.property).toEqual([{ id: 'energy-resistant', choice: 'fire' }, { id: 'energy-resistant', choice: 'cold' }]);
+    // Same rune, same type → exact duplicate, rejected.
+    expect(applyRune(one, energyRes, { choice: 'fire' })).toBeNull();
+  });
+
+  it('applyRune: a non-duplicable rune never stacks even across slots', () => {
+    const one = applyRune(shield({ reinforcing: 'moderate' }), winglet);
+    expect(applyRune(one, winglet)).toBeNull();
+  });
+
+  it('an accessory rune on a shield does not consume a property slot', () => {
+    // Minor shield: 1 property slot. Fill the property, then still take an accessory.
+    const withProp = applyRune(shield({ reinforcing: 'minor' }), winglet);
+    const sockets = gearSockets(withProp);
+    // reinforcing + 1 property (filled) + accessory (empty) — property capacity untouched.
+    expect(sockets.map((s) => s.type)).toEqual(['reinforcing', 'property', 'accessory']);
+    expect(sockets.find((s) => s.type === 'accessory')).toMatchObject({ filled: false });
+  });
+});

@@ -188,7 +188,7 @@ const fromSpellConfig = (config) => {
 // up to a max rune LEVEL, filtered by rarity — the G1 model in shopUtils.
 // Authored as one `{ runeService, targets?, maxLevel, rarities? }` ware in its
 // own "Runesmithing services" section, mirroring the spellcasting editor.
-const RUNE_TARGET_LABELS = [['weapon', 'Weapon'], ['armor', 'Armor'], ['ring', 'Ring'], ['accessory', 'Accessory']];
+const RUNE_TARGET_LABELS = [['weapon', 'Weapon'], ['armor', 'Armor'], ['shield', 'Shield'], ['ring', 'Ring'], ['accessory', 'Accessory']];
 // Property runes cap out at item level 19 (ring runes reach 18); allow 20 headroom.
 const RUNE_MAX_LEVEL = 20;
 

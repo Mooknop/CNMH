@@ -419,7 +419,17 @@ const finishItem = (item, spellMap, ownerLevel, runeMap, catalogMap) => {
   // resolve are dropped; already-inlined objects pass through untouched).
   if (runeMap && out.runes && Array.isArray(out.runes.property) && out.runes.property.length) {
     const resolved = out.runes.property
-      .map((ref) => (typeof ref === 'string' ? runeMap.get(String(ref)) : ref))
+      .map((ref) => {
+        if (typeof ref === 'string') return runeMap.get(String(ref));
+        // A choice-bearing socket ref { id, choice } (Energy-Resistant, #1196 G2):
+        // resolve the doc and carry the chosen value through. A fully-inlined
+        // property doc (has its own name) passes through untouched.
+        if (ref && typeof ref === 'object' && ref.id != null && ref.name == null) {
+          const doc = runeMap.get(String(ref.id));
+          return doc ? { ...doc, choice: ref.choice } : null;
+        }
+        return ref;
+      })
       .filter(Boolean);
     out = { ...out, runes: { ...out.runes, property: resolved } };
   }
