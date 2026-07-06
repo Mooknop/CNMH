@@ -1,5 +1,25 @@
 [
   {
+    "id": "aggressive",
+    "type": "property",
+    "target": "shield",
+    "name": "Aggressive",
+    "level": 6,
+    "price": 215,
+    "rarity": "uncommon",
+    "description": "This rune enables the shield to attack almost entirely on its own when raised.",
+    "actuated": {
+      "cost": "none",
+      "name": "Aggressive",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Interact"
+      ],
+      "description": "Effect Once activated the shield launches itself at enemies when you raise it. The shield becomes animated for 1 minute, during which time you can Strike with it as a free action each time you Raise the Shield. If this shield has a weapon attachment, use those statistics for Strikes made with the shield, otherwise Strikes made while this effect is active deal 2d4 bludgeoning damage on a hit."
+    }
+  },
+  {
     "id": "aim-aiding",
     "type": "property",
     "armorRune": true,
@@ -463,6 +483,28 @@
     "description": "Etched on a slashing or piercing weapon, the rune performs divination magic on your foes' blood to grant insight into their abilities. Once per minute, if your previous action hit and dealt damage to a bleeding creature, you can activate it (free action, envision) to Recall Knowledge about that target, gaining an item bonus to the check equal to the weapon's potency rune bonus to attack rolls (and a +2 circumstance bonus if your hit was a critical hit)."
   },
   {
+    "id": "darkness",
+    "type": "property",
+    "target": "shield",
+    "name": "Darkness",
+    "level": 7,
+    "price": 300,
+    "shieldCategories": [
+      "light"
+    ],
+    "description": "This charcoal colored rune grants you a +1 item bonus to Stealth checks as long as you are wielding the shield that it is etched onto.",
+    "actuated": {
+      "cost": "none",
+      "name": "Darkness",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect The shield casts the darkness spell, but it must be centered on your square. You may Raise a Shield as part of this activation."
+    }
+  },
+  {
     "id": "dragons-breath-1",
     "type": "property",
     "target": "accessory",
@@ -904,6 +946,61 @@
     "description": "The weapon hums when touched to the ground. Once per hour, when you critically hit a flying creature with the etched weapon, you can use a reaction (concentrate) to have the rune cast a DC 20 earthbind spell on that creature."
   },
   {
+    "id": "energy-resistant",
+    "type": "property",
+    "target": "shield",
+    "name": "Energy-Resistant",
+    "level": 5,
+    "price": 150,
+    "duplicable": true,
+    "choices": [
+      "acid",
+      "cold",
+      "electricity",
+      "fire",
+      "sonic"
+    ],
+    "description": "A rune symbolizing one of the primary elements protects this shield and its wearer from that element. You and the shield gain resistance 3 to acid, cold, electricity, fire, or sonic. The crafter chooses the type of damage when creating the rune. Multiple energy-resistant runes can be etched onto a shield; rather than using only the highest-level effect, each must provide resistance to a different damage type. For instance, a +2 fire-resistant cold-resistant shield would give you fire resistance 3 and cold resistance 3."
+  },
+  {
+    "id": "enlarging",
+    "type": "property",
+    "target": "shield",
+    "name": "Enlarging",
+    "level": 7,
+    "price": 325,
+    "description": "This rune pattern etched around the edge of your shield gives it the ability to grow on command.",
+    "actuated": {
+      "cost": "none",
+      "name": "Enlarging",
+      "actionCount": 1,
+      "frequency": "once per minute",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect The shield gains the cumbersome trait and provides cover to other creatures until the end of your next turn. You Raise the Shield and command it to become larger. You may choose to spend an action to Take Cover while this effect is active to increase the circumstance bonus to AC from raising your shield by +2. On subsequent turns you may sustain this effect by spending an action to Raise the Shield again. You can Dismiss this effect as a free action with the concentrate trait."
+    }
+  },
+  {
+    "id": "environmental",
+    "type": "property",
+    "target": "shield",
+    "name": "Environmental",
+    "level": 2,
+    "price": 25,
+    "description": "This circular rune imbues your shield with the power to surround you with breathable air.",
+    "actuated": {
+      "cost": "none",
+      "name": "Environmental",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You enter an area where you cannot breathe; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble."
+    }
+  },
+  {
     "id": "fearsome",
     "type": "property",
     "name": "Fearsome",
@@ -920,6 +1017,19 @@
         ]
       }
     }
+  },
+  {
+    "id": "feather",
+    "type": "property",
+    "target": "shield",
+    "name": "Feather",
+    "level": 3,
+    "price": 55,
+    "shieldCategories": [
+      "light",
+      "medium"
+    ],
+    "description": "Magical runes reduce the difficulty of wielding this shield. The shield gains the finesse trait."
   },
   {
     "id": "flaming",
@@ -949,6 +1059,44 @@
       "onCrit": {
         "persistent": "2d10"
       }
+    }
+  },
+  {
+    "id": "floating",
+    "type": "property",
+    "target": "shield",
+    "name": "Floating",
+    "level": 12,
+    "price": 2000,
+    "description": "This rune gives your shield a mind of its own.",
+    "actuated": {
+      "cost": "none",
+      "name": "Floating",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Interact"
+      ],
+      "description": "Effect The shield releases itself from your arm and floats next to you. You gain your shield's circumstance bonus to AC as if you had raised it, but cannot use any Shield Reactions while it is floating in this way. After 1 minute, the magic dissipates and the shield drops to the ground. You can Interact to grab the shield and Dismiss this effect at any time."
+    }
+  },
+  {
+    "id": "focusing",
+    "type": "property",
+    "target": "shield",
+    "name": "Focusing",
+    "level": 4,
+    "price": 130,
+    "description": "This spiraling rune quickly fades as the shield itself becomes transparent like glass, allowing you to see through it and enhancing your vision of distant objects. A shield etched with this rune functions as a fine spyglass.",
+    "actuated": {
+      "cost": "none",
+      "name": "Focusing",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You gain a +1 status bonus to your next Recall Knowledge check about a target that is visible to you before the end of your turn."
     }
   },
   {
@@ -1009,6 +1157,15 @@
     }
   },
   {
+    "id": "furious",
+    "type": "property",
+    "target": "shield",
+    "name": "Furious",
+    "level": 3,
+    "price": 55,
+    "description": "This red rune spreads out in jagged lines, connecting the shield with the emotions of its user. All Shield Reactions you can use with this shield gain the rage trait."
+  },
+  {
     "id": "ghost-touch",
     "type": "property",
     "name": "Ghost Touch",
@@ -1024,6 +1181,98 @@
     "level": 5,
     "price": 140,
     "description": "This armor can be disguised with a mere thought. You can Activate the armor (envision) to change its appearance to that of ordinary or fine clothes of your imagining. The armor's statistics don't change, only its appearance. Activating the armor again returns it to its original form."
+  },
+  {
+    "id": "glamourous",
+    "type": "property",
+    "target": "shield",
+    "name": "Glamourous",
+    "level": 4,
+    "price": 75,
+    "description": "This multicolored rune causes the shield to glitter in the light. While the shield is raised it grants you a +1 item bonus to Deception checks to Feint.",
+    "actuated": {
+      "cost": "none",
+      "name": "Glamourous",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You attempt a Feint check; Effect As you Feint, the shield sparkles even more, blasting scintillating light into the target's eyes. If your Feint is successful the target is also dazzled for 1 round."
+    }
+  },
+  {
+    "id": "greater-energy-resistant",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Energy-Resistant",
+    "level": 10,
+    "price": 950,
+    "duplicable": true,
+    "choices": [
+      "acid",
+      "cold",
+      "electricity",
+      "fire",
+      "sonic"
+    ],
+    "description": "A rune symbolizing one of the primary elements protects this shield and its wearer from that element. You and the shield gain resistance 6 to the specified damage type (acid, cold, electricity, fire, or sonic); the crafter chooses the type when creating the rune. Multiple energy-resistant runes can be etched onto a shield, but each must provide resistance to a different damage type."
+  },
+  {
+    "id": "greater-environmental",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Environmental",
+    "level": 6,
+    "price": 160,
+    "description": "This circular rune imbues your shield with the power to surround you with breathable air and shield you from extreme temperatures.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Environmental",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You enter an area where you cannot breathe, or an area of severe cold or heat; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble. In addition, the wielder gains the effects of 3rd-level endure elements. Both effects last for 24 hours."
+    }
+  },
+  {
+    "id": "greater-focusing",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Focusing",
+    "level": 8,
+    "price": 515,
+    "description": "This spiraling rune quickly fades as the shield itself becomes transparent like glass, allowing you to see through it and enhancing your vision of distant objects. A shield etched with this rune functions as a fine spyglass.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Focusing",
+      "actionCount": 1,
+      "frequency": "twice per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You gain a +1 status bonus to your next Recall Knowledge check about a target that is visible to you before the end of your turn."
+    }
+  },
+  {
+    "id": "greater-holding",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Holding",
+    "level": 11,
+    "price": 1100,
+    "description": "This sprawling rune creates an extradimensional space inside your shield. You may store items inside your shield, through an opening near the handle or straps. The extradimensional space can hold up to 24 bulk of items and does not affect the bulk of the shield. Objects must still be able to fit through the opening, which is large enough to insert items as large as the shield itself. You can retrieve an item stored in this extradimensional space with a single Interact action."
+  },
+  {
+    "id": "greater-living",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Living",
+    "level": 10,
+    "price": 1100,
+    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. The shield is considered a living creature for the purpose of healing derived from positive energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials."
   },
   {
     "id": "greater-reinforcing",
@@ -1048,6 +1297,37 @@
     "description": "A fundamental rune that grants an item bonus to all saving throws."
   },
   {
+    "id": "greater-retrieving",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Retrieving",
+    "level": 8,
+    "price": 500,
+    "shieldCategories": [
+      "light"
+    ],
+    "description": "This rune of conjuration allows you to teleport a small item that you're wearing directly into your shield hand. Etched onto a buckler, targe, or shield gauntlet.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Retrieving",
+      "actionCount": 1,
+      "frequency": "once per minute",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You teleport a single item of light bulk that you're wearing directly into the hand wielding this shield. If this shield is also etched with a holding rune, you may teleport items from within the extradimensional space, in addition to those you're wearing. As a free action within 1 minute of activating this rune, you may return the item you targeted with this activation to where it was before retrieving it."
+    }
+  },
+  {
+    "id": "greater-sliding",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Sliding",
+    "level": 7,
+    "price": 800,
+    "description": "This rune is capable of creating a sheen of force energy around the face of your shield that makes it lightly repulse other objects, allowing it to effortlessly slide across terrain. As a single action you may drop your shield and hop onto it, propelling yourself forward; you may Stride up to your Speed during this action, ignoring difficult terrain, and you do not have to move in a straight line when riding your shield. If your shield was raised before taking this action, it is no longer raised. At the end of your movement, you may pick up your shield as a free Interact action. You may Stride twice with this action if you are on a descending slope. Once per minute, if you end this movement adjacent to an enemy this rune can emit a burst of force energy to destabilize them; the enemy takes a -2 circumstance penalty to their Reflex DC until the end of your turn."
+  },
+  {
     "id": "greater-striking",
     "type": "fundamental",
     "fundamental": "striking",
@@ -1059,6 +1339,113 @@
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
   },
   {
+    "id": "greater-summoning",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Summoning",
+    "level": 9,
+    "price": 800,
+    "description": "The rune carved on the face of this shield represents a type of summoned creature. The crafter chooses between any common summoning spell up to 4th-level when crafting this rune.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Summoning",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This creates a 4th-level version of the chosen summoning spell, except that the creature must be summoned in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn."
+    }
+  },
+  {
+    "id": "greater-undead",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Undead",
+    "level": 10,
+    "price": 1100,
+    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. The shield is considered an undead creature for the purpose of healing derived from negative energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials."
+  },
+  {
+    "id": "gusting",
+    "type": "property",
+    "target": "shield",
+    "name": "Gusting",
+    "level": 3,
+    "price": 65,
+    "description": "This light rune seems to dance around the face of the shield after it is inscribed.",
+    "actuated": {
+      "cost": "none",
+      "name": "Gusting",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect The shield casts the gust of wind spell in a direction of your choosing. The DC for this effect is the better of your class DC or spell DC."
+    }
+  },
+  {
+    "id": "heavy",
+    "type": "property",
+    "target": "shield",
+    "name": "Heavy",
+    "level": 4,
+    "price": 100,
+    "shieldCategories": [
+      "medium",
+      "heavy"
+    ],
+    "description": "This thick rune makes your shield more difficult for enemies to interact with. You gain a +2 item bonus to your Fortitude DC against attempts to Grapple or Shove you.",
+    "actuated": {
+      "cost": "none",
+      "name": "Heavy",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger A creature would cause you to automatically be grabbed or shoved. Effect Make a Shove or Grapple attempt against the triggering creature, matching the type of action that triggered this reaction; on a success the triggering action is interrupted. On a critical success, you may Shove or Grapple the triggering creature."
+    }
+  },
+  {
+    "id": "holding",
+    "type": "property",
+    "target": "shield",
+    "name": "Holding",
+    "level": 5,
+    "price": 150,
+    "description": "This sprawling rune creates an extradimensional space inside your shield. You may store items inside your shield, through an opening near the handle or straps. The extradimensional space can hold up to 12 bulk of items and does not affect the bulk of the shield. Objects must still be able to fit through the opening, which is large enough to insert items as large as the shield itself. For example, a +1 holding targe has an opening large enough for only light items to be inserted, while a +1 holding scutum has an opening large enough to fit items up to 4 bulk. You can retrieve an item stored in this extradimensional space with a single Interact action."
+  },
+  {
+    "id": "knowing",
+    "type": "property",
+    "target": "shield",
+    "name": "Knowing",
+    "level": 5,
+    "price": 160,
+    "description": "This complicated rune gives the power to gain knowledge about enemies who attack you or your allies. You gain a +1 item bonus to Recall Knowledge checks while wielding this shield.",
+    "actuated": {
+      "cost": "none",
+      "name": "Knowing",
+      "actionCount": 1,
+      "frequency": "once per hour",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You use a Shield Reaction in response to an enemy's action; Effect You Recall Knowledge about the triggering enemy."
+    }
+  },
+  {
+    "id": "launching",
+    "type": "property",
+    "target": "shield",
+    "name": "Launching",
+    "level": 5,
+    "price": 130,
+    "description": "Runes of levitation and force grant a powerful launching effect when timed correctly. Once per minute, when an adjacent ally Leaps, you may use your reaction to boost their jump with your shield. When you use your reaction this way, your ally can choose to attempt a High Jump or Long Jump instead of a Leap without using any additional actions, and does not need to Stride before the attempt. Additionally you increase the distance of their Leap by 20 feet. This increase is cumulative with any bonuses to Leap distance that your ally benefits from, and they may move further than their Speed during this Leap. Additionally, when you make a ranged attack with a thrown weapon while wielding a shield etched with this rune you may incorporate your shield into your throwing technique, boosting the speed of your attacks. Increase the range of the thrown weapon by 5 feet. If the shield etched with this rune has the thrown property, it also gains this range increase."
+  },
+  {
     "id": "lesser-reinforcing",
     "type": "fundamental",
     "fundamental": "reinforcing",
@@ -1068,6 +1455,51 @@
     "level": 7,
     "price": 300,
     "description": "A fundamental shield rune. Raises Hardness by 3 (max 10), HP by 52 (max 80), and Break Threshold by 26 (max 40), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
+  },
+  {
+    "id": "living",
+    "type": "property",
+    "target": "shield",
+    "name": "Living",
+    "level": 4,
+    "price": 125,
+    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of wood."
+  },
+  {
+    "id": "major-energy-resistant",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Energy-Resistant",
+    "level": 15,
+    "price": 7000,
+    "duplicable": true,
+    "choices": [
+      "acid",
+      "cold",
+      "electricity",
+      "fire",
+      "sonic"
+    ],
+    "description": "A rune symbolizing one of the primary elements protects this shield and its wearer from that element. You and the shield gain resistance 10 to the specified damage type (acid, cold, electricity, fire, or sonic); the crafter chooses the type when creating the rune. Multiple energy-resistant runes can be etched onto a shield, but each must provide resistance to a different damage type."
+  },
+  {
+    "id": "major-focusing",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Focusing",
+    "level": 12,
+    "price": 2500,
+    "description": "This spiraling rune quickly fades as the shield itself becomes transparent like glass, allowing you to see through it and enhancing your vision of distant objects. A shield etched with this rune functions as a fine spyglass.",
+    "actuated": {
+      "cost": "none",
+      "name": "Major Focusing",
+      "actionCount": 1,
+      "frequency": "three times per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You gain a +2 status bonus to your next Recall Knowledge check about a target that is visible to you before the end of your turn."
+    }
   },
   {
     "id": "major-reinforcing",
@@ -1101,6 +1533,25 @@
     "level": 19,
     "price": 31065,
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "major-summoning",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Summoning",
+    "level": 13,
+    "price": 3000,
+    "description": "The rune carved on the face of this shield represents a type of summoned creature. The crafter chooses between any common summoning spell up to 6th-level when crafting this rune.",
+    "actuated": {
+      "cost": "none",
+      "name": "Major Summoning",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This creates a 6th-level version of the chosen summoning spell in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn."
+    }
   },
   {
     "id": "menacing",
@@ -1187,6 +1638,15 @@
     "level": 10,
     "price": 900,
     "description": "A fundamental shield rune. Raises Hardness by 3 (max 13), HP by 64 (max 104), and Break Threshold by 32 (max 52), additive over the shield's base and capped at the listed maximum. A shield's reinforcing grade sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3."
+  },
+  {
+    "id": "moonlit",
+    "type": "property",
+    "target": "shield",
+    "name": "Moonlit",
+    "level": 5,
+    "price": 150,
+    "description": "This rune is a simple shape of a waxing moon and allows you to see in dimly lit conditions. When you Raise the Shield, you can see in dim light as though you had low-light vision until the end of your next turn."
   },
   {
     "id": "pacifying",
@@ -1483,6 +1943,28 @@
       "save": "reflex",
       "dc": 27,
       "basic": true
+    }
+  },
+  {
+    "id": "retrieving",
+    "type": "property",
+    "target": "shield",
+    "name": "Retrieving",
+    "level": 3,
+    "price": 60,
+    "shieldCategories": [
+      "light"
+    ],
+    "description": "This rune of conjuration allows you to teleport a small item that you're wearing directly into your shield hand. Etched onto a buckler, targe, or shield gauntlet.",
+    "actuated": {
+      "cost": "none",
+      "name": "Retrieving",
+      "actionCount": 1,
+      "frequency": "once per minute",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You teleport a single item of light bulk that you're wearing directly into the hand wielding this shield. If this shield is also etched with a holding rune, you may teleport items from within the extradimensional space, in addition to those you're wearing."
     }
   },
   {
@@ -1850,6 +2332,15 @@
     ]
   },
   {
+    "id": "shield-returning",
+    "type": "property",
+    "target": "shield",
+    "name": "Returning",
+    "level": 2,
+    "price": 30,
+    "description": "This light blue rune of swirling lines allows your shield to instantly return to your hand. Any time your shield leaves your square as part of a Shield Reaction or when thrown for any other reason, it returns to your hand as soon as that action is completed. Etched onto a shield that doesn't have the cumbersome trait."
+  },
+  {
     "id": "shock",
     "type": "property",
     "name": "Shock",
@@ -1908,6 +2399,15 @@
         "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
       }
     ]
+  },
+  {
+    "id": "sliding",
+    "type": "property",
+    "target": "shield",
+    "name": "Sliding",
+    "level": 3,
+    "price": 90,
+    "description": "This rune is capable of creating a sheen of force energy around the face of your shield that makes it lightly repulse other objects. This allows it to effortlessly slide across terrain, among other benefits. As a single action you may drop your shield and hop onto it, propelling yourself forward as you do so; you may Stride in a straight line up to your Speed during this action, ignoring difficult terrain. If your shield was raised before taking this action, it is no longer raised. At the end of your movement, you may pick up your shield as a free Interact action. You may Stride twice with this action if you are on a descending slope. Once per minute, if you end this movement adjacent to an enemy this rune can emit a burst of force energy to destabilize them; the enemy takes a -2 circumstance penalty to their Reflex DC until the end of your turn."
   },
   {
     "id": "snagging",
@@ -1975,6 +2475,25 @@
     ]
   },
   {
+    "id": "spell-saving",
+    "type": "property",
+    "target": "shield",
+    "name": "Spell-Saving",
+    "level": 4,
+    "price": 110,
+    "description": "This rune of steadying can activate periodically to stabilize the shield, protecting your hand from the disruptive effects of being struck while casting your spell.",
+    "actuated": {
+      "cost": "none",
+      "name": "Spell-Saving",
+      "actionCount": 1,
+      "frequency": "once per hour",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger Your spell would be disrupted because an enemy has critically hit you; Effect The rune flares and activates, stabilizing your shield hand and protecting the delicate motions that must be performed to cast the spell. Resolve the critical hit as normal, but your spell is not disrupted."
+    }
+  },
+  {
     "id": "striking",
     "type": "fundamental",
     "fundamental": "striking",
@@ -1984,6 +2503,25 @@
     "level": 4,
     "price": 65,
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "summoning",
+    "type": "property",
+    "target": "shield",
+    "name": "Summoning",
+    "level": 5,
+    "price": 180,
+    "description": "The rune carved on the face of this shield represents a type of summoned creature. The crafter chooses between any common 1st- or 2nd-level summoning spell when crafting this rune.",
+    "actuated": {
+      "cost": "none",
+      "name": "Summoning",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This has the same effect as a 2nd-level version of the chosen summoning spell, except that the creature must be summoned in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn and the creature disappears."
+    }
   },
   {
     "id": "supreme-reinforcing",
@@ -2034,6 +2572,15 @@
         "description": "The armor attacks the immobilizing creature again, as the Grow Spikes reaction."
       }
     ]
+  },
+  {
+    "id": "throwing",
+    "type": "property",
+    "target": "shield",
+    "name": "Throwing",
+    "level": 6,
+    "price": 225,
+    "description": "Most shields are not balanced to be thrown as weapons, but this rune evens out the weight distribution to allow just that. The shield gains the thrown trait with a range increment of 25 feet if it is light, 20 feet if it is medium, and 15 feet if it is heavy. It also gains the effects of a returning rune. Etched onto a shield that doesn't have the cumbersome trait."
   },
   {
     "id": "thundering",
@@ -2124,6 +2671,73 @@
         }
       }
     }
+  },
+  {
+    "id": "true-focusing",
+    "type": "property",
+    "target": "shield",
+    "name": "True Focusing",
+    "level": 16,
+    "price": 12500,
+    "description": "This spiraling rune quickly fades as the shield itself becomes transparent like glass, allowing you to see through it and enhancing your vision of distant objects. A shield etched with this rune functions as a fine spyglass.",
+    "actuated": {
+      "cost": "none",
+      "name": "True Focusing",
+      "actionCount": 1,
+      "frequency": "four times per day",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Effect You gain a +3 status bonus to your next Recall Knowledge check about a target that is visible to you before the end of your turn."
+    }
+  },
+  {
+    "id": "true-living",
+    "type": "property",
+    "target": "shield",
+    "name": "True Living",
+    "level": 15,
+    "price": 8000,
+    "rarity": "rare",
+    "description": "As greater living, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true living rune is either charismatic or knowledgeable, which affects its abilities and personality."
+  },
+  {
+    "id": "true-summoning",
+    "type": "property",
+    "target": "shield",
+    "name": "True Summoning",
+    "level": 17,
+    "price": 16000,
+    "description": "The rune carved on the face of this shield represents a type of summoned creature. The crafter chooses between any common summoning spell up to 8th-level when crafting this rune.",
+    "actuated": {
+      "cost": "none",
+      "name": "True Summoning",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This creates an 8th-level version of the chosen summoning spell in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn."
+    }
+  },
+  {
+    "id": "true-undead",
+    "type": "property",
+    "target": "shield",
+    "name": "True Undead",
+    "level": 15,
+    "price": 8000,
+    "rarity": "rare",
+    "description": "As greater undead, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true undead rune is either charismatic or knowledgeable, which affects its abilities and personality."
+  },
+  {
+    "id": "undead",
+    "type": "property",
+    "target": "shield",
+    "name": "Undead",
+    "level": 4,
+    "price": 125,
+    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of bone."
   },
   {
     "id": "unexceptional",
@@ -2225,6 +2839,25 @@
     "level": 16,
     "price": 8935,
     "description": "A fundamental rune that grants a +3 item bonus to attack rolls and unlocks 3 property-rune slots."
+  },
+  {
+    "id": "weapon-storing",
+    "type": "property",
+    "target": "shield",
+    "name": "Weapon-Storing",
+    "level": 8,
+    "price": 550,
+    "description": "This rune allows the shield to be combined with a weapon. During your daily preparations, you may combine any one-handed weapon (including a magical staff) with your shield. The weapon is consumed into the shield, which gains an image representing the weapon stored inside of it. The shield and weapon can be separated if desired at your next daily preparations.",
+    "actuated": {
+      "cost": "none",
+      "name": "Weapon-Storing",
+      "actionCount": 1,
+      "frequency": "at will",
+      "traits": [
+        "Interact"
+      ],
+      "description": "Effect You change the shield from its shield form into the stored weapon, or change it from the stored weapon back into a shield."
+    }
   },
   {
     "id": "wounding",
