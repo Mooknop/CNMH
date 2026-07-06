@@ -15,6 +15,7 @@ import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import CharacterStateModal from '../../components/gm/CharacterStateModal';
+import GmGearModal from '../../components/gm/GmGearModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
 import SkillChallengeModal from '../../components/gm/SkillChallengeModal';
 import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
@@ -369,6 +370,7 @@ const GmDashboard = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
   const [isCharacterStateModalOpen, setIsCharacterStateModalOpen] = useState(false);
+  const [isGearModalOpen, setIsGearModalOpen] = useState(false);
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
   const [isSkillChallengeModalOpen, setIsSkillChallengeModalOpen] = useState(false);
   const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
@@ -456,6 +458,16 @@ const GmDashboard = () => {
               <button
                 type="button"
                 className="gm-qa"
+                aria-label="Manage character gear"
+                onClick={() => setIsGearModalOpen(true)}
+              >
+                <GmIcon name="bag" className="gm-qa-ico" />
+                <span className="gm-qa-title">Manage Gear</span>
+                <span className="gm-qa-desc">Bind talismans &amp; shield attachments instantly (sandbox-safe)</span>
+              </button>
+              <button
+                type="button"
+                className="gm-qa"
                 aria-label="Send Recall Knowledge prompt"
                 onClick={() => setIsRecallKnowledgeModalOpen(true)}
               >
@@ -523,6 +535,10 @@ const GmDashboard = () => {
         onClose={() => setIsAdjustHpModalOpen(false)}
       />
 
+      <GmGearModal
+        isOpen={isGearModalOpen}
+        onClose={() => setIsGearModalOpen(false)}
+      />
       <CharacterStateModal
         isOpen={isCharacterStateModalOpen}
         onClose={() => setIsCharacterStateModalOpen(false)}

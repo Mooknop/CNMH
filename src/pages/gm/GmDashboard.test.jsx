@@ -31,6 +31,10 @@ vi.mock('../../components/encounter/RequestedSaves', () => ({
 vi.mock('../../components/character-sheet/EffectsModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="effects-modal" /> : null),
 }));
+// GmGearModal pulls in the heavy useCharacter hook; it has its own suite.
+vi.mock('../../components/gm/GmGearModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="gm-gear-modal" /> : null),
+}));
 vi.mock('../../components/gm/CurrentRoomPanel', () => ({
   default: () => <div data-testid="current-room-panel" />,
 }));
