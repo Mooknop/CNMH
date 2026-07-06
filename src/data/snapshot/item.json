@@ -6991,7 +6991,7 @@
     "traits": [
       "Magical"
     ],
-    "description": "A reinforcing rune bolsters a shield's structure, raising its Hardness, Hit Points, and Break Threshold up to a maximum for each grade. A shield can hold only a reinforcing rune — no potency or property runes.",
+    "description": "A reinforcing rune bolsters a shield's structure, raising its Hardness, Hit Points, and Break Threshold up to a maximum for each grade. A shield's reinforcing grade also sets how many property runes it can hold: minor or lesser 1, moderate or greater 2, major or supreme 3. Shields don't take potency runes.",
     "variants": [
       {
         "level": 4,
