@@ -1,7 +1,7 @@
 [
   {
     "name": "Accessible",
-    "description": "This shield is quick to bring to hand. You can draw or stow it as easily as an accessible weapon, so it interferes less with readying or putting away your other gear.",
+    "description": "These shields are light and easy to keep close at hand. You can draw this shield with a free action that has the manipulate and flourish traits.",
     "id": "accessible"
   },
   {
@@ -86,7 +86,7 @@
   },
   {
     "name": "Cumbersome",
-    "description": "A cumbersome shield is bulky enough to occupy your arm entirely. You can't hold or wield anything else in the hand strapped to it, and it can't benefit from abilities that require a free hand.",
+    "description": "This shield is heavy or unwieldy, which makes it difficult to move around, especially in tight spaces. Any time you are adjacent to two solid walls, or if you are adjacent to the ceiling and the floor, Raise a Shield becomes a 2-action activity instead of a single action, and any ability with Raise a Shield as a subordinate action fails to Raise the Shield. You take a -2 circumstance penalty to all Acrobatics checks while wielding a shield with this trait. Shields with this property cannot be wielded while the character is mounted.",
     "id": "cumbersome"
   },
   {
@@ -96,7 +96,7 @@
   },
   {
     "name": "Deflecting",
-    "description": "A deflecting shield is angled to turn aside missiles. When you use the Shield Block reaction against a ranged attack, the shield gains a +2 circumstance bonus to its Hardness against that attack.",
+    "description": "Shields with this property are particularly effective against ranged attacks. When using the shield block reaction against a ranged attack, treat the Hardness of the shield as 2 higher. If the shield is etched with a shield potency rune, add the rune's bonus to this value. For example, a +2 kite shield would treat its Hardness as 4 higher against ranged attacks.",
     "id": "deflecting"
   },
   {
@@ -151,7 +151,7 @@
   },
   {
     "name": "Finesse",
-    "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage. When the finesse trait applies to a shield, it instead lets you Raise a Shield while wielding a light agile weapon in the same hand; making an attack with that weapon ends the raise.",
+    "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage. Similar to a weapon with the finesse trait, a shield with the finesse trait can be used to make shield attacks and shield bashes utilizing the character's dexterity instead of strength. This also applies to attacks made with any shield attachments or adjustments that the shield has. For example, if you attach a shield boss to a targe, then that shield boss is also considered to have the finesse trait.",
     "id": "finesse-15"
   },
   {
@@ -281,7 +281,7 @@
   },
   {
     "name": "Riding Shield",
-    "description": "This shield is shaped and balanced for use from horseback. It functions normally on foot, but its design makes it especially suited to mounted combat.",
+    "description": "These shields are specially made for tandem mounted combat. When you are mounted on your animal companion, and you Command your animal companion to use its support benefit, you may Raise a Shield as a free action.",
     "id": "riding-shield"
   },
   {

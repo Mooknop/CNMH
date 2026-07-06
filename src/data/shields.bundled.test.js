@@ -52,11 +52,13 @@ describe('seeded Everything Shields (G1)', () => {
     }
   });
 
-  it('all 9 shields have a price and Bulk', () => {
+  it('all 9 shields have a price, Bulk, and a description', () => {
     for (const [id] of SHIELDS) {
       const item = byId(id);
       expect(typeof item.price, `${id} price`).toBe('number');
       expect(typeof item.weight, `${id} weight`).toBe('number');
+      expect(item.description, `${id} description`).toBeTruthy();
+      expect(item.description.length, `${id} description length`).toBeGreaterThan(40);
     }
   });
 });

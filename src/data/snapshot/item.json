@@ -3628,7 +3628,7 @@
   },
   {
     "name": "Fist Shield",
-    "description": "A small, sturdy shield strapped across the knuckles and forearm, leaving the hand free. It's a light shield that can be Raised while your hand is empty or holding a light object that isn't a weapon.",
+    "description": "This rectangular metal shield is usually about 1 foot square and primarily used by duelists. It offers slightly more protection than the buckler at the expense of requiring the use of a hand to wield it the entire time.",
     "price": 2,
     "weight": 0.1,
     "shield": {
@@ -4629,7 +4629,7 @@
   },
   {
     "name": "Heater Shield",
-    "description": "A teardrop-shaped shield sized and balanced for use from horseback. Its riding shield trait suits it to mounted combat.",
+    "description": "This wooden or metal shield is crafted in an elongated heart shape that makes it one of the most versatile shields available. It is small enough to be used effectively from horseback, and often emblazoned with a coat of arms or heraldry on its face.",
     "traits": [
       "Riding Shield"
     ],
@@ -4692,7 +4692,7 @@
   },
   {
     "name": "Hoplon",
-    "description": "A large, deeply concave round shield (an aspis). Its bulk reduces your Speed by 5 feet while you wield it, and it offers no Take Cover benefit.",
+    "description": "This round metal shield affords great protection and durability. While it is the smallest of the heavy shields, its simple and durable construction makes it capable of withstanding many hits. Its smaller profile also makes it the most maneuverable of the heavy shields and unlike the other heavy shields, this prevents the use of the Take Cover action to gain an additional circumstance bonus to AC.",
     "price": 10,
     "weight": 2,
     "shield": {
@@ -4947,7 +4947,7 @@
   },
   {
     "name": "Kite Shield",
-    "description": "A tall shield tapering to a point, angled to turn aside missiles. Its deflecting trait grants +2 Hardness when you Shield Block a ranged attack.",
+    "description": "The kite shield is essentially a larger version of the heater shield, usually tapering more sharply at the bottom and being longer as well. It provides more full-body protection at the expense of maneuverability.",
     "traits": [
       "Deflecting"
     ],
@@ -5877,7 +5877,7 @@
   },
   {
     "name": "Pavise",
-    "description": "An enormous shield that can be planted to shelter behind. It's cumbersome: while it's raised you can Take Cover to raise its AC bonus to +4. Wielding it reduces your Speed by 10 feet.",
+    "description": "This enormous rectangular metal shield can be used to protect the wielder's entire body, and is often used as a source of cover for allied archers, wielded both for the defense of the user and for nearby allies. It is incredibly heavy and unwieldy.",
     "traits": [
       "Cumbersome"
     ],
@@ -7945,7 +7945,7 @@
   },
   {
     "name": "Scutum",
-    "description": "A large rectangular tower-style shield. It's cumbersome and deflecting: while it's raised you can Take Cover to raise its AC bonus to +4, and it grants +2 Hardness when you Shield Block a ranged attack. Wielding it reduces your Speed by 5 feet.",
+    "description": "An ancient style of shield, but still effective, the scutum is large and rectangular, with a convex shape to help deflect incoming blows rather than absorb them into the shield. It is primarily made of wood and typically reinforced with metal bands. Famously used in shield formations, this shield is no less effective when used alone.",
     "traits": [
       "Cumbersome",
       "Deflecting"
@@ -8092,7 +8092,7 @@
   },
   {
     "name": "Shield Gauntlet",
-    "description": "A shield built onto a heavy gauntlet, leaving the hand free to hold or manipulate objects. Its finesse trait lets you Raise a Shield while wielding a light agile weapon in that hand. The hand remains usable, but you can't Raise the shield gauntlet or use a shield reaction on any turn you use that hand to hold or wield something else.",
+    "description": "This gauntlet is finely crafted from thin steel plates that uniquely cover both the inside and outside of the hand. This careful construction allows for relatively fine control with the gauntleted hand, but also grants full protection for grabbing an enemy weapon by the dangerous end. You can wield weapons and carry objects in the hand that is wearing the shield gauntlet, but you aren't considered to be wielding it while you do so, nor can you Raise a Shield or use any Shield Reactions until the hand is once again free.",
     "traits": [
       "Finesse"
     ],
@@ -9921,7 +9921,7 @@
   },
   {
     "name": "Targe",
-    "description": "A small, light shield favored by skirmishers who fight with a blade in the same hand. Its finesse trait lets you Raise a Shield with the targe while wielding a light agile weapon in that same hand; however, making an attack with that weapon ends the raise.",
+    "description": "This small wooden shield is favored by close-quarters fighters. Most targes feature two thin wooden planks bolted together so that the grains are perpendicular to increase strength. It is light enough to wield a small weapon in the same hand that the targe is strapped to. You can Raise a Shield with your targe while carrying an object of light bulk, or while wielding a weapon of light bulk that has the agile trait. If you make an attack with this weapon while the shield is raised, the shield is no longer raised after the attack.",
     "traits": [
       "Finesse"
     ],
@@ -10404,7 +10404,7 @@
   },
   {
     "name": "Viking Shield",
-    "description": "A large round wooden shield with a central boss. Its accessible trait makes it quick to ready, so it interferes less with drawing and stowing your other gear.",
+    "description": "A round shield usually made of layered wood. Generally between 2-3 feet in diameter, the viking shield is light and extremely mobile for the protection that it affords, but sacrifices some durability for those qualities.",
     "traits": [
       "Accessible"
     ],
