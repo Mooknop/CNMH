@@ -13,7 +13,7 @@ import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import {
   isTalisman, affixTargetType, validAffixHosts, affixedHostUid,
-  affix, unaffix, affixedKey, itemUidOf, deactivateTalisman,
+  affix, unaffix, affixedKey, itemUidOf, deactivateTalisman, affixedTalismansByHost,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
@@ -131,6 +131,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const shieldAttachments = item.shield
     ? (attachmentsByHost(attached, flatInventory)[itemUidOf(item)] || [])
     : [];
+  // Affixed talismans bound to THIS item as their host (#254/#339). Like shield
+  // attachments and runes, an affixed talisman has no tile of its own — it lives
+  // on its host's card, the sole place to activate or remove it.
+  const hostedTalismans = affixedTalismansByHost(affixed, flatInventory)[itemUidOf(item)] || [];
 
   const doAttach = (host) => {
     setAttached((cur) => attach(cur, itemUidOf(item), itemUidOf(host)));
@@ -147,6 +151,19 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const doUnaffix = () => {
     setAffixed((cur) => unaffix(cur, itemUidOf(item)));
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${item.name} from ${affixedTo?.name || 'its item'}` });
+    onClose();
+  };
+
+  // Host-card counterparts (#gm-gear follow-up): remove or activate a talisman
+  // affixed to THIS item, addressed by the talisman rather than the open item.
+  const doUnaffixHosted = (t) => {
+    setAffixed((cur) => unaffix(cur, itemUidOf(t)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${t.name} from ${item.name}` });
+    onClose();
+  };
+  const doActivateHosted = (t) => {
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} activated ${t.name}: ${activationSummary(t, charData)}` });
+    deactivateTalisman({ talisman: t, setConsumed, setAffixed });
     onClose();
   };
 
@@ -581,6 +598,51 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Affixed talismans (#254/#339) — those bound to THIS item as their host.
+          Nested here like runes / shield attachments: an affixed talisman has no
+          tile of its own, so this is where it is activated or removed. */}
+      {hostedTalismans.length > 0 && (
+        <div className="item-affix" data-testid="hosted-talismans">
+          <h3>Affixed Talismans</h3>
+          {hostedTalismans.map((t) => {
+            const act = activationOf(t);
+            return (
+              <div key={itemUidOf(t)} className="item-affix-state item-affix-state--stack">
+                <div className="hosted-talisman-info">
+                  <span><strong>{t.name}</strong> — affixed to this item.</span>
+                  {act && (
+                    <p className="item-affix-hint">
+                      {act.cost === 'reaction' ? 'Reaction' : act.cost === 'free' ? 'Free action' : `${act.cost} action`}
+                      {act.trigger ? ` — ${act.trigger}.` : ''}
+                    </p>
+                  )}
+                </div>
+                <div className="hosted-talisman-actions">
+                  {act && (
+                    <button
+                      type="button"
+                      className="btn-small btn-primary"
+                      data-testid={`hosted-activate-${itemUidOf(t)}`}
+                      onClick={() => doActivateHosted(t)}
+                    >
+                      Activate ({activationSummary(t, charData)})
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn-small btn-secondary"
+                    data-testid={`hosted-unaffix-${itemUidOf(t)}`}
+                    onClick={() => doUnaffixHosted(t)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

@@ -339,6 +339,13 @@
 .loot-scroll .item-give-recipients,
 .loot-scroll .item-affix-hosts { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
+/* An affixed talisman nested on its host card: info line + right-aligned
+   Activate/Remove buttons, wrapping on narrow cards. */
+.loot-scroll .item-affix-state--stack { flex-wrap: wrap; align-items: flex-start; }
+.hosted-talisman-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1 1 12rem; }
+.hosted-talisman-info .item-affix-hint { margin: 0; }
+.hosted-talisman-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
 /* ── pinned footer with loadout actions ── */
 .loot-foot,
 .modal-container.modal--loot .item-modal-actions {
