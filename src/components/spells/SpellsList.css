@@ -68,8 +68,8 @@
 
 /* Class-flavored focus glyph — replaces the dot; color, not fill, marks state. */
 .slot-pip.glyph {
-  width: 15px;
-  height: 15px;
+  width: 19px;
+  height: 19px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -80,6 +80,7 @@
   background: transparent;
   color: var(--color-theme, var(--slot-pip-filled, var(--theme-arcane)));
   opacity: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 70%, transparent));
 }
 
 /* View Mode Toggle — pill-strip segmented control */
@@ -843,8 +844,8 @@
 }
 
 .rank-slot-pip {
-  width: 15px;
-  height: 15px;
+  width: 19px;
+  height: 19px;
   color: var(--slot-pip-empty, var(--iron-light));
   opacity: 0.4;
 }
@@ -852,6 +853,7 @@
 .rank-slot-pip.filled {
   color: var(--slot-pip-filled, var(--theme-arcane));
   opacity: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 70%, transparent));
 }
 
 .staff-charges-section {
@@ -903,8 +905,8 @@
 /* Focus bubble carrying a class glyph — the glyph replaces the ring; color +
    opacity mark available vs spent (an empty bubble is faded, not hollow). */
 .slot-bubble.has-glyph {
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -916,6 +918,7 @@
 .slot-bubble.has-glyph.slot-filled {
   background: transparent;
   opacity: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, currentColor 70%, transparent));
 }
 .slot-bubble.has-glyph .game-glyph {
   width: 100%;
