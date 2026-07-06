@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useEffects } from './useEffects';
 import { useShield } from './useShield';
 import { useWornGear } from './useWornGear';
+import { heldShieldRuneEffects } from '../utils/shieldRuneEffects';
 import { useContent } from '../contexts/ContentContext';
 
 // The character's full active-effect universe plus the catalog needed to resolve
@@ -32,6 +33,9 @@ export const useResolvedEffects = (charId, inventory = []) => {
     const synth = [
       ...(shieldEffect ? [shieldEffect] : []),
       ...wornEffects,
+      // Held-shield property runes (#1196 G3): passive effects from a wielded
+      // shield (e.g. Energy-Resistant resistance vs its chosen type).
+      ...heldShieldRuneEffects(inventory),
     ];
     if (!synth.length) {
       return { effects: activeEffects, catalog: contentCatalog };
@@ -40,7 +44,7 @@ export const useResolvedEffects = (charId, inventory = []) => {
       effects: [...activeEffects, ...synth.map((s) => s.entry)],
       catalog: [...(contentCatalog || []), ...synth.map((s) => s.def)],
     };
-  }, [activeEffects, contentCatalog, shieldEffect, wornEffects]);
+  }, [activeEffects, contentCatalog, shieldEffect, wornEffects, inventory]);
 };
 
 export default useResolvedEffects;
