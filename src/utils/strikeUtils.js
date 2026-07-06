@@ -8,6 +8,28 @@ import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
 import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
 
+// ── Thrown Strikes (#1230) ─────────────────────────────────────────────────────
+// A ranged Strike with the Thrown trait leaves the wielder's hand when it
+// resolves: the encounter confirm marks the weapon Dropped in the live loadout —
+// unless a rune with returning effects flies it back. The weapon `returning`
+// rune, the shield `shield-returning` rune, and the shield `throwing` rune
+// (which includes the effects of a returning rune) all count.
+export const RETURNING_RUNE_IDS = ['returning', 'shield-returning', 'throwing'];
+
+// Property-rune ids on an item's `runes` block, tolerant of both resolved docs
+// ({ id, … }) and bare id strings.
+const propertyRuneIds = (item) =>
+  (item?.runes && Array.isArray(item.runes.property) ? item.runes.property : [])
+    .map((p) => (p && typeof p === 'object' ? p.id : p))
+    .filter(Boolean)
+    .map((id) => String(id).toLowerCase());
+
+/** Whether an item carries a rune with returning effects (weapon or shield). */
+export const hasReturningRune = (item) =>
+  propertyRuneIds(item).some((id) => RETURNING_RUNE_IDS.includes(id));
+
+const isThrownTrait = (t) => String(t).toLowerCase().startsWith('thrown');
+
 /**
  * Compute the ability modifier, proficiency value, attack bonus, and damage string
  * for a single strike given a character's stats. Extracted to eliminate the duplicated
@@ -141,6 +163,16 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
       // (held), unless the catalog flags it noHandRequired.
       active: itemAbilitiesActive(item),
     };
+
+    // Thrown Strike (#1230): tag the ranged throw with its inventory uid so the
+    // encounter confirm can mark the weapon Dropped when it resolves — or skip
+    // the drop when a returning-effect rune brings it back. The melee Strike on
+    // the same weapon keeps the Thrown trait for display but never drops.
+    if (strikeObj.type === 'ranged' && strikeObj.traits.some(isThrownTrait)) {
+      strikeObj.thrown = true;
+      strikeObj.weaponUid = item.uid || null;
+      strikeObj.returning = hasReturningRune(item);
+    }
 
     // Chambered ranged weapons (#672, S2): the ranged Strike additionally
     // requires ≥1 loaded chamber. Surface the load state (capacity + loaded

@@ -406,3 +406,46 @@ describe('chambered weapon gate (#672, S2)', () => {
     expect(on.chambersLoaded).toBe(1);
   });
 });
+
+describe('thrown Strike tagging (#1230)', () => {
+  // A dagger-style thrown weapon: authored melee Strike + ranged throw.
+  const dagger = (extra = {}) => ({
+    uid: 'e-dagger', name: 'Dagger', state: 'held1',
+    strikes: [
+      { name: 'Dagger Strike', proficiency: 'simple', type: 'melee', damage: '1d4', traits: ['Attack', 'Agile', 'Finesse', 'Thrown 10ft'] },
+      { name: 'Dagger Throw', proficiency: 'simple', type: 'ranged', damage: '1d4', range: '10ft', traits: ['Attack', 'Agile', 'Thrown'] },
+    ],
+    ...extra,
+  });
+
+  test('the ranged throw is tagged thrown + weaponUid; not returning without a rune', () => {
+    const toss = resolveItemStrikes(dagger(), minimalCharacter)
+      .find((s) => s.type === 'ranged');
+    expect(toss).toMatchObject({ thrown: true, weaponUid: 'e-dagger', returning: false });
+  });
+
+  test('the melee Strike keeps its Thrown trait but is never tagged for the drop', () => {
+    const melee = resolveItemStrikes(dagger(), minimalCharacter)
+      .find((s) => s.type === 'melee');
+    expect('thrown' in melee).toBe(false);
+    expect('weaponUid' in melee).toBe(false);
+  });
+
+  test('a returning property rune marks the throw returning (doc or bare id)', () => {
+    const runedDoc = dagger({ runes: { potency: 1, property: [{ id: 'returning', type: 'property', name: 'Returning' }] } });
+    const runedId = dagger({ runes: { potency: 1, property: ['returning'] } });
+    for (const weapon of [runedDoc, runedId]) {
+      const toss = resolveItemStrikes(weapon, minimalCharacter).find((s) => s.type === 'ranged');
+      expect(toss.returning).toBe(true);
+    }
+  });
+
+  test('a non-thrown ranged Strike is not tagged (bows stay in hand)', () => {
+    const bow = {
+      uid: 'e-bow', name: 'Shortbow', state: 'held2',
+      strikes: [{ name: 'Shortbow Strike', proficiency: 'martial', type: 'ranged', damage: '1d6', range: '60ft', traits: ['Attack', 'Deadly d10'] }],
+    };
+    const shot = resolveItemStrikes(bow, minimalCharacter)[0];
+    expect('thrown' in shot).toBe(false);
+  });
+});

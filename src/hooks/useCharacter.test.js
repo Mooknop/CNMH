@@ -40,7 +40,10 @@ vi.mock('../utils/SpellUtils', () => ({
   extractInnateSpells: () => [],
 }));
 
-vi.mock('../utils/InventoryUtils', () => ({
+vi.mock('../utils/InventoryUtils', async (importOriginal) => ({
+  // Real helpers stay (shieldStrikes/shieldAttach flatten the inventory);
+  // Bulk/armor derivations are stubbed for the tests below.
+  ...(await importOriginal()),
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
   ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
