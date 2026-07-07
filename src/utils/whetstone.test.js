@@ -208,3 +208,52 @@ describe('applyWhetstoneStrikeAlterations (W2, #1214)', () => {
     expect(whetstonesByWeaponUid(null)).toEqual({});
   });
 });
+
+describe('W3 payloads (#1215)', () => {
+  const strike = (over = {}) => ({
+    name: 'Longsword Melee Strike', type: 'melee', traits: [],
+    attackMod: 7, damage: '2d8+4', damageType: 'slashing', ...over,
+  });
+  const entry = (effect, over = {}) => ({
+    id: 'fx1',
+    whetstone: { itemId: 'slayers-stone', itemName: "Slayer's Stone", weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute', effect, ...over },
+  });
+
+  it("Slayer's Stone: addRiders resolves appliesVsTrait from the choice", () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry(
+      { addRiders: [{ dice: '1d6', type: 'precision', appliesVsTrait: 'from-choice' }] },
+      { choice: 'dragon' }
+    ));
+    expect(out.riders).toHaveLength(1);
+    expect(out.riders[0]).toMatchObject({
+      dice: '1d6', type: 'precision', appliesVsTrait: 'dragon',
+      label: "Slayer's Stone (vs dragon)",
+    });
+  });
+
+  it('a compound "fungus and plant" choice gates on either trait', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry(
+      { addRiders: [{ dice: '1d6', type: 'precision', appliesVsTrait: 'from-choice' }] },
+      { choice: 'fungus and plant' }
+    ));
+    expect(out.riders[0].appliesVsTrait).toEqual(['fungus', 'plant']);
+  });
+
+  it('Toothy Knife: bleedDc stamps recovery DCs onto persistent bleed riders only', () => {
+    const s = strike({
+      riders: [
+        { id: 'r1', label: 'Wounding', persistent: { dice: '1d6', type: 'bleed' } },
+        { id: 'r2', label: 'Flaming crit', persistent: { dice: '1d10', type: 'fire' } },
+      ],
+    });
+    const out = applyWhetstoneStrikeAlterations(s, entry({ bleedDc: { base: 17, assisted: 12 } }));
+    expect(out.riders[0].persistent.recoveryDc).toEqual({ base: 17, assisted: 12 });
+    expect(out.riders[1].persistent.recoveryDc).toBeUndefined();
+    expect(out.bleedDc).toEqual({ base: 17, assisted: 12 });
+  });
+
+  it('onHit payloads are carried on the strike with the item name', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry({ onHit: { healHalf: true } }));
+    expect(out.whetstoneOnHit).toEqual({ healHalf: true, itemName: "Slayer's Stone" });
+  });
+});

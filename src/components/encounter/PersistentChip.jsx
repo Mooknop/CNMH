@@ -66,9 +66,11 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   const summary = instances.map(describe).join(', ');
 
   // Eased recovery DC if any tracked instance's type is eased (Blood Booster
-  // eases both bleed and poison, so a mix is rare); the footer states it.
+  // eases both bleed and poison, so a mix is rare); the footer states it. A
+  // per-instance override (Toothy Knife, #1215) wins — mixed DCs show the
+  // highest so the footer never understates a check.
   const eased = instances.some((inst) => flatCheckEasedFor(effects, persistentVsType(inst), catalog));
-  const noteDc = recoveryDc({ easeFlatCheck: eased });
+  const noteDc = Math.max(...instances.map((inst) => recoveryDc({ easeFlatCheck: eased }, inst)));
 
   return (
     <span className="pdc-wrap">

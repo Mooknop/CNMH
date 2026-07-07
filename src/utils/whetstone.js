@@ -174,6 +174,14 @@ export const withWhetstoneApplied = (effects, entry) => [
 //     perDieFlat: { amount: 1, type: 'bludgeoning' }, // +N flat per weapon damage die (Mighty Counterweight)
 //     grantRunes: [{ id, name, rider? }],    // property-rune effects for the duration (Ethereal Crescent)
 //     rangeMultiplier: 2,                    // scale the range increment, ranged strikes only (Featherlight Fletching)
+//     addRiders: [{ dice, type, appliesVsTrait?, persistent?, on? }],
+//                                            // extra #222 damage riders (W3 — Slayer's Stone's 1d6 precision;
+//                                            //   appliesVsTrait:'from-choice' reads the apply-time trait pick,
+//                                            //   'fungus and plant' style picks gate on any of the traits)
+//     bleedDc: { base: 17, assisted: 12 },   // recovery-DC override for persistent bleed the weapon deals (Toothy Knife)
+//     onHit: { revealIwr?, healHalf?, condition?, note? },
+//                                            // confirm-time riders (W3 — Analysis Eye / Leeching Fangs / Limning Gem),
+//                                            //   processed by the strike confirm off successful results
 //   }
 //
 // `material` + `iwrTags` surface on the strike as `iwrTags` and ride the damage
@@ -196,6 +204,14 @@ const scaleRange = (range, mult) => {
   const m = String(range ?? '').match(/^(\s*)(\d+)(.*)$/);
   if (!m) return range;
   return `${m[1]}${Number(m[2]) * mult}${m[3]}`;
+};
+
+// An apply-time trait pick → the appliesVsTrait gate. Compound picks
+// ("fungus and plant" — Slayer's Stone) split into a trait list; the damage
+// step's trait gating accepts either form.
+const choiceTraits = (choice) => {
+  const parts = String(choice || '').split(/\s+and\s+/i).map((t) => t.trim()).filter(Boolean);
+  return parts.length > 1 ? parts : parts[0] || null;
 };
 
 /**
@@ -245,8 +261,36 @@ export const applyWhetstoneStrikeAlterations = (strikeObj, entry) => {
   if (Array.isArray(eff.grantRunes)) {
     riders.push(...eff.grantRunes.flatMap(translatePropertyRider));
   }
+  // Extra damage riders (W3 — Slayer's Stone). An appliesVsTrait of
+  // 'from-choice' resolves against the apply-time trait pick.
+  if (Array.isArray(eff.addRiders)) {
+    eff.addRiders.forEach((r, i) => {
+      const vs = r.appliesVsTrait === 'from-choice' ? choiceTraits(ws.choice) : r.appliesVsTrait;
+      riders.push({
+        id: `whetstone-${ws.itemId || 'rider'}-${i}`,
+        label: `${ws.itemName}${vs ? ` (vs ${ws.choice ?? vs})` : ''}`,
+        ...r,
+        ...(vs ? { appliesVsTrait: vs } : {}),
+      });
+    });
+  }
+  // Recovery-DC override for the weapon's persistent bleed (W3 — Toothy
+  // Knife). Applied last so whetstone-granted bleed riders are covered too;
+  // bleed the engine can't see (crit specialization) keeps the reminder floor.
+  if (eff.bleedDc) {
+    riders = riders.map((r) =>
+      r.persistent && String(r.persistent.type).toLowerCase() === 'bleed'
+        ? { ...r, persistent: { ...r.persistent, recoveryDc: eff.bleedDc } }
+        : r
+    );
+    s.bleedDc = eff.bleedDc;
+  }
   if (riders.length) s.riders = riders;
   else delete s.riders;
+
+  // Confirm-time on-hit riders (W3 — Analysis Eye / Leeching Fangs / Limning
+  // Gem): carried on the strike for the encounter confirm to process.
+  if (eff.onHit) s.whetstoneOnHit = { ...eff.onHit, itemName: ws.itemName };
 
   return s;
 };
