@@ -501,7 +501,9 @@
       "traits": [
         "Envision"
       ],
-      "description": "Effect The shield casts the darkness spell, but it must be centered on your square. You may Raise a Shield as part of this activation."
+      "description": "Effect The shield casts the darkness spell, but it must be centered on your square. You may Raise a Shield as part of this activation.",
+      "spellRef": "darkness",
+      "castRank": 2
     }
   },
   {
@@ -997,7 +999,9 @@
       "traits": [
         "Envision"
       ],
-      "description": "Trigger You enter an area where you cannot breathe; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble."
+      "description": "Trigger You enter an area where you cannot breathe; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble.",
+      "spellRef": "air-bubble",
+      "castRank": 1
     }
   },
   {
@@ -1234,7 +1238,9 @@
       "traits": [
         "Envision"
       ],
-      "description": "Trigger You enter an area where you cannot breathe, or an area of severe cold or heat; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble. In addition, the wielder gains the effects of 3rd-level endure elements. Both effects last for 24 hours."
+      "description": "Trigger You enter an area where you cannot breathe, or an area of severe cold or heat; Effect A protective bubble emerges from your shield, granting you the benefits of air bubble. In addition, the wielder gains the effects of 3rd-level endure elements. Both effects last for 24 hours.",
+      "spellRef": "air-bubble",
+      "castRank": 1
     }
   },
   {
@@ -1272,7 +1278,19 @@
     "name": "Greater Living",
     "level": 10,
     "price": 1100,
-    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. The shield is considered a living creature for the purpose of healing derived from positive energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials."
+    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. The shield is considered a living creature for the purpose of healing derived from positive energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Shillelagh",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast shillelagh as a 1st-level spell.",
+      "spellRef": "shillelagh",
+      "castRank": 1
+    }
   },
   {
     "id": "greater-reinforcing",
@@ -1364,7 +1382,19 @@
     "name": "Greater Undead",
     "level": 10,
     "price": 1100,
-    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. The shield is considered an undead creature for the purpose of healing derived from negative energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials."
+    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. The shield is considered an undead creature for the purpose of healing derived from negative energy, and regains Hit Points as normal when it is affected by these abilities. When targeted by the Repair activity it regains half the normal amount of Hit Points. This rune may be etched onto a shield made from precious materials.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Boneshaker",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting.",
+      "spellRef": "boneshaker",
+      "castRank": 2
+    }
   },
   {
     "id": "gusting",
@@ -1382,7 +1412,9 @@
       "traits": [
         "Command"
       ],
-      "description": "Effect The shield casts the gust of wind spell in a direction of your choosing. The DC for this effect is the better of your class DC or spell DC."
+      "description": "Effect The shield casts the gust of wind spell in a direction of your choosing. The DC for this effect is the better of your class DC or spell DC.",
+      "spellRef": "gust-of-wind",
+      "castRank": 1
     }
   },
   {
@@ -1463,7 +1495,19 @@
     "name": "Living",
     "level": 4,
     "price": 125,
-    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of wood."
+    "description": "This rune of twisting roots causes the shield to morph and change into a thick mass of overlapping, living vines. The shield gains the plant trait and is considered to be made entirely of wood. It is a valid target for shillelagh, and once per day you may cast shillelagh as a 1st-level spell. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of wood.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Shillelagh",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast shillelagh as a 1st-level spell.",
+      "spellRef": "shillelagh",
+      "castRank": 1
+    }
   },
   {
     "id": "major-energy-resistant",
@@ -2699,7 +2743,19 @@
     "level": 15,
     "price": 8000,
     "rarity": "rare",
-    "description": "As greater living, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true living rune is either charismatic or knowledgeable, which affects its abilities and personality."
+    "description": "As greater living, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true living rune is either charismatic or knowledgeable, which affects its abilities and personality.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Shillelagh",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast shillelagh as a 1st-level spell.",
+      "spellRef": "shillelagh",
+      "castRank": 1
+    }
   },
   {
     "id": "true-summoning",
@@ -2728,7 +2784,19 @@
     "level": 15,
     "price": 8000,
     "rarity": "rare",
-    "description": "As greater undead, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true undead rune is either charismatic or knowledgeable, which affects its abilities and personality."
+    "description": "As greater undead, except the shield becomes sentient and has a personality of its own. It can speak through an animated mouth on the shield, and you can also communicate with it telepathically. The shield's personality is generally helpful to you. Each true undead rune is either charismatic or knowledgeable, which affects its abilities and personality.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Boneshaker",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting.",
+      "spellRef": "boneshaker",
+      "castRank": 2
+    }
   },
   {
     "id": "undead",
@@ -2737,7 +2805,19 @@
     "name": "Undead",
     "level": 4,
     "price": 125,
-    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of bone."
+    "description": "This rune in the shape of a skull transforms your shield into an intertwined mass of bones. It is considered to be made of bones regardless of its original material. Once per day you may cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting. This rune may be etched onto a shield made from precious materials. If it is, the shield retains the benefits of the precious material, but is still considered to be made of bone.",
+    "actuated": {
+      "cost": "none",
+      "name": "Cast Boneshaker",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "You cast the boneshaker spell. You do not need a free hand to supply any of the material components for this casting.",
+      "spellRef": "boneshaker",
+      "castRank": 2
+    }
   },
   {
     "id": "unexceptional",

@@ -47,6 +47,27 @@
     ]
   },
   {
+    "id": "air-bubble",
+    "name": "Air Bubble",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Air",
+      "Concentrate"
+    ],
+    "traditions": [
+      "arcane",
+      "divine",
+      "primal"
+    ],
+    "actions": "Reaction",
+    "trigger": "A creature within range enters an environment where it can't breathe.",
+    "range": "60 feet",
+    "targets": "the triggering creature",
+    "duration": "1 minute",
+    "description": "A bubble of pure air appears around the target's head, allowing it to breathe normally. The effect ends as soon as the target returns to an environment where it can breathe normally."
+  },
+  {
     "id": "ancestral-memories",
     "name": "Ancestral Memories",
     "level": 1,
@@ -294,6 +315,34 @@
       "arcane",
       "occult"
     ]
+  },
+  {
+    "id": "boneshaker",
+    "name": "Boneshaker",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Uncommon"
+    ],
+    "traditions": [
+      "arcane",
+      "divine",
+      "primal"
+    ],
+    "actions": "Two Actions or Three Actions",
+    "range": "100 feet",
+    "targets": "1 creature with a skeleton",
+    "defense": "Fortitude",
+    "description": "You reach out a hand and seize a creature's skeleton from afar, harming their body and potentially wrenching them by the bones to move them against their will. The number of actions you spend when Casting this Spell determines the spell's effects. Regardless of the number of actions spent to Cast this Spell, the target must attempt a Fortitude save.\n\n**Two Actions** (somatic, verbal) You clench your fist, painfully compressing the target's bones and dealing 3d8 bludgeoning damage.\n\n**Three Actions** (material, somatic, verbal) As the 2-action version, plus you pull the target's body by their bones, moving them around like an awkward marionette. This movement follows the rules for forced movement.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target takes half damage. If you cast the 3-action version, you can move the target up to 5 feet; it can choose to fall prone to avoid moving.",
+      "Failure": "The target takes full damage and is enfeebled 1. If you cast the 3-action version, you can move the target up to 15 feet; it can fall prone to avoid moving.",
+      "Critical Failure": "The target takes double damage and is enfeebled 2. If you cast the 3-action version, you can move the target up to 25 feet, then knock the target prone; if you attempt to move the target to a hazardous location, such as into a pool of acid or off a cliff, it can fall prone to avoid moving."
+    },
+    "heightened": {
+      "+2": "The damage increases by 3d8."
+    }
   },
   {
     "id": "boom-a-rang",
@@ -870,6 +919,31 @@
       "arcane",
       "primal"
     ]
+  },
+  {
+    "id": "darkness",
+    "name": "Darkness",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Darkness",
+      "Manipulate"
+    ],
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ],
+    "actions": "Three Actions",
+    "range": "120 feet",
+    "area": "20-foot burst",
+    "duration": "1 minute",
+    "description": "You create a shroud of darkness that prevents light from penetrating or emanating within the area. Light does not enter the area and any non-magical light sources, such as a torch or lantern, do not emanate any light while inside the area, even if their light radius would extend beyond the darkness. This also suppresses magical light of your darkness spell's rank or lower. Light can't pass through, so creatures in the area can't see outside. From outside, it appears as a globe of pure darkness.",
+    "heightened": {
+      "4th": "Even creatures with darkvision (but not greater darkvision) can barely see through the darkness. They treat targets seen through the darkness as concealed."
+    }
   },
   {
     "id": "darkvision",
@@ -1560,6 +1634,32 @@
       "occult",
       "primal"
     ]
+  },
+  {
+    "id": "gust-of-wind",
+    "name": "Gust of Wind",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Air",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "traditions": [
+      "arcane",
+      "primal"
+    ],
+    "actions": "Two Actions",
+    "area": "60-foot line",
+    "duration": "Until the start of your next turn",
+    "defense": "Fortitude",
+    "description": "A violent wind issues forth from your palm, blowing from the point where you are when you Cast the Spell to the line's opposite end. The wind extinguishes small non-magical fires, disperses fog and mist, blows objects of light Bulk or less around, and pushes larger objects. Large or smaller creatures in the area must attempt a Fortitude save. Large or smaller creatures that later move into the gust must attempt the save on entering.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature can't move against the wind.",
+      "Failure": "The creature is knocked prone. If it was flying, it takes the effects of critical failure instead.",
+      "Critical Failure": "The creature is pushed 30 feet in the wind's direction, knocked prone, and takes 2d6 bludgeoning damage."
+    }
   },
   {
     "id": "hallucination",
@@ -3260,6 +3360,25 @@
       "arcane",
       "occult"
     ]
+  },
+  {
+    "id": "shillelagh",
+    "name": "Shillelagh",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Plant"
+    ],
+    "traditions": [
+      "primal"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 club or staff you hold",
+    "duration": "1 minute",
+    "description": "The target grows vines and leaves, brimming with primal energy. The target becomes a +1 striking weapon while in your hands, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two. Additionally, as long as you are on your home plane, attacks you make with the target against aberrations, extraplanar creatures, and undead increase the number of weapon damage dice to three."
   },
   {
     "id": "shocking-grasp",
