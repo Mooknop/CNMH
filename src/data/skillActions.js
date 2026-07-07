@@ -246,6 +246,9 @@ export const SKILL_ACTIONS = [
       success:         { condition: 'off-guard', scopedToAttacker: true },
       criticalFailure: { selfCondition: 'off-guard' },
     },
+    // Glamourous shield rune (#1196 G3): +1 item bonus to Feint while the shield
+    // is raised — offered as an opt-in toggle here (heldShieldRollBonus).
+    shieldRune: 'glamourous',
     availableTo: 'all',
   },
   // Escape (#260 slice 3) — self-targeted: shed grabbed/restrained/immobilized.

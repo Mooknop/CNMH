@@ -5,6 +5,7 @@ import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS, rkKeyFor } from '../../utils/recallKnowledge';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import './RecallKnowledgeResolver.css';
 
 const SKILL_LABELS = {
@@ -55,8 +56,14 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
   const [selectedSkill, setSelectedSkill] = useState(recommended[0] || 'arcana');
   const [d20Input, setD20Input]           = useState('');
   const [choices, setChoices]             = useState([]);
+  const [knowingOn, setKnowingOn]         = useState(false);
 
   const skillMod  = charModel?.skillModifiers?.[selectedSkill] ?? 0;
+  // Knowing shield rune (#1196 G3): +1 item bonus to Recall Knowledge while
+  // wielding — offered as an opt-in toggle rather than baked into every skill.
+  const knowingBonus = heldShieldRollBonus(charModel?.inventory, 'knowing');
+  const runeBonus    = knowingBonus && knowingOn ? knowingBonus.amount : 0;
+  const effectiveMod = skillMod + runeBonus;
   const baseDc    = bestiary?.level != null
     ? recallKnowledgeDC(bestiary.level, bestiary.rarity)
     : null;
@@ -65,7 +72,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
 
   const d20    = parseInt(d20Input, 10);
   const hasD20 = !isNaN(d20) && d20 >= 1 && d20 <= 20;
-  const total  = hasD20 ? d20 + skillMod : NaN;
+  const total  = hasD20 ? d20 + effectiveMod : NaN;
 
   const degree = (hasD20 && dc != null)
     ? computeSaveDegree({ d20, total, dc })
@@ -140,6 +147,22 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
         </div>
       </section>
 
+      {/* Knowing shield rune — opt-in +1 item bonus to this Recall Knowledge */}
+      {knowingBonus && (
+        <section className="ct-section" data-testid="rkr-knowing-section">
+          <h3 className="ct-section-title">Shield rune</h3>
+          <button
+            type="button"
+            className={['rkr-skill-btn', knowingOn ? 'rkr-skill-btn--on' : ''].filter(Boolean).join(' ')}
+            aria-pressed={knowingOn}
+            onClick={() => { setKnowingOn((v) => !v); setChoices([]); }}
+          >
+            <span className="rkr-skill-name">{knowingBonus.label}</span>
+            <span className="rkr-skill-mod">+{knowingBonus.amount}</span>
+          </button>
+        </section>
+      )}
+
       {/* Roll input */}
       <section className="ct-section">
         <h3 className="ct-section-title">Roll</h3>
@@ -155,7 +178,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
             onChange={(e) => { setD20Input(e.target.value); setChoices([]); }}
           />
           <span className="trr-bonus-badge" aria-label="skill modifier">
-            {formatModifier(skillMod)}
+            {formatModifier(effectiveMod)}
           </span>
           {hasD20 && (
             <span className="trr-total-badge">= {total}</span>

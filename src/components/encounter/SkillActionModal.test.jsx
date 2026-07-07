@@ -8,6 +8,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
+import { useShield } from '../../hooks/useShield';
 import { resolveActionRoll } from '../../utils/rollResolution';
 
 vi.mock('../shared/Modal', () => ({
@@ -29,6 +30,7 @@ vi.mock('../../hooks/useSyncedState', () => ({ useSyncedState: vi.fn() }));
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../hooks/useTurnState', () => ({ useTurnState: vi.fn() }));
 vi.mock('../../hooks/useEnemyEffects', () => ({ useEnemyEffects: vi.fn() }));
+vi.mock('../../hooks/useShield', () => ({ useShield: vi.fn() }));
 vi.mock('../../utils/rollResolution', () => ({ resolveActionRoll: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getSkillModifier: (_c, s) => ({ athletics: 8, acrobatics: 5 }[s] ?? 0),
@@ -80,6 +82,7 @@ beforeEach(() => {
   useEnemyEffects.mockReturnValue({
     applyCondition, stampImmunity, isImmune: isImmuneFn,
   });
+  useShield.mockReturnValue({ raised: false });
   resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 5 });
 });
 
@@ -273,6 +276,38 @@ describe('SkillActionModal (Feint)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
     expect(applyCondition).not.toHaveBeenCalled();
     expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', [{ id: 'off-guard', value: null }]);
+  });
+
+  // Glamourous shield rune (#1196 G3): +1 to Feint while the shield is raised.
+  const glamShield = {
+    uid: 's1', name: 'Kite Shield', shield: { bonus: 2 }, state: 'held1',
+    runes: { property: [{ id: 'glamourous', type: 'property', name: 'Glamourous' }] },
+  };
+
+  it('offers a Glamourous toggle (raised shield) that adds +1 to the Feint roll', () => {
+    useCharacter.mockReturnValue({ flags: {}, inventory: [glamShield] });
+    useShield.mockReturnValue({ raised: true });
+    render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '16' } });
+    // d20 10 + 5 = 15 vs DC 16 → Failure
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
+    // Opt in to Glamourous → 16 → Success.
+    fireEvent.click(screen.getByRole('button', { name: /Glamourous \(shield\) \+1/ }));
+    expect(screen.getByText('Success — Off-Guard to your attacks')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('Glamourous (shield) +1') })
+    );
+  });
+
+  it('hides the Glamourous toggle when the shield is not raised', () => {
+    useCharacter.mockReturnValue({ flags: {}, inventory: [glamShield] });
+    useShield.mockReturnValue({ raised: false });
+    render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
+    pickGoblin();
+    expect(screen.queryByRole('button', { name: /Glamourous/ })).not.toBeInTheDocument();
   });
 });
 

@@ -1,4 +1,4 @@
-import { heldShieldRuneEffects, ENERGY_RESISTANT_AMOUNT } from './shieldRuneEffects';
+import { heldShieldRuneEffects, heldShieldRollBonus, ENERGY_RESISTANT_AMOUNT } from './shieldRuneEffects';
 import { resistanceFor } from './EffectUtils';
 
 // A held shield entry carrying resolved property-rune docs (as contentUtils
@@ -48,6 +48,36 @@ describe('heldShieldRuneEffects', () => {
     expect(heldShieldRuneEffects([heldShield([{ id: 'moonlit', name: 'Moonlit' }])])).toEqual([]);
     expect(heldShieldRuneEffects([{ uid: 'w', name: 'Sword', strikes: [{}], state: 'held', runes: {} }])).toEqual([]);
     expect(heldShieldRuneEffects([])).toEqual([]);
+  });
+});
+
+describe('heldShieldRollBonus — opt-in roll toggles (Knowing / Glamourous)', () => {
+  const knowing = { id: 'knowing', type: 'property', target: 'shield', name: 'Knowing' };
+  const glamourous = { id: 'glamourous', type: 'property', target: 'shield', name: 'Glamourous' };
+
+  it('Knowing grants +1 while wielding (no raised gate)', () => {
+    const bonus = heldShieldRollBonus([heldShield([knowing])], 'knowing');
+    expect(bonus).toEqual({ amount: 1, label: 'Knowing (shield)' });
+  });
+
+  it('Knowing yields null when the shield is not held', () => {
+    const stowed = { ...heldShield([knowing]), state: 'stowed' };
+    expect(heldShieldRollBonus([stowed], 'knowing')).toBeNull();
+  });
+
+  it('Glamourous requires the shield to be raised', () => {
+    const inv = [heldShield([glamourous])];
+    expect(heldShieldRollBonus(inv, 'glamourous')).toBeNull();               // not raised
+    expect(heldShieldRollBonus(inv, 'glamourous', { raised: false })).toBeNull();
+    expect(heldShieldRollBonus(inv, 'glamourous', { raised: true }))
+      .toEqual({ amount: 1, label: 'Glamourous (shield)' });
+  });
+
+  it('yields null when the held shield lacks the rune, or for an unknown rune', () => {
+    expect(heldShieldRollBonus([heldShield([knowing])], 'glamourous', { raised: true })).toBeNull();
+    expect(heldShieldRollBonus([heldShield([knowing])], 'darkness')).toBeNull(); // not a roll-toggle rune
+    expect(heldShieldRollBonus([heldShield([])], 'knowing')).toBeNull();
+    expect(heldShieldRollBonus([], 'knowing')).toBeNull();
   });
 });
 

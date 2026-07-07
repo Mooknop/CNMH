@@ -8,6 +8,7 @@ import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
+import { useShield } from '../../hooks/useShield';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
@@ -22,6 +23,7 @@ import { toGameSeconds } from '../../utils/gameTime';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
+import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import './SkillActionModal.css';
 
 const DEGREE_LABELS = {
@@ -60,6 +62,13 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const { applyCondition, stampImmunity, isImmune } = useEnemyEffects();
   const { getState, sendUpdate } = useSession();
   const { gameDate, time } = useGameDate();
+  // Shield rune roll bonus (#1196 G3): Glamourous grants +1 to Feint while the
+  // shield is RAISED — offered below as an opt-in toggle. `raised` comes from the
+  // live shield state so an unraised shield never surfaces it.
+  const { raised: shieldRaised } = useShield(character?.id, characterModel?.inventory);
+  const shieldRuneBonus = action?.shieldRune
+    ? heldShieldRollBonus(characterModel?.inventory, action.shieldRune, { raised: shieldRaised })
+    : null;
 
   // Attack-trait actions participate in the Multiple Attack Penalty.
   const isAttack = isAttackAbility(action);
@@ -89,6 +98,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [pickedSkill, setPickedSkill] = useState(null);
   const [toggledIds, setToggledIds] = useState([]); // declared circumstance toggles, active
   const [circumstance, setCircumstance] = useState(''); // free-form "+N (reason)" entry
+  const [shieldRuneOn, setShieldRuneOn] = useState(false); // shield-rune roll bonus, opted in
   const [resolved, setResolved] = useState(null); // locks the UI after confirm
   const [talismanUsed, setTalismanUsed] = useState(false); // Wolf Fang activated this resolve
 
@@ -143,13 +153,17 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     .filter((t) => toggledIds.includes(t.id))
     .reduce((sum, t) => sum + (t.bonus || 0), 0);
   const freeform = /^-?\d+$/.test(circumstance) ? parseInt(circumstance, 10) : 0;
+  // The shield-rune bonus is an ITEM bonus; it's added flat here (no competing
+  // item bonus at these skill actions) and labelled distinctly from circumstance.
+  const runeBonus = shieldRuneBonus && shieldRuneOn ? shieldRuneBonus.amount : 0;
   const circumstanceBonus = toggleBonus + freeform;
-  const netMod = baseMod != null ? baseMod + circumstanceBonus : null;
+  const netMod = baseMod != null ? baseMod + circumstanceBonus + runeBonus : null;
 
-  // Labels for the active circumstance sources (combat log + summary).
+  // Labels for the active bonus sources (combat log + summary).
   const circumstanceSources = [
     ...declaredToggles.filter((t) => toggledIds.includes(t.id)).map((t) => t.label),
     ...(freeform ? [`${freeform >= 0 ? '+' : ''}${freeform} circumstance`] : []),
+    ...(runeBonus ? [`${shieldRuneBonus.label} +${runeBonus}`] : []),
   ];
 
   // DC: prefill from the enemy's defense when present; always GM-overridable.
@@ -308,6 +322,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     setMapOverride(null);
     setToggledIds([]);
     setCircumstance('');
+    setShieldRuneOn(false);
     setResolved(null);
     setTalismanUsed(false);
     onClose();
@@ -419,6 +434,25 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Shield rune bonus — opt-in item bonus from a held (raised, for
+                Glamourous) shield with the relevant rune (#1196 G3). */}
+            {shieldRuneBonus && (
+              <div className="sam-field">
+                <label className="sam-label">Shield rune</label>
+                <div className="sam-target-picks">
+                  <button
+                    type="button"
+                    className={`sam-target-btn${shieldRuneOn ? ' sam-target-btn--active' : ''}`}
+                    aria-pressed={shieldRuneOn}
+                    onClick={() => setShieldRuneOn((v) => !v)}
+                    disabled={!!resolved}
+                  >
+                    {shieldRuneBonus.label} +{shieldRuneBonus.amount}
+                  </button>
                 </div>
               </div>
             )}

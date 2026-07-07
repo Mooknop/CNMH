@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import RecallKnowledgeResolver from './RecallKnowledgeResolver';
+import { useCharacter } from '../../hooks/useCharacter';
 
 // ── Mock hooks ────────────────────────────────────────────────────────────────
 
@@ -12,20 +13,20 @@ vi.mock('../../contexts/ContentContext', () => ({
   }),
 }));
 
-vi.mock('../../hooks/useCharacter', () => ({
-  useCharacter: () => ({
-    skillModifiers: {
-      arcana:    5,
-      nature:    3,
-      occultism: 2,
-      religion:  1,
-      society:   4,
-    },
-    skillProficiencies: {
-      arcana: 2,
-    },
-  }),
-}));
+vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
+
+const CHAR_MODEL = {
+  skillModifiers: {
+    arcana:    5,
+    nature:    3,
+    occultism: 2,
+    religion:  1,
+    society:   4,
+  },
+  skillProficiencies: {
+    arcana: 2,
+  },
+};
 
 const mockResolve = vi.fn();
 vi.mock('../../hooks/useRecallKnowledge', () => ({
@@ -65,7 +66,10 @@ function renderResolver(props = {}) {
   );
 }
 
-beforeEach(() => mockResolve.mockClear());
+beforeEach(() => {
+  mockResolve.mockClear();
+  useCharacter.mockReturnValue(CHAR_MODEL);
+});
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
@@ -187,6 +191,39 @@ test('defaults outOfCombat to false (in-combat)', () => {
   fireEvent.click(screen.getByLabelText('Reflex save'));
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: false }));
+});
+
+// ── Knowing shield rune (#1196 G3) ──────────────────────────────────────────────
+
+const knowingShield = {
+  uid: 's1', name: 'Kite Shield', shield: { bonus: 2 }, state: 'held1',
+  runes: { property: [{ id: 'knowing', type: 'property', name: 'Knowing' }] },
+};
+
+test('no Knowing toggle without a held Knowing shield', () => {
+  renderResolver();
+  expect(screen.queryByTestId('rkr-knowing-section')).toBeNull();
+});
+
+test('a held Knowing shield offers a +1 toggle that raises the RK total', () => {
+  useCharacter.mockReturnValue({ ...CHAR_MODEL, inventory: [knowingShield] });
+  renderResolver();
+  expect(screen.getByTestId('rkr-knowing-section')).toBeInTheDocument();
+  // arcana +5, d20 18 → 23
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '18' } });
+  expect(screen.getByText('= 23')).toBeInTheDocument();
+  // Opt in to Knowing → +1 → 24.
+  fireEvent.click(screen.getByRole('button', { name: /Knowing \(shield\)/ }));
+  expect(screen.getByText('= 24')).toBeInTheDocument();
+});
+
+test('the Knowing bonus is threaded into the resolved total', () => {
+  useCharacter.mockReturnValue({ ...CHAR_MODEL, inventory: [knowingShield] });
+  renderResolver();
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } }); // 10+5=15 failure
+  fireEvent.click(screen.getByRole('button', { name: /Knowing \(shield\)/ }));      // → 16
+  fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
+  expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ total: 16 }));
 });
 
 test('Cancel calls onDone without resolving', () => {
