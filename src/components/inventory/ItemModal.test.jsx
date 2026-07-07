@@ -320,6 +320,35 @@ describe('ItemModal', () => {
     expect(screen.queryByTestId('shield-deflecting')).toBeNull();
   });
 
+  // Shield property-rune activations (#1196 G3/G4) — each actuated rune surfaces
+  // an activation card that fires the gate + logs.
+  it('surfaces, activates, and logs a shield property-rune activation', () => {
+    mockItemAct = makeItemAct({ activation: { canActivate: true, activate: vi.fn(() => ({ ok: true })), disabledReason: null } });
+    const item = {
+      ...baseItem, name: 'Kite Shield', shield: { bonus: 2 },
+      runes: { reinforcing: 'moderate', property: [
+        { id: 'reflecting', type: 'property', name: 'Reflecting', actuated: {
+          cost: 'none', name: 'Reflecting', frequency: 'once per day', traits: ['Command'],
+          description: 'Trigger You are hit by a ranged weapon attack; Effect … The GM resolves the redirected attack.',
+        } },
+      ] },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.getByTestId('shield-rune-activation-reflecting')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('shield-rune-activate-reflecting'));
+    expect(mockItemAct.activation.activate).toHaveBeenCalled();
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('Reflecting') }),
+    );
+  });
+
+  it('shows no shield-rune activation section for a shield with only passive runes', () => {
+    const item = { ...baseItem, name: 'Kite Shield', shield: { bonus: 2 },
+      runes: { reinforcing: 'moderate', property: [{ id: 'energy-resistant', type: 'property', name: 'Energy-Resistant', choice: 'fire' }] } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.queryByTestId('shield-rune-activations')).toBeNull();
+  });
+
   // Rune-granted traits (#1196 G3) — a shield shows its effective traits.
   it('shows a rune-granted trait chip (Feather → Finesse) alongside base traits', () => {
     const item = {

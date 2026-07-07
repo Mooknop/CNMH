@@ -6,6 +6,7 @@ import ActionSymbol from '../shared/ActionSymbol';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
+import ShieldRuneActivations from './ShieldRuneActivations';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
@@ -78,6 +79,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Rune-granted spell cast (#1055 S3) — Menacing (Greater) fear / Presentable
   // (Greater) suggestion. Open state for the hosted cast modal.
   const [castingRune, setCastingRune] = useState(false);
+  // A shield property rune's spell cast (#1196 G3 wiring) — the built cast to hand
+  // to CastSpellModal, or null. Set when a spell-casting rune activation fires.
+  const [shieldRuneCast, setShieldRuneCast] = useState(null);
   // Actuated-item activation state machine (#957 S4) — once/day + Overload +
   // broken/repair, driven by an item's optional `actuated` block.
   const { gameDate, time } = useGameDate();
@@ -216,6 +220,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${actuated.name}${spent}` });
       onClose();
     }
+  };
+  // A shield property rune's activation fired (#1196 G3/G4): log it, and for a
+  // spell-casting rune (Gusting → Gust of Wind) open the cast modal with the
+  // rune's fixed-rank cast. The frequency was already spent by the card.
+  const onShieldRuneActivate = (rune, spellDoc) => {
+    const cast = spellDoc
+      ? buildRuneCastSpell(rune.actuated, spellDoc, `${itemUidOf(item)}:${rune.id}`)
+      : null;
+    const detail = spellDoc ? ` — casts ${spellDoc.name}` : '';
+    appendEvent({ type: 'action', text: `${who} activated ${shieldDisplayName(item)} — ${rune.actuated.name}${detail}` });
+    if (cast) setShieldRuneCast(cast);
   };
   const doOverload = (rank) => {
     const r = itemAct.overload.overload(rank);
@@ -908,6 +923,18 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           an inscribed rune's display activations merge in (#1033 S2) */}
       <ItemActivations item={withAccessoryActivations(item)} />
 
+      {/* Shield property-rune activations (#1196 G3/G4) — each rune's actuated
+          block gets its own frequency-gated card; spell-casters open the cast. */}
+      {item.shield && (
+        <ShieldRuneActivations
+          character={character}
+          item={item}
+          nowSecs={nowSecs}
+          spells={spells}
+          onActivate={onShieldRuneActivate}
+        />
+      )}
+
       {/* Actuated activation (#957 S4) — interactive once/day + Overload +
           broken/repair for scepter-style items that declare an `actuated` block. */}
       {actuated && (
@@ -1033,6 +1060,19 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           isOpen={castingRune}
           onClose={() => setCastingRune(false)}
           spell={runeCastSpell}
+          castSource="innate"
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
+
+      {/* A shield property rune's spell cast (#1196 G3) — opened when a spell-
+          casting rune activation fires (Gusting, Darkness, Environmental…). */}
+      {shieldRuneCast && (
+        <CastSpellModal
+          isOpen={!!shieldRuneCast}
+          onClose={() => setShieldRuneCast(null)}
+          spell={shieldRuneCast}
           castSource="innate"
           character={character}
           themeColor={themeColor}
