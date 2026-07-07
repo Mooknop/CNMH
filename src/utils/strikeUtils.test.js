@@ -172,6 +172,36 @@ describe('resolveItemStrikes (per-item resolution)', () => {
     // spell attack: Cha +5 + expert(4) + level 3 = +12 (beats martial: Str 0 + trained(2) + 3 = +5)
     expect(strike.attackMod).toBe(12);
   });
+
+  describe('dragonbreath template (#1210 M4b)', () => {
+    const dbItem = (tier, dragonType, property) => ({
+      id: 'db', name: 'Longsword',
+      dragonbreath: { tier, dragonType },
+      ...(property ? { runes: { property } } : {}),
+      strikes: { name: 'Longsword Strike', proficiency: 'martial', type: 'melee', damage: '1d8' },
+    });
+
+    test('scales dice + attack by the tier fundamentals, names + types by the template', () => {
+      const [s] = resolveItemStrikes(dbItem('greater', 'Red'), char);
+      expect(s.damage).toBe('3d8+4'); // 1d8 + greater striking (+2 dice) + Str 4
+      expect(s.attackMod).toBe(11); // Str 4 + martial trained 2 + level 3 + potency 2
+      expect(s.source).toBe('Greater Red Dragonbreath Longsword');
+      expect(s.damageType).toBe('fire'); // Red → fire (single-option kind)
+    });
+
+    test('base tier omits the tier word and applies +1 potency', () => {
+      const [s] = resolveItemStrikes(dbItem('base', 'Red'), char);
+      expect(s.damage).toBe('2d8+4');
+      expect(s.attackMod).toBe(10);
+      expect(s.source).toBe('Red Dragonbreath Longsword');
+    });
+
+    test('prepends etched property runes; a multi-option kind leaves native damage type', () => {
+      const [s] = resolveItemStrikes(dbItem('greater', 'Mirage', [{ id: 'vitalizing', name: 'Vitalizing' }]), char);
+      expect(s.source).toBe('Vitalizing Greater Mirage Dragonbreath Longsword');
+      expect(s.damageType).toBeUndefined(); // Mirage = force|mental, unrecorded → native (none)
+    });
+  });
 });
 
 describe('getStrikes spell-attack weapon (attackStat: spellAttackOrMartial)', () => {

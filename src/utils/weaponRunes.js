@@ -8,6 +8,8 @@
 // rune catalog and the Vitalizing rider schema arrive in Slice 3; this slice
 // forwards whatever property-rune objects it is handed so the spine is complete.
 
+import { isDragonbreath, dragonbreathDisplayName } from './dragonbreath';
+
 // Full (non-incremental) price + attack item bonus per potency tier.
 export const POTENCY = {
   1: { bonus: 1, price: 35 },
@@ -208,6 +210,10 @@ const hasRuneBlock = (item) =>
  * into the resolver.
  */
 export const weaponDisplayName = (item) => {
+  // Dragonbreath template (#1210 M4b): name is [property runes] [tier word]
+  // [dragon type] Dragonbreath [base], not the standard +N Striking prefix. The
+  // base weapon name (item.name) is the template's base segment.
+  if (isDragonbreath(item)) return dragonbreathDisplayName(item, item?.name);
   if (!hasRuneBlock(item)) return item?.name;
   return resolveWeapon(
     { name: item.name, price: item.price, material: item.material, traits: item.traits },
