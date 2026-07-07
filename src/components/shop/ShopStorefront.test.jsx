@@ -477,6 +477,28 @@ describe('ShopStorefront', () => {
       expect(within(gear).getByLabelText('un-stage Greater Potency')).toBeInTheDocument();
     });
 
+    it('offers a Dragonbreath tier upgrade on the potency socket and stages it as a handoff (#1210 M4d)', () => {
+      mockInventory = [{ uid: 'db1', name: 'Longsword', strikes: [{}], dragonbreath: { tier: 'base', dragonType: 'Red' } }];
+      render(
+        <ShopStorefront
+          isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', offersRunes: true, wares: [] } }}
+          items={items} runes={[]} spells={spells} character={{ id: 'p', name: 'P' }}
+        />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+      const gear = screen.getByTestId('gear-db1');
+      // The locked +1 potency socket surfaces the synthetic tier-upgrade control.
+      const upgrade = within(gear).getByLabelText('upgrade Potency on Longsword');
+      fireEvent.click(upgrade);
+      const picker = screen.getByTestId('picker-db1');
+      expect(within(picker).getByText('Greater Dragonbreath')).toBeInTheDocument();
+      fireEvent.click(within(picker).getByRole('button', { name: /^etch Greater Dragonbreath/ }));
+      // Staged as a handoff, priced at the tier delta (base → greater = 2,450 gp).
+      expect(within(gear).getByLabelText('un-stage Greater Dragonbreath')).toBeInTheDocument();
+      expect(within(gear).getByTestId('staged-db1')).toHaveTextContent('2450 gp');
+    });
+
     it('staging potency on a +0 weapon reveals the property slot it unlocks in the same visit (#879)', () => {
       renderRunesWith({
         inv: [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: {} }],

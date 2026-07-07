@@ -194,3 +194,42 @@ export const dragonbreathUpgradePrice = (fromTier, toTier) => {
   if (!from || !to || to.price <= from.price) return null;
   return to.price - from.price;
 };
+
+/**
+ * The synthetic "rune" that upgrades a dragonbreath weapon to the next tier
+ * through the runesmithing work-order rail (#1210 M4d). It is shaped like a
+ * fundamental potency rune so it flows through the existing socket-staging,
+ * handoff, checkout, and collect pipeline unchanged — `price` is the tier-price
+ * delta and `dragonbreathUpgrade` names the target tier. The upgrade bumps BOTH
+ * fundamentals at once, so it is offered on the potency socket only. Null at
+ * major (top tier) or for a non-dragonbreath entry.
+ */
+export const dragonbreathUpgradeOption = (entry) => {
+  const meta = dragonbreathMeta(entry);
+  if (!meta) return null;
+  const toTier = nextDragonbreathTier(meta.tier);
+  if (!toTier) return null;
+  const t = DRAGONBREATH_TIERS[toTier];
+  return {
+    id: `dragonbreath-upgrade-${toTier}`,
+    name: `${t.tierWord} Dragonbreath`,
+    type: 'fundamental',
+    fundamental: 'potency',
+    target: 'weapon',
+    price: dragonbreathUpgradePrice(meta.tier, toTier),
+    dragonbreathUpgrade: toTier,
+  };
+};
+
+/**
+ * Apply a tier upgrade to a dragonbreath entry: bump `dragonbreath.tier` to
+ * `toTier`, preserving the dragon type and any etched property runes. Only a
+ * one-step upgrade from the entry's current tier applies; anything else (a skip,
+ * a downgrade, a non-template entry) returns null. uid / loadout handling is the
+ * caller's (applyRune).
+ */
+export const applyDragonbreathUpgrade = (entry, toTier) => {
+  const meta = dragonbreathMeta(entry);
+  if (!meta || nextDragonbreathTier(meta.tier) !== String(toTier).toLowerCase()) return null;
+  return { ...entry, dragonbreath: { ...entry.dragonbreath, tier: String(toTier).toLowerCase() } };
+};

@@ -12,6 +12,8 @@ import {
   dragonbreathBreath,
   nextDragonbreathTier,
   dragonbreathUpgradePrice,
+  dragonbreathUpgradeOption,
+  applyDragonbreathUpgrade,
   BREATH_EMANATION_FT,
 } from './dragonbreath';
 import { resolveWeapon, propertySlotCapacity } from './weaponRunes';
@@ -174,6 +176,30 @@ describe('dragonbreath spine', () => {
       expect(dragonbreathUpgradePrice('greater', 'base')).toBeNull();
       expect(dragonbreathUpgradePrice('major', 'major')).toBeNull();
       expect(dragonbreathUpgradePrice('base', 'legendary')).toBeNull();
+    });
+
+    it('dragonbreathUpgradeOption builds the synthetic next-tier work-order rune', () => {
+      expect(dragonbreathUpgradeOption(entry({ tier: 'base', dragonType: 'Red' }))).toMatchObject({
+        id: 'dragonbreath-upgrade-greater', name: 'Greater Dragonbreath',
+        type: 'fundamental', fundamental: 'potency', target: 'weapon',
+        price: 2450, dragonbreathUpgrade: 'greater',
+      });
+      expect(dragonbreathUpgradeOption(entry({ tier: 'greater', dragonType: 'Red' }))).toMatchObject({
+        dragonbreathUpgrade: 'major', price: 67700,
+      });
+      expect(dragonbreathUpgradeOption(entry({ tier: 'major', dragonType: 'Red' }))).toBeNull();
+      expect(dragonbreathUpgradeOption({ name: 'Longsword' })).toBeNull();
+    });
+
+    it('applyDragonbreathUpgrade bumps one tier, preserving type + property runes', () => {
+      const e = entry({ tier: 'base', dragonType: 'Mirage' }, [{ name: 'Vitalizing' }]);
+      expect(applyDragonbreathUpgrade(e, 'greater')).toMatchObject({
+        dragonbreath: { tier: 'greater', dragonType: 'Mirage' },
+        runes: { property: [{ name: 'Vitalizing' }] },
+      });
+      // only a one-step upgrade applies
+      expect(applyDragonbreathUpgrade(entry({ tier: 'base', dragonType: 'Red' }), 'major')).toBeNull();
+      expect(applyDragonbreathUpgrade(entry({ tier: 'major', dragonType: 'Red' }), 'major')).toBeNull();
     });
   });
 });

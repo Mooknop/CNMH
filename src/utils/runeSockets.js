@@ -22,7 +22,7 @@ import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
 import { REINFORCING, shieldPropertySlotCapacity } from './shieldRunes';
 import { shieldCategory } from './shieldCategory';
-import { isDragonbreath, dragonbreathRunes } from './dragonbreath';
+import { isDragonbreath, dragonbreathRunes, dragonbreathUpgradeOption, applyDragonbreathUpgrade } from './dragonbreath';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
 // socket helpers + their callers keep importing it from one place.
@@ -192,8 +192,15 @@ export const compatibleRunes = (item, socketType, stock) => {
   const target = gearTarget(item);
   if (!target) return [];
   // Dragonbreath fundamentals are template-locked (#1210 M4c): never directly
-  // etchable — a potency/striking change is a tier upgrade via the work order.
-  if ((socketType === 'potency' || socketType === 'striking') && dbFundamentals(item)) return [];
+  // etchable. The only fundamental "option" is a TIER UPGRADE (#1210 M4d),
+  // offered on the potency socket (it bumps both fundamentals at once) as a
+  // synthetic rune that rides the work-order rail; the striking socket offers
+  // nothing on its own.
+  if ((socketType === 'potency' || socketType === 'striking') && dbFundamentals(item)) {
+    if (socketType === 'striking') return [];
+    const opt = dragonbreathUpgradeOption(item);
+    return opt ? [opt] : [];
+  }
   const runes = runesOf(item);
   return (Array.isArray(stock) ? stock : []).filter((r) => {
     if (runeTarget(r) !== target) return false;
@@ -249,6 +256,16 @@ export const applyRune = (gear, rune, opts = {}) => {
 
   const target = gearTarget(gear);
   if (!target || runeTarget(rune) !== target) return null;
+  // Dragonbreath tier upgrade (#1210 M4d): the synthetic upgrade "rune" bumps the
+  // template tier (both fundamentals at once), preserving the dragon kind +
+  // property runes. Handled before the fundamental-lock guard, since it is
+  // shaped like a potency rune but is a tier change, not an etch.
+  if (rune.dragonbreathUpgrade && isDragonbreath(gear)) {
+    const upgraded = applyDragonbreathUpgrade(gear, rune.dragonbreathUpgrade);
+    if (!upgraded) return null;
+    const { state, hand, ...rest } = upgraded;
+    return { ...rest, uid: newEntryUid() };
+  }
   // Dragonbreath fundamentals are template-locked (#1210 M4c) — reject a direct
   // potency/striking etch; property runes still apply into the implied slots,
   // and the stored runes block stays free of the implied fundamentals (the
