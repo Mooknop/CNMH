@@ -23,9 +23,39 @@ export const ENERGY_RESISTANT_AMOUNT = {
   'major-energy-resistant': 10,
 };
 
+// Runes that grant an OPT-IN item bonus to a specific roll, surfaced as a toggle
+// at that roll's resolver (not netted into the sheet): the player opts in on the
+// exact check it applies to. Knowing → Recall Knowledge (while wielding);
+// Glamourous → Feint (only while the shield is RAISED). Code-owned.
+export const ROLL_BONUS_RUNES = {
+  knowing:    { amount: 1, requiresRaised: false, label: 'Knowing' },
+  glamourous: { amount: 1, requiresRaised: true,  label: 'Glamourous' },
+};
+
 // The shield currently in a hand (first held entry wins), matching useShield.
 const heldShieldEntry = (inventory) =>
   (Array.isArray(inventory) ? inventory : []).find((e) => e && e.shield && isHeldState(e.state)) || null;
+
+/**
+ * The opt-in roll bonus a character's HELD shield grants for a given rune, or
+ * null. A rune gated on the shield being RAISED (Glamourous) yields null unless
+ * the live `raised` flag is passed. Consumed by the roll resolvers (Feint /
+ * Recall Knowledge) to offer a toggle.
+ *
+ * @param {Array}  inventory - effective (state-stamped) inventory
+ * @param {string} runeId    - property-rune id (e.g. 'knowing', 'glamourous')
+ * @param {{ raised?: boolean }} [opts]
+ * @returns {{ amount: number, label: string } | null}
+ */
+export const heldShieldRollBonus = (inventory, runeId, { raised = false } = {}) => {
+  const def = ROLL_BONUS_RUNES[runeId];
+  if (!def) return null;
+  if (def.requiresRaised && !raised) return null;
+  const shield = heldShieldEntry(inventory);
+  const property = shield && shield.runes && Array.isArray(shield.runes.property) ? shield.runes.property : [];
+  const has = property.some((p) => p && typeof p === 'object' && p.id === runeId);
+  return has ? { amount: def.amount, label: `${def.label} (shield)` } : null;
+};
 
 /**
  * Passive rune effects contributed by the character's held shield, as
