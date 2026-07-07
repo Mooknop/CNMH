@@ -11384,5 +11384,110 @@
     ],
     "weight": 2,
     "id": "xanderghuls-flawless-hammer"
+  },
+  {
+    "name": "Howl of Winter",
+    "description": "This spellgun somehow appears to be a naturally-formed pistol shaped icicle. You Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's AC. This spellgun has a range increment of 30 feet. The spellgun blasts bone-chilling arctic wind that deals cold damage based on the spellgun's type, then melts.",
+    "traits": [
+      "Attack",
+      "Cold",
+      "Consumable",
+      "Magical",
+      "Spellgun",
+      "3rd Party"
+    ],
+    "level": 3,
+    "price": 12,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "spellgun": {
+      "rangeIncrement": 30,
+      "against": "ac",
+      "damageType": "cold",
+      "actionCount": 2,
+      "attackChoice": true
+    },
+    "actions": [
+      {
+        "name": "Activate a Spellgun",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Interact to level the spellgun at one creature, then Strike: make your choice of a spell attack roll or a firearm attack roll against the target's AC. Then the spellgun melts.\n\nCritical Success The target takes double damage and takes a –10-foot status penalty to its Speed.\nSuccess As critical success, except the target takes full damage and takes a –5-foot status penalty."
+      }
+    ],
+    "variants": [
+      {
+        "level": 3,
+        "label": "Lesser",
+        "name": "Howl of Winter (Lesser)",
+        "price": 12,
+        "dice": "2d6",
+        "penalty": "until the end of the target's next turn",
+        "effect": "2d6 cold; the Speed penalty lasts until the end of the target's next turn"
+      },
+      {
+        "level": 7,
+        "label": "Moderate",
+        "name": "Howl of Winter (Moderate)",
+        "price": 70,
+        "dice": "7d6",
+        "penalty": "until the start of your next turn",
+        "effect": "7d6 cold; the Speed penalty lasts until the start of your next turn"
+      },
+      {
+        "level": 11,
+        "label": "Greater",
+        "name": "Howl of Winter (Greater)",
+        "price": 275,
+        "dice": "12d6",
+        "penalty": "for 1 minute",
+        "effect": "12d6 cold; the Speed penalty lasts for 1 minute"
+      },
+      {
+        "level": 15,
+        "label": "Major",
+        "name": "Howl of Winter (Major)",
+        "price": 1250,
+        "dice": "16d6",
+        "penalty": "for 1 minute",
+        "effect": "16d6 cold; the Speed penalty lasts for 1 minute"
+      }
+    ],
+    "id": "howl-of-winter"
+  },
+  {
+    "name": "Verdant Bola",
+    "description": "This spellgun seems to be a slingshot full of large nuts at the ends of tangles of vines, rather than some kind of firearm. Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's Reflex DC. This spellgun has a range increment of 20 feet.",
+    "traits": [
+      "Attack",
+      "Consumable",
+      "Magical",
+      "Plant",
+      "Spellgun",
+      "3rd Party"
+    ],
+    "level": 7,
+    "price": 55,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "spellgun": {
+      "rangeIncrement": 20,
+      "against": "reflex-dc",
+      "actionCount": 2,
+      "attackChoice": true
+    },
+    "actions": [
+      {
+        "name": "Activate a Spellgun",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Interact to level the spellgun at one creature, then Strike: make your choice of a spell attack roll or a firearm attack roll against the target's Reflex DC. Then the spellgun melts.\n\nCritical Success The target is restrained until the end of your next turn, or it Escapes using your spell DC for the DC to Escape.\nSuccess As critical success, except the target is grabbed instead of restrained."
+      }
+    ],
+    "id": "verdant-bola"
   }
 ]
