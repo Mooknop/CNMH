@@ -9,6 +9,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
 
 const mockAppendLog = vi.fn();
+const mockAddSaveRequest = vi.fn();
 
 let mockRollProfile = { mode: 'actor-roll', bonus: 5, defense: 'ac', dc: null };
 
@@ -16,7 +17,7 @@ const enemyOrder = [
   { entryId: 'e-caster', kind: 'pc', charId: 'char-a', name: 'Ashka' },
   {
     entryId: 'e-gob', kind: 'enemy', name: 'Goblin',
-    defenses: { ac: 15, saves: { fortitude: 8 }, weaknesses: [{ type: 'fire', value: 5 }] },
+    defenses: { ac: 15, saves: { fortitude: 8, reflex: 9, will: 7 }, weaknesses: [{ type: 'fire', value: 5 }] },
   },
 ];
 
@@ -44,7 +45,7 @@ vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({
     encounter: { active: true, order: enemyOrder, log: [] },
     appendLog: mockAppendLog,
-    addSaveRequest: vi.fn(),
+    addSaveRequest: mockAddSaveRequest,
     removeSaveRequest: vi.fn(),
   }),
 }));
@@ -174,6 +175,86 @@ describe('UseAbilityModal — whetstone on-hit riders (#1215)', () => {
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       text: 'Limning Gem: Outlined until the end of your next turn.',
     }));
+  });
+
+  it('Chroma Kaleidoscope: a critical Strike pushes a Will save request vs the higher DC with the condition ladder', () => {
+    const ladder = {
+      success: [{ id: 'dazzled', note: '1 round' }],
+      failure: [{ id: 'blinded', note: '1 round, then dazzled 1 round' }],
+      criticalFailure: [{ id: 'stunned', value: 1 }],
+    };
+    const chroma = {
+      ...strikeWith(undefined),
+      whetstoneOnCrit: { save: 'will', dcFrom: 'classOrSpellDC', conditions: ladder, itemName: 'Chroma Kaleidoscope' },
+    };
+    // class DC beats spell DC for this fighter: 10 + key mod (str 16 → +3) + prof.
+    const fighter = {
+      ...character,
+      class: 'fighter',
+      level: 8,
+      fighter: { class_dc: 26 },
+    };
+    render(<UseAbilityModal {...props} character={fighter} ability={chroma} />);
+    enterD20(20); // nat 20 → Critical Hit
+    enterDamage(9);
+    confirm();
+    expect(mockAddSaveRequest).toHaveBeenCalledTimes(1);
+    expect(mockAddSaveRequest).toHaveBeenCalledWith(expect.objectContaining({
+      abilityName: 'Chroma Kaleidoscope',
+      save: 'will',
+      dc: 26,
+      basic: false,
+      targets: [{ entryId: 'e-gob', name: 'Goblin', saveMod: 7 }],
+      conditions: ladder,
+    }));
+  });
+
+  it('Chroma Kaleidoscope: a plain hit pushes no save request', () => {
+    const chroma = {
+      ...strikeWith(undefined),
+      whetstoneOnCrit: { save: 'will', dc: 20, conditions: {}, itemName: 'Chroma Kaleidoscope' },
+    };
+    render(<UseAbilityModal {...props} ability={chroma} />);
+    enterD20(10); // plain hit
+    enterDamage(9);
+    confirm();
+    expect(mockAddSaveRequest).not.toHaveBeenCalled();
+  });
+
+  it('Reactive Flash: a reaction Strike pushes the Reflex save request + resolve-first note', () => {
+    const flash = {
+      ...strikeWith(undefined),
+      actions: 'Reaction',
+      whetstoneReactionSave: {
+        save: 'reflex', dc: 19, itemName: 'Reactive Flash',
+        conditions: { failure: [{ id: 'off-guard', scopedToCaster: true, note: 'vs this attack' }] },
+      },
+    };
+    render(<UseAbilityModal {...props} ability={flash} />);
+    enterD20(10);
+    enterDamage(9);
+    confirm();
+    expect(mockAddSaveRequest).toHaveBeenCalledWith(expect.objectContaining({
+      abilityName: 'Reactive Flash',
+      save: 'reflex',
+      dc: 19,
+      targets: [{ entryId: 'e-gob', name: 'Goblin', saveMod: 9 }],
+    }));
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('resolve the target\'s reflex save (DC 19) BEFORE applying'),
+    }));
+  });
+
+  it('Reactive Flash: a normal (non-reaction) Strike pushes no save request', () => {
+    const flash = {
+      ...strikeWith(undefined),
+      whetstoneReactionSave: { save: 'reflex', dc: 19, itemName: 'Reactive Flash' },
+    };
+    render(<UseAbilityModal {...props} ability={flash} />);
+    enterD20(10);
+    enterDamage(9);
+    confirm();
+    expect(mockAddSaveRequest).not.toHaveBeenCalled();
   });
 
   it('a miss fires nothing', () => {

@@ -277,6 +277,20 @@ const PF2E_EFFECTS = [
     description: '+2 circumstance bonus to AC while your guardian stays adjacent with their tower shield raised.',
     modifiers: [{ stat: 'ac', kind: 'circumstance', amount: 2 }],
   },
+
+  // ── Valorous Coin (whetstone, #1216) ────────────────────────────────
+  // Fired by the GM-side HP watch when the wielder drops below 1/4 HP: temp HP
+  // = level (written directly) + this 1-minute buff. Damage's +1 is a table
+  // note, matching Inspire Courage's posture.
+  {
+    id: 'valorous-coin',
+    name: 'Valorous Coin (determination)',
+    description: '+1 circumstance bonus to Strikes and damage rolls with the affected weapon for 1 minute. When the minute ends, the valorous coin\'s effects end and you are Fatigued until healed to your maximum Hit Points (apply manually).',
+    modifiers: [
+      { stat: 'meleeAttack',  kind: 'circumstance', amount: 1 },
+      { stat: 'rangedAttack', kind: 'circumstance', amount: 1 },
+    ],
+  },
 ];
 
 export default PF2E_EFFECTS;

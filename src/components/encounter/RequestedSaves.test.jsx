@@ -47,7 +47,7 @@ vi.mock('../../contexts/SessionContext', () => ({
 // Key-aware synced-state mock (#272): capture the cnmh_persistent_global
 // setter so tests can apply its functional updater and inspect the map.
 // cnmh_knowledge_global likewise (#1014 — IWR reveal-on-trigger writes).
-const syncedMock = vi.hoisted(() => ({ persistentSetter: null, knowledgeSetter: null }));
+const syncedMock = vi.hoisted(() => ({ persistentSetter: null, knowledgeSetter: null, enemyFxSetter: null }));
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (key === 'cnmh_persistent_global') {
@@ -57,6 +57,10 @@ vi.mock('../../hooks/useSyncedState', () => ({
     if (key === 'cnmh_knowledge_global') {
       syncedMock.knowledgeSetter = syncedMock.knowledgeSetter || vi.fn();
       return [{}, syncedMock.knowledgeSetter];
+    }
+    if (key === 'cnmh_enemyfx_global') {
+      syncedMock.enemyFxSetter = syncedMock.enemyFxSetter || vi.fn();
+      return [{}, syncedMock.enemyFxSetter];
     }
     return [[], vi.fn()];
   },
@@ -69,6 +73,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   syncedMock.persistentSetter = null;
   syncedMock.knowledgeSetter = null;
+  syncedMock.enemyFxSetter = null;
   useEncounter.mockReturnValue({
     encounter: makeEncounter([baseRequest]),
     appendLog: mockAppendLog,
@@ -580,5 +585,85 @@ describe('RequestedSaves', () => {
       expect(mockAppendLog.mock.calls.map(([e]) => e.text))
         .toContain("Troll's weakness to fire is revealed!");
     });
+  });
+});
+
+describe('per-degree target conditions (#1216 — whetstone save riders)', () => {
+  const ladder = {
+    success: [{ id: 'dazzled', note: '1 round' }],
+    failure: [{ id: 'blinded', note: '1 round, then dazzled 1 round' }],
+    criticalFailure: [{ id: 'stunned', value: 1 }, { id: 'blinded', note: '1 round' }],
+  };
+  const conditionRequest = {
+    ...baseRequest,
+    abilityName: 'Chroma Kaleidoscope',
+    save: 'will',
+    conditions: ladder,
+  };
+
+  const enemyFx = (prior = {}) =>
+    (syncedMock.enemyFxSetter?.mock.calls || []).reduce(
+      (acc, [u]) => (typeof u === 'function' ? u(acc) : u), prior);
+
+  test('a failed save applies the failure conditions to the target + logs', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([conditionRequest]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } }); // 15 < 20 → failure
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    const fx = enemyFx();
+    expect(fx['e-goblin'].conditions).toHaveLength(1);
+    expect(fx['e-goblin'].conditions[0]).toMatchObject({ id: 'blinded', source: 'Chroma Kaleidoscope' });
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Goblin is blinded (1 round, then dazzled 1 round) — Chroma Kaleidoscope',
+    }));
+  });
+
+  test('a critical failure applies every listed condition, valued ones with their value', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([conditionRequest]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '1' } }); // nat 1 + fail by 10+
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    const fx = enemyFx();
+    expect(fx['e-goblin'].conditions.map((c) => c.id).sort()).toEqual(['blinded', 'stunned']);
+    expect(fx['e-goblin'].conditions.find((c) => c.id === 'stunned').value).toBe(1);
+  });
+
+  test('a scopedToCaster condition (Reactive Flash off-guard) scopes to the attacker', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([{
+        ...baseRequest,
+        abilityName: 'Reactive Flash',
+        conditions: { failure: [{ id: 'off-guard', scopedToCaster: true, note: 'vs this attack' }] },
+      }]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    const fx = enemyFx();
+    expect(fx['e-goblin'].conditions[0]).toMatchObject({
+      id: 'off-guard', scopedTo: 'char-a', scopedToName: 'Pellias',
+    });
+  });
+
+  test('a critical success applies nothing', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([conditionRequest]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '20' } }); // 25 ≥ 20, nat 20 → crit success
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    expect(syncedMock.enemyFxSetter).not.toHaveBeenCalled();
   });
 });

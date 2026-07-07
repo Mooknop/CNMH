@@ -3,6 +3,7 @@ import { useEffects } from '../../hooks/useEffects';
 import { useSustains } from '../../hooks/useSustains';
 import { useSpellCounters } from '../../hooks/useSpellCounters';
 import { useStance } from '../../hooks/useStance';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import './EffectsPanel.css';
@@ -10,6 +11,7 @@ import { expiryLabel, expiryLabelSecs } from '../../utils/expiry';
 import { toGameSeconds } from '../../utils/gameTime';
 import { IMMUNITY_EFFECT_ID } from '../../utils/treatWounds';
 import { ABILITY_IMMUNITY_EFFECT_ID } from '../../utils/immunity';
+import { withWhetstoneArmedVs } from '../../utils/whetstone';
 
 const FROM_NAME_EFFECT_IDS = [IMMUNITY_EFFECT_ID, ABILITY_IMMUNITY_EFFECT_ID];
 
@@ -23,6 +25,13 @@ const EffectsPanel = ({ charId, themeColor }) => {
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const getEffect = (id) => (effectCatalog || []).find((e) => e.id === id) || null;
   const getCharName = (id) => (characters || []).find((c) => c.id === id)?.name || null;
+  // Armable whetstone bonuses (#1216 — Chivalric Emblem): the player arms the
+  // effect against the enemy that downed/crit an ally (witnessing is a table
+  // call); the strike surface then offers the bonus vs that enemy.
+  const [, setRawEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
+  const [encounterState] = useSyncedState('cnmh_encounter_global', null);
+  const enemyEntries = (encounterState?.order || []).filter((e) => e.kind === 'enemy');
+  const armVs = (entryId, target) => setRawEffects((cur) => withWhetstoneArmedVs(cur, entryId, target));
 
   const stanceCount = stanceActive ? 1 : 0;
   if (effects.length === 0 && sustains.length === 0 && counters.length === 0 && !stanceActive) return null;
@@ -57,9 +66,36 @@ const EffectsPanel = ({ charId, themeColor }) => {
           // Foundry-sourced effects (#455) are owned by Foundry's own duration /
           // aura engine — show them read-only (no × ) with a tag, mirroring how
           // sustained spells render below.
+          const armable = !entry.fromFoundry && entry.whetstone?.effect?.armedBonus;
+          const armedVs = entry.whetstone?.armedVs || null;
           return (
             <li key={entry.id} className="effects-panel-item">
               <span className="effects-panel-name">{displayName}</span>
+              {armable && (armedVs ? (
+                <button
+                  className="effects-panel-adjust"
+                  onClick={() => armVs(entry.id, null)}
+                  title={`Armed vs ${armedVs.name} — click to disarm`}
+                >
+                  vs {armedVs.name} ×
+                </button>
+              ) : (
+                <select
+                  className="effects-panel-arm"
+                  value=""
+                  aria-label={`Arm ${displayName} against an enemy`}
+                  title={entry.whetstone.effect.armedBonus.trigger || 'Arm against the triggering enemy'}
+                  onChange={(e) => {
+                    const target = enemyEntries.find((en) => en.entryId === e.target.value);
+                    if (target) armVs(entry.id, { entryId: target.entryId, name: target.name });
+                  }}
+                >
+                  <option value="">Arm vs…</option>
+                  {enemyEntries.map((en) => (
+                    <option key={en.entryId} value={en.entryId}>{en.name}</option>
+                  ))}
+                </select>
+              ))}
               {expLabel && (
                 <span className="effects-panel-expiry" title={`Expires: ${expLabel}`}>
                   {expLabel}

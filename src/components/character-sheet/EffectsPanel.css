@@ -97,3 +97,21 @@
 .effects-panel-adjust:hover {
   border-color: var(--color-theme, var(--verdant-light));
 }
+
+/* Armable whetstone bonus (#1216 — Chivalric Emblem): the enemy picker shares
+   the adjust-button footprint. */
+.effects-panel-arm {
+  background: var(--surface-inset, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text, inherit);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  max-width: 7.5rem;
+  padding: 2px 4px;
+}
+
+.effects-panel-arm:hover {
+  border-color: var(--color-theme, var(--verdant-light));
+}

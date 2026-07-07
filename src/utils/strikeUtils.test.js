@@ -513,3 +513,37 @@ describe('whetstone strike alterations (#1214)', () => {
     expect(strikes.find((s) => s.name === 'Dagger Strike').whetstone).toBeUndefined();
   });
 });
+
+describe('whetstone proficiency floor (#1216)', () => {
+  const advancedChar = {
+    ...minimalCharacter,
+    level: 11,
+    proficiencies: {
+      weapons: {
+        unarmed: { proficiency: 4 },
+        simple:  { proficiency: 4 },
+        martial: { proficiency: 6 },
+        advanced: { proficiency: 2 },
+      },
+    },
+  };
+  const exoticWeapon = {
+    id: 'i11', uid: 'u11', name: 'Odd Polearm', state: 'held1',
+    strikes: [{ name: 'Polearm Strike', proficiency: 'advanced', type: 'melee', damage: '1d10' }],
+  };
+  const guideEntry = {
+    id: 'fx2',
+    whetstone: {
+      itemId: 'blade-phantoms-guide', itemName: "Blade Phantom's Guide",
+      weaponUid: 'u11', weaponName: 'Odd Polearm', duration: 'minute',
+      effect: { proficiencyFloor: 'highest-weapon' },
+    },
+  };
+
+  test('treats the weapon proficiency as the highest weapon rank while active', () => {
+    const [plain] = resolveItemStrikes(exoticWeapon, advancedChar);
+    const [floored] = resolveItemStrikes(exoticWeapon, advancedChar, null, guideEntry);
+    // advanced (2) floors up to martial (6): +2 per proficiency step.
+    expect(floored.attackMod).toBe(plain.attackMod + 8);
+  });
+});
