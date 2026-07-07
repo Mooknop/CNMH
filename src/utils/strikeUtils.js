@@ -6,6 +6,7 @@ import { calculateSpellStats } from './SpellUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
+import { dragonbreathRunes, dragonbreathDisplayName, dragonbreathStrikeDamageType } from './dragonbreath';
 import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
 
 // ── Thrown Strikes (#1230) ─────────────────────────────────────────────────────
@@ -114,16 +115,27 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
   // block, fold it into attack bonus, scaled damage dice, derived display name,
   // and forwarded property-rune riders. Items with a legacy flat `potency` (and
   // no `runes`) keep the original back-compat path.
-  const resolved = item.runes
+  //
+  // Dragonbreath template (#1210 M4b): a templated weapon is TREATED AS carrying
+  // the tier's fundamental runes, so resolve off the injected runes block
+  // (dragonbreathRunes) — potency/striking/property all flow through the same
+  // resolver. Its display name + Strike damage type come from the template.
+  const dbRunes = dragonbreathRunes(item); // null when not a dragonbreath entry
+  const effectiveRunes = dbRunes || item.runes;
+  const resolved = effectiveRunes
     ? resolveWeapon(
       { name: item.name, price: item.price, material: item.material, traits: item.traits },
-      item.runes,
+      effectiveRunes,
     )
     : null;
   const potencyBonus = resolved ? resolved.potencyBonus : (item.potency || 0);
-  const sourceName = resolved ? resolved.name : item.name;
-  // Rune source breakdown (#608) — where the bonus/dice/riders come from.
-  const runeBreakdown = buildRuneBreakdown(item);
+  const sourceName = dbRunes
+    ? dragonbreathDisplayName(item, item.name)
+    : (resolved ? resolved.name : item.name);
+  const dbDamageType = dragonbreathStrikeDamageType(item);
+  // Rune source breakdown (#608) — where the bonus/dice/riders come from. For a
+  // dragonbreath weapon it reads the injected fundamentals + property runes.
+  const runeBreakdown = buildRuneBreakdown(dbRunes ? { ...item, runes: effectiveRunes } : item);
 
   const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
   return strikesArray.map(weaponStrike => {
@@ -149,8 +161,10 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
       attackMod: attackBonus,
       damage,
       // Damage type (#1018) — feeds the damage panel hint and the typed relay
-      // to Foundry (#1016), where PF2e's applyDamage nets the target's IWR.
-      ...(weaponStrike.damageType ? { damageType: weaponStrike.damageType } : {}),
+      // to Foundry (#1016), where PF2e's applyDamage nets the target's IWR. A
+      // dragonbreath weapon's Strike follows the dragon's breath damage type
+      // (#1210 M4b), overriding the base weapon's native type.
+      ...((dbDamageType || weaponStrike.damageType) ? { damageType: dbDamageType || weaponStrike.damageType } : {}),
       description: weaponStrike.description || item.description || '',
       source: sourceName,
       range: weaponStrike.range,

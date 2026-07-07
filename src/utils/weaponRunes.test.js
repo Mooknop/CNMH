@@ -245,6 +245,15 @@ describe('display helpers (#548 Slice 3c)', () => {
       expect(weaponDisplayName({ name: 'Rope' })).toBe('Rope');
       expect(weaponDisplayName(undefined)).toBeUndefined();
     });
+    test('names a dragonbreath weapon by its template (#1210 M4b)', () => {
+      expect(weaponDisplayName({ name: 'Longsword', dragonbreath: { tier: 'base', dragonType: 'Mirage' } }))
+        .toBe('Mirage Dragonbreath Longsword');
+      expect(weaponDisplayName({
+        name: 'Longsword',
+        dragonbreath: { tier: 'greater', dragonType: 'Mirage' },
+        runes: { property: [{ id: 'vitalizing', name: 'Vitalizing' }] },
+      })).toBe('Vitalizing Greater Mirage Dragonbreath Longsword');
+    });
   });
 
   describe('runeTierSummary', () => {

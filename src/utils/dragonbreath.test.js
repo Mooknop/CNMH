@@ -8,6 +8,7 @@ import {
   dragonKind,
   dragonbreathName,
   dragonbreathDisplayName,
+  dragonbreathStrikeDamageType,
   dragonbreathBreath,
   nextDragonbreathTier,
   dragonbreathUpgradePrice,
@@ -113,6 +114,23 @@ describe('dragonbreath spine', () => {
 
     it('falls back to the base name for a non-template entry', () => {
       expect(dragonbreathDisplayName({ name: 'Longsword' }, 'Longsword')).toBe('Longsword');
+    });
+  });
+
+  describe('dragonbreathStrikeDamageType', () => {
+    it('confers a single-option kind damage type automatically', () => {
+      expect(dragonbreathStrikeDamageType(entry({ tier: 'base', dragonType: 'Red' }))).toBe('fire');
+      expect(dragonbreathStrikeDamageType(entry({ tier: 'major', dragonType: 'umbral' }))).toBe('void');
+    });
+
+    it('leaves a multi-option kind unset unless an explicit choice is recorded', () => {
+      expect(dragonbreathStrikeDamageType(entry({ tier: 'base', dragonType: 'Mirage' }))).toBeNull();
+      expect(dragonbreathStrikeDamageType({ dragonbreath: { tier: 'base', dragonType: 'Mirage', damageType: 'mental' } })).toBe('mental');
+    });
+
+    it('is null for a non-template entry or unauthored kind', () => {
+      expect(dragonbreathStrikeDamageType({ name: 'Longsword' })).toBeNull();
+      expect(dragonbreathStrikeDamageType(entry({ tier: 'base', dragonType: 'Rainbow' }))).toBeNull();
     });
   });
 

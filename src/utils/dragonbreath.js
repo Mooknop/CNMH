@@ -138,6 +138,22 @@ export const dragonbreathDisplayName = (entry, baseName) => {
 };
 
 /**
+ * The Strike damage type a dragonbreath template confers (the weapon's damage
+ * type follows the dragon's breath). An explicit `entry.dragonbreath.damageType`
+ * wins (the acquisition flow records the wielder's pick); else the kind's damage
+ * type when it has exactly one option; else null — a multi-option kind whose
+ * choice hasn't been recorded leaves the weapon's native damage type standing.
+ */
+export const dragonbreathStrikeDamageType = (entry) => {
+  const meta = dragonbreathMeta(entry);
+  if (!meta) return null;
+  const explicit = entry.dragonbreath.damageType ? String(entry.dragonbreath.damageType).toLowerCase() : null;
+  if (explicit) return explicit;
+  const kind = dragonKind(meta.dragonType);
+  return kind && kind.damageTypes.length === 1 ? kind.damageTypes[0] : null;
+};
+
+/**
  * The breath activation profile for a dragonbreath entry: dice + DC derived from
  * the tier's implied fundamentals, the cone size by tier, an always-available
  * 5-ft emanation, once-per-minute frequency, and the damage type(s)/save from the
