@@ -23,6 +23,19 @@ export const ENERGY_RESISTANT_AMOUNT = {
   'major-energy-resistant': 10,
 };
 
+// Runes granting an always-on skill item bonus WHILE THE SHIELD IS WIELDED
+// (held). Code-owned, like ENERGY_RESISTANT_AMOUNT. The bonus rides on the effect
+// DEF (not the entry) so computeEffectBonuses nets it into the skill panel and
+// roll resolution — the same path useWornGear's Slick-style skill runes use.
+//
+// Only "while wielding", whole-skill bonuses belong here: a bonus gated on the
+// shield being RAISED, or scoped to one activity (Glamourous's Feint, Knowing's
+// Recall Knowledge), is NOT always-on, so it can't net into the base skill
+// number — those surface as opt-in roll toggles instead (ROLL_BONUS_RUNES).
+export const SKILL_WIRE_RUNES = {
+  darkness: { stat: 'stealth', amount: 1 }, // +1 item to Stealth while wielding
+};
+
 // Runes that grant an OPT-IN item bonus to a specific roll, surfaced as a toggle
 // at that roll's resolver (not netted into the sheet): the player opts in on the
 // exact check it applies to. Knowing → Recall Knowledge (while wielding);
@@ -72,13 +85,25 @@ export const heldShieldRuneEffects = (inventory = []) => {
   const out = [];
   property.forEach((rune, i) => {
     if (!rune || typeof rune !== 'object') return;
+    const id = `shieldrune-${shield.uid}-${i}`;
     // Energy-Resistant: resistance vs the chosen type while the shield is wielded.
+    // The parametrized value rides on the ENTRY (the modifiersOf/resistanceFor
+    // reader), so the def carries no modifiers.
     const amount = ENERGY_RESISTANT_AMOUNT[rune.id];
     if (amount && rune.choice) {
-      const id = `shieldrune-${shield.uid}-${i}`;
       out.push({
         entry: { id, effectId: id, modifiers: [{ stat: 'resistance', vs: String(rune.choice), amount }] },
         def: { id, name: `${rune.name} (${rune.choice})`, modifiers: [] },
+      });
+      return;
+    }
+    // Skill-wire runes (Darkness → Stealth): a fixed item bonus rides on the DEF
+    // so computeEffectBonuses nets it into the skill sheet + roll resolution.
+    const skill = SKILL_WIRE_RUNES[rune.id];
+    if (skill) {
+      out.push({
+        entry: { id, effectId: id },
+        def: { id, name: rune.name, modifiers: [{ stat: skill.stat, kind: 'item', amount: skill.amount }] },
       });
     }
   });
