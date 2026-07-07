@@ -2,6 +2,93 @@ import React from 'react';
 import Modal from '../shared/Modal';
 import TraitsField from '../shared/TraitsField';
 import { resolveScroll, resolveWand, catalogItemName } from '../../utils/spellItems';
+import {
+  DRAGON_KINDS,
+  DRAGONBREATH_TIER_ORDER,
+  dragonbreathName,
+  dragonbreathBreath,
+} from '../../utils/dragonbreath';
+
+const DRAGON_KIND_KEYS = Object.keys(DRAGON_KINDS).sort();
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// Turn a base-weapon reference entry into a Dragonbreath weapon (#1210 M4f) — the
+// GM-only authoring surface (these are loot / shop stock, never player-bought or
+// crafted). The template rides in the entry's `extra` bag as
+// `dragonbreath: { tier, dragonType }`; the resolver (M4b), rune sockets (M4c),
+// tier upgrade (M4d), and breath (M4e) all key off it once the player owns it.
+// Dragon type is free-form (the pack invites GM-curated kinds) with the authored
+// kinds as suggestions; an unlisted kind still templates but carries no breath
+// damage type until authored.
+const DragonbreathFields = ({ item, tag, baseName, onPatch }) => {
+  const db = (item.extra && item.extra.dragonbreath) || null;
+  const enabled = !!db;
+  const tier = (db && db.tier) || 'base';
+  const dragonType = (db && db.dragonType) || '';
+
+  const setDb = (next) => {
+    const extra = { ...(item.extra || {}) };
+    if (next) extra.dragonbreath = next;
+    else delete extra.dragonbreath;
+    onPatch({ extra });
+  };
+
+  const previewName = enabled ? dragonbreathName({ tier, dragonType, base: baseName }) : baseName;
+  const breath = enabled ? dragonbreathBreath({ dragonbreath: { tier, dragonType } }) : null;
+
+  return (
+    <div className="gm-card" data-testid={`${tag}-dragonbreath`}>
+      <label className="gm-inv-inv">
+        <input
+          type="checkbox"
+          aria-label={`${tag}-dragonbreath-toggle`}
+          checked={enabled}
+          onChange={(e) => setDb(e.target.checked ? { tier: 'base', dragonType: '' } : null)}
+        />{' '}
+        Dragonbreath weapon
+      </label>
+      {enabled && (
+        <>
+          <div className="gm-row">
+            <div className="form-group">
+              <label>tier</label>
+              <select
+                aria-label={`${tag}-dragonbreath-tier`}
+                value={tier}
+                onChange={(e) => setDb({ tier: e.target.value, dragonType })}
+              >
+                {DRAGONBREATH_TIER_ORDER.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>dragon type</label>
+              <input
+                aria-label={`${tag}-dragonbreath-type`}
+                list={`${tag}-db-kinds`}
+                value={dragonType}
+                placeholder="e.g. Red, Mirage"
+                onChange={(e) => setDb({ tier, dragonType: e.target.value })}
+              />
+              <datalist id={`${tag}-db-kinds`}>
+                {DRAGON_KIND_KEYS.map((k) => (
+                  <option key={k} value={cap(k)} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+          <p className="gm-count" data-testid={`${tag}-dragonbreath-preview`}>
+            {previewName}
+            {breath
+              ? ` · ${breath.dice} ${breath.damageTypes.length ? breath.damageTypes.join('/') : '(GM sets type)'} · basic Reflex DC ${breath.dc} · ${breath.coneFt}-ft cone`
+              : ''}
+          </p>
+        </>
+      )}
+    </div>
+  );
+};
 
 // Editor body for a generated scroll/wand entry (#812): the spell is a catalog
 // ref, so there is no item to re-point — the GM picks the spell, an optional
@@ -232,6 +319,12 @@ const ItemEditModal = ({
               </button>
             </div>
           </div>
+
+          {/* Dragonbreath authoring (#1210 M4f) — a weapon can be templated into a
+              Dragonbreath weapon (GM-only: loot / shop stock). */}
+          {sel && sel.strikes && (
+            <DragonbreathFields item={item} tag={tag} baseName={(sel && sel.name) || item.ref} onPatch={onPatch} />
+          )}
 
           {showContents && (
             <div className="gm-card" data-testid={`${tag}-contents`}>
