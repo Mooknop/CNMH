@@ -199,3 +199,24 @@ describe('resistance helpers (#900)', () => {
     expect(recoveryDc(null)).toBe(15);
   });
 });
+
+describe('recovery-DC overrides (#1215 — Toothy Knife)', () => {
+  it('makeInstances carries the recoveryDc override', () => {
+    const [inst] = makeInstances(
+      [{ dice: '1d6', type: 'bleed', recoveryDc: { base: 17, assisted: 12 } }], 'Strike');
+    expect(inst.recoveryDc).toEqual({ base: 17, assisted: 12 });
+  });
+
+  it('recoveryDc prefers the instance override; assistance selects the assisted value', () => {
+    const inst = { recoveryDc: { base: 17, assisted: 12 } };
+    expect(recoveryDc(null, inst)).toBe(17);
+    expect(recoveryDc({ easeFlatCheck: true }, inst)).toBe(12);
+    expect(recoveryDc(null, { dice: '1d6' })).toBe(15);
+  });
+
+  it('formatReminder states the overridden DC', () => {
+    const inst = { dice: '1d6', type: 'bleed', recoveryDc: { base: 19, assisted: 14 } };
+    expect(formatReminder('Goblin', inst)).toContain('DC 19 flat check to end');
+    expect(formatReminder('Goblin', inst, { easeFlatCheck: true })).toContain('DC 14 flat check to end');
+  });
+});

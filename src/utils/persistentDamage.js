@@ -29,6 +29,8 @@ export const makeInstances = (persistent, sourceName) =>
       type: p.type || '',
       sourceName: sourceName || '',
       ...(p.half && { half: true }),
+      // Recovery-DC override ({ base, assisted } — Toothy Knife, #1215).
+      ...(p.recoveryDc && { recoveryDc: p.recoveryDc }),
     }));
 
 export const addPersistent = (map, entryId, instances) => {
@@ -105,19 +107,27 @@ export const persistentVsType = (inst) => `persistent-${inst?.type || ''}`;
 // `immune` (#919) zeroes the tick outright and supersedes the other modifiers;
 // otherwise `weakness` adds to each tick and `amount` (resistance) reduces it
 // (min 0) — the table rolls the dice, so the reminder just states the
-// modifiers; `easeFlatCheck` lowers the recovery DC.
-export const recoveryDc = (res) => (res?.easeFlatCheck ? EASED_RECOVERY_DC : RECOVERY_DC);
+// modifiers; `easeFlatCheck` lowers the recovery DC. An instance carrying a
+// `recoveryDc: { base, assisted }` override (Toothy Knife, #1215) replaces
+// both defaults — assistance/easing selects the assisted value.
+export const recoveryDc = (res, inst = null) => {
+  const dc = inst?.recoveryDc;
+  if (dc && typeof dc.base === 'number') {
+    return res?.easeFlatCheck ? (dc.assisted ?? dc.base) : dc.base;
+  }
+  return res?.easeFlatCheck ? EASED_RECOVERY_DC : RECOVERY_DC;
+};
 
 export const formatReminder = (name, inst, res = null) => {
   if (res?.immune) {
     // The condition persists (the flat check can still end it) but each tick
     // deals nothing while the immunity holds.
-    return `${name}: ${describe(inst)} — immune (no damage) — DC ${recoveryDc(res)} flat check to end`;
+    return `${name}: ${describe(inst)} — immune (no damage) — DC ${recoveryDc(res, inst)} flat check to end`;
   }
   // PF2e order: weakness adds first, then resistance reduces.
   const weakNote = res?.weakness ? `, weakness ${res.weakness} (add)` : '';
   const resNote = res?.amount ? `, resistance ${res.amount} (reduce, min 0)` : '';
-  return `${name}: ${describe(inst)}${weakNote}${resNote} — DC ${recoveryDc(res)} flat check to end`;
+  return `${name}: ${describe(inst)}${weakNote}${resNote} — DC ${recoveryDc(res, inst)} flat check to end`;
 };
 
 export const formatClearance = (name, inst, how) =>

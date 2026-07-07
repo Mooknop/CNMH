@@ -1196,3 +1196,33 @@ describe('counts-as iwrTags (#1214 — whetstone material / ghost touch)', () =>
     expect(plain.iwrTags).toBeUndefined();
   });
 });
+
+describe('traitGatedEntryIds trait lists (#1215)', () => {
+  const entries = [
+    { entryId: 'e1', bestiary: { traits: ['Fungus'] } },
+    { entryId: 'e2', bestiary: { traits: ['Plant'] } },
+    { entryId: 'e3', bestiary: { traits: ['Undead'] } },
+    { entryId: 'e4' }, // no trait data — stays in
+  ];
+
+  test('a single trait matches as before', () => {
+    expect(traitGatedEntryIds('undead', entries)).toEqual(['e3', 'e4']);
+  });
+
+  test('a trait list matches any-of', () => {
+    expect(traitGatedEntryIds(['fungus', 'plant'], entries)).toEqual(['e1', 'e2', 'e4']);
+  });
+});
+
+describe('persistent recoveryDc pass-through (#1215)', () => {
+  test('computeTargetDamage keeps the rider persistent recoveryDc', () => {
+    const riders = [{
+      id: 'r1', label: 'Bleed',
+      persistent: { dice: '1d6', type: 'bleed', recoveryDc: { base: 17, assisted: 12 } },
+    }];
+    const out = computeTargetDamage({ entered: 9, degree: 'success', riders, entryId: 'e1' });
+    expect(out.persistent[0]).toMatchObject({
+      dice: '1d6', type: 'bleed', recoveryDc: { base: 17, assisted: 12 },
+    });
+  });
+});

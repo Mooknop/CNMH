@@ -351,6 +351,34 @@ export function newlyRevealedFromDamage(record, fired) {
   return out;
 }
 
+// Analysis Eye (#1215): learn ONE weakness or resistance — the highest
+// weakness when the creature has any, else the highest resistance. Returns
+// { record, revealed } where `revealed` is { kind, type } or null (nothing to
+// learn); `fresh` is false when it was already table knowledge.
+export function revealOneIwr(record, defenses) {
+  const base = record || defaultRecord();
+  const hw = highestWeakness(defenses);
+  if (hw) {
+    const fresh = !base.iwr?.weaknesses && !base.weaknessesRevealed?.[hw.type];
+    return {
+      record: { ...base, weaknessesRevealed: { ...(base.weaknessesRevealed || {}), [hw.type]: true } },
+      revealed: { kind: 'weakness', type: hw.type },
+      fresh,
+    };
+  }
+  const rs = defenses?.resistances;
+  const hr = rs && rs.length ? rs.reduce((best, r) => (r.value > best.value ? r : best)) : null;
+  if (hr) {
+    const fresh = !base.iwr?.resistances && !base.resistancesRevealed?.[hr.type];
+    return {
+      record: { ...base, resistancesRevealed: { ...(base.resistancesRevealed || {}), [hr.type]: true } },
+      revealed: { kind: 'resistance', type: hr.type },
+      fresh,
+    };
+  }
+  return { record: base, revealed: null, fresh: false };
+}
+
 // Applies the knowledge reveals from Exploit Vulnerability.
 // success      → adds the highest weakness type to weaknessesRevealed (partial)
 // critSuccess  → reveals all three IWR categories

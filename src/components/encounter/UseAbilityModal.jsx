@@ -47,6 +47,8 @@ import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
+import { rkKeyFor, revealOneIwr } from '../../utils/recallKnowledge';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { collectDamageHits, buildDamageApply } from '../../utils/damageRelay';
 import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
 import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
@@ -114,6 +116,9 @@ const UseAbilityModal = ({
     useFrequency(character?.id || 'nobody');
   const { exploitFor } = useExploitVulnerability();
   const { revealFiredIwr } = useIwrReveal();
+  // Whetstone on-hit reveals (#1215 — Analysis Eye) write the creature's RK
+  // record directly (one weakness/resistance, not damage-fired).
+  const { recordFor, mergeRecord } = useRecallKnowledge();
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -1050,6 +1055,71 @@ const UseAbilityModal = ({
       ...rayGroups.flatMap((g) => g?.results || []),
       ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
     ]);
+
+    // Whetstone on-hit riders (#1215) — the bound whetstone's confirm-time
+    // automations fire off successful results: Analysis Eye learns one
+    // weakness/resistance, Leeching Fangs heals half the damage dealt,
+    // Limning Gem lights the target up (+ a reminder note).
+    const wsOnHit = ability.whetstoneOnHit;
+    if (wsOnHit) {
+      const hitResults = [
+        ...rayGroups.flatMap((g) => g?.results || []),
+        ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
+      ].filter((r) => r?.degree === 'success' || r?.degree === 'criticalSuccess');
+      if (hitResults.length) {
+        if (wsOnHit.healHalf) {
+          const dealt = hitResults.reduce((sum, r) => sum + (r.damage?.final || 0), 0);
+          const heal = Math.floor(dealt / 2);
+          if (heal > 0) {
+            applyHealing({
+              target: { id: character.id, name: character.name, maxHp: character.maxHp },
+              amount: heal,
+              getState,
+              sendUpdate,
+              appendLog,
+              logText: `${wsOnHit.itemName}: ${character.name} heals ${heal} HP (half of ${dealt} dealt — living targets only)`,
+            });
+          }
+        }
+        if (wsOnHit.revealIwr) {
+          hitResults.forEach((r) => {
+            const entry = (order || []).find((e) => e.entryId === r.entryId);
+            if (!entry || entry.kind !== 'enemy') return;
+            const key = rkKeyFor(entry);
+            if (!key) return;
+            const { revealed, fresh } = revealOneIwr(recordFor(key), entry.defenses);
+            if (!revealed) {
+              appendLog({
+                type: 'system',
+                text: `${wsOnHit.itemName}: ${entry.name} has no weakness or resistance to learn.`,
+              });
+              return;
+            }
+            mergeRecord(key, (prev) => revealOneIwr(prev, entry.defenses).record);
+            if (fresh) {
+              appendLog({
+                type: 'system',
+                text: `${wsOnHit.itemName}: ${entry.name}'s ${revealed.kind} to ${revealed.type} is revealed!`,
+              });
+            }
+          });
+        }
+        if (wsOnHit.condition) {
+          hitResults.forEach((r) => {
+            const entry = (order || []).find((e) => e.entryId === r.entryId);
+            if (!entry || entry.kind !== 'enemy') return;
+            applyEnemyCondition(r.entryId, { id: wsOnHit.condition, source: wsOnHit.itemName });
+            appendLog({
+              type: 'system',
+              text: `${wsOnHit.itemName}: ${entry.name} is ${wsOnHit.condition}`,
+            });
+          });
+        }
+        if (wsOnHit.note) {
+          appendLog({ type: 'action', charId: character.id, text: `${wsOnHit.itemName}: ${wsOnHit.note}` });
+        }
+      }
+    }
 
     // Push a save request to the GM for target-save abilities. When a damage
     // profile exists (#270), the caster's entered total and rider snapshot

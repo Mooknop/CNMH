@@ -166,17 +166,21 @@ const applyIwr = (instances, defenses, dedupeTypes = null, iwrTags = null) => {
   return { instances: out, fired };
 };
 
-// Entry ids whose creature traits include `trait` (case-insensitive). Targets
-// with NO trait data — manually-added enemies that never came from Foundry/the
-// bestiary — can't be disproven, so they stay in (GM keeps the call). Drives
-// `appliesVsTrait` riders such as Vitalizing's "vs undead" (#548).
+// Entry ids whose creature traits include `trait` (case-insensitive) — a
+// string, or a list matched any-of (Slayer's Stone's "fungus and plant" pick,
+// #1215). Targets with NO trait data — manually-added enemies that never came
+// from Foundry/the bestiary — can't be disproven, so they stay in (GM keeps
+// the call). Drives `appliesVsTrait` riders such as Vitalizing's "vs undead"
+// (#548).
 export const traitGatedEntryIds = (trait, enemyEntries) => {
-  const want = String(trait || '').toLowerCase();
+  const want = new Set(
+    (Array.isArray(trait) ? trait : [trait]).map((t) => String(t || '').toLowerCase())
+  );
   return (enemyEntries || [])
     .filter((e) => {
       const traits = e?.bestiary?.traits;
       if (!Array.isArray(traits) || !traits.length) return true;
-      return traits.some((t) => String(t).toLowerCase() === want);
+      return traits.some((t) => want.has(String(t).toLowerCase()));
     })
     .map((e) => e.entryId);
 };
@@ -305,6 +309,8 @@ export const computeTargetDamage = ({
         dice: doubled ? doubleDice(r.persistent.dice) : r.persistent.dice,
         type: r.persistent.type || '',
         label: r.label,
+        // Recovery-DC override (#1215 — Toothy Knife) rides to the tracker.
+        ...(r.persistent.recoveryDc ? { recoveryDc: r.persistent.recoveryDc } : {}),
       };
     });
 
