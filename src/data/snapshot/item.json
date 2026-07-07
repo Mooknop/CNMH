@@ -11489,5 +11489,219 @@
       }
     ],
     "id": "verdant-bola"
+  },
+  {
+    "name": "Torrent Spellgun",
+    "description": "This spellgun fires a jet of pressurized water at a foe. Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's AC. This spellgun has a range increment of 30 feet. The spellgun blasts a torrent of water that deals bludgeoning damage based on the spellgun's type, then disintegrates into sand.",
+    "traits": [
+      "Attack",
+      "Consumable",
+      "Magical",
+      "Spellgun",
+      "Water"
+    ],
+    "level": 3,
+    "price": 12,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "spellgun": {
+      "rangeIncrement": 30,
+      "against": "ac",
+      "damageType": "bludgeoning",
+      "actionCount": 2,
+      "attackChoice": true
+    },
+    "actions": [
+      {
+        "name": "Activate a Spellgun",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Interact to level the spellgun at one creature, then Strike: make your choice of a spell attack roll or a firearm attack roll against the target's AC. Then the spellgun disintegrates into sand.\n\nCritical Success The target takes double damage and is knocked back 10 feet.\nSuccess The target takes full damage and is knocked back 5 feet."
+      }
+    ],
+    "variants": [
+      {
+        "level": 3,
+        "label": "Lesser",
+        "name": "Torrent Spellgun (Lesser)",
+        "price": 12,
+        "dice": "2d6",
+        "rider": "knocked back 5 feet (10 on a crit)",
+        "effect": "2d6 bludgeoning; target is knocked back 5 feet (10 on a crit)"
+      },
+      {
+        "level": 7,
+        "label": "Moderate",
+        "name": "Torrent Spellgun (Moderate)",
+        "price": 70,
+        "dice": "7d6",
+        "rider": "knocked back 5 feet (10 on a crit)",
+        "effect": "7d6 bludgeoning; target is knocked back 5 feet (10 on a crit)"
+      },
+      {
+        "level": 11,
+        "label": "Greater",
+        "name": "Torrent Spellgun (Greater)",
+        "price": 275,
+        "dice": "12d6",
+        "rider": "knocked back 5 feet (10 on a crit)",
+        "effect": "12d6 bludgeoning; target is knocked back 5 feet (10 on a crit)"
+      },
+      {
+        "level": 15,
+        "label": "Major",
+        "name": "Torrent Spellgun (Major)",
+        "price": 1250,
+        "dice": "16d6",
+        "rider": "knocked back 5 feet (10 on a crit)",
+        "effect": "16d6 bludgeoning; target is knocked back 5 feet (10 on a crit)"
+      }
+    ],
+    "id": "torrent-spellgun"
+  },
+  {
+    "name": "Sparking Spellgun",
+    "description": "This spellgun shoots a searing bolt of flame that clings and burns. Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's AC. This spellgun has a range increment of 30 feet. The spellgun deals fire damage based on the spellgun's type plus persistent fire damage, then crumbles to ash.",
+    "traits": [
+      "Attack",
+      "Consumable",
+      "Fire",
+      "Magical",
+      "Spellgun"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "spellgun": {
+      "rangeIncrement": 30,
+      "against": "ac",
+      "damageType": "fire",
+      "actionCount": 2,
+      "attackChoice": true
+    },
+    "actions": [
+      {
+        "name": "Activate a Spellgun",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Interact to level the spellgun at one creature, then Strike: make your choice of a spell attack roll or a firearm attack roll against the target's AC. Then the spellgun crumbles to ash.\n\nCritical Success The target takes double damage, takes double persistent damage, is blinded for 1 round, and is dazzled while the persistent damage lasts.\nSuccess The target takes full damage, full persistent damage, and is dazzled while the persistent damage lasts."
+      }
+    ],
+    "variants": [
+      {
+        "level": 5,
+        "label": "Lesser",
+        "name": "Sparking Spellgun (Lesser)",
+        "price": 30,
+        "dice": "4d6",
+        "persistent": "1d4",
+        "effect": "4d6 fire, 1d4 persistent fire, dazzled while the persistent damage lasts"
+      },
+      {
+        "level": 9,
+        "label": "Moderate",
+        "name": "Sparking Spellgun (Moderate)",
+        "price": 150,
+        "dice": "7d6",
+        "persistent": "3d4",
+        "effect": "7d6 fire, 3d4 persistent fire, dazzled while the persistent damage lasts"
+      },
+      {
+        "level": 13,
+        "label": "Greater",
+        "name": "Sparking Spellgun (Greater)",
+        "price": 600,
+        "dice": "10d6",
+        "persistent": "5d4",
+        "effect": "10d6 fire, 5d4 persistent fire, dazzled while the persistent damage lasts"
+      }
+    ],
+    "id": "sparking-spellgun"
+  },
+  {
+    "name": "Moonlit Spellgun",
+    "description": "This spellgun emits a silvery ray of pure moonlight that deals fire damage depending on its type. Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's AC. This spellgun has a range increment of 30 feet. The spellgun deals more damage at night than at other times.",
+    "traits": [
+      "Attack",
+      "Consumable",
+      "Fire",
+      "Light",
+      "Magical",
+      "Spellgun"
+    ],
+    "level": 2,
+    "price": 7,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "spellgun": {
+      "rangeIncrement": 30,
+      "against": "ac",
+      "damageType": "fire",
+      "actionCount": 2,
+      "attackChoice": true
+    },
+    "actions": [
+      {
+        "name": "Activate a Spellgun",
+        "actionCount": 2,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Interact to level the spellgun at one creature, then Strike: make your choice of a spell attack roll or a firearm attack roll against the target's AC. It deals more damage at night than at other times. Then the spellgun fades.\n\nCritical Success The target takes double damage and is dazzled until the start of your next turn. If it has a weakness to silver or a resistance that can be bypassed by silver, it's also enfeebled 1 for 1 minute.\nSuccess The target takes full damage and is dazzled until the start of your next turn."
+      }
+    ],
+    "variants": [
+      {
+        "level": 2,
+        "label": "Minor",
+        "name": "Moonlit Spellgun (Minor)",
+        "price": 7,
+        "dice": "1d6",
+        "diceNight": "1d8",
+        "effect": "1d8 fire at night, 1d6 at other times; dazzled until the start of your next turn"
+      },
+      {
+        "level": 5,
+        "label": "Lesser",
+        "name": "Moonlit Spellgun (Lesser)",
+        "price": 30,
+        "dice": "3d6",
+        "diceNight": "3d8",
+        "effect": "3d8 fire at night, 3d6 at other times; dazzled until the start of your next turn"
+      },
+      {
+        "level": 9,
+        "label": "Moderate",
+        "name": "Moonlit Spellgun (Moderate)",
+        "price": 150,
+        "dice": "7d6",
+        "diceNight": "7d8",
+        "effect": "7d8 fire at night, 7d6 at other times; dazzled until the start of your next turn"
+      },
+      {
+        "level": 13,
+        "label": "Greater",
+        "name": "Moonlit Spellgun (Greater)",
+        "price": 600,
+        "dice": "12d6",
+        "diceNight": "12d8",
+        "effect": "12d8 fire at night, 12d6 at other times; dazzled until the start of your next turn"
+      },
+      {
+        "level": 17,
+        "label": "Major",
+        "name": "Moonlit Spellgun (Major)",
+        "price": 3000,
+        "dice": "18d6",
+        "diceNight": "18d8",
+        "effect": "18d8 fire at night, 18d6 at other times; dazzled until the start of your next turn"
+      }
+    ],
+    "id": "moonlit-spellgun"
   }
 ]

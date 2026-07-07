@@ -5,10 +5,15 @@
 // against the target's AC (Howl) or Reflex DC (Verdant Bola), then the device
 // melts. This module owns the shared derivations the attack/consume modal reads:
 //   - the two attack-roll options (spell vs firearm) and their bonuses,
-//   - the per-variant damage dice + Speed-penalty duration,
-//   - the degree-of-success outcome (damage multiplier, Speed penalty,
-//     grabbed/restrained condition),
+//   - the per-variant damage dice,
+//   - the universal degree-of-success outcome (hit/crit + damage multiplier, or
+//     the grabbed/restrained control result vs Reflex DC),
 //   - the range increment.
+//
+// On-HIT riders vary per spellgun (Howl's Speed penalty, Torrent's knockback,
+// Sparking's persistent + blinded, Moonlit's dazzled), so they live in the item
+// data (variant `rider`/`persistent` + the activation degree text), NOT in the
+// generic outcome resolver here.
 //
 // Data shape (item.json): a `spellgun` block beside the item, plus `variants`
 // for graded spellguns (Howl lesser/moderate/greater/major):
@@ -62,8 +67,9 @@ export const spellgunVariants = (item) =>
  *
  * - spell:   the character's spell attack modifier (SpellUtils). Non-casters
  *            score low here and simply pick the firearm option instead.
- * - firearm: Dex + the best weapon proficiency the character has (martial,
- *            else simple) — how a firearm attacks for most PCs.
+ * - firearm: Dex + the character's SIMPLE-firearms proficiency (RAW: "a ranged
+ *            attack roll using your proficiency with simple firearms"). A
+ *            spellgun is not a firearm, so no crit-spec/damage bonuses apply.
  *
  * @param {Object} character
  * @returns {Array<{ id:'spell'|'firearm', label:string, bonus:number }>}
@@ -73,9 +79,7 @@ export const spellgunAttackOptions = (character) => {
   const { spellAttackMod } = calculateSpellStats(character);
 
   const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
-  const weapons = character.proficiencies?.weapons || {};
-  const firearmProf =
-    weapons.martial?.proficiency || weapons.simple?.proficiency || 0;
+  const firearmProf = character.proficiencies?.weapons?.simple?.proficiency || 0;
   const firearmBonus = getAttackBonusValue(dexMod, firearmProf, character.level || 0);
 
   return [
@@ -85,11 +89,14 @@ export const spellgunAttackOptions = (character) => {
 };
 
 /**
- * Resolve a spellgun's degree-of-success outcome.
+ * Resolve a spellgun's universal degree-of-success outcome. Item-specific on-hit
+ * riders (Speed penalty, knockback, dazzled, persistent, …) are applied
+ * separately from the item data — this returns only what's true for every
+ * spellgun of that defence.
  *
- * Damage spellguns (Howl, against AC):
- *   critical success → double damage, −10 ft Speed
- *   success          → full damage,   −5 ft Speed
+ * Damage spellguns (against AC):
+ *   critical success → double damage (also doubles persistent, applied by caller)
+ *   success          → full damage
  *   failure/crit fail → miss
  * Control spellguns (Verdant Bola, against Reflex DC):
  *   critical success → restrained
@@ -98,31 +105,15 @@ export const spellgunAttackOptions = (character) => {
  *
  * @param {string} against  - 'ac' | 'reflex-dc'
  * @param {string} degree   - 'criticalSuccess'|'success'|'failure'|'criticalFailure'
- * @returns {{ hit:boolean, crit:boolean, damageMultiplier:number,
- *             speedPenalty:number, condition:string|null }}
+ * @returns {{ hit:boolean, crit:boolean, damageMultiplier:number, condition:string|null }}
  */
 export const spellgunOutcome = (against, degree) => {
   const crit = degree === 'criticalSuccess';
   const hit = crit || degree === 'success';
-  const control = against === 'reflex-dc';
 
-  if (!hit) {
-    return { hit: false, crit: false, damageMultiplier: 0, speedPenalty: 0, condition: null };
+  if (!hit) return { hit: false, crit: false, damageMultiplier: 0, condition: null };
+  if (against === 'reflex-dc') {
+    return { hit: true, crit, damageMultiplier: 0, condition: crit ? 'restrained' : 'grabbed' };
   }
-  if (control) {
-    return {
-      hit: true,
-      crit,
-      damageMultiplier: 0,
-      speedPenalty: 0,
-      condition: crit ? 'restrained' : 'grabbed',
-    };
-  }
-  return {
-    hit: true,
-    crit,
-    damageMultiplier: crit ? 2 : 1,
-    speedPenalty: crit ? 10 : 5,
-    condition: null,
-  };
+  return { hit: true, crit, damageMultiplier: crit ? 2 : 1, condition: null };
 };
