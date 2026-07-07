@@ -532,4 +532,31 @@ describe('useCharacter', () => {
       expect(result.current.staffSpells.every((s) => s.name)).toBe(true);
     });
   });
+
+  // Gear-granted senses (#1210 M4h): a worn Bloodstained Bandana appends its
+  // bloodsense to the character's senses line, at the grade its variant sets.
+  describe('gear-granted senses (#1210 M4h)', () => {
+    const base = { id: 's', name: 'Seer', level: 3, senses: 'low-light vision' };
+
+    it('appends a worn bandana\'s bloodsense to the authored senses line, by grade', () => {
+      const resolved = resolveCharacterItems(
+        { ...base, inventory: [{ uid: 'bb', ref: 'bloodstained-bandana', level: 7 }] }, items, spells
+      );
+      const { result } = renderHook(() => useCharacter(resolved));
+      expect(result.current.senses).toBe('low-light vision, imprecise bloodsense 30 feet');
+    });
+
+    it('shows only the gear sense (base grade = vague) when the character has none of their own', () => {
+      const resolved = resolveCharacterItems(
+        { ...base, senses: undefined, inventory: [{ uid: 'bb', ref: 'bloodstained-bandana' }] }, items, spells
+      );
+      const { result } = renderHook(() => useCharacter(resolved));
+      expect(result.current.senses).toBe('vague bloodsense 30 feet');
+    });
+
+    it('is null when the character has no senses of their own and no sense gear', () => {
+      const { result } = renderHook(() => useCharacter({ ...base, senses: undefined, inventory: [] }));
+      expect(result.current.senses).toBeNull();
+    });
+  });
 });

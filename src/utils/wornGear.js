@@ -78,6 +78,48 @@ const highestWornSpecial = (inventory, isInvested, stat, vsType) => {
 };
 
 /**
+ * The senses line a `sense` block reads as (#1210 M4h — the Bloodstained
+ * Bandana's bloodsense). PF2e phrasing: `<precision> <name> <range> feet`
+ * (e.g. "imprecise bloodsense 30 feet"); the range is dropped when unset, the
+ * precision when unset. Empty string for a block with no `name`.
+ *
+ * @param {Object} s - { name, precision?, rangeFt? }
+ * @returns {string}
+ */
+export const senseLabel = (s) => {
+  if (!s || typeof s !== 'object' || !s.name) return '';
+  const parts = [];
+  if (s.precision) parts.push(String(s.precision));
+  parts.push(String(s.name));
+  if (s.rangeFt != null && s.rangeFt !== '') parts.push(`${s.rangeFt} feet`);
+  return parts.join(' ');
+};
+
+/**
+ * Senses granted by worn gear (#1210 M4h). Any contributing worn item (worn,
+ * and invested where investable — same gate as the modifier readers) that
+ * carries a `sense: { name, precision?, rangeFt? }` block adds its senses line.
+ * Deduped case-insensitively so two copies of the same sense collapse; returned
+ * in inventory order.
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @returns {string[]} the granted senses lines, e.g. ['imprecise bloodsense 30 feet']
+ */
+export const wornSenses = (inventory, isInvested) => {
+  const out = [];
+  const seen = new Set();
+  for (const e of Array.isArray(inventory) ? inventory : []) {
+    if (!e || !e.sense || typeof e.sense !== 'object') continue;
+    if (!contributes(e, isInvested)) continue;
+    const label = senseLabel(e.sense);
+    const key = label.toLowerCase();
+    if (label && !seen.has(key)) { seen.add(key); out.push(label); }
+  }
+  return out;
+};
+
+/**
  * Extra daily spell slots granted by worn gear (#1093 — Ring of Wizardry).
  * An item authors `bonusSlots: { tradition?, ranks: { <rank>: n } }`; it
  * contributes while worn (and invested, when investable), and only to a

@@ -1662,6 +1662,60 @@
     "id": "bloodseeker-beak"
   },
   {
+    "name": "Bloodstained Bandana",
+    "description": "This dark bandana is so stained and crusted with blood that it is no longer possible to tell what color or pattern it may have once had. Wearing this bandana heightens your sense of smell, but only for the scent of blood. You gain vague bloodsense with a range of 30 feet. Bloodsense allows you to detect living creatures that are taking persistent bleed damage or who have the dying or wounded condition. You also detect free-standing puddles or droplets of recently spilled blood. At the GM's discretion, living creatures without blood can't be detected with your bloodsense.",
+    "traits": [
+      "Magical",
+      "3rd Party"
+    ],
+    "level": 2,
+    "price": 25,
+    "weight": 0.1,
+    "usage": "worn mask",
+    "sense": {
+      "name": "bloodsense",
+      "precision": "vague",
+      "rangeFt": 30
+    },
+    "variants": [
+      {
+        "level": 2,
+        "label": "Vague",
+        "name": "Bloodstained Bandana",
+        "price": 25
+      },
+      {
+        "level": 7,
+        "label": "Moderate",
+        "name": "Bloodstained Bandana (Moderate)",
+        "price": 300,
+        "description": "This dark bandana is so stained and crusted with blood that it is no longer possible to tell what color or pattern it may have once had. Wearing this bandana heightens your sense of smell, but only for the scent of blood. You gain imprecise bloodsense with a range of 30 feet. Bloodsense allows you to detect living creatures that are taking persistent bleed damage or who have the dying or wounded condition. You also detect free-standing puddles or droplets of recently spilled blood. At the GM's discretion, living creatures without blood can't be detected with your bloodsense.\n\nYou reduce the flat check to target a creature taking persistent bleed damage. The flat check from concealed is reduced to 4, and for hidden to 8.",
+        "overrides": {
+          "sense": {
+            "name": "bloodsense",
+            "precision": "imprecise",
+            "rangeFt": 30
+          }
+        }
+      },
+      {
+        "level": 14,
+        "label": "Greater",
+        "name": "Bloodstained Bandana (Greater)",
+        "price": 4300,
+        "description": "This dark bandana is so stained and crusted with blood that it is no longer possible to tell what color or pattern it may have once had. Wearing this bandana heightens your sense of smell, but only for the scent of blood. You gain precise bloodsense with a range of 30 feet. Bloodsense allows you to detect living creatures that are taking persistent bleed damage or who have the dying or wounded condition. You also detect free-standing puddles or droplets of recently spilled blood. At the GM's discretion, living creatures without blood can't be detected with your bloodsense.\n\nYou ignore the flat check to target a concealed creature taking persistent bleed damage, and reduce the flat check to target a hidden creature taking persistent bleed damage to 5.",
+        "overrides": {
+          "sense": {
+            "name": "bloodsense",
+            "precision": "precise",
+            "rangeFt": 30
+          }
+        }
+      }
+    ],
+    "id": "bloodstained-bandana"
+  },
+  {
     "name": "Blue Salt Crystal",
     "description": "This crystal of salt is as blue as the deep ocean. Adding this catalyst to a casting of drown transforms the summoned water into deadly brine, causing the target to take persistent acid damage for the duration of the spell equal to the rank of the spell.",
     "traits": [

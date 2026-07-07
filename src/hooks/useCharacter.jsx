@@ -14,7 +14,7 @@ import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
 import { itemUidOf } from '../utils/affix';
 import { applyItemModes } from '../utils/itemModes';
-import { wornBonusSlots } from '../utils/wornGear';
+import { wornBonusSlots, wornSenses } from '../utils/wornGear';
 import { listStaves } from '../utils/staffPrep';
 import { itemCatalogMap, spellCatalogMap, runeCatalogMap, resolveInventory } from '../utils/contentUtils';
 
@@ -141,7 +141,6 @@ export const useCharacter = (character) => {
     const keyAbility   = character.keyAbility;
     const size         = character.size;
     const speed        = character.speed;
-    const senses       = character.senses;
     const maxHp        = character.maxHp || 0;
     const ac           = character.ac || 10;
 
@@ -183,6 +182,16 @@ export const useCharacter = (character) => {
     // so a claimed/purchased item carrying `bonus: [skill, n]` — and a mode
     // that swaps the bonus — actually grants it.
     const charSkills = { ...character, inventory: effectiveInventory };
+
+    // Senses (#1210 M4h): the authored senses string plus any granted by worn
+    // gear carrying a `sense` block (the Bloodstained Bandana's bloodsense),
+    // gated worn-and-invested like every other worn-gear reader. Falsy when
+    // there are none, so StatsBlock hides the line.
+    const gearSenses = wornSenses(
+      effectiveInventory,
+      (itemUid) => !!(investedMap || {})[itemUid],
+    );
+    const senses = [character.senses, ...gearSenses].filter(Boolean).join(', ') || null;
 
     // ── Skills ──────────────────────────────────────────────────────────────
     const skillModifiers = Object.fromEntries(
