@@ -11,6 +11,8 @@ import {
   spellItemOfferings,
   eligibleSpellItems,
   spellOfferingSummary,
+  offeredSpellIds,
+  eligibleCatalysts,
   isRuneServiceWare,
   runeRarity,
   runeOfferings,
@@ -384,6 +386,62 @@ describe('spellItemOfferings', () => {
   it('is empty for a missing shop or a shop with no offerings', () => {
     expect(spellItemOfferings('nope', {})).toEqual([]);
     expect(spellItemOfferings('s', { s: { wares: [{ ref: 'healing-potion' }] } })).toEqual([]);
+  });
+});
+
+// ── Auto-stocked catalysts (Magic+ arsenal M3c, #1209) ──────────────────────
+describe('offeredSpellIds (#1209 M3c)', () => {
+  const shop = { s: { wares: [{ spellItem: 'scroll', maxLevel: 3 }] } };
+
+  it("collects the spell ids a shop's scroll/wand offerings cover", () => {
+    const ids = offeredSpellIds('s', shop, spellCatalog, catalogMap);
+    expect(ids.has('heal')).toBe(true);
+    expect(ids.has('sleep')).toBe(true);
+    expect(ids.has('wish')).toBe(false); // rank 10, above the maxLevel-3 envelope
+    expect(ids.has('web')).toBe(false); // uncommon, not offered by a common scroll
+  });
+
+  it('is empty for a shop with no spell-item offerings', () => {
+    const plain = { x: { wares: [{ ref: 'antidote' }] } };
+    expect(offeredSpellIds('x', plain, spellCatalog, catalogMap).size).toBe(0);
+  });
+});
+
+describe('eligibleCatalysts (#1209 M3c)', () => {
+  const catalysts = [
+    { id: 'healers-gel', name: "Healer's Gel", price: 25, traits: ['Catalyst', 'Consumable', 'Magical'], catalyst: { catalystFor: 'heal', effect: 'temp HP' } },
+    { id: 'wish-cat', name: 'Wish Catalyst', price: 9, traits: ['Catalyst'], catalyst: { catalystFor: 'wish', effect: 'x' } },
+    { id: 'secret-gel', name: 'Secret Gel', price: 5, noShop: true, catalyst: { catalystFor: 'heal', effect: 'x' } },
+    { id: 'rope', name: 'Rope', traits: ['Adventuring Gear'] },
+  ];
+  const shop = { s: { wares: [{ spellItem: 'scroll', maxLevel: 3 }] } };
+
+  it('auto-stocks catalysts whose spell is in the shop envelope, as resolved wares', () => {
+    const out = eligibleCatalysts('s', shop, spellCatalog, catalysts, catalogMap);
+    expect(out.map((w) => w.id)).toEqual(['healers-gel']);
+    expect(out[0].wareKey).toBe('catalyst:healers-gel');
+    expect(out[0].price).toBe(25);
+    expect(out[0].baseName).toBe("Healer's Gel");
+  });
+
+  it('excludes a catalyst whose spell the shop does not offer', () => {
+    const out = eligibleCatalysts('s', shop, spellCatalog, catalysts, catalogMap);
+    expect(out.map((w) => w.id)).not.toContain('wish-cat');
+  });
+
+  it('skips GM-excluded (noShop) catalysts', () => {
+    const out = eligibleCatalysts('s', shop, spellCatalog, catalysts, catalogMap);
+    expect(out.map((w) => w.id)).not.toContain('secret-gel');
+  });
+
+  it('is gated on spellcasting — an explicit offersSpellcasting:false stocks none', () => {
+    const off = { s: { wares: [{ spellItem: 'scroll', maxLevel: 3 }], offersSpellcasting: false } };
+    expect(eligibleCatalysts('s', off, spellCatalog, catalysts, catalogMap)).toEqual([]);
+  });
+
+  it('is empty when the shop offers no spells at all', () => {
+    const plain = { s: { wares: [{ ref: 'antidote' }] } };
+    expect(eligibleCatalysts('s', plain, spellCatalog, catalysts, catalogMap)).toEqual([]);
   });
 });
 

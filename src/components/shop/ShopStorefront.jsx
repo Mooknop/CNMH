@@ -13,6 +13,7 @@ import {
   eligibleRunes,
   eligibleHostItems,
   eligibleTalismans,
+  eligibleCatalysts,
 } from '../../utils/shopUtils';
 import { resolveSaleWares } from '../../utils/saleShelf';
 import { resolveRunestone } from '../../utils/runestone';
@@ -781,9 +782,19 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     () => (selected ? resolveSaleWares(selected.id, waresStore, catalogMap, runeMap, spells) : []),
     [selected, waresStore, catalogMap, runeMap, spells]
   );
+  // Catalysts auto-carried by a Spellcasting-Services shop (#1209 M3c): every
+  // catalyst whose augmented spell is inside the shop's scroll/wand envelope,
+  // expanded from the catalog like the rune-service host/talisman wares — nothing
+  // written to stored wares. Hand-stocked catalysts win (deduped by item id).
+  const catalystWares = useMemo(() => {
+    if (!selected) return [];
+    const stocked = new Set(resolved.map((w) => String(w.id)));
+    return eligibleCatalysts(selected.id, waresStore, spells, items, catalogMap)
+      .filter((w) => !stocked.has(String(w.id)));
+  }, [selected, waresStore, spells, items, catalogMap, resolved]);
   const wareGroups = useMemo(
-    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares, ...talismanWares]),
-    [saleWares, resolved, isRuneWare, hostWares, talismanWares]
+    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares, ...talismanWares, ...catalystWares]),
+    [saleWares, resolved, isRuneWare, hostWares, talismanWares, catalystWares]
   );
   // Spell docs by id — for the scroll-pack preview card (names + rank, #1137).
   const spellMap = useMemo(

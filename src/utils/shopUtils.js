@@ -5,6 +5,7 @@ import { accessoryEligible } from './accessoryRunes';
 import { isTalisman, affixTargetType } from './affix';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
+import { isCatalyst, catalystTargetSpell } from './catalyst';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
 //
@@ -341,6 +342,50 @@ export function spellOfferingSummary(ware, spells) {
   const tradLabel = traditions.length === ALL_TRADITIONS.length ? 'all traditions' : traditions.join('/');
   const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to item level ${maxLevel} · ${count} eligible spell${count === 1 ? '' : 's'}`;
   return { kind, maxLevel, cap, count, traditions, rarities, text };
+}
+
+// ── Auto-stocked catalysts (Magic+ arsenal M3c, #1209) ──────────────────────
+// A shop that offers Spellcasting Services also carries every CATALYST whose
+// augmented spell falls inside that shop's spell envelope — the union of spells
+// its scroll/wand offerings actually cover (eligibleSpellItems). Computed at
+// resolve time from the catalog; nothing is written to the stored wares,
+// mirroring the generative rune-service host/talisman auto-stock (#1044/#1211).
+// Spellguns stay MANUAL wares — only catalysts ride the spell envelope, because a
+// catalyst is bound to one spell and is only worth stocking where that spell sells.
+
+// The set of spell ids a shop's spell-item offerings actually cover (deduped
+// across offerings + heightened rank-forms, which all share one spellRef).
+export function offeredSpellIds(loreId, shops, spells, catalogMap) {
+  const out = new Set();
+  for (const ware of spellItemOfferings(loreId, shops)) {
+    for (const it of eligibleSpellItems(ware, spells, catalogMap)) {
+      const block = it.scroll || it.wand;
+      if (block && block.spellRef != null) out.add(String(block.spellRef));
+    }
+  }
+  return out;
+}
+
+// Catalysts implied by a shop's spell envelope: those whose `catalystFor` spell
+// is offered. Each is returned as a resolved flat ware ({ ...item, wareKey }), so
+// the storefront groups + sells it like any hand-stocked item. Gated on
+// shopOffersSpellcasting so a shop that offers no spellcasting never carries them;
+// an excluded item (#1105 noShop) is skipped. The caller dedupes against
+// hand-stocked wares by item id, so a GM's explicit catalyst ware (custom
+// price/stock, or one outside the envelope) always wins.
+export function eligibleCatalysts(loreId, shops, spells, items, catalogMap) {
+  if (!shopOffersSpellcasting(loreId, shops)) return [];
+  const offered = offeredSpellIds(loreId, shops, spells, catalogMap);
+  if (!offered.size) return [];
+  const out = [];
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!isCatalyst(item) || isShopExcluded(item)) continue;
+    const spellId = catalystTargetSpell(item);
+    if (spellId == null || !offered.has(String(spellId))) continue;
+    const price = Number.isFinite(item.price) ? item.price : 0;
+    out.push({ ...item, baseName: item.name, price, wareKey: `catalyst:${item.id}` });
+  }
+  return out;
 }
 
 // ── Generative rune-service offerings (#982 G1) ─────────────────────────────
