@@ -1,5 +1,5 @@
 import { heldShieldRuneEffects, heldShieldRollBonus, ENERGY_RESISTANT_AMOUNT } from './shieldRuneEffects';
-import { resistanceFor, computeEffectBonuses } from './EffectUtils';
+import { resistanceFor, computeEffectBonuses, conditionalModifiersFor } from './EffectUtils';
 
 // A held shield entry carrying resolved property-rune docs (as contentUtils
 // produces them — { ...doc, choice } for a choice-bearing rune).
@@ -86,6 +86,34 @@ describe('heldShieldRuneEffects — skill-wire runes (Darkness)', () => {
     const bonuses = computeEffectBonuses(fx.map((f) => f.entry), fx.map((f) => f.def));
     expect(bonuses.stealth.total).toBe(1);
     expect(resistanceFor(fx.map((f) => f.entry), 'fire', fx.map((f) => f.def))).toBe(3);
+  });
+});
+
+const heavyRune = { id: 'heavy', type: 'property', target: 'shield', name: 'Heavy' };
+
+describe('heldShieldRuneEffects — save-hint runes (Heavy)', () => {
+  it('emits a conditional Fortitude def (+2 vs Grapple or Shove) for a held Heavy shield', () => {
+    const fx = heldShieldRuneEffects([heldShield([heavyRune])]);
+    expect(fx).toHaveLength(1);
+    // Conditional bonus rides on the DEF with a `vs` tag; entry carries no modifiers.
+    expect(fx[0].def.modifiers).toEqual([{ stat: 'fort', kind: 'item', amount: 2, vs: 'Grapple or Shove' }]);
+    expect(fx[0].entry.modifiers).toBeUndefined();
+    expect(fx[0].entry.effectId).toBe(fx[0].def.id);
+  });
+
+  it('contributes nothing when the Heavy shield is not held', () => {
+    const stowed = { ...heldShield([heavyRune]), state: 'stowed' };
+    expect(heldShieldRuneEffects([stowed])).toEqual([]);
+  });
+
+  it('surfaces as a conditional Fortitude hint (not netted into the base save)', () => {
+    const fx = heldShieldRuneEffects([heldShield([heavyRune])]);
+    const effects = fx.map((f) => f.entry);
+    const catalog = fx.map((f) => f.def);
+    // The `vs` modifier is conditional — the always-on fort total stays 0.
+    expect(computeEffectBonuses(effects, catalog).fort.total).toBe(0);
+    const hints = conditionalModifiersFor(effects, 'fort', catalog);
+    expect(hints).toEqual([{ amount: 2, kind: 'item', label: 'Heavy', vs: 'Grapple or Shove' }]);
   });
 });
 

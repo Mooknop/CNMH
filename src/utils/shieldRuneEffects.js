@@ -36,6 +36,16 @@ export const SKILL_WIRE_RUNES = {
   darkness: { stat: 'stealth', amount: 1 }, // +1 item to Stealth while wielding
 };
 
+// Runes granting a CONDITIONAL ('vs X') defensive bonus while wielded — surfaced
+// as a save hint on the sheet (the #338 conditional path, which reads the
+// resolved-effects universe). Heavy: +2 item to your Fortitude DC against
+// attempts to Grapple or Shove you. The modifier rides on the DEF with a `vs`
+// tag, so computeEffectBonuses buckets it as conditional (never netted into the
+// always-on save number — the app can't know a check's context). Code-owned.
+export const SAVE_HINT_RUNES = {
+  heavy: { stat: 'fort', amount: 2, vs: 'Grapple or Shove' },
+};
+
 // Runes that grant an OPT-IN item bonus to a specific roll, surfaced as a toggle
 // at that roll's resolver (not netted into the sheet): the player opts in on the
 // exact check it applies to. Knowing → Recall Knowledge (while wielding);
@@ -104,6 +114,19 @@ export const heldShieldRuneEffects = (inventory = []) => {
       out.push({
         entry: { id, effectId: id },
         def: { id, name: rune.name, modifiers: [{ stat: skill.stat, kind: 'item', amount: skill.amount }] },
+      });
+      return;
+    }
+    // Save-hint runes (Heavy → Fortitude vs Grapple/Shove): a conditional bonus
+    // rides on the DEF with a `vs` tag, surfacing as a save note on the sheet.
+    const saveHint = SAVE_HINT_RUNES[rune.id];
+    if (saveHint) {
+      out.push({
+        entry: { id, effectId: id },
+        def: {
+          id, name: rune.name,
+          modifiers: [{ stat: saveHint.stat, kind: 'item', amount: saveHint.amount, vs: saveHint.vs }],
+        },
       });
     }
   });
