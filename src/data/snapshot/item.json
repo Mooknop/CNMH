@@ -227,6 +227,57 @@
     "id": "acid-flask"
   },
   {
+    "id": "adamantine-flake",
+    "name": "Adamantine Flake",
+    "level": 3,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman",
+      "Transmutation"
+    ],
+    "price": 8,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1,
+        "trigger": "You use the Shield Block reaction."
+      }
+    },
+    "description": "This tiny fleck of adamantine can impart some of its incredible hardness to the shield it is attached to. When activated, it grants the attached shield a +2 item bonus to Hardness for 1 minute.",
+    "variants": [
+      {
+        "level": 3,
+        "label": "Adamantine Flake",
+        "name": "Adamantine Flake",
+        "price": 8,
+        "effect": "+2 item bonus to the shield's Hardness for 1 minute"
+      },
+      {
+        "level": 8,
+        "label": "Greater",
+        "name": "Greater Adamantine Flake",
+        "price": 90,
+        "effect": "The item bonus to hardness is increased to +6."
+      },
+      {
+        "level": 13,
+        "label": "Major",
+        "name": "Major Adamantine Flake",
+        "price": 460,
+        "effect": "The item bonus to hardness is increased to +10."
+      },
+      {
+        "level": 18,
+        "label": "True",
+        "name": "True Adamantine Flake",
+        "price": 1600,
+        "effect": "The item bonus to hardness is increased to +14."
+      }
+    ]
+  },
+  {
     "name": "Aeon Stone (Agate Ellipsoid)",
     "description": "This banded agate orbits your head. You can cast augury as a 2nd-rank divine innate spell once per day. Resonant Power The augury spell from this aeon stone always succeeds at its DC 6 flat check.",
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
@@ -1623,6 +1674,57 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "bottled-firefly-swarm",
+    "name": "Bottled Firefly Swarm",
+    "level": 1,
+    "traits": [
+      "Conjuration",
+      "Consumable",
+      "Primal",
+      "Talisman"
+    ],
+    "price": 2,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1,
+        "trigger": "An enemy targets you with an attack."
+      }
+    },
+    "description": "This bottle emits a buzzing sound that can only be heard if you hold it up to your ear. When you activate the bottle, a swarm of insects is released into the attacker's face. The creature is dazzled for the triggering attack and must attempt a flat check as normal to determine if the attack misses due to concealment.",
+    "variants": [
+      {
+        "level": 1,
+        "label": "Bottled Firefly Swarm",
+        "name": "Bottled Firefly Swarm",
+        "price": 2,
+        "effect": "The triggering creature is dazzled for the triggering attack"
+      },
+      {
+        "level": 4,
+        "label": "Greater",
+        "name": "Greater Bottled Firefly Swarm",
+        "price": 12,
+        "effect": "The creature becomes dazzled until the end of their turn."
+      },
+      {
+        "level": 8,
+        "label": "Major",
+        "name": "Major Bottled Firefly Swarm",
+        "price": 100,
+        "effect": "The creature becomes dazzled until the end of their turn, and must pass a DC 25 Fortitude save or be dazzled for 1 minute."
+      },
+      {
+        "level": 16,
+        "label": "True",
+        "name": "True Bottled Firefly Swarm",
+        "price": 1600,
+        "effect": "The creature becomes blinded until the end of their turn and dazzled for 1 minute."
+      }
+    ]
   },
   {
     "name": "Bottled Lightning",
@@ -4628,6 +4730,26 @@
     "id": "healing-potion"
   },
   {
+    "id": "heartstone",
+    "name": "Heartstone",
+    "level": 10,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman",
+      "Transmutation"
+    ],
+    "price": 160,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1
+      }
+    },
+    "description": "This small dense stone is wrapped in wire. When activated, it spreads across the face of your shield and up the arm that wields it, protecting it and its wearer for as long as the stone holds up against attack. Your shield gains 5d6 + 10 temporary Hit Points and you gain half that amount."
+  },
+  {
     "name": "Heater Shield",
     "description": "This wooden or metal shield is crafted in an elongated heart shape that makes it one of the most versatile shields available. It is small enough to be used effectively from horseback, and often emblazoned with a coat of arms or heraldry on its face.",
     "traits": [
@@ -5213,6 +5335,27 @@
     ],
     "weight": 0.1,
     "id": "magic-wand"
+  },
+  {
+    "id": "magnetic-token",
+    "name": "Magnetic Token",
+    "level": 6,
+    "traits": [
+      "Consumable",
+      "Evocation",
+      "Magical",
+      "Talisman"
+    ],
+    "price": 40,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1,
+        "trigger": "You use Shield Block to reduce the damage from an attack made with a metal weapon."
+      }
+    },
+    "description": "This token seems to shift position around the shield periodically and unpredictably. When activated you cause your shield to become magnetic. You may immediately attempt to Disarm the blocked weapon and you gain a +1 circumstance bonus to this check."
   },
   {
     "id": "masquerade-scarf",
@@ -6620,6 +6763,27 @@
       1
     ],
     "description": "This sprig of berry-festooned holly and mistletoe doesn't wilt or rot. It can be used as a primal locus, and it grants a +1 item bonus to Nature checks while you wear it.\n\nActivate—Anoint (two actions, manipulate; once per 10 minutes): Smear berry juice onto a wooden weapon to cast runic weapon on it, or onto a creature to cast runic body on it.\n\nActivate—Bind (two actions, manipulate; once per day): Touch the sprig, then a tree, to cast one with plants upon yourself, turning into a vine on the touched tree."
+  },
+  {
+    "id": "prismatic-crystal",
+    "name": "Prismatic Crystal",
+    "level": 4,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman",
+      "Transmutation"
+    ],
+    "price": 12,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1,
+        "trigger": "You are targeted by, or in the area of an effect that deals acid, cold, electricity, fire, poison, or sonic damage."
+      }
+    },
+    "description": "A small crystal that refracts light into its constituent colors, wrapped in a leather cord that can be tied to your shield. When activated, for 1 minute your shield transforms into an elemental version of the triggering damage type. During this effect, you may use your Shield Block reaction when you would take damage from the triggering damage type in addition to physical damage, and your shield is immune to the triggering damage type."
   },
   {
     "name": "Psychopomp Mask",
@@ -9469,6 +9633,26 @@
     "id": "sticky-algae-bomb"
   },
   {
+    "id": "stone-and-mortar",
+    "name": "Stone and Mortar",
+    "level": 8,
+    "traits": [
+      "Conjuration",
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "price": 90,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1
+      }
+    },
+    "description": "A small piece of a brick with surrounding mortar that is wrapped in gold wire. When activated, you create a brick wall 3 feet tall, 1 foot thick, and 15 feet wide. The wall must be adjacent to you and centered on your square.\n\nThe wall is difficult terrain for creatures moving through it, and it provides standard cover to anyone in its area or adjacent to it. It can potentially provide cover for creatures further away at the GM's discretion."
+  },
+  {
     "name": "Stone Body Mutagen",
     "description": "This mutagen calcifies your body, making it as hard as stone — turning aside blades and points at the cost of speed and agility.",
     "traits": [
@@ -10056,6 +10240,42 @@
     "id": "treasure-item"
   },
   {
+    "id": "tree-sap",
+    "name": "Tree Sap",
+    "level": 3,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman",
+      "Transmutation"
+    ],
+    "price": 8,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1
+      }
+    },
+    "description": "This waxed pouch contains thick tree sap. When activated, the face of your shield becomes incredibly sticky. For 1 round the shield gains the grapple trait.",
+    "variants": [
+      {
+        "level": 3,
+        "label": "Tree Sap",
+        "name": "Tree Sap",
+        "price": 8,
+        "effect": "The shield gains the grapple trait for 1 round"
+      },
+      {
+        "level": 6,
+        "label": "Greater",
+        "name": "Greater Tree Sap",
+        "price": 40,
+        "effect": "The shield gains the grapple trait for 1 minute."
+      }
+    ]
+  },
+  {
     "name": "Trickster's Mandolin",
     "description": "This ever-changing mandolin is as slippery and protean as the trickster who carries it. While playing the mandolin, you gain a +1 item bonus to Deception and Performance checks. You can Activate the mandolin to Cast a Spell from its staff spell list.",
     "traits": [
@@ -10261,6 +10481,50 @@
     "price": 60,
     "weight": 0,
     "id": "vangloris-tattoo"
+  },
+  {
+    "id": "venom-pouch",
+    "name": "Venom Pouch",
+    "level": 6,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Necromancy",
+      "Talisman"
+    ],
+    "price": 40,
+    "weight": 0,
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": 1,
+        "trigger": "You use Shield Block against an unarmed melee Strike or a Strike made by a non-reach melee weapon."
+      }
+    },
+    "description": "This small brown pouch contains the venom of a poisonous creature. When activated, the triggering creature must attempt a Fortitude save against DC 22. On a failed save, the creature takes 2d6 persistent poison damage.",
+    "variants": [
+      {
+        "level": 6,
+        "label": "Venom Pouch",
+        "name": "Venom Pouch",
+        "price": 40,
+        "effect": "DC 22 Fortitude save; 2d6 persistent poison on a failure"
+      },
+      {
+        "level": 10,
+        "label": "Greater",
+        "name": "Greater Venom Pouch",
+        "price": 160,
+        "effect": "The persistent poison increases to 4d6 and the DC increases to 27."
+      },
+      {
+        "level": 14,
+        "label": "Major",
+        "name": "Major Venom Pouch",
+        "price": 800,
+        "effect": "The persistent poison increases to 6d6 and the DC increases to 32."
+      }
+    ]
   },
   {
     "id": "ventriloquists-ring",
