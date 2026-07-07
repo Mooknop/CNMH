@@ -40,9 +40,12 @@ const isThrownTrait = (t) => String(t).toLowerCase().startsWith('thrown');
  * @param {Object} strike    - Strike data (type, traits, proficiency, damage, …)
  * @param {Object} character - Character data
  * @param {string} [defaultDamage='1d6'] - Fallback damage string when strike.damage is absent
+ * @param {Object} [opts]    - { proficiencyFloor: 'highest-weapon' } — treat the
+ *   weapon's proficiency as the character's best weapon rank (Blade Phantom's
+ *   Guide, #1216)
  * @returns {{ strMod, attackBonus, damageString }}
  */
-const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
+const resolveStrikeMods = (strike, character, defaultDamage = '1d6', opts = {}) => {
   const isMelee = strike.type === 'melee';
   const isFinesse = strike.traits?.includes('Finesse');
   const isThrown = strike.traits?.includes('Thrown');
@@ -70,6 +73,14 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
     proficiencyValue = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
   } else {
     proficiencyValue = character.proficiencies?.weapons?.simple?.proficiency || 0;
+  }
+
+  // Proficiency floor (#1216 — Blade Phantom's Guide): treat this weapon's
+  // proficiency as the character's highest weapon rank for the duration.
+  if (opts.proficiencyFloor === 'highest-weapon') {
+    const ranks = Object.values(character.proficiencies?.weapons || {})
+      .map((w) => w?.proficiency || 0);
+    proficiencyValue = Math.max(proficiencyValue, ...(ranks.length ? ranks : [0]));
   }
 
   let attackBonus = getAttackBonusValue(abilityMod, proficiencyValue, character.level || 0);
@@ -142,8 +153,11 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
   const runeBreakdown = buildRuneBreakdown(dbRunes ? { ...item, runes: effectiveRunes } : item);
 
   const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
+  const whetstoneOpts = whetstoneEntry?.whetstone?.effect?.proficiencyFloor
+    ? { proficiencyFloor: whetstoneEntry.whetstone.effect.proficiencyFloor }
+    : {};
   return strikesArray.map(weaponStrike => {
-    const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character);
+    const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character, undefined, whetstoneOpts);
 
     const attackBonus = baseBonus + potencyBonus;
     const damage = resolved ? scaleDamageDice(damageString, resolved.extraDice) : damageString;

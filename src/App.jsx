@@ -24,6 +24,7 @@ import PersistentSync from './components/encounter/PersistentSync';
 import TurnEffectsSync from './components/encounter/TurnEffectsSync';
 import BestiaryCaptureSync from './components/encounter/BestiaryCaptureSync';
 import AuraKoSync from './components/encounter/AuraKoSync';
+import WhetstoneTriggerSync from './components/encounter/WhetstoneTriggerSync';
 import WardSync from './components/encounter/WardSync';
 import VocoderConcealSync from './components/encounter/VocoderConcealSync';
 import CodaPlayingSync from './components/encounter/CodaPlayingSync';
@@ -91,6 +92,7 @@ function App() {
           <TurnEffectsSync />
           <BestiaryCaptureSync />
           <AuraKoSync />
+          <WhetstoneTriggerSync />
           <WardSync />
           <VocoderConcealSync />
           <CodaPlayingSync />

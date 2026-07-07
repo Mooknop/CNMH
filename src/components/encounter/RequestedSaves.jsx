@@ -10,6 +10,7 @@ import { buildDamageApply } from '../../utils/damageRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
+import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -60,6 +61,9 @@ const RequestedSaves = () => {
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
   const { revealFiredIwr } = useIwrReveal();
+  // Per-degree target conditions (#1216 — whetstone save riders) land on the
+  // app-tracked enemy-conditions rail.
+  const { applyCondition } = useEnemyEffects();
   const [d20Inputs, setD20Inputs] = useState({});
   // Persistent-damage tracking (#272) — failed saves record their entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -152,6 +156,33 @@ const RequestedSaves = () => {
       const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
       return { entryId: r.entryId, damage: d?.dmg || null };
     }));
+
+    // Per-degree target conditions (#1216 — Chroma Kaleidoscope's dazzle/blind
+    // ladder, Reactive Flash's off-guard). Applied to the enemy-conditions rail;
+    // durations ride as log notes (round-timed enemy-condition expiry is GM
+    // bookkeeping — the #1246 enemy-automation bucket). A `scopedToCaster`
+    // condition (off-guard vs this attack) scopes to the requesting attacker.
+    if (req.conditions) {
+      results.forEach((r) => {
+        const list = req.conditions[r.degree];
+        if (!Array.isArray(list) || !list.length) return;
+        list.forEach((c) => {
+          if (!c?.id) return;
+          applyCondition(r.entryId, {
+            id: c.id,
+            ...(c.value != null ? { value: c.value } : {}),
+            source: req.abilityName,
+            ...(c.scopedToCaster
+              ? { scopedTo: req.casterId, scopedToName: req.casterName }
+              : {}),
+          });
+          appendLog({
+            type: 'system',
+            text: `${r.name} is ${c.id}${c.value != null ? ` ${c.value}` : ''}${c.note ? ` (${c.note})` : ''} — ${req.abilityName}`,
+          });
+        });
+      });
+    }
 
     // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned bonus):
     // when the resolved degree is one this effect triggers on, write it to the

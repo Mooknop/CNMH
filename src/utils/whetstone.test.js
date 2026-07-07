@@ -3,7 +3,7 @@ import {
   whetstoneChoice, whetstoneReminder, eligibleWhetstoneWeapons, needsRegripNote,
   activeWhetstoneOn, whetstoneHostUids, buildWhetstoneEffectEntry,
   withWhetstoneApplied, MINUTE_ROUNDS,
-  applyWhetstoneStrikeAlterations, whetstonesByWeaponUid,
+  applyWhetstoneStrikeAlterations, whetstonesByWeaponUid, withWhetstoneArmedVs,
 } from './whetstone';
 
 const stone = (over = {}) => ({
@@ -255,5 +255,61 @@ describe('W3 payloads (#1215)', () => {
   it('onHit payloads are carried on the strike with the item name', () => {
     const out = applyWhetstoneStrikeAlterations(strike(), entry({ onHit: { healHalf: true } }));
     expect(out.whetstoneOnHit).toEqual({ healHalf: true, itemName: "Slayer's Stone" });
+  });
+});
+
+describe('W4 payloads (#1216)', () => {
+  const strike = (over = {}) => ({
+    name: 'Longsword Melee Strike', type: 'melee', traits: [],
+    attackMod: 7, damage: '2d8+4', damageType: 'slashing', ...over,
+  });
+  const entry = (effect, over = {}) => ({
+    id: 'fx1',
+    whetstone: { itemId: 'x', itemName: 'Stone', weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute', effect, ...over },
+  });
+
+  it('reactionSave and onCrit are stamped on the strike with the item name', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry({
+      reactionSave: { save: 'reflex', dc: 19, conditions: { failure: [{ id: 'off-guard', scopedToCaster: true }] } },
+      onCrit: { save: 'will', dcFrom: 'classOrSpellDC', conditions: { failure: [{ id: 'blinded', note: '1 round' }] } },
+    }));
+    expect(out.whetstoneReactionSave).toMatchObject({ save: 'reflex', dc: 19, itemName: 'Stone' });
+    expect(out.whetstoneOnCrit).toMatchObject({ save: 'will', dcFrom: 'classOrSpellDC', itemName: 'Stone' });
+  });
+
+  it('armedBonus adds the per-target damage rider + toggle stamp only once armed', () => {
+    const unarmed = applyWhetstoneStrikeAlterations(strike(), entry({ armedBonus: { bonus: 1 } }));
+    expect(unarmed.riders).toBeUndefined();
+    expect(unarmed.whetstoneArmedVs).toBeUndefined();
+
+    const armed = applyWhetstoneStrikeAlterations(strike(), entry(
+      { armedBonus: { bonus: 1 } },
+      { armedVs: { entryId: 'e-ogre', name: 'Ogre' } }
+    ));
+    expect(armed.riders).toHaveLength(1);
+    expect(armed.riders[0]).toMatchObject({
+      bonus: { flat: 1 }, appliesToEntryIds: ['e-ogre'], label: 'Stone (vs Ogre)',
+    });
+    expect(armed.whetstoneArmedVs).toEqual({ entryId: 'e-ogre', name: 'Ogre', bonus: 1, itemName: 'Stone' });
+  });
+
+  it('withWhetstoneArmedVs arms and disarms the entry', () => {
+    const fx = [entry({ armedBonus: { bonus: 1 } }), { id: 'other' }];
+    const armed = withWhetstoneArmedVs(fx, 'fx1', { entryId: 'e-ogre', name: 'Ogre' });
+    expect(armed[0].whetstone.armedVs).toEqual({ entryId: 'e-ogre', name: 'Ogre' });
+    expect(armed[1]).toEqual({ id: 'other' });
+    const disarmed = withWhetstoneArmedVs(armed, 'fx1', null);
+    expect(disarmed[0].whetstone.armedVs).toBeUndefined();
+  });
+
+  it('maxWeaponLevel gates the apply picker (Blade Phantom weapon-level cap)', () => {
+    const guide = {
+      uid: 'ws2', name: "Blade Phantom's Guide", traits: ['Whetstone'],
+      whetstone: { maxWeaponLevel: 11 },
+    };
+    const low = { uid: 'w1', name: 'Longsword', level: 3, strikes: [{ type: 'melee' }] };
+    const high = { uid: 'w2', name: 'Holy Avenger', level: 15, strikes: [{ type: 'melee' }] };
+    const unleveled = { uid: 'w3', name: 'Club', strikes: [{ type: 'melee' }] };
+    expect(eligibleWhetstoneWeapons([guide, low, high, unleveled], guide)).toEqual([low, unleveled]);
   });
 });
