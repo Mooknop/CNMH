@@ -23,6 +23,12 @@ import {
   affix, unaffix, affixedKey, itemUidOf, deactivateTalisman, affixedTalismansByHost,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
+import {
+  isWhetstone, whetstoneMeta, whetstoneChoice, whetstoneDuration, whetstoneDurationLabel,
+  eligibleWhetstoneWeapons, needsRegripNote, activeWhetstoneOn, buildWhetstoneEffectEntry,
+  withWhetstoneApplied,
+} from '../../utils/whetstone';
+import { expiryLabel, expiryLabelSecs } from '../../utils/expiry';
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing, shieldEffectiveTraits, shieldPropertyRunes } from '../../utils/shieldRunes';
@@ -77,8 +83,14 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [itemModeState, setItemModeState] = useSyncedState(`cnmh_itemmode_${character?.id}`, {});
   // Active-effects store (#1055 S5) — an actuated block may apply a lasting
   // self-effect on activation (Trackless (Greater)'s 8-hour emanation). Written
-  // here on activate; EffectsPanel renders it with a Dismiss ×.
-  const [, setEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
+  // here on activate; EffectsPanel renders it with a Dismiss ×. Also read for
+  // the whetstone-on-weapon child line (#1213).
+  const [effects, setEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
+  // Whetstone application (#1213) needs the encounter for round-ticked expiry
+  // and an apply-time choice pick (Morph Jewel's damage type). Raw key read —
+  // the modal only checks active/round/order, no need for the full hook.
+  const [encounter] = useSyncedState('cnmh_encounter_global', null);
+  const [whetstonePick, setWhetstonePick] = useState(null);
   const { appendEvent } = useSessionLog();
   // Player-to-player item transfer (#656/#657) — out of combat only.
   const { give, giveConsumable } = useGiveItem(character?.id);
@@ -130,6 +142,50 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} affixed ${item.name} to ${host.name} (10-minute activity)` });
     onClose();
   };
+  // Whetstone application (#1213). A whetstone picks a weapon (1 Interact), is
+  // consumed on application, and leaves a timed effect entry bound to that
+  // weapon in cnmh_effects_ — one whetstone per weapon, a new apply replaces
+  // the old in the same write. Two-handed weapons get a regrip reminder only.
+  const whetstone = isWhetstone(item);
+  const whetstoneWeapons = whetstone ? eligibleWhetstoneWeapons(flatInventory, item) : [];
+  const whetstoneChoiceBlock = whetstone ? whetstoneChoice(item) : null;
+  const selfEntryId = (encounter?.order || []).find(
+    (e) => e.kind === 'pc' && e.charId === character?.id
+  )?.entryId || null;
+
+  const doApplyWhetstone = (weapon) => {
+    const entry = buildWhetstoneEffectEntry({
+      item,
+      weapon,
+      charId: character?.id,
+      choice: whetstoneChoiceBlock ? whetstonePick : undefined,
+      encounter,
+      casterEntryId: selfEntryId,
+      nowSecs,
+    });
+    setEffects((cur) => withWhetstoneApplied(cur, entry));
+    setConsumed((cur) => ({ ...(cur || {}), [item.name]: ((cur || {})[item.name] || 0) + 1 }));
+    const regrip = needsRegripNote(weapon)
+      ? ' — regrip to keep wielding it in two hands'
+      : '';
+    appendEvent({
+      type: 'action',
+      text: `${character?.name || 'Someone'} applied ${item.name} to ${weapon.name} (Interact, ${whetstoneDurationLabel(whetstoneDuration(item))})${regrip}`,
+    });
+    onClose();
+  };
+
+  // When THIS item is a weapon: the whetstone effect currently bound to it.
+  const weaponWhetstone = item.strikes ? activeWhetstoneOn(effects, itemUidOf(item)) : null;
+  const doRemoveWhetstone = () => {
+    setEffects((cur) => (cur || []).filter((e) => e.id !== weaponWhetstone.id));
+    appendEvent({
+      type: 'action',
+      text: `${character?.name || 'Someone'} removed ${weaponWhetstone.whetstone.itemName} from ${item.name}`,
+    });
+    onClose();
+  };
+
   // Shield attachments (#1165 Track 2). An attachment (Shield Spikes/Boss) is its
   // own weapon that binds to a shield via a 10-minute activity — reusable, never
   // consumed. While the host shield is held its Strike is injected (useCharacter);
@@ -330,6 +386,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     : item.wand ? 'Wand'
     : item.scroll ? 'Scroll'
     : item.runestone ? 'Runestone'
+    : whetstone ? 'Whetstone'
     : consumableMeta(item) ? 'Consumable'
     : 'Gear';
   const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
@@ -743,6 +800,42 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
+      {/* Applied whetstone (#1213) — the whetstone effect bound to THIS weapon,
+          nested here like an affixed talisman: name, countdown, reminder text,
+          and manual removal (it is also visible/removable in EffectsPanel). */}
+      {weaponWhetstone && (
+        <div className="item-affix" data-testid="hosted-whetstone">
+          <h3>Whetstone</h3>
+          <div className="item-affix-state item-affix-state--stack">
+            <div className="hosted-talisman-info">
+              <span>
+                <strong>{weaponWhetstone.whetstone.itemName}</strong>
+                {weaponWhetstone.whetstone.choice ? ` (${weaponWhetstone.whetstone.choice})` : ''}
+                {' — '}
+                {weaponWhetstone.expireAtSecs != null
+                  ? `until ${expiryLabelSecs(weaponWhetstone.expireAtSecs, nowSecs)}`
+                  : weaponWhetstone.expireAt
+                    ? `expires ${expiryLabel(weaponWhetstone.expireAt)}`
+                    : 'active'}
+              </span>
+              {weaponWhetstone.whetstone.reminder && (
+                <p className="item-affix-hint">{weaponWhetstone.whetstone.reminder}</p>
+              )}
+            </div>
+            <div className="hosted-talisman-actions">
+              <button
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid="hosted-whetstone-remove"
+                onClick={doRemoveWhetstone}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Absorbed spellguns (#1208) — the Arcane Duelist's Gloves host spellguns
           nested here (like affixed talismans): fired or retrieved from this card. */}
       {gloveHost && (
@@ -868,6 +961,62 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <p className="item-affix-hint">
               No valid {affixTargetType(item) || 'item'} to affix this to.
             </p>
+          )}
+        </div>
+      )}
+
+      {/* Whetstone application (#1213) — apply to a weapon (1 Interact); the
+          whetstone is consumed and its timed effect binds to the picked weapon.
+          A weapon under an old whetstone effect gets it replaced on apply. */}
+      {whetstone && character && (item.quantity ?? 1) > 0 && (
+        <div className="item-affix" data-testid="item-whetstone">
+          <h3>Apply to Weapon</h3>
+          {whetstoneWeapons.length === 0 ? (
+            <p className="item-affix-hint">
+              No {whetstoneMeta(item)?.targets === 'ranged' ? 'ranged ' : ''}weapon to apply this to.
+            </p>
+          ) : (
+            <>
+              <p className="item-affix-hint">
+                Apply to a {whetstoneMeta(item)?.targets === 'ranged' ? 'ranged ' : ''}weapon
+                (Interact) — consumed on application, lasts {whetstoneDurationLabel(whetstoneDuration(item))}.
+                A weapon holds one whetstone effect at a time.
+              </p>
+              {whetstoneChoiceBlock && (
+                <div className="item-affix-hosts item-whetstone-choice" data-testid="whetstone-choice">
+                  <span className="item-affix-hint">{whetstoneChoiceBlock.label || 'Choose'}:</span>
+                  {whetstoneChoiceBlock.options.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      className={`btn-small ${whetstonePick === opt ? 'btn-primary' : 'btn-secondary'}`}
+                      data-testid={`whetstone-choice-${opt}`}
+                      onClick={() => setWhetstonePick(opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="item-affix-hosts">
+                {whetstoneWeapons.map((w) => {
+                  const replacing = activeWhetstoneOn(effects, itemUidOf(w));
+                  return (
+                    <button
+                      key={itemUidOf(w)}
+                      type="button"
+                      className="btn-small btn-secondary"
+                      data-testid={`whetstone-apply-${itemUidOf(w)}`}
+                      disabled={!!whetstoneChoiceBlock && !whetstonePick}
+                      onClick={() => doApplyWhetstone(w)}
+                    >
+                      {w.name}
+                      {replacing ? ` (replaces ${replacing.whetstone.itemName})` : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}

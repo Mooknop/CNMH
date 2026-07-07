@@ -70,8 +70,12 @@ let mockItemModes = {};
 const mockSetItemModes = vi.fn((next) => {
   mockItemModes = typeof next === 'function' ? next(mockItemModes) : next;
 });
+// Encounter state (#1213) — whetstone expiry branches on encounter.active.
+let mockEncounter = null;
+const mockSetEncounter = vi.fn();
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
+    if (String(key).startsWith('cnmh_encounter_')) return [mockEncounter, mockSetEncounter];
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
     if (String(key).startsWith('cnmh_absorbed_')) return [mockAbsorbed, mockSetAbsorbed];
@@ -155,6 +159,7 @@ beforeEach(() => {
   mockRuneConfig = {};
   mockEffects = [];
   mockItemModes = {};
+  mockEncounter = null;
   mockSetItemModes.mockClear();
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
@@ -1876,5 +1881,122 @@ describe('ItemModal — spellgun host (Arcane Duelist\'s Gloves, #1208)', () => 
     const s2 = gun('gun2', 'Verdant Bola');
     render(<ItemModal isOpen onClose={vi.fn()} item={s2} character={petra([g, gun(), s2])} />);
     expect(screen.queryByTestId('item-absorb')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — whetstone application (#1213)', () => {
+  const stone = (over = {}) => ({
+    uid: 'ws1', name: 'Morph Jewel', quantity: 1,
+    traits: ['Consumable', 'Magical', 'Whetstone'],
+    whetstone: { reminder: 'Change the damage type.', ...over.whetstone },
+    ...over,
+  });
+  const sword = { uid: 'w1', name: 'Longsword', strikes: [{ damage: '1d8', type: 'melee' }] };
+  const bow = { uid: 'w2', name: 'Shortbow', strikes: [{ damage: '1d6', type: 'ranged', range: 60 }] };
+  const plate = { uid: 'a1', name: 'Full Plate', armor: { ac: 6 } };
+  const hero = (inv) => ({ id: 'hero', name: 'Ashka', __inventory: inv });
+  const open = (item, inv = [item, sword, bow, plate]) =>
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={hero(inv)} />);
+
+  it('shows no apply section for a non-whetstone item', () => {
+    open({ uid: 'p1', name: 'Potion', quantity: 1, consumable: { kind: 'healing' } });
+    expect(screen.queryByTestId('item-whetstone')).not.toBeInTheDocument();
+  });
+
+  it('offers weapons only (not armor) and applies: consume + effect entry, one write each', () => {
+    const s = stone();
+    open(s);
+    const section = screen.getByTestId('item-whetstone');
+    expect(within(section).getByRole('button', { name: 'Longsword' })).toBeInTheDocument();
+    expect(within(section).queryByRole('button', { name: 'Full Plate' })).not.toBeInTheDocument();
+
+    fireEvent.click(within(section).getByRole('button', { name: 'Longsword' }));
+    expect(mockConsumed).toEqual({ 'Morph Jewel': 1 });
+    expect(mockEffects).toHaveLength(1);
+    const entry = mockEffects[0];
+    expect(entry.whetstone).toMatchObject({
+      itemName: 'Morph Jewel', weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute',
+      reminder: 'Change the damage type.',
+    });
+    expect(entry.name).toBe('Morph Jewel (Longsword)');
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Ashka applied Morph Jewel to Longsword (Interact, 1 minute)'),
+    }));
+  });
+
+  it('replaces an existing whetstone effect on the same weapon in the same write', () => {
+    mockEffects = [{
+      id: 'old', name: 'Hand of Mercy (Longsword)',
+      whetstone: { itemName: 'Hand of Mercy', weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute' },
+    }];
+    const s = stone();
+    open(s);
+    const section = screen.getByTestId('item-whetstone');
+    const btn = within(section).getByRole('button', { name: /Longsword \(replaces Hand of Mercy\)/ });
+    fireEvent.click(btn);
+    expect(mockEffects).toHaveLength(1);
+    expect(mockEffects[0].whetstone.itemName).toBe('Morph Jewel');
+  });
+
+  it('filters to ranged weapons when targets is ranged', () => {
+    const s = stone({ whetstone: { targets: 'ranged' } });
+    open(s);
+    const section = screen.getByTestId('item-whetstone');
+    expect(within(section).getByRole('button', { name: 'Shortbow' })).toBeInTheDocument();
+    expect(within(section).queryByRole('button', { name: 'Longsword' })).not.toBeInTheDocument();
+  });
+
+  it('gates apply on the apply-time choice when the item declares one', () => {
+    const s = stone({ whetstone: { choice: { label: 'Damage type', options: ['bludgeoning', 'piercing'] } } });
+    open(s);
+    const section = screen.getByTestId('item-whetstone');
+    const swordBtn = within(section).getByRole('button', { name: 'Longsword' });
+    expect(swordBtn).toBeDisabled();
+    fireEvent.click(screen.getByTestId('whetstone-choice-piercing'));
+    expect(within(section).getByRole('button', { name: 'Longsword' })).toBeEnabled();
+    fireEvent.click(within(section).getByRole('button', { name: 'Longsword' }));
+    expect(mockEffects[0].whetstone.choice).toBe('piercing');
+  });
+
+  it('uses round-ticked expiry in an active encounter (1 min = 10 rounds) and clock expiry otherwise', () => {
+    mockEncounter = {
+      active: true, round: 3,
+      order: [{ entryId: 'e1', kind: 'pc', charId: 'hero' }],
+    };
+    open(stone());
+    fireEvent.click(within(screen.getByTestId('item-whetstone')).getByRole('button', { name: 'Longsword' }));
+    expect(mockEffects[0].expireAt).toEqual({ round: 13, entryId: 'e1', boundary: 'turn-end' });
+    expect(mockEffects[0].expireAtSecs).toBeUndefined();
+  });
+
+  it('adds the regrip reminder to the log for a two-handed weapon', () => {
+    const greatsword = { uid: 'w3', name: 'Greatsword', state: 'held2', strikes: [{ damage: '1d12', type: 'melee' }] };
+    const s = stone();
+    open(s, [s, greatsword]);
+    fireEvent.click(within(screen.getByTestId('item-whetstone')).getByRole('button', { name: 'Greatsword' }));
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('regrip'),
+    }));
+  });
+
+  it('nests the active whetstone on the WEAPON card with reminder + Remove', () => {
+    mockEffects = [{
+      id: 'fx1', name: 'Morph Jewel (Longsword)',
+      whetstone: { itemName: 'Morph Jewel', weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute', reminder: 'Change the damage type.' },
+    }];
+    open(sword, [stone(), sword]);
+    const section = screen.getByTestId('hosted-whetstone');
+    expect(section).toHaveTextContent('Morph Jewel');
+    expect(section).toHaveTextContent('Change the damage type.');
+    fireEvent.click(screen.getByTestId('hosted-whetstone-remove'));
+    expect(mockEffects).toEqual([]);
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Ashka removed Morph Jewel from Longsword',
+    }));
+  });
+
+  it('hides the apply section when the stack is used up', () => {
+    open(stone({ quantity: 0 }));
+    expect(screen.queryByTestId('item-whetstone')).not.toBeInTheDocument();
   });
 });

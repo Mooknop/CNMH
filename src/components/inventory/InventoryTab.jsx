@@ -14,6 +14,7 @@ import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { absorbedKey, absorbedUidSet } from '../../utils/spellgunHost';
 import { attachedKey, attachedUidSet } from '../../utils/shieldAttach';
+import { whetstoneHostUids } from '../../utils/whetstone';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useInvested } from '../../hooks/useInvested';
@@ -57,6 +58,9 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Spellgun-absorption overlay (#1208) — spellguns absorbed into a host glove
   // render via the glove card, not as their own loose tile (like the above).
   const [absorbed] = useSyncedState(absorbedKey(character?.id), {});
+  // Active effects — read for the whetstone-on-weapon medallion (#1213): a
+  // weapon under a whetstone effect gets the same attachment mark as a host.
+  const [charEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
   const { mode } = usePlayMode();
@@ -83,7 +87,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // `hasAttachment` flag so IconTile can mark them with the attachment medallion —
   // the visual counterpart to the child now living inside the host's card.
   const hostUids = new Set(
-    [...Object.values(affixed || {}), ...Object.values(attached || {}), ...Object.values(absorbed || {})].filter(Boolean),
+    [
+      ...Object.values(affixed || {}),
+      ...Object.values(attached || {}),
+      ...Object.values(absorbed || {}),
+      ...whetstoneHostUids(charEffects),
+    ].filter(Boolean),
   );
   const stampHosts = (items) =>
     items.map((it) => (hostUids.has(itemUidOf(it)) ? { ...it, hasAttachment: true } : it));
