@@ -17,6 +17,7 @@ import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionM
 import ItemModal from '../components/inventory/ItemModal';
 import UseConsumableModal from '../components/inventory/UseConsumableModal';
 import SpellgunAttackModal from '../components/encounter/SpellgunAttackModal';
+import DragonbreathModal from '../components/encounter/DragonbreathModal';
 import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
@@ -40,6 +41,7 @@ import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { isCharTurn } from '../utils/encounterUtils';
 import { isSpellgun } from '../utils/spellgun';
+import { isDragonbreath } from '../utils/dragonbreath';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
@@ -443,7 +445,16 @@ const CharacterSheet = () => {
           onUse={handleUseConsumable}
         />
       )}
-      {useItem && isSpellgun(useItem) && (
+      {useItem && isDragonbreath(useItem) && (
+        <DragonbreathModal
+          isOpen={!!useItem}
+          onClose={() => setUseItem(null)}
+          item={useItem}
+          character={character}
+          themeColor={characterColor}
+        />
+      )}
+      {useItem && !isDragonbreath(useItem) && isSpellgun(useItem) && (
         <SpellgunAttackModal
           isOpen={!!useItem}
           onClose={() => setUseItem(null)}
@@ -452,7 +463,7 @@ const CharacterSheet = () => {
           themeColor={characterColor}
         />
       )}
-      {useItem && !isSpellgun(useItem) && (
+      {useItem && !isDragonbreath(useItem) && !isSpellgun(useItem) && (
         <UseConsumableModal
           isOpen={!!useItem}
           onClose={() => setUseItem(null)}

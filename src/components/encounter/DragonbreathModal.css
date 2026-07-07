@@ -1,0 +1,130 @@
+/* DragonbreathModal — unleash a dragonbreath weapon's breath as a basic-save AoE (#1210 M4e) */
+
+.dbm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dbm-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dbm-area {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+.dbm-def {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+.dbm-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.dbm-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.dbm-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dbm-pick {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.dbm-pick:hover:not(:disabled) {
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.dbm-pick--active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.dbm-pick:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dbm-empty {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+.dbm-note {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+  margin: 0;
+}
+
+.dbm-dmg {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  max-width: 160px;
+}
+
+.dbm-hint {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+  margin: var(--space-1) 0 0;
+}
+
+.dbm-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+
+.dbm-confirm {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.dbm-confirm:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
