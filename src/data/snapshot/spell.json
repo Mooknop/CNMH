@@ -270,6 +270,35 @@
     ]
   },
   {
+    "id": "blazing-dive",
+    "name": "Blazing Dive",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Air",
+      "Evocation",
+      "Fire"
+    ],
+    "actions": "Two Actions",
+    "range": "",
+    "area": "10-foot emanation",
+    "targets": "",
+    "defense": "Reflex",
+    "basic": true,
+    "duration": "",
+    "description": "Superheated air collects under you, buoying you high into the sky before you plummet back down in a fiery comet. You Fly 15 feet straight up into the air, then Fly in a straight line to an empty space of your choice on the ground within 60 feet. When you land, a burst of superheated air explodes outward, dealing 3d4 bludgeoning damage and 3d6 fire damage to each creature in a 10-foot emanation (basic Reflex save).\n\nHeightened (+1) The bludgeoning damage increases by 1d4 and the fire damage increases by 1d6.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double damage."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "bless",
     "name": "Bless",
     "level": 1,

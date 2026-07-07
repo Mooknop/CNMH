@@ -53,6 +53,8 @@ import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura
 import { HARROW_CAST_DC } from '../../utils/harrow';
 import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
 import { applyHealing } from '../../utils/consumables';
+import { itemUidOf } from '../../utils/affix';
+import { eligibleCatalystsFor, sumCatalystActions, catalystSummary, catalystAddActions } from '../../utils/catalyst';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
@@ -132,7 +134,10 @@ const UseAbilityModal = ({
   // the confirm marks it Dropped in the live loadout unless a returning rune
   // flies it back.
   const { drop: dropThrownWeapon } = useLoadout(character?.id || 'nobody');
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  const [consumed, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  // Catalyst adds (#1209) — held catalysts the player chooses to fold into this
+  // cast (by uid). Eligibility is computed once the cast spell/inventory are known.
+  const [catalystIds, setCatalystIds] = useState([]);
   const [fireChamberIdx, setFireChamberIdx] = useState(null);
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
@@ -319,6 +324,17 @@ const UseAbilityModal = ({
   const isMultiRay     = perActionRange != null || fixedRayCount != null;
   const rayCount = perActionRange ? chosenActions : (fixedRayCount ?? 1);
   const castCost = variableRange ? chosenActions : effectiveCost;
+
+  // Catalysts (#1209) — held catalysts whose target spell matches this cast are
+  // offered as opt-in adds. Selecting one consumes it and folds its extra actions
+  // into the cast cost; its rider effect is logged for the GM.
+  const eligibleCatalysts = effectiveVerb === 'cast'
+    ? eligibleCatalystsFor(charData?.inventory, ability.id, consumed)
+    : [];
+  const selectedCatalysts = eligibleCatalysts.filter((c) => catalystIds.includes(itemUidOf(c)));
+  const catalystActionBump = sumCatalystActions(selectedCatalysts);
+  const toggleCatalyst = (uid) =>
+    setCatalystIds((cur) => (cur.includes(uid) ? cur.filter((x) => x !== uid) : [...cur, uid]));
 
   // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
   // Only casts pay a resource; plain actions get an empty list and no section.
@@ -780,6 +796,17 @@ const UseAbilityModal = ({
     }
 
     let suffixLogged = false;
+
+    // Catalysts (#1209): consume each added catalyst (by name, like potions) and
+    // log its rider effect. The extra actions fold into the cast spend below.
+    selectedCatalysts.forEach((cat) => {
+      setConsumed((cur) => ({ ...(cur || {}), [cat.name]: ((cur || {})[cat.name] || 0) + 1 }));
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name} adds ${cat.name} to ${ability.name} — ${catalystSummary(cat)}`,
+      });
+    });
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
     const coveredByRoll = new Set(
@@ -1290,8 +1317,9 @@ const UseAbilityModal = ({
     if (costToSpend === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
     } else if (costToSpend > 0) {
-      // Chambered fire adds the chosen ammo's Activate cost on top of the Strike (#676).
-      spendActions(costToSpend + fireExtra, `${verb} ${ability.name}`);
+      // Chambered fire adds the chosen ammo's Activate cost on top of the Strike (#676);
+      // catalysts add their extra actions to the cast (#1209).
+      spendActions(costToSpend + fireExtra + catalystActionBump, `${verb} ${ability.name}`);
     }
 
     // Chambered fire (#676): discharge the chosen chamber + apply on-hit effects to
@@ -1815,6 +1843,35 @@ const UseAbilityModal = ({
               })}
             </div>
             {selectedRider?.note && <div className="uam-variant-note">{selectedRider.note}</div>}
+          </section>
+        </>
+      )}
+
+      {eligibleCatalysts.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Catalysts</h3>
+            <div className="uam-cost-options" role="group" aria-label="Catalysts">
+              {eligibleCatalysts.map((cat) => {
+                const uid = itemUidOf(cat);
+                const extra = catalystAddActions(cat);
+                return (
+                  <label key={uid} className="uam-cost-option">
+                    <input
+                      type="checkbox"
+                      data-testid={`catalyst-${uid}`}
+                      checked={catalystIds.includes(uid)}
+                      onChange={() => toggleCatalyst(uid)}
+                    />
+                    {cat.name}{extra ? ` (+${extra} action${extra === 1 ? '' : 's'})` : ''}
+                  </label>
+                );
+              })}
+            </div>
+            {selectedCatalysts.map((cat) => (
+              <div key={itemUidOf(cat)} className="uam-variant-note">{catalystSummary(cat)}</div>
+            ))}
           </section>
         </>
       )}

@@ -1662,6 +1662,25 @@
     "id": "bloodseeker-beak"
   },
   {
+    "name": "Blue Salt Crystal",
+    "description": "This crystal of salt is as blue as the deep ocean. Adding this catalyst to a casting of drown transforms the summoned water into deadly brine, causing the target to take persistent acid damage for the duration of the spell equal to the rank of the spell.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical",
+      "3rd Party"
+    ],
+    "level": 3,
+    "price": 8,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "drown",
+      "effect": "The target takes persistent acid damage equal to the spell rank for the spell's duration."
+    },
+    "id": "blue-salt-crystal"
+  },
+  {
     "accessoryTags": [
       "footwear"
     ],
@@ -6512,6 +6531,26 @@
       }
     ],
     "id": "peshpine-grenade"
+  },
+  {
+    "name": "Phoenix Tail Feather",
+    "description": "This large feather shimmers between orange and blue and is noticeably warm to the touch. Adding this catalyst to a casting of blazing dive prevents allies from having to save against the damage caused by your landing, instead being granted 2 temporary Hit Points per rank that last until the end of your next turn.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical",
+      "3rd Party"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "blazing-dive",
+      "addActions": 1,
+      "effect": "Allies in the area don't save against your landing damage; each instead gains 2 temporary Hit Points per spell rank until the end of your next turn."
+    },
+    "id": "phoenix-tail-feather"
   },
   {
     "name": "Pipes of Compulsion",
