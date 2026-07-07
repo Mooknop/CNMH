@@ -847,6 +847,7 @@ describe('eligibleHostItems (#1044)', () => {
     { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50, usage: ['clothing'] },
     { id: 'pontoon', type: 'property', target: 'accessory', name: 'Pontoon', level: 9, price: 650, usage: ['footwear'] },
     { id: 'catching', type: 'property', target: 'accessory', name: 'Catching', level: 8, price: 425, usage: ['shield'] },
+    { id: 'presentable', type: 'property', target: 'shield', name: 'Presentable', level: 5, price: 100 },
   ];
   // A catalog slice: base gear, pre-runed/magic/bomb impostors, hosts, and a
   // light-bulk trinket that must never be swept in by the derived light tag.
@@ -876,6 +877,28 @@ describe('eligibleHostItems (#1044)', () => {
     expect(ids({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 20 })).toEqual([]);
   });
 
+  it('a shield-target service stocks base shields (the branch that was missing)', () => {
+    // Presentable (shield property rune, L5) is admitted → the buckler appears.
+    // Below the cap that admits it, no shields — same window logic as the others.
+    expect(ids({ runeService: true, targets: ['shield'], maxLevel: 5 })).toEqual(['buckler']);
+    expect(ids({ runeService: true, targets: ['shield'], maxLevel: 4 })).toEqual([]);
+  });
+
+  it('a shield with a bash strikes block is a shield host, never weapon base gear (#1177)', () => {
+    // Spiked steel shield: strikes + shield. Under a weapon+shield service it
+    // appears once, under shield — the weapon branch excludes it.
+    const spiked = { id: 'spiked-shield', name: 'Spiked Shield', price: 2, weight: 1, shield: { hardness: 5 }, strikes: [{}], runes: {} };
+    const got = eligibleHostItems(
+      { runeService: true, targets: ['weapon', 'shield'], maxLevel: 10 },
+      [...hostItems, spiked], hostRunes,
+    ).map((i) => i.id);
+    expect(got).toContain('spiked-shield');
+    expect(got.filter((id) => id === 'spiked-shield')).toHaveLength(1); // not double-listed
+    // And a weapon-only service never stocks it.
+    expect(eligibleHostItems({ runeService: true, targets: ['weapon'], maxLevel: 10 }, [...hostItems, spiked], hostRunes).map((i) => i.id))
+      .not.toContain('spiked-shield');
+  });
+
   it('never offers a GM-excluded (noShop) item, even valid base gear (#1105)', () => {
     // cursed-blade is a perfectly good base weapon but flagged never-sell.
     expect(ids({ runeService: true, targets: ['weapon'], maxLevel: 10 })).toEqual(['longsword']);
@@ -897,6 +920,9 @@ describe('eligibleHostItems (#1044)', () => {
     });
     it('is orthogonal to noShop — a flagged item keeps its kind', () => {
       expect(kind('cursed-blade')).toBe('weapon');
+    });
+    it('classifies a shield with a bash strikes block as shield, not weapon (#1177)', () => {
+      expect(shopHostKind({ id: 'spiked-shield', price: 2, weight: 1, shield: { hardness: 5 }, strikes: [{}], runes: {} })).toBe('shield');
     });
   });
 

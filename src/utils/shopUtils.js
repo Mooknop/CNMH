@@ -486,9 +486,13 @@ export const shopHostKind = (item) => {
   if (!item || item.id == null) return null;
   if (item.powerRing) return 'ring';
   if (!isMundaneBase(item)) return null;
+  // A shield — even one carrying a bash `strikes` block — is a shield host, not
+  // a weapon: mirrors gearTarget's shield-before-strikes precedence (#1177), so
+  // its runesmithing target and its shop kind agree.
+  if (item.shield) return 'shield';
   if (item.strikes) return 'weapon';
   if (item.armor) return 'armor';
-  if (isDeliberateHost(item)) return item.shield ? 'shield' : 'accessory';
+  if (isDeliberateHost(item)) return 'accessory';
   return null;
 };
 
@@ -536,8 +540,12 @@ export function eligibleHostItems(ware, items, runes) {
       continue;
     }
     if (!isMundaneBase(item)) continue;
-    if (explicit.includes('weapon') && admitted.has('weapon') && item.strikes) push(item);
+    // A shield is its own target (#1177) — never weapon base gear, even when it
+    // carries a bash `strikes` block (spiked steel shield). So the weapon branch
+    // excludes shields, and the shield branch stocks them for a shield service.
+    if (explicit.includes('weapon') && admitted.has('weapon') && item.strikes && !item.shield) push(item);
     if (explicit.includes('armor') && admitted.has('armor') && item.armor) push(item);
+    if (explicit.includes('shield') && admitted.has('shield') && item.shield) push(item);
     if (explicit.includes('accessory') && isDeliberateHost(item) &&
         accessoryDocs.some((r) => accessoryEligible(item, r))) push(item);
   }
