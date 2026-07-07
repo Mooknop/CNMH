@@ -12,6 +12,7 @@ import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { isSpellgun } from '../../utils/spellgun';
+import { isDragonbreath } from '../../utils/dragonbreath';
 import {
   absorbedKey, isSpellgunHost, spellgunHostCapacity, absorbedHostUid,
   absorb, retrieve as retrieveAbsorbed, absorbedSpellgunsByHost, validSpellgunHosts,
@@ -471,9 +472,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // consumableMeta recognises — so they get their own Fire button that routes to
   // the spellgun attack flow (the host page's onUse branches on isSpellgun).
   const isGun = isSpellgun(item);
-  const useButton = onUse && (consumableMeta(item) || isGun) && (item.quantity ?? 1) > 0 ? (
+  // Dragonbreath weapons (#1210 M4e) get a Breathe button that routes to the
+  // breath AoE flow (the host page's onUse branches on isDragonbreath). A weapon,
+  // not a consumable — never gated on quantity.
+  const isBreather = isDragonbreath(item);
+  const useButton = onUse && (consumableMeta(item) || isGun || isBreather) && (item.quantity ?? 1) > 0 ? (
     <button className="btn-small btn-primary" data-testid="item-action-use" onClick={() => act(() => onUse(item))}>
-      {isGun ? 'Fire' : consumableVerb(item)}
+      {isBreather ? 'Breathe' : isGun ? 'Fire' : consumableVerb(item)}
     </button>
   ) : null;
 

@@ -1035,6 +1035,16 @@ describe('ItemModal — Use button (#217)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={{ ...potion, quantity: 0 }} onUse={vi.fn()} />);
     expect(screen.queryByTestId('item-action-use')).not.toBeInTheDocument();
   });
+
+  it('offers a Breathe button that routes a dragonbreath weapon to onUse (#1210 M4e)', () => {
+    const onUse = vi.fn();
+    const weapon = { uid: 'db', name: 'Longsword', strikes: [{}], dragonbreath: { tier: 'base', dragonType: 'Red' } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={weapon} onUse={onUse} />);
+    const btn = screen.getByTestId('item-action-use');
+    expect(btn).toHaveTextContent('Breathe');
+    fireEvent.click(btn);
+    expect(onUse).toHaveBeenCalledWith(weapon);
+  });
 });
 
 describe('ItemModal — loadout action footer', () => {
