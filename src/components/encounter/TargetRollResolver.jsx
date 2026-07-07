@@ -157,6 +157,8 @@ const TargetRollResolver = forwardRef(({
             // displayed final (relay stays raw via rawFinal/rawInstances).
             typeLabel: damage.typeLabel,
             defenses: entry.defenses,
+            // Counts-as tags (#1214 — whetstone material / ghost touch).
+            iwrTags: damage.iwrTags,
           })
         : null;
       return {

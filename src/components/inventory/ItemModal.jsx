@@ -119,8 +119,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // it's derived from the wielder's stats (ability/proficiency, runes/potency,
   // and special rules like the Flawless Hammer's spell-attack). Resolve per-item
   // so the modal can show the real bonus/damage; fall back to any explicitly
-  // authored values (used by tests/synthetic items) or "-".
-  const resolvedStrikes = resolveItemStrikes(item, charData);
+  // authored values (used by tests/synthetic items) or "-". An active whetstone
+  // effect bound to this weapon alters the displayed strikes too (#1214).
+  const weaponWhetstone = item.strikes ? activeWhetstoneOn(effects, itemUidOf(item)) : null;
+  const resolvedStrikes = resolveItemStrikes(item, charData, null, weaponWhetstone);
   const strikeBonus = (raw, i) => {
     const mod = resolvedStrikes[i]?.attackMod;
     if (typeof mod === 'number') return formatModifier(mod);
@@ -175,8 +177,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     onClose();
   };
 
-  // When THIS item is a weapon: the whetstone effect currently bound to it.
-  const weaponWhetstone = item.strikes ? activeWhetstoneOn(effects, itemUidOf(item)) : null;
+  // When THIS item is a weapon: remove the whetstone effect bound to it.
   const doRemoveWhetstone = () => {
     setEffects((cur) => (cur || []).filter((e) => e.id !== weaponWhetstone.id));
     appendEvent({

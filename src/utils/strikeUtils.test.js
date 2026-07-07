@@ -479,3 +479,37 @@ describe('thrown Strike tagging (#1230)', () => {
     expect('thrown' in shot).toBe(false);
   });
 });
+
+describe('whetstone strike alterations (#1214)', () => {
+  const runedSword = {
+    id: 'i9', uid: 'u9', name: 'Longsword', state: 'held1',
+    strikes: [{ name: 'Longsword Strike', proficiency: 'martial', type: 'melee', damage: '1d8', damageType: 'slashing' }],
+    runes: { potency: 1, striking: 'striking' },
+  };
+  const morphEntry = {
+    id: 'fx1',
+    whetstone: {
+      itemId: 'morph-jewel', itemName: 'Morph Jewel', weaponUid: 'u9', weaponName: 'Longsword',
+      duration: 'minute', choice: 'bludgeoning', effect: { damageType: 'from-choice' },
+    },
+  };
+
+  test('resolveItemStrikes applies the bound whetstone after runes', () => {
+    const [strike] = resolveItemStrikes(runedSword, minimalCharacter, null, morphEntry);
+    expect(strike.damageType).toBe('bludgeoning'); // whetstone override wins
+    expect(strike.damage).toBe('2d8+2');           // striking dice untouched
+    expect(strike.whetstone).toEqual({ itemName: 'Morph Jewel', choice: 'bludgeoning' });
+  });
+
+  test('getStrikes keys whetstone entries by weapon uid; other weapons untouched', () => {
+    const other = {
+      id: 'i10', uid: 'u10', name: 'Dagger', state: 'held1',
+      strikes: [{ name: 'Dagger Strike', proficiency: 'simple', type: 'melee', damage: '1d4', damageType: 'piercing' }],
+    };
+    const char = { ...minimalCharacter, inventory: [runedSword, other] };
+    const strikes = getStrikes(char, {}, { u9: morphEntry });
+    expect(strikes.find((s) => s.name === 'Longsword Strike').damageType).toBe('bludgeoning');
+    expect(strikes.find((s) => s.name === 'Dagger Strike').damageType).toBe('piercing');
+    expect(strikes.find((s) => s.name === 'Dagger Strike').whetstone).toBeUndefined();
+  });
+});

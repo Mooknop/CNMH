@@ -115,7 +115,7 @@ const HIT_DEGREES = ['success', 'criticalSuccess'];
 // Returns { instances, fired } where `fired` lists the modifiers that actually
 // changed an amount: [{ kind: 'immunity'|'weakness'|'resistance', type, amount }]
 // (amount signed — the reveal-on-trigger hook and the breakdown both key off it).
-const applyIwr = (instances, defenses, dedupeTypes = null) => {
+const applyIwr = (instances, defenses, dedupeTypes = null, iwrTags = null) => {
   const fired = [];
   const immunities = new Set(
     (defenses?.immunities || []).map((t) => String(t).toLowerCase())
@@ -126,6 +126,14 @@ const applyIwr = (instances, defenses, dedupeTypes = null) => {
     );
     return hit ? hit.value : 0;
   };
+  // Counts-as tags (#1214 — Transmuting Ingots, ghost touch): monster weaknesses
+  // keyed by material/effect strings the attack now counts as. A tag weakness
+  // fires once, on the first damaging non-immune instance (RAW: a weakness to
+  // the attack itself applies once per attack), and never on the tag-immune path
+  // — resistance exceptions stay Foundry-side (the relay sends raw totals).
+  let tagsPending = (iwrTags || [])
+    .map((t) => String(t).toLowerCase())
+    .filter((t) => t && !dedupeTypes?.has(t));
   const out = instances.map((inst) => {
     const type = String(inst.type || '').toLowerCase();
     if (!type || !(inst.amount > 0)) return inst;
@@ -139,6 +147,14 @@ const applyIwr = (instances, defenses, dedupeTypes = null) => {
       amount += weak;
       fired.push({ kind: 'weakness', type, amount: weak });
     }
+    for (const tag of tagsPending) {
+      const tagWeak = valueFor(defenses?.weaknesses, tag);
+      if (tagWeak > 0) {
+        amount += tagWeak;
+        fired.push({ kind: 'weakness', type: tag, amount: tagWeak });
+      }
+    }
+    tagsPending = [];
     const resist = valueFor(defenses?.resistances, type);
     const reduce = Math.min(resist, amount);
     if (reduce > 0) {
@@ -211,6 +227,7 @@ export const computeTargetDamage = ({
   critDouble = true,
   typeLabel = null,
   defenses = null,
+  iwrTags = null,
 }) => {
   const multi = Array.isArray(instances) && instances.length > 0;
   if (multi) {
@@ -264,7 +281,7 @@ export const computeTargetDamage = ({
       weaknessRiders.map((r) => String(r.weaknessType || '').toLowerCase()).filter(Boolean)
     );
     const working = outInstances ?? [{ amount: total, type: typeLabel || '' }];
-    const { instances: netted, fired } = applyIwr(working, defenses, dedupeTypes);
+    const { instances: netted, fired } = applyIwr(working, defenses, dedupeTypes, iwrTags);
     if (fired.length) {
       final = netted.reduce((sum, i) => sum + i.amount, 0);
       if (multi) finalInstances = netted;
@@ -649,7 +666,16 @@ export const buildDamageProfile = (ability, character, {
   // Per-degree save multiplier overrides (#987) — profile-level, carried into
   // the save request next to entered/typeLabel for GM-side computeSaveDamage.
   const degrees = damageOverride?.degrees ?? dd?.degrees ?? null;
-  return { expression, typeLabel, riders: gatedRiders, ...(degrees && { degrees }) };
+  // Counts-as tags (#1214 — whetstone material / ghost touch): strike-level
+  // strings the attack counts as for monster weakness matching.
+  const iwrTags = damageOverride?.iwrTags ?? dd?.iwrTags ?? ability.iwrTags ?? null;
+  return {
+    expression,
+    typeLabel,
+    riders: gatedRiders,
+    ...(degrees && { degrees }),
+    ...(Array.isArray(iwrTags) && iwrTags.length ? { iwrTags } : {}),
+  };
 };
 
 /**

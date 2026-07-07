@@ -1138,3 +1138,61 @@ describe('formatDamageBreakdown — fired IWR', () => {
     })).toBe('0 (13 immune (fire))');
   });
 });
+
+describe('counts-as iwrTags (#1214 — whetstone material / ghost touch)', () => {
+  test('a monster weakness keyed by the tag fires once on the base instance', () => {
+    const out = computeTargetDamage({
+      entered: 10, degree: 'success', entryId: 'e1',
+      typeLabel: 'slashing',
+      defenses: { weaknesses: [{ type: 'silver', value: 5 }] },
+      iwrTags: ['silver'],
+    });
+    expect(out.final).toBe(15);
+    expect(out.iwr).toEqual([{ kind: 'weakness', type: 'silver', amount: 5 }]);
+    expect(out.rawFinal).toBe(10);
+  });
+
+  test('tags fire alongside a type weakness, before resistance nets', () => {
+    const out = computeTargetDamage({
+      entered: 10, degree: 'success', entryId: 'e1',
+      typeLabel: 'slashing',
+      defenses: {
+        weaknesses: [{ type: 'slashing', value: 3 }, { type: 'ghost touch', value: 5 }],
+        resistances: [{ type: 'slashing', value: 4 }],
+      },
+      iwrTags: ['ghost touch'],
+    });
+    // 10 + 3 (slashing weak) + 5 (ghost touch weak) - 4 (slashing resist) = 14
+    expect(out.final).toBe(14);
+  });
+
+  test('multi-instance: the tag weakness lands on the first damaging instance only', () => {
+    const out = computeTargetDamage({
+      instances: [{ amount: 8, type: 'slashing' }, { amount: 4, type: 'fire' }],
+      degree: 'success', entryId: 'e1',
+      defenses: { weaknesses: [{ type: 'cold iron', value: 5 }] },
+      iwrTags: ['cold iron'],
+    });
+    expect(out.instances.map((i) => i.amount)).toEqual([13, 4]);
+    expect(out.final).toBe(17);
+  });
+
+  test('no matching weakness → tags are inert', () => {
+    const out = computeTargetDamage({
+      entered: 10, degree: 'success', entryId: 'e1',
+      typeLabel: 'slashing',
+      defenses: { weaknesses: [{ type: 'fire', value: 5 }] },
+      iwrTags: ['silver'],
+    });
+    expect(out.final).toBe(10);
+    expect(out.iwr).toBeUndefined();
+  });
+
+  test('buildDamageProfile carries strike-level iwrTags into the profile', () => {
+    const strike = { name: 'Silvered Strike', attackMod: 7, damage: '1d8+4', damageType: 'slashing', iwrTags: ['silver'] };
+    const profile = buildDamageProfile(strike, { level: 5 });
+    expect(profile.iwrTags).toEqual(['silver']);
+    const plain = buildDamageProfile({ name: 'Plain', attackMod: 7, damage: '1d8' }, { level: 5 });
+    expect(plain.iwrTags).toBeUndefined();
+  });
+});

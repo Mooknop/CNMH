@@ -29,6 +29,7 @@
 import { newEntryUid } from './uid';
 import { itemUidOf, isTalisman } from './affix';
 import { resolveExpireAt } from './expiry';
+import { translatePropertyRider } from './weaponRunes';
 
 /** 1 minute = 10 rounds under the encounter round sweep. */
 export const MINUTE_ROUNDS = 10;
@@ -156,3 +157,96 @@ export const withWhetstoneApplied = (effects, entry) => [
   ),
   entry,
 ];
+
+// ── Strike & damage alterations (W2, #1214) ─────────────────────────────────
+//
+// The composable `item.whetstone.effect` payload (copied onto the effect entry
+// at apply time) alters the bound weapon's resolved strikes. All fields are
+// optional; a whetstone may combine several:
+//
+//   effect: {
+//     damageType: 'from-choice' | '<type>',  // override the strike's damage type
+//                                            //   ('from-choice' reads the apply-time pick — Morph Jewel)
+//     addTraits: ['Nonlethal'],              // grant traits (Hand of Mercy)
+//     suppressPersistent: true,              // negate the weapon's persistent-damage riders (Hand of Mercy)
+//     material: 'silver',                    // counts as that material (Transmuting Ingot)
+//     iwrTags: ['ghost touch'],              // extra counts-as tags for weakness matching (#1014 rail)
+//     perDieFlat: { amount: 1, type: 'bludgeoning' }, // +N flat per weapon damage die (Mighty Counterweight)
+//     grantRunes: [{ id, name, rider? }],    // property-rune effects for the duration (Ethereal Crescent)
+//     rangeMultiplier: 2,                    // scale the range increment, ranged strikes only (Featherlight Fletching)
+//   }
+//
+// `material` + `iwrTags` surface on the strike as `iwrTags` and ride the damage
+// profile into weakness matching (a creature weak to silver/ghost touch takes
+// the bonus). Resistance exceptions ("physical 10, except silver") stay
+// Foundry-side — the relay sends raw totals and Foundry nets IWR itself.
+
+/** Active whetstone entries keyed by their bound weapon uid. */
+export const whetstonesByWeaponUid = (effects) => {
+  const out = {};
+  for (const e of Array.isArray(effects) ? effects : []) {
+    if (e?.whetstone?.weaponUid) out[e.whetstone.weaponUid] = e;
+  }
+  return out;
+};
+
+// '60 ft' / '60' / 60 → scaled by mult, preserving the string suffix.
+const scaleRange = (range, mult) => {
+  if (typeof range === 'number') return range * mult;
+  const m = String(range ?? '').match(/^(\s*)(\d+)(.*)$/);
+  if (!m) return range;
+  return `${m[1]}${Number(m[2]) * mult}${m[3]}`;
+};
+
+/**
+ * Apply an active whetstone entry's effect payload to a resolved strike object
+ * (strikeUtils.resolveItemStrikes output). Descriptive whetstones (no payload)
+ * only stamp the marker; unknown payload fields are ignored so future
+ * whetstones stay content-only.
+ */
+export const applyWhetstoneStrikeAlterations = (strikeObj, entry) => {
+  const ws = entry?.whetstone;
+  if (!ws) return strikeObj;
+  const eff = ws.effect || {};
+  const s = { ...strikeObj, whetstone: { itemName: ws.itemName, ...(ws.choice != null ? { choice: ws.choice } : {}) } };
+
+  const damageType = eff.damageType === 'from-choice' ? ws.choice : eff.damageType;
+  if (damageType) s.damageType = damageType;
+
+  if (Array.isArray(eff.addTraits) && eff.addTraits.length) {
+    const have = new Set((s.traits || []).map((t) => String(t).toLowerCase()));
+    s.traits = [
+      ...(s.traits || []),
+      ...eff.addTraits.filter((t) => !have.has(String(t).toLowerCase())),
+    ];
+  }
+
+  const tags = [
+    ...(eff.material ? [eff.material] : []),
+    ...(Array.isArray(eff.iwrTags) ? eff.iwrTags : []),
+  ];
+  if (eff.material) s.material = eff.material;
+  if (tags.length) s.iwrTags = [...new Set([...(s.iwrTags || []), ...tags])];
+
+  if (eff.rangeMultiplier && s.type === 'ranged' && s.range != null) {
+    s.range = scaleRange(s.range, eff.rangeMultiplier);
+  }
+
+  let riders = Array.isArray(s.riders) ? [...s.riders] : [];
+  if (eff.suppressPersistent) riders = riders.filter((r) => !r.persistent);
+  if (eff.perDieFlat) {
+    riders.push({
+      id: `whetstone-${ws.itemId || 'perdie'}`,
+      label: ws.itemName,
+      bonus: { perWeaponDie: eff.perDieFlat.amount ?? 1 },
+      ...(eff.perDieFlat.type ? { type: eff.perDieFlat.type } : {}),
+    });
+  }
+  if (Array.isArray(eff.grantRunes)) {
+    riders.push(...eff.grantRunes.flatMap(translatePropertyRider));
+  }
+  if (riders.length) s.riders = riders;
+  else delete s.riders;
+
+  return s;
+};
