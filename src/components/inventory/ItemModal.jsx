@@ -12,6 +12,10 @@ import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { isSpellgun } from '../../utils/spellgun';
+import {
+  absorbedKey, isSpellgunHost, spellgunHostCapacity, absorbedHostUid,
+  absorb, retrieve as retrieveAbsorbed, absorbedSpellgunsByHost, validSpellgunHosts,
+} from '../../utils/spellgunHost';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import {
   isTalisman, affixTargetType, validAffixHosts, affixedHostUid,
@@ -59,6 +63,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
   // Shield-attachment overlay (#1165 Track 2) — attachmentUid → hostShieldUid.
   const [attached, setAttached] = useSyncedState(attachedKey(character?.id), {});
+  // Spellgun-absorption overlay (#1208) — spellgunUid → host glove uid.
+  const [absorbed, setAbsorbed] = useSyncedState(absorbedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   // Etch-time accessory-rune config (#1055 S4) — the depicted dragon type for a
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
@@ -140,6 +146,38 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // attachments and runes, an affixed talisman has no tile of its own — it lives
   // on its host's card, the sole place to activate or remove it.
   const hostedTalismans = affixedTalismansByHost(affixed, flatInventory)[itemUidOf(item)] || [];
+
+  // Spellgun hosts (#1208) — the Arcane Duelist's Gloves absorb spellguns. The
+  // binding mirrors talisman affix / shield attach but is capacity-limited: a
+  // spellgun is absorbed into a glove (10-min activity), fired from the glove
+  // card, or retrieved intact (never consumed on retrieval — only on firing).
+  const spellgunItem = isSpellgun(item);
+  const absorbHosts = spellgunItem ? validSpellgunHosts(flatInventory, item, absorbed) : [];
+  const absorbedInto = spellgunItem
+    ? flatInventory.find((it) => itemUidOf(it) === absorbedHostUid(absorbed, itemUidOf(item)))
+    : null;
+  // When THIS item is a host glove: the spellgun(s) currently absorbed into it.
+  const gloveHost = isSpellgunHost(item);
+  const gloveCapacity = spellgunHostCapacity(item);
+  const absorbedGuns = gloveHost
+    ? (absorbedSpellgunsByHost(absorbed, flatInventory)[itemUidOf(item)] || [])
+    : [];
+
+  const doAbsorb = (host) => {
+    setAbsorbed((cur) => absorb(cur, itemUidOf(item), host));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} absorbed ${item.name} into ${host.name} (10-minute activity)` });
+    onClose();
+  };
+  const doRetrieveAbsorbed = () => {
+    setAbsorbed((cur) => retrieveAbsorbed(cur, itemUidOf(item)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} retrieved ${item.name} from ${absorbedInto?.name || 'the gloves'} (10-minute activity)` });
+    onClose();
+  };
+  const doRetrieveHosted = (g) => {
+    setAbsorbed((cur) => retrieveAbsorbed(cur, itemUidOf(g)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} retrieved ${g.name} from ${item.name} (10-minute activity)` });
+    onClose();
+  };
 
   const doAttach = (host) => {
     setAttached((cur) => attach(cur, itemUidOf(item), itemUidOf(host)));
@@ -700,6 +738,48 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
+      {/* Absorbed spellguns (#1208) — the Arcane Duelist's Gloves host spellguns
+          nested here (like affixed talismans): fired or retrieved from this card. */}
+      {gloveHost && (
+        <div className="item-affix" data-testid="absorbed-spellguns">
+          <h3>Absorbed Spellguns <span className="item-affix-count">{absorbedGuns.length} / {gloveCapacity}</span></h3>
+          {absorbedGuns.length === 0 ? (
+            <p className="item-affix-hint">
+              No spellgun absorbed. Absorb one from its item card (10-minute activity).
+            </p>
+          ) : (
+            absorbedGuns.map((g) => (
+              <div key={itemUidOf(g)} className="item-affix-state item-affix-state--stack">
+                <div className="hosted-talisman-info">
+                  <span><strong>{g.name}</strong> — absorbed into these gloves.</span>
+                  <p className="item-affix-hint">Activate with at least one hand empty.</p>
+                </div>
+                <div className="hosted-talisman-actions">
+                  {onUse && (
+                    <button
+                      type="button"
+                      className="btn-small btn-primary"
+                      data-testid={`absorbed-fire-${itemUidOf(g)}`}
+                      onClick={() => act(() => onUse(g))}
+                    >
+                      Fire
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn-small btn-secondary"
+                    data-testid={`absorbed-retrieve-${itemUidOf(g)}`}
+                    onClick={() => doRetrieveHosted(g)}
+                  >
+                    Retrieve
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
       {/* Active item-target effects (oils, #339) — with manual removal for the
           untimed ones (timed effects also clear on the game clock). */}
       {activeItemEffects.length > 0 && (
@@ -783,6 +863,46 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <p className="item-affix-hint">
               No valid {affixTargetType(item) || 'item'} to affix this to.
             </p>
+          )}
+        </div>
+      )}
+
+      {/* Absorb into gloves (#1208) — a spellgun binds to an Arcane Duelist's
+          Gloves host (10-min activity); retrieval returns it intact. */}
+      {spellgunItem && (absorbedInto || absorbHosts.length > 0) && (
+        <div className="item-affix" data-testid="item-absorb">
+          <h3>Absorb</h3>
+          {absorbedInto ? (
+            <div className="item-affix-state">
+              <span>Absorbed into <strong>{absorbedInto.name}</strong></span>
+              <button
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid="item-action-retrieve-absorbed"
+                onClick={doRetrieveAbsorbed}
+              >
+                Retrieve
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="item-affix-hint">
+                Absorb into a pair of spellgun gloves (10-minute activity):
+              </p>
+              <div className="item-affix-hosts">
+                {absorbHosts.map((h) => (
+                  <button
+                    key={itemUidOf(h)}
+                    type="button"
+                    className="btn-small btn-secondary"
+                    data-testid={`absorb-host-${itemUidOf(h)}`}
+                    onClick={() => doAbsorb(h)}
+                  >
+                    {h.name}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

@@ -151,6 +151,34 @@ describe('SpellgunAttackModal', () => {
     expect(sendUpdate).toHaveBeenCalledWith('petra', 'consumed', { 'Verdant Bola': 1 }, { force: false });
   });
 
+  it('clears the absorbed binding when the fired spellgun was in gloves (#1208)', () => {
+    const bound = { ...howlGreater, uid: 'gun-uid' };
+    useEncounter.mockReturnValue({ encounter: { order, active: true, phase: 'in-progress' }, appendLog });
+    useTurnState.mockReturnValue({ spendActions });
+    useSessionLog.mockReturnValue({ appendEvent });
+    useIwrReveal.mockReturnValue({ revealFiredIwr });
+    const sess = {
+      connected: true,
+      foundryConnected: true,
+      getState: (id, type) => (id === 'petra' && type === 'absorbed' ? { 'gun-uid': 'glove-uid' } : undefined),
+      getAllState: () => ({}),
+      sendUpdate,
+      subscribe: () => () => {},
+    };
+    render(
+      <SessionContext.Provider value={sess}>
+        <SpellgunAttackModal isOpen onClose={() => {}} item={bound} character={petra} />
+      </SessionContext.Provider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByTestId('sgm-fire'));
+
+    const absorbedCall = sendUpdate.mock.calls.find(([id, type]) => id === 'petra' && type === 'absorbed');
+    expect(absorbedCall).toBeTruthy();
+    expect(absorbedCall[2]).toEqual({}); // gun-uid binding removed
+  });
+
   it('does not spend actions out of encounter (logs to the session log instead)', () => {
     renderModal(howlGreater, { active: false });
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));

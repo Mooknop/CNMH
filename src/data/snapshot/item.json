@@ -920,6 +920,38 @@
     "id": "antiplague"
   },
   {
+    "name": "Arcane Duelist's Gloves",
+    "description": "This pair of white gloves has an embroidered dueling pistol on its back, the barrel running the length of its ring and pointer finger. You can spend 10 minutes absorbing a spellgun into the embroidered pistol, retrieving an absorbed item, or swapping one spellgun for another. A pair of arcane duelist's gloves can only contain one spellgun. You can activate an absorbed spellgun while at least one of your hands is empty as if you were holding it, simply by pointing at the target with the embroidered fingers.",
+    "traits": [
+      "Magical",
+      "3rd Party"
+    ],
+    "level": 6,
+    "price": 225,
+    "bulk": "L",
+    "usage": "worn gloves",
+    "spellgunHost": {
+      "capacity": 1
+    },
+    "id": "arcane-duelists-gloves"
+  },
+  {
+    "name": "Arcane Duelist's Gloves (Greater)",
+    "description": "This pair of white gloves has an embroidered dueling pistol on its back, the barrel running the length of its ring and pointer finger. You can spend 10 minutes absorbing a spellgun into the embroidered pistol, retrieving an absorbed item, or swapping one spellgun for another. A pair of greater arcane duelist's gloves can only contain up to two spellguns. You can activate an absorbed spellgun while at least one of your hands is empty as if you were holding it, simply by pointing at the target with the embroidered fingers.",
+    "traits": [
+      "Magical",
+      "3rd Party"
+    ],
+    "level": 16,
+    "price": 9750,
+    "bulk": "L",
+    "usage": "worn gloves",
+    "spellgunHost": {
+      "capacity": 2
+    },
+    "id": "arcane-duelists-gloves-greater"
+  },
+  {
     "actions": [
       {
         "name": "Release Cantrip",

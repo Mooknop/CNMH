@@ -54,6 +54,10 @@ const mockSetConsumed = vi.fn((next) => {
 const mockSetAttached = vi.fn((next) => {
   mockAttached = typeof next === 'function' ? next(mockAttached) : next;
 });
+let mockAbsorbed = {};
+const mockSetAbsorbed = vi.fn((next) => {
+  mockAbsorbed = typeof next === 'function' ? next(mockAbsorbed) : next;
+});
 let mockInvested = {};
 const mockSetInvested = vi.fn((next) => {
   mockInvested = typeof next === 'function' ? next(mockInvested) : next;
@@ -70,6 +74,7 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
+    if (String(key).startsWith('cnmh_absorbed_')) return [mockAbsorbed, mockSetAbsorbed];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
@@ -141,6 +146,10 @@ vi.mock('../../hooks/useItemActivation', () => ({
 beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
+  mockAttached = {};
+  mockAbsorbed = {};
+  mockSetAttached.mockClear();
+  mockSetAbsorbed.mockClear();
   mockConsumed = {};
   mockInvested = {};
   mockRuneConfig = {};
@@ -1810,5 +1819,52 @@ describe('ItemModal — item-mode toggle (#1093)', () => {
   it('shows no toggle for mode-less items', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={{ name: 'Rope', quantity: 1, weight: 0.1 }} character={char} />);
     expect(screen.queryByTestId('item-modes')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — spellgun host (Arcane Duelist\'s Gloves, #1208)', () => {
+  const glove = () => ({ uid: 'g1', name: "Arcane Duelist's Gloves", spellgunHost: { capacity: 1 }, usage: 'worn gloves', quantity: 1 });
+  const gun = (uid = 'gun1', name = 'Howl of Winter (Greater)') =>
+    ({ uid, name, quantity: 1, traits: ['Attack', 'Consumable', 'Spellgun'], spellgun: { against: 'ac', damageType: 'cold', rangeIncrement: 30, actionCount: 2 }, dice: '12d6' });
+  const petra = (inv) => ({ id: 'petra', name: 'Petra', __inventory: inv });
+
+  it('renders absorbed spellguns nested on the glove card, with capacity', () => {
+    mockAbsorbed = { gun1: 'g1' };
+    const g = glove();
+    const onUse = vi.fn();
+    render(<ItemModal isOpen onClose={vi.fn()} item={g} character={petra([g, gun()])} onUse={onUse} />);
+    const section = screen.getByTestId('absorbed-spellguns');
+    expect(within(section).getByText('1 / 1')).toBeInTheDocument();
+    expect(within(section).getByText(/Howl of Winter \(Greater\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('absorbed-fire-gun1'));
+    expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ uid: 'gun1' }));
+  });
+
+  it('offers an absorb picker on a spellgun and binds it to the chosen glove', () => {
+    mockAbsorbed = {};
+    const g = glove();
+    const s = gun();
+    render(<ItemModal isOpen onClose={vi.fn()} item={s} character={petra([g, s])} />);
+    expect(screen.getByTestId('item-absorb')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('absorb-host-g1'));
+    expect(mockAbsorbed).toEqual({ gun1: 'g1' });
+  });
+
+  it('shows Retrieve when the spellgun is already absorbed, and clears the binding', () => {
+    mockAbsorbed = { gun1: 'g1' };
+    const g = glove();
+    const s = gun();
+    render(<ItemModal isOpen onClose={vi.fn()} item={s} character={petra([g, s])} />);
+    expect(screen.getByText(/Absorbed into/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('item-action-retrieve-absorbed'));
+    expect(mockAbsorbed).toEqual({});
+  });
+
+  it('hides the absorb picker when every glove is at capacity', () => {
+    mockAbsorbed = { gun1: 'g1' }; // capacity-1 glove already full
+    const g = glove();
+    const s2 = gun('gun2', 'Verdant Bola');
+    render(<ItemModal isOpen onClose={vi.fn()} item={s2} character={petra([g, gun(), s2])} />);
+    expect(screen.queryByTestId('item-absorb')).not.toBeInTheDocument();
   });
 });

@@ -12,6 +12,7 @@ import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } fr
 import { isHeldState } from '../../utils/itemState';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
+import { absorbedKey, absorbedUidSet } from '../../utils/spellgunHost';
 import { attachedKey, attachedUidSet } from '../../utils/shieldAttach';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -53,6 +54,9 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Shield-attachment overlay (#1165 Track 2) — attached weapons render via their
   // host shield, not as their own loose tile (like affixed talismans).
   const [attached] = useSyncedState(attachedKey(character?.id), {});
+  // Spellgun-absorption overlay (#1208) — spellguns absorbed into a host glove
+  // render via the glove card, not as their own loose tile (like the above).
+  const [absorbed] = useSyncedState(absorbedKey(character?.id), {});
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
   const { mode } = usePlayMode();
@@ -72,12 +76,14 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // their own tile.
   const affixedUids = affixedUidSet(affixed);
   const attachedUids = attachedUidSet(attached);
-  const notAffixed = (item) => !affixedUids.has(itemUidOf(item)) && !attachedUids.has(itemUidOf(item));
+  const absorbedUids = absorbedUidSet(absorbed);
+  const notAffixed = (item) =>
+    !affixedUids.has(itemUidOf(item)) && !attachedUids.has(itemUidOf(item)) && !absorbedUids.has(itemUidOf(item));
   // Host items (the target of any affixed talisman or shield attachment) get a
   // `hasAttachment` flag so IconTile can mark them with the attachment medallion —
   // the visual counterpart to the child now living inside the host's card.
   const hostUids = new Set(
-    [...Object.values(affixed || {}), ...Object.values(attached || {})].filter(Boolean),
+    [...Object.values(affixed || {}), ...Object.values(attached || {}), ...Object.values(absorbed || {})].filter(Boolean),
   );
   const stampHosts = (items) =>
     items.map((it) => (hostUids.has(itemUidOf(it)) ? { ...it, hasAttachment: true } : it));
