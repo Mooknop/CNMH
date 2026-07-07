@@ -413,6 +413,26 @@
     ]
   },
   {
+    "id": "confounding",
+    "type": "property",
+    "target": "shield",
+    "name": "Confounding",
+    "level": 10,
+    "price": 1000,
+    "description": "This swirling rune causes the face of the shield to shift in mesmerizing ways, confusing enemies between friend and foe.",
+    "actuated": {
+      "cost": "none",
+      "name": "Confounding",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger An enemy misses you while you have your shield raised; Effect The enemy is subjected to the effects of the confuse spell (DC 29). The GM resolves the confuse effect.",
+      "dc": 29
+    }
+  },
+  {
     "id": "corrosive",
     "type": "property",
     "name": "Corrosive",
@@ -1206,6 +1226,46 @@
     }
   },
   {
+    "id": "glyphed",
+    "type": "property",
+    "target": "shield",
+    "name": "Glyphed",
+    "level": 11,
+    "price": 1200,
+    "description": "This intricate and complex rune creates a reservoir that can hold magical potential. Once per day as a 10-minute activity, a creature may imbue the shield with a hostile spell of up to 3rd-level that takes 3 actions or fewer to cast. The first time you use your Shield Block reaction, or any Shield Reaction that is triggered by an enemy's action, the glyph is set off, casting the stored spell from the shield's position. The GM adjudicates the stored spell and its resolution.",
+    "actuated": {
+      "cost": "none",
+      "name": "Set Glyph",
+      "actionCount": 10,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "A 10-minute activity imbuing the shield with a hostile spell of up to 3rd-level. It discharges the first time you use a Shield Reaction triggered by an enemy. The GM tracks and resolves the stored spell."
+    }
+  },
+  {
+    "id": "glyphed-lesser",
+    "type": "property",
+    "target": "shield",
+    "name": "Lesser Glyphed",
+    "level": 8,
+    "price": 500,
+    "description": "This intricate and complex rune creates a reservoir that can hold magical potential. Once per day as a 10-minute activity, a creature may imbue the shield with a hostile spell, which is consumed by this activity. The stored spell must take 3 actions or fewer to cast, have a hostile effect, and target one or more creatures or have an area. The spell may be up to 2nd-level. The first time you use your Shield Block reaction, or any Shield Reaction that is triggered by an enemy's action, the glyph is set off, casting the stored spell from the shield's position. If the spell targets one or more creatures, it targets the creature who triggered the glyph. If the spell deals damage, the shield takes the spell's damage as if it had been hit, reduced by the shield's Hardness as usual. The stored spell remains in the shield until it is triggered or until you make your next daily preparations. The GM adjudicates the stored spell and its resolution.",
+    "actuated": {
+      "cost": "none",
+      "name": "Set Glyph",
+      "actionCount": 10,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "A 10-minute activity. A creature imbues the shield with a hostile spell of up to 2nd-level that takes 3 actions or fewer to cast. It discharges the first time you use a Shield Reaction triggered by an enemy. The GM tracks and resolves the stored spell."
+    }
+  },
+  {
     "id": "greater-energy-resistant",
     "type": "property",
     "target": "shield",
@@ -1263,6 +1323,26 @@
     }
   },
   {
+    "id": "greater-glyphed",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Glyphed",
+    "level": 14,
+    "price": 4700,
+    "description": "As glyphed, but the stored spell may be up to 4th-level. The GM adjudicates the stored spell and its resolution.",
+    "actuated": {
+      "cost": "none",
+      "name": "Set Glyph",
+      "actionCount": 10,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "A 10-minute activity imbuing the shield with a hostile spell of up to 4th-level. It discharges the first time you use a Shield Reaction triggered by an enemy. The GM tracks and resolves the stored spell."
+    }
+  },
+  {
     "id": "greater-holding",
     "type": "property",
     "target": "shield",
@@ -1270,6 +1350,25 @@
     "level": 11,
     "price": 1100,
     "description": "This sprawling rune creates an extradimensional space inside your shield. You may store items inside your shield, through an opening near the handle or straps. The extradimensional space can hold up to 24 bulk of items and does not affect the bulk of the shield. Objects must still be able to fit through the opening, which is large enough to insert items as large as the shield itself. You can retrieve an item stored in this extradimensional space with a single Interact action."
+  },
+  {
+    "id": "greater-jinxed",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Jinxed",
+    "level": 14,
+    "price": 4500,
+    "description": "This carefully drawn hex rune has the power to bring misfortune on enemies who try to attack you.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Jinxed",
+      "actionCount": 1,
+      "frequency": "once per minute",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger An enemy hits you with an attack; Effect You shout a quick hex word to trigger the curse on your shield. The enemy must roll their attack roll twice and keep the worse result. This is a misfortune effect. If you are a witch or have the witch archetype, you may reuse this ability as a focus spell by spending a focus point after you have consumed its daily use. The GM applies the reroll."
+    }
   },
   {
     "id": "greater-living",
@@ -1290,6 +1389,25 @@
       "description": "You cast shillelagh as a 1st-level spell.",
       "spellRef": "shillelagh",
       "castRank": 1
+    }
+  },
+  {
+    "id": "greater-reflecting",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Reflecting",
+    "level": 12,
+    "price": 2500,
+    "description": "A rune of counteraction is inscribed on this shield, allowing the shield to absorb attacks and redirect them back at their source.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Reflecting",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger You are hit by any weapon attack; Effect Change the target of the triggering attack from yourself to the attacker; use the same attack roll to determine the result of the attack. Your shield loses 10 Hit Points. The GM resolves the redirected attack."
     }
   },
   {
@@ -1337,6 +1455,34 @@
     }
   },
   {
+    "id": "greater-reverberating",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Reverberating",
+    "level": 12,
+    "price": 2250,
+    "description": "This rune spreads across the shield's face like waves. It must be etched onto a metal shield. Any time an attack misses you because of your shield's circumstance bonus to Armor Class or you use the Shield Block reaction, the shockwave is stored in this rune for 1 round. The next time you hit a target with this shield, you release the stored energy in a reverberating sonic blast. The additional sonic damage is two times the number of weapon damage dice, and on a critical hit the persistent sonic damage increases to 4d4 (and deafens the target for 1 minute)."
+  },
+  {
+    "id": "greater-seeing",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Seeing",
+    "level": 13,
+    "price": 4000,
+    "description": "A rune that roughly resembles an eye grants the inscribed shield the ability to see through deceit and illusions. You gain a +2 item bonus to Perception checks to Sense Motive and any check made to disbelieve an illusion.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Seeing",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Effect You Raise the Shield and attempt a counteract check against each illusion within a 30-foot cone. If you have a spellcasting class feature, you may use your counteract bonus, otherwise your counteract bonus is +22. This is a 7th-level counteract effect. The GM resolves the counteract checks."
+    }
+  },
+  {
     "id": "greater-sliding",
     "type": "property",
     "target": "shield",
@@ -1374,6 +1520,38 @@
       ],
       "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This creates a 4th-level version of the chosen summoning spell, except that the creature must be summoned in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn."
     }
+  },
+  {
+    "id": "greater-taunting",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Taunting",
+    "level": 12,
+    "price": 2500,
+    "description": "This chaotic rune encourages enemies to attack you instead of your allies.",
+    "actuated": {
+      "cost": "none",
+      "name": "Greater Taunting",
+      "actionCount": 1,
+      "frequency": "at will",
+      "traits": [
+        "Command",
+        "Interact",
+        "Auditory",
+        "Linguistic",
+        "Mental"
+      ],
+      "description": "Targets an enemy within 15 feet; Effect You Raise a Shield and shout a taunt at your target. The target must make a Will save against the higher of your spell DC or class DC (the GM sets the DC). On a failure the creature ignores other creatures in the area and concentrates on defeating you for 1 round; on a critical failure the duration is 1 minute. On a failure or critical failure, the target can only take actions that could potentially damage you or creatures preventing the target from reaching you."
+    }
+  },
+  {
+    "id": "greater-thirsting",
+    "type": "property",
+    "target": "shield",
+    "name": "Greater Thirsting",
+    "level": 9,
+    "price": 750,
+    "description": "This rune evokes vague impressions of dripping blood and fresh meat. When you hit a creature that has blood or a similar life essence with this shield or any attachment or adjustment on this shield and deal damage, the shield regains 5 Hit Points."
   },
   {
     "id": "greater-undead",
@@ -1448,6 +1626,34 @@
     "level": 5,
     "price": 150,
     "description": "This sprawling rune creates an extradimensional space inside your shield. You may store items inside your shield, through an opening near the handle or straps. The extradimensional space can hold up to 12 bulk of items and does not affect the bulk of the shield. Objects must still be able to fit through the opening, which is large enough to insert items as large as the shield itself. For example, a +1 holding targe has an opening large enough for only light items to be inserted, while a +1 holding scutum has an opening large enough to fit items up to 4 bulk. You can retrieve an item stored in this extradimensional space with a single Interact action."
+  },
+  {
+    "id": "hungering",
+    "type": "property",
+    "target": "shield",
+    "name": "Hungering",
+    "level": 7,
+    "price": 350,
+    "description": "This vicious rune seems to hunger for slaughter, becoming stronger when you kill creatures. When you reduce a creature to 0 Hit Points with an attack from this shield or an attachment or adjustment on this shield, the shield gains a status bonus to Hardness equal to the creature's level and a +1 status bonus to attack rolls for 1 minute. Both effects end early after using any Shield Reaction that would reduce damage you would take by the shield's Hardness, such as Shield Block."
+  },
+  {
+    "id": "jinxed",
+    "type": "property",
+    "target": "shield",
+    "name": "Jinxed",
+    "level": 9,
+    "price": 720,
+    "description": "This carefully drawn hex rune has the power to bring misfortune on enemies who try to attack you.",
+    "actuated": {
+      "cost": "none",
+      "name": "Jinxed",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger An enemy targets you with an attack; Effect You shout a quick hex word to trigger the curse on your shield. The enemy must roll their attack roll twice and keep the worse result. This is a misfortune effect. If you are a witch or have the witch archetype, you may reuse this ability as a focus spell by spending a focus point after you have consumed its daily use. The GM applies the reroll."
+    }
   },
   {
     "id": "knowing",
@@ -1546,6 +1752,45 @@
     }
   },
   {
+    "id": "major-glyphed",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Glyphed",
+    "level": 17,
+    "price": 17000,
+    "description": "As glyphed, but the stored spell may be up to 5th-level. The GM adjudicates the stored spell and its resolution.",
+    "actuated": {
+      "cost": "none",
+      "name": "Set Glyph",
+      "actionCount": 10,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "A 10-minute activity imbuing the shield with a hostile spell of up to 5th-level. It discharges the first time you use a Shield Reaction triggered by an enemy. The GM tracks and resolves the stored spell."
+    }
+  },
+  {
+    "id": "major-reflecting",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Reflecting",
+    "level": 17,
+    "price": 15000,
+    "description": "A rune of counteraction is inscribed on this shield, allowing the shield to absorb attacks and redirect them back at their source.",
+    "actuated": {
+      "cost": "none",
+      "name": "Major Reflecting",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger You are hit by any attack, even a spell attack; Effect Change the target of the triggering attack from yourself to the attacker; use the same attack roll to determine the result of the attack. Your shield loses 10 Hit Points. The GM resolves the redirected attack."
+    }
+  },
+  {
     "id": "major-reinforcing",
     "type": "fundamental",
     "fundamental": "reinforcing",
@@ -1566,6 +1811,34 @@
     "level": 20,
     "price": 49440,
     "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "major-reverberating",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Reverberating",
+    "level": 16,
+    "price": 12700,
+    "description": "This rune spreads across the shield's face like waves. It must be etched onto a metal shield. Any time an attack misses you because of your shield's circumstance bonus to Armor Class or you use the Shield Block reaction, the shockwave is stored in this rune for 1 round. The next time you hit a target with this shield, you release the stored energy in a reverberating sonic blast. The additional sonic damage is three times the number of weapon damage dice, and on a critical hit the persistent sonic damage increases to 6d4 (and deafens the target for 1 minute)."
+  },
+  {
+    "id": "major-seeing",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Seeing",
+    "level": 18,
+    "price": 19000,
+    "description": "A rune that roughly resembles an eye grants the inscribed shield the ability to see through deceit and illusions. You gain a +3 item bonus to Perception checks to Sense Motive and any check made to disbelieve an illusion.",
+    "actuated": {
+      "cost": "none",
+      "name": "Major Seeing",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Effect You Raise the Shield and attempt a counteract check against each illusion within a 30-foot cone. If you have a spellcasting class feature, you may use your counteract bonus, otherwise your counteract bonus is +30. This is a 9th-level counteract effect. The GM resolves the counteract checks."
+    }
   },
   {
     "id": "major-striking",
@@ -1596,6 +1869,15 @@
       ],
       "description": "Effect You Raise the Shield and a creature leaps out of the face of it, launching into combat. This creates a 6th-level version of the chosen summoning spell in a square adjacent to you. You can spend an action on subsequent turns to sustain the creature and grant it actions as normal. This action has the concentrate trait. If you do not sustain the effect, it ends at the end of your turn."
     }
+  },
+  {
+    "id": "major-thirsting",
+    "type": "property",
+    "target": "shield",
+    "name": "Major Thirsting",
+    "level": 14,
+    "price": 4600,
+    "description": "This rune evokes vague impressions of dripping blood and fresh meat. When you hit a creature that has blood or a similar life essence with this shield or any attachment or adjustment on this shield and deal damage, the shield regains 10 Hit Points."
   },
   {
     "id": "menacing",
@@ -1878,6 +2160,44 @@
     }
   },
   {
+    "id": "projecting",
+    "type": "property",
+    "target": "shield",
+    "name": "Projecting",
+    "level": 9,
+    "price": 750,
+    "description": "This rune allows you to project a pure-force copy of your shield at a distance to protect someone else.",
+    "actuated": {
+      "cost": "none",
+      "name": "Projecting",
+      "actionCount": 1,
+      "frequency": "at will",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Requirements You have your shield raised; Targets an ally within 20 feet; Effect A copy of your shield made of force appears next to the target and grants them the same bonuses that you would normally receive when you Raise the Shield. Because you are puppeteering the shield clone instead of focusing on your own defense, your shield does not provide its normal bonuses to you. You may use any Shield Reaction as long as the trigger is satisfied based on the targeted ally's position."
+    }
+  },
+  {
+    "id": "protecting",
+    "type": "property",
+    "target": "shield",
+    "name": "Protecting",
+    "level": 3,
+    "price": 70,
+    "description": "This rune of protection allows the shield to temporarily emit a magical field around itself to protect you or nearby allies.",
+    "actuated": {
+      "cost": "none",
+      "name": "Protecting",
+      "actionCount": 1,
+      "frequency": "once per minute",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Trigger You or an adjacent ally takes physical damage; Effect Your shield emits a protective field to reduce the force of the triggering attack. Reduce the amount of damage you or your ally takes by your shield's Hardness. If you also use your Shield Block reaction against the attack, this applies before your Shield Block."
+    }
+  },
+  {
     "id": "quenching",
     "type": "property",
     "armorRune": true,
@@ -1917,6 +2237,25 @@
     ]
   },
   {
+    "id": "reflecting",
+    "type": "property",
+    "target": "shield",
+    "name": "Reflecting",
+    "level": 7,
+    "price": 320,
+    "description": "A rune of counteraction is inscribed on this shield, allowing the shield to absorb attacks and redirect them back at their source.",
+    "actuated": {
+      "cost": "none",
+      "name": "Reflecting",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Trigger You are hit by a ranged weapon attack; Effect Change the target of the triggering attack from yourself to the attacker; use the same attack roll to determine the result of the attack. Your shield loses 10 Hit Points. The GM resolves the redirected attack."
+    }
+  },
+  {
     "id": "resilient",
     "type": "fundamental",
     "fundamental": "resilient",
@@ -1926,6 +2265,25 @@
     "level": 8,
     "price": 340,
     "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "resuscitating",
+    "type": "property",
+    "target": "shield",
+    "name": "Resuscitating",
+    "level": 16,
+    "price": 12000,
+    "description": "This gentle white rune provides aid and succor when you need it most. Once per day the first time your turn starts and you have the dying condition, you regain 1 Hit Point.",
+    "actuated": {
+      "cost": "none",
+      "name": "Resuscitating",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Trigger Your turn starts and you have the dying condition; Effect You regain 1 Hit Point."
+    }
   },
   {
     "id": "retaliation-lesser",
@@ -2018,6 +2376,15 @@
     "level": 3,
     "price": 55,
     "description": "Etched onto a thrown weapon. When you make a thrown Strike with this weapon, it flies back to your hand after the Strike is complete. If your hands are full when the weapon returns, it falls to the ground in your space."
+  },
+  {
+    "id": "reverberating",
+    "type": "property",
+    "target": "shield",
+    "name": "Reverberating",
+    "level": 8,
+    "price": 520,
+    "description": "This rune spreads across the shield's face like waves. It must be etched onto a metal shield. Any time an attack misses you because of your shield's circumstance bonus to Armor Class or you use the Shield Block reaction, the shockwave of the impact with your shield is stored in this rune for 1 round. The next time you hit a target with this shield, you release this stored energy in a reverberating sonic blast, dealing additional sonic damage equal to the number of weapon damage dice. On a critical hit, you trigger a reverberation in the target's body, dealing 2d4 persistent sonic damage, and deafening the target for 1 minute."
   },
   {
     "id": "ring-calling",
@@ -2360,6 +2727,25 @@
     ]
   },
   {
+    "id": "seeing",
+    "type": "property",
+    "target": "shield",
+    "name": "Seeing",
+    "level": 7,
+    "price": 310,
+    "description": "A rune that roughly resembles an eye grants the inscribed shield the ability to see through deceit and illusions. You gain a +1 item bonus to Perception checks to Sense Motive and any check made to disbelieve an illusion.",
+    "actuated": {
+      "cost": "none",
+      "name": "Seeing",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Effect You Raise the Shield and briefly close your eyes, seeing through the shield's rune. Attempt a counteract check against each illusion within a 30-foot cone. If you have a spellcasting class feature, you may use your counteract bonus as if you were counteracting the illusion yourself, otherwise your counteract bonus is +13. In either case this is a 4th-level counteract effect. The GM resolves the counteract checks."
+    }
+  },
+  {
     "id": "shadow",
     "type": "property",
     "armorRune": true,
@@ -2538,6 +2924,15 @@
     }
   },
   {
+    "id": "spellguarding",
+    "type": "property",
+    "target": "shield",
+    "name": "Spellguarding",
+    "level": 7,
+    "price": 380,
+    "description": "Eldritch runes etched onto the shield protect it and its wielder from magical energies. While you have the shield raised, you also gain its circumstance bonus to saving throws against spells that target you."
+  },
+  {
     "id": "striking",
     "type": "fundamental",
     "fundamental": "striking",
@@ -2616,6 +3011,38 @@
         "description": "The armor attacks the immobilizing creature again, as the Grow Spikes reaction."
       }
     ]
+  },
+  {
+    "id": "taunting",
+    "type": "property",
+    "target": "shield",
+    "name": "Taunting",
+    "level": 6,
+    "price": 240,
+    "description": "This chaotic rune encourages enemies to attack you instead of your allies.",
+    "actuated": {
+      "cost": "none",
+      "name": "Taunting",
+      "actionCount": 1,
+      "frequency": "at will",
+      "traits": [
+        "Command",
+        "Interact",
+        "Auditory",
+        "Linguistic",
+        "Mental"
+      ],
+      "description": "Targets an enemy within 15 feet; Effect You Raise a Shield and shout a taunt at your target, enhanced by the magic of the rune. The target must make a Will save against the higher of your spell DC or class DC (the GM sets the DC). On a failure the creature ignores other creatures in the area and concentrates on defeating you for 1 round. The creature will still attack anyone preventing them from attacking you, uses tactics deemed most convenient to defeat you, and works with other creatures that confront you. On a critical failure the duration is 1 minute."
+    }
+  },
+  {
+    "id": "thirsting",
+    "type": "property",
+    "target": "shield",
+    "name": "Thirsting",
+    "level": 5,
+    "price": 185,
+    "description": "This rune evokes vague impressions of dripping blood and fresh meat. When you hit a creature that has blood or a similar life essence with this shield or any attachment or adjustment on this shield and deal damage, the shield regains 2 Hit Points."
   },
   {
     "id": "throwing",
@@ -2733,6 +3160,26 @@
         "Envision"
       ],
       "description": "Effect You gain a +3 status bonus to your next Recall Knowledge check about a target that is visible to you before the end of your turn."
+    }
+  },
+  {
+    "id": "true-glyphed",
+    "type": "property",
+    "target": "shield",
+    "name": "True Glyphed",
+    "level": 20,
+    "price": 30000,
+    "description": "As glyphed, but the stored spell may be up to 6th-level. The GM adjudicates the stored spell and its resolution.",
+    "actuated": {
+      "cost": "none",
+      "name": "Set Glyph",
+      "actionCount": 10,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "A 10-minute activity imbuing the shield with a hostile spell of up to 6th-level. It discharges the first time you use a Shield Reaction triggered by an enemy. The GM tracks and resolves the stored spell."
     }
   },
   {
