@@ -1,4 +1,4 @@
-import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, wornBonusSlots, specialModifiers, itemModifiers } from './wornGear';
+import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, wornBonusSlots, wornSenses, senseLabel, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -244,5 +244,53 @@ describe('wornBonusSlots (#1093 — Ring of Wizardry)', () => {
 
   it('ignores items without a bonusSlots block', () => {
     expect(wornBonusSlots([robe()], yes, 'arcane')).toEqual({});
+  });
+});
+
+describe('senseLabel (#1210 M4h)', () => {
+  it('formats precision + name + range, dropping unset parts', () => {
+    expect(senseLabel({ name: 'bloodsense', precision: 'imprecise', rangeFt: 30 })).toBe('imprecise bloodsense 30 feet');
+    expect(senseLabel({ name: 'bloodsense', precision: 'precise' })).toBe('precise bloodsense');
+    expect(senseLabel({ name: 'tremorsense', rangeFt: 60 })).toBe('tremorsense 60 feet');
+  });
+
+  it('is empty for a malformed block', () => {
+    expect(senseLabel(null)).toBe('');
+    expect(senseLabel({ precision: 'vague' })).toBe(''); // no name
+  });
+});
+
+describe('wornSenses (#1210 M4h)', () => {
+  const bandana = (overrides = {}) => ({
+    uid: 'bandana',
+    name: 'Bloodstained Bandana',
+    traits: ['Magical', '3rd Party'], // not Invested — contributes once worn
+    sense: { name: 'bloodsense', precision: 'vague', rangeFt: 30 },
+    ...overrides,
+  });
+
+  it('reads a worn item\'s sense block (no investment needed when not investable)', () => {
+    expect(wornSenses([bandana()], no)).toEqual(['vague bloodsense 30 feet']);
+  });
+
+  it('ignores an item with no sense block', () => {
+    expect(wornSenses([{ uid: 'x', name: 'Antidote' }], yes)).toEqual([]);
+  });
+
+  it('does not contribute when the item is stowed', () => {
+    expect(wornSenses([bandana({ state: 'stowed' })], yes)).toEqual([]);
+  });
+
+  it('gates an investable sense item on being invested', () => {
+    const goggles = bandana({ uid: 'g', traits: ['Invested', 'Magical'], sense: { name: 'darkvision' } });
+    expect(wornSenses([goggles], no)).toEqual([]);
+    expect(wornSenses([goggles], yes)).toEqual(['darkvision']);
+  });
+
+  it('dedupes identical senses case-insensitively, in inventory order', () => {
+    const a = bandana({ uid: 'a' });
+    const b = bandana({ uid: 'b', sense: { name: 'Bloodsense', precision: 'Vague', rangeFt: 30 } });
+    const c = bandana({ uid: 'c', sense: { name: 'bloodsense', precision: 'precise', rangeFt: 30 } });
+    expect(wornSenses([a, b, c], no)).toEqual(['vague bloodsense 30 feet', 'precise bloodsense 30 feet']);
   });
 });

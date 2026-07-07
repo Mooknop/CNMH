@@ -234,7 +234,9 @@ describe('bundled item catalog (Slice 3)', () => {
   // itemBonus / ringSockets / cantripSlots / apex — per grade.
   // #935 (S4): a Coda staff's Major grade overrides `playingEffect` — the ref
   // into the effect catalog its while-playing bonuses come from — to the +2 def.
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect'];
+  // #1210 (M4h): a graded sense-granting item (the Bloodstained Bandana) carries
+  // its per-grade `sense: { name, precision?, rangeFt? }` block as an override.
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -262,6 +264,14 @@ describe('bundled item catalog (Slice 3)', () => {
         if (v.overrides.ringSockets !== undefined) expect(typeof v.overrides.ringSockets).toBe('number');
         if (v.overrides.cantripSlots !== undefined) expect(typeof v.overrides.cantripSlots).toBe('number');
         if (v.overrides.apex !== undefined) expect(typeof v.overrides.apex).toBe('boolean');
+        // #1210 (M4h): a sense block — a non-empty `name`, with optional string
+        // precision and numeric range.
+        if (v.overrides.sense !== undefined) {
+          expect(typeof v.overrides.sense.name).toBe('string');
+          expect(v.overrides.sense.name.length).toBeGreaterThan(0);
+          if (v.overrides.sense.precision !== undefined) expect(typeof v.overrides.sense.precision).toBe('string');
+          if (v.overrides.sense.rangeFt !== undefined) expect(typeof v.overrides.sense.rangeFt).toBe('number');
+        }
       });
     });
   });
