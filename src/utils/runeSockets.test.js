@@ -122,6 +122,46 @@ describe('compatibleRunes', () => {
   });
 });
 
+describe('dragonbreath weapon fundamentals (#1210 M4c)', () => {
+  const dbWeapon = (tier, property) => ({
+    uid: 'db1', name: 'Longsword', strikes: [{}],
+    dragonbreath: { tier, dragonType: 'Red' },
+    ...(property ? { runes: { property } } : {}),
+  });
+
+  it('shows the tier fundamentals as filled + locked, with property slots per tier', () => {
+    const sockets = gearSockets(dbWeapon('greater'));
+    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'property']);
+    expect(sockets[0]).toMatchObject({ type: 'potency', filled: true, value: 2, locked: true });
+    expect(sockets[1]).toMatchObject({ type: 'striking', filled: true, value: 'greater', locked: true });
+    expect(sockets[2]).toMatchObject({ type: 'property', filled: false, index: 0 });
+    // base tier → 1 property slot
+    expect(gearSockets(dbWeapon('base')).filter((s) => s.type === 'property')).toHaveLength(1);
+  });
+
+  it('never offers a fundamental etch, but still offers property runes', () => {
+    const stock = [wPot1, wPot2, striking, vitalizing];
+    expect(compatibleRunes(dbWeapon('base'), 'potency', stock)).toEqual([]);
+    expect(compatibleRunes(dbWeapon('base'), 'striking', stock)).toEqual([]);
+    expect(compatibleRunes(dbWeapon('base'), 'property', stock).map((r) => r.id)).toEqual(['vitalizing']);
+  });
+
+  it('applyRune rejects a fundamental etch, keeping the template locked', () => {
+    expect(applyRune(dbWeapon('base'), wPot2)).toBeNull();
+    expect(applyRune(dbWeapon('base'), striking)).toBeNull();
+  });
+
+  it('applyRune etches a property rune without baking the implied fundamentals in', () => {
+    const etched = applyRune(dbWeapon('greater'), vitalizing);
+    expect(etched.runes).toEqual({ property: ['vitalizing'] }); // no potency/striking written
+    expect(etched.dragonbreath).toEqual({ tier: 'greater', dragonType: 'Red' }); // template preserved
+  });
+
+  it('honors the implied property capacity (base tier fills at 1 slot)', () => {
+    expect(applyRune(dbWeapon('base', ['keen']), vitalizing)).toBeNull(); // 1 slot, already used
+  });
+});
+
 describe('projectStagedGear (#879)', () => {
   it('applies a staged potency rune, opening the property slot it unlocks', () => {
     const projected = projectStagedGear(weapon({}), { potency: wPot1 });
