@@ -17,6 +17,7 @@ import {
   eligibleRunes,
   runeOfferingSummary,
   eligibleHostItems,
+  eligibleTalismans,
   isShopExcluded,
   shopHostKind,
   RUNE_TARGETS,
@@ -922,5 +923,69 @@ describe('eligibleHostItems (#1044)', () => {
     expect(ids({ runeService: true, targets: ['armor', 'accessory'], maxLevel: 10 }))
       .toEqual(['breastplate', 'explorers-clothing', 'cloak', 'boots', 'buckler']);
     expect(eligibleHostItems({ ref: 'runestone' }, hostItems, hostRunes)).toEqual([]);
+  });
+});
+
+describe('eligibleTalismans (#1211)', () => {
+  const talItems = [
+    { id: 'adamantine-flake', name: 'Adamantine Flake', level: 3, price: 8,
+      traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'shield', activation: { cost: 1 } },
+      variants: [
+        { level: 3, name: 'Adamantine Flake', price: 8 },
+        { level: 8, name: 'Greater Adamantine Flake', price: 90 },
+        { level: 13, name: 'Major Adamantine Flake', price: 460 },
+      ] },
+    { id: 'heartstone', name: 'Heartstone', level: 10, price: 160,
+      traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'shield', activation: { cost: 1 } } },
+    { id: 'wolf-fang', name: 'Wolf Fang', level: 2, price: 7,
+      traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon', activation: { cost: 1 } } },
+    // A valid shield talisman, but GM-flagged never-sell (#1105).
+    { id: 'shield-cover', name: 'Shield Cover', level: 1, price: 1, noShop: true,
+      traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'shield', activation: { cost: 1 } } },
+    { id: 'longsword', name: 'Longsword', price: 1, strikes: [{}], runes: {} }, // not a talisman
+  ];
+  const keys = (ware) => eligibleTalismans(ware, talItems).map((w) => w.wareKey);
+
+  it('a shield-target service stocks shield talismans up to the shield cap, one form per in-cap grade', () => {
+    // Cap 10: adamantine grades 3 & 8 (not 13), heartstone (10). wolf-fang is a
+    // weapon talisman; shield-cover is noShop; longsword is not a talisman.
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 10 })).toEqual([
+      'talisman:adamantine-flake@3', 'talisman:adamantine-flake@8', 'talisman:heartstone@10',
+    ]);
+  });
+
+  it('the general runesmith is exempt: unset targets and an explicit all-target list stock nothing', () => {
+    expect(keys({ runeService: true, maxLevel: 20 })).toEqual([]);
+    expect(keys({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 20 })).toEqual([]);
+  });
+
+  it('the level cap gates individual grades', () => {
+    // Cap 3: only the base adamantine grade; its higher grades and heartstone (10) drop.
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 3 }))
+      .toEqual(['talisman:adamantine-flake@3']);
+  });
+
+  it('only stocks talismans whose affixTo is an offered target', () => {
+    // A weapon-rune smith carries weapon talismans, not shield ones.
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 10 }))
+      .toEqual(['talisman:wolf-fang@2']);
+  });
+
+  it('honors a per-target level cap object across mixed targets', () => {
+    const out = eligibleTalismans({ runeService: true, targets: ['weapon', 'shield'], maxLevel: { shield: 8, weapon: 2 } }, talItems);
+    expect(out.map((w) => w.wareKey)).toEqual([
+      'talisman:adamantine-flake@3', 'talisman:adamantine-flake@8', 'talisman:wolf-fang@2',
+    ]);
+    // The merged grade ware carries the variant's name/level/price + the base id/talisman.
+    const greater = out.find((w) => w.wareKey === 'talisman:adamantine-flake@8');
+    expect(greater).toMatchObject({ id: 'adamantine-flake', name: 'Greater Adamantine Flake', level: 8, price: 90, baseName: 'Adamantine Flake' });
+    expect(greater.talisman.affixTo).toBe('shield');
+    expect(greater.variants).toBeUndefined(); // the ladder is stripped from the ware
+  });
+
+  it('never offers a GM-excluded (noShop) talisman, and ignores non-service wares', () => {
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 20 }))
+      .not.toContain('talisman:shield-cover@1');
+    expect(eligibleTalismans({ ref: 'runestone' }, talItems)).toEqual([]);
   });
 });

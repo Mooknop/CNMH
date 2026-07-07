@@ -906,6 +906,41 @@ describe('ShopStorefront', () => {
     });
   });
 
+  describe('rune-service talismans in Wares (#1211)', () => {
+    const talItems = [
+      ...items,
+      { id: 'adamantine-flake', name: 'Adamantine Flake', level: 3, price: 8,
+        traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'shield', activation: { cost: 1 } },
+        variants: [
+          { level: 3, name: 'Adamantine Flake', price: 8 },
+          { level: 8, name: 'Greater Adamantine Flake', price: 90 },
+        ] },
+      { id: 'wolf-fang', name: 'Wolf Fang', level: 2, price: 7,
+        traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon', activation: { cost: 1 } } },
+    ];
+    const renderSvc = (wares) => {
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', wares } }}
+          items={talItems} runes={[]} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+    };
+
+    it('a shield-target service stocks shield talismans as buyable wares, not weapon ones', () => {
+      renderSvc([{ runeService: true, targets: ['shield'], maxLevel: 10 }]);
+      const grid = screen.getByLabelText('wares');
+      expect(within(grid).getByTestId('ware-adamantine-flake')).toBeInTheDocument();
+      // Weapon talisman: the shield target doesn't stock it.
+      expect(within(grid).queryByTestId('ware-wolf-fang')).not.toBeInTheDocument();
+    });
+
+    it('the general runesmith stocks no talismans', () => {
+      renderSvc([{ ref: 'antidote' }, { runeService: true, maxLevel: 20 }]);
+      expect(screen.getByLabelText('wares')).toBeInTheDocument();
+      expect(screen.queryByTestId('ware-adamantine-flake')).not.toBeInTheDocument();
+    });
+  });
+
   describe('multi-shop picker', () => {
     const second = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
     it('lists shops and opens one, with Back returning to the picker', () => {

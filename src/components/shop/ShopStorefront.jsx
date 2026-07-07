@@ -12,6 +12,7 @@ import {
   runeOfferings,
   eligibleRunes,
   eligibleHostItems,
+  eligibleTalismans,
 } from '../../utils/shopUtils';
 import { resolveSaleWares } from '../../utils/saleShelf';
 import { resolveRunestone } from '../../utils/runestone';
@@ -755,6 +756,23 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     );
     return out;
   }, [selected, waresStore, resolved, items, runes, catalogMap]);
+  // Affix-to-gear talismans implied by SPECIFIC-target rune services (#1211) —
+  // a shield-rune smith also stocks shield talismans, up to the shield cap. Each
+  // grade is its own virtual ware; hand-stocked forms win (deduped by item id).
+  const talismanWares = useMemo(() => {
+    if (!selected) return [];
+    const stocked = new Set(resolved.map((w) => String(w.id)));
+    const seen = new Set();
+    const out = [];
+    runeOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleTalismans(o, items).forEach((ware) => {
+        if (stocked.has(String(ware.id)) || seen.has(ware.wareKey)) return;
+        seen.add(ware.wareKey);
+        out.push(ware);
+      })
+    );
+    return out;
+  }, [selected, waresStore, resolved, items]);
   // GM-rolled Sale Shelf wares (#1137): one-of-a-kind discounted goods baked into
   // the shop entry (S1 engine). They LEAD the Wares grid — the deal is the draw —
   // each a distinct id so groupWares keeps it a single-form group, capped at its
@@ -764,8 +782,8 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     [selected, waresStore, catalogMap, runeMap, spells]
   );
   const wareGroups = useMemo(
-    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares]),
-    [saleWares, resolved, isRuneWare, hostWares]
+    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares, ...talismanWares]),
+    [saleWares, resolved, isRuneWare, hostWares, talismanWares]
   );
   // Spell docs by id — for the scroll-pack preview card (names + rank, #1137).
   const spellMap = useMemo(

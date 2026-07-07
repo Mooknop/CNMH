@@ -2,6 +2,7 @@ import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { runeTarget } from './runeClassify';
 import { accessoryEligible } from './accessoryRunes';
+import { isTalisman, affixTargetType } from './affix';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 
@@ -539,6 +540,52 @@ export function eligibleHostItems(ware, items, runes) {
     if (explicit.includes('armor') && admitted.has('armor') && item.armor) push(item);
     if (explicit.includes('accessory') && isDeliberateHost(item) &&
         accessoryDocs.some((r) => accessoryEligible(item, r))) push(item);
+  }
+  return out;
+}
+
+// ── Rune-service talismans (#1211 G6) ───────────────────────────────────────
+// A shop that sells runes for SPECIFIC gear targets (weapon/armor/shield) also
+// stocks the affix-to-that-gear TALISMANS, up to the same per-target level cap —
+// a shield-rune smith carries shield talismans, a weapon smith weapon talismans.
+// Like eligibleHostItems this exempts the general / all-target runesmith (an
+// etching service, not a consumables counter). Unlike it the gate is the level
+// CAP alone: talismans aren't runes, so there's no rune-admission coupling — the
+// cap being 0 (target not offered) is what excludes them. Each in-cap GRADE
+// becomes its own resolved ware (variant merged, `variants` stripped, distinct
+// wareKey), mirroring eligibleSpellItems, so groupWares shows the grade ladder
+// and the cart/reuid price each form independently. Honors #1105 noShop; deduped.
+const TALISMAN_TARGETS = new Set(['weapon', 'armor', 'shield']);
+
+export function eligibleTalismans(ware, items) {
+  if (!isRuneServiceWare(ware)) return [];
+  const explicit = Array.isArray(ware.targets)
+    ? ware.targets.filter(Boolean).map((t) => String(t).toLowerCase())
+    : [];
+  // Empty list = general runesmith; a full list is that shop spelled out — both exempt.
+  if (explicit.length === 0 || explicit.length >= RUNE_TARGETS.length) return [];
+
+  const out = [];
+  const seen = new Set();
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!item || item.id == null || isShopExcluded(item) || !isTalisman(item)) continue;
+    const affixTo = String(affixTargetType(item) || '').toLowerCase();
+    if (!TALISMAN_TARGETS.has(affixTo) || !explicit.includes(affixTo)) continue;
+    const cap = maxLevelForTarget(ware, affixTo);
+    if (cap < 1) continue;
+
+    // Each grade is its own form; a grade-less talisman is a single synthetic grade.
+    const grades = Array.isArray(item.variants) && item.variants.length
+      ? item.variants
+      : [{ level: item.level, name: item.name, price: item.price }];
+    const { variants, ...base } = item;
+    for (const g of grades) {
+      if (Number(g.level) > cap) continue;
+      const key = `talisman:${item.id}@${g.level}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ ...base, ...g, baseName: item.name, wareKey: key });
+    }
   }
   return out;
 }
