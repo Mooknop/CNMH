@@ -824,6 +824,28 @@
     "id": "amphisbaena-handwraps"
   },
   {
+    "name": "Analysis Eye",
+    "description": "Activate (one-action, manipulate). This metal disk is engraved with an image of an open eye, which always seems to look directly at the creature viewing it no matter what angle it's seen from. The first time you succeed at a Strike against a given creature with a weapon under the effect of an analysis eye, as a free action, you learn one weakness or resistance of that creature; if the creature has multiple weaknesses or resistances, the GM selects which one you learn.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 4,
+    "price": 20,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "onHit": {
+          "revealIwr": true
+        }
+      },
+      "reminder": "First successful Strike vs a creature: learn one of its weaknesses or resistances."
+    },
+    "id": "analysis-eye"
+  },
+  {
     "name": "Anticorrosion Oil",
     "description": "You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae.",
     "image": "img_3f9d87d1-6113-4f77-9bbd-781784b514e9.jpg",
@@ -1434,6 +1456,27 @@
       "group": "chain"
     },
     "id": "blade-byrnie"
+  },
+  {
+    "name": "Blade Phantom's Guide",
+    "description": "Activate (one-action, manipulate). A blade phantom's guide is a metal rectangle, often on a chain, etched with an image of a warrior in a fighting stance. When you apply a blade phantom's guide to a weapon, it summons a spiritual fragment of a warrior who was adept with that weapon. For 1 minute, you treat your proficiency with that weapon as equal to your highest weapon proficiency. This effect cannot affect a weapon whose level is higher than the blade phantom's guide (11th).",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 11,
+    "price": 300,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "maxWeaponLevel": 11,
+      "effect": {
+        "proficiencyFloor": "highest-weapon"
+      },
+      "reminder": "Treat your proficiency with this weapon as your highest weapon proficiency."
+    },
+    "id": "blade-phantoms-guide"
   },
   {
     "name": "Blight Bomb",
@@ -2288,6 +2331,78 @@
     }
   },
   {
+    "name": "Chivalric Emblem",
+    "description": "Activate (one-action, manipulate). Originally created by Taldan cavaliers acting as knights errant, chivalric emblems have since spread across the Inner Sea region and beyond. A chivalric emblem is crafted in the form of a small iron shield, embossed with heraldic insignia. These whetstones call protective spirits into a weapon; the effects last for 1 hour. While wielding a weapon under the effect of a chivalric emblem, if you witness an ally being reduced to 0 Hit Points or taking damage from a critical Strike, you gain a +1 circumstance bonus to attack rolls and damage with that weapon against the creature that damaged that ally for the remainder of the chivalric emblem's duration.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "duration": "hour",
+      "effect": {
+        "armedBonus": {
+          "bonus": 1,
+          "trigger": "You witness an ally reduced to 0 HP or damaged by a critical Strike — arm against that enemy"
+        }
+      },
+      "reminder": "If you witness an ally downed or crit: +1 circumstance to attack and damage with this weapon vs that enemy for the remaining duration (arm it on the effect card)."
+    },
+    "id": "chivalric-emblem"
+  },
+  {
+    "name": "Chroma Kaleidoscope",
+    "description": "Activate (one-action, manipulate). These iron rings filled with kaleidoscopic glass are popular among Shelynites. A chroma kaleidoscope's effects last for 1 hour. When you critically Strike a creature with a weapon under the effects of a chroma kaleidoscope, a blast of color from the weapon forces them to attempt a Will saving throw against your class DC or spell DC, whichever is higher, with the following effects. Critical Success The creature is unaffected. Success The creature is Dazzled for 1 round. Failure The creature is Blinded for 1 round and dazzled for 1 round after the blindness ends. Critical Failure The creature is Stunned 1 and blinded for 1 round, and dazzled for 1 round after the blindness ends.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 7,
+    "price": 70,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "duration": "hour",
+      "effect": {
+        "onCrit": {
+          "save": "will",
+          "dcFrom": "classOrSpellDC",
+          "conditions": {
+            "success": [
+              {
+                "id": "dazzled",
+                "note": "1 round"
+              }
+            ],
+            "failure": [
+              {
+                "id": "blinded",
+                "note": "1 round, then dazzled 1 round"
+              }
+            ],
+            "criticalFailure": [
+              {
+                "id": "stunned",
+                "value": 1
+              },
+              {
+                "id": "blinded",
+                "note": "1 round, then dazzled 1 round"
+              }
+            ]
+          }
+        }
+      },
+      "reminder": "Critical hits force a Will save vs your class or spell DC (higher): dazzled/blinded/stunned ladder."
+    },
+    "id": "chroma-kaleidoscope"
+  },
+  {
     "name": "Circlet of Persuasion",
     "description": "This elegant circlet is worn around the head. While wearing it, you gain a +1 item bonus to Charisma-based skill checks.",
     "traits": [
@@ -2977,6 +3092,24 @@
     "price": 70,
     "weight": 0.1,
     "description": "This 6-inch stick of gray-green incense has an unsettling, oily look. Activate (Interact): When burned, it emits a brimstone-like stink and burns for 10 minutes. A creature within 10 feet must succeed at a Fortitude save or become sickened 1 (sickened 2 on a critical failure), after which it is temporarily immune for 1 hour. While the stick burns, an adjacent creature can inhale forcefully (Interact), consuming the entire stick and becoming sickened 3; on its next turn it can exhale a 15-foot cone of foul-smelling smoke that sickens creatures in the area."
+  },
+  {
+    "name": "Dimensional Cleavestone",
+    "description": "The edges of this irregular hunk of obsidian seem to shimmer. While wielding a weapon under the effect of a dimensional cleavestone, you gain the Tear Rift action for 1 minute. Tear Rift (two-actions) (magical, manipulate, teleportation) You carve a rent in space in an adjacent square, choosing another square within 30 feet to connect with your rift. A visible slash appears in both locations, displaying the view from the other side. Until the end of your next turn, these two squares are treated as adjacent to each other; for example, creatures could Stride or be Shoved through the rifts to their other side, and a creature adjacent to one rift can Strike a creature adjacent to the other. When Tearing a Rift, you can choose to Step through the rift as part of the activity. The rifts don't automatically pull creatures or objects through, as they take up only a small amount of space within the square, and a creature sharing a space with a rift is unaffected except for determining adjacency. You can have only one rift active at a time.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Uncommon",
+      "Whetstone"
+    ],
+    "level": 14,
+    "price": 900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "reminder": "Grants the Tear Rift action (2 actions): connect two squares within 30 ft as adjacent until the end of your next turn."
+    },
+    "id": "dimensional-cleavestone"
   },
   {
     "actions": [
@@ -3883,6 +4016,66 @@
     }
   },
   {
+    "name": "Ethereal Crescent",
+    "description": "Activate (one-action, manipulate). This crescent-shaped shard of iridescent metal is strangely translucent, fading to a blurry outline when examined for too long. A weapon under the effects of an ethereal crescent becomes a Ghost Touch weapon for 1 minute.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 3,
+    "price": 58,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "grantRunes": [
+          {
+            "id": "ghost-touch",
+            "name": "Ghost Touch"
+          }
+        ],
+        "iwrTags": [
+          "ghost touch"
+        ]
+      },
+      "reminder": "Ghost touch: damages incorporeal creatures normally."
+    },
+    "id": "ethereal-crescent"
+  },
+  {
+    "name": "Ethereal Crescent (Greater)",
+    "description": "Activate (one-action, manipulate). This crescent-shaped shard of iridescent metal is strangely translucent, fading to a blurry outline when examined for too long. A weapon under the effects of a greater ethereal crescent gains the effects of an Astral rune for 1 minute. This does not count against the weapon's normal maximum number of runes.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 7,
+    "price": 320,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "grantRunes": [
+          {
+            "id": "astral",
+            "name": "Astral",
+            "rider": {
+              "dice": "1d6",
+              "damageType": "spirit"
+            }
+          }
+        ],
+        "iwrTags": [
+          "ghost touch"
+        ]
+      },
+      "reminder": "Astral rune effects: +1d6 spirit damage and ghost touch."
+    },
+    "id": "ethereal-crescent-greater"
+  },
+  {
     "name": "Euphoric Loop",
     "description": "This catalyst is made from twisted sapling bark harvested under a full moon. When used to cast a Charm spell, the spell creates a blissful experience for one target of your choice. When the spell ends, even if you Dismiss it, the sudden mental dissonance between the charmed state and reality forces the target to attempt a Will save against your spell DC.\nCritical Success The target is unaffected.\nSuccess The target is Stunned 1 or, if the spell ended because of a hostile action, confused for 1 round.\nFailure The target is Stunned 2 or, if the spell ended because of a hostile action, confused for 1 round.\nCritical Failure The target is Stunned 3 or, if the spell ended because of a hostile action, confused for 2 rounds.",
     "traits": [
@@ -4049,6 +4242,27 @@
     "id": "fearcracker"
   },
   {
+    "name": "Featherlight Fletching",
+    "description": "Activate (one-action, manipulate). Elven archers were the first to create the featherlight fletching, meant for long-range battles, though artisans of many other ancestries have now learned the art of crafting these whetstones. A featherlight fletching is a feather-shaped trinket crafted of spun silver filigree and aids projectiles in flying true, even over great distances. A ranged weapon under the effects of a featherlight fletching doubles its range increment for 1 minute.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 4,
+    "price": 20,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "targets": "ranged",
+      "effect": {
+        "rangeMultiplier": 2
+      },
+      "reminder": "Range increment doubled."
+    },
+    "id": "featherlight-fletching"
+  },
+  {
     "id": "fine-clothing",
     "name": "Clothing (Fine)",
     "price": 2,
@@ -4138,6 +4352,65 @@
     "price": 0.05,
     "weight": 0,
     "id": "flint-steel"
+  },
+  {
+    "name": "Foe-Sensing Rod",
+    "description": "Activate (one-action, manipulate). Imbued with a spirit fragment that continually surveys the world around it, this crystalline bar is roughened to form a file at one end. When you apply the foe-sensing rod to a weapon, choose aberration, animal, beast, celestial, construct, dragon, elemental, fey, fiend, giant, monitor, ooze, undead, or both fungus and plant. The spirit fragment is transferred into your weapon for 1 hour, keeping watch for creatures with the chosen trait or traits. The affected weapon vibrates slightly if such a creature is within 60 feet of you, unless the creature is disguised or Hidden and has a Deception or Stealth DC of 26 or higher.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 10,
+    "price": 200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "duration": "hour",
+      "choice": {
+        "label": "Creature trait",
+        "options": [
+          "aberration",
+          "animal",
+          "beast",
+          "celestial",
+          "construct",
+          "dragon",
+          "elemental",
+          "fey",
+          "fiend",
+          "giant",
+          "monitor",
+          "ooze",
+          "undead",
+          "fungus and plant"
+        ]
+      },
+      "reminder": "The weapon vibrates when a creature with the chosen trait is within 60 feet (unless disguised/Hidden with Deception or Stealth DC 26+)."
+    },
+    "id": "foe-sensing-rod"
+  },
+  {
+    "name": "Frenzied Quintessence",
+    "description": "Activate (one-action, manipulate). Contained within this small iron-bound glass sphere is a raging whirlwind of colors, each fighting for prominence. After a successful Strike with a weapon enhanced by frenzied quintessence, you are Quickened for 1 round. You can use the additional action only to Stride toward a foe or Strike.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 14,
+    "price": 900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "onHit": {
+          "note": "You are Quickened for 1 round (extra action: Stride toward a foe, or Strike)."
+        }
+      },
+      "reminder": "After a successful Strike: Quickened 1 round (Stride toward a foe or Strike)."
+    },
+    "id": "frenzied-quintessence"
   },
   {
     "name": "Frost Vial",
@@ -4946,6 +5219,29 @@
     }
   },
   {
+    "name": "Hand of Mercy",
+    "description": "Activate (one-action, manipulate). Shaped like an open-palmed hand, this small sculpture of smooth sandstone seems to blunt a weapon when applied rather than sharpen it. For 1 minute, a weapon to which a hand of mercy is applied gains the nonlethal trait and can't be used to make lethal attacks. Any persistent damage the weapon would deal is negated.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 2,
+    "price": 7,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "addTraits": [
+          "Nonlethal"
+        ],
+        "suppressPersistent": true
+      },
+      "reminder": "Nonlethal; can't make lethal attacks; persistent damage the weapon would deal is negated."
+    },
+    "id": "hand-of-mercy"
+  },
+  {
     "name": "Handwraps of Mighty Blows",
     "strikes": {
       "damageType": "bludgeoning",
@@ -5547,6 +5843,24 @@
     }
   },
   {
+    "name": "Key of Unwinding",
+    "description": "A key of unwinding is a narrow brass clock hand, its pointed end fashioned into the shape of a key. When applied to a weapon, a key of unwinding forms a direct link to the Dimension of Time, allowing you to draw on a fragment of temporal power. For 1 minute, you gain the Rewrite Time reaction while wielding the attuned weapon. Rewrite Time (reaction) (magical, occult) Trigger You or an ally within your weapon's reach or range increment would be hit by a Strike or a spell attack roll Effect Attempt a Strike with the affected weapon against the triggering enemy. On a success, you deal no damage, but you negate the triggering attack or spell. Actions and spell slots used to attempt this attack are lost, and the triggering creature's multiple attack penalty increases as normal, as the results of the action are siphoned into the Dimension of Time. Any creature attempting to use Rewrite Time more than once per combat becomes Slowed 1 for 1 round after each subsequent use, as their own time begins to leech away.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Uncommon",
+      "Whetstone"
+    ],
+    "level": 18,
+    "price": 5000,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "reminder": "Grants the Rewrite Time reaction: when you or an ally in reach/range would be hit, Strike the attacker — on a success, negate the triggering attack or spell."
+    },
+    "id": "key-of-unwinding"
+  },
+  {
     "name": "Kirin Echo Chime",
     "description": "The echo of kirin's song can be captured within this small glass chime, which shatters and calls up a meandering breeze of its own when rung. Adding this catalyst to a Gust of Wind spell causes any flying creatures that would be pushed by the spell's effects to be pushed 30 feet in a direction of your choice, rather than 30 feet in the direction of the spell.",
     "traits": [
@@ -5704,6 +6018,53 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Leeching Fangs",
+    "description": "Activate (one-action, manipulate). A set of leeching fangs is a metal sculpture in the form of a fanged maw, and when applied to a weapon, it causes the weapon or its ammunition to grow numerous mouths filled with serrated teeth. Leeching fangs establish a metaphysical link between the life force of the wielder of the weapon it's applied to and those it damages. Whenever you deal Hit Point damage to a living creature with a weapon under the effect of leeching fangs, you heal yourself half the amount of Hit Point damage dealt. This cannot heal you above your maximum number of Hit Points.",
+    "traits": [
+      "Consumable",
+      "Healing",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 12,
+    "price": 400,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "onHit": {
+          "healHalf": true
+        }
+      },
+      "reminder": "Dealing HP damage to a living creature heals you half that amount (not above max HP)."
+    },
+    "id": "leeching-fangs"
+  },
+  {
+    "name": "Limning Gem",
+    "description": "Activate (one-action, manipulate). This luminescent white gem glows from within, and a weapon it's applied to gains its inner radiance, shedding dim light in a 10-foot radius. Successful Strikes with a weapon affected by a limning gem outline the target in a bright white light; if the target was Invisible, it becomes Concealed instead. This light lasts until the end of your next turn or for the remainder of the limning gem's duration on a critical hit.",
+    "traits": [
+      "Consumable",
+      "Light",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 4,
+    "price": 20,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "onHit": {
+          "condition": "limned",
+          "note": "Target outlined in bright white light until the end of your next turn (critical hit: for the gem’s remaining duration); an Invisible target becomes Concealed instead."
+        }
+      },
+      "reminder": "Weapon sheds dim light (10 ft); hits outline the target in light until the end of your next turn."
+    },
+    "id": "limning-gem"
   },
   {
     "name": "Longbow",
@@ -5932,6 +6293,29 @@
     "price": 30,
     "weight": 0.1,
     "id": "midnight-milk"
+  },
+  {
+    "name": "Mighty Counterweight",
+    "description": "Activate (one-action, manipulate). This thick lead disk is etched with geometric patterns, and a weapon it's applied to grows unusually heavy. When you attack with a weapon under the effects of a mighty counterweight, you deal an amount of additional bludgeoning damage equal to the number of weapon damage dice.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 4,
+    "price": 20,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "perDieFlat": {
+          "amount": 1,
+          "type": "bludgeoning"
+        }
+      },
+      "reminder": "+1 bludgeoning damage per weapon damage die."
+    },
+    "id": "mighty-counterweight"
   },
   {
     "name": "Mirror Robe",
@@ -6213,6 +6597,34 @@
       }
     ],
     "id": "moonlit-spellgun"
+  },
+  {
+    "name": "Morph Jewel",
+    "description": "Activate (one-action, manipulate). Constructed of an oddly flexible material, this golden jewel holds whatever shape it's twisted into. Choose bludgeoning, piercing, or slashing when you apply a morph jewel to a weapon. The weapon's damage becomes that type for 1 minute.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 3,
+    "price": 12,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "choice": {
+        "label": "Damage type",
+        "options": [
+          "bludgeoning",
+          "piercing",
+          "slashing"
+        ]
+      },
+      "effect": {
+        "damageType": "from-choice"
+      },
+      "reminder": "The weapon's damage becomes the chosen type."
+    },
+    "id": "morph-jewel"
   },
   {
     "reactions": [
@@ -6691,6 +7103,25 @@
     }
   },
   {
+    "name": "Penultimate Heartbeat",
+    "description": "Activate (one-action, manipulate). This small hunk of slightly rusted iron gives off a faint reddish glow that occasionally pulses when touched. Tales of penultimate heartbeats say that the metal attracts a creature's spirit at the moment of death and channels it outward for a grisly display. Once applied to a weapon, a penultimate heartbeat's effects last for 1 hour. When you reduce a living creature to 0 Hit Points with a weapon under the effect of a penultimate heartbeat, it doesn't perish immediately (though is visibly on the brink of death). You can Reposition the creature up to 10 feet as a free action, after which it dies in a dramatic fashion appropriate to the injury that killed it. Foes in a 30-foot cone you direct originating from the creature's final position are sprayed with gore, taking 9d10 spirit damage (emotion fear mental) from the release of the creature's soul. An affected target attempts a Will save against your class DC or spell DC, whichever is higher. This effect has the emotion, fear, and mental traits. Critical Success The creature is unaffected. Success The creature takes half damage and is Frightened 1 from the shock. Failure The creature takes full damage and is Frightened 2. For the remainder of the penultimate heartbeat's duration, the creature can't reduce the value of the frightened condition below 1 if it ends its turn where it can see you. Critical Failure The creature takes double damage and is Frightened 3. For the remainder of the penultimate heartbeat's duration, the creature can't reduce the value of the frightened condition below 2 if it ends its turn where it can see you.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Spirit",
+      "Whetstone"
+    ],
+    "level": 16,
+    "price": 2000,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "duration": "hour",
+      "reminder": "Reducing a living creature to 0 HP: Reposition it up to 10 ft free, then it dies — 9d10 spirit damage (emotion, fear, mental) in a 30-ft cone you direct (basic Will vs the creature's level-based DC)."
+    },
+    "id": "penultimate-heartbeat"
+  },
+  {
     "name": "Pernicious Spore Bomb",
     "description": "A bomb that bursts into a cloud of barbed, toxic spores. Deals 1 poison on a direct hit, 1d4 persistent piercing, and 1 poison splash; one square of the target’s space becomes difficult terrain for 1 round.",
     "traits": [
@@ -6962,6 +7393,24 @@
     "id": "peshpine-grenade"
   },
   {
+    "name": "Phasing Trine",
+    "description": "Activate (one-action, manipulate). A phasing trine is a metallic triangle embedded with a clear crystal designed in the shape of a bow and nocked arrow. Strikes made with a ranged weapon under the effect of a phasing trine against a target who is observed by or Hidden to you (but not Undetected) pass through any non-magical barriers or walls in their way, though magical barriers stop the ammunition. These Strikes ignore all cover and circumstance bonuses to AC from shields. The Strike's damage can't be reduced with a Shield Block reaction using a non-magical shield.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 16,
+    "price": 1900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "targets": "ranged",
+      "reminder": "Ranged Strikes vs observed/hidden targets pass through non-magical barriers, ignore all cover and shield circumstance bonuses; non-magical Shield Blocks can't reduce the damage."
+    },
+    "id": "phasing-trine"
+  },
+  {
     "name": "Phoenix Tail Feather",
     "description": "This large feather shimmers between orange and blue and is noticeably warm to the touch. Adding this catalyst to a casting of blazing dive prevents allies from having to save against the damage caused by your landing, instead being granted 2 temporary Hit Points per rank that last until the end of your next turn.",
     "traits": [
@@ -6980,6 +7429,24 @@
       "effect": "Allies in the area don't save against your landing damage; each instead gains 2 temporary Hit Points per spell rank until the end of your next turn."
     },
     "id": "phoenix-tail-feather"
+  },
+  {
+    "name": "Pinpoint Arrowhead",
+    "description": "Activate (one-action, manipulate). This metal arrowhead is sharp at the tip but never draws the blood of its user. When you attempt a ranged Strike with a weapon under the effect of a pinpoint arrowhead, you treat any cover the target has as one degree less (for example, treat standard cover as lesser cover, and lesser cover as no cover).",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 6,
+    "price": 44,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "targets": "ranged",
+      "reminder": "Ranged Strikes treat the target's cover as one degree less (standard → lesser, lesser → none)."
+    },
+    "id": "pinpoint-arrowhead"
   },
   {
     "name": "Pipes of Compulsion",
@@ -7640,6 +8107,45 @@
     "price": 0.04,
     "weight": 0.1,
     "id": "rations"
+  },
+  {
+    "name": "Reactive Flash",
+    "description": "Activate (one-action, manipulate). These whetstones are miniature stone replicas of weapons, such as a sword or an axe, though their function is the same regardless of their shape. When you attempt a Strike as a reaction (such as with a Readied action or the Reactive Strike reaction) using a weapon under the effect of a reactive flash, the target must first succeed at a DC 19 Reflex save or be Off-Guard against the attack.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 5,
+    "price": 27,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "reactionSave": {
+          "save": "reflex",
+          "dc": 19,
+          "conditions": {
+            "failure": [
+              {
+                "id": "off-guard",
+                "scopedToCaster": true,
+                "note": "vs this attack"
+              }
+            ],
+            "criticalFailure": [
+              {
+                "id": "off-guard",
+                "scopedToCaster": true,
+                "note": "vs this attack"
+              }
+            ]
+          }
+        }
+      },
+      "reminder": "Strikes made as a reaction: target saves Reflex DC 19 first or is Off-Guard against the attack."
+    },
+    "id": "reactive-flash"
   },
   {
     "id": "ready",
@@ -9272,6 +9778,50 @@
     "id": "skinstitch-salve"
   },
   {
+    "name": "Slayer's Stone",
+    "description": "Activate (one-action, manipulate). This dull red stone is shot through with glittering veins of black and silver. When you apply a slayer's stone to your weapon, choose aberration, animal, beast, celestial, construct, dragon, elemental, fey, fiend, giant, monitor, ooze, or both fungus and plant. A weapon under the effect of a slayer's stone deals an additional 1d6 precision damage to the creatures with the chosen trait or traits for 1 minute. It's up to the GM's discretion whether this benefit applies against a creature disguised as a creature with the chosen trait or traits.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 6,
+    "price": 40,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "choice": {
+        "label": "Creature trait",
+        "options": [
+          "aberration",
+          "animal",
+          "beast",
+          "celestial",
+          "construct",
+          "dragon",
+          "elemental",
+          "fey",
+          "fiend",
+          "giant",
+          "monitor",
+          "ooze",
+          "fungus and plant"
+        ]
+      },
+      "effect": {
+        "addRiders": [
+          {
+            "dice": "1d6",
+            "type": "precision",
+            "appliesVsTrait": "from-choice"
+          }
+        ]
+      },
+      "reminder": "+1d6 precision damage vs creatures with the chosen trait."
+    },
+    "id": "slayers-stone"
+  },
+  {
     "id": "sleep-arrow",
     "name": "Sleep Arrow",
     "level": 3,
@@ -9727,6 +10277,23 @@
       }
     ],
     "id": "spectacles-of-understanding"
+  },
+  {
+    "name": "Spellslasher",
+    "description": "Activate (one-action, manipulate). A spellslasher is made of faceted crystal, its edges sharp and oddly misaligned. When it's applied to a weapon, it attunes the weapon to magical energies, allowing it to slice through spells as though they were physical threads. While your weapon is under the effect of a spellslasher, you gain the Spellslash reaction; you can use this reaction only with the affected weapon, and the spellslasher's effects end as soon as you use Spellslash. Spellslash (reaction) (magical, manipulate) Trigger You are the only target of a spell Effect You swing or shoot your weapon to intercept the magic, attempting to counteract the spell. Your counteract rank is equal to half your level (rounded up), and your counteract check modifier is equal to your attack modifier with the affected weapon.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 15,
+    "price": 1200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "reminder": "Grants the Spellslash reaction: when you're the sole target of a spell, counteract it with a weapon swing (counteract modifier = your attack modifier); ends the whetstone."
+    },
+    "id": "spellslasher"
   },
   {
     "id": "spiked-chain",
@@ -11046,6 +11613,52 @@
     "id": "thunderbird-tuft-moderate"
   },
   {
+    "name": "Toothy Knife",
+    "description": "Activate (one-action, manipulate). This jagged bit of metal is pitted and worn but wickedly sharp. The DC of the flat check to end persistent bleed damage dealt by a weapon under the effects of a toothy knife is 17 (or 12 with appropriate assistance). This bleeding still typically ends on its own after 1 minute, as normal.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "bleedDc": {
+          "base": 17,
+          "assisted": 12
+        }
+      },
+      "reminder": "Persistent bleed this weapon deals ends on DC 17 (12 with appropriate assistance)."
+    },
+    "id": "toothy-knife"
+  },
+  {
+    "name": "Toothy Knife (Greater)",
+    "description": "Activate (one-action, manipulate). This jagged bit of metal is pitted and worn but wickedly sharp. The DC of the flat check to end persistent bleed damage dealt by a weapon under the effects of a greater toothy knife is 19 (or 14 with appropriate assistance). This bleeding still typically ends on its own after 1 minute, as normal.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 15,
+    "price": 1100,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "bleedDc": {
+          "base": 19,
+          "assisted": 14
+        }
+      },
+      "reminder": "Persistent bleed this weapon deals ends on DC 19 (14 with appropriate assistance)."
+    },
+    "id": "toothy-knife-greater"
+  },
+  {
     "name": "Torch",
     "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit.",
     "image": "img_f9d51ca7-1eb7-45da-97d3-90b86dc37b51.jpg",
@@ -11145,6 +11758,75 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Transmuting Ingot (Adamantine)",
+    "description": "Activate (one-action, manipulate). A miniature ingot of metal hangs upon a leather cord, with deep weapon grooves on its surface. A weapon it's applied to counts as adamantine for physical damage it deals for 1 minute, depending on its type.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 10,
+    "price": 154,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "material": "adamantine",
+        "iwrTags": [
+          "adamantine"
+        ]
+      },
+      "reminder": "Counts as adamantine for the physical damage it deals."
+    },
+    "id": "transmuting-ingot-adamantine"
+  },
+  {
+    "name": "Transmuting Ingot (Cold Iron)",
+    "description": "Activate (one-action, manipulate). A miniature ingot of metal hangs upon a leather cord, with deep weapon grooves on its surface. A weapon it's applied to counts as cold iron for physical damage it deals for 1 minute, depending on its type.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 1,
+    "price": 4,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "material": "cold iron",
+        "iwrTags": [
+          "cold iron"
+        ]
+      },
+      "reminder": "Counts as cold iron for the physical damage it deals."
+    },
+    "id": "transmuting-ingot-cold-iron"
+  },
+  {
+    "name": "Transmuting Ingot (Silver)",
+    "description": "Activate (one-action, manipulate). A miniature ingot of metal hangs upon a leather cord, with deep weapon grooves on its surface. A weapon it's applied to counts as silver for physical damage it deals for 1 minute, depending on its type.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 1,
+    "price": 3,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "effect": {
+        "material": "silver",
+        "iwrTags": [
+          "silver"
+        ]
+      },
+      "reminder": "Counts as silver for the physical damage it deals."
+    },
+    "id": "transmuting-ingot-silver"
   },
   {
     "name": "Treasure",
@@ -11367,6 +12049,32 @@
       "umbrella"
     ],
     "description": "A collapsible canvas umbrella on a wooden frame."
+  },
+  {
+    "name": "Valorous Coin",
+    "description": "Activate (one-action, manipulate). Valorous coins are metal disks emblazoned with two crossed swords, with inscriptions exhorting bravery and optimism. The effects of a valorous coin last for 1 hour. During that time, if you're reduced below a quarter of your Hit Points while wielding the affected weapon, it empowers you with determination and resolve to finish the fight. You gain temporary Hit Points equal to your level that last for 1 minute, and you gain a +1 circumstance bonus to Strikes and damage rolls with the affected weapon for 1 minute. Once this minute ends, so do all effects and the remaining duration of the valorous coin, and you're Fatigued until you're healed to your maximum Hit Points.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 8,
+    "price": 90,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "duration": "hour",
+      "effect": {
+        "hpTrigger": {
+          "belowFraction": 0.25,
+          "tempHpPerLevel": 1,
+          "effectId": "valorous-coin",
+          "note": "when the minute ends: Fatigued until healed to maximum HP"
+        }
+      },
+      "reminder": "If you drop below 1/4 HP while wielding it: temp HP = level and +1 circumstance to Strikes and damage for 1 minute, then Fatigued until fully healed."
+    },
+    "id": "valorous-coin"
   },
   {
     "actions": [
@@ -12092,6 +12800,23 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Windstep Sheath",
+    "description": "Activate (one-action, manipulate). Carved of ash wood and decorated with images of clouds and gusting winds, a windstep sheath is a small icon shaped like a weapon sheath or quiver. This whetstone is favored by duelists who like to take their foe by surprise. When you use the Quick Draw feat with a weapon under the effect of a windstep sheath, you can also Step as part of that action, either immediately before or after your Strike.",
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Whetstone"
+    ],
+    "level": 9,
+    "price": 101,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "whetstone": {
+      "reminder": "Quick Draw with this weapon: also Step immediately before or after the Strike."
+    },
+    "id": "windstep-sheath"
   },
   {
     "id": "wisp-chain",
