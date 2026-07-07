@@ -339,12 +339,17 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
-// ── Ring runes (#967 R9) ─────────────────────────────────────────────────────
-// Ring runes carry rich activations (actions[]/freeActions[]/reactions[]) and
-// riders authored in snapshot content (#248), not editable here yet. This safe
-// form edits the descriptive fields and PRESERVES every other field by spreading
-// the original doc on save, so an edit never drops a ring rune's mechanics.
-const ringToForm = (r) => {
+// ── Safe preserve-on-save form (ring #967 R9, shield #1196 G3/G4) ─────────────
+// Some property runes carry hand-authored mechanics the structured weapon form
+// can't express and would DROP on save: ring activations
+// (actions[]/freeActions[]/reactions[]) + riders (#248), and a shield rune's
+// `actuated` block (Weapon-Storing's Interact toggle, the Class B spell casts,
+// the Class C reactions), its `shieldCategories` etch gate, and the
+// `duplicable`/`choices` pair (Energy-Resistant's damage-type pick). This form
+// edits only the descriptive fields and PRESERVES every other field by spreading
+// the original doc on save, so an edit never guts a rune (the GmItems variant
+// clobber, #1170 task_316f46df, in rune form).
+const preserveToForm = (r) => {
   const src = r && typeof r === 'object' ? r : {};
   return {
     id: src.id,
@@ -355,10 +360,9 @@ const ringToForm = (r) => {
     _original: src,
   };
 };
-const ringBlankRune = () => ringToForm({});
-const ringFromForm = (f) => {
+const preserveFromForm = (target, f) => {
   if (!f.name.trim()) throw new Error('Rune name is required.');
-  const out = { ...(f._original || {}), type: 'property', target: 'ring', name: f.name.trim() };
+  const out = { ...(f._original || {}), type: 'property', target, name: f.name.trim() };
   const level = parseInt(f.level, 10);
   if (Number.isNaN(level)) delete out.level; else out.level = level;
   const price = parseFloat(f.price);
@@ -368,7 +372,26 @@ const ringFromForm = (f) => {
   return out;
 };
 
-const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
+// One-line summary of the mechanics this form preserves but never edits, so the
+// GM sees what a bare descriptive save keeps intact. Returns null when there's
+// nothing but the descriptive fields.
+const ringPreservedNote = (o) => {
+  const activations = ['actions', 'freeActions', 'reactions'].reduce(
+    (n, k) => n + (Array.isArray(o[k]) ? o[k].length : 0), 0);
+  const riders = Array.isArray(o.riders) ? o.riders.length : 0;
+  if (!activations && !riders) return null;
+  return `${activations} activation${activations === 1 ? '' : 's'} · ${riders} rider${riders === 1 ? '' : 's'}`;
+};
+const shieldPreservedNote = (o) => {
+  const parts = [];
+  if (o.actuated) parts.push('an activation');
+  const choices = Array.isArray(o.choices) ? o.choices.length : 0;
+  if (choices) parts.push(`${choices} etch choice${choices === 1 ? '' : 's'}`);
+  if (Array.isArray(o.shieldCategories) && o.shieldCategories.length) parts.push('a shield-category restriction');
+  return parts.length ? parts.join(' · ') : null;
+};
+
+const PreserveRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored, target, noteTestId, preservedNote }) => {
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -384,7 +407,7 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   };
   const save = async () => {
     let body;
-    try { body = ringFromForm(e); } catch (err) { setError(err.message); return; }
+    try { body = preserveFromForm(target, e); } catch (err) { setError(err.message); return; }
     const id = e.id || slugify(body.name);
     const payload = { ...body, id };
     if (isNew && existingIds && existingIds.has(id)) { setConfirm({ kind: 'collision', id, payload }); return; }
@@ -397,9 +420,7 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     finally { setBusy(false); }
   };
 
-  const activationCount = ['actions', 'freeActions', 'reactions'].reduce(
-    (n, k) => n + (Array.isArray(e._original?.[k]) ? e._original[k].length : 0), 0);
-  const riderCount = Array.isArray(e._original?.riders) ? e._original.riders.length : 0;
+  const note = preservedNote(e._original || {});
 
   return (
     <div className="gm-card" data-testid={`rune-form-${e.id || 'new'}`}>
@@ -421,9 +442,9 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         <label>Description</label>
         <textarea aria-label="description" rows={3} value={e.description} onChange={(ev) => set({ description: ev.target.value })} />
       </div>
-      {(activationCount > 0 || riderCount > 0) && (
-        <p className="gm-count" data-testid="ring-preserved-note">
-          Preserved on save: {activationCount} activation{activationCount === 1 ? '' : 's'} · {riderCount} rider{riderCount === 1 ? '' : 's'} (authored in content).
+      {note && (
+        <p className="gm-count" data-testid={noteTestId}>
+          Preserved on save: {note} (authored in content).
         </p>
       )}
       {error && <p className="gm-warn" role="alert">{error}</p>}
@@ -439,7 +460,7 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       {!isNew && (
         <HistoryModal isOpen={showHistory} collection="rune" id={e.id} name={e.name}
           onClose={() => setShowHistory(false)}
-          onRestored={(doc) => { setShowHistory(false); if (doc) setE(ringToForm(doc)); setError(null); onRestored(); }} />
+          onRestored={(doc) => { setShowHistory(false); if (doc) setE(preserveToForm(doc)); setError(null); onRestored(); }} />
       )}
       <ConfirmDialog isOpen={confirm?.kind === 'delete'} title="Delete rune"
         message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
@@ -451,6 +472,13 @@ const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     </div>
   );
 };
+
+const RingRuneForm = (props) => (
+  <PreserveRuneForm {...props} target="ring" noteTestId="ring-preserved-note" preservedNote={ringPreservedNote} />
+);
+const ShieldRuneForm = (props) => (
+  <PreserveRuneForm {...props} target="shield" noteTestId="shield-preserved-note" preservedNote={shieldPreservedNote} />
+);
 
 // ── Accessory runes (#1033 S4) ───────────────────────────────────────────────
 // Accessory runes inscribe onto mundane worn items matched by USAGE TAGS
@@ -747,9 +775,9 @@ const AccessoryRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored })
 // by rune target so weapon/armor/ring/accessory are distinguishable at a glance.
 // The facet also picks the target for a NEW rune (weapon when 'All').
 // Fundamentals (type:'fundamental') are table-derived — not authored here.
-const TARGETS = ['weapon', 'armor', 'ring', 'accessory'];
-const TARGET_LABEL = { weapon: 'Weapon', armor: 'Armor', ring: 'Ring', accessory: 'Accessory' };
-const TARGET_ORDER = { weapon: 0, armor: 1, ring: 2, accessory: 3 };
+const TARGETS = ['weapon', 'armor', 'shield', 'ring', 'accessory'];
+const TARGET_LABEL = { weapon: 'Weapon', armor: 'Armor', shield: 'Shield', ring: 'Ring', accessory: 'Accessory' };
+const TARGET_ORDER = { weapon: 0, armor: 1, shield: 2, ring: 3, accessory: 4 };
 
 const GmRunes = () => {
   const { runes } = useContent();
@@ -778,7 +806,10 @@ const GmRunes = () => {
       return <ArmorRuneForm initial={isNew ? armorBlankRune() : armorToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
     }
     if (t === 'ring') {
-      return <RingRuneForm initial={isNew ? ringBlankRune() : ringToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+      return <RingRuneForm initial={isNew ? preserveToForm({}) : preserveToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+    }
+    if (t === 'shield') {
+      return <ShieldRuneForm initial={isNew ? preserveToForm({}) : preserveToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
     }
     if (t === 'accessory') {
       return <AccessoryRuneForm initial={isNew ? accBlankRune() : accToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;

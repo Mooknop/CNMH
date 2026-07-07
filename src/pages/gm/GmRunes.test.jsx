@@ -139,6 +139,62 @@ describe('GmRunes', () => {
     });
   });
 
+  it('groups shield runes under their own target and facet (#1196)', () => {
+    useContent.mockReturnValue({ runes: [
+      ...runes,
+      { id: 'weapon-storing', type: 'property', target: 'shield', name: 'Weapon-Storing', level: 8, price: 550,
+        actuated: { cost: 'none', name: 'Weapon-Storing', actionCount: 1, frequency: 'at will' } },
+    ] });
+    render(<GmRunes />);
+    expect(screen.getByText('Shield runes')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Weapon-Storing' })).toBeInTheDocument();
+    // Shield facet filters to just the shield rune.
+    fireEvent.click(screen.getByRole('button', { name: 'Shield' }));
+    expect(screen.getByText('Showing 1 of 1')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Frost' })).not.toBeInTheDocument();
+  });
+
+  it('edits a shield rune through a safe form that preserves its activation, choices, and category gate (#1196)', async () => {
+    saveDocument.mockResolvedValue({ ok: true });
+    useContent.mockReturnValue({ runes: [
+      { id: 'energy-resistant', type: 'property', target: 'shield', name: 'Energy-Resistant', level: 8, price: 500,
+        description: 'resist an element', rarity: 'uncommon', duplicable: true,
+        choices: ['fire', 'cold', 'acid', 'electricity', 'sonic'], shieldCategories: ['medium', 'heavy'],
+        actuated: { cost: 'none', name: 'Toggle', actionCount: 1, frequency: 'once per day' } },
+    ] });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Energy-Resistant' }));
+    const form = screen.getByTestId('rune-form-energy-resistant');
+    expect(within(form).getByLabelText('name')).toHaveValue('Energy-Resistant');
+    expect(within(form).getByTestId('shield-preserved-note'))
+      .toHaveTextContent('an activation · 5 etch choices · a shield-category restriction');
+    // No weapon rider controls leak onto the shield form.
+    expect(within(form).queryByLabelText('rider-vsTrait')).not.toBeInTheDocument();
+    fireEvent.change(within(form).getByLabelText('description'), { target: { value: 'resist a chosen element' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [collection, id, data] = saveDocument.mock.calls[0];
+    expect(collection).toBe('rune');
+    expect(id).toBe('energy-resistant');
+    // Descriptive edit applied; target stays 'shield' and every mechanic survives.
+    expect(data).toMatchObject({
+      type: 'property', target: 'shield', name: 'Energy-Resistant', description: 'resist a chosen element',
+      rarity: 'uncommon', duplicable: true,
+      choices: ['fire', 'cold', 'acid', 'electricity', 'sonic'], shieldCategories: ['medium', 'heavy'],
+      actuated: { cost: 'none', name: 'Toggle', actionCount: 1, frequency: 'once per day' },
+    });
+  });
+
+  it('creates a new rune under the shield facet with the safe form (#1196)', () => {
+    setContent();
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Shield' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ New shield rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    expect(within(form).getByLabelText('name')).toBeInTheDocument();
+    expect(within(form).queryByLabelText('rider-vsTrait')).not.toBeInTheDocument(); // shield form, not weapon
+  });
+
   it('authors a new accessory rune with usage tags, modifiers, and reminders (#1033 S4)', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
