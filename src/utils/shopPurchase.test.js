@@ -64,6 +64,26 @@ describe('expandWare', () => {
     ]);
   });
 
+  it('lands a dragonbreath ware as a lean ref entry carrying only the template (#1210 M4g)', () => {
+    const db = {
+      id: 'dragonbreath:longsword:greater:red',
+      ref: 'longsword',
+      name: 'Greater Red Dragonbreath Longsword',
+      dragonbreath: { tier: 'greater', dragonType: 'Red' },
+      price: 2801,
+      stock: 1,
+      wareKey: 'dragonbreath:longsword:greater:red',
+      strikes: {},
+      traits: ['Sword', 'Magical'],
+    };
+    const out = expandWare(db);
+    expect(out).toEqual([{ ref: 'longsword', dragonbreath: { tier: 'greater', dragonType: 'Red' }, uid: 'u-1' }]);
+    // No baked display name / price / strikes go stale — inventory re-derives them.
+    ['name', 'price', 'stock', 'wareKey', 'strikes', 'traits', 'id'].forEach((k) =>
+      expect(out[0]).not.toHaveProperty(k)
+    );
+  });
+
   it('falls back to a single reuid copy for an ordinary ware', () => {
     const antidote = { id: 'antidote', name: 'Antidote', price: 3, stock: 5, wareKey: 'antidote' };
     const out = expandWare(antidote);

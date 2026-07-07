@@ -6,6 +6,12 @@ import { isTalisman, affixTargetType } from './affix';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 import { isCatalyst, catalystTargetSpell } from './catalyst';
+import {
+  dragonbreathMeta,
+  dragonbreathDisplayName,
+  dragonbreathTierPrice,
+  dragonbreathTierLevel,
+} from './dragonbreath';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
 //
@@ -109,6 +115,16 @@ export function getShopsForLocation(locationId, entries, shops) {
 // the item doc so it round-trips through the content DO like any other field.
 export const isShopExcluded = (item) => !!(item && item.noShop);
 
+// A dragonbreath weapon ware (#1210 M4g): a base-weapon `ref` carrying a
+// `dragonbreath: { tier, dragonType }` template block. The GM stocks a specific
+// templated weapon (a Greater Red Dragonbreath Longsword) rather than a plain
+// catalog item — these are loot-grade, never player-crafted — so it is authored
+// in its own GmShops section and attached to the base at resolve time. A bought
+// copy lands as a lean `{ ref, dragonbreath }` entry (expandWare) that
+// re-resolves off the base weapon.
+export const isDragonbreathWare = (w) =>
+  !!(w && w.ref != null && w.ref !== 'runestone' && !isSpellItemWare(w) && !isRuneServiceWare(w) && dragonbreathMeta(w));
+
 export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
   const wares = shops && loreId != null ? shops[loreId]?.wares : null;
   if (!Array.isArray(wares) || !catalogMap) return [];
@@ -128,6 +144,38 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
         const override = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : null;
         if (override != null) resolved.price = override;
         resolved.wareKey = w.runeRef != null ? `runestone@${w.runeRef}` : 'runestone';
+        if (w.stock != null) resolved.stock = w.stock;
+        return resolved;
+      }
+
+      // A dragonbreath weapon ware (#1210 M4g): resolve the base weapon, attach
+      // the template block, and present it as the dragonbreath weapon — its
+      // derived name, tier level, and price (pack tier price + base, unless the
+      // GM overrode it). A distinct `id`/`wareKey` (base+tier+type) keeps each
+      // templated weapon its own single-form browse group, so a shop can stock a
+      // plain longsword and a Red Dragonbreath longsword side by side. The `ref`
+      // is carried so the bought copy re-resolves off the base (expandWare).
+      if (isDragonbreathWare(w)) {
+        const base = catalogMap.get(String(w.ref));
+        if (!base || isShopExcluded(base)) return null;
+        const meta = dragonbreathMeta(w);
+        const { variants, ...rest } = base;
+        const resolved = { ...rest };
+        resolved.dragonbreath = { tier: meta.tier, dragonType: meta.dragonType };
+        resolved.name = dragonbreathDisplayName(resolved, base.name);
+        resolved.baseName = base.name;
+        resolved.level = dragonbreathTierLevel(meta.tier);
+        const override = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : null;
+        resolved.price = override != null
+          ? override
+          : dragonbreathTierPrice(meta.tier) + (Number(base.price) || 0);
+        const traits = Array.isArray(base.traits) ? base.traits.slice() : [];
+        if (!traits.includes('Magical')) traits.push('Magical');
+        resolved.traits = traits;
+        const key = `dragonbreath:${w.ref}:${meta.tier}:${String(meta.dragonType || '').toLowerCase()}`;
+        resolved.id = key;
+        resolved.ref = String(w.ref);
+        resolved.wareKey = key;
         if (w.stock != null) resolved.stock = w.stock;
         return resolved;
       }

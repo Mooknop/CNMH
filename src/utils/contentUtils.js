@@ -538,6 +538,12 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
   // mirroring the etch flow's inline entry. (Ordinary catalog refs never carry a
   // rune block, so this is inert for them.)
   if (entry.runes && typeof entry.runes === 'object') resolved.runes = entry.runes;
+  // A dragonbreath weapon (#1210 M4): the template block rides the ref entry — GM
+  // loot (M4f) or a bought shop ware (M4g) — carrying only `{ tier, dragonType }`.
+  // Overlay it onto the resolved base weapon so isDragonbreath fires and the
+  // resolver derives the display name, Strike dice, breath, and sockets; the base
+  // weapon has no template of its own, so nothing is lost by re-deriving.
+  if (entry.dragonbreath && typeof entry.dragonbreath === 'object') resolved.dragonbreath = entry.dragonbreath;
   // Read `resolved.container` (not `cat.container`) so a variant's
   // `overrides.container` (#907 S2 — e.g. Sleeves of Storage Greater's larger
   // capacity) is honored; it equals the catalog's container when no override.

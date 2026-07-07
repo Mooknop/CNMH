@@ -21,6 +21,7 @@ import {
   eligibleHostItems,
   eligibleTalismans,
   isShopExcluded,
+  isDragonbreathWare,
   shopHostKind,
   RUNE_TARGETS,
   groupWares,
@@ -1071,5 +1072,65 @@ describe('eligibleTalismans (#1211)', () => {
     expect(keys({ runeService: true, targets: ['shield'], maxLevel: 20 }))
       .not.toContain('talisman:shield-cover@1');
     expect(eligibleTalismans({ ref: 'runestone' }, talItems)).toEqual([]);
+  });
+});
+
+describe('isDragonbreathWare (#1210 M4g)', () => {
+  it('is true only for a base-weapon ref carrying a dragonbreath template', () => {
+    expect(isDragonbreathWare({ ref: 'longsword', dragonbreath: { tier: 'greater', dragonType: 'Red' } })).toBe(true);
+    expect(isDragonbreathWare({ ref: 'longsword', dragonbreath: { tier: 'base' } })).toBe(true);
+    // Not a dragonbreath ware
+    expect(isDragonbreathWare({ ref: 'longsword' })).toBe(false);
+    expect(isDragonbreathWare({ ref: 'longsword', dragonbreath: { tier: 'legendary' } })).toBe(false); // bad tier
+    expect(isDragonbreathWare({ ref: 'runestone', runeRef: 'flaming' })).toBe(false);
+    expect(isDragonbreathWare({ spellItem: 'scroll', maxLevel: 5 })).toBe(false);
+    expect(isDragonbreathWare(null)).toBe(false);
+  });
+});
+
+describe('resolveShopWares — dragonbreath weapons (#1210 M4g)', () => {
+  const dbCatalog = new Map([
+    ['longsword', { id: 'longsword', name: 'Longsword', price: 1, weight: 1, traits: ['Sword'], strikes: {}, runes: {}, description: 'A blade.' }],
+  ]);
+  const shopWith = (ware) => ({ s: { wares: [ware] } });
+
+  it('attaches the template and derives name / level / default price', () => {
+    const [w] = resolveShopWares('s', shopWith({ ref: 'longsword', dragonbreath: { tier: 'greater', dragonType: 'Red' } }), dbCatalog);
+    expect(w.name).toBe('Greater Red Dragonbreath Longsword');
+    expect(w.dragonbreath).toEqual({ tier: 'greater', dragonType: 'Red' });
+    expect(w.level).toBe(13);
+    // Pack tier price (2800) + base weapon price (1).
+    expect(w.price).toBe(2801);
+    // Base name kept for grouping; ref kept so the bought copy re-resolves.
+    expect(w.baseName).toBe('Longsword');
+    expect(w.ref).toBe('longsword');
+    // Distinct id/wareKey per template so it stays its own browse group.
+    expect(w.id).toBe('dragonbreath:longsword:greater:red');
+    expect(w.wareKey).toBe('dragonbreath:longsword:greater:red');
+    // Marked Magical, variants stripped.
+    expect(w.traits).toContain('Magical');
+    expect(w.variants).toBeUndefined();
+  });
+
+  it('base tier omits the tier word in the name and honors a price override', () => {
+    const [w] = resolveShopWares('s', shopWith({ ref: 'longsword', dragonbreath: { tier: 'base', dragonType: 'Mirage' }, price: 500, stock: 2 }), dbCatalog);
+    expect(w.name).toBe('Mirage Dragonbreath Longsword');
+    expect(w.price).toBe(500);
+    expect(w.stock).toBe(2);
+    expect(w.level).toBe(7);
+  });
+
+  it('lets a shop stock a plain and a dragonbreath copy of one base as distinct groups', () => {
+    const wares = resolveShopWares('s', { s: { wares: [
+      { ref: 'longsword' },
+      { ref: 'longsword', dragonbreath: { tier: 'base', dragonType: 'Red' } },
+    ] } }, dbCatalog);
+    expect(wares.map((w) => w.id)).toEqual(['longsword', 'dragonbreath:longsword:base:red']);
+  });
+
+  it('drops a dragonbreath ware whose base weapon is missing or GM-excluded', () => {
+    expect(resolveShopWares('s', shopWith({ ref: 'nope', dragonbreath: { tier: 'base' } }), dbCatalog)).toEqual([]);
+    const excl = new Map([['x', { id: 'x', name: 'X', price: 1, strikes: {}, noShop: true }]]);
+    expect(resolveShopWares('s', shopWith({ ref: 'x', dragonbreath: { tier: 'base' } }), excl)).toEqual([]);
   });
 });
