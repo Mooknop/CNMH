@@ -55,6 +55,8 @@ import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura
 import { HARROW_CAST_DC } from '../../utils/harrow';
 import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
 import { applyHealing } from '../../utils/consumables';
+import { getClassDC } from '../../utils/CharacterUtils';
+import { calculateSpellStats } from '../../utils/SpellUtils';
 import { itemUidOf } from '../../utils/affix';
 import { eligibleCatalystsFor, sumCatalystActions, catalystSummary, catalystAddActions } from '../../utils/catalyst';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
@@ -495,6 +497,17 @@ const UseAbilityModal = ({
   const attackToggles = [
     ...(attackStat ? conditionalTogglesFor(activeEffects || [], attackStat, effectCatalog) : []),
     ...offGuardToggle,
+    // Armed whetstone bonus (#1216 — Chivalric Emblem): once armed against an
+    // enemy, the +1 circumstance to attacks with the bound weapon surfaces as
+    // an opt-in toggle (flip it when attacking that enemy); the damage side
+    // rides as a per-target rider on the strike.
+    ...(attackStat && ability.whetstoneArmedVs
+      ? [{
+          id: 'whetstone-armed',
+          label: `${ability.whetstoneArmedVs.itemName} (vs ${ability.whetstoneArmedVs.name})`,
+          bonus: ability.whetstoneArmedVs.bonus ?? 1,
+        }]
+      : []),
   ];
 
   // Ranged range increments (#530): for a ranged weapon Strike with a parseable
@@ -1117,6 +1130,65 @@ const UseAbilityModal = ({
         }
         if (wsOnHit.note) {
           appendLog({ type: 'action', charId: character.id, text: `${wsOnHit.itemName}: ${wsOnHit.note}` });
+        }
+      }
+    }
+
+    // Triggered whetstone saves (#1216). Reactive Flash: a Strike made as a
+    // reaction forces every target's save — pushed to the GM rail with a note
+    // to resolve it BEFORE applying the attack (a failure means off-guard, −2
+    // AC vs this Strike). Chroma Kaleidoscope: a critical Strike forces a save
+    // vs the wielder's class/spell DC (higher); per-degree conditions ride the
+    // request for RequestedSaves to apply on resolution.
+    const wsReaction = ability.whetstoneReactionSave;
+    const wsCrit = ability.whetstoneOnCrit;
+    if (wsReaction || wsCrit) {
+      const allStrikeResults = [
+        ...rayGroups.flatMap((g) => g?.results || []),
+        ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
+      ];
+      const saveTargetsFor = (rs, save) => rs
+        .map((r) => {
+          const entry = (order || []).find((e) => e.entryId === r.entryId);
+          return entry
+            ? { entryId: entry.entryId, name: entry.name, saveMod: entry.defenses?.saves?.[save] ?? null }
+            : null;
+        })
+        .filter(Boolean);
+      if (wsReaction && castCost === 'reaction' && allStrikeResults.length) {
+        const save = wsReaction.save || 'reflex';
+        addSaveRequest({
+          casterId: character.id,
+          casterName: character.name,
+          abilityName: wsReaction.itemName,
+          save,
+          dc: wsReaction.dc,
+          basic: false,
+          targets: saveTargetsFor(allStrikeResults, save),
+          ...(wsReaction.conditions ? { conditions: wsReaction.conditions } : {}),
+        });
+        appendLog({
+          type: 'system',
+          text: `${wsReaction.itemName}: resolve the target's ${save} save (DC ${wsReaction.dc}) BEFORE applying this reaction Strike — on a failure the target is off-guard against it.`,
+        });
+      }
+      if (wsCrit) {
+        const crits = allStrikeResults.filter((r) => r.degree === 'criticalSuccess');
+        if (crits.length) {
+          const save = wsCrit.save || 'will';
+          const dc = wsCrit.dcFrom === 'classOrSpellDC'
+            ? Math.max(getClassDC(character) || 0, calculateSpellStats(character).spellDC || 0)
+            : wsCrit.dc;
+          addSaveRequest({
+            casterId: character.id,
+            casterName: character.name,
+            abilityName: wsCrit.itemName,
+            save,
+            dc,
+            basic: false,
+            targets: saveTargetsFor(crits, save),
+            ...(wsCrit.conditions ? { conditions: wsCrit.conditions } : {}),
+          });
         }
       }
     }

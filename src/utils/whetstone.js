@@ -70,13 +70,17 @@ const hasRangedStrike = (weapon) =>
  */
 export const eligibleWhetstoneWeapons = (items, whetstone) => {
   const selfUid = itemUidOf(whetstone);
-  const rangedOnly = whetstoneMeta(whetstone)?.targets === 'ranged';
+  const meta = whetstoneMeta(whetstone);
+  const rangedOnly = meta?.targets === 'ranged';
+  // Blade Phantom's Guide can't affect a weapon of higher level than itself.
+  const maxLevel = typeof meta?.maxWeaponLevel === 'number' ? meta.maxWeaponLevel : null;
   return (Array.isArray(items) ? items : []).filter(
     (it) =>
       itemUidOf(it) !== selfUid &&
       !isTalisman(it) &&
       !!it.strikes &&
-      (!rangedOnly || hasRangedStrike(it))
+      (!rangedOnly || hasRangedStrike(it)) &&
+      (maxLevel == null || (it.level || 0) <= maxLevel)
   );
 };
 
@@ -182,6 +186,19 @@ export const withWhetstoneApplied = (effects, entry) => [
 //     onHit: { revealIwr?, healHalf?, condition?, note? },
 //                                            // confirm-time riders (W3 — Analysis Eye / Leeching Fangs / Limning Gem),
 //                                            //   processed by the strike confirm off successful results
+//     reactionSave: { save, dc, conditions? },
+//                                            // W4 — Reactive Flash: a Strike made as a reaction forces the
+//                                            //   target's save via the GM save-request rail
+//     onCrit: { save, dcFrom: 'classOrSpellDC' | undefined, dc?, conditions? },
+//                                            // W4 — Chroma Kaleidoscope: a critical Strike forces a save
+//                                            //   vs the wielder's class/spell DC; per-degree conditions
+//                                            //   ride the request ({ failure: [{ id, value?, note? }], … })
+//     proficiencyFloor: 'highest-weapon',    // W4 — Blade Phantom's Guide: attack with your best weapon rank
+//     maxWeaponLevel: 11,                    // apply-time gate: not applicable to higher-level weapons
+//     hpTrigger: { belowFraction: 0.25, tempHpPerLevel: 1, effectId, note? },
+//                                            // W4 — Valorous Coin: GM-side HP watch (useWhetstoneHpTrigger)
+//     armedBonus: { bonus: 1, trigger },     // W4 — Chivalric Emblem: EffectsPanel arms it against one enemy
+//                                            //   (ws.armedVs) → attack toggle + damage rider vs that enemy
 //   }
 //
 // `material` + `iwrTags` surface on the strike as `iwrTags` and ride the damage
@@ -285,6 +302,18 @@ export const applyWhetstoneStrikeAlterations = (strikeObj, entry) => {
     );
     s.bleedDc = eff.bleedDc;
   }
+  // Armed bonus (W4 — Chivalric Emblem): once the effect card is armed against
+  // an enemy, +N damage vs that enemy rides as a per-target rider; the matching
+  // attack toggle is surfaced by the strike surface off whetstoneArmedVs.
+  if (eff.armedBonus && ws.armedVs?.entryId) {
+    riders.push({
+      id: `whetstone-${ws.itemId || 'armed'}-armed`,
+      label: `${ws.itemName} (vs ${ws.armedVs.name})`,
+      bonus: { flat: eff.armedBonus.bonus ?? 1 },
+      appliesToEntryIds: [ws.armedVs.entryId],
+    });
+    s.whetstoneArmedVs = { ...ws.armedVs, bonus: eff.armedBonus.bonus ?? 1, itemName: ws.itemName };
+  }
   if (riders.length) s.riders = riders;
   else delete s.riders;
 
@@ -292,5 +321,21 @@ export const applyWhetstoneStrikeAlterations = (strikeObj, entry) => {
   // Gem): carried on the strike for the encounter confirm to process.
   if (eff.onHit) s.whetstoneOnHit = { ...eff.onHit, itemName: ws.itemName };
 
+  // Triggered saves (W4): carried on the strike for the encounter confirm.
+  if (eff.reactionSave) s.whetstoneReactionSave = { ...eff.reactionSave, itemName: ws.itemName };
+  if (eff.onCrit) s.whetstoneOnCrit = { ...eff.onCrit, itemName: ws.itemName };
+
   return s;
 };
+
+/**
+ * Arm / disarm a whetstone effect entry's targeted bonus (W4 — Chivalric
+ * Emblem). Returns the next effects list; `target` is { entryId, name } or
+ * null to disarm.
+ */
+export const withWhetstoneArmedVs = (effects, effectEntryId, target) =>
+  (Array.isArray(effects) ? effects : []).map((e) => {
+    if (e?.id !== effectEntryId || !e?.whetstone) return e;
+    const { armedVs, ...rest } = e.whetstone;
+    return { ...e, whetstone: { ...rest, ...(target ? { armedVs: target } : {}) } };
+  });
