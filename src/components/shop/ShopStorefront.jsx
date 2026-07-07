@@ -14,6 +14,7 @@ import {
   eligibleHostItems,
   eligibleTalismans,
   eligibleCatalysts,
+  eligibleWhetstones,
 } from '../../utils/shopUtils';
 import { resolveSaleWares } from '../../utils/saleShelf';
 import { resolveRunestone } from '../../utils/runestone';
@@ -774,6 +775,24 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     );
     return out;
   }, [selected, waresStore, resolved, items]);
+  // Whetstones auto-carried by any WEAPON-runesmithing shop (#1212) — including
+  // the general runesmith — up to the weapon target's rune level cap, expanded
+  // from the catalog like the talisman wares. Hand-stocked whetstones win
+  // (deduped by item id).
+  const whetstoneWares = useMemo(() => {
+    if (!selected) return [];
+    const stocked = new Set(resolved.map((w) => String(w.id)));
+    const seen = new Set();
+    const out = [];
+    runeOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleWhetstones(o, items).forEach((ware) => {
+        if (stocked.has(String(ware.id)) || seen.has(ware.wareKey)) return;
+        seen.add(ware.wareKey);
+        out.push(ware);
+      })
+    );
+    return out;
+  }, [selected, waresStore, resolved, items]);
   // GM-rolled Sale Shelf wares (#1137): one-of-a-kind discounted goods baked into
   // the shop entry (S1 engine). They LEAD the Wares grid — the deal is the draw —
   // each a distinct id so groupWares keeps it a single-form group, capped at its
@@ -793,8 +812,8 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       .filter((w) => !stocked.has(String(w.id)));
   }, [selected, waresStore, spells, items, catalogMap, resolved]);
   const wareGroups = useMemo(
-    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares, ...talismanWares, ...catalystWares]),
-    [saleWares, resolved, isRuneWare, hostWares, talismanWares, catalystWares]
+    () => groupWares([...saleWares, ...resolved.filter((w) => !isRuneWare(w)), ...hostWares, ...talismanWares, ...whetstoneWares, ...catalystWares]),
+    [saleWares, resolved, isRuneWare, hostWares, talismanWares, whetstoneWares, catalystWares]
   );
   // Spell docs by id — for the scroll-pack preview card (names + rank, #1137).
   const spellMap = useMemo(
