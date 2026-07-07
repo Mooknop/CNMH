@@ -11,6 +11,7 @@ import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } f
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
+import { isSpellgun } from '../../utils/spellgun';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import {
   isTalisman, affixTargetType, validAffixHosts, affixedHostUid,
@@ -428,9 +429,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
   // Use / Drink / Apply for consumables (#217) — only where the host page
   // provides a use flow (the character sheet; PartyWealth passes no onUse).
-  const useButton = onUse && consumableMeta(item) && (item.quantity ?? 1) > 0 ? (
+  // Spellguns (#1207 M1b) are attack-consumables — not the healing/effect kind
+  // consumableMeta recognises — so they get their own Fire button that routes to
+  // the spellgun attack flow (the host page's onUse branches on isSpellgun).
+  const isGun = isSpellgun(item);
+  const useButton = onUse && (consumableMeta(item) || isGun) && (item.quantity ?? 1) > 0 ? (
     <button className="btn-small btn-primary" data-testid="item-action-use" onClick={() => act(() => onUse(item))}>
-      {consumableVerb(item)}
+      {isGun ? 'Fire' : consumableVerb(item)}
     </button>
   ) : null;
 

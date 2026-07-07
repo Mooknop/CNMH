@@ -117,3 +117,48 @@ export const spellgunOutcome = (against, degree) => {
   }
   return { hit: true, crit, damageMultiplier: crit ? 2 : 1, condition: null };
 };
+
+/**
+ * The damage dice a (resolved, grade-merged) spellgun rolls right now. Moonlit
+ * deals more at night (`diceNight`); everything else has a single `dice`. Flat
+ * control spellguns (Verdant Bola) have no dice → null.
+ *
+ * @param {Object} item
+ * @param {{ night?: boolean }} [opts]
+ * @returns {string|null}
+ */
+export const spellgunActiveDice = (item, { night = false } = {}) => {
+  if (night && item?.diceNight) return item.diceNight;
+  return item?.dice || null;
+};
+
+/** Whether a spellgun's damage changes between day and night (Moonlit only). */
+export const spellgunHasNightDice = (item) => !!(item?.dice && item?.diceNight);
+
+/**
+ * A concise on-hit rider note for the combat log, derived from the resolved
+ * item's fields + the outcome. Best-effort annotation for the GM — the full,
+ * authoritative degree text lives on the item's activation card. Returns null on
+ * a miss or a rider-less spellgun.
+ *
+ * @param {Object} item     - resolved, grade-merged spellgun
+ * @param {ReturnType<typeof spellgunOutcome>} outcome
+ * @returns {string|null}
+ */
+export const spellgunRiderNote = (item, outcome) => {
+  if (!outcome?.hit) return null;
+  if (outcome.condition) {
+    return outcome.condition === 'restrained'
+      ? 'restrained until the end of your next turn (Escape vs your spell DC)'
+      : 'grabbed (Escape vs your spell DC)';
+  }
+  const meta = spellgunMeta(item) || {};
+  const notes = [];
+  if (item?.penalty) notes.push(`−${outcome.crit ? 10 : 5} ft status penalty to Speed ${item.penalty}`);
+  if (item?.rider) notes.push(item.rider);
+  if (item?.persistent) {
+    notes.push(`${item.persistent} persistent ${meta.damageType || 'fire'} damage${outcome.crit ? ', blinded 1 round' : ''}, dazzled`);
+  }
+  if (item?.diceNight) notes.push(`dazzled${outcome.crit ? ', enfeebled 1 if it has a silver weakness/resistance' : ''}`);
+  return notes.length ? notes.join('; ') : null;
+};
