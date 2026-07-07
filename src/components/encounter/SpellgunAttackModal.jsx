@@ -23,6 +23,8 @@ import {
   spellgunRiderNote,
 } from '../../utils/spellgun';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { itemUidOf } from '../../utils/affix';
+import { absorbedKey, retrieve as retrieveAbsorbed } from '../../utils/spellgunHost';
 import './SpellgunAttackModal.css';
 
 const DEGREE_LABELS = {
@@ -54,6 +56,7 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
   const { spendActions } = useTurnState(character?.id || 'nobody');
   const { revealFiredIwr } = useIwrReveal();
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  const [, setAbsorbed] = useSyncedState(absorbedKey(character?.id || ''), {});
   const [profChoice, setProfChoice] = useSyncedState(`cnmh_spellgunatk_${character?.id || ''}`, null);
   const [positionsState] = useSyncedState('cnmh_positions_global', null);
 
@@ -153,6 +156,9 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
     // Consume the spellgun (one-shot; the device melts) — the player-writable
     // consumed overlay, same mechanism potions use. Keyed by the (grade) name.
     setConsumed((cur) => ({ ...(cur || {}), [item.name]: ((cur || {})[item.name] || 0) + 1 }));
+    // If the fired spellgun was absorbed into a host glove (#1208), consuming it
+    // clears its binding so the glove slot frees up. Idempotent when unbound.
+    setAbsorbed((cur) => retrieveAbsorbed(cur, itemUidOf(item)));
 
     if (encounterMode) spendActions(meta.actionCount || 2, `Fire ${item.name}`);
     setResolved(true);
