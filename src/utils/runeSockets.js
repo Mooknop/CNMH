@@ -22,6 +22,7 @@ import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
 import { REINFORCING, shieldPropertySlotCapacity } from './shieldRunes';
 import { shieldCategory } from './shieldCategory';
+import { isDragonbreath, dragonbreathRunes } from './dragonbreath';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
 // socket helpers + their callers keep importing it from one place.
@@ -49,11 +50,17 @@ export const ringSocketCapacity = (item) => Number(item && item.ringSockets) || 
 
 const runesOf = (item) => (item && item.runes && typeof item.runes === 'object' ? item.runes : {});
 
+// A dragonbreath weapon's fundamentals are implied by its tier template (M4b),
+// not etched runes: they are LOCKED (changed only by a tier upgrade, #1210 M4c)
+// and their implied potency is what unlocks the property slots. Returns the
+// effective { potency, striking, property } for such a weapon, else null.
+const dbFundamentals = (item) => (isDragonbreath(item) ? dragonbreathRunes(item) : null);
+
 const propertyCapacity = (item, target) =>
   target === 'armor' ? armorPropertySlotCapacity(runesOf(item))
     : target === 'ring' ? ringSocketCapacity(item)
       : target === 'shield' ? shieldPropertySlotCapacity(runesOf(item)) // #1196 G2: from reinforcing grade
-        : propertySlotCapacity(runesOf(item));
+        : propertySlotCapacity(dbFundamentals(item) || runesOf(item)); // weapon: implied potency for a dragonbreath
 
 // A property-rune slot entry is either a bare id (string) or a { id, choice }
 // object (a choice-bearing rune like Energy-Resistant, #1196 G2). These read
@@ -117,9 +124,23 @@ export const gearSockets = (item) => {
     // and armor lead with their two fundamentals (potency + striking|resilient)
     // before the potency-gated property sockets.
     if (target !== 'ring') {
-      sockets.push({ type: 'potency', target, filled: (runes.potency || 0) > 0, value: runes.potency || 0 });
+      // Dragonbreath weapon (#1210 M4c): the fundamental sockets show the tier's
+      // implied +N / striking grade, always FILLED and LOCKED — they can't be
+      // etched or upgraded directly (a tier upgrade is a separate work-order).
+      const db = dbFundamentals(item);
+      sockets.push({
+        type: 'potency', target,
+        filled: db ? true : (runes.potency || 0) > 0,
+        value: db ? db.potency : (runes.potency || 0),
+        ...(db ? { locked: true } : {}),
+      });
       if (target === 'weapon') {
-        sockets.push({ type: 'striking', target, filled: !!runes.striking, value: runes.striking || null });
+        sockets.push({
+          type: 'striking', target,
+          filled: db ? true : !!runes.striking,
+          value: db ? db.striking : (runes.striking || null),
+          ...(db ? { locked: true } : {}),
+        });
       } else {
         sockets.push({ type: 'resilient', target, filled: !!runes.resilient, value: runes.resilient || null });
       }
@@ -170,6 +191,9 @@ export const compatibleRunes = (item, socketType, stock) => {
   }
   const target = gearTarget(item);
   if (!target) return [];
+  // Dragonbreath fundamentals are template-locked (#1210 M4c): never directly
+  // etchable — a potency/striking change is a tier upgrade via the work order.
+  if ((socketType === 'potency' || socketType === 'striking') && dbFundamentals(item)) return [];
   const runes = runesOf(item);
   return (Array.isArray(stock) ? stock : []).filter((r) => {
     if (runeTarget(r) !== target) return false;
@@ -225,6 +249,13 @@ export const applyRune = (gear, rune, opts = {}) => {
 
   const target = gearTarget(gear);
   if (!target || runeTarget(rune) !== target) return null;
+  // Dragonbreath fundamentals are template-locked (#1210 M4c) — reject a direct
+  // potency/striking etch; property runes still apply into the implied slots,
+  // and the stored runes block stays free of the implied fundamentals (the
+  // template supplies them at resolve time, so writing them would double up).
+  if (rune.type === 'fundamental' && (rune.fundamental === 'potency' || rune.fundamental === 'striking') && isDragonbreath(gear)) {
+    return null;
+  }
   const runes = runesOf(gear);
   const property = Array.isArray(runes.property) ? runes.property : [];
   let nextRunes;
