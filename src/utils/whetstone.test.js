@@ -3,6 +3,7 @@ import {
   whetstoneChoice, whetstoneReminder, eligibleWhetstoneWeapons, needsRegripNote,
   activeWhetstoneOn, whetstoneHostUids, buildWhetstoneEffectEntry,
   withWhetstoneApplied, MINUTE_ROUNDS,
+  applyWhetstoneStrikeAlterations, whetstonesByWeaponUid,
 } from './whetstone';
 
 const stone = (over = {}) => ({
@@ -129,5 +130,81 @@ describe('withWhetstoneApplied / lookups', () => {
     expect(activeWhetstoneOn(fx, 'w2')).toBeNull();
     expect([...whetstoneHostUids(fx)]).toEqual(['w1']);
     expect([...whetstoneHostUids(null)]).toEqual([]);
+  });
+});
+
+describe('applyWhetstoneStrikeAlterations (W2, #1214)', () => {
+  const strike = (over = {}) => ({
+    name: 'Longsword Melee Strike', type: 'melee', traits: ['Versatile P'],
+    attackMod: 7, damage: '2d8+4', damageType: 'slashing', ...over,
+  });
+  const entry = (effect, over = {}) => ({
+    id: 'fx1',
+    whetstone: { itemId: 'x', itemName: 'Stone', weaponUid: 'w1', weaponName: 'Longsword', duration: 'minute', effect, ...over },
+  });
+
+  it('descriptive whetstone only stamps the marker', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry(undefined));
+    expect(out.whetstone).toEqual({ itemName: 'Stone' });
+    expect(out.damageType).toBe('slashing');
+    expect(out.riders).toBeUndefined();
+  });
+
+  it('Morph Jewel: damage type from the apply-time choice', () => {
+    const out = applyWhetstoneStrikeAlterations(
+      strike(), entry({ damageType: 'from-choice' }, { choice: 'bludgeoning' }));
+    expect(out.damageType).toBe('bludgeoning');
+    expect(out.whetstone.choice).toBe('bludgeoning');
+  });
+
+  it('Hand of Mercy: adds Nonlethal (no dupes) and suppresses persistent riders', () => {
+    const s = strike({
+      traits: ['Agile'],
+      riders: [
+        { id: 'r1', label: 'Flaming', dice: '1d6', type: 'fire' },
+        { id: 'r2', label: 'Wounding', persistent: { dice: '1d6', type: 'bleed' } },
+      ],
+    });
+    const out = applyWhetstoneStrikeAlterations(s, entry({ addTraits: ['Nonlethal'], suppressPersistent: true }));
+    expect(out.traits).toEqual(['Agile', 'Nonlethal']);
+    expect(out.riders.map((r) => r.id)).toEqual(['r1']);
+    const again = applyWhetstoneStrikeAlterations(out, entry({ addTraits: ['nonlethal'] }));
+    expect(again.traits).toEqual(['Agile', 'Nonlethal']);
+  });
+
+  it('Transmuting Ingot: counts-as material surfaces as material + iwrTags', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry({ material: 'silver' }));
+    expect(out.material).toBe('silver');
+    expect(out.iwrTags).toEqual(['silver']);
+  });
+
+  it('Mighty Counterweight: per-die flat bludgeoning bonus rider', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry({ perDieFlat: { amount: 1, type: 'bludgeoning' } }));
+    expect(out.riders).toHaveLength(1);
+    expect(out.riders[0]).toMatchObject({ label: 'Stone', bonus: { perWeaponDie: 1 }, type: 'bludgeoning' });
+  });
+
+  it('Ethereal Crescent: granted rune riders translate; ghost touch tag matches weaknesses', () => {
+    const out = applyWhetstoneStrikeAlterations(strike(), entry({
+      grantRunes: [{ id: 'astral', name: 'Astral', rider: { dice: '1d6', damageType: 'spirit' } }],
+      iwrTags: ['ghost touch'],
+    }));
+    expect(out.riders).toHaveLength(1);
+    expect(out.riders[0]).toMatchObject({ dice: '1d6', type: 'spirit' });
+    expect(out.iwrTags).toEqual(['ghost touch']);
+  });
+
+  it('Featherlight Fletching: doubles the range increment on ranged strikes only', () => {
+    const ranged = strike({ type: 'ranged', range: '60 ft' });
+    expect(applyWhetstoneStrikeAlterations(ranged, entry({ rangeMultiplier: 2 })).range).toBe('120 ft');
+    expect(applyWhetstoneStrikeAlterations(strike({ range: 60, type: 'ranged' }), entry({ rangeMultiplier: 2 })).range).toBe(120);
+    expect(applyWhetstoneStrikeAlterations(strike(), entry({ rangeMultiplier: 2 })).range).toBeUndefined();
+  });
+
+  it('whetstonesByWeaponUid keys active entries by weapon uid', () => {
+    const e1 = entry({});
+    const e2 = { id: 'fx2', whetstone: { itemName: 'Other', weaponUid: 'w2' } };
+    expect(whetstonesByWeaponUid([e1, e2, { id: 'x' }])).toEqual({ w1: e1, w2: e2 });
+    expect(whetstonesByWeaponUid(null)).toEqual({});
   });
 });

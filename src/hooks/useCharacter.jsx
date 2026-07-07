@@ -43,6 +43,7 @@ import {
 import { bladeStrikes } from '../utils/bladeByrnie';
 import { attachmentStrikes } from '../utils/shieldAttach';
 import { shieldBashStrikes } from '../utils/shieldStrikes';
+import { whetstonesByWeaponUid } from '../utils/whetstone';
 
 import {
   calculateSpellStats,
@@ -300,7 +301,8 @@ export const useCharacter = (character) => {
 
     // ── Combat ──────────────────────────────────────────────────────────────
     const strikes     = [
-      ...getStrikes(charEff, chambers),
+      // Active whetstone effects alter their bound weapon's strikes (#1214).
+      ...getStrikes(charEff, chambers, whetstonesByWeaponUid(activeEffects)),
       ...(blade?.active ? bladeStrikes(charEff) : []),
       // A shield attachment bound to a HELD shield contributes its own Strike.
       ...attachmentStrikes(charEff, attached),

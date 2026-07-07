@@ -8,6 +8,7 @@ import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
 import { dragonbreathRunes, dragonbreathDisplayName, dragonbreathStrikeDamageType } from './dragonbreath';
 import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
+import { applyWhetstoneStrikeAlterations } from './whetstone';
 
 // ── Thrown Strikes (#1230) ─────────────────────────────────────────────────────
 // A ranged Strike with the Thrown trait leaves the wielder's hand when it
@@ -106,9 +107,12 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
  * @param {Object} character - Character data
  * @param {Object} [chamberState=null] - This weapon's chamber state from the
  *   cnmh_chambers_<id> overlay (epic #672), used to gate chambered ranged Strikes.
+ * @param {Object} [whetstoneEntry=null] - The active whetstone effect entry bound
+ *   to this weapon (cnmh_effects_ overlay, #1214) — its payload alters the
+ *   resolved strikes (damage type, traits, riders, material tags, range).
  * @returns {Array} - Resolved strike objects ({ name, attackMod, damage, … })
  */
-export const resolveItemStrikes = (item, character, chamberState = null) => {
+export const resolveItemStrikes = (item, character, chamberState = null, whetstoneEntry = null) => {
   if (!item || !item.strikes || !character) return [];
 
   // Weapon-rune resolution (#548): when an item carries a declarative `runes`
@@ -205,7 +209,12 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
       strikeObj.weaponUid = item.uid || null;
     }
 
-    return strikeObj;
+    // Whetstone alterations (#1214) — the active whetstone effect bound to this
+    // weapon alters the resolved strike last, after runes/chambers, so its
+    // overrides (damage type, traits, riders, range) win over the base layers.
+    return whetstoneEntry
+      ? applyWhetstoneStrikeAlterations(strikeObj, whetstoneEntry)
+      : strikeObj;
   });
 };
 
@@ -216,9 +225,11 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
  * @param {Object} [chambersByUid={}] - Per-weapon chamber state keyed by the
  *   inventory entry's uid (cnmh_chambers_<id> overlay, epic #672). Drives the
  *   loaded-chamber gate on capacity/chambered ranged Strikes.
+ * @param {Object} [whetstonesByUid={}] - Active whetstone effect entries keyed
+ *   by weapon uid (whetstonesByWeaponUid over cnmh_effects_, #1214).
  * @returns {Array} - Array of strike objects with computed attack modifiers
  */
-export const getStrikes = (character, chambersByUid = {}) => {
+export const getStrikes = (character, chambersByUid = {}, whetstonesByUid = {}) => {
   let allStrikes = [];
 
   // Character-defined strikes
@@ -300,7 +311,12 @@ export const getStrikes = (character, chambersByUid = {}) => {
   if (character.inventory) {
     const weaponStrikes = character.inventory
       .filter(item => item.strikes)
-      .flatMap(item => resolveItemStrikes(item, character, (chambersByUid || {})[item.uid]));
+      .flatMap(item => resolveItemStrikes(
+        item,
+        character,
+        (chambersByUid || {})[item.uid],
+        (whetstonesByUid || {})[item.uid],
+      ));
     allStrikes = [...allStrikes, ...weaponStrikes];
   }
 
