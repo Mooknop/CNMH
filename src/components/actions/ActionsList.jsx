@@ -12,9 +12,11 @@ import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import FamiliarModal from '../character-sheet/FamiliarModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
+import SpellgunAttackModal from '../encounter/SpellgunAttackModal';
 import ReloadSheet from '../inventory/ReloadSheet';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { consumableMeta } from '../../utils/consumables';
+import { isSpellgun } from '../../utils/spellgun';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -39,13 +41,14 @@ const ActionsList = ({ character, characterColor }) => {
   const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
   const [reload, setReload] = useState(null); // { reload, actionCost } while the Reload ammo sheet is open (#675), else null
   const [exploitOpen, setExploitOpen] = useState(false); // Exploit Vulnerability slide-up (#454)
+  const [spellgunFire, setSpellgunFire] = useState(null); // resolved spellgun while its attack modal is open (#1207 M1b), else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
   // Minion pools (#391) — Command spends 1 owner action and grants the minion 2.
   const { grantActions: grantCompanion } = useTurnState(minionTurnId(character.id, MINION_COMPANION));
   const { grantActions: grantFamiliar } = useTurnState(minionTurnId(character.id, MINION_FAMILIAR));
-  const { flags } = useCharacter(character);
+  const { flags, inventory: resolvedInventory } = useCharacter(character);
   const hasMagic = flags.hasSpellcasting || flags.hasFocusSpells || flags.hasInnateSpells
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
   const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
@@ -102,6 +105,14 @@ const ActionsList = ({ character, characterColor }) => {
 
   const handleUse = useCallback(
     (item, cost) => {
+      // Spellguns (#1207 M1b) — the item's "Activate a Spellgun" tile is sourced
+      // by the spellgun's name; route it to the attack flow with the resolved
+      // (grade-merged) inventory item rather than the bare action.
+      if (item.source) {
+        const gun = (resolvedInventory || []).find((i) => isSpellgun(i) && i.name === item.source);
+        if (gun) { setSpellgunFire(gun); return; }
+      }
+
       // Battle Medicine has its own resolution flow.
       if (item.name === 'Battle Medicine') {
         setTreatWoundsMode('battle-medicine');
@@ -209,7 +220,7 @@ const ActionsList = ({ character, characterColor }) => {
         });
       }
     },
-    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode, enterStance, bladeActive, activateBlade, returnBlade]
+    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode, enterStance, bladeActive, activateBlade, returnBlade, resolvedInventory]
   );
 
   const handleUseGranted = useCallback(
@@ -445,6 +456,16 @@ const ActionsList = ({ character, characterColor }) => {
           character={character}
           themeColor={themeColor}
           actionCost={reload.actionCost}
+        />
+      )}
+
+      {spellgunFire && (
+        <SpellgunAttackModal
+          isOpen
+          onClose={() => setSpellgunFire(null)}
+          item={spellgunFire}
+          character={character}
+          themeColor={themeColor}
         />
       )}
     </div>

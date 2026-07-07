@@ -7,6 +7,9 @@ import {
   spellgunVariants,
   spellgunAttackOptions,
   spellgunOutcome,
+  spellgunActiveDice,
+  spellgunHasNightDice,
+  spellgunRiderNote,
 } from './spellgun';
 import { items } from '../data';
 
@@ -120,6 +123,48 @@ describe('spellgun spine', () => {
     });
     it('failure → miss (no condition)', () => {
       expect(spellgunOutcome('reflex-dc', 'failure').condition).toBeNull();
+    });
+  });
+
+  describe('spellgunActiveDice / spellgunHasNightDice', () => {
+    it('returns the grade dice; swaps to night dice for Moonlit', () => {
+      expect(spellgunActiveDice({ dice: '12d6' })).toBe('12d6');
+      expect(spellgunActiveDice({ dice: '12d6', diceNight: '12d8' })).toBe('12d6');
+      expect(spellgunActiveDice({ dice: '12d6', diceNight: '12d8' }, { night: true })).toBe('12d8');
+      expect(spellgunActiveDice({ dice: '12d6' }, { night: true })).toBe('12d6'); // no night dice
+      expect(spellgunActiveDice({})).toBeNull();
+    });
+    it('flags day/night-varying spellguns', () => {
+      expect(spellgunHasNightDice({ dice: '1d6', diceNight: '1d8' })).toBe(true);
+      expect(spellgunHasNightDice({ dice: '2d6' })).toBe(false);
+    });
+  });
+
+  describe('spellgunRiderNote', () => {
+    it('miss → null', () => {
+      expect(spellgunRiderNote(howl(), spellgunOutcome('ac', 'failure'))).toBeNull();
+    });
+    it('Howl → Speed penalty scaling with crit', () => {
+      const variant = spellgunVariants(howl())[0]; // Lesser
+      const item = { ...howl(), ...variant };
+      expect(spellgunRiderNote(item, spellgunOutcome('ac', 'success'))).toMatch(/−5 ft status penalty to Speed/);
+      expect(spellgunRiderNote(item, spellgunOutcome('ac', 'criticalSuccess'))).toMatch(/−10 ft status penalty/);
+    });
+    it('Bola → grabbed on success, restrained on crit', () => {
+      expect(spellgunRiderNote(bola(), spellgunOutcome('reflex-dc', 'success'))).toMatch(/^grabbed/);
+      expect(spellgunRiderNote(bola(), spellgunOutcome('reflex-dc', 'criticalSuccess'))).toMatch(/^restrained/);
+    });
+    it('Sparking → persistent + dazzled (blinded on crit)', () => {
+      const item = { ...items.find((x) => x.id === 'sparking-spellgun'), ...{ dice: '4d6', persistent: '1d4' } };
+      const note = spellgunRiderNote(item, spellgunOutcome('ac', 'criticalSuccess'));
+      expect(note).toMatch(/1d4 persistent fire/);
+      expect(note).toMatch(/blinded 1 round/);
+      expect(note).toMatch(/dazzled/);
+    });
+    it('Torrent → authored knockback rider verbatim', () => {
+      const variant = spellgunVariants(items.find((x) => x.id === 'torrent-spellgun'))[0];
+      const item = { ...items.find((x) => x.id === 'torrent-spellgun'), ...variant };
+      expect(spellgunRiderNote(item, spellgunOutcome('ac', 'success'))).toMatch(/knocked back/);
     });
   });
 
