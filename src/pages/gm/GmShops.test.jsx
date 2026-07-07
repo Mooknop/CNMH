@@ -883,3 +883,55 @@ describe('GmShops', () => {
     });
   });
 });
+
+describe('GmShops — dragonbreath weapons (#1210 M4g)', () => {
+  const longsword = { id: 'longsword', name: 'Longsword', price: 1, weight: 1, traits: ['Sword'], strikes: [{ name: 'Longsword', damage: '1d8' }] };
+  const open = (shops = { 'town-hall': { wares: [] } }) => {
+    setup(shops);
+    useContent.mockReturnValue({ allLoreEntries, items: [...items, longsword], runes, spells });
+    render(<GmShops />);
+    select('Town Hall');
+  };
+  const lastWares = () => lastSave()[1].wares;
+  const section = () => screen.getByTestId('dragonbreath-offerings');
+
+  it('shows the empty prompt until a weapon is added', () => {
+    open();
+    expect(within(section()).getByTestId('dragonbreath-empty')).toBeInTheDocument();
+  });
+
+  it('adds a dragonbreath weapon and persists the { ref, dragonbreath } ware', () => {
+    open();
+    fireEvent.click(screen.getByTestId('db-add'));
+    fireEvent.change(screen.getByLabelText('db-base-0'), { target: { value: 'longsword' } });
+    fireEvent.change(screen.getByLabelText('db-tier-0'), { target: { value: 'greater' } });
+    fireEvent.change(screen.getByLabelText('db-type-0'), { target: { value: 'Red' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+    expect(lastWares()).toEqual([{ ref: 'longsword', dragonbreath: { tier: 'greater', dragonType: 'Red' } }]);
+  });
+
+  it('carries a price + stock override and shows a live preview name', () => {
+    open();
+    fireEvent.click(screen.getByTestId('db-add'));
+    fireEvent.change(screen.getByLabelText('db-type-0'), { target: { value: 'Mirage' } });
+    fireEvent.change(screen.getByLabelText('db-price-0'), { target: { value: '500' } });
+    fireEvent.change(screen.getByLabelText('db-stock-0'), { target: { value: '2' } });
+    expect(screen.getByTestId('db-row-0')).toHaveTextContent('Mirage Dragonbreath Longsword');
+    fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+    expect(lastWares()).toEqual([{ ref: 'longsword', dragonbreath: { tier: 'base', dragonType: 'Mirage' }, price: 500, stock: 2 }]);
+  });
+
+  it('round-trips an authored dragonbreath ware into an editable row', () => {
+    open({ 'town-hall': { wares: [{ ref: 'longsword', dragonbreath: { tier: 'major', dragonType: 'Gold' } }] } });
+    expect(screen.getByLabelText('db-base-0')).toHaveValue('longsword');
+    expect(screen.getByLabelText('db-tier-0')).toHaveValue('major');
+    expect(screen.getByLabelText('db-type-0')).toHaveValue('Gold');
+  });
+
+  it('removes a dragonbreath row', () => {
+    open({ 'town-hall': { wares: [{ ref: 'longsword', dragonbreath: { tier: 'base', dragonType: 'Red' } }] } });
+    fireEvent.click(screen.getByLabelText('db-remove-0'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+    expect(lastWares()).toEqual([]);
+  });
+});

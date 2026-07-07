@@ -24,6 +24,19 @@ export const DRAGONBREATH_TIERS = {
 
 export const DRAGONBREATH_TIER_ORDER = ['base', 'greater', 'major'];
 
+/** The pack-authored catalog price of a bare dragonbreath weapon at a tier (no
+ * base weapon / property runes), or 0 for an unknown tier. */
+export const dragonbreathTierPrice = (tier) => {
+  const t = DRAGONBREATH_TIERS[String(tier).toLowerCase()];
+  return t ? t.price : 0;
+};
+
+/** The item level of a dragonbreath weapon at a tier, or 0 for an unknown tier. */
+export const dragonbreathTierLevel = (tier) => {
+  const t = DRAGONBREATH_TIERS[String(tier).toLowerCase()];
+  return t ? t.level : 0;
+};
+
 // Breath dice by striking grade and save DC by potency tier — both derived from
 // the tier's implied fundamentals (pack "Special": 4d6/6d6/8d6 as the striking
 // grade rises; DC 23/27/35 as the potency rises). The cone widens by tier; the

@@ -400,6 +400,20 @@ describe('contentUtils', () => {
       expect(out.name).toBe('Longsword'); // base name kept — display derives the runed name
     });
 
+    it('overlays a dragonbreath template carried on the ENTRY onto the base weapon (#1210 M4g)', () => {
+      // A GM-looted / bought dragonbreath weapon lands as a lean ref entry
+      // carrying only { tier, dragonType }; resolveInventoryItem must overlay it
+      // onto the base so the resolver (isDragonbreath) fires downstream.
+      const weaponCatalog = itemCatalogMap([{ id: 'longsword', name: 'Longsword', price: 15, strikes: { type: 'melee', damage: '1d8' } }]);
+      const out = resolveInventoryItem(
+        { ref: 'longsword', dragonbreath: { tier: 'greater', dragonType: 'Red' }, uid: 'u1' },
+        weaponCatalog
+      );
+      expect(out.dragonbreath).toEqual({ tier: 'greater', dragonType: 'Red' });
+      expect(out.name).toBe('Longsword'); // base name kept — display derives the templated name
+      expect(out.uid).toBe('u1');
+    });
+
     it('overlays entry runes onto a graded ring variant, keeping its grade name (#1138)', () => {
       const spellstoring = { id: 'spellstoring', name: 'Spellstoring', type: 'property', target: 'ring', price: 2700 };
       const runeMap = runeCatalogMap([spellstoring]);

@@ -9,11 +9,21 @@ import {
   shopOffersSpellcasting,
   shopOffersRunes,
   isRuneServiceWare,
+  isDragonbreathWare,
   runeOfferingSummary,
   eligibleHostItems,
   maxLevelForTarget,
+  shopHostKind,
   RUNE_TARGETS,
 } from '../../utils/shopUtils';
+import {
+  DRAGON_KINDS,
+  DRAGONBREATH_TIER_ORDER,
+  dragonbreathName,
+  dragonbreathBreath,
+  dragonbreathTierPrice,
+  dragonbreathTierLevel,
+} from '../../utils/dragonbreath';
 import {
   rollSaleShelf,
   resolveSaleWares,
@@ -49,9 +59,10 @@ const str = (v) => (v != null ? String(v) : '');
 
 const toRows = (wares) => {
   // Generative spell-item (#819) and rune-service (#982 G2) offerings are authored
-  // in their own sections, not as catalog rows — they carry no `ref`.
+  // in their own sections, not as catalog rows — they carry no `ref`. Dragonbreath
+  // weapons (#1210 M4g) carry a `ref` but are authored in their own section too.
   const list = (Array.isArray(wares) ? wares : []).filter(
-    (w) => !isSpellItemWare(w) && !isRuneServiceWare(w)
+    (w) => !isSpellItemWare(w) && !isRuneServiceWare(w) && !isDragonbreathWare(w)
   );
   const rows = [];
   const variantRow = new Map(); // ref -> the collapsed variant row
@@ -109,6 +120,30 @@ const fromRows = (rows) => {
   });
   return out;
 };
+
+// ── Dragonbreath weapons (#1210 M4g) ────────────────────────────────────────
+// A shop can stock specific dragonbreath weapons: a base weapon carrying a
+// `{ tier, dragonType }` template (the resolveShopWares attach model). Authored
+// as their own rows — base weapon + tier + dragon type + optional price/stock —
+// since each is a discrete templated item, not a generative spec. Stored as
+// `{ ref, dragonbreath: { tier, dragonType }, price?, stock? }` wares.
+const DRAGON_KIND_KEYS = Object.keys(DRAGON_KINDS).sort();
+const capKind = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+const toDragonbreathRows = (wares) =>
+  (Array.isArray(wares) ? wares : []).filter(isDragonbreathWare).map((w) => ({
+    ref: String(w.ref),
+    tier: String(w.dragonbreath.tier || 'base').toLowerCase(),
+    dragonType: w.dragonbreath.dragonType ? String(w.dragonbreath.dragonType) : '',
+    price: str(w.price),
+    stock: str(w.stock),
+  }));
+
+const fromDragonbreathRows = (rows) =>
+  (Array.isArray(rows) ? rows : []).filter((r) => r.ref).map((r) => {
+    const w = { ref: r.ref, dragonbreath: { tier: r.tier || 'base', dragonType: (r.dragonType || '').trim() } };
+    return applyPriceStock(w, r.price, r.stock);
+  });
 
 // ── Generative spell-item offerings (#819) ──────────────────────────────────
 // A shop can also sell Scrolls/Wands of ANY catalog spell up to an ITEM LEVEL,
@@ -808,6 +843,105 @@ const RunesmithingSection = ({ config, runes, items, onChange }) => {
   );
 };
 
+// The "Dragonbreath weapons" section (#1210 M4g): the GM stocks specific
+// templated weapons — each a base weapon + tier + free-form dragon type (the
+// pack invites GM-curated kinds; the authored DRAGON_KINDS are suggestions) with
+// an optional price/stock override. A live preview per row shows the derived name
+// + breath line off the spine, mirroring the GM → Characters authoring surface.
+const DragonbreathSection = ({ rows, weapons, catalogMap, onChange }) => {
+  const setRow = (i, patch) => onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const addRow = () =>
+    onChange([...rows, { ref: weapons[0] ? String(weapons[0].id) : '', tier: 'base', dragonType: '', price: '', stock: '' }]);
+  const removeRow = (i) => onChange(rows.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="gm-shop-offers" data-testid="dragonbreath-offerings">
+      <div className="gm-shop-offers-head">
+        <div className="gm-shop-pane-title">Dragonbreath weapons</div>
+      </div>
+      <p className="gm-count gm-shop-offers-intro">
+        Stock a specific dragonbreath weapon — a base weapon carrying a tier and a dragon type. It
+        sells as loot-grade gear; the buyer can etch property runes and upgrade its tier later.
+      </p>
+      {weapons.length === 0 ? (
+        <p className="gm-count gm-shop-offers-empty">No base weapons in the catalog to template.</p>
+      ) : rows.length === 0 ? (
+        <p className="gm-count gm-shop-offers-empty" data-testid="dragonbreath-empty">
+          No dragonbreath weapons stocked. Add one below.
+        </p>
+      ) : (
+        <ul className="gm-shop-wares" aria-label="dragonbreath weapons">
+          {rows.map((r, i) => {
+            const base = catalogMap.get(String(r.ref));
+            const baseName = base ? base.name : '(pick a weapon)';
+            const preview = dragonbreathName({ tier: r.tier, dragonType: r.dragonType, base: baseName });
+            const breath = dragonbreathBreath({ dragonbreath: { tier: r.tier, dragonType: r.dragonType } });
+            const defPrice = dragonbreathTierPrice(r.tier) + (Number(base?.price) || 0);
+            return (
+              <li key={i} className="gm-row gm-shop-ware-row" data-testid={`db-row-${i}`}>
+                <div className="gm-shop-ware-top">
+                  <span className="gm-shop-ware-name">{preview}</span>
+                  <button type="button" className="btn-small btn-danger gm-shop-ware-x"
+                    aria-label={`db-remove-${i}`} onClick={() => removeRow(i)}>✕</button>
+                </div>
+                <div className="gm-shop-offer-filters">
+                  <div className="form-group gm-shop-offer-field">
+                    <label htmlFor={`db-base-${i}`}>base weapon</label>
+                    <select id={`db-base-${i}`} aria-label={`db-base-${i}`} value={r.ref}
+                      onChange={(e) => setRow(i, { ref: e.target.value })}>
+                      {weapons.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group gm-shop-offer-field">
+                    <label htmlFor={`db-tier-${i}`}>tier</label>
+                    <select id={`db-tier-${i}`} aria-label={`db-tier-${i}`} value={r.tier}
+                      onChange={(e) => setRow(i, { tier: e.target.value })}>
+                      {DRAGONBREATH_TIER_ORDER.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group gm-shop-offer-field">
+                    <label htmlFor={`db-type-${i}`}>dragon type</label>
+                    <input id={`db-type-${i}`} aria-label={`db-type-${i}`} list="gm-shop-db-kinds"
+                      value={r.dragonType} placeholder="e.g. Red, Mirage"
+                      onChange={(e) => setRow(i, { dragonType: e.target.value })} />
+                  </div>
+                  <div className="form-group gm-shop-ware-field">
+                    <label htmlFor={`db-price-${i}`}>price (gp)</label>
+                    <input id={`db-price-${i}`} aria-label={`db-price-${i}`} type="number" min="0"
+                      placeholder={String(defPrice)} value={r.price}
+                      onChange={(e) => setRow(i, { price: e.target.value })} />
+                  </div>
+                  <div className="form-group gm-shop-ware-field">
+                    <label htmlFor={`db-stock-${i}`}>stock</label>
+                    <input id={`db-stock-${i}`} aria-label={`db-stock-${i}`} type="number" min="0"
+                      placeholder="∞" value={r.stock}
+                      onChange={(e) => setRow(i, { stock: e.target.value })} />
+                  </div>
+                </div>
+                <p className="gm-count" data-testid={`db-preview-${i}`}>
+                  L{dragonbreathTierLevel(r.tier)} · {defPrice} gp · {breath.dice}{' '}
+                  {breath.damageTypes.length ? breath.damageTypes.join('/') : '(GM sets type)'} · basic
+                  Reflex DC {breath.dc} · {breath.coneFt}-ft cone
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {weapons.length > 0 && (
+        <div className="gm-actions">
+          <button type="button" className="btn-small btn-secondary" data-testid="db-add" onClick={addRow}>
+            + Add dragonbreath weapon
+          </button>
+        </div>
+      )}
+      <datalist id="gm-shop-db-kinds">
+        {DRAGON_KIND_KEYS.map((k) => <option key={k} value={capKind(k)} />)}
+      </datalist>
+    </div>
+  );
+};
+
 // ── Sale Shelf per-item editors ──────────────────────────────────────────────
 // The rune target the editor's "second" fundamental slot fills, per base kind.
 const RUNE_SECOND_LABEL = { weapon: 'striking', armor: 'resilient' };
@@ -1216,8 +1350,19 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
   const [offersSpellcasting, setOffersSpellcasting] = useState(() => shopOffersSpellcasting(loreId, shops));
   const [offersRunes, setOffersRunes] = useState(() => shopOffersRunes(loreId, shops));
   const [rows, setRows] = useState(() => toRows(entry?.wares));
+  const [dbRows, setDbRows] = useState(() => toDragonbreathRows(entry?.wares));
   const [spellConfig, setSpellConfig] = useState(() => toSpellConfig(entry?.wares));
   const [runeConfig, setRuneConfig] = useState(() => toRuneConfig(entry?.wares));
+
+  // Base weapons the GM can template into a dragonbreath weapon (#1210 M4g) —
+  // mundane base weapons only (shopHostKind 'weapon'), title-sorted.
+  const weapons = useMemo(
+    () => (Array.isArray(items) ? items : [])
+      .filter((it) => shopHostKind(it) === 'weapon')
+      .slice()
+      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))),
+    [items]
+  );
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -1236,6 +1381,7 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
 
   const editSpellConfig = (next) => { setSpellConfig(next); touch(); };
   const editRuneConfig = (next) => { setRuneConfig(next); touch(); };
+  const editDbRows = (next) => { setDbRows(next); touch(); };
 
   // Shelve a catalog card as ONE row, skipping a ref/rune already on the shelf.
   // A multi-variant item (#889) shelves with its first variant pre-selected (the
@@ -1263,6 +1409,7 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
     setRevealed(false);
     setOpen(true);
     setRows([]);
+    setDbRows([]);
     setSpellConfig(toSpellConfig([]));
     setRuneConfig(toRuneConfig([]));
     setOffersSpellcasting(false);
@@ -1273,7 +1420,12 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
 
   // Publish the whole entry (meta + wares), optionally with an extra patch (the
   // rolled `saleShelf`, #1136). One writer for Save & publish and Roll.
-  const buildWares = () => [...fromRows(rows), ...fromSpellConfig(spellConfig), ...fromRuneConfig(runeConfig)];
+  const buildWares = () => [
+    ...fromRows(rows),
+    ...fromDragonbreathRows(dbRows),
+    ...fromSpellConfig(spellConfig),
+    ...fromRuneConfig(runeConfig),
+  ];
   const publish = (extra) => {
     setShop(loreId, {
       keeper,
@@ -1453,6 +1605,13 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
             runes={runes}
             items={items}
             onChange={editRuneConfig}
+          />
+
+          <DragonbreathSection
+            rows={dbRows}
+            weapons={weapons}
+            catalogMap={catalogMap}
+            onChange={editDbRows}
           />
 
           <SaleShelfSection

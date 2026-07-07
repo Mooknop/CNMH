@@ -14,6 +14,8 @@ import {
   dragonbreathUpgradePrice,
   dragonbreathUpgradeOption,
   applyDragonbreathUpgrade,
+  dragonbreathTierPrice,
+  dragonbreathTierLevel,
   BREATH_EMANATION_FT,
 } from './dragonbreath';
 import { resolveWeapon, propertySlotCapacity } from './weaponRunes';
@@ -201,5 +203,18 @@ describe('dragonbreath spine', () => {
       expect(applyDragonbreathUpgrade(entry({ tier: 'base', dragonType: 'Red' }), 'major')).toBeNull();
       expect(applyDragonbreathUpgrade(entry({ tier: 'major', dragonType: 'Red' }), 'major')).toBeNull();
     });
+  });
+});
+
+describe('dragonbreathTierPrice / dragonbreathTierLevel (#1210 M4g)', () => {
+  it('returns the pack tier price + level, case-insensitively; 0 for unknown', () => {
+    expect(dragonbreathTierPrice('base')).toBe(350);
+    expect(dragonbreathTierPrice('Greater')).toBe(2800);
+    expect(dragonbreathTierPrice('major')).toBe(70500);
+    expect(dragonbreathTierPrice('legendary')).toBe(0);
+    expect(dragonbreathTierLevel('base')).toBe(7);
+    expect(dragonbreathTierLevel('greater')).toBe(13);
+    expect(dragonbreathTierLevel('MAJOR')).toBe(20);
+    expect(dragonbreathTierLevel('nope')).toBe(0);
   });
 });

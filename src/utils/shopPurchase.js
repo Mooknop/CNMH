@@ -56,6 +56,13 @@ export const expandWare = (item) => {
     if (item.level != null) entry.level = item.level;
     return [entry];
   }
+  // A dragonbreath weapon ware (#1210 M4g): lands as a lean ref entry carrying
+  // just the template block. resolveInventoryItem overlays it onto the base
+  // weapon and the display re-derives (name, Strike dice, breath) — no baked
+  // display name to go stale — mirroring the runed sale item above.
+  if (item.dragonbreath && item.ref != null && item.ref !== 'runestone') {
+    return [{ ref: String(item.ref), dragonbreath: item.dragonbreath, uid: newEntryUid() }];
+  }
   return [reuid(item)];
 };
 
