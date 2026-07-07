@@ -300,6 +300,36 @@ describe('ShopStorefront', () => {
     });
   });
 
+  describe('auto-stocked catalysts (#1209 M3c)', () => {
+    // Healer's Gel augments Heal, which the scroll offering (maxLevel 3) covers;
+    // the bolt catalyst augments a spell this shop doesn't sell.
+    const gel = { id: 'healers-gel', name: "Healer's Gel", price: 25, traits: ['Catalyst', 'Consumable', 'Magical'], catalyst: { catalystFor: 'heal', effect: 'temp HP' } };
+    const bolt = { id: 'bolt-cat', name: 'Bolt Catalyst', price: 9, traits: ['Catalyst'], catalyst: { catalystFor: 'blazing-bolt', effect: 'x' } };
+
+    it('surfaces a catalyst whose spell is in the scroll envelope, hides one whose spell is not', () => {
+      renderShop({ items: [...items, gel, bolt] });
+      const grid = screen.getByLabelText('wares');
+      expect(within(grid).getByTestId('ware-healers-gel')).toHaveTextContent('25 gp');
+      expect(within(grid).queryByTestId('ware-bolt-cat')).not.toBeInTheDocument();
+    });
+
+    it('carries no catalysts at a shop without spellcasting services', () => {
+      render(
+        <ShopStorefront
+          isOpen
+          onClose={vi.fn()}
+          shops={[ringsShop]}
+          waresStore={{ rings: { wares: [{ ref: 'antidote' }] } }}
+          items={[...items, gel]}
+          runes={runes}
+          spells={spells}
+          character={{ id: 'pellias', name: 'Pellias' }}
+        />
+      );
+      expect(within(screen.getByLabelText('wares')).queryByTestId('ware-healers-gel')).not.toBeInTheDocument();
+    });
+  });
+
   describe('spellcasting tab (#857 S5)', () => {
     const openSpells = () => fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
 
