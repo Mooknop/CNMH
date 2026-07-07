@@ -18,7 +18,7 @@ import {
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { itemModesOf, activeItemMode } from '../../utils/itemModes';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
-import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing, shieldEffectiveTraits } from '../../utils/shieldRunes';
+import { shieldDisplayName, resolveShieldBlock, shieldRuneTierSummary, hasReinforcing, shieldEffectiveTraits, shieldPropertyRunes } from '../../utils/shieldRunes';
 import {
   attachedKey, isShieldAttachment, validAttachHosts, attachedHostUid,
   attach, unattach, attachmentsByHost,
@@ -558,6 +558,22 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <p className="shield-rune-tier" data-testid="shield-rune-tier">
               {shieldRuneTierSummary(item.runes)} rune — Hardness/HP/BT reinforced
             </p>
+          )}
+          {/* Property runes (#1196 G3): each etched shield property rune's name
+              (with its chosen type, if any) and flavor — so a wired effect like
+              Darkness's +1 Stealth or Energy-Resistant's resistance is visible on
+              the shield sheet, mirroring the weapon property-rune list below. */}
+          {shieldPropertyRunes(item).length > 0 && (
+            <div className="shield-property-runes" data-testid="shield-property-runes">
+              {shieldPropertyRunes(item).map((rune, i) => (
+                <div key={`${rune.id}-${rune.choice ?? i}`} className="item-rune">
+                  <span className="item-rune-name">
+                    {rune.name}{rune.choice ? ` (${rune.choice})` : ''}
+                  </span>
+                  {rune.description && <p className="item-rune-desc">{rune.description}</p>}
+                </div>
+              ))}
+            </div>
           )}
           <div className="item-detail-grid is-block">
             {shield.bonus !== undefined && (

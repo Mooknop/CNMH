@@ -400,6 +400,33 @@ describe('ItemModal', () => {
     expect(within(grid).getByText('5')).toBeInTheDocument();
   });
 
+  // --- shield property runes (#1196 G3) ---
+  it('lists each etched shield property rune (name + flavor), with the chosen type', () => {
+    const item = {
+      name: 'Kite Shield',
+      shield: { hardness: 4, health: 12, breakThreshold: 6, bonus: 2 },
+      runes: {
+        reinforcing: 'lesser',
+        property: [
+          { id: 'darkness', name: 'Darkness', description: '+1 item bonus to Stealth while wielding.' },
+          { id: 'energy-resistant', name: 'Energy-Resistant', choice: 'fire', description: 'Resist the chosen energy type.' },
+        ],
+      },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const runes = screen.getByTestId('shield-property-runes');
+    expect(within(runes).getByText('Darkness')).toBeInTheDocument();
+    expect(within(runes).getByText('+1 item bonus to Stealth while wielding.')).toBeInTheDocument();
+    // Choice-bearing rune shows its chosen type.
+    expect(within(runes).getByText('Energy-Resistant (fire)')).toBeInTheDocument();
+  });
+
+  it('does not render the property-rune list for a shield with no property runes', () => {
+    const item = { ...baseItem, name: 'Steel Shield', shield: { hardness: 5, health: 20, breakThreshold: 10 } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.queryByTestId('shield-property-runes')).toBeNull();
+  });
+
   // --- description ---
   it('renders description when item.description is present', () => {
     const item = { ...baseItem, description: 'A fine blade.' };

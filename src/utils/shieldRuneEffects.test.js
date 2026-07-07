@@ -1,5 +1,5 @@
 import { heldShieldRuneEffects, heldShieldRollBonus, ENERGY_RESISTANT_AMOUNT } from './shieldRuneEffects';
-import { resistanceFor } from './EffectUtils';
+import { resistanceFor, computeEffectBonuses } from './EffectUtils';
 
 // A held shield entry carrying resolved property-rune docs (as contentUtils
 // produces them — { ...doc, choice } for a choice-bearing rune).
@@ -48,6 +48,44 @@ describe('heldShieldRuneEffects', () => {
     expect(heldShieldRuneEffects([heldShield([{ id: 'moonlit', name: 'Moonlit' }])])).toEqual([]);
     expect(heldShieldRuneEffects([{ uid: 'w', name: 'Sword', strikes: [{}], state: 'held', runes: {} }])).toEqual([]);
     expect(heldShieldRuneEffects([])).toEqual([]);
+  });
+});
+
+const darknessRune = { id: 'darkness', type: 'property', target: 'shield', name: 'Darkness' };
+
+describe('heldShieldRuneEffects — skill-wire runes (Darkness)', () => {
+  it('emits a +1 item Stealth def for a held Darkness shield', () => {
+    const fx = heldShieldRuneEffects([heldShield([darknessRune])]);
+    expect(fx).toHaveLength(1);
+    // Skill bonus rides on the DEF (computeEffectBonuses reads def.modifiers).
+    expect(fx[0].def.modifiers).toEqual([{ stat: 'stealth', kind: 'item', amount: 1 }]);
+    expect(fx[0].entry.modifiers).toBeUndefined();
+    expect(fx[0].entry.effectId).toBe(fx[0].def.id);
+  });
+
+  it('contributes nothing when the Darkness shield is not held', () => {
+    const stowed = { ...heldShield([darknessRune]), state: 'stowed' };
+    expect(heldShieldRuneEffects([stowed])).toEqual([]);
+  });
+
+  it('the emitted def nets +1 item Stealth through computeEffectBonuses', () => {
+    const fx = heldShieldRuneEffects([heldShield([darknessRune])]);
+    const bonuses = computeEffectBonuses(fx.map((f) => f.entry), fx.map((f) => f.def));
+    expect(bonuses.stealth.total).toBe(1);
+    expect(bonuses.acrobatics.total).toBe(0); // only Stealth
+  });
+
+  it('coexists with Energy-Resistant on the same shield (distinct effects)', () => {
+    const fx = heldShieldRuneEffects([heldShield([
+      energyRes('energy-resistant', 'fire'),
+      darknessRune,
+    ])]);
+    expect(fx).toHaveLength(2);
+    expect(fx[0].entry.id).not.toBe(fx[1].entry.id);
+    // Resistance rides on the entry; Stealth on the def — no cross-talk.
+    const bonuses = computeEffectBonuses(fx.map((f) => f.entry), fx.map((f) => f.def));
+    expect(bonuses.stealth.total).toBe(1);
+    expect(resistanceFor(fx.map((f) => f.entry), 'fire', fx.map((f) => f.def))).toBe(3);
   });
 });
 
