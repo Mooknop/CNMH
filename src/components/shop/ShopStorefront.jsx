@@ -553,12 +553,16 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
                     <div className="ps-runeopt-row">
                       <button type="button" className="ps-runeopt" aria-label={`etch ${r.name}`}
                         onClick={() => {
-                          // A Dragon's Breath rune (#1059) is staged with its
-                          // depicted dragon type defaulted to the first option;
-                          // the player can change it below before checkout.
-                          const staging = r.dragonChoice
-                            ? { ...r, etchConfig: { dragonType: r.dragonChoice.options?.[0]?.value } }
-                            : r;
+                          // Etch-time choice defaults to the first option; the
+                          // player can change it below before checkout. Dragon's
+                          // Breath (#1059) picks a depicted dragon; a `choices`
+                          // rune (Energy-Resistant, #1196 G3) picks a damage type.
+                          let staging = r;
+                          if (r.dragonChoice) {
+                            staging = { ...r, etchConfig: { dragonType: r.dragonChoice.options?.[0]?.value } };
+                          } else if (Array.isArray(r.choices) && r.choices.length) {
+                            staging = { ...r, etchConfig: { choice: r.choices[0] } };
+                          }
                           onStage(gear.uid, openKey, staging);
                           setOpenKey(null);
                         }}>
@@ -599,6 +603,26 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
             >
               {(r.dragonChoice.options || []).map((o) => (
                 <option key={o.value} value={o.value}>{o.label || o.value}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+
+      {/* Etch-time choice (#1196 G3): a staged `choices` rune (Energy-Resistant)
+          fixes its damage type at purchase — the player-side mirror of the GM's
+          rune-socket picker. */}
+      {!readOnly && stagedEntries
+        .filter(([, r]) => !r.dragonChoice && Array.isArray(r.choices) && r.choices.length)
+        .map(([key, r]) => (
+          <label key={`cfg-${key}`} className="ps-etch-choice" data-testid={`etch-choice-${gear.uid}`}>
+            {r.name} — type:{' '}
+            <select
+              aria-label={`${r.name} type`}
+              value={r.etchConfig?.choice ?? r.choices[0]}
+              onChange={(e) => onConfigure(gear.uid, key, { choice: e.target.value })}
+            >
+              {r.choices.map((c) => (
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </label>

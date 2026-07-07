@@ -724,6 +724,44 @@ describe('ShopStorefront', () => {
       expect(within(gear).queryByTestId('etch-choice-k1')).not.toBeInTheDocument();
     });
 
+    // ── Etch-time damage-type picker for shield property runes (#1196 G3) ───
+    const energyRes = {
+      id: 'energy-resistant', type: 'property', target: 'shield', name: 'Energy-Resistant',
+      level: 5, price: 150, duplicable: true, choices: ['acid', 'cold', 'electricity', 'fire', 'sonic'],
+    };
+    // Minor reinforcing → exactly one property slot (unambiguous fill button).
+    const kiteShield = {
+      uid: 'sh1', name: 'Kite Shield', weight: 1,
+      shield: { hardness: 4, health: 12, breakThreshold: 6, bonus: 2 }, runes: { reinforcing: 'minor' },
+    };
+
+    it('offers a damage-type picker when staging Energy-Resistant, and carries the choice to checkout (#1196 G3)', () => {
+      mockGold = 500;
+      renderRunesWith({ inv: [kiteShield], runeDocs: [energyRes], refs: ['energy-resistant'] });
+      const gear = screen.getByTestId('gear-sh1');
+      fireEvent.click(within(gear).getByLabelText('fill Property slot on Kite Shield'));
+      fireEvent.click(within(screen.getByTestId('picker-sh1')).getByRole('button', { name: /^etch Energy-Resistant/ }));
+      // A type selector appears, defaulted to the first choice.
+      const select = within(gear).getByLabelText('Energy-Resistant type');
+      expect(within(gear).getByTestId('etch-choice-sh1')).toBeInTheDocument();
+      expect(select.value).toBe('acid');
+      // Change it, then check out — the handoff rune carries the etch config.
+      fireEvent.change(select, { target: { value: 'fire' } });
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      const { handoffs } = mockCheckout.mock.calls[0][0];
+      expect(handoffs[0].runes[0]).toMatchObject({ id: 'energy-resistant', etchConfig: { choice: 'fire' } });
+    });
+
+    it('stages a non-choice shield property rune without a type picker', () => {
+      const winglet = { id: 'winglet', type: 'property', target: 'shield', name: 'Winglet', level: 4, price: 100 };
+      renderRunesWith({ inv: [kiteShield], runeDocs: [winglet], refs: ['winglet'] });
+      const gear = screen.getByTestId('gear-sh1');
+      fireEvent.click(within(gear).getByLabelText('fill Property slot on Kite Shield'));
+      fireEvent.click(within(screen.getByTestId('picker-sh1')).getByRole('button', { name: /^etch Winglet/ }));
+      expect(within(gear).queryByTestId('etch-choice-sh1')).not.toBeInTheDocument();
+    });
+
     it('a dual-host card shows the accessory socket after its armor sockets (#1033 S5)', () => {
       renderRunesWith({
         inv: [{ uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },

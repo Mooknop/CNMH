@@ -401,6 +401,20 @@ describe('shield property sockets (#1196 G2)', () => {
     expect(applyRune(one, winglet)).toBeNull();
   });
 
+  it('applyRune: honors a shop-staged rune\'s etchConfig.choice (no opts)', () => {
+    // A player-etched Energy-Resistant carries its damage type on etchConfig
+    // (the #1059 carrier); fulfillment calls applyRune without opts.
+    const staged = { ...energyRes, etchConfig: { choice: 'fire' } };
+    const applied = applyRune(shield({ reinforcing: 'moderate' }), staged);
+    expect(applied.runes.property).toEqual([{ id: 'energy-resistant', choice: 'fire' }]);
+  });
+
+  it('applyRune: explicit opts.choice wins over etchConfig.choice', () => {
+    const staged = { ...energyRes, etchConfig: { choice: 'fire' } };
+    const applied = applyRune(shield({ reinforcing: 'moderate' }), staged, { choice: 'cold' });
+    expect(applied.runes.property).toEqual([{ id: 'energy-resistant', choice: 'cold' }]);
+  });
+
   it('an accessory rune on a shield does not consume a property slot', () => {
     // Minor shield: 1 property slot. Fill the property, then still take an accessory.
     const withProp = applyRune(shield({ reinforcing: 'minor' }), winglet);

@@ -236,7 +236,13 @@ export const applyRune = (gear, rune, opts = {}) => {
     if (target === 'shield' && !shieldRuneUsageAllows(gear, rune)) return null;
     // A duplicable rune (Energy-Resistant) may be applied more than once — but
     // never with a choice already present. Every other property rune is unique.
-    const choice = opts && opts.choice != null ? opts.choice : undefined;
+    // The chosen value comes from opts (GM instant-apply) or, for a shop-staged
+    // rune, from its baked `etchConfig.choice` (#1059 carrier) — mirroring how
+    // the accessory branch above reads etchConfig, so a player-etched choice
+    // survives fulfillment (applyRunesToGear calls applyRune without opts).
+    const choice = opts && opts.choice != null
+      ? opts.choice
+      : (rune.etchConfig && rune.etchConfig.choice != null ? rune.etchConfig.choice : undefined);
     const sameId = property.filter((p) => propRuneId(p) === rune.id);
     const exactDup = sameId.some((p) => (propRuneChoice(p) ?? null) === (choice ?? null));
     if (exactDup || (sameId.length && !rune.duplicable)) return null;

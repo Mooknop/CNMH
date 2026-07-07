@@ -117,4 +117,16 @@ describe('createHandoffOrder / applyRunesToGear (#857 S7a)', () => {
     expect(runed.runes).toEqual({ accessory: 'menacing' });
     expect(runed.uid).not.toBe('k1');
   });
+
+  it('folds a staged property rune\'s etchConfig.choice into the { id, choice } entry (#1196 G3)', () => {
+    // A player-etched Energy-Resistant: the chosen damage type rides on
+    // etchConfig and survives fulfillment (applyRune reads it without opts).
+    const energyRes = {
+      id: 'energy-resistant', type: 'property', target: 'shield', name: 'Energy-Resistant',
+      price: 150, duplicable: true, etchConfig: { choice: 'fire' },
+    };
+    const shield = { uid: 'sh1', name: 'Steel Shield', weight: 1, shield: { hardness: 5 }, runes: { reinforcing: 'moderate' } };
+    const runed = applyRunesToGear(shield, [energyRes]);
+    expect(runed.runes.property).toEqual([{ id: 'energy-resistant', choice: 'fire' }]);
+  });
 });
