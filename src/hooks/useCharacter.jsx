@@ -42,6 +42,7 @@ import {
 } from '../utils/ActionsUtils';
 import { bladeStrikes } from '../utils/bladeByrnie';
 import { attachmentStrikes } from '../utils/shieldAttach';
+import { shieldBashStrikes } from '../utils/shieldStrikes';
 
 import {
   calculateSpellStats,
@@ -294,6 +295,10 @@ export const useCharacter = (character) => {
       ...(blade?.active ? bladeStrikes(charEff) : []),
       // A shield attachment bound to a HELD shield contributes its own Strike.
       ...attachmentStrikes(charEff, attached),
+      // Every held shield fights back (#1230): a derived Shield Bash — replaced
+      // by the attachment's Strike above when one is bound — plus a Shield
+      // Throw when the shield has the Thrown trait (Throwing rune).
+      ...shieldBashStrikes(charEff, attached),
     ];
     const actions     = getActions(charEff);
     const reactions   = getReactions(charEff);
