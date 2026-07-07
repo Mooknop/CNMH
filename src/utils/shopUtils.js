@@ -3,6 +3,7 @@ import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { runeTarget } from './runeClassify';
 import { accessoryEligible } from './accessoryRunes';
 import { isTalisman, affixTargetType } from './affix';
+import { isWhetstone } from './whetstone';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 import { isCatalyst, catalystTargetSpell } from './catalyst';
@@ -687,6 +688,32 @@ export function eligibleTalismans(ware, items) {
       seen.add(key);
       out.push({ ...base, ...g, baseName: item.name, wareKey: key });
     }
+  }
+  return out;
+}
+
+// ── Rune-service whetstones (#1212) ─────────────────────────────────────────
+// A shop that offers WEAPON runesmithing also counters the apply-to-weapon
+// WHETSTONE consumables, up to the weapon target's rune level cap and inside
+// the offering's rarity window. Unlike host gear / talismans, the general
+// (all-target) runesmith is NOT exempt — it offers weapon runesmithing too,
+// and the whetstone catalog is small and level-gated, so there's no base-gear
+// flood to guard against. Honors #1105 noShop; hand-stocked wares win (the
+// caller dedupes by item id, so a GM's explicit whetstone ware keeps its
+// custom price/stock).
+export function eligibleWhetstones(ware, items) {
+  if (!isRuneServiceWare(ware)) return [];
+  if (!offeringTargets(ware).includes('weapon')) return [];
+  const cap = maxLevelForTarget(ware, 'weapon');
+  if (cap < 1) return [];
+  const rarities = offeringRarities(ware);
+  const out = [];
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!item || item.id == null || isShopExcluded(item) || !isWhetstone(item)) continue;
+    if (Number(item.level || 0) > cap) continue;
+    if (!rarities.includes(String(getItemRarity(item) || 'common').toLowerCase())) continue;
+    const price = Number.isFinite(item.price) ? item.price : 0;
+    out.push({ ...item, baseName: item.name, price, wareKey: `whetstone:${item.id}` });
   }
   return out;
 }
