@@ -66,10 +66,25 @@ describe('catalyst spine', () => {
     it('every catalyst targets a real catalog spell (catches typos)', () => {
       const spellIds = new Set(spells.map((s) => s.id));
       const catalysts = items.filter(isCatalyst);
-      expect(catalysts.length).toBeGreaterThanOrEqual(2);
+      expect(catalysts.length).toBeGreaterThanOrEqual(30);
       catalysts.forEach((c) => {
         expect(spellIds.has(catalystTargetSpell(c))).toBe(true);
       });
+    });
+
+    it('imports the official catalyst set (M3b) verbatim, no 3rd-party tag', () => {
+      const official = ['thunderbird-tuft-lesser', 'demon-bone-tiles-pusk', 'healers-gel-lesser', 'noxious-incense', 'dragon-eye'];
+      official.forEach((id) => {
+        const c = items.find((i) => i.id === id);
+        expect(c, id).toBeTruthy();
+        expect(isCatalyst(c)).toBe(true);
+        // official items carry Catalyst but never the 3rd-party pack tag
+        expect(c.traits).not.toContain('3rd Party');
+      });
+      // sample rider shape: Thunderbird Tuft (Lesser) → Shocking Grasp, +1 action
+      const tuft = items.find((i) => i.id === 'thunderbird-tuft-lesser');
+      expect(catalystTargetSpell(tuft)).toBe('shocking-grasp');
+      expect(catalystAddActions(tuft)).toBe(1);
     });
 
     it('imports blazing dive alongside the Phoenix Tail Feather', () => {

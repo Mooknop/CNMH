@@ -2812,6 +2812,107 @@
     }
   },
   {
+    "name": "Deadlock Mint",
+    "description": "Deadlock mint is a species of mint with small, green flowers, said to grow on battlefields where the opposing sides were equally matched. Sprigs of the flowers blow gently in a breeze of their own creation. If you cast Mystic Armor using deadlock mint, you release a small blast of concussive air in an emanation of a size that depends on the catalyst's type. Unattended objects up to a certain Bulk limit are pushed away from you. Large or smaller creatures must succeed at a Fortitude save equal to your spell save DC or be pushed the same distance away from you. Objects of 1 Bulk or less and creatures that fail the save are pushed 5 feet.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 11,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mystic-armor",
+      "effect": "Release a concussive emanation; objects (1 Bulk or less) and Large-or-smaller creatures that fail a Fortitude save are pushed 5 feet.",
+      "addActions": 1
+    },
+    "id": "deadlock-mint"
+  },
+  {
+    "name": "Deadlock Mint (Greater)",
+    "description": "Deadlock mint is a species of mint with small, green flowers, said to grow on battlefields where the opposing sides were equally matched. Sprigs of the flowers blow gently in a breeze of their own creation. If you cast Mystic Armor using deadlock mint, you release a small blast of concussive air in an emanation of a size that depends on the catalyst's type. Unattended objects up to a certain Bulk limit are pushed away from you. Large or smaller creatures must succeed at a Fortitude save equal to your spell save DC or be pushed the same distance away from you. Objects of 1 Bulk or less and creatures that fail the save are pushed 10 feet. Objects of up to 2 Bulk are pushed 5 feet, and Huge creatures must succeed at the save or be pushed 5 feet.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 110,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mystic-armor",
+      "effect": "Release a concussive emanation; creatures that fail a Fortitude save are pushed up to 10 feet (Huge 5 feet).",
+      "addActions": 1
+    },
+    "id": "deadlock-mint-greater"
+  },
+  {
+    "name": "Demon Bone Tiles (Brimorak)",
+    "description": "These bones from different types of demons can be used to form temporary barriers. When you crush the bone fragments and blow the resulting dust around yourself as you cast Shield, the shield appears as a bone bulwark shaped like the demon's face. When you use Shield Block with the spell, the barrier explodes into many bone fragments. The shards cause 1d6 bleed damage to each creature adjacent to you that fails a DC 20 Reflex save. This persistent bleed damage is unholy and can be stopped with an Interact action to remove the shards.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical",
+      "Unholy"
+    ],
+    "level": 5,
+    "price": 28,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shield",
+      "effect": "On a Shield Block, adjacent creatures that fail a DC 20 Reflex save take 1d6 persistent unholy bleed.",
+      "addActions": 1
+    },
+    "id": "demon-bone-tiles-brimorak"
+  },
+  {
+    "name": "Demon Bone Tiles (Pusk)",
+    "description": "These bones from different types of demons can be used to form temporary barriers. When you crush the bone fragments and blow the resulting dust around yourself as you cast Shield, the shield appears as a bone bulwark shaped like the demon's face. When you use Shield Block with the spell, the barrier explodes into many bone fragments. The shards cause 1d4 bleed damage to each creature adjacent to you that fails a DC 16 Reflex save. This persistent bleed damage is unholy and can be stopped with an Interact action to remove the shards.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical",
+      "Unholy"
+    ],
+    "level": 2,
+    "price": 7,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shield",
+      "effect": "On a Shield Block, adjacent creatures that fail a DC 16 Reflex save take 1d4 persistent unholy bleed.",
+      "addActions": 1
+    },
+    "id": "demon-bone-tiles-pusk"
+  },
+  {
+    "name": "Demon Bone Tiles (Seraptis)",
+    "description": "These bones from different types of demons can be used to form temporary barriers. When you crush the bone fragments and blow the resulting dust around yourself as you cast Shield, the shield appears as a bone bulwark shaped like the demon's face. When you use Shield Block with the spell, the barrier explodes into many bone fragments. The shards cause 2d8 bleed damage to each creature adjacent to you that fails a DC 34 Reflex save. This persistent bleed damage is unholy and can be stopped with an Interact action to remove the shards.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical",
+      "Unholy"
+    ],
+    "level": 15,
+    "price": 1200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shield",
+      "effect": "On a Shield Block, adjacent creatures that fail a DC 34 Reflex save take 2d8 persistent unholy bleed.",
+      "addActions": 1
+    },
+    "id": "demon-bone-tiles-seraptis"
+  },
+  {
     "id": "devils-breath-incense",
     "name": "Devil's Breath Incense",
     "level": 7,
@@ -2852,6 +2953,25 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Dischoran Rubble",
+    "description": "Rock fragments exposed to any dischoran's sonic blasts can sometimes retain a portion of the attack's energy, trembling slightly whenever they are touched. When you cast Noise Blast using a piece of dischoran rubble, the cacophony reverberates through the targets' forms for 1 round. If a creature that failed or critically failed its initial saving throw moves 10 feet or more on their next turn, it takes an additional 2d10 sonic damage.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 4,
+    "price": 18,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "noise-blast",
+      "effect": "A creature that failed its save takes an extra 2d10 sonic if it moves 10 feet or more on its next turn.",
+      "addActions": 1
+    },
+    "id": "dischoran-rubble"
   },
   {
     "id": "dog-bone-knife",
@@ -2936,6 +3056,62 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Dragon Breath Scale",
+    "description": "When used to cast Breathe Fire or Chilling Spray, a scale from a dragon's throat changes the spell's damage type and corresponding trait to the damage type and trait of the dragon's breath. You can instead choose the damage type and trait corresponding to the dragon's tradition if it's different. Adamantine bludgeoning or fire Conspirator mental or poison Diabolic fire or spirit Empyreal spirit Fortune force Horned fire or poison Mirage force or mental Omen mental",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 55,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "breathe-fire",
+      "effect": "Change the spell's damage type and trait to that of the dragon's breath (also works with chilling spray)."
+    },
+    "id": "dragon-breath-scale"
+  },
+  {
+    "name": "Dragon Eye",
+    "description": "Even in death, a dragon's gaze is terrible to behold. When used to cast Breathe Fire at 3rd rank or higher, an eye from a dragon causes the spell to manifest some of the creature's fearsome aura and inspire terror. Creatures in the spell's area must attempt a basic Will save instead of a basic Reflex save, and in addition to taking the spell's normal damage on a failure, they're Frightened 1. This adds the emotion, fear, and mental traits to the spell.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "breathe-fire",
+      "effect": "Cast at 3rd rank or higher: targets attempt a basic Will save and are Frightened 1 on a failure; adds the emotion, fear, and mental traits.",
+      "addActions": 1
+    },
+    "id": "dragon-eye"
+  },
+  {
+    "name": "Dragon Throat Scale",
+    "description": "Dragon scales of all sorts can be powerful magical reagents, infusing magic with the might of their breath. When used to cast Force Barrage, a scale from a dragon's throat causes the spell to lose the force trait and damage type. Instead, the spell has the damage type of the breath weapon belonging to the dragon the scale came from, along with that trait. Damage types are associated with the following dragons, with uncommon dragons noted with an asterisk. Acid: Black, brine*, copper Cold: Silver, white Electricity: Blue, bronze, cloud*, sky* Fire: Brass, gold, magma*, red, underworld* Mental: Sovereign* Poison: Green Void: Umbral*",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 55,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "force-barrage",
+      "effect": "The spell loses the force trait and damage type, dealing the dragon's breath damage type instead."
+    },
+    "id": "dragon-throat-scale"
   },
   {
     "speedPenalty": [
@@ -3653,6 +3829,42 @@
     }
   },
   {
+    "name": "Euphoric Loop",
+    "description": "This catalyst is made from twisted sapling bark harvested under a full moon. When used to cast a Charm spell, the spell creates a blissful experience for one target of your choice. When the spell ends, even if you Dismiss it, the sudden mental dissonance between the charmed state and reality forces the target to attempt a Will save against your spell DC.\nCritical Success The target is unaffected.\nSuccess The target is Stunned 1 or, if the spell ended because of a hostile action, confused for 1 round.\nFailure The target is Stunned 2 or, if the spell ended because of a hostile action, confused for 1 round.\nCritical Failure The target is Stunned 3 or, if the spell ended because of a hostile action, confused for 2 rounds.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "charm",
+      "effect": "When the charm ends, one target must succeed at a Will save or be Stunned (Confused if it ended by a hostile action)."
+    },
+    "id": "euphoric-loop"
+  },
+  {
+    "name": "Euphoric Loop (Greater)",
+    "description": "This catalyst is made from twisted sapling bark harvested under a full moon. When used to cast a Charm spell, the spell creates a blissful experience for all targets of the spell. When the spell ends, even if you Dismiss it, the sudden mental dissonance between the charmed state and reality forces all targets of the charm spell to attempt a Will save against your spell DC.\nCritical Success The target is unaffected.\nSuccess The target is Stunned 1 or, if the spell ended because of a hostile action, confused for 1 round.\nFailure The target is Stunned 2 or, if the spell ended because of a hostile action, confused for 1 round.\nCritical Failure The target is Stunned 3 or, if the spell ended because of a hostile action, confused for 2 rounds.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 13,
+    "price": 450,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "charm",
+      "effect": "When the charm ends, all targets must succeed at a Will save or be Stunned (Confused if it ended by a hostile action)."
+    },
+    "id": "euphoric-loop-greater"
+  },
+  {
     "name": "Everyneed Pack",
     "description": "This green pack is decorated with a white Glyph of the Open Road, and a dozen or more small pockets line the inside. Each pocket is enchanted to contain common, mundane gear worth no more than 1 gp each, such as chalk, flint and steel, or string. It doesn't contain any armor, shields, weapons, or items made of any kind of precious material. Once 8 gp worth of items have been removed, the magic is spent and the pack becomes an ordinary backpack.",
     "traits": [
@@ -3763,6 +3975,24 @@
       "note": "Strike → frightened 1 (2 on crit)"
     },
     "id": "fear-gem"
+  },
+  {
+    "name": "Fearcracker",
+    "description": "A fearcracker contains fragments of broken mirrors and reagents that pop and smoke when consumed. When thrown down in your space as part of a Mirror Image spell, your and your images' appearance twists nightmarishly. When an image is destroyed, it \"dies\" in a disturbing fashion, rendering the attacker Frightened 1. This aspect of the spell has the emotion, fear, and mental traits.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mirror-image",
+      "effect": "When one of your images is destroyed, the attacker becomes Frightened 1 (emotion, fear, mental)."
+    },
+    "id": "fearcracker"
   },
   {
     "id": "fine-clothing",
@@ -4173,6 +4403,24 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Ghostcracker",
+    "description": "A ghostcracker pops and smokes when consumed. When you throw the ghostcracker down in your space as part of casting an Illusory Creature spell, the appearance of the creature twists nightmarishly. When an enemy's attack or spell ends the illusory creature spell, the creature \"dies\" in a disturbing fashion, rendering the enemy Frightened 1. From this effect, the ghostcracker adds the emotion, fear, and mental traits to the spell.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "illusory-creature",
+      "effect": "When an enemy's attack or spell ends the spell, that enemy becomes Frightened 1 (emotion, fear, mental)."
+    },
+    "id": "ghostcracker"
   },
   {
     "actions": [
@@ -4678,6 +4926,60 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Healer's Gel (Greater)",
+    "description": "An astringent aroma from rare succulent plants wafts off these soothing cloth patches. Adding this material component to a Heal spell bestows an additional 15 temporary Hit Points to one target healed by the spell. These temporary Hit Points last for 1 minute.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 13,
+    "price": 500,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "heal",
+      "effect": "One target healed by the spell also gains 15 temporary Hit Points for 1 minute."
+    },
+    "id": "healers-gel-greater"
+  },
+  {
+    "name": "Healer's Gel (Lesser)",
+    "description": "An astringent aroma from rare succulent plants wafts off these soothing cloth patches. Adding this material component to a Heal spell bestows an additional 5 temporary Hit Points to one target healed by the spell. These temporary Hit Points last for 1 minute.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "heal",
+      "effect": "One target healed by the spell also gains 5 temporary Hit Points for 1 minute."
+    },
+    "id": "healers-gel-lesser"
+  },
+  {
+    "name": "Healer's Gel (Moderate)",
+    "description": "An astringent aroma from rare succulent plants wafts off these soothing cloth patches. Adding this material component to a Heal spell bestows an additional 10 temporary Hit Points to one target healed by the spell. These temporary Hit Points last for 1 minute.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 125,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "heal",
+      "effect": "One target healed by the spell also gains 10 temporary Hit Points for 1 minute."
+    },
+    "id": "healers-gel-moderate"
   },
   {
     "actions": [
@@ -5189,6 +5491,25 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Kirin Echo Chime",
+    "description": "The echo of kirin's song can be captured within this small glass chime, which shatters and calls up a meandering breeze of its own when rung. Adding this catalyst to a Gust of Wind spell causes any flying creatures that would be pushed by the spell's effects to be pushed 30 feet in a direction of your choice, rather than 30 feet in the direction of the spell.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 2,
+    "price": 5,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "gust-of-wind",
+      "effect": "Flying creatures pushed by the spell are pushed 30 feet in a direction of your choice.",
+      "addActions": 1
+    },
+    "id": "kirin-echo-chime"
   },
   {
     "name": "Kite Shield",
@@ -6121,6 +6442,60 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Nightpitch",
+    "description": "A pellet of tar mixed with the fur of a nocturnal creature, such as a bat, nightpitch used to cast a Darkness spell makes the area of the darkness difficult terrain.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 60,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "darkness",
+      "effect": "The darkness's area becomes difficult terrain."
+    },
+    "id": "nightpitch"
+  },
+  {
+    "name": "Noxious Incense",
+    "description": "Sold only in single sticks, this foul incense comes coated with a bevy of alchemical smoke that activates in the presence of intense heat, releasing its namesake pungent odor. Adding this catalyst to a Wall of Fire spell fills all squares adjacent to the wall with thick, foul smoke. Creatures in this area are concealed, and other creatures are concealed to creatures in the area. The smoke lasts for the duration of the spell. The incense can be used with a wall of fire of 6th level or below.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 125,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-fire",
+      "effect": "Fills squares adjacent to the wall with concealing smoke for the duration (wall of fire 6th level or below)."
+    },
+    "id": "noxious-incense"
+  },
+  {
+    "name": "Noxious Incense (Greater)",
+    "description": "Sold only in single sticks, this foul incense comes coated with a bevy of alchemical smoke that activates in the presence of intense heat, releasing its namesake pungent odor. Adding this catalyst to a Wall of Fire spell fills all squares adjacent to the wall with thick, foul smoke. Creatures in this area are concealed, and other creatures are concealed to creatures in the area. The smoke lasts for the duration of the spell. The incense can be used with a wall of fire of any level.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 750,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-fire",
+      "effect": "Fills squares adjacent to the wall with concealing smoke for the duration (wall of fire of any level)."
+    },
+    "id": "noxious-incense-greater"
   },
   {
     "id": "obsidian-goggles",
@@ -8419,6 +8794,42 @@
     "id": "serene-mutagen"
   },
   {
+    "name": "Seventh Prism (Pentagonal)",
+    "description": "Beloved by the church of the Seventh Veil, a seventh prism is a crystal that disperses its internal light, casting an aurora of color. If you use a seventh prism to cast Dizzying Colors, targets are dazzled for twice as long as their saving throw indicates. On a critical failure, the target is dazzled for 1 minute after its blinded condition ends. Motes of shifting rainbow hues cloud the eyes, making it difficult to see details. The area increases to a 20-foot cone, and the DC for the flat check against the target being concealed increases to DC 7 flat check.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 52,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "dizzying-colors",
+      "effect": "As the triangular prism, and the area becomes a 20-foot cone with the concealment flat check raised to DC 7."
+    },
+    "id": "seventh-prism-pentagonal"
+  },
+  {
+    "name": "Seventh Prism (Triangular)",
+    "description": "Beloved by the church of the Seventh Veil, a seventh prism is a crystal that disperses its internal light, casting an aurora of color. If you use a seventh prism to cast Dizzying Colors, targets are dazzled for twice as long as their saving throw indicates. On a critical failure, the target is dazzled for 1 minute after its blinded condition ends. Motes of shifting rainbow hues cloud the eyes, making it difficult to see details.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 10,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "dizzying-colors",
+      "effect": "Targets are dazzled for twice as long; on a critical failure, dazzled 1 minute after the blinded condition ends."
+    },
+    "id": "seventh-prism-triangular"
+  },
+  {
     "id": "shadow",
     "name": "Shadow",
     "price": 55,
@@ -10273,6 +10684,25 @@
     ]
   },
   {
+    "name": "Swirling Sand",
+    "description": "Swirling sand carries a faint trace of strange compulsions from the helical sand spire near Beachcomber. Adding this catalyst to a Suggestion spell implants a strange compulsion in one target of the spell. The target creature must spin counterclockwise at the end of its turn if it didn't take a move action that turn. This spin is a free action that has the move trait. This effect lasts for 3 rounds on a success, failure, or critical failure against suggestion (even if the target completes its suggestion in fewer rounds); a target that critically succeeds against suggestion is unaffected by the swirling sand.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 52,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "suggestion",
+      "effect": "One target must spin counterclockwise at the end of its turn if it didn't move, for 3 rounds."
+    },
+    "id": "swirling-sand"
+  },
+  {
     "name": "Tallow Bomb",
     "description": "A bomb of rendered fat that clings and burns. Deals no direct damage; 1d4 persistent fire and 1 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts.",
     "traits": [
@@ -10484,6 +10914,82 @@
     "price": 3,
     "weight": 0.1,
     "id": "thieves-toolkit"
+  },
+  {
+    "name": "Thunderbird Tuft (Greater)",
+    "description": "This carved chunk of amber contains a single tuft of gray feathers, which spark with electricity to create an odd jittery sensation in anyone holding the amber for long. When used as part of a Shocking Grasp spell, thunderbird tuft funnels electricity back into the spellcaster in a defensive nimbus. For 1 minute, any creature that touches you or that hits you with a melee unarmed attack or non-reach melee weapon attack takes 2d4 electricity damage, or 2d6 electricity damage if the creature is using a metal weapon.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 125,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shocking-grasp",
+      "effect": "For 1 minute, any creature that touches or hits you with a melee attack takes 2d4 electricity (2d6 with a metal weapon).",
+      "addActions": 1
+    },
+    "id": "thunderbird-tuft-greater"
+  },
+  {
+    "name": "Thunderbird Tuft (Lesser)",
+    "description": "This carved chunk of amber contains a single tuft of gray feathers, which spark with electricity to create an odd jittery sensation in anyone holding the amber for long. When used as part of a Shocking Grasp spell, thunderbird tuft funnels electricity back into the spellcaster in a defensive nimbus. For 1 round, any creature that touches you or that hits you with a melee unarmed attack or non-reach melee weapon attack takes 1d4 electricity damage, or 1d6 electricity damage if the creature is using a metal weapon, but the nimbus only lasts 1 round, rather than the full minute.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 1,
+    "price": 3,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shocking-grasp",
+      "effect": "For 1 round, any creature that touches or hits you with a melee attack takes 1d4 electricity (1d6 with a metal weapon).",
+      "addActions": 1
+    },
+    "id": "thunderbird-tuft-lesser"
+  },
+  {
+    "name": "Thunderbird Tuft (Major)",
+    "description": "This carved chunk of amber contains a single tuft of gray feathers, which spark with electricity to create an odd jittery sensation in anyone holding the amber for long. When used as part of a Shocking Grasp spell, thunderbird tuft funnels electricity back into the spellcaster in a defensive nimbus. For 1 minute, any creature that touches you or that hits you with a melee unarmed attack or non-reach melee weapon attack takes 3d4 electricity damage, or 3d6 electricity damage if the creature is using a metal weapon.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 13,
+    "price": 500,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shocking-grasp",
+      "effect": "For 1 minute, any creature that touches or hits you with a melee attack takes 3d4 electricity (3d6 with a metal weapon).",
+      "addActions": 1
+    },
+    "id": "thunderbird-tuft-major"
+  },
+  {
+    "name": "Thunderbird Tuft (Moderate)",
+    "description": "This carved chunk of amber contains a single tuft of gray feathers, which spark with electricity to create an odd jittery sensation in anyone holding the amber for long. When used as part of a Shocking Grasp spell, thunderbird tuft funnels electricity back into the spellcaster in a defensive nimbus. For 1 minute, any creature that touches you or that hits you with a melee unarmed attack or non-reach melee weapon attack takes 1d4 electricity damage, or 1d6 electricity damage if the creature is using a metal weapon.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shocking-grasp",
+      "effect": "For 1 minute, any creature that touches or hits you with a melee attack takes 1d4 electricity (1d6 with a metal weapon).",
+      "addActions": 1
+    },
+    "id": "thunderbird-tuft-moderate"
   },
   {
     "name": "Torch",
@@ -11409,6 +11915,24 @@
       }
     ],
     "id": "water-bomb"
+  },
+  {
+    "name": "Waterproofing Wax",
+    "description": "Many books and spellbooks are treated in this wax formula to protect them from the elements, but waterproofing wax's liquid-repellent properties can be further applied to split up a Grease spell into useful smaller sections. When the spell is cast in an area while using this catalyst, the conjured grease fills three 5-foot squares within 30 feet instead of its normal area; these squares don't need to be contiguous.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 10,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "grease",
+      "effect": "The grease fills three non-contiguous 5-foot squares within 30 feet instead of its normal area."
+    },
+    "id": "waterproofing-wax"
   },
   {
     "name": "Waterskin",
