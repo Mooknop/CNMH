@@ -20,6 +20,7 @@ import {
   runeOfferingSummary,
   eligibleHostItems,
   eligibleTalismans,
+  eligibleWhetstones,
   isShopExcluded,
   isDragonbreathWare,
   shopHostKind,
@@ -1132,5 +1133,63 @@ describe('resolveShopWares — dragonbreath weapons (#1210 M4g)', () => {
     expect(resolveShopWares('s', shopWith({ ref: 'nope', dragonbreath: { tier: 'base' } }), dbCatalog)).toEqual([]);
     const excl = new Map([['x', { id: 'x', name: 'X', price: 1, strikes: {}, noShop: true }]]);
     expect(resolveShopWares('s', shopWith({ ref: 'x', dragonbreath: { tier: 'base' } }), excl)).toEqual([]);
+  });
+});
+
+describe('eligibleWhetstones (#1212)', () => {
+  const wsItems = [
+    { id: 'morph-jewel', name: 'Morph Jewel', level: 3, price: 12,
+      traits: ['Consumable', 'Magical', 'Whetstone'], whetstone: {} },
+    { id: 'leeching-fangs', name: 'Leeching Fangs', level: 12, price: 400,
+      traits: ['Consumable', 'Magical', 'Whetstone'], whetstone: {} },
+    { id: 'dimensional-cleavestone', name: 'Dimensional Cleavestone', level: 14, price: 900,
+      traits: ['Consumable', 'Magical', 'Uncommon', 'Whetstone'], whetstone: {} },
+    // A valid whetstone, but GM-flagged never-sell (#1105).
+    { id: 'cursed-stone', name: 'Cursed Stone', level: 1, price: 1, noShop: true,
+      traits: ['Consumable', 'Whetstone'], whetstone: {} },
+    { id: 'wolf-fang', name: 'Wolf Fang', level: 2, price: 7,
+      traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon' } }, // not a whetstone
+  ];
+  const keys = (ware) => eligibleWhetstones(ware, wsItems).map((w) => w.wareKey);
+
+  it('a weapon-target service stocks common whetstones up to the weapon cap', () => {
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 12 })).toEqual([
+      'whetstone:morph-jewel', 'whetstone:leeching-fangs',
+    ]);
+  });
+
+  it('the GENERAL runesmith stocks whetstones too (it offers weapon runesmithing)', () => {
+    expect(keys({ runeService: true, maxLevel: 5 })).toEqual(['whetstone:morph-jewel']);
+    expect(keys({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 5 }))
+      .toEqual(['whetstone:morph-jewel']);
+  });
+
+  it('a service without the weapon target (or with a 0 weapon cap) stocks none', () => {
+    expect(keys({ runeService: true, targets: ['shield', 'armor'], maxLevel: 20 })).toEqual([]);
+    expect(keys({ runeService: true, targets: ['weapon', 'shield'], maxLevel: { shield: 10 } })).toEqual([]);
+  });
+
+  it('gates by the weapon cap from a per-target maxLevel object', () => {
+    expect(keys({ runeService: true, targets: ['weapon', 'shield'], maxLevel: { weapon: 4, shield: 20 } }))
+      .toEqual(['whetstone:morph-jewel']);
+  });
+
+  it('uncommon whetstones need the rarity opt-in', () => {
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 20 }))
+      .not.toContain('whetstone:dimensional-cleavestone');
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 20, rarities: ['common', 'uncommon'] }))
+      .toContain('whetstone:dimensional-cleavestone');
+  });
+
+  it('never offers a GM-excluded (noShop) whetstone, and ignores non-service wares', () => {
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 20 }))
+      .not.toContain('whetstone:cursed-stone');
+    expect(eligibleWhetstones({ ref: 'runestone' }, wsItems)).toEqual([]);
+  });
+
+  it('resolved wares carry price, baseName, and the whetstone block', () => {
+    const [ware] = eligibleWhetstones({ runeService: true, targets: ['weapon'], maxLevel: 5 }, wsItems);
+    expect(ware).toMatchObject({ id: 'morph-jewel', price: 12, baseName: 'Morph Jewel' });
+    expect(ware.whetstone).toEqual({});
   });
 });
