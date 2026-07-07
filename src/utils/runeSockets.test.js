@@ -139,14 +139,18 @@ describe('dragonbreath weapon fundamentals (#1210 M4c)', () => {
     expect(gearSockets(dbWeapon('base')).filter((s) => s.type === 'property')).toHaveLength(1);
   });
 
-  it('never offers a fundamental etch, but still offers property runes', () => {
+  it('offers only the tier-upgrade option on potency, nothing on striking, property normally', () => {
     const stock = [wPot1, wPot2, striking, vitalizing];
-    expect(compatibleRunes(dbWeapon('base'), 'potency', stock)).toEqual([]);
+    // no stock fundamental etch — the only potency option is the synthetic upgrade
+    const pot = compatibleRunes(dbWeapon('base'), 'potency', stock);
+    expect(pot.map((r) => r.id)).toEqual(['dragonbreath-upgrade-greater']);
     expect(compatibleRunes(dbWeapon('base'), 'striking', stock)).toEqual([]);
     expect(compatibleRunes(dbWeapon('base'), 'property', stock).map((r) => r.id)).toEqual(['vitalizing']);
+    // major weapon: top tier, no upgrade offered
+    expect(compatibleRunes(dbWeapon('major'), 'potency', stock)).toEqual([]);
   });
 
-  it('applyRune rejects a fundamental etch, keeping the template locked', () => {
+  it('applyRune rejects a real fundamental etch, keeping the template locked', () => {
     expect(applyRune(dbWeapon('base'), wPot2)).toBeNull();
     expect(applyRune(dbWeapon('base'), striking)).toBeNull();
   });
@@ -159,6 +163,40 @@ describe('dragonbreath weapon fundamentals (#1210 M4c)', () => {
 
   it('honors the implied property capacity (base tier fills at 1 slot)', () => {
     expect(applyRune(dbWeapon('base', ['keen']), vitalizing)).toBeNull(); // 1 slot, already used
+  });
+});
+
+describe('dragonbreath tier upgrade via the work-order rail (#1210 M4d)', () => {
+  const dbWeapon = (tier, property) => ({
+    uid: 'db1', name: 'Longsword', strikes: [{}],
+    dragonbreath: { tier, dragonType: 'Red' },
+    ...(property ? { runes: { property } } : {}),
+  });
+  const upgrade = compatibleRunes(dbWeapon('base'), 'potency', [])[0];
+
+  it('the potency socket surfaces a synthetic upgrade rune, priced at the tier delta', () => {
+    expect(upgrade).toMatchObject({ id: 'dragonbreath-upgrade-greater', dragonbreathUpgrade: 'greater', price: 2450 });
+  });
+
+  it('applyRune bumps the tier, preserving dragon kind + property runes, with a fresh uid', () => {
+    const out = applyRune(dbWeapon('base', ['vitalizing']), upgrade);
+    expect(out.dragonbreath).toEqual({ tier: 'greater', dragonType: 'Red' });
+    expect(out.runes).toEqual({ property: ['vitalizing'] }); // property carried through
+    expect(out.uid).not.toBe('db1'); // fresh-uid runed snapshot to credit back
+  });
+
+  it('a staged upgrade projects the next tier onto the socket board (#879)', () => {
+    // projectStagedGear applies the staged upgrade under the potency socket key,
+    // so the board previews greater's fundamentals + its extra property slot.
+    const projected = projectStagedGear(dbWeapon('base'), { potency: upgrade });
+    const sockets = gearSockets(projected);
+    expect(sockets[0]).toMatchObject({ type: 'potency', value: 2, locked: true });
+    expect(sockets.filter((s) => s.type === 'property')).toHaveLength(2);
+  });
+
+  it('rejects an upgrade that is not a one-step bump from the current tier', () => {
+    // a greater-target upgrade rune applied to an already-greater weapon: no-op
+    expect(applyRune(dbWeapon('greater'), upgrade)).toBeNull();
   });
 });
 
