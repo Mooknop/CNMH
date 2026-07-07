@@ -89,12 +89,23 @@ test.describe('Familiar maneuvers', () => {
       .getByRole('button', { name: 'Encounter', exact: true })
       .click();
 
+    // Gate on encounter hydration before the pool assertion. `cnmh_encounter_global`
+    // is a GLOBAL key shared across the shard, so the seed can land a beat late; if
+    // the modal opens while `encounterMode` is still false the maneuver isn't
+    // pool-gated at all (blocking is encounter-only), and `toBeDisabled` flakes to
+    // enabled. The `Command <familiar>` button renders only under `encounterMode &&
+    // hasFamiliar` — the same useEncounter the modal reads — so its visibility
+    // proves encounterMode is live app-wide.
+    await expect(
+      page.getByRole('button', { name: `Command ${FAMILIAR_NAME}` }),
+    ).toBeVisible();
+
     // Masthead familiar button (data-driven hasFamiliar, #1142 — no feat seeded).
     const mastheadBtn = page.getByRole('button', { name: new RegExp(`^${FAMILIAR_NAME}`) });
     await mastheadBtn.click();
     await expect(page.getByRole('heading', { name: FAMILIAR_NAME, level: 2 })).toBeVisible();
 
-    // Pool empty → maneuvers hard-blocked until Command.
+    // Pool empty → maneuvers hard-blocked until Command (encounterMode confirmed above).
     const maneuvers = page.locator('.familiar-maneuvers');
     await expect(maneuvers.getByRole('button', { name: 'Trip' })).toBeDisabled();
     await page.getByRole('button', { name: '×' }).click();
