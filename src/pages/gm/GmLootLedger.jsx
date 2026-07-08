@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { usePartyGold } from '../../hooks/usePartyGold';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import {
   characterWealth,
   lumpSumFor,
@@ -11,6 +12,7 @@ import {
   partyLevel,
   levelBudget,
 } from '../../utils/wealthBenchmark';
+import { groupRoomsByArea, areaLootSummary } from '../../utils/lootAreas';
 import './GmLootLedger.css';
 
 // World → Loot Ledger (#1281 WB3). Compares each PC's held wealth (live gold +
@@ -34,9 +36,32 @@ const BAND_LABEL = {
   [WEALTH_BANDS.FLUSH]: 'Flush',
 };
 
+const LEVELS = Array.from({ length: 20 }, (_, i) => i + 1);
+
 const GmLootLedger = () => {
-  const { characters = [] } = useContent();
+  const { characters = [], rooms = [], items = [], runes = [] } = useContent();
   const { goldById } = usePartyGold(characters);
+  // GM-assigned Dungeon Level per area letter ({ A: 4, ... }) — synced so every
+  // GM device agrees; players never read it.
+  const [areaLevels, setAreaLevels] = useSyncedState('cnmh_lootareas_global', {});
+
+  // Same item+rune merge as the treasure editor/claims, for pricing cache lines.
+  const catalogById = useMemo(() => {
+    const m = new Map();
+    for (const r of runes || []) m.set(r.id, r);
+    for (const i of items || []) m.set(i.id, i);
+    return m;
+  }, [items, runes]);
+
+  const areas = useMemo(() => groupRoomsByArea(rooms), [rooms]);
+
+  const setAreaLevel = (key, raw) => {
+    const next = { ...(areaLevels || {}) };
+    const lvl = Number(raw);
+    if (Number.isInteger(lvl) && lvl >= 1 && lvl <= 20) next[key] = lvl;
+    else delete next[key];
+    setAreaLevels(next);
+  };
 
   const rows = characters.map((c) => {
     const wealth = characterWealth(c, goldById[c.id]);
@@ -137,6 +162,79 @@ const GmLootLedger = () => {
         </ul>
         {!rows.length && <p className="gm-help">No characters loaded yet.</p>}
       </section>
+
+      {areas.length > 0 && (
+        <section className="gm-ledger-panel" aria-label="Area loot budgets">
+          <h2 className="gm-ledger-section-title">Areas</h2>
+          <p className="gm-help">
+            Loot stocked per dungeon area (rooms grouped by code letter). Assign
+            an area a level to check its total against the Party Treasure by
+            Level budget for a {characters.length}-PC party. The bar shows how
+            much of the area's loot the party has already claimed.
+          </p>
+          <ul className="gm-ledger-areas">
+            {areas.map((area) => {
+              const summary = areaLootSummary(area.rooms, catalogById);
+              const level = (areaLevels || {})[area.key];
+              const budget = level ? levelBudget(level, characters.length) : null;
+              const budgetPct = budget && budget.totalValue > 0
+                ? Math.round((summary.total / budget.totalValue) * 100)
+                : null;
+              const claimedPct = summary.total > 0
+                ? Math.round((summary.claimed / summary.total) * 100)
+                : 0;
+              return (
+                <li key={area.key} className="gm-ledger-area">
+                  <div className="gm-ledger-area-head">
+                    <span className="gm-ledger-area-key">{area.key}</span>
+                    <span className="gm-ledger-area-site">{area.site || 'Unknown site'}</span>
+                    <label className="gm-ledger-area-level">
+                      Dungeon Level
+                      <select
+                        value={level || ''}
+                        onChange={(e) => setAreaLevel(area.key, e.target.value)}
+                        aria-label={`Area ${area.key} dungeon level`}
+                      >
+                        <option value="">—</option>
+                        {LEVELS.map((l) => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="gm-ledger-area-stats">
+                    <span className="gm-ledger-area-total"><strong>{gp(summary.total)}</strong> stocked</span>
+                    <span>{gp(summary.claimed)} claimed · {gp(summary.remaining)} unclaimed</span>
+                    <span>
+                      {summary.distributedRooms} of {summary.lootRooms} loot room
+                      {summary.lootRooms === 1 ? '' : 's'} distributed
+                    </span>
+                  </div>
+                  {summary.total > 0 && (
+                    <div
+                      className="gm-ledger-bar gm-ledger-area-bar"
+                      role="meter"
+                      aria-label={`Area ${area.key} claimed loot`}
+                      aria-valuenow={claimedPct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div className="gm-ledger-bar-fill" style={{ width: `${claimedPct}%` }} />
+                    </div>
+                  )}
+                  {budget && (
+                    <div className={`gm-ledger-area-budget${summary.total < budget.totalValue ? ' is-behind' : ''}`}>
+                      {gp(summary.total)} of the {gp(budget.totalValue)} level-{level} budget stocked
+                      {budgetPct != null && ` (${budgetPct}%)`}
+                      {summary.total < budget.totalValue && ` — ${gp(budget.totalValue - summary.total)} short`}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   );
 };
