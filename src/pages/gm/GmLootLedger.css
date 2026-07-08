@@ -1,0 +1,166 @@
+/* World → Loot Ledger (#1281). Per-PC wealth vs the Character Wealth benchmark
+   plus party rollup. Reuses GM shell tokens; band colors map onto the shell's
+   success/peril/gold semantics. */
+
+.gm-ledger {
+  padding: var(--space-4);
+  max-width: 60rem;
+  color: var(--shell-text-primary);
+}
+
+.gm-ledger-head h1 {
+  margin: 0 0 var(--space-2);
+}
+
+.gm-ledger-panel {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+
+/* ── Party rollup ─────────────────────────────────────────────────────────── */
+.gm-ledger-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.gm-ledger-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 10rem;
+}
+
+.gm-ledger-stat-label {
+  color: var(--shell-text-tertiary);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gm-ledger-stat-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.gm-ledger-stat-value.is-behind {
+  color: var(--peril-light);
+}
+
+.gm-ledger-stat-sub {
+  color: var(--shell-text-tertiary);
+  font-size: 0.78rem;
+  font-weight: 400;
+  font-family: inherit;
+}
+
+/* ── Per-PC rows ──────────────────────────────────────────────────────────── */
+.gm-ledger-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gm-ledger-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gm-ledger-name {
+  font-weight: 600;
+}
+
+.gm-ledger-level {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-full);
+  color: var(--shell-text-secondary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.gm-ledger-band {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.gm-ledger-band.band-behind {
+  background: var(--peril-light);
+  color: var(--shell-text-primary);
+}
+
+.gm-ledger-band.band-healthy {
+  background: var(--d-succ-bg);
+  color: var(--d-succ-fg, var(--shell-text-primary));
+  border: 1px solid var(--d-succ-border, var(--shell-border));
+}
+
+.gm-ledger-band.band-flush {
+  border: 1px solid var(--gold-mid);
+  color: var(--gold-mid);
+}
+
+.gm-ledger-amounts {
+  margin-left: auto;
+  color: var(--shell-text-secondary);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+/* Track spans 0 → 2× benchmark; ticks mark the benchmark (50%) and flush
+   threshold (FLUSH_RATIO/2, positioned inline from the component). */
+.gm-ledger-bar {
+  position: relative;
+  height: 10px;
+  margin-top: var(--space-2);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.gm-ledger-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--d-succ-bg);
+  transition: width 0.3s ease;
+}
+
+.gm-ledger-row.band-behind .gm-ledger-bar-fill {
+  background: var(--peril-light);
+}
+
+.gm-ledger-row.band-flush .gm-ledger-bar-fill {
+  background: var(--gold-mid);
+}
+
+.gm-ledger-bar-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: var(--shell-text-tertiary);
+  opacity: 0.8;
+}
+
+.gm-ledger-bar-tick.tick-flush {
+  opacity: 0.4;
+}
+
+.gm-ledger-breakdown {
+  margin-top: var(--space-1, 4px);
+  color: var(--shell-text-tertiary);
+  font-size: 0.78rem;
+}
