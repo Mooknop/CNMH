@@ -24,6 +24,7 @@ import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
+import { useVeracious } from '../../hooks/useVeracious';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
 import { useChambers } from '../../hooks/useChambers';
 import { useBladeByrnie } from '../../hooks/useBladeByrnie';
@@ -189,6 +190,11 @@ const UseAbilityModal = ({
   const charData = useCharacter(character);
   const { raised: shieldRaised } = useShield(character?.id || 'nobody', charData?.inventory || []);
   const [shieldOverride, setShieldOverride] = useState(false);
+
+  // Veracious Spell (#967 R7) — the armed power-ring bonus applies to the NEXT
+  // spell attack, so a committed cast consumes it (cleared on confirm below).
+  const { armed: veraciousArmed, disarm: disarmVeracious } =
+    useVeracious(character?.id || 'nobody', charData?.inventory || []);
 
   // Harrow omen gate (#227) — omen-bound abilities (Avoid Dire Fate, Harrow
   // Casting) need an active omen; using a clearsOmen ability spends it.
@@ -624,6 +630,11 @@ const UseAbilityModal = ({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
+    // Veracious Spell (#967 R7): every path through this handler is a committed
+    // use, so any cast — even one that fizzles on a flat check downstream —
+    // consumes the armed state. Re-arming stays a SpellsHeader action.
+    if (effectiveVerb === 'cast' && veraciousArmed) disarmVeracious();
+
     // Foundry-authoritative buffs (#455): when the ability's foundryEffect is
     // flagged `authoritative` AND the Foundry bridge is connected (its roster is
     // present), let Foundry's aura engine own the effect — the app skips its own
