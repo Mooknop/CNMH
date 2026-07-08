@@ -164,3 +164,88 @@
   color: var(--shell-text-tertiary);
   font-size: 0.78rem;
 }
+
+/* ── Area loot budgets (WB4) ──────────────────────────────────────────────── */
+.gm-ledger-section-title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.05rem;
+  color: var(--shell-text-secondary);
+}
+
+.gm-ledger-areas {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gm-ledger-area {
+  padding: var(--space-3);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+
+.gm-ledger-area-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gm-ledger-area-key {
+  min-width: 1.6rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.gm-ledger-area-site {
+  font-weight: 600;
+}
+
+.gm-ledger-area-level {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--shell-text-tertiary);
+  font-size: 0.8rem;
+}
+
+.gm-ledger-area-level select {
+  padding: 2px var(--space-2);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+
+.gm-ledger-area-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  color: var(--shell-text-secondary);
+  font-size: 0.85rem;
+}
+
+.gm-ledger-area-bar .gm-ledger-bar-fill {
+  background: var(--gold-mid);
+}
+
+.gm-ledger-area-budget {
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary);
+}
+
+.gm-ledger-area-budget.is-behind {
+  color: var(--peril-light);
+}
