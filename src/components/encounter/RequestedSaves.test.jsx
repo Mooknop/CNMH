@@ -47,7 +47,8 @@ vi.mock('../../contexts/SessionContext', () => ({
 // Key-aware synced-state mock (#272): capture the cnmh_persistent_global
 // setter so tests can apply its functional updater and inspect the map.
 // cnmh_knowledge_global likewise (#1014 — IWR reveal-on-trigger writes).
-const syncedMock = vi.hoisted(() => ({ persistentSetter: null, knowledgeSetter: null, enemyFxSetter: null }));
+// cnmh_savedone_global feeds the Foundry-rolled-saves effect (#1275).
+const syncedMock = vi.hoisted(() => ({ persistentSetter: null, knowledgeSetter: null, enemyFxSetter: null, saveDone: null }));
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (key === 'cnmh_persistent_global') {
@@ -62,6 +63,9 @@ vi.mock('../../hooks/useSyncedState', () => ({
       syncedMock.enemyFxSetter = syncedMock.enemyFxSetter || vi.fn();
       return [{}, syncedMock.enemyFxSetter];
     }
+    if (key === 'cnmh_savedone_global') {
+      return [syncedMock.saveDone, vi.fn()];
+    }
     return [[], vi.fn()];
   },
 }));
@@ -74,6 +78,7 @@ beforeEach(() => {
   syncedMock.persistentSetter = null;
   syncedMock.knowledgeSetter = null;
   syncedMock.enemyFxSetter = null;
+  syncedMock.saveDone = null;
   useEncounter.mockReturnValue({
     encounter: makeEncounter([baseRequest]),
     appendLog: mockAppendLog,
@@ -665,5 +670,112 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '20' } }); // 25 ≥ 20, nat 20 → crit success
     fireEvent.click(screen.getByRole('button', { name: /log results/i }));
     expect(syncedMock.enemyFxSetter).not.toHaveBeenCalled();
+  });
+});
+
+// ── Foundry-rolled saves (#1275) ──────────────────────────────────────────────
+
+describe('Foundry-rolled saves (#1275)', () => {
+  const withRequests = (saveRequests) =>
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter(saveRequests),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+
+  test('"Roll in Foundry" pushes the request to the saveroll relay', () => {
+    withRequests([baseRequest]);
+    render(<RequestedSaves />);
+    fireEvent.click(screen.getByRole('button', { name: /roll in foundry/i }));
+    expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'saveroll', expect.objectContaining({
+      id: 'savereq-1',
+      save: 'reflex',
+      dc: 20,
+      targets: [{ entryId: 'e-goblin', name: 'Goblin' }],
+    }));
+  });
+
+  test('a fresh full savedone auto-resolves using the FOUNDRY total', () => {
+    withRequests([baseRequest]);
+    // saveMod is +5, but the live-modified Foundry total is 18 (not 10+5) —
+    // total 18 vs DC 20 → Failure, proving the bridge total is authoritative.
+    syncedMock.saveDone = {
+      id: 'savereq-1',
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 10, total: 18 }],
+      failed: [],
+      ts: Date.now(),
+    };
+    render(<RequestedSaves />);
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 18 → Failure',
+    }));
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Foundry rolled the Reflex DC saves for Fireball'),
+    }));
+    expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
+  });
+
+  test('auto-resolution runs the shared tail — condition ladders apply', () => {
+    withRequests([{
+      ...baseRequest,
+      abilityName: 'Sleep Arrow',
+      save: 'will',
+      dc: 17,
+      conditions: { failure: [{ id: 'unconscious', note: 'sleep' }] },
+    }]);
+    syncedMock.saveDone = {
+      id: 'savereq-1',
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 8, total: 13 }], // 13 < 17 → Failure
+      failed: [],
+      ts: Date.now(),
+    };
+    render(<RequestedSaves />);
+    const fx = (syncedMock.enemyFxSetter?.mock.calls || []).reduce(
+      (acc, [u]) => (typeof u === 'function' ? u(acc) : u), {});
+    expect(fx['e-goblin'].conditions[0]).toMatchObject({ id: 'unconscious', source: 'Sleep Arrow' });
+    expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
+  });
+
+  test('a partial savedone fills the rolled d20s and keeps the request pending', () => {
+    withRequests([{ ...baseRequest, targets: [goblinTarget, trollTarget] }]);
+    syncedMock.saveDone = {
+      id: 'savereq-1',
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 12, total: 17 }],
+      failed: [{ entryId: 'e-troll', name: 'Troll' }],
+      ts: Date.now(),
+    };
+    render(<RequestedSaves />);
+    expect(screen.getByLabelText(/Goblin d20/i)).toHaveValue(12);
+    expect(screen.getByLabelText(/Troll d20/i)).toHaveValue(null);
+    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('could not roll for Troll'),
+    }));
+  });
+
+  test('a stale savedone (persisted-key hydration) is ignored', () => {
+    withRequests([baseRequest]);
+    syncedMock.saveDone = {
+      id: 'savereq-1',
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 10, total: 18 }],
+      failed: [],
+      ts: Date.now() - 60_000,
+    };
+    render(<RequestedSaves />);
+    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockAppendLog).not.toHaveBeenCalled();
+  });
+
+  test('a savedone for an unknown / already-resolved request is ignored', () => {
+    withRequests([baseRequest]);
+    syncedMock.saveDone = {
+      id: 'savereq-gone',
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 10, total: 18 }],
+      failed: [],
+      ts: Date.now(),
+    };
+    render(<RequestedSaves />);
+    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockAppendLog).not.toHaveBeenCalled();
   });
 });

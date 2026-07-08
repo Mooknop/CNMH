@@ -326,6 +326,31 @@ export function startCombat(combat) {
   return combat.startCombat();
 }
 
+// Roll a saving throw for an actor against a DC (#1275 — the app's save-request
+// rail). actor.saves[stat] is a PF2e Statistic; roll() resolves the check with
+// the actor's LIVE modifiers (frightened, elixirs, …), so the result can differ
+// from the app's static bestiary saveMod — the app treats this total as
+// authoritative. rollMode 'gmroll' keeps enemy saves off the players' chat.
+// Returns { d20, total } (degree is recomputed app-side — computeSaveDegree is
+// the one source of truth for nat-20/nat-1 and Incapacitation) or null when the
+// actor has no such statistic.
+// v14 MIGRATION: Statistic#roll is a PF2e API (src/module/system/statistic);
+// re-verify the options bag ({ dc, skipDialog, rollMode }) on the v14 system.
+export async function rollActorSave(actor, save, dc) {
+  const statistic = actor?.saves?.[save];
+  if (typeof statistic?.roll !== 'function') return null;
+  const roll = await statistic.roll({
+    ...(typeof dc === 'number' ? { dc: { value: dc } } : {}),
+    skipDialog: true,
+    rollMode: 'gmroll',
+  });
+  if (!roll) return null;
+  return {
+    d20: roll.dice?.[0]?.total ?? null,
+    total: roll.total ?? null,
+  };
+}
+
 // The version-independent combat snapshot the encounter payload is built from.
 // Keeping these reads here means a v14 Combat API rename touches only this file.
 export function getCombatState(combat) {
