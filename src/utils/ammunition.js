@@ -76,6 +76,36 @@ export function weaponAmmoType(strike) {
 }
 
 /**
+ * Whether a strike is a "nock" weapon (#1270, AA1): a non-capacity ranged
+ * weapon that fires typed ammunition — a bow or crossbow (reload 0/1). Such a
+ * weapon can hold ONE special-ammunition load at a time (a nocked Sleep Arrow),
+ * reusing the chamber rail with capacity 1. Unlike a capacity weapon it never
+ * needs loading to fire — plain arrows stay untracked and infinite.
+ *
+ * @param {Object} strike
+ * @returns {boolean}
+ */
+export function isNockWeapon(strike) {
+  return strike?.type === 'ranged'
+    && weaponAmmoType(strike) != null
+    && !isCapacityWeapon(strike);
+}
+
+/**
+ * How many ammunition slots a strike's chamber state has: the weapon's capacity
+ * for a capacity weapon, 1 for a nock weapon (bow/crossbow), null when the
+ * strike doesn't take special ammunition at all.
+ *
+ * @param {Object} strike
+ * @returns {number|null}
+ */
+export function strikeAmmoCapacity(strike) {
+  const cap = weaponCapacity(strike);
+  if (cap != null) return cap;
+  return isNockWeapon(strike) ? 1 : null;
+}
+
+/**
  * The item's `ammunition` metadata block, or null when the item isn't loadable
  * special ammunition.
  * Shape: { types: string[], activate?: number, traits?: string[], effectId?, onHit?: boolean }
@@ -92,7 +122,8 @@ export function ammoBlock(item) {
 /**
  * Whether an inventory item is special ammunition that can load the given weapon
  * strike. True when the item carries an `ammunition` block whose `types` include
- * the weapon's ammo type. A capacity weapon with no declared ammoType accepts
+ * the weapon's ammo type. The strike must take ammunition — a capacity weapon or
+ * a nock weapon (#1270). A capacity weapon with no declared ammoType accepts
  * any ammunition; ammo with no declared types loads any matching weapon.
  *
  * @param {Object} item        - candidate inventory consumable
@@ -101,7 +132,7 @@ export function ammoBlock(item) {
  */
 export function isAmmoEligible(item, weaponStrike) {
   const block = ammoBlock(item);
-  if (!block || !isCapacityWeapon(weaponStrike)) return false;
+  if (!block || strikeAmmoCapacity(weaponStrike) == null) return false;
   const weaponType = weaponAmmoType(weaponStrike);
   const ammoTypes = (block.types || []).map((t) => String(t).toLowerCase());
   if (!weaponType || ammoTypes.length === 0) return true;

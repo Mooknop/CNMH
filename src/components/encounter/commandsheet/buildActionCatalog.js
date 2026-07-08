@@ -20,11 +20,13 @@ import { consumableMeta } from '../../../utils/consumables';
 import { itemAbilitiesActive } from '../../../utils/itemState';
 import {
   isCapacityWeapon,
-  weaponCapacity,
+  strikeAmmoCapacity,
+  isAmmoEligible,
   reloadCost,
   normalizeChamberState,
   nextEmptyChamber,
 } from '../../../utils/ammunition';
+import { flattenInventory } from '../../../utils/InventoryUtils';
 
 // Short labels for the maneuver "vs <defense>" stat line.
 const DEFENSE_SHORT = {
@@ -131,13 +133,19 @@ const makeConsumableTile = (item) => {
 // untouched. Cost is the weapon's Reload value (1 for the Crescent Cross). The
 // `raw` descriptor carries what the sheet needs (weapon uid + capacity + the
 // ranged strike) and `kind: 'reload'` so handleUse routes it to the picker.
+//
+// A nock weapon (#1270, AA1 — bow/crossbow with typed ammo, single slot) gets
+// the same tile as "Nock <weapon>" at the strike's Reload cost (0 for a bow —
+// renders the free-action glyph). Its sheet omits the infinite default: the
+// tile only exists to load a carried special.
 const makeReloadTile = (item, strike) => {
   uid += 1;
-  const capacity = weaponCapacity(strike);
-  const cost = reloadCost(strike) ?? 1;
+  const nock = !isCapacityWeapon(strike);
+  const capacity = strikeAmmoCapacity(strike);
+  const cost = reloadCost(strike) ?? (nock ? 0 : 1);
   return {
     id: `reload-${item.uid || item.name}-${uid}`,
-    name: `Reload ${item.name}`,
+    name: `${nock ? 'Nock' : 'Reload'} ${item.name}`,
     origin: 'reload',
     kind: 'reload',
     cost,
@@ -156,6 +164,7 @@ const makeReloadTile = (item, strike) => {
       weaponName: item.name,
       capacity,
       reloadCost: cost,
+      nock,
       strike,
       requiresTarget: false,
     },
@@ -227,15 +236,24 @@ export function buildActionCatalog({ actions = [], strikes = [], reactions = [],
   // Reload tiles (#675) — for each held capacity weapon with an empty chamber,
   // a 1-action Reload that opens the ammo sheet. Gated on held (itemAbilitiesActive)
   // so it disappears when the weapon is sheathed, and hidden when fully loaded.
+  //
+  // Nock weapons (#1270, AA1) additionally require an eligible special in the
+  // carried inventory (containers flattened, so a quivered arrow counts): plain
+  // arrows never need loading, so with no specials there is nothing to nock.
+  const flatInventory = flattenInventory(inventory);
   inventory.forEach((item) => {
     if (!item || !item.strikes || !itemAbilitiesActive(item)) return;
     const strikeList = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
-    const capStrike = strikeList.find((s) => isCapacityWeapon(s));
-    if (!capStrike) return;
-    const capacity = weaponCapacity(capStrike);
+    const ammoStrike = strikeList.find((s) => strikeAmmoCapacity(s) != null);
+    if (!ammoStrike) return;
+    const capacity = strikeAmmoCapacity(ammoStrike);
     const state = normalizeChamberState((chambers || {})[item.uid], capacity);
     if (nextEmptyChamber(state) < 0) return; // fully loaded
-    tiles.push(makeReloadTile(item, capStrike));
+    if (!isCapacityWeapon(ammoStrike)
+      && !flatInventory.some((it) => isAmmoEligible(it, ammoStrike) && (it.quantity ?? 1) > 0)) {
+      return; // nock weapon with no carried special ammo
+    }
+    tiles.push(makeReloadTile(item, ammoStrike));
   });
 
   // Reactions & Free (#424) — one cost group ('rf'), filterable by their own

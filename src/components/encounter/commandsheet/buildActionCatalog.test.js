@@ -241,6 +241,54 @@ describe('reload tiles (#675)', () => {
   });
 });
 
+describe('nock tiles (#1270, AA1)', () => {
+  // A held shortbow — a nock weapon: ranged, typed ammo, reload 0, no capacity.
+  const bow = {
+    uid: 'bow-1',
+    name: 'Shortbow',
+    state: 'held1',
+    strikes: [{ name: 'Shortbow', type: 'ranged', reload: 0, ammoType: 'arrow' }],
+  };
+  const sleepArrow = {
+    uid: 'arrow-1',
+    name: 'Sleep Arrow',
+    quantity: 1,
+    ammunition: { types: ['arrow'], activate: 0, effectId: 'sleep-arrow', onHit: true },
+  };
+
+  it('emits a free-cost Nock tile while eligible special ammo is carried', () => {
+    const tiles = buildActionCatalog({ inventory: [bow, sleepArrow] });
+    const nock = tiles.filter((t) => t.kind === 'reload');
+    expect(nock).toHaveLength(1);
+    expect(nock[0].name).toBe('Nock Shortbow');
+    expect(nock[0].cost).toBe(0); // reload 0 — renders the free-action glyph
+    expect(nock[0].raw).toMatchObject({ kind: 'reload', weaponUid: 'bow-1', capacity: 1, nock: true });
+  });
+
+  it('finds special ammo inside a carried container (quiver)', () => {
+    const quiver = { uid: 'q-1', name: 'Quiver', state: 'worn', container: { contents: [sleepArrow] } };
+    const tiles = buildActionCatalog({ inventory: [bow, quiver] });
+    expect(tiles.some((t) => t.name === 'Nock Shortbow')).toBe(true);
+  });
+
+  it('emits no Nock tile without carried special ammo — plain arrows never load', () => {
+    const tiles = buildActionCatalog({ inventory: [bow] });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+
+  it('emits no Nock tile when the ammo does not fit the bow', () => {
+    const bolt = { ...sleepArrow, ammunition: { ...sleepArrow.ammunition, types: ['bolt'] } };
+    const tiles = buildActionCatalog({ inventory: [bow, bolt] });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+
+  it('hides the Nock tile while a special is already nocked', () => {
+    const nocked = { chambers: [{ name: 'Sleep Arrow' }], pointer: 0 };
+    const tiles = buildActionCatalog({ inventory: [bow, sleepArrow], chambers: { 'bow-1': nocked } });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+});
+
 describe('ally-support flag (#429)', () => {
   it('flags Battle Medicine / Healing-trait actions as support; basics are not', () => {
     const tiles = buildActionCatalog({

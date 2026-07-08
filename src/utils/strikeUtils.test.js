@@ -437,6 +437,48 @@ describe('chambered weapon gate (#672, S2)', () => {
   });
 });
 
+describe('nock weapon single-slot load (#1270, AA1)', () => {
+  // A held shortbow: ranged strike with typed ammo (arrow), reload 0, no capacity.
+  const heldBow = {
+    uid: 'e-bow', id: 'shortbow', name: 'Shortbow', state: 'held1',
+    strikes: [
+      { name: 'Shortbow', proficiency: 'martial', type: 'ranged', damage: '1d6', reload: 0, ammoType: 'arrow', traits: ['Attack', 'Ranged'] },
+    ],
+  };
+  const sleepArrow = { name: 'Sleep Arrow', item: 'Sleep Arrow', default: false, activate: 0, onHit: true, effectId: 'sleep-arrow' };
+  const bowWith = (chambers) =>
+    getStrikes({ ...minimalCharacter, inventory: [heldBow] }, chambers)
+      .find((s) => s.name === 'Shortbow');
+
+  test('the bow joins the chamber rail with a single slot but stays active when empty', () => {
+    const bow = bowWith({});
+    expect(bow.capacity).toBe(1);
+    expect(bow.nock).toBe(true);
+    expect(bow.chambersLoaded).toBe(0);
+    expect(bow.loaded).toBe(false);
+    expect(bow.active).toBe(true); // plain arrows are infinite — no load gate
+    expect(bow.weaponUid).toBe('e-bow'); // fire resolver reaches the overlay
+  });
+
+  test('a nocked special surfaces as the loaded slot', () => {
+    const bow = bowWith({ 'e-bow': { chambers: [sleepArrow], pointer: 0 } });
+    expect(bow.chambersLoaded).toBe(1);
+    expect(bow.loaded).toBe(true);
+    expect(bow.active).toBe(true);
+  });
+
+  test('a ranged strike without an ammoType is untouched by the rail', () => {
+    const javelin = {
+      uid: 'e-jav', name: 'Javelin', state: 'held1',
+      strikes: [{ name: 'Javelin', proficiency: 'martial', type: 'ranged', damage: '1d6', traits: ['Attack', 'Thrown 30 ft.'] }],
+    };
+    const strike = getStrikes({ ...minimalCharacter, inventory: [javelin] }, {})
+      .find((s) => s.name === 'Javelin');
+    expect('capacity' in strike).toBe(false);
+    expect('nock' in strike).toBe(false);
+  });
+});
+
 describe('thrown Strike tagging (#1230)', () => {
   // A dagger-style thrown weapon: authored melee Strike + ranged throw.
   const dagger = (extra = {}) => ({

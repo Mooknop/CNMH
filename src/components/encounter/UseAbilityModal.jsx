@@ -724,7 +724,7 @@ const UseAbilityModal = ({
         type:   'action',
         charId: character.id,
         text:   `${character.name} fires the ${ability.source || ability.name} — ${ref?.name || 'bolt'}`
-          + ` (chamber ${selectedFireIdx + 1})${appliedOnHit ? ` · ${ref.name} effect applied` : ''}`,
+          + ` (${ability.nock ? 'nocked' : `chamber ${selectedFireIdx + 1}`})${appliedOnHit ? ` · ${ref.name} effect applied` : ''}`,
       });
     };
 
@@ -1675,12 +1675,13 @@ const UseAbilityModal = ({
       </section>
 
       {/* Chamber selection (#676) — which loaded chamber to fire. Defaults to the
-          auto-advance pointer; firing special ammo adds its Activate cost. */}
+          auto-advance pointer; firing special ammo adds its Activate cost. A nock
+          weapon (#1270) has a single slot, so this reads "Nocked: <ammo>". */}
       {isChamberedFire && loadedChambers.length > 0 && (
         <>
           <hr className="ct-divider" />
           <section className="ct-section">
-            <h3 className="ct-section-title">Chamber</h3>
+            <h3 className="ct-section-title">{ability.nock ? 'Ammunition' : 'Chamber'}</h3>
             <div className="uam-cost-options" role="radiogroup" aria-label="Chamber to fire">
               {loadedChambers.map(({ index, ref }) => (
                 <label key={index} className="uam-cost-option">
@@ -1690,7 +1691,7 @@ const UseAbilityModal = ({
                     checked={selectedFireIdx === index}
                     onChange={() => setFireChamberIdx(index)}
                   />
-                  Chamber {index + 1}: {ref.name}
+                  {ability.nock ? 'Nocked' : `Chamber ${index + 1}`}: {ref.name}
                   {ref.activate > 0 ? ` (+${ref.activate} to fire)` : ''}
                 </label>
               ))}
