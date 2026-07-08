@@ -69,10 +69,12 @@ const PartyWealth = () => {
         
         items.push(itemWithContext);
         
-        // Check if item is a container with contents
-        if (item.contents && Array.isArray(item.contents) && item.contents.length > 0) {
+        // Resolved containers carry their contents at item.container.contents
+        // (see resolveInventoryItem in contentUtils.js / flattenInventory)
+        const contents = item.container?.contents;
+        if (Array.isArray(contents) && contents.length > 0) {
           extractAllItems(
-            item.contents, 
+            contents,
             character, 
             charIndex, 
             `container-${itemIndex}`,
