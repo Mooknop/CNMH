@@ -2863,6 +2863,7 @@
         "damage": "1d8",
         "range": "120ft",
         "reload": 1,
+        "ammoType": "bolt",
         "traits": [
           "Attack",
           "Ranged"
@@ -5646,6 +5647,7 @@
         "type": "ranged",
         "damage": "1d6",
         "range": "60ft",
+        "ammoType": "arrow",
         "traits": [
           "Attack",
           "Deadly d10",
@@ -6074,6 +6076,7 @@
         "type": "ranged",
         "damage": "1d8",
         "range": "100 feet",
+        "ammoType": "arrow",
         "traits": [
           "Attack",
           "Deadly D10",
@@ -9506,6 +9509,7 @@
         "type": "ranged",
         "damage": "1d6",
         "range": "60ft",
+        "ammoType": "arrow",
         "traits": [
           "Attack",
           "Deadly d10",
@@ -9833,7 +9837,33 @@
     ],
     "price": 11,
     "weight": 0,
-    "description": "Sleep arrows often have shafts of deep blue or black, and their fletching is exceptionally soft and downy. An activated sleep arrow deals no damage, but a living creature hit by it is subject to the effects of a sleep spell (DC 17)."
+    "description": "Sleep arrows often have shafts of deep blue or black, and their fletching is exceptionally soft and downy. An activated sleep arrow deals no damage, but a living creature hit by it is subject to the effects of a sleep spell (DC 17).\n\nCritical Success The creature is unaffected.\nSuccess The creature takes a –1 status penalty to Perception checks for 1 round.\nFailure The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.\nCritical Failure The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically.",
+    "ammunition": {
+      "types": ["arrow"],
+      "activate": 1,
+      "traits": ["Manipulate"],
+      "onHit": true,
+      "save": {
+        "stat": "will",
+        "dc": 17,
+        "rank": 1,
+        "conditions": {
+          "failure": [
+            {
+              "id": "unconscious",
+              "note": "doesn't fall prone or release what it's holding; wakes automatically if still unconscious after 1 minute, or earlier on a successful Perception check"
+            }
+          ],
+          "criticalFailure": [
+            {
+              "id": "unconscious",
+              "note": "doesn't fall prone or release what it's holding; wakes automatically if still unconscious after 1 hour, or earlier on a successful Perception check"
+            }
+          ]
+        }
+      },
+      "note": "Sleep spell rider — on a Success the target takes a –1 status penalty to Perception checks for 1 round."
+    }
   },
   {
     "name": "Sleeves of Storage",
@@ -11057,7 +11087,40 @@
     ],
     "price": 130,
     "weight": 0,
-    "description": "The head of this arrow is made from gleaming copper. When an activated storm arrow hits a target, it is buffeted by raging winds and struck by a bolt of lightning that deals 3d12 electricity damage, and the target attempts a basic Reflex save (the DC increases to 27 if the arrow is shot from a weapon with a shock property rune). On a failure, the foe is also buffeted by winds for 1 round, taking a –2 circumstance penalty to ranged attack rolls and a –10-foot circumstance penalty to its fly Speed."
+    "description": "The head of this arrow is made from gleaming copper. When an activated storm arrow hits a target, it's buffeted by raging winds and struck by a bolt of lightning that deals 3d12 electricity damage, and the target must attempt a DC 25 Reflex saving throw. If this arrow is shot from a weapon with a shock property rune, the save DC increases to 27, though the attack doesn't benefit from the shock property rune itself.\n\nCritical Success The creature is unaffected.\nSuccess The creature takes half damage and isn't affected by the wind.\nFailure The creature takes full damage and is buffeted by winds for 1 round, taking a –2 circumstance penalty to ranged attack rolls and a –10-foot circumstance penalty to its fly Speed.\nCritical Failure As failure, but the creature takes double damage.",
+    "ammunition": {
+      "types": ["arrow"],
+      "activate": 1,
+      "traits": ["Manipulate"],
+      "onHit": true,
+      "damage": {
+        "dice": "3d12",
+        "type": "electricity"
+      },
+      "save": {
+        "stat": "reflex",
+        "dc": 25,
+        "basic": true,
+        "dcBump": {
+          "rune": "shock",
+          "dc": 27
+        },
+        "conditions": {
+          "failure": [
+            {
+              "id": "buffeted",
+              "note": "1 round — –2 circumstance penalty to ranged attack rolls, –10-foot circumstance penalty to fly Speed"
+            }
+          ],
+          "criticalFailure": [
+            {
+              "id": "buffeted",
+              "note": "1 round — –2 circumstance penalty to ranged attack rolls, –10-foot circumstance penalty to fly Speed"
+            }
+          ]
+        }
+      }
+    }
   },
   {
     "id": "storm-hammer",
