@@ -20,6 +20,35 @@ function combine(...parts) {
 }
 
 /**
+ * Augment a stored condition list ({ id, value } entries) with the
+ * Bulk-derived encumbrance pair (SP3, #1222): carrying more than the
+ * encumbered threshold makes you Encumbered (−10 ft Speed) and Clumsy 1, per
+ * PF2e. Both land through this rail — NOT hand-rolled penalties — so the
+ * existing condition engine (computeConditionEffects / hydrateConditions)
+ * nets them with normal stacking. Added entries carry `derived: true` so the
+ * tracker renders them non-removable; a manually-tracked Encumbered or Clumsy
+ * is left alone (an existing Clumsy of any value already covers the derived
+ * value 1). `derived` false ⇒ passthrough (the GM/player override toggle, or
+ * simply not over-Bulk).
+ *
+ * @param {Array}   stored  - synced cnmh_conditions_ entries
+ * @param {boolean} derived - Bulk exceeds the threshold AND auto-derive is on
+ * @returns {Array} the (possibly augmented) stored-shape list
+ */
+export function withDerivedEncumbrance(stored, derived) {
+  const list = Array.isArray(stored) ? stored : [];
+  if (!derived) return list;
+  const out = [...list];
+  if (!out.some((c) => c?.id === 'encumbered')) {
+    out.push({ id: 'encumbered', value: null, derived: true });
+  }
+  if (!out.some((c) => c?.id === 'clumsy')) {
+    out.push({ id: 'clumsy', value: 1, derived: true });
+  }
+  return out;
+}
+
+/**
  * Compute all condition-derived penalties for the character sheet.
  *
  * @param {Array}  activeConditions  - from StatsBlock state

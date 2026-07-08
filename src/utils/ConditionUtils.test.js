@@ -1,4 +1,4 @@
-import { computeConditionEffects } from './ConditionUtils';
+import { computeConditionEffects, withDerivedEncumbrance } from './ConditionUtils';
 
 // Helpers to build active condition objects quickly
 const valued = (id, value) => ({ id, value });
@@ -391,5 +391,46 @@ describe('computeConditionEffects', () => {
       const { meleeAttack } = computeConditionEffects([valued('frightened', 1), toggle('prone')]);
       expect(meleeAttack.sources).toHaveLength(2);
     });
+  });
+});
+
+describe('withDerivedEncumbrance (SP3 #1222)', () => {
+  it('is a passthrough when not derived', () => {
+    const stored = [{ id: 'frightened', value: 2 }];
+    expect(withDerivedEncumbrance(stored, false)).toBe(stored);
+    expect(withDerivedEncumbrance(undefined, false)).toEqual([]);
+  });
+
+  it('appends derived Encumbered + Clumsy 1 when over Bulk', () => {
+    expect(withDerivedEncumbrance([], true)).toEqual([
+      { id: 'encumbered', value: null, derived: true },
+      { id: 'clumsy', value: 1, derived: true },
+    ]);
+  });
+
+  it('leaves a manually-tracked Encumbered or Clumsy alone', () => {
+    const manual = [
+      { id: 'encumbered', value: null },
+      { id: 'clumsy', value: 3 },
+    ];
+    expect(withDerivedEncumbrance(manual, true)).toEqual(manual);
+  });
+
+  it('adds only the missing half of the pair', () => {
+    const out = withDerivedEncumbrance([{ id: 'clumsy', value: 2 }], true);
+    expect(out).toEqual([
+      { id: 'clumsy', value: 2 },
+      { id: 'encumbered', value: null, derived: true },
+    ]);
+  });
+
+  it('the derived pair nets through the condition engine (speed −10, dex effects via clumsy)', () => {
+    const effects = computeConditionEffects(
+      withDerivedEncumbrance([], true).map((c) => ({ ...c })),
+      'strength',
+      1,
+    );
+    expect(effects.speed).toEqual({ total: -10, sources: [{ label: 'Encumbered', penalty: -10 }] });
+    expect(effects.ac.total).toBe(-1); // Clumsy 1 status to AC
   });
 });
