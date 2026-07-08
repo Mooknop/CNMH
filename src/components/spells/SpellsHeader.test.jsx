@@ -32,7 +32,7 @@ describe('SpellsHeader', () => {
       spellStats: { spellAttackMod: 6, spellDC: 16 },
       flags: { hasFocusSpells: true },
     };
-    mockVeracious = { itemBonus: 0, imbuedRunes: [], armed: false, arm: vi.fn(), disarm: vi.fn() };
+    mockVeracious = { itemBonus: 0, imbuedRunes: [], imbuedRiders: [], armed: false, arm: vi.fn(), disarm: vi.fn() };
   });
 
   it('renders without crashing', () => {
@@ -108,6 +108,25 @@ describe('SpellsHeader', () => {
       expect(screen.getByText('16')).toBeInTheDocument(); // DC unchanged
       expect(screen.getByRole('button', { name: /Veracious Spell armed · \+2/ })).toBeInTheDocument();
       expect(screen.getByText(/Imbued: Energy, Calling/)).toBeInTheDocument();
+    });
+
+    it('renders imbued-rune rider text while armed (#974)', () => {
+      mockVeracious = {
+        ...mockVeracious, itemBonus: 2, armed: true, imbuedRunes: ['Immobilizing'],
+        imbuedRiders: [{ rune: 'Immobilizing', text: 'On a critical spell attack, the target is immobilized.' }],
+      };
+      render(<SpellsHeader character={mockCharacter} />);
+      expect(screen.getByText(/On a critical spell attack, the target is immobilized\./)).toBeInTheDocument();
+      expect(screen.getByText('Immobilizing:')).toBeInTheDocument();
+    });
+
+    it('hides rider text while disarmed', () => {
+      mockVeracious = {
+        ...mockVeracious, itemBonus: 2, armed: false,
+        imbuedRiders: [{ rune: 'Immobilizing', text: 'On a critical spell attack, the target is immobilized.' }],
+      };
+      render(<SpellsHeader character={mockCharacter} />);
+      expect(screen.queryByText(/target is immobilized/)).not.toBeInTheDocument();
     });
 
     it('arm and disarm are wired to the toggle', () => {

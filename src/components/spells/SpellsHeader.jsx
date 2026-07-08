@@ -18,7 +18,7 @@ const SpellsHeader = ({ character }) => {
   // Veracious Spell (#967 R7): an invested power ring lets a player arm the
   // ring's item bonus onto their NEXT spell attack. Display-only — it boosts the
   // shown Atk (never the DC) while armed and surfaces a reminder.
-  const { itemBonus, imbuedRunes, armed, arm, disarm } = useVeracious(character?.id, inventory || []);
+  const { itemBonus, imbuedRunes, imbuedRiders, armed, arm, disarm } = useVeracious(character?.id, inventory || []);
   const veracious = itemBonus > 0; // a power ring is invested with a bonus
   const shownAtk = spellAttackMod + (armed ? itemBonus : 0);
 
@@ -76,6 +76,7 @@ const SpellsHeader = ({ character }) => {
             className="veracious-toggle"
             aria-pressed={armed}
             onClick={armed ? disarm : arm}
+            title="Once per 10 minutes — the cantrip chosen at daily preparations ignores this frequency."
           >
             {armed ? `Veracious Spell armed · +${itemBonus} to next spell attack` : 'Arm Veracious Spell'}
           </button>
@@ -83,6 +84,15 @@ const SpellsHeader = ({ character }) => {
             <span className="veracious-runes">
               Imbued: {imbuedRunes.join(', ')} — effects apply to a spell attack modified by Veracious Spell.
             </span>
+          )}
+          {armed && imbuedRiders.length > 0 && (
+            <ul className="veracious-riders">
+              {imbuedRiders.map((r, i) => (
+                <li key={i}>
+                  <strong>{r.rune}:</strong> {r.text}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
