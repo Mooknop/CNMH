@@ -16,6 +16,7 @@ import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
+import { speedModifier } from '../../utils/speed';
 
 const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities');
@@ -557,10 +558,15 @@ const StatsBlock = ({ character, characterColor }) => {
           <span className="attribute-label">Size</span>
           <span className="attribute-value">{size || 'teeny weeny'}</span>
         </div>
+        {/* Speed spine (SP1, #1220): useCharacter derives the total (base +
+            conditions + effect stat:'speed' mods, floored at 5 ft). Do NOT
+            layer mod('speed') here — that channel is already inside the
+            derivation, and re-applying it would double-count mutagens et al.
+            The breakdown rides PenaltyDisplay's tooltip like every other stat. */}
         <div className="attribute">
           <span className="attribute-label">Speed</span>
           <span className="attribute-value">
-            <PenaltyDisplay base={speed || 69} penalty={mod('speed')} /> feet
+            <PenaltyDisplay base={speed?.base ?? 0} penalty={speedModifier(speed)} /> feet
           </span>
         </div>
         {senses && (
