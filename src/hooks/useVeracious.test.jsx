@@ -20,6 +20,12 @@ vi.mock('./useInvested', () => ({
   useInvested: () => ({ isInvested: (uid) => investedUids.has(uid) }),
 }));
 
+// Controllable rune catalog — imbued ids hydrate against this.
+let mockRunes = [];
+vi.mock('../contexts/ContentContext', () => ({
+  useContent: () => ({ runes: mockRunes }),
+}));
+
 import { __reset } from './useSyncedState';
 import { useVeracious } from './useVeracious';
 
@@ -29,7 +35,7 @@ const ring = (uid, itemBonus, property) => ({
   traits: ['Invested', 'Magical'],
 });
 
-beforeEach(() => { __reset(); investedUids = new Set(); });
+beforeEach(() => { __reset(); investedUids = new Set(); mockRunes = []; });
 
 describe('useVeracious (#967 R7)', () => {
   it('finds the invested power ring and its item bonus', () => {
@@ -73,5 +79,33 @@ describe('useVeracious (#967 R7)', () => {
     const { result } = renderHook(() =>
       useVeracious('P', [ring('pr1', 2, ['ring-energy', { id: 'ring-calling', name: 'Calling' }])]));
     expect(result.current.imbuedRunes).toEqual(['ring-energy', 'Calling']);
+  });
+
+  it('hydrates imbued ids against the rune catalog for names', () => {
+    investedUids = new Set(['pr1']);
+    mockRunes = [{ id: 'ring-energy', name: 'Energy', target: 'ring' }];
+    const { result } = renderHook(() => useVeracious('P', [ring('pr1', 2, ['ring-energy'])]));
+    expect(result.current.imbuedRunes).toEqual(['Energy']);
+  });
+
+  it('surfaces imbued-rune rider text from the catalog (#974)', () => {
+    investedUids = new Set(['pr1']);
+    mockRunes = [
+      {
+        id: 'ring-immobilizing', name: 'Immobilizing', target: 'ring',
+        riders: [{ id: 'r1', text: 'On a critical spell attack, the target is immobilized (Escape DC 30).' }],
+      },
+      { id: 'ring-energy', name: 'Energy', target: 'ring' }, // no riders
+    ];
+    const { result } = renderHook(() =>
+      useVeracious('P', [ring('pr1', 2, ['ring-immobilizing', 'ring-energy'])]));
+    expect(result.current.imbuedRiders).toEqual([
+      { rune: 'Immobilizing', text: 'On a critical spell attack, the target is immobilized (Escape DC 30).' },
+    ]);
+  });
+
+  it('yields no riders without a ring or without rider-bearing runes', () => {
+    const { result } = renderHook(() => useVeracious('P', [ring('pr1', 2, ['ring-energy'])]));
+    expect(result.current.imbuedRiders).toEqual([]); // ring not invested
   });
 });
