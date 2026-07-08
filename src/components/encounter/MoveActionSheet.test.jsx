@@ -201,8 +201,47 @@ describe('MoveActionSheet', () => {
         speed: 25,
       }));
       expect(screen.getByLabelText('Speed parity note')).toHaveTextContent(
-        'Foundry says 25 ft; the sheet derives 30 ft.'
+        "Using the sheet's 30 ft; Foundry's actor says 25 ft."
       );
+      // The budget display reads the authoritative (derived) number too.
+      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('0/30 ft');
+      Date.now.mockRestore();
+    });
+
+    it('charges Stride actions against the derived speed even when Foundry disagrees', () => {
+      // App-authoritative accounting: the Foundry actor doesn't model
+      // app-owned gear/feats, so its (higher) speed must NOT stretch the
+      // Stride budget. Derived 10 ft vs Foundry 25 ft → 2 steps = 1 action.
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      const shortRunner = { ...runner, id: 'Runner3', speed: 10 };
+      let tsDriver, setOpts, setDone;
+      render(
+        <>
+          <TurnDriver charId="Runner3" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_moveopts_Runner3" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_movedone_Runner3" onReady={(s) => (setDone = s)} />
+          <MoveActionSheet character={shortRunner} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      const stepEastFoundryFast = () => {
+        act(() => setOpts({
+          reqTs: 555,
+          origin: { col: 5, row: 5 },
+          reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+          blocked: [],
+          speed: 25,
+        }));
+        fireEvent.click(screen.getByLabelText('Step east'));
+        act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
+      };
+
+      stepEastFoundryFast();
+      stepEastFoundryFast();
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('10/10 ft');
+      // Step 3 crosses the DERIVED 10 ft (well under Foundry's 25) → action 2.
+      stepEastFoundryFast();
+      expect(tsDriver.turnState.actionsSpent).toBe(2);
       Date.now.mockRestore();
     });
 
