@@ -54,6 +54,10 @@ const defaultCharData = {
     derived: true,
     breakdown: [{ label: 'Base Speed', amount: 25, type: 'base' }],
   },
+  // Bulk-derived encumbrance (SP3, #1222) — not over Bulk by default.
+  encumbrance: { overBulk: false, auto: true, derived: false, setAuto: vi.fn() },
+  totalBulk: 3,
+  bulkStats: { bulkLimit: 10, encumberedThreshold: 5 },
   senses: 'Low-light vision'
 };
 
@@ -553,6 +557,49 @@ describe('StatsBlock', () => {
       fireEvent.click(screen.getByLabelText('Dismiss kinetic aura'));
       expect(screen.getByText('Inactive')).toBeInTheDocument();
       expect(screen.queryByText('◈ Active')).toBeNull();
+    });
+  });
+
+  describe('Bulk-derived encumbrance (SP3 #1222)', () => {
+    const encumberedData = {
+      ...defaultCharData,
+      encumbrance: { overBulk: true, auto: true, derived: true, setAuto: vi.fn() },
+      totalBulk: 8,
+      speed: {
+        base: 25,
+        total: 15,
+        derived: true,
+        breakdown: [
+          { label: 'Base Speed', amount: 25, type: 'base' },
+          { label: 'Encumbered', amount: -10, type: 'penalty' },
+        ],
+      },
+    };
+
+    it('derived Encumbered + Clumsy raise the badge and render as auto rows', () => {
+      mockUseCharacter.mockReturnValue(encumberedData);
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // Badge counts the two derived conditions.
+      expect(screen.getByText('2')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      // Both derived rows carry the auto tag and no remove control.
+      expect(screen.getAllByText('auto')).toHaveLength(2);
+      expect(screen.queryByTitle('Remove condition')).toBeNull();
+    });
+
+    it('the modal exposes the auto-derive toggle wired to setAuto', () => {
+      mockUseCharacter.mockReturnValue(encumberedData);
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      fireEvent.click(screen.getByLabelText('Derive Encumbered from carried Bulk'));
+      expect(encumberedData.encumbrance.setAuto).toHaveBeenCalledWith(false);
+    });
+
+    it('no derived rows when under the threshold', () => {
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.getByText('—')).toBeInTheDocument(); // badge em-dash
+      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      expect(screen.queryByText('auto')).toBeNull();
     });
   });
 

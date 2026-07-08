@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { useCharacter } from './useCharacter';
 import { getFreeActions } from '../utils/ActionsUtils';
+import { calculateEnhancedBulkLimit } from '../utils/CharacterUtils';
 import { resolveCharacterItems } from '../utils/contentUtils';
 import { items, spells } from '../data';
 
@@ -17,7 +18,10 @@ vi.mock('../utils/CharacterUtils', () => ({
     athletics: 'strength'
   },
   calculateClassDC: vi.fn((level) => 10 + level),
-  calculateEnhancedBulkLimit: vi.fn((char) => 10),
+  // Real shape ({ bulkLimit, encumberedThreshold }); calculateItemsBulk is
+  // mocked to 5 in this file, so the default threshold (5) is NOT exceeded
+  // (over-Bulk is strictly greater). Encumbrance tests override per-test.
+  calculateEnhancedBulkLimit: vi.fn(() => ({ bulkLimit: 10, encumberedThreshold: 5 })),
   hasFeat: vi.fn(() => false),
   FEAT_NAMES: {
     FAMILIAR: 'Familiar',
@@ -666,6 +670,101 @@ describe('useCharacter', () => {
         })));
         expect(result.current.speed.total).toBe(5);
         expect(result.current.speed.breakdown.some((r) => r.type === 'floor')).toBe(true);
+      });
+    });
+
+    // SP3 (#1222): worn-gear speed bonuses + Bulk-derived encumbrance.
+    describe('worn-gear bonuses + encumbrance (SP3 #1222)', () => {
+      const boots = {
+        uid: 'runner-boots',
+        name: 'Boots of Bounding',
+        traits: ['Invested', 'Magical'],
+        modifiers: [{ stat: 'speed', kind: 'item', amount: 5 }],
+      };
+
+      it('worn-and-invested speed gear grants its item bonus', () => {
+        localStorage.setItem('cnmh_invested_runner', JSON.stringify({ 'runner-boots': true }));
+        const { result } = renderHook(() => useCharacter(runner({ inventory: [boots] })));
+        expect(result.current.speed.total).toBe(30);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Boots of Bounding', amount: 5, type: 'bonus' }
+        );
+      });
+
+      it('uninvested boots grant nothing', () => {
+        const { result } = renderHook(() => useCharacter(runner({ inventory: [boots] })));
+        expect(result.current.speed.total).toBe(25);
+      });
+
+      it('item bonus stacks with a status bonus, but not with another item bonus', () => {
+        localStorage.setItem('cnmh_invested_runner', JSON.stringify({
+          'runner-boots': true, 'runner-boots2': true,
+        }));
+        // Drums of War (+5 status, real catalog) + two item-bonus speed
+        // items: status stacks, items collapse to the highest (+10).
+        localStorage.setItem(
+          'cnmh_effects_runner',
+          JSON.stringify([{ id: 'e1', effectId: 'coda-drums-playing' }])
+        );
+        const boots2 = {
+          uid: 'runner-boots2',
+          name: 'Greater Boots of Bounding',
+          traits: ['Invested', 'Magical'],
+          modifiers: [{ stat: 'speed', kind: 'item', amount: 10 }],
+        };
+        const { result } = renderHook(() => useCharacter(runner({ inventory: [boots, boots2] })));
+        // 25 + 10 (best item) + 5 (status) = 40
+        expect(result.current.speed.total).toBe(40);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Greater Boots of Bounding', amount: 10, type: 'bonus' }
+        );
+        expect(result.current.speed.breakdown).not.toContainEqual(
+          expect.objectContaining({ label: 'Boots of Bounding' })
+        );
+      });
+
+      it('over-Bulk derives Encumbered (−10 speed) + Clumsy 1 and flags encumbrance', () => {
+        // totalBulk is mocked to 5 in this file; drop the threshold under it.
+        calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 9, encumberedThreshold: 4 });
+        const { result } = renderHook(() => useCharacter(runner()));
+        expect(result.current.encumbrance).toMatchObject({
+          overBulk: true, auto: true, derived: true,
+        });
+        expect(typeof result.current.encumbrance.setAuto).toBe('function');
+        expect(result.current.speed.total).toBe(15);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Encumbered', amount: -10, type: 'penalty' }
+        );
+      });
+
+      it('exactly at the threshold is NOT encumbered', () => {
+        calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 10, encumberedThreshold: 5 });
+        const { result } = renderHook(() => useCharacter(runner()));
+        expect(result.current.encumbrance.overBulk).toBe(false);
+        expect(result.current.speed.total).toBe(25);
+      });
+
+      it('the cnmh_encauto_ override suppresses the derivation', () => {
+        calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 9, encumberedThreshold: 4 });
+        localStorage.setItem('cnmh_encauto_runner', JSON.stringify(false));
+        const { result } = renderHook(() => useCharacter(runner()));
+        expect(result.current.encumbrance).toMatchObject({
+          overBulk: true, auto: false, derived: false,
+        });
+        expect(result.current.speed.total).toBe(25);
+      });
+
+      it('a manually-tracked Encumbered still applies once (no derived duplicate)', () => {
+        calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 9, encumberedThreshold: 4 });
+        localStorage.setItem(
+          'cnmh_conditions_runner',
+          JSON.stringify([{ id: 'encumbered', value: null }])
+        );
+        const { result } = renderHook(() => useCharacter(runner()));
+        expect(result.current.speed.total).toBe(15);
+        expect(
+          result.current.speed.breakdown.filter((r) => r.label === 'Encumbered')
+        ).toHaveLength(1);
       });
     });
   });

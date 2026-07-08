@@ -148,6 +148,40 @@ export const wornBonusSlots = (inventory, isInvested, tradition) => {
 };
 
 /**
+ * Synthetic active-effect pairs for worn gear granting a Speed modifier
+ * (SP3, #1222 — Boots of Bounding's +5 item bonus). Same `{ entry, def }`
+ * shape as useWornGear's rail, but consumed by the Speed spine in useCharacter
+ * (via computeEffectBonuses, so PF2e item-bonus stacking applies — highest
+ * item wins vs other item speed bonuses, stacks with status/circumstance).
+ * Deliberately NOT part of useWornGear's SUPPORTED_STATS universe: the spine
+ * is the only speed apply-site, and routing these through the resolved-effects
+ * list too would leave a stray always-on chip with no netting consumer.
+ *
+ * Same contribution gate as every worn-gear reader: worn, and invested when
+ * the item carries the Invested trait.
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @returns {Array<{ entry: object, def: object }>}
+ */
+export const wornSpeedEffects = (inventory, isInvested) => {
+  const out = [];
+  for (const e of Array.isArray(inventory) ? inventory : []) {
+    if (!e || !contributes(e, isInvested)) continue;
+    const speedMods = itemModifiers(e).filter(
+      (m) => m && m.stat === 'speed' && typeof m.amount === 'number'
+    );
+    if (!speedMods.length) continue;
+    const id = `wornspeed-${e.uid}`;
+    out.push({
+      entry: { id, effectId: id },
+      def: { id, name: e.name, modifiers: speedMods },
+    });
+  }
+  return out;
+};
+
+/**
  * Highest worn-gear resistance to a damage descriptor (#900/#922). Reduces
  * matching incoming/persistent damage.
  *

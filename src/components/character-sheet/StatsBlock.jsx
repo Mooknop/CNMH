@@ -12,7 +12,7 @@ import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { usePlaying } from '../../hooks/usePlaying';
 import { characterHasKineticAura } from '../../utils/kineticAura';
-import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { computeConditionEffects, withDerivedEncumbrance } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
@@ -57,14 +57,19 @@ const StatsBlock = ({ character, characterColor }) => {
     );
   };
 
-  // Re-derive full condition objects (with `effect`) for display/computation.
-  const hydratedConditions = useMemo(
-    () => hydrateConditions(activeConditions),
-    [activeConditions]
-  );
-
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
+
+  // Re-derive full condition objects (with `effect`) for display/computation.
+  // Bulk-derived encumbrance (SP3, #1222) is appended here — Encumbered +
+  // Clumsy 1 as non-removable `derived` rows — so the tracker, the condition
+  // penalties below and EnhancedSkillsList all see the same augmented list.
+  // The Speed spine applies the same augmentation inside useCharacter.
+  const encumbranceDerived = !!charData?.encumbrance?.derived;
+  const hydratedConditions = useMemo(
+    () => hydrateConditions(withDerivedEncumbrance(activeConditions, encumbranceDerived)),
+    [activeConditions, encumbranceDerived]
+  );
 
   // The full effect universe + its catalog (Rules of Hooks: unconditional).
   // app + Foundry effects plus the synthetic raised-shield and worn-gear effects
@@ -466,14 +471,14 @@ const StatsBlock = ({ character, characterColor }) => {
             </div>
           </div>
           <button
-            className={`condition-box${activeConditions.length > 0 ? ' condition-box--active' : ''}`}
+            className={`condition-box${hydratedConditions.length > 0 ? ' condition-box--active' : ''}`}
             onClick={() => setIsConditionModalOpen(true)}
           >
             <div className="defense-name">
               CONDITIONS
             </div>
             <div className="defense-value condition-count">
-              {activeConditions.length > 0 ? activeConditions.length : '—'}
+              {hydratedConditions.length > 0 ? hydratedConditions.length : '—'}
             </div>
           </button>
         </div>
@@ -618,6 +623,9 @@ const StatsBlock = ({ character, characterColor }) => {
         onAdd={handleAddCondition}
         onRemove={handleRemoveCondition}
         onChangeValue={handleChangeValue}
+        encumbrance={charData.encumbrance}
+        totalBulk={charData.totalBulk}
+        encumberedThreshold={charData.bulkStats?.encumberedThreshold}
       />
     </div>
   );
