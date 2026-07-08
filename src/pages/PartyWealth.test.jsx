@@ -162,7 +162,10 @@ describe('PartyWealth', () => {
     expect(() => renderWithContext(characters)).not.toThrow();
   });
 
-  it('recursively extracts container contents into allPartyItems', () => {
+  it('extracts container contents (item.container.contents, the resolved model shape)', () => {
+    // Regression: extractAllItems used to read item.contents, which never
+    // exists on resolved inventory items — container contents were silently
+    // dropped from the item list and totals.
     const nestedItem = { id: 'i2', name: 'Potion', price: 2, quantity: 1, weight: 0 };
     const container = {
       id: 'c1',
@@ -170,13 +173,31 @@ describe('PartyWealth', () => {
       price: 1,
       quantity: 1,
       weight: 1,
-      contents: [nestedItem],
+      container: { capacity: 4, contents: [nestedItem] },
     };
     const characters = [makeCharacter('c1', 'Aria', [container])];
     renderWithContext(characters);
-    // Both the container and its contents should be in allPartyItems (2 items)
-    // The mock shows the click-item button when items.length > 0
-    expect(screen.getByTestId('click-item-c1')).toBeInTheDocument();
+    // Both the container and its contents count toward the party totals
+    expect(screen.getByText(/2 items/)).toBeInTheDocument();
+    // Value total includes the nested item: 1 gp (backpack) + 2 gp (potion)
+    expect(screen.getByText(/📦 3 gp/)).toBeInTheDocument();
+  });
+
+  it('counts multi-quantity container contents into the value total', () => {
+    const arrows = { id: 'i3', name: 'Arrows', price: 0.1, quantity: 20, weight: 0.1 };
+    const quiver = {
+      id: 'c2',
+      name: 'Quiver',
+      price: 1,
+      quantity: 1,
+      weight: 0.1,
+      container: { capacity: 1, contents: [arrows] },
+    };
+    const characters = [makeCharacter('c1', 'Aria', [quiver])];
+    renderWithContext(characters);
+    // 1 gp (quiver) + 0.1 * 20 (arrows) = 3 gp
+    expect(screen.getByText(/📦 3 gp/)).toBeInTheDocument();
+    expect(screen.getByText(/2 items/)).toBeInTheDocument();
   });
 
   it('shows party item count in totals', () => {
