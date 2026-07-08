@@ -1806,7 +1806,14 @@
         "label": "Greater",
         "name": "Boots of Bounding (Greater)",
         "price": 4250,
-        "effect": "The Speed bonus is +10 feet and the High Jump / Long Jump bonus is +3."
+        "effect": "The Speed bonus is +10 feet and the High Jump / Long Jump bonus is +3.",
+        "modifiers": [
+          {
+            "stat": "speed",
+            "kind": "item",
+            "amount": 10
+          }
+        ]
       }
     ],
     "description": "These springy boots lend a bounding lightness to every stride and leap.",
@@ -1816,6 +1823,13 @@
     ],
     "usage": "worn shoes",
     "weight": 0.1,
+    "modifiers": [
+      {
+        "stat": "speed",
+        "kind": "item",
+        "amount": 5
+      }
+    ],
     "id": "boots-of-bounding",
     "image": "img_d00a577e-207d-4082-8757-6bd8657f3400.jpg",
     "imagePosition": {
