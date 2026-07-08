@@ -2072,6 +2072,7 @@
       "acBonus": 4,
       "dexCap": 1,
       "strength": 16,
+      "speedPenalty": 5,
       "group": "plate"
     },
     "id": "breastplate"
@@ -2270,6 +2271,7 @@
       "acBonus": 4,
       "dexCap": 1,
       "strength": 16,
+      "speedPenalty": 5,
       "group": "chain"
     },
     "image": "img_2bf8502f-7573-4526-ac74-f58984edb14f.jpg",
@@ -3346,6 +3348,7 @@
       "acBonus": 5,
       "dexCap": 1,
       "strength": 16,
+      "speedPenalty": 10,
       "group": "plate"
     },
     "id": "dragon-turtle-plate"
@@ -4557,6 +4560,7 @@
       "acBonus": 6,
       "dexCap": 0,
       "strength": 18,
+      "speedPenalty": 10,
       "group": "plate"
     },
     "id": "full-plate"
@@ -5211,6 +5215,7 @@
       "acBonus": 5,
       "dexCap": 1,
       "strength": 16,
+      "speedPenalty": 10,
       "group": "plate"
     },
     "image": "img_76858de6-ac46-480f-bd76-6ae9a809d0d5.jpg",
@@ -5480,6 +5485,7 @@
       "acBonus": 3,
       "dexCap": 2,
       "strength": 14,
+      "speedPenalty": 5,
       "group": "leather"
     }
   },
@@ -8775,6 +8781,7 @@
       "acBonus": 3,
       "dexCap": 2,
       "strength": 14,
+      "speedPenalty": 5,
       "group": "composite"
     },
     "image": "img_d37ae439-6fc5-4707-b8fd-11e50b4c0faf.jpg",
@@ -10396,6 +10403,7 @@
       "acBonus": 5,
       "dexCap": 1,
       "strength": 16,
+      "speedPenalty": 10,
       "group": "composite"
     },
     "image": "img_c13ebf76-6074-4ce6-bcd2-37dcbde619ec.jpg",
@@ -11814,7 +11822,8 @@
       "health": 20,
       "breakThreshold": 10,
       "hardness": 5,
-      "bonus": 2
+      "bonus": 2,
+      "speedPenalty": 5
     },
     "image": "img_de7e0ead-fe8d-47da-8c37-9f391b6835f6.jpg",
     "imagePosition": {

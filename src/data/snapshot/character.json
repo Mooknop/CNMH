@@ -2394,7 +2394,7 @@
     "level": 4,
     "maxHp": 60,
     "ac": 22,
-    "speed": 20,
+    "speed": 25,
     "abilities": {
       "strength": 18,
       "dexterity": 10,
