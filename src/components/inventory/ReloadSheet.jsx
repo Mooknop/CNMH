@@ -24,10 +24,15 @@ import './ReloadSheet.css';
  * unfired reload can be unloaded without losing the item. The Reload spends the
  * weapon's Reload action cost in encounter and logs a session line.
  *
+ * Nock mode (#1270, AA1): for a nock weapon (bow/crossbow, single slot) the
+ * descriptor carries `nock: true` — the infinite default option is omitted
+ * (plain arrows never need loading), the first carried special is preselected,
+ * and the verb becomes Nock/Nocked.
+ *
  * @param {boolean}  isOpen
  * @param {Function} onClose
  * @param {Object}   reload     - the tile's raw reload descriptor:
- *                   { weaponUid, weaponName, capacity, reloadCost, strike }
+ *                   { weaponUid, weaponName, capacity, reloadCost, nock, strike }
  * @param {Object}   character  - raw character object (the loader)
  * @param {string}   themeColor
  * @param {number}   actionCost - actions to spend in encounter (the weapon's Reload). 0 out of combat.
@@ -44,7 +49,7 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
 
   if (!isOpen || !reload || !character) return null;
 
-  const { weaponUid, weaponName, capacity, strike } = reload;
+  const { weaponUid, weaponName, capacity, nock, strike } = reload;
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
 
   // The next chamber a reload fills (left-to-right). Should always be ≥0 here —
@@ -58,29 +63,37 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
   const specials = flattenInventory(charData?.inventory)
     .filter((it) => isAmmoEligible(it, strike) && (it.quantity ?? 1) > 0);
 
+  // Nock mode has no infinite default — the selection is always a special, so
+  // the initial '__default__' resolves to the first carried one.
+  const specialKey = (it) => it.uid || it.name;
+  const effectiveKey = nock && (selectedKey === '__default__' || !specials.some((it) => specialKey(it) === selectedKey))
+    ? (specials[0] ? specialKey(specials[0]) : null)
+    : selectedKey;
+  const verb = nock ? 'Nock' : 'Reload';
+
   // In-encounter log lines go to the combat log; otherwise to the session log.
   const log = encounter?.active
     ? appendLog
     : ({ type, text }) => appendEvent({ type, text });
 
   const handleConfirm = () => {
-    if (targetIndex < 0) {
+    if (targetIndex < 0 || (nock && effectiveKey == null)) {
       onClose();
       return;
     }
-    const special = selectedKey === '__default__'
+    const special = effectiveKey === '__default__'
       ? null
-      : specials.find((it) => (it.uid || it.name) === selectedKey);
+      : specials.find((it) => specialKey(it) === effectiveKey);
     const ref = special ? loadedAmmoRef(special) : bolt;
 
     load(weaponUid, targetIndex, ref, capacity);
     log({
       type: 'action',
       charId: character.id,
-      text: `${character.name} Reloaded the ${weaponName} (${ref.name})`,
+      text: `${character.name} ${verb}ed the ${weaponName} (${ref.name})`,
     });
     if (encounterMode && actionCost > 0) {
-      spendActions(actionCost, `Reload ${weaponName}`);
+      spendActions(actionCost, `${verb} ${weaponName}`);
     }
     onClose();
   };
@@ -89,7 +102,7 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Reload ${weaponName}`}
+      title={`${verb} ${weaponName}`}
       themeColor={themeColor}
       maxWidth="420px"
       placement="bottom"
@@ -97,7 +110,9 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
     >
       <section className="ct-section">
         <p className="rls-sub">
-          Chamber {targetIndex + 1} of {capacity} · choose ammunition
+          {nock
+            ? 'Choose special ammunition to nock'
+            : `Chamber ${targetIndex + 1} of ${capacity} · choose ammunition`}
         </p>
       </section>
 
@@ -105,25 +120,27 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
 
       <section className="ct-section">
         <div className="rls-picks" role="radiogroup" aria-label="Ammunition">
-          <button
-            type="button"
-            className={`rls-pick${selectedKey === '__default__' ? ' rls-pick--active' : ''}`}
-            aria-pressed={selectedKey === '__default__'}
-            onClick={() => setSelectedKey('__default__')}
-          >
-            <span className="rls-pick-name">{bolt.name}</span>
-            <span className="rls-pick-meta">∞</span>
-          </button>
+          {!nock && (
+            <button
+              type="button"
+              className={`rls-pick${effectiveKey === '__default__' ? ' rls-pick--active' : ''}`}
+              aria-pressed={effectiveKey === '__default__'}
+              onClick={() => setSelectedKey('__default__')}
+            >
+              <span className="rls-pick-name">{bolt.name}</span>
+              <span className="rls-pick-meta">∞</span>
+            </button>
+          )}
 
           {specials.map((it) => {
-            const key = it.uid || it.name;
+            const key = specialKey(it);
             const extra = it.ammunition?.activate || 0;
             return (
               <button
                 key={key}
                 type="button"
-                className={`rls-pick${selectedKey === key ? ' rls-pick--active' : ''}`}
-                aria-pressed={selectedKey === key}
+                className={`rls-pick${effectiveKey === key ? ' rls-pick--active' : ''}`}
+                aria-pressed={effectiveKey === key}
                 onClick={() => setSelectedKey(key)}
               >
                 <span className="rls-pick-name">{it.name}</span>
@@ -139,8 +156,8 @@ const ReloadSheet = ({ isOpen, onClose, reload, character, themeColor, actionCos
 
       <div className="rls-footer">
         <button className="btn-secondary" onClick={onClose}>Cancel</button>
-        <button className="btn-primary" onClick={handleConfirm} disabled={targetIndex < 0}>
-          Reload{encounterMode && actionCost > 0 ? ` (${actionCost} act)` : ''}
+        <button className="btn-primary" onClick={handleConfirm} disabled={targetIndex < 0 || (nock && effectiveKey == null)}>
+          {verb}{encounterMode && actionCost > 0 ? ` (${actionCost} act)` : ''}
         </button>
       </div>
     </Modal>

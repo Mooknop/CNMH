@@ -125,3 +125,58 @@ describe('ReloadSheet', () => {
     expect(mockSpendActions).not.toHaveBeenCalled();
   });
 });
+
+describe('ReloadSheet nock mode (#1270, AA1)', () => {
+  const bowStrike = { name: 'Shortbow', type: 'ranged', reload: 0, ammoType: 'arrow' };
+  const sleepArrow = {
+    uid: 'arrow-1',
+    name: 'Sleep Arrow',
+    quantity: 1,
+    ammunition: { types: ['arrow'], activate: 0, effectId: 'sleep-arrow', onHit: true },
+  };
+  const nockReload = {
+    kind: 'reload',
+    weaponUid: 'bow-1',
+    weaponName: 'Shortbow',
+    capacity: 1,
+    reloadCost: 0,
+    nock: true,
+    strike: bowStrike,
+  };
+
+  const renderNock = () =>
+    render(
+      <ReloadSheet isOpen onClose={vi.fn()} reload={nockReload} character={character} themeColor="#abc" actionCost={0} />
+    );
+
+  beforeEach(() => {
+    mockStateFor.mockReturnValue({ chambers: [null], pointer: 0 });
+    inventory = [sleepArrow];
+    encounterValue = { active: true, phase: 'in-progress' };
+  });
+
+  it('lists only carried specials — no infinite default — with the first preselected', () => {
+    renderNock();
+    expect(screen.queryByText('∞')).not.toBeInTheDocument();
+    const pick = screen.getByRole('button', { name: /Sleep Arrow/ });
+    expect(pick).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('nocks the selected special into the single slot and logs the Nock verb', () => {
+    renderNock();
+    fireEvent.click(screen.getByRole('button', { name: 'Nock' }));
+    expect(mockLoad).toHaveBeenCalledWith('bow-1', 0, expect.objectContaining({
+      name: 'Sleep Arrow', default: false, effectId: 'sleep-arrow',
+    }), 1);
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Ashka Nocked the Shortbow (Sleep Arrow)',
+    }));
+    expect(mockSpendActions).not.toHaveBeenCalled(); // reload 0 — no action spend
+  });
+
+  it('disables the confirm when no eligible special is carried', () => {
+    inventory = [];
+    renderNock();
+    expect(screen.getByRole('button', { name: 'Nock' })).toBeDisabled();
+  });
+});

@@ -7,7 +7,7 @@ import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
 import { dragonbreathRunes, dragonbreathDisplayName, dragonbreathStrikeDamageType } from './dragonbreath';
-import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
+import { isCapacityWeapon, strikeAmmoCapacity, normalizeChamberState, loadedCount } from './ammunition';
 import { applyWhetstoneStrikeAlterations } from './whetstone';
 
 // ── Thrown Strikes (#1230) ─────────────────────────────────────────────────────
@@ -211,13 +211,22 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
     // count) so the action tile can render e.g. "0/3 loaded" and gate firing.
     // The melee Blade strike on the same weapon is a non-capacity strike and is
     // untouched.
-    if (isCapacityWeapon(weaponStrike)) {
-      const capacity = weaponCapacity(weaponStrike);
-      const loaded = loadedCount(normalizeChamberState(chamberState, capacity));
-      strikeObj.capacity = capacity;
+    //
+    // Nock weapons (#1270, AA1) — bows/crossbows with a typed ammoType — reuse
+    // the same rail with a single slot, but the Strike stays active when empty:
+    // plain arrows are untracked/infinite, and only a nocked special is
+    // consumed/applied by the fire path.
+    const ammoCapacity = strikeAmmoCapacity(weaponStrike);
+    if (ammoCapacity != null) {
+      const loaded = loadedCount(normalizeChamberState(chamberState, ammoCapacity));
+      strikeObj.capacity = ammoCapacity;
       strikeObj.chambersLoaded = loaded;
       strikeObj.loaded = loaded > 0;
-      strikeObj.active = strikeObj.active && loaded > 0;
+      if (isCapacityWeapon(weaponStrike)) {
+        strikeObj.active = strikeObj.active && loaded > 0;
+      } else {
+        strikeObj.nock = true;
+      }
       // Carry the inventory uid so the fire resolver (#676, S4) can read the live
       // chamber overlay (refs + pointer) and write the discharge back.
       strikeObj.weaponUid = item.uid || null;

@@ -3,6 +3,8 @@ import {
   weaponCapacity,
   reloadCost,
   isCapacityWeapon,
+  isNockWeapon,
+  strikeAmmoCapacity,
   weaponAmmoType,
   ammoBlock,
   isAmmoEligible,
@@ -41,6 +43,15 @@ const beaconShot = {
     effectId: 'beacon-shot',
     onHit: true,
   },
+};
+
+// A shortbow ranged strike — a nock weapon (#1270, AA1): typed ammo, no capacity.
+const shortbow = {
+  name: 'Shortbow',
+  type: 'ranged',
+  reload: 0,
+  ammoType: 'arrow',
+  traits: ['Attack', 'Deadly d10', 'Ranged'],
 };
 
 // An elixir — a consumable, but not ammunition.
@@ -129,12 +140,47 @@ describe('isAmmoEligible', () => {
     expect(isAmmoEligible(beaconShot, sling)).toBe(false);
   });
 
-  it('rejects loading into a non-capacity weapon', () => {
-    expect(isAmmoEligible(beaconShot, { name: 'Crescent Cross Blade', traits: ['Melee'] })).toBe(false);
+  it('rejects loading into a melee strike', () => {
+    expect(isAmmoEligible(beaconShot, { name: 'Crescent Cross Blade', type: 'melee', traits: ['Melee'] })).toBe(false);
   });
 
   it('accepts when weapon declares no ammoType (any ammunition)', () => {
     expect(isAmmoEligible(beaconShot, { capacity: 3 })).toBe(true);
+  });
+
+  it('accepts matching ammo into a nock weapon — a bow (#1270)', () => {
+    expect(isAmmoEligible(beaconShot, shortbow)).toBe(true);
+  });
+
+  it('rejects type-mismatched ammo for a nock weapon', () => {
+    const sling = { name: 'Sling', type: 'ranged', reload: 0, ammoType: 'sling bullet' };
+    expect(isAmmoEligible(beaconShot, sling)).toBe(false);
+  });
+
+  it('rejects a plain ranged strike without an ammoType (e.g. a thrown dagger)', () => {
+    expect(isAmmoEligible(beaconShot, { name: 'Dagger', type: 'ranged', traits: ['Thrown 10 ft.'] })).toBe(false);
+  });
+});
+
+describe('isNockWeapon / strikeAmmoCapacity (#1270, AA1)', () => {
+  it('a bow — ranged with typed ammo, no capacity — is a nock weapon with one slot', () => {
+    expect(isNockWeapon(shortbow)).toBe(true);
+    expect(strikeAmmoCapacity(shortbow)).toBe(1);
+  });
+
+  it('a capacity weapon is not a nock weapon; its slots are its capacity', () => {
+    expect(isNockWeapon(crescentBolt)).toBe(false);
+    expect(strikeAmmoCapacity(crescentBolt)).toBe(3);
+  });
+
+  it('melee strikes and untyped ranged strikes take no ammunition', () => {
+    const blade = { name: 'Blade', type: 'melee', traits: ['Melee'] };
+    const thrown = { name: 'Dagger', type: 'ranged', traits: ['Thrown 10 ft.'] };
+    expect(isNockWeapon(blade)).toBe(false);
+    expect(isNockWeapon(thrown)).toBe(false);
+    expect(strikeAmmoCapacity(blade)).toBeNull();
+    expect(strikeAmmoCapacity(thrown)).toBeNull();
+    expect(strikeAmmoCapacity(null)).toBeNull();
   });
 });
 
