@@ -3,6 +3,7 @@ import {
   speedModifier,
   armorSpeedPenalty,
   shieldSpeedPenalty,
+  formatSpeedBreakdown,
   SPEED_FLOOR,
 } from './speed';
 import { computeEffectBonuses, combineModifiers } from './EffectUtils';
@@ -255,5 +256,30 @@ describe('speedModifier', () => {
     expect(speedModifier(deriveSpeed({ base: 30 }))).toEqual({ total: 0, sources: [] });
     expect(speedModifier(null)).toEqual({ total: 0, sources: [] });
     expect(speedModifier(25)).toEqual({ total: 0, sources: [] });
+  });
+});
+
+describe('formatSpeedBreakdown (SP4 #1223)', () => {
+  it('formats the base row plain and modifier rows signed, in breakdown order', () => {
+    const derived = deriveSpeed({
+      base: 25,
+      modifiers: {
+        total: -5,
+        sources: [{ label: 'Encumbered', penalty: -10 }, { label: 'Drums of War', bonus: 5 }],
+      },
+      gearPenalties: [{ label: 'Full Plate', amount: -5 }],
+    });
+    expect(formatSpeedBreakdown(derived)).toBe(
+      'Base Speed 25, Full Plate -5, Encumbered -10, Drums of War +5'
+    );
+  });
+
+  it('is just the base row for an unmodified speed', () => {
+    expect(formatSpeedBreakdown(deriveSpeed({ base: 30 }))).toBe('Base Speed 30');
+  });
+
+  it('is empty for missing/invalid input', () => {
+    expect(formatSpeedBreakdown(null)).toBe('');
+    expect(formatSpeedBreakdown(25)).toBe('');
   });
 });

@@ -11,6 +11,12 @@ vi.mock('../../hooks/useSessionLog', () => ({ useSessionLog: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getCharacterColor: (i) => ['#c03030', '#3060c0', '#30a060'][i % 3],
 }));
+// Derived-speed chip (SP4 #1223): the real useCharacter can't run under this
+// file's minimal CharacterUtils mock, so stub the spine output directly.
+let mockCharSpeed = null;
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (c) => (c && mockCharSpeed ? { speed: mockCharSpeed } : null),
+}));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
@@ -50,6 +56,7 @@ afterEach(() => vi.restoreAllMocks());
 beforeEach(() => {
   sendUpdate.mockClear();
   appendEvent.mockClear();
+  mockCharSpeed = null;
   getState.mockClear().mockReturnValue(undefined);
   useContent.mockReturnValue({ characters: [THORN, PELLIAS] });
   useGameDate.mockReturnValue({
@@ -357,6 +364,34 @@ describe('PartyPanel', () => {
       useContent.mockReturnValue({ characters: [] });
       render(<PartyPanel />);
       expect(screen.queryByRole('button', { name: 'End-encounter sweep' })).not.toBeInTheDocument();
+    });
+  });
+
+  // SP4 (#1223): spine-derived speed chip with the breakdown tooltip.
+  describe('derived speed chip (SP4 #1223)', () => {
+    it('renders the read-only chip with the labeled breakdown as tooltip', () => {
+      mockCharSpeed = {
+        base: 25,
+        total: 15,
+        derived: true,
+        breakdown: [
+          { label: 'Base Speed', amount: 25, type: 'base' },
+          { label: 'Full Plate', amount: -5, type: 'penalty' },
+          { label: 'Encumbered', amount: -10, type: 'penalty' },
+        ],
+      };
+      render(<PartyPanel />);
+      const chip = screen.getByTestId('party-chip-thorn-speed');
+      expect(chip).toHaveTextContent('Speed');
+      expect(chip).toHaveTextContent('15 ft');
+      expect(chip).toHaveAttribute('title', 'Base Speed 25, Full Plate -5, Encumbered -10');
+      // Read-only — no ±1 nudge buttons on the speed chip.
+      expect(chip.querySelector('.gm-party-mini-btn')).toBeNull();
+    });
+
+    it('renders no chip when the spine has nothing to derive', () => {
+      render(<PartyPanel />);
+      expect(screen.queryByTestId('party-chip-thorn-speed')).toBeNull();
     });
   });
 });

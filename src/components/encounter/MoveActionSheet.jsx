@@ -13,6 +13,7 @@ import MoveGridPicker from './MoveGridPicker';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useCharacter } from '../../hooks/useCharacter';
 import { needsNewStride } from '../../utils/movement';
 import './MoveActionSheet.css';
 
@@ -22,6 +23,13 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
   const charId = character.id;
   const { appendLog } = useEncounter();
   const { spendActions } = useTurnState(charId);
+
+  // App-derived Speed (the SP1-SP3 spine, #1223). Foundry stays authoritative
+  // for reachable squares and for the Stride budget when it answers
+  // (moveopts.speed); the derived total is the fallback so the pad still
+  // charges actions sanely in the offline sandbox (#550), plus the parity
+  // check below.
+  const derivedSpeed = useCharacter(character)?.speed ?? null;
 
   // feetThisAction: distance walked under the current Stride action (resets each
   // time a new action is charged). Step ignores it.
@@ -45,8 +53,9 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
     }
 
     // Stride: charge the 1st action on the 1st step, then one more each time the
-    // running distance would cross the character's Speed.
-    const speed = speedRef.current || stepFeet;
+    // running distance would cross the character's Speed. Budget precedence:
+    // Foundry's actor speed (via moveopts) → the app-derived total → this step.
+    const speed = speedRef.current || derivedSpeed?.total || stepFeet;
     const needNewAction = needsNewStride(feetThisAction, stepFeet, speed);
     if (needNewAction) {
       spendActions(1, 'Stride');
@@ -55,7 +64,7 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
       setFeetThisAction(feetThisAction + stepFeet);
     }
     requestMoveRefreshRef.current?.('stride'); // keep the pad open to chain steps
-  }, [feetThisAction, spendActions, appendLog, charId, character.name, moveType, onClose]);
+  }, [feetThisAction, spendActions, appendLog, charId, character.name, moveType, onClose, derivedSpeed?.total]);
 
   const {
     stage,
@@ -97,7 +106,19 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
       <div className="mas-body">
         {moveType === 'stride' && (
           <div className="mas-dist" aria-label="Stride distance">
-            {feetThisAction}/{pickerOpts?.speed ?? speedRef.current} ft
+            {feetThisAction}/{pickerOpts?.speed ?? (speedRef.current || derivedSpeed?.total || 0)} ft
+          </div>
+        )}
+
+        {/* Parity check (#1223): Foundry's actor speed vs the app spine — a
+            cheap drift detector. No auto-reconcile; the GM fixes whichever
+            side is wrong. */}
+        {pickerOpts?.speed != null &&
+          derivedSpeed?.total != null &&
+          derivedSpeed.total > 0 &&
+          pickerOpts.speed !== derivedSpeed.total && (
+          <div className="mas-parity" role="note" aria-label="Speed parity note">
+            Foundry says {pickerOpts.speed} ft; the sheet derives {derivedSpeed.total} ft.
           </div>
         )}
 

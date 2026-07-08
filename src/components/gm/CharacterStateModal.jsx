@@ -6,6 +6,8 @@ import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { DEFAULT_CLOCK } from '../../contexts/GameDateContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
+import { useCharacter } from '../../hooks/useCharacter';
+import { formatSpeedBreakdown } from '../../utils/speed';
 import { partitionLiveState } from '../../utils/liveStateRegistry';
 import { performDailyPrep } from '../../utils/dailyPrep';
 import { defaultTurnState } from '../../hooks/useTurnState';
@@ -237,6 +239,10 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
   );
   const charName = character?.name || selectedId;
 
+  // Derived Speed (#1223) — read-only spine output with the labeled breakdown,
+  // so the GM sees WHY a PC is at 15 ft (armor + encumbered) while inspecting.
+  const derivedSpeed = useCharacter(character)?.speed ?? null;
+
   const { groups, unrecognized } = useMemo(
     () => partitionLiveState(liveState, character),
     [liveState, character],
@@ -322,6 +328,25 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
 
         {selectedId && !hasAny && (
           <p className="cs-empty gm-help">No live state recorded for this character yet.</p>
+        )}
+
+        {selectedId && derivedSpeed && derivedSpeed.total > 0 && (
+          <section className="cs-group" aria-label="Derived">
+            <h3 className="cs-group-title">Derived</h3>
+            <ul className="cs-list">
+              <li className="cs-row" data-testid="cs-row-speed">
+                <span className="cs-label">Speed</span>
+                <div className="cs-control">
+                  <span className="cs-value">
+                    {derivedSpeed.total} ft
+                    {derivedSpeed.breakdown.length > 1 && (
+                      <span className="cs-value-detail"> — {formatSpeedBreakdown(derivedSpeed)}</span>
+                    )}
+                  </span>
+                </div>
+              </li>
+            </ul>
+          </section>
         )}
 
         {selectedId && groups.map((g) => (

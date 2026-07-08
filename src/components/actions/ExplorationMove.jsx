@@ -3,6 +3,9 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useCharacter } from '../../hooks/useCharacter';
+import { useContent } from '../../contexts/ContentContext';
+import { formatSpeedBreakdown } from '../../utils/speed';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import './ExplorationMove.css';
 
@@ -19,6 +22,13 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
   const { isGm } = useGmAuth();
   const [feetTotal, setFeetTotal] = useState(0);
   const [, setExploreDist] = useSyncedState('cnmh_exploredist_global', 0);
+  // App-derived Speed (#1223) — context for the walk (exploration steps carry
+  // no action cost, but pacing math reads the character's real speed). The
+  // grid itself stays Foundry-authoritative. Hidden when the roster has no
+  // matching character (e.g. a bare charId in tests/sandbox setups).
+  const { characters } = useContent();
+  const character = (Array.isArray(characters) ? characters : []).find((c) => c.id === charId) || null;
+  const derivedSpeed = useCharacter(character)?.speed ?? null;
 
   // Use a ref so the internal callback can call requestMoveRefresh without a
   // circular dependency. Also calls the optional onMoveDone prop so parent
@@ -78,6 +88,15 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
 
       {(stage === 'picking' || (isRefreshing && pickerOpts)) && (
         <>
+          {derivedSpeed && derivedSpeed.total > 0 && (
+            <div
+              className="em-speed"
+              aria-label="Derived speed"
+              title={formatSpeedBreakdown(derivedSpeed)}
+            >
+              Speed <strong>{derivedSpeed.total} ft</strong>
+            </div>
+          )}
           {feetTotal > 0 && (
             <div className="em-distance" aria-label="Distance walked">
               Moved <strong>{feetTotal} ft</strong>

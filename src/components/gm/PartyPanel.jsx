@@ -4,6 +4,8 @@ import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
+import { useCharacter } from '../../hooks/useCharacter';
+import { formatSpeedBreakdown } from '../../utils/speed';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { formatLiveValue, getLiveStateDescriptor } from '../../utils/liveStateRegistry';
 import { collectCooldowns, collectImmunities } from '../../utils/partyCooldowns';
@@ -116,6 +118,9 @@ const endFor = (type, liveState, write) => {
 // panel's per-character persist+log helper.
 const PartyMemberRow = ({ character, color, nowSecs, write }) => {
   const { liveState } = useCharacterLiveState(character.id);
+  // Derived Speed (#1223) — the same spine the sheet renders, so the GM sees
+  // WHY a PC is at 15 ft (armor + encumbered) from the chip's tooltip.
+  const derivedSpeed = useCharacter(character)?.speed ?? null;
   const hp = liveState.hp;
 
   const current = hp?.current ?? character.maxHp ?? 0;
@@ -137,6 +142,17 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
     }));
   const reaction = reactionChip(liveState.turnstate);
   if (reaction) chips.push(reaction);
+  // Speed chip (#1223): spine-derived, read-only (no registry key to edit);
+  // the tooltip carries the labeled breakdown.
+  if (derivedSpeed && derivedSpeed.total > 0) {
+    chips.push({
+      key: 'speed',
+      type: null,
+      label: 'Speed',
+      value: `${derivedSpeed.total} ft`,
+      title: formatSpeedBreakdown(derivedSpeed),
+    });
+  }
 
   const pills = STATE_PILLS
     .filter((p) => p.type in liveState)
@@ -195,6 +211,7 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
               <li
                 className={`gm-party-chip${c.spent ? ' is-spent' : ''}`}
                 key={c.key}
+                title={c.title}
                 data-testid={`party-chip-${character.id}-${c.key}`}
               >
                 <span className="gm-party-chip-label">{c.label}</span>

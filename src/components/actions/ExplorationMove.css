@@ -16,7 +16,8 @@
   margin-bottom: var(--space-1);
 }
 
-.em-distance {
+.em-distance,
+.em-speed {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--theme-text-secondary, var(--shell-text-secondary));
@@ -24,6 +25,7 @@
   padding: var(--space-1) 0;
 }
 
-.em-distance strong {
+.em-distance strong,
+.em-speed strong {
   color: var(--theme-text, var(--shell-text));
 }
