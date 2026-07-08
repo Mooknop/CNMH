@@ -339,6 +339,92 @@ describe('GmShops', () => {
     });
   });
 
+  describe('restock (#1139)', () => {
+    // Purchases decrement `stock` and stamp `maxStock` = the authored capacity
+    // (shopUtils.decrementWareStock); this surface reads it back as the restock
+    // target and collapses it again on re-author.
+    const openShop = (wares) => {
+      setup({ 'bottled-solutions': { wares } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+    };
+
+    it('an untouched save preserves the live stock AND the stamped capacity', () => {
+      openShop([{ ref: 'antidote', stock: 1, maxStock: 4 }]);
+      fireEvent.change(screen.getByLabelText('keeper'), { target: { value: 'Bob' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual([
+        'bottled-solutions',
+        { ...META, keeper: 'Bob', wares: [{ ref: 'antidote', stock: 1, maxStock: 4 }] },
+      ]);
+    });
+
+    it('editing the stock input re-authors the capacity (maxStock collapses)', () => {
+      openShop([{ ref: 'antidote', stock: 1, maxStock: 4 }]);
+      fireEvent.change(screen.getByLabelText('stock-antidote'), { target: { value: '6' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'antidote', stock: 6 }] }]);
+    });
+
+    it('the per-ware restock button refills the input to capacity and saves clean', () => {
+      openShop([{ ref: 'antidote', stock: 1, maxStock: 4 }]);
+      fireEvent.click(screen.getByLabelText('restock-antidote'));
+      expect(screen.getByLabelText('stock-antidote')).toHaveValue(4);
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'antidote', stock: 4 }] }]);
+    });
+
+    it('no restock button for a full, unlimited, or capacity-less ware', () => {
+      openShop([
+        { ref: 'antidote', stock: 4, maxStock: 4 }, // full
+        { ref: 'spellbook' }, // unlimited
+        { ref: 'tonic', level: 1, stock: 2 }, // limited but never decremented
+      ]);
+      expect(screen.queryByLabelText('restock-antidote')).toBeNull();
+      expect(screen.queryByLabelText('restock-spellbook')).toBeNull();
+      expect(screen.queryByLabelText('restock-tonic@1')).toBeNull();
+      expect(screen.queryByLabelText('restock-all')).toBeNull();
+    });
+
+    it('marks a drained ware Sold out on the row and in the footer tally', () => {
+      openShop([{ ref: 'antidote', stock: 0, maxStock: 2 }, { ref: 'spellbook', stock: 3 }]);
+      expect(screen.getByTestId('gm-soldout-antidote')).toHaveTextContent('Sold out');
+      expect(screen.queryByTestId('gm-soldout-spellbook')).toBeNull();
+      expect(screen.getByText(/2 limited stock · 1 sold out/)).toBeInTheDocument();
+    });
+
+    it('restocks a drained variant form by its ref@level key', () => {
+      openShop([{ ref: 'tonic', level: 3, stock: 0, maxStock: 2 }]);
+      expect(screen.getByTestId('gm-soldout-tonic@3')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('restock-tonic@3'));
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'tonic', level: 3, stock: 2 }] }]);
+    });
+
+    it('Restock all refills every drained ware in one click, then one save', () => {
+      openShop([
+        { ref: 'antidote', stock: 0, maxStock: 3 },
+        { ref: 'spellbook', stock: 1, maxStock: 2 },
+        { ref: 'tonic', level: 3, stock: 5 }, // untouched — no capacity recorded
+      ]);
+      const all = screen.getByLabelText('restock-all');
+      expect(all).toHaveTextContent('Restock all (2)');
+      fireEvent.click(all);
+      expect(screen.getByLabelText('stock-antidote')).toHaveValue(3);
+      expect(screen.getByLabelText('stock-spellbook')).toHaveValue(2);
+      expect(screen.getByLabelText('stock-tonic@3')).toHaveValue(5);
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual([
+        'bottled-solutions',
+        { ...META, wares: [
+          { ref: 'antidote', stock: 3 },
+          { ref: 'spellbook', stock: 2 },
+          { ref: 'tonic', level: 3, stock: 5 },
+        ] },
+      ]);
+    });
+  });
+
   describe('spellcasting services — by-tradition config (#884)', () => {
     const open = (shops = { 'town-hall': { wares: [] } }) => {
       setup(shops);
