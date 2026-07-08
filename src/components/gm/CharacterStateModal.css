@@ -72,6 +72,12 @@
   word-break: break-word;
 }
 
+/* Derived-speed breakdown suffix (#1223) */
+.cs-value-detail {
+  font-size: 0.8rem;
+  color: var(--shell-text-tertiary);
+}
+
 .cs-row--block {
   flex-direction: column;
   align-items: stretch;

@@ -189,3 +189,39 @@ describe('CharacterStateModal — presets', () => {
     expect(logText()).toMatch(/cleared combat state for Jade/);
   });
 });
+
+// SP4 (#1223): read-only derived-speed row from the spine.
+describe('CharacterStateModal — derived speed row (SP4 #1223)', () => {
+  afterEach(() => localStorage.clear());
+
+  it('shows the derived Speed for a character with an authored base', () => {
+    useContent.mockReturnValue({
+      characters: [{ id: 'runner', name: 'Runner', speed: 30 }],
+    });
+    render(<CharacterStateModal isOpen onClose={() => {}} />);
+    select('runner');
+    const row = screen.getByTestId('cs-row-speed');
+    expect(row).toHaveTextContent('Speed');
+    expect(row).toHaveTextContent('30 ft');
+    // Unmodified: no breakdown suffix.
+    expect(row).not.toHaveTextContent('Base Speed');
+  });
+
+  it('appends the breakdown when conditions modify the total', () => {
+    useContent.mockReturnValue({
+      characters: [{ id: 'runner', name: 'Runner', speed: 30 }],
+    });
+    h.sessionStore.runner = { conditions: [{ id: 'encumbered', value: null }] };
+    render(<CharacterStateModal isOpen onClose={() => {}} />);
+    select('runner');
+    const row = screen.getByTestId('cs-row-speed');
+    expect(row).toHaveTextContent('20 ft');
+    expect(row).toHaveTextContent('Base Speed 30, Encumbered -10');
+  });
+
+  it('hides the row when the spine has nothing to derive', () => {
+    render(<CharacterStateModal isOpen onClose={() => {}} />);
+    select('pellias'); // fixture has no authored speed
+    expect(screen.queryByTestId('cs-row-speed')).toBeNull();
+  });
+});

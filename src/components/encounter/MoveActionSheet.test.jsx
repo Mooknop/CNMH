@@ -132,6 +132,121 @@ describe('MoveActionSheet', () => {
     Date.now.mockRestore();
   });
 
+  // SP4 (#1223): the app-derived speed spine backs the pad when Foundry's
+  // moveopts are absent or carry no speed, plus the drift note.
+  describe('derived-speed fallback + parity (SP4 #1223)', () => {
+    const runner = {
+      id: 'Runner',
+      name: 'Runner',
+      speed: 30,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+    };
+
+    it('shows the derived speed as the Stride budget before moveopts arrive', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      render(<MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />);
+      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('0/30 ft');
+      Date.now.mockRestore();
+    });
+
+    it('charges Stride actions against the derived speed when moveopts carry none', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      const shortRunner = { ...runner, id: 'Runner2', speed: 10 };
+      let tsDriver, setOpts, setDone;
+      render(
+        <>
+          <TurnDriver charId="Runner2" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_moveopts_Runner2" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_movedone_Runner2" onReady={(s) => (setDone = s)} />
+          <MoveActionSheet character={shortRunner} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      // Sandbox-shaped opts: reachable squares but NO speed field.
+      const stepEastNoSpeed = () => {
+        act(() => setOpts({
+          reqTs: 555,
+          origin: { col: 5, row: 5 },
+          reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+          blocked: [],
+        }));
+        fireEvent.click(screen.getByLabelText('Step east'));
+        act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
+      };
+
+      // Steps 1-2 fill the derived 10 ft budget → 1 action.
+      stepEastNoSpeed();
+      stepEastNoSpeed();
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('10/10 ft');
+      // Step 3 crosses it → a 2nd Stride action.
+      stepEastNoSpeed();
+      expect(tsDriver.turnState.actionsSpent).toBe(2);
+      Date.now.mockRestore();
+    });
+
+    it('shows the parity note when Foundry speed differs from the derived total', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_moveopts_Runner" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setOpts({
+        reqTs: 555,
+        origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+        blocked: [],
+        speed: 25,
+      }));
+      expect(screen.getByLabelText('Speed parity note')).toHaveTextContent(
+        'Foundry says 25 ft; the sheet derives 30 ft.'
+      );
+      Date.now.mockRestore();
+    });
+
+    it('no parity note when Foundry and the spine agree', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_moveopts_Runner" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setOpts({
+        reqTs: 555,
+        origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+        blocked: [],
+        speed: 30,
+      }));
+      expect(screen.queryByLabelText('Speed parity note')).toBeNull();
+      Date.now.mockRestore();
+    });
+
+    it('no parity note for a character the spine cannot derive (total 0)', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setOpts({
+        reqTs: 555,
+        origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+        blocked: [],
+        speed: 25,
+      }));
+      expect(screen.queryByLabelText('Speed parity note')).toBeNull();
+      Date.now.mockRestore();
+    });
+  });
+
   it('ignores stale option sets from a previous request', () => {
     vi.spyOn(Date, 'now').mockReturnValue(100);
     let setOpts;

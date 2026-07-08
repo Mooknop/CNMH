@@ -52,6 +52,16 @@ vi.mock('../encounter/MoveGridPicker', () => ({
   }
 }));
 
+// Derived-speed line (SP4 #1223): the real useCharacter can't run under this
+// file's minimal useSyncedState mock, so stub the spine output directly.
+let mockCharData = null;
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: () => mockCharData,
+}));
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ characters: [] }),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockIsGm = true;
@@ -64,6 +74,7 @@ beforeEach(() => {
   mockMovement.stage = null;
   mockMovement.pickerOpts = null;
   mockMovement.isRefreshing = false;
+  mockCharData = null;
 });
 
 describe('ExplorationMove', () => {
@@ -198,5 +209,35 @@ describe('ExplorationMove', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(mockSetExploreDist).toHaveBeenCalledWith(0);
+  });
+
+  // SP4 (#1223): derived-speed context line above the pad.
+  describe('derived speed line (SP4 #1223)', () => {
+    it('shows the spine total with the breakdown tooltip while picking', () => {
+      mockCharData = {
+        speed: {
+          base: 25,
+          total: 15,
+          derived: true,
+          breakdown: [
+            { label: 'Base Speed', amount: 25, type: 'base' },
+            { label: 'Full Plate', amount: -10, type: 'penalty' },
+          ],
+        },
+      };
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+      const line = screen.getByLabelText('Derived speed');
+      expect(line).toHaveTextContent('Speed 15 ft');
+      expect(line).toHaveAttribute('title', 'Base Speed 25, Full Plate -10');
+    });
+
+    it('hides the line when the spine has nothing to derive', () => {
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+      expect(screen.queryByLabelText('Derived speed')).toBeNull();
+    });
   });
 });

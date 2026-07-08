@@ -145,3 +145,20 @@ export function speedModifier(derived) {
         : { label: row.label, bonus: row.amount, isBuff: true })),
   };
 }
+
+/**
+ * One-line human-readable breakdown for tooltips and GM rows (SP4, #1223) —
+ * "Base Speed 25, Full Plate −5, Encumbered −10". Empty string for a
+ * missing/invalid derivation.
+ *
+ * @param {object} derived - deriveSpeed() result
+ * @returns {string}
+ */
+export function formatSpeedBreakdown(derived) {
+  if (!derived || !Array.isArray(derived.breakdown)) return '';
+  return derived.breakdown
+    .map((row) => (row.type === 'base'
+      ? `${row.label} ${row.amount}`
+      : `${row.label} ${row.amount > 0 ? '+' : ''}${row.amount}`))
+    .join(', ');
+}

@@ -21,3 +21,14 @@
   font-size: var(--text-sm);
   color: var(--shell-text-tertiary);
 }
+
+/* Foundry-vs-spine drift note (#1223) */
+.mas-parity {
+  font-size: var(--text-xs);
+  color: var(--color-warning);
+  text-align: center;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+}
