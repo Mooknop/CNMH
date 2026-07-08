@@ -4,7 +4,7 @@ import { usePartyGold } from '../../hooks/usePartyGold';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import {
   characterWealth,
-  lumpSumFor,
+  wealthTargetFor,
   wealthBand,
   WEALTH_BANDS,
   FLUSH_RATIO,
@@ -16,11 +16,12 @@ import { groupRoomsByArea, areaLootSummary } from '../../utils/lootAreas';
 import './GmLootLedger.css';
 
 // World → Loot Ledger (#1281 WB3). Compares each PC's held wealth (live gold +
-// inventory value) against the GM Core Table 10-10 lump sum for their level —
-// the low estimate of on-level wealth, so anyone under it is genuinely
-// underequipped. The party rollup expresses the total surplus/deficit in
-// "levels of treasure" (Table 10-9 total value at the party's level, adjusted
-// for party size) to make the number actionable.
+// inventory value) against the GM Core Table 10-10 lump sum for the level
+// ABOVE theirs — treasure earned while playing a level carries a PC to the
+// next level's baseline, and the lump sum is the low estimate, so anyone under
+// it is genuinely underequipped. The party rollup expresses the total
+// surplus/deficit in "levels of treasure" (Table 10-9 total value at the
+// party's level, adjusted for party size) to make the number actionable.
 
 const gp = (n) => `${parseFloat((Number(n) || 0).toFixed(2)).toLocaleString()} gp`;
 
@@ -65,7 +66,7 @@ const GmLootLedger = () => {
 
   const rows = characters.map((c) => {
     const wealth = characterWealth(c, goldById[c.id]);
-    const target = lumpSumFor(c.level);
+    const target = wealthTargetFor(c.level);
     return { character: c, wealth, target, band: wealthBand(wealth.total, c.level) };
   });
 
@@ -92,9 +93,10 @@ const GmLootLedger = () => {
         <h1>Loot Ledger</h1>
         <p className="gm-help">
           Each PC's held wealth (gold + item value) against the Character Wealth
-          benchmark for their level. The benchmark is the <em>low</em> estimate —
-          a freshly made character of that level starts with this much — so
-          anyone below it is underequipped. Above ×{FLUSH_RATIO} counts as flush.
+          benchmark for the level <em>above</em> theirs — treasure earned while
+          playing a level carries a PC toward the next level's baseline, so a
+          level-4 PC is measured against the level-5 amount. Anyone below it is
+          underequipped; above ×{FLUSH_RATIO} counts as flush.
         </p>
       </header>
 
@@ -105,7 +107,7 @@ const GmLootLedger = () => {
             <span className="gm-ledger-stat-value">{gp(partyTotal)}</span>
           </div>
           <div className="gm-ledger-stat">
-            <span className="gm-ledger-stat-label">Benchmark (level {level})</span>
+            <span className="gm-ledger-stat-label">Benchmark (next level)</span>
             <span className="gm-ledger-stat-value">{gp(expected)}</span>
           </div>
           <div className="gm-ledger-stat">
