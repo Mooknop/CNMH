@@ -11,24 +11,32 @@ import { spellItemDisplayName } from './spellItems';
   /**
    * Calculate spell attack modifier and DC based on character data
    * @param {Object} character - The character object
+   * @param {Object} [options]
+   * @param {boolean} [options.apex] - An invested apex item (#967 R8, the
+   *   platinum power ring) boosts the spellcasting attribute: the modifier
+   *   becomes max(mod + 1, +4) — never lower than the raw mod. Flows through
+   *   to the DC via 10 + spellAttackMod.
    * @returns {Object} - Object containing spellAttackMod and spellDC
    */
-  export const calculateSpellStats = (character) => {
+  export const calculateSpellStats = (character, { apex = false } = {}) => {
     const spellcasting = character.spellcasting || {};
-    
+
     // Get ability modifier
-    const abilityMod = getAbilityModifier(character.abilities?.[spellcasting.ability] || 10);
-    
+    let abilityMod = getAbilityModifier(character.abilities?.[spellcasting.ability] || 10);
+    if (apex) {
+      abilityMod = Math.max(abilityMod + 1, 4);
+    }
+
     // Get proficiency bonus
     const proficiencyValue = spellcasting.proficiency || 0;
     const proficiencyMod = getProficiencyBonus(proficiencyValue, character.level || 0);
-    
+
     // Calculate spell attack modifier
     const spellAttackMod = abilityMod + proficiencyMod;
-    
+
     // Calculate spell DC
     const spellDC = 10 + spellAttackMod;
-    
+
     return { spellAttackMod, spellDC };
   };
   

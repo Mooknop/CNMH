@@ -340,6 +340,26 @@ export const wouldBreakPowerRingLimit = (item, investedItems = []) =>
   );
 
 /**
+ * Whether an item grants an apex attribute boost (#967 R8) — the resolved
+ * `apex` flag applyVariant flattens from the grade's overrides (platinum
+ * power ring today).
+ */
+export const isApexItem = (item) => !!(item && item.apex);
+
+/**
+ * PF2e grants the apex benefit from only ONE invested item at a time. True
+ * when investing `item` would break that — it's an apex item and a DIFFERENT
+ * apex item is already invested (#967 R8). Mirrors wouldBreakPowerRingLimit;
+ * today only the platinum power ring is apex, so the ring limit already
+ * covers it, but the guard keeps future apex items honest.
+ */
+export const wouldBreakApexLimit = (item, investedItems = []) =>
+  isApexItem(item) &&
+  (Array.isArray(investedItems) ? investedItems : []).some(
+    (it) => isApexItem(it) && it?.uid !== item?.uid,
+  );
+
+/**
  * Whether an item is a tracked consumable — one whose copies are used up via
  * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
  * GM-gated content). Scrolls qualify implicitly; other consumables (potions,
