@@ -507,6 +507,7 @@ function mergeGmFields(docs, existingDocs) {
     if (ex.notes) merged.notes = ex.notes;
     if (ex.treasureCache) merged.treasureCache = ex.treasureCache;
     if (ex.distributedAt != null) merged.distributedAt = ex.distributedAt;
+    if (ex.claimed) merged.claimed = ex.claimed;
     for (const f of EVENT_GM_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(ex, f)) merged[f] = ex[f];
     }

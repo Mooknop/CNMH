@@ -14,6 +14,9 @@ import {
   acquiredEntry,
   unclaimedCache,
   receiptText,
+  lineUnitValue,
+  claimedDelta,
+  accumulateClaimed,
 } from './lootDrop';
 
 const room = (over = {}) => ({
@@ -258,5 +261,53 @@ describe('unclaimedCache', () => {
   it('is empty when everything was claimed and all gold distributed', () => {
     const drop = { gold: 10, items: [{ lineId: 'l1', ref: 'rope', name: 'Rope', qty: 1, claims: [{ charId: 'a', qty: 1 }] }] };
     expect(unclaimedCache(drop, 10)).toEqual({ gold: 0, items: [] });
+  });
+});
+
+describe('lineUnitValue', () => {
+  const catalog = new Map([
+    ['acid-flask', { id: 'acid-flask', price: 10 }],
+    ['free-token', { id: 'free-token', price: 0 }],
+  ]);
+
+  it('prefers the catalog price', () => {
+    expect(lineUnitValue({ ref: 'acid-flask' }, catalog)).toBe(10);
+    expect(lineUnitValue({ ref: 'acid-flask', value: 3 }, catalog)).toBe(10);
+  });
+
+  it('falls back to the inline value for unpriced or unbound lines', () => {
+    expect(lineUnitValue({ ref: 'treasure-item', value: 5 }, catalog)).toBe(5);
+    expect(lineUnitValue({ name: 'Garnet Bead', value: 2 }, catalog)).toBe(2);
+    expect(lineUnitValue({ ref: 'free-token', value: 4 }, catalog)).toBe(4);
+  });
+
+  it('is 0 with neither', () => {
+    expect(lineUnitValue({ ref: 'unknown' }, catalog)).toBe(0);
+    expect(lineUnitValue({ name: 'Story Token' }, catalog)).toBe(0);
+  });
+});
+
+describe('claimedDelta / accumulateClaimed', () => {
+  const catalog = new Map([['acid-flask', { id: 'acid-flask', price: 10 }]]);
+
+  it('values claimed units and the distributed gold', () => {
+    const drop = {
+      gold: 25,
+      items: [
+        { lineId: 'l1', ref: 'acid-flask', name: 'Acid Flask', qty: 2, claims: [{ charId: 'a', qty: 1 }] },
+        { lineId: 'l2', ref: 'treasure-item', name: 'Garnet Bead', qty: 3, value: 5, claims: [{ charId: 'b', qty: 2 }] },
+      ],
+    };
+    expect(claimedDelta(drop, 25, catalog)).toEqual({ gold: 25, itemsValue: 20 });
+  });
+
+  it('is zero for an unclaimed drop', () => {
+    const drop = { gold: 25, items: [{ lineId: 'l1', ref: 'acid-flask', qty: 2, claims: [] }] };
+    expect(claimedDelta(drop, 0, catalog)).toEqual({ gold: 0, itemsValue: 0 });
+  });
+
+  it('accumulates onto a prior claimed record', () => {
+    expect(accumulateClaimed({ gold: 5, itemsValue: 10 }, { gold: 25, itemsValue: 20 })).toEqual({ gold: 30, itemsValue: 30 });
+    expect(accumulateClaimed(undefined, { gold: 25, itemsValue: 20 })).toEqual({ gold: 25, itemsValue: 20 });
   });
 });

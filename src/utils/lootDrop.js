@@ -170,6 +170,37 @@ export const unclaimedCache = (drop, distributedGold) => {
   return { gold: returnedGold, items };
 };
 
+// Per-unit gp value of a drop/cache line: the bound catalog doc's price when
+// it has one, else the line's own inline `value` (coin-valuables and generic
+// treasure items), else 0. Mirrors resolveTreasure's price-then-value order.
+export const lineUnitValue = (line, catalogById) => {
+  const cat = line?.ref && catalogById ? catalogById.get(line.ref) : null;
+  const price = cat ? Number(cat.price) : NaN;
+  if (Number.isFinite(price) && price > 0) return price;
+  const v = Number(line?.value);
+  return Number.isFinite(v) && v > 0 ? v : 0;
+};
+
+// The gp value a finalize actually handed out: the gold credited to characters
+// plus every claimed unit at its unit value. Feeds the room's `claimed`
+// accumulator so area budgeting (#1281) can tell claimed from unclaimed loot
+// after the cache has been overwritten with the remainder.
+export const claimedDelta = (drop, distributedGold, catalogById) => ({
+  gold: Math.max(0, Math.floor(Number(distributedGold) || 0)),
+  itemsValue: (drop?.items || []).reduce(
+    (sum, line) => sum + lineClaimedQty(line) * lineUnitValue(line, catalogById),
+    0,
+  ),
+});
+
+// Fold a finalize's delta onto the room's historical `claimed` accumulator
+// ({ gold, itemsValue } gp). The accumulator survives cache reopens and
+// re-imports — it records what the party has ever taken from the room.
+export const accumulateClaimed = (prev, delta) => ({
+  gold: (Number(prev?.gold) || 0) + (Number(delta?.gold) || 0),
+  itemsValue: (Number(prev?.itemsValue) || 0) + (Number(delta?.itemsValue) || 0),
+});
+
 // "Acid Flask ×2, +6 gp" — the claimed-items + gold-share half of a receipt.
 export const receiptText = (lines, gold) => {
   const parts = (lines || []).map((l) => `${l.name}${l.variant ? ` (${l.variant})` : ''}${l.qty > 1 ? ` ×${l.qty}` : ''}`);
