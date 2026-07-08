@@ -211,6 +211,67 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
     .filter(Boolean);
 }
 
+// ── Purchase-time stock decrement (#1139) ───────────────────────────────────
+// A ware's `stock` used to be a UI-only cart cap; buying never wrote the store,
+// so a stock-4 shelf showed 4 forever. Checkout now guards against the CURRENT
+// stock and decrements it — these are the pure halves the hook composes.
+
+// The browse wareKey a stored ware resolves to — the same key resolveShopWares
+// stamps on the resolved ware — computed WITHOUT the catalog, so checkout can
+// match cart lines (which carry the resolved wareKey) back to the stored wares
+// they came from. Generative offerings (spell items, rune services) return
+// null: they're unlimited by design and never carry stock. One divergence from
+// resolveShopWares: a level-pinned ware whose catalog item lacks that variant
+// resolves to the BARE ref there but keys `ref@level` here — a misauthored
+// ware that simply never matches (no guard, no decrement), never a wrong hit.
+export function storedWareKey(w) {
+  if (!w || isSpellItemWare(w) || isRuneServiceWare(w) || w.ref == null) return null;
+  if (isRunestoneEntry(w)) return w.runeRef != null ? `runestone@${w.runeRef}` : 'runestone';
+  if (isDragonbreathWare(w)) {
+    const meta = dragonbreathMeta(w);
+    return `dragonbreath:${w.ref}:${meta.tier}:${String(meta.dragonType || '').toLowerCase()}`;
+  }
+  if (w.level != null) return `${w.ref}@${w.level}`;
+  return String(w.ref);
+}
+
+// Current stock per wareKey on a shop entry — only wares the GM gave a numeric
+// stock appear; everything else is unlimited. First ware wins a duplicate key,
+// matching decrementWareStock's first-match rule.
+export function stockByWareKey(entry) {
+  const out = new Map();
+  const wares = entry && Array.isArray(entry.wares) ? entry.wares : [];
+  for (const w of wares) {
+    const key = storedWareKey(w);
+    if (key == null || w.stock == null || out.has(key)) continue;
+    const s = Number(w.stock);
+    if (Number.isFinite(s)) out.set(key, s);
+  }
+  return out;
+}
+
+// Decrement bought quantities off a shop entry's stocked wares: `boughtByKey`
+// is a Map of wareKey → qty. Only the FIRST stocked ware matching a key is
+// decremented (mirroring stockByWareKey), floored at 0 — a sold-out ware stays
+// on the shelf at stock 0 so players see it sold out rather than vanishing.
+// Returns the same entry reference when nothing matched (no-op write guard).
+export function decrementWareStock(entry, boughtByKey) {
+  if (!entry || !Array.isArray(entry.wares) || !(boughtByKey instanceof Map) || !boughtByKey.size) return entry;
+  const applied = new Set();
+  let changed = false;
+  const wares = entry.wares.map((w) => {
+    // Stock-less (unlimited) wares never match — mirrors stockByWareKey, so the
+    // "first ware wins" rule picks the same ware on both sides of a duplicate.
+    if (!w || w.stock == null || !Number.isFinite(Number(w.stock))) return w;
+    const key = storedWareKey(w);
+    if (key == null || applied.has(key) || !boughtByKey.has(key)) return w;
+    applied.add(key);
+    changed = true;
+    return { ...w, stock: Math.max(0, Number(w.stock) - boughtByKey.get(key)) };
+  });
+  return changed ? { ...entry, wares } : entry;
+}
+
 // ── Generative spell-item offerings (#812 S6) ───────────────────────────────
 // A shop can sell a Scroll/Wand of ANY catalog spell up to an ITEM LEVEL, filtered
 // by tradition and rarity — priced from the base-template resolver (spellItems.js)

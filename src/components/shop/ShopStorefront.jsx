@@ -60,6 +60,9 @@ const wareAccentVar = (group) => `var(--${traitAccent(group)}-mid)`;
 const firstLetter = (s) => String(s || '?').trim().charAt(0).toUpperCase() || '?';
 const formLabel = (form) => form.label || (form.level != null ? `Lvl ${form.level}` : form.name);
 const atStockCap = (form, qty) => form.stock != null && qty >= form.stock;
+// A stocked ware bought down to 0 (#1139) stays on display as sold out rather
+// than vanishing — the shelf tells players the shop DID carry it.
+const isSoldOut = (form) => form.stock === 0;
 
 const topTraits = (groups, limit = 8) => {
   const counts = new Map();
@@ -137,7 +140,9 @@ const WareGrid = ({ groups, label, town, qtyByKey, onSelect, onAdd }) => (
         <li key={g.ref} className="ps-tile">
           {town ? <DraggableTile group={g} onSelect={onSelect} /> : <StaticTile group={g} onSelect={onSelect} />}
           {town && single && (
-            qty > 0 ? (
+            isSoldOut(g.forms[0]) ? (
+              <span className="ps-tile-soldout" data-testid={`soldout-${g.ref}`}>Sold out</span>
+            ) : qty > 0 ? (
               <span className="ps-tile-incart" data-testid={`incart-${g.ref}`}>in cart ×{qty}</span>
             ) : (
               <button type="button" className="ps-tile-add" aria-label={`add ${g.name}`}
@@ -354,7 +359,9 @@ const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) =
                   {f.price} gp
                 </span>
                 {town && (
-                  qty > 0 ? (
+                  isSoldOut(f) ? (
+                    <span className="ps-preview-form-soldout">Sold out</span>
+                  ) : qty > 0 ? (
                     <span className="ps-preview-form-incart">in cart ×{qty}</span>
                   ) : (
                     <button type="button" className="ps-preview-form-add" aria-label={`add ${formLabel(f)}`}
@@ -976,6 +983,11 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     // A Sale Shelf deal bought out from under you (#1138) — reject, keep the cart.
     if (result && result.rejected === 'stale-shelf') {
       setToast('That deal is gone — someone grabbed it first. Refresh your cart.');
+      return;
+    }
+    // A stocked ware ran dry under your cart (#1139) — same reject, keep the cart.
+    if (result && result.rejected === 'stale-stock') {
+      setToast('The shelf ran dry — not enough left in stock. Refresh your cart.');
       return;
     }
     if (result) {
