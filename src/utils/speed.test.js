@@ -1,4 +1,10 @@
-import { deriveSpeed, speedModifier, SPEED_FLOOR } from './speed';
+import {
+  deriveSpeed,
+  speedModifier,
+  armorSpeedPenalty,
+  shieldSpeedPenalty,
+  SPEED_FLOOR,
+} from './speed';
 import { computeEffectBonuses, combineModifiers } from './EffectUtils';
 
 describe('deriveSpeed (SP1 #1220)', () => {
@@ -84,6 +90,136 @@ describe('deriveSpeed (SP1 #1220)', () => {
     const result = deriveSpeed({ base: 25, modifiers: combineModifiers(penalty, bonus) });
     expect(result.total).toBe(20);
     expect(result.breakdown.map((r) => r.type)).toEqual(['base', 'penalty', 'bonus']);
+  });
+});
+
+describe('armorSpeedPenalty (SP2 #1221)', () => {
+  const fullPlate = {
+    uid: 'fp',
+    name: 'Full Plate',
+    armor: { category: 'heavy', acBonus: 6, dexCap: 0, strength: 18, speedPenalty: 10 },
+  };
+  const breastplate = {
+    uid: 'bp',
+    name: 'Breastplate',
+    armor: { category: 'medium', acBonus: 4, dexCap: 1, strength: 16, speedPenalty: 5 },
+  };
+
+  it('applies the full penalty below the Strength threshold', () => {
+    expect(armorSpeedPenalty(fullPlate, 10)).toEqual({ label: 'Full Plate', amount: -10 });
+  });
+
+  it('reduces the penalty by 5 ft at/above the Strength threshold', () => {
+    expect(armorSpeedPenalty(fullPlate, 18)).toEqual({ label: 'Full Plate', amount: -5 });
+    expect(armorSpeedPenalty(fullPlate, 20)).toEqual({ label: 'Full Plate', amount: -5 });
+  });
+
+  it('waives a −5 penalty entirely at the threshold', () => {
+    expect(armorSpeedPenalty(breastplate, 16)).toBeNull();
+    expect(armorSpeedPenalty(breastplate, 14)).toEqual({ label: 'Breastplate', amount: -5 });
+  });
+
+  it('never waives without an authored Strength threshold', () => {
+    const noStr = { name: 'Odd Plate', armor: { category: 'heavy', speedPenalty: 10 } };
+    expect(armorSpeedPenalty(noStr, 20)).toEqual({ label: 'Odd Plate', amount: -10 });
+  });
+
+  it('is null for no armor, penalty-free armor, or a non-numeric penalty', () => {
+    expect(armorSpeedPenalty(null, 10)).toBeNull();
+    expect(armorSpeedPenalty({ name: 'Leather', armor: { category: 'light', acBonus: 1 } }, 10)).toBeNull();
+    expect(armorSpeedPenalty({ name: 'X', armor: { speedPenalty: '10' } }, 10)).toBeNull();
+  });
+});
+
+describe('shieldSpeedPenalty (SP2 #1221)', () => {
+  const tower = (state) => ({
+    uid: 'ts',
+    name: 'Reinforced Tower Shield',
+    state,
+    shield: { bonus: 2, hardness: 8, hp: 40, brokenThreshold: 20, speedPenalty: 5 },
+  });
+  const steel = (state) => ({
+    uid: 'ss',
+    name: 'Steel Shield',
+    state,
+    shield: { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 },
+  });
+
+  it('applies a held tower shield penalty', () => {
+    expect(shieldSpeedPenalty([tower('held1')])).toEqual({
+      label: 'Reinforced Tower Shield',
+      amount: -5,
+    });
+  });
+
+  it('ignores worn/stowed/dropped shields', () => {
+    expect(shieldSpeedPenalty([tower('worn')])).toBeNull();
+    expect(shieldSpeedPenalty([tower('stowed')])).toBeNull();
+    expect(shieldSpeedPenalty([tower('dropped')])).toBeNull();
+    expect(shieldSpeedPenalty([{ ...tower(undefined), state: undefined }])).toBeNull();
+  });
+
+  it('ignores held shields without a penalty', () => {
+    expect(shieldSpeedPenalty([steel('held1')])).toBeNull();
+  });
+
+  it('applies the worst single penalty when several shields are held', () => {
+    const pavise = {
+      uid: 'pv', name: 'Pavise', state: 'held2',
+      shield: { bonus: 2, speedPenalty: 10 },
+    };
+    expect(shieldSpeedPenalty([steel('held1'), tower('held1'), pavise])).toEqual({
+      label: 'Pavise',
+      amount: -10,
+    });
+  });
+});
+
+describe('deriveSpeed gear penalties (SP2 #1221)', () => {
+  it('folds untyped gear rows into the total and breakdown', () => {
+    const result = deriveSpeed({
+      base: 25,
+      gearPenalties: [{ label: 'Full Plate', amount: -5 }],
+    });
+    expect(result.total).toBe(20);
+    expect(result.breakdown).toEqual([
+      { label: 'Base Speed', amount: 25, type: 'base' },
+      { label: 'Full Plate', amount: -5, type: 'penalty' },
+    ]);
+  });
+
+  it('stacks gear penalties with typed modifiers (untyped stacks with everything)', () => {
+    const result = deriveSpeed({
+      base: 25,
+      modifiers: {
+        total: -5,
+        sources: [{ label: 'Encumbered', penalty: -10 }, { label: 'Drums of War', bonus: 5 }],
+      },
+      gearPenalties: [
+        { label: 'Full Plate', amount: -10 },
+        { label: 'Reinforced Tower Shield', amount: -5 },
+      ],
+    });
+    expect(result.total).toBe(5); // 25 − 10 − 5 − 10 + 5 = 5, on the floor exactly
+    expect(result.breakdown.filter((r) => r.type === 'penalty')).toHaveLength(3);
+  });
+
+  it('gear penalties respect the 5 ft floor', () => {
+    const result = deriveSpeed({
+      base: 10,
+      gearPenalties: [{ label: 'Full Plate', amount: -10 }],
+    });
+    expect(result.total).toBe(SPEED_FLOOR);
+    expect(result.breakdown.some((r) => r.type === 'floor')).toBe(true);
+  });
+
+  it('drops null/zero/malformed gear rows', () => {
+    const result = deriveSpeed({
+      base: 25,
+      gearPenalties: [null, { label: 'X', amount: 0 }, { label: 'Y' }],
+    });
+    expect(result.total).toBe(25);
+    expect(result.breakdown).toHaveLength(1);
   });
 });
 

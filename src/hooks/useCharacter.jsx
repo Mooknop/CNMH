@@ -10,7 +10,7 @@ import { useEffects } from './useEffects';
 import { dexCapFor, computeEffectBonuses, combineModifiers } from '../utils/EffectUtils';
 import { computeConditionEffects } from '../utils/ConditionUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
-import { deriveSpeed } from '../utils/speed';
+import { deriveSpeed, armorSpeedPenalty, shieldSpeedPenalty } from '../utils/speed';
 import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { applyRemovedOverlay } from '../utils/removedOverlay';
@@ -151,26 +151,6 @@ export const useCharacter = (character) => {
     const size         = character.size;
     const maxHp        = character.maxHp || 0;
     const ac           = character.ac || 10;
-
-    // ── Speed (SP1, #1220) ──────────────────────────────────────────────────
-    // The derivation spine: authored base + condition penalties (Encumbered) +
-    // effect stat:'speed' modifiers (mutagens, Drums of War), floored at 5 ft.
-    // Exposed as an object ({ base, total, breakdown }); the sheet renders the
-    // derived total and must NOT layer mod('speed') on top — that channel is
-    // already inside this derivation. Armor/shield penalties land in SP2;
-    // worn-gear bonuses + Bulk encumbrance in SP3. Encounter reachable grids
-    // stay Foundry-authoritative (cnmh_moveopts_) — this is display/accounting
-    // truth.
-    const conditionMods = computeConditionEffects(
-      hydrateConditions(Array.isArray(activeConditions) ? activeConditions : []),
-      keyAbility,
-      level,
-    );
-    const effectMods = computeEffectBonuses(activeEffects, effectCatalog);
-    const speed = deriveSpeed({
-      base: character.speed,
-      modifiers: combineModifiers(conditionMods.speed, effectMods.speed),
-    });
 
     // ── Saves (pre-calculated in JSON) ─────────────────────────────────────
     const saves = {
@@ -321,6 +301,31 @@ export const useCharacter = (character) => {
       category: acDerived ? armorCategory : null,
       armorName: wornArmor ? wornArmor.name : null,
     };
+
+    // ── Speed (SP1 #1220 / SP2 #1221) ────────────────────────────────────────
+    // The derivation spine: authored base + condition penalties (Encumbered) +
+    // effect stat:'speed' modifiers (mutagens, Drums of War) + untyped gear
+    // penalties — the worn armor's speedPenalty (reduced 5 ft when Strength
+    // meets armor.strength) and a held tower shield's — floored at 5 ft.
+    // Exposed as an object ({ base, total, breakdown }); the sheet renders the
+    // derived total and must NOT layer mod('speed') on top — that channel is
+    // already inside this derivation. Worn-gear bonuses + Bulk encumbrance land
+    // in SP3. Encounter reachable grids stay Foundry-authoritative
+    // (cnmh_moveopts_) — this is display/accounting truth.
+    const conditionMods = computeConditionEffects(
+      hydrateConditions(Array.isArray(activeConditions) ? activeConditions : []),
+      keyAbility,
+      level,
+    );
+    const effectMods = computeEffectBonuses(activeEffects, effectCatalog);
+    const speed = deriveSpeed({
+      base: character.speed,
+      modifiers: combineModifiers(conditionMods.speed, effectMods.speed),
+      gearPenalties: [
+        armorSpeedPenalty(wornArmor, abilityScores.strength),
+        shieldSpeedPenalty(effectiveInventory),
+      ].filter(Boolean),
+    });
 
     // ── Bulk ────────────────────────────────────────────────────────────────
     const bulkStats = calculateEnhancedBulkLimit(character);
