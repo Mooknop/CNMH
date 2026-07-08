@@ -7,6 +7,9 @@ import { items, spells } from '../data';
 // Mock all the utility modules
 vi.mock('../utils/CharacterUtils', () => ({
   getAbilityModifier: (score) => Math.floor((score - 10) / 2),
+  // strikeUtils reaches this via shieldBashStrikes when a fixture HOLDS a
+  // shield (SP2 speed tests) — the value itself is irrelevant here.
+  getAttackBonusValue: () => 0,
   getSkillModifier: vi.fn((char, skill) => 5),
   getItemBonus: vi.fn(() => 0),
   SKILL_ABILITY_MAP: {
@@ -591,6 +594,79 @@ describe('useCharacter', () => {
       const { result } = renderHook(() => useCharacter(runner({ speed: 10 })));
       expect(result.current.speed.total).toBe(5);
       expect(result.current.speed.breakdown.some((r) => r.type === 'floor')).toBe(true);
+    });
+
+    // SP2 (#1221): armor + shield penalties through the spine.
+    describe('armor + shield penalties (SP2 #1221)', () => {
+      const fullPlate = {
+        uid: 'runner-fp',
+        name: 'Full Plate',
+        armor: { category: 'heavy', acBonus: 6, dexCap: 0, strength: 18, speedPenalty: 10 },
+      };
+      const towerShield = {
+        uid: 'runner-ts',
+        name: 'Reinforced Tower Shield',
+        shield: { bonus: 2, hardness: 8, hp: 40, brokenThreshold: 20, speedPenalty: 5 },
+      };
+
+      // The Pellias acceptance check: authored 20 ft today = base 25 with a
+      // baked, Str-waived Full Plate −5. After the content re-baseline
+      // (speed: 25) the derived total must land on the SAME 20 he shows now.
+      it('re-baselined Full Plate wearer at the Str threshold keeps his displayed total', () => {
+        const { result } = renderHook(() => useCharacter(runner({
+          speed: 25,
+          abilities: { strength: 18, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+          inventory: [fullPlate],
+        })));
+        expect(result.current.speed.total).toBe(20);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Full Plate', amount: -5, type: 'penalty' }
+        );
+      });
+
+      it('applies the full armor penalty below the Str threshold', () => {
+        const { result } = renderHook(() => useCharacter(runner({
+          speed: 25,
+          inventory: [fullPlate], // runner Str 10 < 18
+        })));
+        expect(result.current.speed.total).toBe(15);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Full Plate', amount: -10, type: 'penalty' }
+        );
+      });
+
+      it('a held tower shield slows; the same shield merely worn does not', () => {
+        localStorage.setItem(
+          'cnmh_loadout_runner',
+          JSON.stringify({ 'runner-ts': { state: 'held1', hand: 1 } })
+        );
+        const { result: held } = renderHook(() => useCharacter(runner({ inventory: [towerShield] })));
+        expect(held.current.speed.total).toBe(20);
+        expect(held.current.speed.breakdown).toContainEqual(
+          { label: 'Reinforced Tower Shield', amount: -5, type: 'penalty' }
+        );
+
+        localStorage.clear();
+        const { result: worn } = renderHook(() => useCharacter(runner({ inventory: [towerShield] })));
+        expect(worn.current.speed.total).toBe(25);
+      });
+
+      it('armor, shield and condition penalties all stack (untyped + typed)', () => {
+        localStorage.setItem(
+          'cnmh_loadout_runner',
+          JSON.stringify({ 'runner-ts': { state: 'held1', hand: 1 } })
+        );
+        localStorage.setItem(
+          'cnmh_conditions_runner',
+          JSON.stringify([{ id: 'encumbered', value: null }])
+        );
+        const { result } = renderHook(() => useCharacter(runner({
+          speed: 25,
+          inventory: [fullPlate, towerShield], // Str 10: −10 armor, −5 shield, −10 encumbered
+        })));
+        expect(result.current.speed.total).toBe(5);
+        expect(result.current.speed.breakdown.some((r) => r.type === 'floor')).toBe(true);
+      });
     });
   });
 
