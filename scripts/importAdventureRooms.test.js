@@ -295,6 +295,13 @@ describe('mergeGmFields', () => {
     expect(a1.distributedAt).toBe(1720000000000);
   });
 
+  it('preserves the claimed accumulator over the fresh transform (#1281 WB2)', () => {
+    const existing = [{ id: 'a1', claimed: { gold: 25, itemsValue: 10 } }];
+    const merged = mergeGmFields(fresh, existing);
+    expect(merged.find((d) => d.id === 'a1').claimed).toEqual({ gold: 25, itemsValue: 10 });
+    expect(merged.find((d) => d.id === 'a2').claimed).toBeUndefined();
+  });
+
   it('leaves fresh values for ids with no existing doc', () => {
     const merged = mergeGmFields(fresh, [{ id: 'gone', notes: 'stale' }]);
     expect(merged.find((d) => d.id === 'a1').treasureCache.gold).toBe(5);

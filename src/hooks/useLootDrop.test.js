@@ -7,15 +7,24 @@ const rooms = [
     name: 'Shrine to Kabriri',
     treasureCache: { gold: 25, items: [{ ref: 'acid-flask', name: 'Acid Flask', qty: 2 }] },
   },
+  {
+    id: 'sd4s-b1',
+    code: 'B1',
+    name: 'Old Vault',
+    treasureCache: { gold: 10, items: [] },
+    claimed: { gold: 5, itemsValue: 10 },
+  },
 ];
 const characters = [
   { id: 'a', name: 'Aria', gold: 100 },
   { id: 'b', name: 'Vestri', gold: 50 },
 ];
+const items = [{ id: 'acid-flask', name: 'Acid Flask', price: 10 }];
+const runes = [];
 const mockRefresh = vi.fn();
 vi.mock('../contexts/ContentContext', () => ({
   __esModule: true,
-  useContent: () => ({ rooms, characters, refresh: mockRefresh }),
+  useContent: () => ({ rooms, characters, items, runes, refresh: mockRefresh }),
 }));
 
 // Session primitives: getState/sendUpdate front the per-character overlays.
@@ -152,12 +161,28 @@ describe('useLootDrop — finalize', () => {
     expect(mockAppendEvent).toHaveBeenCalledWith({ type: 'action', text: 'Aria claimed Acid Flask, +13 gp' });
     expect(mockAppendEvent).toHaveBeenCalledWith({ type: 'action', text: 'Vestri claimed +12 gp' });
 
-    // 1 unclaimed acid flask returns to the cache; all gold distributed.
+    // 1 unclaimed acid flask returns to the cache; all gold distributed. The
+    // claimed accumulator records what was handed out: 25 gp + 1 flask @ 10 gp.
     expect(mockSave).toHaveBeenCalledWith('room', 'sd4s-a3', expect.objectContaining({
       distributedAt: expect.any(Number),
       treasureCache: { gold: 0, items: [{ ref: 'acid-flask', name: 'Acid Flask', qty: 1 }] },
+      claimed: { gold: 25, itemsValue: 10 },
     }));
     expect(mockSetDrop).toHaveBeenCalledWith(null);
+  });
+
+  it('accumulates claimed onto a room with a prior claimed record', async () => {
+    drop = openDropState({
+      roomId: 'sd4s-b1',
+      gold: 10,
+      items: [],
+    });
+    const { result } = renderHook(() => useLootDrop());
+    await act(async () => { await result.current.finalizeDrop(); });
+    // Prior { gold: 5, itemsValue: 10 } + this drop's 10 gp, no items claimed.
+    expect(mockSave).toHaveBeenCalledWith('room', 'sd4s-b1', expect.objectContaining({
+      claimed: { gold: 15, itemsValue: 10 },
+    }));
   });
 
   it('adds to an existing acquired overlay rather than replacing it', async () => {

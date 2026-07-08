@@ -14,6 +14,8 @@ import {
   unclaimedCache,
   receiptText,
   charClaimQty,
+  claimedDelta,
+  accumulateClaimed,
 } from '../utils/lootDrop';
 
 // The treasure-distribution lifecycle (#1090/#1091, epic #1085 T4/T5). One drop
@@ -34,7 +36,7 @@ import {
 // pin/finalize surface is GM-only (GM pages sit behind useGmAuth in GmLayout).
 export const useLootDrop = () => {
   const { connected, foundryConnected, getState, sendUpdate } = useSession();
-  const { characters = [], rooms = [], refresh } = useContent();
+  const { characters = [], rooms = [], items = [], runes = [], refresh } = useContent();
   const { appendEvent } = useSessionLog();
   const [drop, setDrop] = useSyncedState('cnmh_lootdrop_global', null);
 
@@ -46,6 +48,15 @@ export const useLootDrop = () => {
     () => Object.fromEntries((characters || []).map((c) => [c.id, c])),
     [characters],
   );
+
+  // Cache lines can bind to items or loose runes (same merge as
+  // RoomTreasureEditor, item id wins) — used to value claimed lines at finalize.
+  const catalogById = useMemo(() => {
+    const m = new Map();
+    for (const r of runes || []) m.set(r.id, r);
+    for (const i of items || []) m.set(i.id, i);
+    return m;
+  }, [items, runes]);
 
   // Live even-split (or GM override) gold shares for the open drop, keyed by id.
   const shares = useMemo(
@@ -140,13 +151,16 @@ export const useLootDrop = () => {
         ...room,
         treasureCache: unclaimedCache(drop, distributedGold),
         distributedAt: Date.now(),
+        // Historical value handed out, for claimed-vs-unclaimed budgeting
+        // (#1281) — survives reopen (full-doc spread) and re-import (merge).
+        claimed: accumulateClaimed(room.claimed, claimedDelta(drop, distributedGold, catalogById)),
       });
       if (refresh) await refresh();
     }
 
     setDrop(null);
     return true;
-  }, [drop, offline, ids, byId, rooms, refresh, getState, sendUpdate, appendEvent, setDrop]);
+  }, [drop, offline, ids, byId, rooms, catalogById, refresh, getState, sendUpdate, appendEvent, setDrop]);
 
   return { drop, isOpen, offline, shares, openDrop, claimLine, setGoldSplit, cancelDrop, finalizeDrop };
 };
