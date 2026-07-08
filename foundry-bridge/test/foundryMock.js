@@ -71,6 +71,8 @@ export function makeActor(opts = {}) {
     hasPlayerOwner = false,
     ownership = null,
     prototypeToken = null,
+    // PF2e save statistics (#1275) — pass e.g. { reflex: { roll: jest.fn() } }.
+    saves = null,
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -118,6 +120,7 @@ export function makeActor(opts = {}) {
       ...(perception !== null ? { perception: { mod: perception } } : {}),
     },
     itemTypes: { condition: conditionItems, effect: effectItems },
+    ...(saves !== null ? { saves } : {}),
     getActiveTokens: () => tokens,
     update: jest.fn().mockResolvedValue(undefined),
     createEmbeddedDocuments: jest.fn().mockResolvedValue([]),

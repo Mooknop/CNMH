@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -7,6 +7,7 @@ import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../u
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 import { buildDamageApply } from '../../utils/damageRelay';
+import { SAVEDONE_KEY, SAVEDONE_FRESH_MS, buildSaveRoll } from '../../utils/saveRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
@@ -67,6 +68,9 @@ const RequestedSaves = () => {
   const [d20Inputs, setD20Inputs] = useState({});
   // Persistent-damage tracking (#272) — failed saves record their entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
+  // Foundry-rolled saves (#1275): the bridge's ack for a "Roll in Foundry" push.
+  const [saveDone] = useSyncedState(SAVEDONE_KEY, null);
+  const processedAckRef = useRef(null);
 
   const requests = (encounter?.saveRequests || []).filter((r) => r.status === 'pending');
 
@@ -74,8 +78,6 @@ const RequestedSaves = () => {
   // the defenses live on the encounter order entries.
   const defensesFor = (entryId) =>
     (encounter?.order || []).find((e) => e.entryId === entryId)?.defenses ?? null;
-
-  if (requests.length === 0) return null;
 
   const setD20 = (reqId, entryId, val) =>
     setD20Inputs((prev) => ({
@@ -85,19 +87,11 @@ const RequestedSaves = () => {
 
   const getD20 = (reqId, entryId) => d20Inputs[`${reqId}:${entryId}`] ?? '';
 
-  const resolveRequest = (req) => {
-    const results = req.targets.map((t) => {
-      const raw = getD20(req.id, t.entryId);
-      const d20 = parseInt(raw, 10);
-      if (isNaN(d20)) return null;
-      const saveMod = t.saveMod ?? 0;
-      const total = d20 + saveMod;
-      const degree = computeSaveDegree({ d20, total, dc: req.dc });
-      return { entryId: t.entryId, name: t.name, d20, total, degree };
-    });
-
-    if (results.some((r) => r === null)) return; // not all filled
-
+  // Shared resolution tail — everything downstream of a full result set (log
+  // lines, persistent tracking, dmgapply relay, IWR reveal, condition ladders,
+  // caster effects, request removal). Results come from GM-typed d20s
+  // (resolveRequest) or Foundry-rolled saves (#1275 — the savedone effect).
+  const finishResolve = (req, results) => {
     const saveLabel = DEFENSE_LABELS[req.save] || req.save;
     results.forEach((r) => {
       const degreeLabel = DEGREE_LABELS[r.degree] || r.degree;
@@ -224,6 +218,77 @@ const RequestedSaves = () => {
     });
   };
 
+  const resolveRequest = (req) => {
+    const results = req.targets.map((t) => {
+      const raw = getD20(req.id, t.entryId);
+      const d20 = parseInt(raw, 10);
+      if (isNaN(d20)) return null;
+      const saveMod = t.saveMod ?? 0;
+      const total = d20 + saveMod;
+      const degree = computeSaveDegree({ d20, total, dc: req.dc });
+      return { entryId: t.entryId, name: t.name, d20, total, degree };
+    });
+
+    if (results.some((r) => r === null)) return; // not all filled
+    finishResolve(req, results);
+  };
+
+  // Latest-callback ref (#1275): the savedone effect calls the current
+  // finishResolve without making its per-render identity an effect dependency
+  // (wrapping it in useCallback would cascade through every hook it closes over).
+  const finishResolveRef = useRef(null);
+  finishResolveRef.current = finishResolve;
+
+  // Foundry-rolled saves (#1275): a fresh savedone ack matching a pending
+  // request resolves it through the same tail as typed d20s. The bridge's
+  // `total` is authoritative (live modifiers); degrees are recomputed here so
+  // computeSaveDegree stays the one source of truth for nat-20/nat-1. Targets
+  // the bridge could not roll keep their manual inputs (their d20s stay empty);
+  // a stale ack (persisted-key hydration on mount) is ignored.
+  useEffect(() => {
+    if (!saveDone?.id) return;
+    const ackKey = `${saveDone.id}:${saveDone.ts}`;
+    if (processedAckRef.current === ackKey) return;
+    const req = requests.find((r) => r.id === saveDone.id);
+    if (!req) return;
+    processedAckRef.current = ackKey;
+    if (typeof saveDone.ts !== 'number' || Date.now() - saveDone.ts > SAVEDONE_FRESH_MS) return;
+
+    const byEntry = new Map((saveDone.results || []).map((r) => [r.entryId, r]));
+    const results = req.targets.map((t) => {
+      const r = byEntry.get(t.entryId);
+      if (!r || typeof r.d20 !== 'number' || typeof r.total !== 'number') return null;
+      return {
+        entryId: t.entryId,
+        name: t.name || r.name,
+        d20: r.d20,
+        total: r.total,
+        degree: computeSaveDegree({ d20: r.d20, total: r.total, dc: req.dc }),
+      };
+    });
+
+    if (results.every(Boolean)) {
+      appendLog({ type: 'system', text: `Foundry rolled the ${DEFENSE_LABELS[req.save] || req.save} saves for ${req.abilityName}` });
+      finishResolveRef.current(req, results);
+      return;
+    }
+    // Partial: surface what did roll for GM review; the rest stays manual.
+    setD20Inputs((prev) => {
+      const next = { ...prev };
+      results.forEach((r) => { if (r) next[`${req.id}:${r.entryId}`] = String(r.d20); });
+      return next;
+    });
+    const failedNames = (saveDone.failed || []).map((f) => f.name || f.entryId).join(', ');
+    if (failedNames) {
+      appendLog({
+        type: 'system',
+        text: `Foundry: could not roll for ${failedNames} — enter those d20s by hand (${req.abilityName})`,
+      });
+    }
+  }, [saveDone, requests, appendLog]);
+
+  if (requests.length === 0) return null;
+
   return (
     <div className="gm-requested-saves">
       <h3>Requested Saves</h3>
@@ -296,6 +361,13 @@ const RequestedSaves = () => {
                 </div>
               );
             })}
+            <button
+              className="btn-secondary"
+              onClick={() => sendUpdate('global', 'saveroll', buildSaveRoll(req))}
+              style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
+            >
+              Roll in Foundry
+            </button>
             <button
               className="btn-primary"
               onClick={() => resolveRequest(req)}
