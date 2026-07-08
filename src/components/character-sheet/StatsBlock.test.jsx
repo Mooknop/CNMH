@@ -47,7 +47,13 @@ const defaultCharData = {
   ac: 16,
   armorClass: { value: 16, derived: true, source: 'armor', category: 'light', armorName: 'Leather' },
   size: 'Medium',
-  speed: 25,
+  // Speed spine (SP1, #1220): useCharacter exposes the derived object.
+  speed: {
+    base: 25,
+    total: 25,
+    derived: true,
+    breakdown: [{ label: 'Base Speed', amount: 25, type: 'base' }],
+  },
   senses: 'Low-light vision'
 };
 
@@ -275,12 +281,65 @@ describe('StatsBlock', () => {
     expect(screen.getByText('teeny weeny')).toBeInTheDocument();
   });
 
-  it('should use 69 fallback when speed is absent', () => {
+  it('renders 0 feet when the speed detail is absent (the || 69 placeholder is dead)', () => {
     mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, speed: null });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.getByText((_, el) =>
-      el?.textContent?.replace(/\s+/g, ' ').trim() === '69 feet'
+      el?.textContent?.replace(/\s+/g, ' ').trim() === '0 feet'
     )).toBeInTheDocument();
+  });
+
+  it('shows the derived speed total with its breakdown delta (SP1 #1220)', () => {
+    mockUseCharacter.mockReturnValueOnce({
+      ...defaultCharData,
+      speed: {
+        base: 25,
+        total: 15,
+        derived: true,
+        breakdown: [
+          { label: 'Base Speed', amount: 25, type: 'base' },
+          { label: 'Encumbered', amount: -10, type: 'penalty' },
+        ],
+      },
+    });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    // PenaltyDisplay renders the adjusted total (15), the delta (-10), and the
+    // source row in the tooltip.
+    expect(screen.getByText('15')).toBeInTheDocument();
+    // '-10' appears twice: the inline delta and the tooltip source row.
+    expect(screen.getAllByText('-10').length).toBeGreaterThan(0);
+    expect(screen.getByText('Encumbered')).toBeInTheDocument();
+  });
+
+  it('does not double-count an active speed effect on top of the derived total', () => {
+    // Quicksilver Mutagen (+10 status speed) is active AND already folded into
+    // the derived total by useCharacter. The sheet must show 35 — never 45.
+    mockUseEffects.mockReturnValue({
+      effects: [{ id: 'e1', effectId: 'quicksilver-mutagen' }],
+      removeEffect: vi.fn(),
+    });
+    mockUseContent.mockReturnValue({
+      effects: [{
+        id: 'quicksilver-mutagen',
+        name: 'Quicksilver Mutagen',
+        modifiers: [{ stat: 'speed', kind: 'status', amount: 10 }],
+      }],
+    });
+    mockUseCharacter.mockReturnValue({
+      ...defaultCharData,
+      speed: {
+        base: 25,
+        total: 35,
+        derived: true,
+        breakdown: [
+          { label: 'Base Speed', amount: 25, type: 'base' },
+          { label: 'Quicksilver Mutagen', amount: 10, type: 'bonus' },
+        ],
+      },
+    });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('35')).toBeInTheDocument();
+    expect(screen.queryByText('45')).toBeNull();
   });
 
   it('should not display senses section when senses is absent', () => {

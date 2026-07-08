@@ -7,7 +7,10 @@ import { useMemo } from 'react';
 
 import { useSyncedState } from './useSyncedState';
 import { useEffects } from './useEffects';
-import { dexCapFor } from '../utils/EffectUtils';
+import { dexCapFor, computeEffectBonuses, combineModifiers } from '../utils/EffectUtils';
+import { computeConditionEffects } from '../utils/ConditionUtils';
+import { hydrateConditions } from '../data/pf2eConditions';
+import { deriveSpeed } from '../utils/speed';
 import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { applyRemovedOverlay } from '../utils/removedOverlay';
@@ -112,10 +115,15 @@ export const useCharacter = (character) => {
   // Given-away overlay (#656) — uids handed to another PC, masked out of the
   // effective tree + Bulk. Empty/absent ⇒ no effect.
   const [removed] = useSyncedState(`cnmh_removed_${character?.id || 'none'}`, []);
+  // Active conditions ({ id, value } entries, cnmh_conditions_) — read-only
+  // here; StatsBlock's condition tracker is the sole writer. Feeds the Speed
+  // spine (SP1, #1220) so the derived total reflects Encumbered et al.
+  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
   // Active effects (#507) — the merged app + Foundry buff list, the same source
-  // StatsBlock's effect engine reads. Used here only for the Dexterity-cap
+  // StatsBlock's effect engine reads. Used here for the Dexterity-cap
   // adjustment that feeds the AC derivation (caps can't ride the additive effect
-  // rail, so the value must be applied at the derivation site).
+  // rail, so the value must be applied at the derivation site) and for the
+  // stat:'speed' channel of the Speed spine.
   const { effects: activeEffects } = useEffects(character?.id || 'none');
   const { items: catalogItems, spells: catalogSpells, effects: effectCatalog, runes: catalogRunes } = useContent();
   const resolvedAcquired = useMemo(
@@ -141,9 +149,28 @@ export const useCharacter = (character) => {
     const characterClass = character.class;
     const keyAbility   = character.keyAbility;
     const size         = character.size;
-    const speed        = character.speed;
     const maxHp        = character.maxHp || 0;
     const ac           = character.ac || 10;
+
+    // ── Speed (SP1, #1220) ──────────────────────────────────────────────────
+    // The derivation spine: authored base + condition penalties (Encumbered) +
+    // effect stat:'speed' modifiers (mutagens, Drums of War), floored at 5 ft.
+    // Exposed as an object ({ base, total, breakdown }); the sheet renders the
+    // derived total and must NOT layer mod('speed') on top — that channel is
+    // already inside this derivation. Armor/shield penalties land in SP2;
+    // worn-gear bonuses + Bulk encumbrance in SP3. Encounter reachable grids
+    // stay Foundry-authoritative (cnmh_moveopts_) — this is display/accounting
+    // truth.
+    const conditionMods = computeConditionEffects(
+      hydrateConditions(Array.isArray(activeConditions) ? activeConditions : []),
+      keyAbility,
+      level,
+    );
+    const effectMods = computeEffectBonuses(activeEffects, effectCatalog);
+    const speed = deriveSpeed({
+      base: character.speed,
+      modifiers: combineModifiers(conditionMods.speed, effectMods.speed),
+    });
 
     // ── Saves (pre-calculated in JSON) ─────────────────────────────────────
     const saves = {
@@ -524,7 +551,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeConditions, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

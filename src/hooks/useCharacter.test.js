@@ -533,6 +533,67 @@ describe('useCharacter', () => {
     });
   });
 
+  // Speed spine (SP1, #1220): useCharacter derives `speed` as an object —
+  // authored base + condition penalties + effect stat:'speed' modifiers,
+  // floored at 5 ft. The effect test rides the real bundled catalog
+  // (coda-drums-playing: +5 status) via the no-provider useContent fallback.
+  describe('speed spine (SP1 #1220)', () => {
+    const runner = (over = {}) => ({
+      id: 'runner',
+      name: 'Runner',
+      level: 1,
+      speed: 25,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      inventory: [],
+      feats: [],
+      ...over,
+    });
+
+    afterEach(() => localStorage.clear());
+
+    it('derives speed as an object, base passthrough with no modifiers', () => {
+      const { result } = renderHook(() => useCharacter(runner()));
+      expect(result.current.speed).toMatchObject({ base: 25, total: 25, derived: true });
+      expect(result.current.speed.breakdown).toEqual([
+        { label: 'Base Speed', amount: 25, type: 'base' },
+      ]);
+    });
+
+    it('applies an active effect speed bonus exactly once (Drums of War +5 status)', () => {
+      localStorage.setItem(
+        'cnmh_effects_runner',
+        JSON.stringify([{ id: 'e1', effectId: 'coda-drums-playing' }])
+      );
+      const { result } = renderHook(() => useCharacter(runner()));
+      expect(result.current.speed.total).toBe(30);
+      expect(result.current.speed.breakdown).toContainEqual(
+        { label: 'Drums of War (playing)', amount: 5, type: 'bonus' }
+      );
+    });
+
+    it('applies condition penalties (Encumbered −10)', () => {
+      localStorage.setItem(
+        'cnmh_conditions_runner',
+        JSON.stringify([{ id: 'encumbered', value: null }])
+      );
+      const { result } = renderHook(() => useCharacter(runner()));
+      expect(result.current.speed.total).toBe(15);
+      expect(result.current.speed.breakdown).toContainEqual(
+        { label: 'Encumbered', amount: -10, type: 'penalty' }
+      );
+    });
+
+    it('floors the derived total at 5 ft', () => {
+      localStorage.setItem(
+        'cnmh_conditions_runner',
+        JSON.stringify([{ id: 'encumbered', value: null }])
+      );
+      const { result } = renderHook(() => useCharacter(runner({ speed: 10 })));
+      expect(result.current.speed.total).toBe(5);
+      expect(result.current.speed.breakdown.some((r) => r.type === 'floor')).toBe(true);
+    });
+  });
+
   // Gear-granted senses (#1210 M4h): a worn Bloodstained Bandana appends its
   // bloodsense to the character's senses line, at the grade its variant sets.
   describe('gear-granted senses (#1210 M4h)', () => {
