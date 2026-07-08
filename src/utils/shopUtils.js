@@ -254,6 +254,9 @@ export function stockByWareKey(entry) {
 // is a Map of wareKey → qty. Only the FIRST stocked ware matching a key is
 // decremented (mirroring stockByWareKey), floored at 0 — a sold-out ware stays
 // on the shelf at stock 0 so players see it sold out rather than vanishing.
+// The first decrement also stamps `maxStock` = the pre-decrement stock — the
+// GM's authored shelf capacity, which the GmShops restock UX resets to; it is
+// GM-side only (resolveShopWares never carries it to the storefront).
 // Returns the same entry reference when nothing matched (no-op write guard).
 export function decrementWareStock(entry, boughtByKey) {
   if (!entry || !Array.isArray(entry.wares) || !(boughtByKey instanceof Map) || !boughtByKey.size) return entry;
@@ -267,7 +270,9 @@ export function decrementWareStock(entry, boughtByKey) {
     if (key == null || applied.has(key) || !boughtByKey.has(key)) return w;
     applied.add(key);
     changed = true;
-    return { ...w, stock: Math.max(0, Number(w.stock) - boughtByKey.get(key)) };
+    const cur = Number(w.stock);
+    const max = Number.isFinite(Number(w.maxStock)) ? Number(w.maxStock) : cur;
+    return { ...w, stock: Math.max(0, cur - boughtByKey.get(key)), maxStock: Math.max(max, cur) };
   });
   return changed ? { ...entry, wares } : entry;
 }

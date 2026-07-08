@@ -393,6 +393,16 @@
 .gm-shop-ware-fields { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
 .gm-shop-ware-fields .gm-shop-ware-field:first-child { flex: 1 1 140px; }
 
+/* Restock affordances (#1139): the per-ware ↻-to-capacity button sits beside
+   the stock input; a drained ware wears the sold-out chip in its title row. */
+.gm-shop-restock { flex: 0 0 auto; align-self: flex-end; white-space: nowrap; }
+.gm-shop-soldout {
+  flex: 0 0 auto; font-size: 0.68rem; font-weight: 700; line-height: 1;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border: 1px solid var(--shell-border); border-radius: var(--radius-sm);
+  padding: 3px 6px; color: var(--shell-text-secondary);
+}
+
 /* Variant multi-select + per-variant price/stock (#889). */
 .gm-shop-ware-variants { display: flex; flex-direction: column; gap: 8px; }
 .gm-shop-ware-vopts { display: flex; flex-wrap: wrap; gap: 6px 14px; }

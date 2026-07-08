@@ -55,7 +55,13 @@ import './gm.css';
 // A multi-level item (#798) is authored as ONE row whose `forms` hold the chosen
 // variants (a sub-row per selected level). Strings throughout (form inputs);
 // blanks mean "fall back to the catalog/variant price / unlimited stock".
+//
+// Restock plumbing (#1139): each priced row/form also carries `stock0` (the
+// stock string as LOADED — purchase-decremented live value) and `maxStock` (the
+// authored capacity checkout stamped on first decrement). An untouched stock
+// input preserves the capacity through saves; an edited one re-authors it.
 const str = (v) => (v != null ? String(v) : '');
+const priceStock = (w) => ({ price: str(w.price), stock: str(w.stock), stock0: str(w.stock), maxStock: str(w.maxStock) });
 
 const toRows = (wares) => {
   // Generative spell-item (#819) and rune-service (#982 G2) offerings are authored
@@ -68,16 +74,25 @@ const toRows = (wares) => {
   const variantRow = new Map(); // ref -> the collapsed variant row
   list.forEach((w) => {
     if (w.ref === 'runestone') {
-      rows.push({ ref: 'runestone', runeRef: str(w.runeRef), price: str(w.price), stock: str(w.stock) });
+      rows.push({ ref: 'runestone', runeRef: str(w.runeRef), ...priceStock(w) });
     } else if (w.level != null) {
       let row = variantRow.get(w.ref);
       if (!row) { row = { ref: w.ref, forms: [] }; variantRow.set(w.ref, row); rows.push(row); }
-      row.forms.push({ level: str(w.level), price: str(w.price), stock: str(w.stock) });
+      row.forms.push({ level: str(w.level), ...priceStock(w) });
     } else {
-      rows.push({ ref: w.ref, price: str(w.price), stock: str(w.stock) });
+      rows.push({ ref: w.ref, ...priceStock(w) });
     }
   });
   return rows;
+};
+
+// The capacity a row/form can restock to, or null when it's already full (or
+// unlimited / capacity unknown). Reads the string form fields.
+const restockTo = (row) => {
+  const m = parseInt(row?.maxStock, 10);
+  if (Number.isNaN(m) || m < 0) return null;
+  const s = parseInt(row?.stock, 10);
+  return Number.isNaN(s) || s < m ? m : null;
 };
 
 // Stable per-row key: `runestone@runeRef` for a rune ware, else the bare ref —
@@ -88,12 +103,20 @@ const rowKey = (r) => {
 };
 
 // Set price/stock on a stored ware from form strings (drop blanks; stock must be
-// a non-negative integer).
-const applyPriceStock = (w, price, stock) => {
+// a non-negative integer). `prior` carries the row's stock0/maxStock (#1139): an
+// UNTOUCHED stock input (stock === stock0) preserves the recorded capacity; an
+// edited one re-authors it — the new number IS the capacity, so maxStock
+// collapses away (it's only ever stored when it exceeds the current stock).
+const applyPriceStock = (w, price, stock, prior) => {
   const p = parseFloat(price);
   if (!Number.isNaN(p)) w.price = p;
   const s = parseInt(stock, 10);
-  if (!Number.isNaN(s) && s >= 0) w.stock = s;
+  if (!Number.isNaN(s) && s >= 0) {
+    w.stock = s;
+    const untouched = prior != null && stock === prior.stock0;
+    const m = untouched ? parseInt(prior.maxStock, 10) : s;
+    if (!Number.isNaN(m) && m > s) w.maxStock = m;
+  }
   return w;
 };
 
@@ -106,16 +129,16 @@ const fromRows = (rows) => {
     if (r.ref === 'runestone') {
       const w = { ref: 'runestone' };
       if (r.runeRef) w.runeRef = r.runeRef;
-      out.push(applyPriceStock(w, r.price, r.stock));
+      out.push(applyPriceStock(w, r.price, r.stock, r));
     } else if (Array.isArray(r.forms)) {
       r.forms.forEach((f) => {
         const w = { ref: r.ref };
         const level = parseInt(f.level, 10);
         if (!Number.isNaN(level)) w.level = level;
-        out.push(applyPriceStock(w, f.price, f.stock));
+        out.push(applyPriceStock(w, f.price, f.stock, f));
       });
     } else {
-      out.push(applyPriceStock({ ref: r.ref }, r.price, r.stock));
+      out.push(applyPriceStock({ ref: r.ref }, r.price, r.stock, r));
     }
   });
   return out;
@@ -135,14 +158,13 @@ const toDragonbreathRows = (wares) =>
     ref: String(w.ref),
     tier: String(w.dragonbreath.tier || 'base').toLowerCase(),
     dragonType: w.dragonbreath.dragonType ? String(w.dragonbreath.dragonType) : '',
-    price: str(w.price),
-    stock: str(w.stock),
+    ...priceStock(w),
   }));
 
 const fromDragonbreathRows = (rows) =>
   (Array.isArray(rows) ? rows : []).filter((r) => r.ref).map((r) => {
     const w = { ref: r.ref, dragonbreath: { tier: r.tier || 'base', dragonType: (r.dragonType || '').trim() } };
-    return applyPriceStock(w, r.price, r.stock);
+    return applyPriceStock(w, r.price, r.stock, r);
   });
 
 // ── Generative spell-item offerings (#819) ──────────────────────────────────
@@ -464,9 +486,26 @@ const CatalogPane = ({ catalog, chips, stockedKeys, onAdd }) => {
   );
 };
 
+// Quick-restock affordance (#1139): shown beside a stock input whose recorded
+// capacity (maxStock, stamped by the purchase decrement) exceeds the current
+// value. Clicking fills the input back to capacity — a draft edit like any
+// other; Save & publish makes it live (and collapses maxStock back into stock).
+const RestockButton = ({ idKey, row, onChange }) => {
+  const m = restockTo(row);
+  if (m == null) return null;
+  return (
+    <button type="button" className="btn-small btn-secondary gm-shop-restock"
+      aria-label={`restock-${idKey}`} title={`Restock to ${m}`}
+      onClick={() => onChange({ stock: String(m) })}>
+      ↻ {m}
+    </button>
+  );
+};
+
 // Compact price + stock inputs, keyed by `idKey` (the row ref, or `ref@level`
 // for a variant sub-row). `placeholderPrice` is the catalog/variant fallback.
-const PriceStock = ({ idKey, price, stock, placeholderPrice, onChange }) => (
+// `row` supplies the stock/maxStock pair the restock affordance reads.
+const PriceStock = ({ idKey, price, stock, placeholderPrice, row, onChange }) => (
   <>
     <div className="form-group gm-shop-ware-field">
       <label htmlFor={`price-${idKey}`}>price (gp)</label>
@@ -479,8 +518,14 @@ const PriceStock = ({ idKey, price, stock, placeholderPrice, onChange }) => (
       <input id={`stock-${idKey}`} aria-label={`stock-${idKey}`} type="number" min="0"
         placeholder="∞" value={stock} onChange={(e) => onChange({ stock: e.target.value })} />
     </div>
+    {row && <RestockButton idKey={idKey} row={row} onChange={onChange} />}
   </>
 );
+
+// A drained ware (stock 0) wears a sold-out chip so the GM can spot what needs
+// restocking without reading every input.
+const SoldOutChip = ({ idKey }) =>
+  <span className="gm-shop-soldout" data-testid={`gm-soldout-${idKey}`}>Sold out</span>;
 
 // One stocked ware row. A variant item (#889) is a single row: the catalog item
 // picked once, with a checkbox per variant choosing which forms it sells and a
@@ -514,6 +559,7 @@ const ShelfRow = ({ row, catalogMap, runeMap, onChange, onRemove }) => {
     <li className="gm-row gm-shop-ware-row gm-shop-shelf-row">
       <div className="gm-shop-ware-top">
         <span className="gm-shop-ware-name">{name}</span>
+        {!isVariantItem && parseInt(row.stock, 10) === 0 && <SoldOutChip idKey={key} />}
         {traits.slice(0, 3).length > 0 && (
           <span className="gm-shop-ware-tr">{traits.slice(0, 3).join(' · ').toLowerCase()}</span>
         )}
@@ -541,9 +587,10 @@ const ShelfRow = ({ row, catalogMap, runeMap, onChange, onRemove }) => {
             return (
               <div key={f.level} className="gm-shop-ware-form">
                 <span className="gm-shop-ware-form-name">{v ? v.label || v.name || `L${f.level}` : `L${f.level}`}</span>
+                {parseInt(f.stock, 10) === 0 && <SoldOutChip idKey={`${row.ref}@${f.level}`} />}
                 <div className="gm-shop-ware-fields">
                   <PriceStock idKey={`${row.ref}@${f.level}`} price={f.price} stock={f.stock}
-                    placeholderPrice={v?.price} onChange={(patch) => setForm(f.level, patch)} />
+                    placeholderPrice={v?.price} row={f} onChange={(patch) => setForm(f.level, patch)} />
                 </div>
               </div>
             );
@@ -553,7 +600,7 @@ const ShelfRow = ({ row, catalogMap, runeMap, onChange, onRemove }) => {
         <div className="gm-shop-ware-fields">
           <PriceStock idKey={key} price={row.price} stock={row.stock}
             placeholderPrice={isRune ? (rune ? 3 + (Number(rune.price) || 0) : 3) : item?.price}
-            onChange={onChange} />
+            row={row} onChange={onChange} />
         </div>
       )}
     </li>
@@ -561,10 +608,19 @@ const ShelfRow = ({ row, catalogMap, runeMap, onChange, onRemove }) => {
 };
 
 // Shelf (stock) pane: the stocked wares + the pinned Save & publish footer.
-const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSaved, onSave }) => {
+// `restockable`/`onRestockAll` (#1139) cover the whole shop draft (shelf rows +
+// dragonbreath rows): one click refills every drained ware to its recorded
+// capacity, then Save & publish makes it live.
+const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSaved, onSave, restockable, onRestockAll }) => {
   const hasStock = (s) => s !== '' && s != null;
   const limited = rows.reduce(
     (n, r) => n + (Array.isArray(r.forms) ? r.forms.filter((f) => hasStock(f.stock)).length : (hasStock(r.stock) ? 1 : 0)),
+    0
+  );
+  const soldOut = rows.reduce(
+    (n, r) => n + (Array.isArray(r.forms)
+      ? r.forms.filter((f) => parseInt(f.stock, 10) === 0).length
+      : (parseInt(r.stock, 10) === 0 ? 1 : 0)),
     0
   );
   return (
@@ -600,9 +656,15 @@ const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSa
         <span className="gm-count gm-shop-tally">
           {rows.length} item{rows.length === 1 ? '' : 's'}
           {limited > 0 && ` · ${limited} limited stock`}
+          {soldOut > 0 && ` · ${soldOut} sold out`}
         </span>
         {justSaved && !dirty && (
           <span className="gm-shop-saveflash" role="status">Saved — live for players</span>
+        )}
+        {restockable > 0 && (
+          <button type="button" className="btn-small btn-secondary" aria-label="restock-all" onClick={onRestockAll}>
+            ↻ Restock all ({restockable})
+          </button>
         )}
         <button type="button" className="btn-primary" disabled={!dirty} onClick={onSave}>
           {dirty ? 'Save & publish' : 'Saved'}
@@ -917,6 +979,7 @@ const DragonbreathSection = ({ rows, weapons, catalogMap, onChange }) => {
                       placeholder="∞" value={r.stock}
                       onChange={(e) => setRow(i, { stock: e.target.value })} />
                   </div>
+                  <RestockButton idKey={`db-${i}`} row={r} onChange={(patch) => setRow(i, patch)} />
                 </div>
                 <p className="gm-count" data-testid={`db-preview-${i}`}>
                   L{dragonbreathTierLevel(r.tier)} · {defPrice} gp · {breath.dice}{' '}
@@ -1383,6 +1446,21 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
   const editRuneConfig = (next) => { setRuneConfig(next); touch(); };
   const editDbRows = (next) => { setDbRows(next); touch(); };
 
+  // Restock all (#1139): refill every drained row/form — shelf AND dragonbreath —
+  // to its recorded capacity, as one draft edit the GM then saves.
+  const refill = (o) => { const m = restockTo(o); return m != null ? { ...o, stock: String(m) } : o; };
+  const restockRow = (r) => (Array.isArray(r.forms) ? { ...r, forms: r.forms.map(refill) } : refill(r));
+  const restockable =
+    rows.reduce((n, r) => n + (Array.isArray(r.forms)
+      ? r.forms.filter((f) => restockTo(f) != null).length
+      : (restockTo(r) != null ? 1 : 0)), 0) +
+    dbRows.filter((r) => restockTo(r) != null).length;
+  const restockAll = () => {
+    setRows((cur) => cur.map(restockRow));
+    setDbRows((cur) => cur.map(refill));
+    touch();
+  };
+
   // Shelve a catalog card as ONE row, skipping a ref/rune already on the shelf.
   // A multi-variant item (#889) shelves with its first variant pre-selected (the
   // GM toggles the rest); a flat item / runestone is a single-form row.
@@ -1591,6 +1669,8 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
               dirty={dirty}
               justSaved={justSaved}
               onSave={save}
+              restockable={restockable}
+              onRestockAll={restockAll}
             />
           </div>
 

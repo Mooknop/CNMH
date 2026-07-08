@@ -180,14 +180,15 @@ describe('useShopCheckout', () => {
       const r = result.current.checkout({ purchases: [stocked(3)], shopTitle: 'Forge', loreId: 'forge' });
       expect(r).toMatchObject({ total: 9, wareCount: 3 });
       expect(setShops).toHaveBeenCalledTimes(1);
-      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 1 }, { ref: 'spellbook' }]);
+      // maxStock stamps the pre-decrement capacity — the GM's restock target.
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 1, maxStock: 4 }, { ref: 'spellbook' }]);
     });
 
     it('buying the last copies leaves the ware at stock 0 (sold out, not deleted)', () => {
       shops = { forge: { wares: [{ ref: 'antidote', stock: 2 }] } };
       const { result } = renderHook(() => useShopCheckout('a'));
       result.current.checkout({ purchases: [stocked(2)], shopTitle: 'Forge', loreId: 'forge' });
-      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 0 }]);
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 0, maxStock: 2 }]);
     });
 
     it('rejects (writes nothing) when a line exceeds the CURRENT stock', () => {
@@ -215,7 +216,7 @@ describe('useShopCheckout', () => {
         purchases: [{ item: { id: 'tonic', name: 'Lesser Tonic', price: 12, stock: 2, wareKey: 'tonic@3' }, qty: 2 }],
         shopTitle: 'Forge', loreId: 'forge',
       });
-      expect(shops.forge.wares).toEqual([{ ref: 'tonic', level: 3, stock: 0 }, { ref: 'tonic', level: 1, stock: 5 }]);
+      expect(shops.forge.wares).toEqual([{ ref: 'tonic', level: 3, stock: 0, maxStock: 2 }, { ref: 'tonic', level: 1, stock: 5 }]);
     });
 
     it('composes a sale-shelf strike + a stock decrement into ONE store write', () => {
@@ -228,7 +229,7 @@ describe('useShopCheckout', () => {
       expect(r).toMatchObject({ total: 803, wareCount: 2 });
       expect(setShops).toHaveBeenCalledTimes(1);
       expect(shops.forge.saleShelf).toEqual([]);
-      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 3 }]);
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 3, maxStock: 4 }]);
     });
 
     it('a sale line (stock 1, sale wareKey) never trips the stocked-ware guard', () => {

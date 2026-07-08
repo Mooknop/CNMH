@@ -1246,15 +1246,22 @@ describe('purchase-time stock decrement (#1139)', () => {
       { ref: 'spellbook' },
     ] };
 
-    it('decrements bought quantities on matching stocked wares, floored at 0', () => {
+    it('decrements bought quantities on matching stocked wares, floored at 0, stamping maxStock', () => {
       const next = decrementWareStock(entry, new Map([['antidote', 2], ['tonic@3', 5]]));
       expect(next.wares).toEqual([
-        { ref: 'antidote', stock: 1 },
-        { ref: 'tonic', level: 3, stock: 0 },
+        // maxStock = the pre-decrement stock: the GM's restock target (#1139 slice 2).
+        { ref: 'antidote', stock: 1, maxStock: 3 },
+        { ref: 'tonic', level: 3, stock: 0, maxStock: 1 },
         { ref: 'spellbook' },
       ]);
       expect(next.keeper).toBe('Hi'); // other entry fields survive
       expect(entry.wares[0].stock).toBe(3); // pure — input untouched
+    });
+
+    it('preserves an already-stamped maxStock across later decrements', () => {
+      const partly = { wares: [{ ref: 'antidote', stock: 2, maxStock: 4 }] };
+      const next = decrementWareStock(partly, new Map([['antidote', 1]]));
+      expect(next.wares).toEqual([{ ref: 'antidote', stock: 1, maxStock: 4 }]);
     });
 
     it('never touches an unlimited (stock-less) ware', () => {
