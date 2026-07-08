@@ -135,6 +135,44 @@
   padding: 1px 5px;
 }
 
+/* ── Bulk-derived encumbrance rows (SP3, #1222) ── */
+.ct-derived-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #888;
+  background: #f0f0f0;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.ct-encumbrance-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.ct-encumbrance-label {
+  font-weight: 600;
+}
+
+.ct-encumbrance-detail {
+  font-weight: 400;
+  color: #888;
+}
+
+.ct-encumbrance-hint {
+  font-size: 0.78rem;
+  color: #666;
+  line-height: 1.4;
+  margin: 0.4rem 0 0;
+}
+
 /* ── Divider ── */
 .ct-divider {
   border: none;
@@ -266,7 +304,17 @@
 }
 
 .ct-browser-valued-tag,
-.ct-decrement-tag {
+.ct-decrement-tag,
+.ct-derived-tag {
   background: rgba(255, 255, 255, 0.08);
   color: var(--shell-text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.ct-encumbrance-label {
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.ct-encumbrance-detail,
+.ct-encumbrance-hint {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.45));
 }

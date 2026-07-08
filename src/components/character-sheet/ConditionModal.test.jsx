@@ -229,4 +229,58 @@ describe('ConditionModal', () => {
       expect(screen.getByText('Persistent Damage')).toBeInTheDocument();
     });
   });
+  describe('Bulk-derived encumbrance (SP3 #1222)', () => {
+    const derivedRows = [
+      { id: 'encumbered', name: 'Encumbered', valued: false, value: null, derived: true, effect: () => '-10 ft Speed' },
+      { id: 'clumsy', name: 'Clumsy', valued: true, maxValue: 4, value: 1, derived: true, effect: (v) => `-${v} to Dex checks` },
+    ];
+
+    it('derived rows render an auto tag and no adjust/remove controls', () => {
+      render(<ConditionModal {...defaultProps} activeConditions={derivedRows} />);
+      expect(screen.getAllByText('auto')).toHaveLength(2);
+      expect(screen.queryByTitle('Remove condition')).toBeNull();
+      expect(screen.queryByTitle('Increment')).toBeNull();
+    });
+
+    it('manual rows keep their controls next to derived ones', () => {
+      const mixed = [
+        { id: 'frightened', name: 'Frightened', valued: true, maxValue: 4, value: 2, effect: (v) => `-${v} to checks` },
+        ...derivedRows,
+      ];
+      render(<ConditionModal {...defaultProps} activeConditions={mixed} />);
+      expect(screen.getByTitle('Remove condition')).toBeInTheDocument();
+      expect(screen.getAllByText('auto')).toHaveLength(2);
+    });
+
+    it('renders the encumbrance toggle when the prop is provided, wired to setAuto', () => {
+      const setAuto = vi.fn();
+      render(
+        <ConditionModal
+          {...defaultProps}
+          encumbrance={{ overBulk: true, auto: true, derived: true, setAuto }}
+          totalBulk={8}
+          encumberedThreshold={5}
+        />
+      );
+      expect(screen.getByText('Encumbrance')).toBeInTheDocument();
+      expect(screen.getByText(/8 carried \/ encumbered over 5/)).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('Derive Encumbered from carried Bulk'));
+      expect(setAuto).toHaveBeenCalledWith(false);
+    });
+
+    it('unticked toggle reflects auto=false', () => {
+      render(
+        <ConditionModal
+          {...defaultProps}
+          encumbrance={{ overBulk: true, auto: false, derived: false, setAuto: vi.fn() }}
+        />
+      );
+      expect(screen.getByLabelText('Derive Encumbered from carried Bulk').checked).toBe(false);
+    });
+
+    it('hides the encumbrance section without the prop', () => {
+      render(<ConditionModal {...defaultProps} />);
+      expect(screen.queryByText('Encumbrance')).toBeNull();
+    });
+  });
 });

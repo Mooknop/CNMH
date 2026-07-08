@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useEffects } from './useEffects';
 import { dexCapFor, computeEffectBonuses, combineModifiers } from '../utils/EffectUtils';
-import { computeConditionEffects } from '../utils/ConditionUtils';
+import { computeConditionEffects, withDerivedEncumbrance } from '../utils/ConditionUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
 import { deriveSpeed, armorSpeedPenalty, shieldSpeedPenalty } from '../utils/speed';
 import { useContent } from '../contexts/ContentContext';
@@ -17,7 +17,7 @@ import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
 import { itemUidOf } from '../utils/affix';
 import { applyItemModes } from '../utils/itemModes';
-import { wornBonusSlots, wornSenses } from '../utils/wornGear';
+import { wornBonusSlots, wornSenses, wornSpeedEffects } from '../utils/wornGear';
 import { listStaves } from '../utils/staffPrep';
 import { itemCatalogMap, spellCatalogMap, runeCatalogMap, resolveInventory } from '../utils/contentUtils';
 
@@ -119,6 +119,11 @@ export const useCharacter = (character) => {
   // here; StatsBlock's condition tracker is the sole writer. Feeds the Speed
   // spine (SP1, #1220) so the derived total reflects Encumbered et al.
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  // Bulk-derived encumbrance auto-toggle (SP3, #1222) — default ON: carrying
+  // over the encumbered threshold derives Encumbered + Clumsy 1. GM/player can
+  // suppress it (containers, mounts and party hauling make raw Bulk math wrong
+  // at real tables); the setter is exposed as encumbrance.setAuto.
+  const [encAuto, setEncAuto] = useSyncedState(`cnmh_encauto_${character?.id || 'none'}`, true);
   // Active effects (#507) — the merged app + Foundry buff list, the same source
   // StatsBlock's effect engine reads. Used here for the Dexterity-cap
   // adjustment that feeds the AC derivation (caps can't ride the additive effect
@@ -302,22 +307,59 @@ export const useCharacter = (character) => {
       armorName: wornArmor ? wornArmor.name : null,
     };
 
-    // ── Speed (SP1 #1220 / SP2 #1221) ────────────────────────────────────────
-    // The derivation spine: authored base + condition penalties (Encumbered) +
-    // effect stat:'speed' modifiers (mutagens, Drums of War) + untyped gear
-    // penalties — the worn armor's speedPenalty (reduced 5 ft when Strength
-    // meets armor.strength) and a held tower shield's — floored at 5 ft.
-    // Exposed as an object ({ base, total, breakdown }); the sheet renders the
-    // derived total and must NOT layer mod('speed') on top — that channel is
-    // already inside this derivation. Worn-gear bonuses + Bulk encumbrance land
-    // in SP3. Encounter reachable grids stay Foundry-authoritative
-    // (cnmh_moveopts_) — this is display/accounting truth.
+    // ── Bulk ────────────────────────────────────────────────────────────────
+    const bulkStats = calculateEnhancedBulkLimit(character);
+    const totalBulk = calculateItemsBulk(effectiveInventory);
+
+    // ── Encumbrance (SP3, #1222) ─────────────────────────────────────────────
+    // Carried Bulk strictly over the encumbered threshold (5 + Str mod, Hefty
+    // Hauler-aware — exactly AT the threshold is fine) derives the PF2e
+    // encumbered state: the Encumbered condition (−10 ft Speed) + Clumsy 1,
+    // injected into the condition list below so the existing condition engine
+    // nets them — never hand-rolled penalties. GM/player-overridable via the
+    // cnmh_encauto_ toggle (default ON).
+    const overBulk =
+      Number.isFinite(bulkStats?.encumberedThreshold) &&
+      totalBulk > bulkStats.encumberedThreshold;
+    const encumbrance = {
+      overBulk,
+      auto: encAuto !== false,
+      derived: encAuto !== false && overBulk,
+    };
+
+    // ── Speed (SP1 #1220 / SP2 #1221 / SP3 #1222) ────────────────────────────
+    // The derivation spine: authored base + condition penalties (Encumbered —
+    // manual or Bulk-derived) + effect stat:'speed' modifiers (mutagens, Drums
+    // of War, and worn-and-invested gear like Boots of Bounding, synthesized
+    // into the same bucket computation so item-bonus stacking is PF2e-correct)
+    // + untyped gear penalties — the worn armor's speedPenalty (reduced 5 ft
+    // when Strength meets armor.strength) and a held tower shield's — floored
+    // at 5 ft. Exposed as an object ({ base, total, breakdown }); the sheet
+    // renders the derived total and must NOT layer mod('speed') on top — that
+    // channel is already inside this derivation. Encounter reachable grids
+    // stay Foundry-authoritative (cnmh_moveopts_) — this is display/accounting
+    // truth.
+    const spineConditions = withDerivedEncumbrance(
+      Array.isArray(activeConditions) ? activeConditions : [],
+      encumbrance.derived,
+    );
     const conditionMods = computeConditionEffects(
-      hydrateConditions(Array.isArray(activeConditions) ? activeConditions : []),
+      hydrateConditions(spineConditions),
       keyAbility,
       level,
     );
-    const effectMods = computeEffectBonuses(activeEffects, effectCatalog);
+    const wornSpeed = wornSpeedEffects(
+      effectiveInventory,
+      (itemUid) => !!(investedMap || {})[itemUid],
+    );
+    // Appending synth entries+defs mirrors useResolvedEffects; with no speed
+    // gear the plain call keeps computeEffectBonuses' default-catalog fallback.
+    const effectMods = wornSpeed.length
+      ? computeEffectBonuses(
+          [...activeEffects, ...wornSpeed.map((s) => s.entry)],
+          [...(effectCatalog || []), ...wornSpeed.map((s) => s.def)],
+        )
+      : computeEffectBonuses(activeEffects, effectCatalog);
     const speed = deriveSpeed({
       base: character.speed,
       modifiers: combineModifiers(conditionMods.speed, effectMods.speed),
@@ -326,10 +368,6 @@ export const useCharacter = (character) => {
         shieldSpeedPenalty(effectiveInventory),
       ].filter(Boolean),
     });
-
-    // ── Bulk ────────────────────────────────────────────────────────────────
-    const bulkStats = calculateEnhancedBulkLimit(character);
-    const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Combat ──────────────────────────────────────────────────────────────
     const strikes     = [
@@ -521,6 +559,7 @@ export const useCharacter = (character) => {
       // Bulk
       bulkStats,
       totalBulk,
+      encumbrance,
 
       // Combat
       strikes,
@@ -556,13 +595,22 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeConditions, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeConditions, encAuto, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither
   // the character data nor the synced values have actually changed.
   return useMemo(
-    () => charMemo ? { ...charMemo, hp, setHp, heroPoints, setHeroPoints } : null,
-    [charMemo, hp, setHp, heroPoints, setHeroPoints]
+    () => charMemo
+      ? {
+          ...charMemo,
+          encumbrance: { ...charMemo.encumbrance, setAuto: setEncAuto },
+          hp,
+          setHp,
+          heroPoints,
+          setHeroPoints,
+        }
+      : null,
+    [charMemo, setEncAuto, hp, setHp, heroPoints, setHeroPoints]
   );
 };

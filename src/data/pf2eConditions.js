@@ -274,7 +274,12 @@ export const getCondition = (id) => PF2E_CONDITIONS.find((c) => c.id === id);
 
 export const hydrateCondition = (stored) => {
   const def = getCondition(stored?.id);
-  return def ? { ...def, value: stored.value } : null;
+  if (!def) return null;
+  // `derived` marks Bulk-derived encumbrance entries (SP3, #1222) so the
+  // tracker renders them as auto rows without remove/adjust controls.
+  return stored.derived
+    ? { ...def, value: stored.value, derived: true }
+    : { ...def, value: stored.value };
 };
 
 // Unknown ids (older/newer clients) are dropped defensively.

@@ -1,4 +1,4 @@
-import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, wornBonusSlots, wornSenses, senseLabel, specialModifiers, itemModifiers } from './wornGear';
+import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, wornBonusSlots, wornSenses, wornSpeedEffects, senseLabel, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -292,5 +292,50 @@ describe('wornSenses (#1210 M4h)', () => {
     const b = bandana({ uid: 'b', sense: { name: 'Bloodsense', precision: 'Vague', rangeFt: 30 } });
     const c = bandana({ uid: 'c', sense: { name: 'bloodsense', precision: 'precise', rangeFt: 30 } });
     expect(wornSenses([a, b, c], no)).toEqual(['vague bloodsense 30 feet', 'precise bloodsense 30 feet']);
+  });
+});
+
+describe('wornSpeedEffects (SP3 #1222)', () => {
+  const boots = (overrides = {}) => ({
+    uid: 'boots',
+    name: 'Boots of Bounding',
+    traits: ['Invested', 'Magical'],
+    modifiers: [{ stat: 'speed', kind: 'item', amount: 5 }],
+    ...overrides,
+  });
+
+  it('synthesizes an entry/def pair for worn, invested speed gear', () => {
+    const out = wornSpeedEffects([boots()], yes);
+    expect(out).toHaveLength(1);
+    expect(out[0].entry).toEqual({ id: 'wornspeed-boots', effectId: 'wornspeed-boots' });
+    expect(out[0].def).toEqual({
+      id: 'wornspeed-boots',
+      name: 'Boots of Bounding',
+      modifiers: [{ stat: 'speed', kind: 'item', amount: 5 }],
+    });
+  });
+
+  it('carries ONLY the speed modifiers of a multi-stat item', () => {
+    const multi = boots({
+      modifiers: [
+        { stat: 'speed', kind: 'item', amount: 5 },
+        { stat: 'acrobatics', kind: 'item', amount: 1 },
+      ],
+    });
+    expect(wornSpeedEffects([multi], yes)[0].def.modifiers).toEqual([
+      { stat: 'speed', kind: 'item', amount: 5 },
+    ]);
+  });
+
+  it('contributes nothing when uninvested, held, or speed-free', () => {
+    expect(wornSpeedEffects([boots()], no)).toEqual([]);
+    expect(wornSpeedEffects([boots({ state: 'held1' })], yes)).toEqual([]);
+    expect(wornSpeedEffects([boots({ modifiers: [{ stat: 'ac', kind: 'item', amount: 1 }] })], yes)).toEqual([]);
+    expect(wornSpeedEffects([], yes)).toEqual([]);
+  });
+
+  it('non-investable worn gear contributes as soon as it is worn', () => {
+    const mundane = boots({ traits: [] });
+    expect(wornSpeedEffects([mundane], no)).toHaveLength(1);
   });
 });

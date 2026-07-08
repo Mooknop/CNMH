@@ -11,6 +11,11 @@ const ConditionModal = ({
   onAdd,
   onRemove,
   onChangeValue,
+  // Bulk-derived encumbrance (SP3, #1222): { overBulk, auto, derived, setAuto }
+  // from useCharacter. When present, the footer renders the auto-derive toggle.
+  encumbrance = null,
+  totalBulk = null,
+  encumberedThreshold = null,
   highZ = false,
 }) => {
   const activeIds = new Set(activeConditions.map((c) => c.id));
@@ -43,32 +48,43 @@ const ConditionModal = ({
                     )}
                   </span>
                   <div className="ct-active-controls">
-                    {cond.valued && (
+                    {/* Bulk-derived rows (SP3, #1222) are auto-managed — no
+                        adjust/remove controls; suppress them via the footer
+                        toggle instead. */}
+                    {cond.derived ? (
+                      <span className="ct-derived-tag" title="Derived from carried Bulk">
+                        auto
+                      </span>
+                    ) : (
                       <>
+                        {cond.valued && (
+                          <>
+                            <button
+                              className="ct-ctrl-btn"
+                              onClick={() => onChangeValue(cond.id, -1)}
+                              title="Decrement"
+                            >
+                              −
+                            </button>
+                            <button
+                              className="ct-ctrl-btn"
+                              onClick={() => onChangeValue(cond.id, 1)}
+                              title="Increment"
+                              disabled={cond.value >= cond.maxValue}
+                            >
+                              +
+                            </button>
+                          </>
+                        )}
                         <button
-                          className="ct-ctrl-btn"
-                          onClick={() => onChangeValue(cond.id, -1)}
-                          title="Decrement"
+                          className="ct-remove-btn"
+                          onClick={() => onRemove(cond.id)}
+                          title="Remove condition"
                         >
-                          −
-                        </button>
-                        <button
-                          className="ct-ctrl-btn"
-                          onClick={() => onChangeValue(cond.id, 1)}
-                          title="Increment"
-                          disabled={cond.value >= cond.maxValue}
-                        >
-                          +
+                          ×
                         </button>
                       </>
                     )}
-                    <button
-                      className="ct-remove-btn"
-                      onClick={() => onRemove(cond.id)}
-                      title="Remove condition"
-                    >
-                      ×
-                    </button>
                   </div>
                 </div>
                 <p className="ct-active-effect">{cond.effect(cond.value)}</p>
@@ -107,6 +123,37 @@ const ConditionModal = ({
           })}
         </div>
       </section>
+
+      {/* ── Bulk-derived encumbrance (SP3, #1222) ── */}
+      {encumbrance && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Encumbrance</h3>
+            <label className="ct-encumbrance-row">
+              <input
+                type="checkbox"
+                checked={encumbrance.auto}
+                onChange={(e) => encumbrance.setAuto?.(e.target.checked)}
+                aria-label="Derive Encumbered from carried Bulk"
+              />
+              <span className="ct-encumbrance-label">
+                Derive Encumbered from carried Bulk
+                {totalBulk != null && encumberedThreshold != null && (
+                  <span className="ct-encumbrance-detail">
+                    {' '}({totalBulk} carried / encumbered over {encumberedThreshold})
+                  </span>
+                )}
+              </span>
+            </label>
+            <p className="ct-encumbrance-hint">
+              Over the threshold: Encumbered (−10 ft Speed) and Clumsy 1 apply
+              automatically. Untick if a container, mount or party hauling makes
+              the raw Bulk math wrong.
+            </p>
+          </section>
+        </>
+      )}
     </Modal>
   );
 };
