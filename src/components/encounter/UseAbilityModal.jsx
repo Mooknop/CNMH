@@ -40,6 +40,7 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { ammoSaveDc } from '../../utils/ammunition';
 import { resolveActionRoll, isBasicDefense } from '../../utils/rollResolution';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { preyMatches } from '../../utils/huntPrey';
@@ -146,6 +147,9 @@ const UseAbilityModal = ({
   // cast (by uid). Eligibility is computed once the cast spell/inventory are known.
   const [catalystIds, setCatalystIds] = useState([]);
   const [fireChamberIdx, setFireChamberIdx] = useState(null);
+  // Rolled total for the loaded ammo's on-hit damage payload (#1271, AA2 —
+  // Storm Arrow's 3d12): entered by the player like every other damage roll.
+  const [ammoDmgInput, setAmmoDmgInput] = useState('');
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
@@ -706,9 +710,15 @@ const UseAbilityModal = ({
 
     // Chambered fire bookkeeping (#676, S4): empty the fired chamber + advance the
     // pointer, decrement special ammo from inventory (plain bolts are infinite),
-    // and on a hit apply the ammo's on-hit effect to the struck enemies. Runs on
+    // and on a hit apply the ammo's on-hit payload to the struck enemies. Runs on
     // every fire path — including a lost concealment flat check below (the bolt is
-    // still spent), where `hitEntryIds` is empty so no on-hit effect lands.
+    // still spent), where `hitEntryIds` is empty so no on-hit payload lands.
+    //
+    // On-hit payload v2 (#1271, AA2): beyond the effectId condition, the ammo may
+    // force a save (per-degree conditions ride the GM rail, damage resolves per
+    // degree GM-side) and/or deal extra typed damage (no save → straight to the
+    // dmgapply relay, Foundry nets IWR). The damage total is player-entered
+    // (ammoDmgInput) like every other rolled damage in the app.
     const commitChamberFire = (hitEntryIds) => {
       if (!isChamberedFire || selectedFireIdx < 0) return;
       const ref = selectedChamberRef;
@@ -726,6 +736,74 @@ const UseAbilityModal = ({
         text:   `${character.name} fires the ${ability.source || ability.name} — ${ref?.name || 'bolt'}`
           + ` (${ability.nock ? 'nocked' : `chamber ${selectedFireIdx + 1}`})${appliedOnHit ? ` · ${ref.name} effect applied` : ''}`,
       });
+
+      // Damage/save payloads apply to struck ENEMIES only — PC damage flows
+      // through cnmh_hp and enemy saves need the bestiary save mods.
+      const hitEnemies = hitEntryIds
+        .map((eid) => (order || []).find((e) => e.entryId === eid))
+        .filter((e) => e && e.kind === 'enemy');
+      if (!ref || !ref.onHit || hitEnemies.length === 0) return;
+      const enteredRaw = parseInt(ammoDmgInput, 10);
+      const entered = Number.isNaN(enteredRaw) ? null : enteredRaw;
+
+      if (ref.save) {
+        const save = ref.save.stat || 'reflex';
+        const dc = ammoSaveDc(ref.save, ability);
+        addSaveRequest({
+          casterId: character.id,
+          casterName: character.name,
+          abilityName: ref.name,
+          save,
+          dc,
+          basic: !!ref.save.basic,
+          ...(ref.save.rank != null ? { rank: ref.save.rank } : {}),
+          targets: hitEnemies.map((e) => ({
+            entryId: e.entryId,
+            name: e.name,
+            saveMod: e.defenses?.saves?.[save] ?? null,
+          })),
+          ...(ref.damage ? {
+            damage: {
+              entered,
+              expression: ref.damage.dice ?? null,
+              typeLabel: ref.damage.type ?? null,
+              riders: [],
+              ...(ref.save.degrees ? { degrees: ref.save.degrees } : {}),
+            },
+          } : {}),
+          ...(ref.save.conditions ? { conditions: ref.save.conditions } : {}),
+        });
+        appendLog({
+          type: 'system',
+          text: `${ref.name}: ${DEFENSE_LABELS[save] || save} save DC ${dc} pushed to the GM`
+            + (ref.damage ? ` — ${ref.damage.dice} ${ref.damage.type}${entered == null ? ' (roll not entered)' : ''}` : ''),
+        });
+      } else if (ref.damage) {
+        if (entered != null) {
+          sendUpdate('global', 'dmgapply', buildDamageApply({
+            hits: hitEnemies.map((e) => ({
+              entryId: e.entryId,
+              name: e.name,
+              amount: entered,
+              type: ref.damage.type || '',
+            })),
+            sourceName: ref.name,
+          }));
+          appendLog({
+            type: 'action',
+            charId: character.id,
+            text: `${ref.name}: ${entered} ${ref.damage.type || ''} damage → ${hitEnemies.map((e) => e.name).join(', ')}`,
+          });
+        } else {
+          appendLog({
+            type: 'system',
+            text: `${ref.name}: roll not entered — apply ${ref.damage.dice} ${ref.damage.type || ''} to ${hitEnemies.map((e) => e.name).join(', ')} manually`,
+          });
+        }
+      }
+      if (ref.note) {
+        appendLog({ type: 'action', charId: character.id, text: `${ref.name}: ${ref.note}` });
+      }
     };
 
     // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
@@ -1696,6 +1774,30 @@ const UseAbilityModal = ({
                 </label>
               ))}
             </div>
+            {/* On-hit damage payload (#1271, AA2) — the player rolls the ammo's
+                dice and enters the total; it rides the save request (basic save
+                resolves per degree GM-side) or goes straight to dmgapply. */}
+            {selectedChamberRef?.damage && (
+              <label className="uam-ammo-dmg" style={{ display: 'block', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                {selectedChamberRef.name} on-hit damage ({selectedChamberRef.damage.dice} {selectedChamberRef.damage.type})
+                {selectedChamberRef.save ? ` — ${selectedChamberRef.save.basic ? 'basic ' : ''}${DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} DC ${ammoSaveDc(selectedChamberRef.save, ability)}` : ''}
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={ammoDmgInput}
+                  onChange={(e) => setAmmoDmgInput(e.target.value)}
+                  placeholder="rolled total"
+                  aria-label="ammo damage roll"
+                  style={{ display: 'block', width: '7rem', marginTop: '0.25rem' }}
+                />
+              </label>
+            )}
+            {selectedChamberRef?.save && !selectedChamberRef.damage && (
+              <p className="uam-ammo-save-hint" style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                On hit: {DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} save
+                {' '}DC {ammoSaveDc(selectedChamberRef.save, ability)} → GM
+              </p>
+            )}
           </section>
         </>
       )}

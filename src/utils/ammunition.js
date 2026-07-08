@@ -18,7 +18,12 @@
 //       "activate": 1,                // extra actions to fire (manipulate)
 //       "traits": ["Manipulate"],
 //       "effectId": "beacon-shot",    // catalog effect applied on hit
-//       "onHit": true
+//       "onHit": true,
+//       "damage": { "dice": "3d12", "type": "electricity" },  // on-hit damage (#1271)
+//       "save": { "stat": "reflex", "dc": 25, "basic": true,  // on-hit save (#1271)
+//                 "conditions": {…}, "degrees": {…},
+//                 "dcBump": { "rune": "shock", "dc": 27 } },
+//       "note": "…"                   // extra log line on hit
 //     }
 //
 // This slice is data + resolver only: no chamber state, no behaviour change.
@@ -175,12 +180,26 @@ export function defaultAmmo(strike) {
  * The chamber ref stored when Reloading with a special-ammunition item (#675,
  * S3). Captures just what fire (S4) needs: the display name, the inventory
  * `item` name used to decrement the `cnmh_consumed_<id>` overlay on fire, the
- * extra Activate cost, and the on-hit effect id. Special ammo is NOT consumed on
+ * extra Activate cost, and the on-hit payload. Special ammo is NOT consumed on
  * load — an unfired reload can be unloaded without losing the item — so this is
  * purely the descriptor written into the chamber slot.
  *
+ * On-hit payload v2 (#1271, AA2) — beyond the effectId condition, the block may
+ * author:
+ *   damage: { dice: '3d12', type: 'electricity' }   // extra on-hit damage
+ *   save: {                                          // target save on hit
+ *     stat: 'reflex' | 'will' | 'fortitude',
+ *     dc: 25,
+ *     basic?: true,            // basic save vs the damage payload
+ *     rank?: number,           // spell rank (Incapacitation interplay)
+ *     degrees?: {…},           // per-degree multiplier map (computeSaveDamage)
+ *     conditions?: {…},        // per-degree condition ladder (#1216 shape)
+ *     dcBump?: { rune: 'shock', dc: 27 },  // higher DC from a matching property rune
+ *   }
+ *   note: '…'                                        // extra log line on hit
+ *
  * @param {Object} item - the special-ammunition inventory item
- * @returns {{ name: string, item: string, default: false, infinite: false, activate: number, onHit: boolean, effectId: string|null }}
+ * @returns {{ name: string, item: string, default: false, infinite: false, activate: number, onHit: boolean, effectId: string|null, damage: Object|null, save: Object|null, note: string|null }}
  */
 export function loadedAmmoRef(item) {
   const block = ammoBlock(item);
@@ -192,7 +211,33 @@ export function loadedAmmoRef(item) {
     activate: ammoActivateCost(item),
     onHit: !!(block && block.onHit),
     effectId: (block && block.effectId) || null,
+    damage: (block && block.damage) || null,
+    save: (block && block.save) || null,
+    note: (block && block.note) || null,
   };
+}
+
+/**
+ * The effective save DC of an ammo save payload (#1271, AA2), honoring an
+ * authored conditional bump: `save.dcBump = { rune, dc }` raises the DC when the
+ * firing weapon carries a matching property rune (Storm Arrow is DC 27 instead
+ * of 25 from a shock weapon). Matched case-insensitively against the resolved
+ * strike's rune-breakdown property names, by substring so 'shock' also matches
+ * 'Greater Shock'.
+ *
+ * @param {Object} save   - the ammo's save payload ({ dc, dcBump? })
+ * @param {Object} strike - the resolved firing strike (carries runeBreakdown, #608)
+ * @returns {number|null}
+ */
+export function ammoSaveDc(save, strike) {
+  if (!save) return null;
+  const bump = save.dcBump;
+  if (bump?.rune && typeof bump.dc === 'number') {
+    const want = String(bump.rune).toLowerCase();
+    const props = strike?.runeBreakdown?.properties || [];
+    if (props.some((p) => String(p).toLowerCase().includes(want))) return bump.dc;
+  }
+  return typeof save.dc === 'number' ? save.dc : null;
 }
 
 // ── Chamber state (epic #672, S2) ────────────────────────────────────────────
