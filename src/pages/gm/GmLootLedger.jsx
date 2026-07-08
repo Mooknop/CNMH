@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { usePartyGold } from '../../hooks/usePartyGold';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -75,6 +75,12 @@ const GmLootLedger = () => {
   const level = partyLevel(characters);
   const budget = levelBudget(level, characters.length);
   const deltaLevels = budget.totalValue > 0 ? delta / budget.totalValue : 0;
+
+  // WB5: the award-budget reference card. Defaults to the derived party level;
+  // the GM can peek ahead/behind without touching the roster.
+  const [budgetLevelOverride, setBudgetLevelOverride] = useState(null);
+  const budgetLevel = budgetLevelOverride ?? level;
+  const awardBudget = levelBudget(budgetLevel, characters.length);
 
   const richest = rows.reduce((a, b) => (b.wealth.total > (a?.wealth.total ?? -1) ? b : a), null);
   const poorest = rows.reduce((a, b) => (b.wealth.total < (a?.wealth.total ?? Infinity) ? b : a), null);
@@ -161,6 +167,72 @@ const GmLootLedger = () => {
           ))}
         </ul>
         {!rows.length && <p className="gm-help">No characters loaded yet.</p>}
+      </section>
+
+      <section className="gm-ledger-panel" aria-label="Level loot budget">
+        <div className="gm-ledger-budget-head">
+          <h2 className="gm-ledger-section-title">Loot budget for level</h2>
+          <select
+            value={budgetLevel}
+            onChange={(e) => setBudgetLevelOverride(Number(e.target.value))}
+            aria-label="Budget level"
+          >
+            {LEVELS.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
+          {budgetLevelOverride != null && budgetLevelOverride !== level && (
+            <button type="button" className="btn-secondary" onClick={() => setBudgetLevelOverride(null)}>
+              Back to party level ({level})
+            </button>
+          )}
+        </div>
+        <p className="gm-help">
+          Award this much treasure while the party works through level {budgetLevel}
+          {characters.length > 4 && `, adjusted for ${characters.length} PCs`}. Hand
+          it out through room caches, shops, and rewards.
+        </p>
+        <dl className="gm-ledger-budget">
+          <div className="gm-ledger-budget-item">
+            <dt>Total value</dt>
+            <dd>{gp(awardBudget.totalValue)}</dd>
+          </div>
+          <div className="gm-ledger-budget-item">
+            <dt>Permanent items</dt>
+            <dd>
+              {awardBudget.permanentItems.map((p) => `${p.qty}× level ${p.rank}`).join(', ')}
+              {awardBudget.extraPermanentItems > 0 && (
+                <span className="gm-ledger-budget-extra">
+                  {' '}+{awardBudget.extraPermanentItems} at level {awardBudget.level}
+                  {awardBudget.level < 20 ? ` or ${awardBudget.level + 1}` : ''} (extra PC)
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="gm-ledger-budget-item">
+            <dt>Consumables</dt>
+            <dd>
+              {awardBudget.consumables.map((c) => `${c.qty}× level ${c.rank}`).join(', ')}
+              {awardBudget.extraConsumables > 0 && (
+                <span className="gm-ledger-budget-extra">
+                  {' '}+{awardBudget.extraConsumables} at level {awardBudget.level}
+                  {awardBudget.level < 20 ? `–${awardBudget.level + 1}` : ''} (extra PC)
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="gm-ledger-budget-item">
+            <dt>Currency</dt>
+            <dd>
+              {gp(awardBudget.currency)}
+              {awardBudget.extraPcs > 0 && (
+                <span className="gm-ledger-budget-extra">
+                  {' '}(includes the extra-PC share)
+                </span>
+              )}
+            </dd>
+          </div>
+        </dl>
       </section>
 
       {areas.length > 0 && (

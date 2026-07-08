@@ -114,3 +114,28 @@ describe('GmLootLedger — areas', () => {
     expect(mockSetAreaLevels).toHaveBeenCalledWith({ A: 4 });
   });
 });
+
+describe('GmLootLedger — level loot budget', () => {
+  it('defaults to the party level and lists the Table 10-9 breakdown', () => {
+    render(<GmLootLedger />);
+    // Modal roster level is 4 (two of three PCs).
+    expect(screen.getByLabelText('Budget level')).toHaveValue('4');
+    const panel = screen.getByLabelText('Level loot budget');
+    // Level-4 row (3-PC party clamps to the 4-PC baseline; no extra-PC lines).
+    expect(panel.textContent).toContain('850 gp');
+    expect(panel.textContent).toContain('2× level 5, 2× level 4');
+    expect(panel.textContent).toContain('2× level 5, 2× level 4, 2× level 3');
+    expect(panel.textContent).toContain('200 gp');
+    expect(panel.textContent).not.toContain('extra PC');
+  });
+
+  it('overrides the level and offers the way back', () => {
+    render(<GmLootLedger />);
+    fireEvent.change(screen.getByLabelText('Budget level'), { target: { value: '6' } });
+    const panel = screen.getByLabelText('Level loot budget');
+    expect(panel.textContent).toContain('2,000 gp'); // level-6 total value
+    const back = screen.getByRole('button', { name: 'Back to party level (4)' });
+    fireEvent.click(back);
+    expect(screen.getByLabelText('Budget level')).toHaveValue('4');
+  });
+});
