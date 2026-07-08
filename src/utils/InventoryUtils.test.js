@@ -15,6 +15,8 @@ import {
   isItemMagical,
   isPowerRing,
   wouldBreakPowerRingLimit,
+  isApexItem,
+  wouldBreakApexLimit,
   ARMOR_CATEGORIES,
   isArmor,
   normalizeArmor,
@@ -446,6 +448,33 @@ describe('InventoryUtils', () => {
     it('does not conflict with itself, and never blocks a non-power-ring', () => {
       expect(wouldBreakPowerRingLimit(ring('r1'), [ring('r1')])).toBe(false); // same ring
       expect(wouldBreakPowerRingLimit(notRing('x'), [ring('r1')])).toBe(false); // not a ring
+    });
+  });
+
+  describe('isApexItem / wouldBreakApexLimit (#967 R8)', () => {
+    const apexRing = (uid) => ({ uid, name: 'Platinum Power Ring', powerRing: true, apex: true, traits: ['Apex', 'Invested', 'Magical'] });
+    const plainItem = (uid) => ({ uid, name: 'Ring of Wizardry', traits: ['Invested', 'Magical'] });
+
+    it('isApexItem keys off the resolved apex flag', () => {
+      expect(isApexItem(apexRing('a1'))).toBe(true);
+      expect(isApexItem({ name: 'Iron Power Ring', powerRing: true, apex: false })).toBe(false);
+      expect(isApexItem(plainItem('x'))).toBe(false);
+      expect(isApexItem(null)).toBe(false);
+    });
+
+    it('blocks a second apex item when a different one is already invested', () => {
+      expect(wouldBreakApexLimit(apexRing('a2'), [apexRing('a1')])).toBe(true);
+      expect(wouldBreakApexLimit(apexRing('a2'), [plainItem('x'), apexRing('a1')])).toBe(true);
+    });
+
+    it('allows an apex item when none (or only non-apex items) are invested', () => {
+      expect(wouldBreakApexLimit(apexRing('a1'), [])).toBe(false);
+      expect(wouldBreakApexLimit(apexRing('a1'), [plainItem('x')])).toBe(false);
+    });
+
+    it('does not conflict with itself, and never blocks a non-apex item', () => {
+      expect(wouldBreakApexLimit(apexRing('a1'), [apexRing('a1')])).toBe(false); // same item
+      expect(wouldBreakApexLimit(plainItem('x'), [apexRing('a1')])).toBe(false);
     });
   });
 

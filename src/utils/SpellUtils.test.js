@@ -67,6 +67,40 @@ describe('SpellUtils', () => {
       expect(result.spellAttackMod).toBe(33); // +5 from ability, +8 from legendary, +20 from level
       expect(result.spellDC).toBe(43); // 10 + 33
     });
+
+    describe('apex boost (#967 R8)', () => {
+      const caster = (score) => ({
+        abilities: { charisma: score },
+        spellcasting: { ability: 'charisma', proficiency: 1 },
+        level: 1,
+      });
+
+      it('sets a low spellcasting mod to +4 (whichever is higher)', () => {
+        // Cha 14 → mod +2; apex: max(2+1, 4) = 4. Proficiency 1+level 1 = +3.
+        const result = calculateSpellStats(caster(14), { apex: true });
+        expect(result.spellAttackMod).toBe(7); // 4 + 3
+        expect(result.spellDC).toBe(17); // DC flows from the boosted mod
+      });
+
+      it('increases an already-high mod by 1 instead', () => {
+        // Cha 20 → mod +5; apex: max(5+1, 4) = 6.
+        const result = calculateSpellStats(caster(20), { apex: true });
+        expect(result.spellAttackMod).toBe(9); // 6 + 3
+        expect(result.spellDC).toBe(19);
+      });
+
+      it('boundary: mod +3 lands on +4 either way', () => {
+        // Cha 16 → mod +3; apex: max(3+1, 4) = 4.
+        const result = calculateSpellStats(caster(16), { apex: true });
+        expect(result.spellAttackMod).toBe(7);
+      });
+
+      it('no apex option leaves the stats unboosted', () => {
+        const result = calculateSpellStats(caster(14));
+        expect(result.spellAttackMod).toBe(5); // 2 + 3
+        expect(result.spellDC).toBe(15);
+      });
+    });
   });
 
   describe('organizeSpellsByRank', () => {

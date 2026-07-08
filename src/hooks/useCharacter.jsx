@@ -317,7 +317,15 @@ export const useCharacter = (character) => {
 
     // ── Spellcasting ────────────────────────────────────────────────────────
     const spellcasting = character.spellcasting || {};
-    const spellStats   = calculateSpellStats(character);
+    // Apex (#967 R8): an invested apex item (the platinum power ring's grade
+    // override) boosts the spellcasting attribute modifier to max(mod+1, +4),
+    // flowing to both spell Atk and DC. `.some()` grants the benefit once no
+    // matter how many apex items are invested (single-apex is also enforced at
+    // the invest gate — AttunedArea).
+    const apexInvested = effectiveInventory.some(
+      (e) => e?.apex && !!(investedMap || {})[itemUidOf(e)],
+    );
+    const spellStats   = calculateSpellStats(character, { apex: apexInvested });
 
     // Effective daily slot totals (#1093): the authored spell_slots plus any
     // worn-and-invested bonusSlots gear (Ring of Wizardry). THE display/spend
