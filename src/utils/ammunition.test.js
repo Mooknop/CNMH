@@ -9,6 +9,7 @@ import {
   ammoBlock,
   isAmmoEligible,
   ammoActivateCost,
+  ammoSaveDc,
   defaultAmmo,
   loadedAmmoRef,
   emptyChamberState,
@@ -218,6 +219,9 @@ describe('loadedAmmoRef', () => {
       activate: 1,
       onHit: true,
       effectId: 'beacon-shot',
+      damage: null,
+      save: null,
+      note: null,
     });
   });
 
@@ -230,7 +234,50 @@ describe('loadedAmmoRef', () => {
       activate: 0,
       onHit: false,
       effectId: null,
+      damage: null,
+      save: null,
+      note: null,
     });
+  });
+
+  it('carries the on-hit damage/save/note payloads (#1271, AA2)', () => {
+    const stormArrow = {
+      name: 'Storm Arrow',
+      ammunition: {
+        types: ['arrow'],
+        activate: 1,
+        onHit: true,
+        damage: { dice: '3d12', type: 'electricity' },
+        save: { stat: 'reflex', dc: 25, basic: true, dcBump: { rune: 'shock', dc: 27 } },
+        note: 'The arrow bursts in a crack of thunder.',
+      },
+    };
+    const ref = loadedAmmoRef(stormArrow);
+    expect(ref.damage).toEqual({ dice: '3d12', type: 'electricity' });
+    expect(ref.save).toEqual({ stat: 'reflex', dc: 25, basic: true, dcBump: { rune: 'shock', dc: 27 } });
+    expect(ref.note).toBe('The arrow bursts in a crack of thunder.');
+  });
+});
+
+describe('ammoSaveDc (#1271, AA2)', () => {
+  const save = { stat: 'reflex', dc: 25, dcBump: { rune: 'shock', dc: 27 } };
+
+  it('is the authored DC without a matching rune', () => {
+    expect(ammoSaveDc(save, { runeBreakdown: { properties: ['Vitalizing'] } })).toBe(25);
+    expect(ammoSaveDc(save, {})).toBe(25);
+    expect(ammoSaveDc(save, null)).toBe(25);
+  });
+
+  it('bumps the DC when the firing weapon carries the rune (substring, any grade)', () => {
+    expect(ammoSaveDc(save, { runeBreakdown: { properties: ['Shock'] } })).toBe(27);
+    expect(ammoSaveDc(save, { runeBreakdown: { properties: ['Greater Shock'] } })).toBe(27);
+  });
+
+  it('ignores a malformed bump and handles missing payloads', () => {
+    expect(ammoSaveDc({ dc: 17 }, { runeBreakdown: { properties: ['Shock'] } })).toBe(17);
+    expect(ammoSaveDc({ dc: 17, dcBump: { rune: 'shock' } }, { runeBreakdown: { properties: ['Shock'] } })).toBe(17);
+    expect(ammoSaveDc(null, {})).toBeNull();
+    expect(ammoSaveDc({}, {})).toBeNull();
   });
 });
 
