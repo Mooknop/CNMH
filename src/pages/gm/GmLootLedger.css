@@ -249,3 +249,49 @@
 .gm-ledger-area-budget.is-behind {
   color: var(--peril-light);
 }
+
+/* ── Level loot budget (WB5) ──────────────────────────────────────────────── */
+.gm-ledger-budget-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gm-ledger-budget-head .gm-ledger-section-title {
+  margin: 0;
+}
+
+.gm-ledger-budget-head select {
+  padding: 2px var(--space-2);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font: inherit;
+}
+
+.gm-ledger-budget {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+}
+
+.gm-ledger-budget-item dt {
+  color: var(--shell-text-tertiary);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gm-ledger-budget-item dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.gm-ledger-budget-extra {
+  color: var(--gold-mid);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
