@@ -1,11 +1,12 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 
-// Level-4 lump sum is 140 gp; level-5 is 270 gp. Aria (300 total) is flush
-// (>140×1.4), Vestri (100 total) is behind (<140), Pell (280) is healthy for 5.
+// PCs are benched against the NEXT level's lump sum: level 4 → 270 gp, level 5
+// → 450 gp. Aria (500 total) is flush (>270×1.4=378), Vestri (100) is behind
+// (<270), Pell (500) is healthy for 5 (450–630).
 const characters = [
-  { id: 'a', name: 'Aria', level: 4, gold: 100, inventory: [{ name: 'Sword', price: 200 }] },
+  { id: 'a', name: 'Aria', level: 4, gold: 100, inventory: [{ name: 'Sword', price: 400 }] },
   { id: 'b', name: 'Vestri', level: 4, gold: 100, inventory: [] },
-  { id: 'p', name: 'Pell', level: 5, gold: 280, inventory: [] },
+  { id: 'p', name: 'Pell', level: 5, gold: 500, inventory: [] },
 ];
 
 // Area A: one distributed room (35 gp claimed) + one untouched 45 gp cache.
@@ -59,24 +60,24 @@ describe('GmLootLedger', () => {
     expect(screen.getByText('Healthy')).toBeInTheDocument();
 
     const ariaMeter = screen.getByRole('meter', { name: 'Aria wealth vs benchmark' });
-    expect(ariaMeter).toHaveAttribute('aria-valuenow', '300');
-    expect(ariaMeter).toHaveAttribute('aria-valuemax', '280'); // 2× the 140 gp benchmark
+    expect(ariaMeter).toHaveAttribute('aria-valuenow', '500');
+    expect(ariaMeter).toHaveAttribute('aria-valuemax', '540'); // 2× the 270 gp next-level benchmark
   });
 
   it('shows the per-character coin/items breakdown', () => {
     render(<GmLootLedger />);
-    expect(screen.getByText('100 gp coin · 200 gp in items')).toBeInTheDocument();
+    expect(screen.getByText('100 gp coin · 400 gp in items')).toBeInTheDocument();
   });
 
   it('rolls up party wealth, benchmark, delta, and spread', () => {
     render(<GmLootLedger />);
-    // Party 680 vs expected 140+140+270 = 550 → +130 ahead.
-    expect(screen.getByText('680 gp')).toBeInTheDocument();
-    expect(screen.getByText('550 gp')).toBeInTheDocument();
-    expect(screen.getByText(/\+130 gp/)).toBeInTheDocument();
+    // Party 1,100 vs expected 270+270+450 = 990 → +110 ahead.
+    expect(screen.getByText('1,100 gp')).toBeInTheDocument();
+    expect(screen.getByText('990 gp')).toBeInTheDocument();
+    expect(screen.getByText(/\+110 gp/)).toBeInTheDocument();
     expect(screen.getByText(/ahead/)).toBeInTheDocument();
-    // Spread: Aria 300 ↔ Vestri 100.
-    expect(screen.getByText(/Aria ↔ Vestri/)).toBeInTheDocument();
+    // Spread: Aria/Pell 500 ↔ Vestri 100.
+    expect(screen.getByText(/↔ Vestri/)).toBeInTheDocument();
   });
 });
 

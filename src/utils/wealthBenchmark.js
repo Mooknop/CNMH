@@ -36,14 +36,22 @@ export const characterWealth = (character, liveGold) => {
 
 export const lumpSumFor = (level) => CHARACTER_WEALTH[clampLevel(level)].lumpSum;
 
-// Band thresholds vs the Table 10-10 lump sum. The lump sum is deliberately
-// the LOW estimate of on-level wealth (it's what a brand-new character gets in
-// currency alone), so holding less than it means genuinely underequipped.
+// The wealth target for a character of `level` is the NEXT level's lump sum:
+// the lump sum is what a brand-new character starts with, and treasure earned
+// while playing a level is what carries a PC to the next level's baseline —
+// so a level-4 PC is benched against the level-5 amount. Level 20 stays at
+// the level-20 lump sum (the table tops out).
+export const wealthTargetFor = (level) => lumpSumFor(clampLevel(level) + 1);
+
+// Band thresholds vs the next-level lump sum target. The lump sum is
+// deliberately the LOW estimate of wealth (it's what a brand-new character
+// gets in currency alone), so holding less than it means genuinely
+// underequipped.
 export const FLUSH_RATIO = 1.4;
 export const WEALTH_BANDS = { BEHIND: 'behind', HEALTHY: 'healthy', FLUSH: 'flush' };
 
 export const wealthBand = (totalWealth, level) => {
-  const target = lumpSumFor(level);
+  const target = wealthTargetFor(level);
   if (totalWealth < target) return WEALTH_BANDS.BEHIND;
   if (totalWealth > target * FLUSH_RATIO) return WEALTH_BANDS.FLUSH;
   return WEALTH_BANDS.HEALTHY;
@@ -72,9 +80,9 @@ export const levelBudget = (level, partySize = BASELINE_PARTY_SIZE) => {
   };
 };
 
-// Sum of every character's expected lump-sum wealth.
+// Sum of every character's next-level wealth target.
 export const partyExpected = (characters) =>
-  (characters || []).reduce((sum, c) => sum + lumpSumFor(c?.level), 0);
+  (characters || []).reduce((sum, c) => sum + wealthTargetFor(c?.level), 0);
 
 // The party's effective level: the most common character level, ties broken
 // upward (a mid-level-up party budgets against the level it's entering).

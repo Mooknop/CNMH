@@ -3,6 +3,7 @@ import {
   inventoryValue,
   characterWealth,
   lumpSumFor,
+  wealthTargetFor,
   wealthBand,
   WEALTH_BANDS,
   FLUSH_RATIO,
@@ -95,17 +96,21 @@ describe('characterWealth', () => {
 });
 
 describe('wealthBand', () => {
-  it('classifies against the level lump sum', () => {
-    // Level 5 lump sum is 270 gp.
-    expect(wealthBand(269, 5)).toBe(WEALTH_BANDS.BEHIND);
-    expect(wealthBand(270, 5)).toBe(WEALTH_BANDS.HEALTHY);
-    expect(wealthBand(270 * FLUSH_RATIO, 5)).toBe(WEALTH_BANDS.HEALTHY);
-    expect(wealthBand(270 * FLUSH_RATIO + 1, 5)).toBe(WEALTH_BANDS.FLUSH);
+  it('classifies against the NEXT level lump sum', () => {
+    // A level-5 PC is benched against the level-6 lump sum: 450 gp.
+    expect(wealthBand(449, 5)).toBe(WEALTH_BANDS.BEHIND);
+    expect(wealthBand(450, 5)).toBe(WEALTH_BANDS.HEALTHY);
+    expect(wealthBand(450 * FLUSH_RATIO, 5)).toBe(WEALTH_BANDS.HEALTHY);
+    expect(wealthBand(450 * FLUSH_RATIO + 1, 5)).toBe(WEALTH_BANDS.FLUSH);
   });
 
-  it('exposes the lump sum lookup', () => {
+  it('exposes the lump sum lookup and the next-level target', () => {
     expect(lumpSumFor(5)).toBe(270);
     expect(lumpSumFor(99)).toBe(112000);
+    expect(wealthTargetFor(4)).toBe(270);
+    expect(wealthTargetFor(5)).toBe(450);
+    // The table tops out: level 20 stays benched against the level-20 sum.
+    expect(wealthTargetFor(20)).toBe(112000);
   });
 });
 
@@ -140,9 +145,9 @@ describe('levelBudget', () => {
 });
 
 describe('partyExpected', () => {
-  it('sums per-character lump sums', () => {
+  it('sums per-character next-level targets', () => {
     const characters = [{ level: 4 }, { level: 4 }, { level: 5 }];
-    expect(partyExpected(characters)).toBe(140 + 140 + 270);
+    expect(partyExpected(characters)).toBe(270 + 270 + 450);
   });
 
   it('is 0 for an empty roster', () => {
