@@ -1148,4 +1148,43 @@ describe('ShopStorefront', () => {
       expect(screen.getByTestId('cart-bar')).toHaveTextContent('1 item');
     });
   });
+
+  describe('stocked-ware sold out + stale stock (#1139)', () => {
+    const soldOutStore = { rings: { wares: [
+      { ref: 'antidote', stock: 0 },
+      { ref: 'spellbook', stock: 2 },
+      { ref: 'tonic', level: 1, stock: 0 },
+      { ref: 'tonic', level: 3, stock: 1 },
+    ] } };
+
+    it('a stock-0 single-form ware stays on the shelf marked Sold out (no add button)', () => {
+      renderShop({ waresStore: soldOutStore });
+      const grid = screen.getByLabelText('wares');
+      expect(within(grid).getByTestId('ware-antidote')).toBeInTheDocument();
+      expect(within(grid).getByTestId('soldout-antidote')).toHaveTextContent('Sold out');
+      expect(within(grid).queryByLabelText('add Antidote')).toBeNull();
+      // A ware with stock left keeps its quick add.
+      expect(within(grid).getByLabelText('add Spellbook')).toBeInTheDocument();
+      expect(within(grid).queryByTestId('soldout-spellbook')).toBeNull();
+    });
+
+    it('a sold-out form in the takeover preview shows Sold out instead of Add', () => {
+      renderShop({ waresStore: soldOutStore });
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'), { key: 'Enter' });
+      const forms = within(screen.getByTestId('ware-preview')).getByLabelText('forms');
+      expect(within(forms).queryByLabelText('add Minor')).toBeNull();
+      expect(within(forms).getByText('Sold out')).toBeInTheDocument();
+      expect(within(forms).getByLabelText('add Lesser')).toBeInTheDocument();
+    });
+
+    it('surfaces a stale-stock rejection without clearing the cart', () => {
+      mockCheckout.mockReturnValueOnce({ rejected: 'stale-stock' });
+      renderShop({ waresStore: soldOutStore });
+      fireEvent.click(within(screen.getByLabelText('wares')).getByLabelText('add Spellbook'));
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      expect(screen.getByTestId('shop-toast')).toHaveTextContent(/shelf ran dry/i);
+      expect(screen.getByTestId('cart-bar')).toHaveTextContent('1 item');
+    });
+  });
 });

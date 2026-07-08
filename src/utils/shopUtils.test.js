@@ -23,6 +23,9 @@ import {
   eligibleWhetstones,
   isShopExcluded,
   isDragonbreathWare,
+  storedWareKey,
+  stockByWareKey,
+  decrementWareStock,
   shopHostKind,
   RUNE_TARGETS,
   groupWares,
@@ -1191,5 +1194,83 @@ describe('eligibleWhetstones (#1212)', () => {
     const [ware] = eligibleWhetstones({ runeService: true, targets: ['weapon'], maxLevel: 5 }, wsItems);
     expect(ware).toMatchObject({ id: 'morph-jewel', price: 12, baseName: 'Morph Jewel' });
     expect(ware.whetstone).toEqual({});
+  });
+});
+
+describe('purchase-time stock decrement (#1139)', () => {
+  describe('storedWareKey', () => {
+    it('mirrors resolveShopWares keys: flat ref, variant ref@level, runestone', () => {
+      expect(storedWareKey({ ref: 'antidote', stock: 3 })).toBe('antidote');
+      expect(storedWareKey({ ref: 'tonic', level: 3, price: 12 })).toBe('tonic@3');
+      expect(storedWareKey({ ref: 'runestone', runeRef: 'flaming' })).toBe('runestone@flaming');
+      expect(storedWareKey({ ref: 'runestone' })).toBe('runestone');
+    });
+
+    it('keys a dragonbreath ware like its resolved wareKey (#1210)', () => {
+      expect(storedWareKey({ ref: 'longsword', dragonbreath: { tier: 'base', dragonType: 'Mirage' } }))
+        .toBe('dragonbreath:longsword:base:mirage');
+    });
+
+    it('returns null for generative offerings and refless wares', () => {
+      expect(storedWareKey({ spellItem: 'scroll', maxLevel: 3 })).toBeNull();
+      expect(storedWareKey({ runeService: true, targets: ['weapon'], maxLevel: 8 })).toBeNull();
+      expect(storedWareKey({})).toBeNull();
+      expect(storedWareKey(null)).toBeNull();
+    });
+  });
+
+  describe('stockByWareKey', () => {
+    it('maps only wares carrying a numeric stock; the rest stay unlimited', () => {
+      const entry = { wares: [
+        { ref: 'antidote', stock: 3 },
+        { ref: 'spellbook' },
+        { ref: 'tonic', level: 3, stock: 0 },
+        { spellItem: 'scroll', maxLevel: 3 },
+      ] };
+      const m = stockByWareKey(entry);
+      expect([...m.entries()]).toEqual([['antidote', 3], ['tonic@3', 0]]);
+    });
+
+    it('first ware wins a duplicate key; tolerates a missing entry', () => {
+      const m = stockByWareKey({ wares: [{ ref: 'antidote', stock: 2 }, { ref: 'antidote', stock: 9 }] });
+      expect(m.get('antidote')).toBe(2);
+      expect(stockByWareKey(null).size).toBe(0);
+      expect(stockByWareKey({}).size).toBe(0);
+    });
+  });
+
+  describe('decrementWareStock', () => {
+    const entry = { keeper: 'Hi', wares: [
+      { ref: 'antidote', stock: 3 },
+      { ref: 'tonic', level: 3, stock: 1 },
+      { ref: 'spellbook' },
+    ] };
+
+    it('decrements bought quantities on matching stocked wares, floored at 0', () => {
+      const next = decrementWareStock(entry, new Map([['antidote', 2], ['tonic@3', 5]]));
+      expect(next.wares).toEqual([
+        { ref: 'antidote', stock: 1 },
+        { ref: 'tonic', level: 3, stock: 0 },
+        { ref: 'spellbook' },
+      ]);
+      expect(next.keeper).toBe('Hi'); // other entry fields survive
+      expect(entry.wares[0].stock).toBe(3); // pure — input untouched
+    });
+
+    it('never touches an unlimited (stock-less) ware', () => {
+      const next = decrementWareStock(entry, new Map([['spellbook', 4]]));
+      expect(next).toBe(entry); // no-op returns the same reference
+    });
+
+    it('decrements only the FIRST ware matching a duplicate key', () => {
+      const dup = { wares: [{ ref: 'antidote', stock: 2 }, { ref: 'antidote', stock: 2 }] };
+      const next = decrementWareStock(dup, new Map([['antidote', 1]]));
+      expect(next.wares.map((w) => w.stock)).toEqual([1, 2]);
+    });
+
+    it('is a same-reference no-op for an empty plan or missing entry', () => {
+      expect(decrementWareStock(entry, new Map())).toBe(entry);
+      expect(decrementWareStock(null, new Map([['antidote', 1]]))).toBeNull();
+    });
   });
 });

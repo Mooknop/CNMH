@@ -165,4 +165,77 @@ describe('useShopCheckout', () => {
       expect(setShops).not.toHaveBeenCalled();
     });
   });
+
+  describe('stocked-ware decrement (#1139)', () => {
+    // A resolved stocked ware as it reaches checkout: carries the wareKey +
+    // browse-time stock snapshot (the guard re-checks the CURRENT store).
+    const stocked = (qty = 1, over = {}) => ({
+      item: { id: 'antidote', name: 'Antidote', price: 3, stock: 4, wareKey: 'antidote', ...over },
+      qty,
+    });
+
+    it('decrements the bought quantity off the stored ware (floor stays above 0)', () => {
+      shops = { forge: { wares: [{ ref: 'antidote', stock: 4 }, { ref: 'spellbook' }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [stocked(3)], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ total: 9, wareCount: 3 });
+      expect(setShops).toHaveBeenCalledTimes(1);
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 1 }, { ref: 'spellbook' }]);
+    });
+
+    it('buying the last copies leaves the ware at stock 0 (sold out, not deleted)', () => {
+      shops = { forge: { wares: [{ ref: 'antidote', stock: 2 }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      result.current.checkout({ purchases: [stocked(2)], shopTitle: 'Forge', loreId: 'forge' });
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 0 }]);
+    });
+
+    it('rejects (writes nothing) when a line exceeds the CURRENT stock', () => {
+      shops = { forge: { wares: [{ ref: 'antidote', stock: 1 }] } }; // browse showed 4, someone bought 3
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [stocked(2)], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toEqual({ rejected: 'stale-stock' });
+      expect(setGold).not.toHaveBeenCalled();
+      expect(setAcquired).not.toHaveBeenCalled();
+      expect(setShops).not.toHaveBeenCalled();
+    });
+
+    it('an unlimited (stock-less) ware never guards nor writes the store', () => {
+      shops = { forge: { wares: [{ ref: 'antidote' }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [stocked(99, { stock: undefined })], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ wareCount: 99 });
+      expect(setShops).not.toHaveBeenCalled();
+    });
+
+    it('matches a variant line by its ref@level wareKey', () => {
+      shops = { forge: { wares: [{ ref: 'tonic', level: 3, stock: 2 }, { ref: 'tonic', level: 1, stock: 5 }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      result.current.checkout({
+        purchases: [{ item: { id: 'tonic', name: 'Lesser Tonic', price: 12, stock: 2, wareKey: 'tonic@3' }, qty: 2 }],
+        shopTitle: 'Forge', loreId: 'forge',
+      });
+      expect(shops.forge.wares).toEqual([{ ref: 'tonic', level: 3, stock: 0 }, { ref: 'tonic', level: 1, stock: 5 }]);
+    });
+
+    it('composes a sale-shelf strike + a stock decrement into ONE store write', () => {
+      shops = { forge: {
+        wares: [{ ref: 'antidote', stock: 4 }],
+        saleShelf: [{ sale: 'rune', saleId: 'w1' }],
+      } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [saleWare(), stocked(1)], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ total: 803, wareCount: 2 });
+      expect(setShops).toHaveBeenCalledTimes(1);
+      expect(shops.forge.saleShelf).toEqual([]);
+      expect(shops.forge.wares).toEqual([{ ref: 'antidote', stock: 3 }]);
+    });
+
+    it('a sale line (stock 1, sale wareKey) never trips the stocked-ware guard', () => {
+      shops = { forge: { wares: [{ ref: 'antidote', stock: 4 }], saleShelf: [{ sale: 'rune', saleId: 'w1' }] } };
+      const { result } = renderHook(() => useShopCheckout('a'));
+      const r = result.current.checkout({ purchases: [saleWare()], shopTitle: 'Forge', loreId: 'forge' });
+      expect(r).toMatchObject({ total: 800 });
+    });
+  });
 });

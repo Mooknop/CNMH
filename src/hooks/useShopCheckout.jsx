@@ -8,6 +8,7 @@ import { docGold } from '../utils/gold';
 import { toGameSeconds } from '../utils/gameTime';
 import { createHandoffOrder } from '../utils/runeWorkOrder';
 import { expandWare, lineQty } from '../utils/shopPurchase';
+import { stockByWareKey, decrementWareStock } from '../utils/shopUtils';
 
 // Unified shop checkout (#878). One hook that owns ALL the overlays a single
 // storefront transaction touches — gold, acquired, removed, and rune work orders
@@ -40,9 +41,9 @@ export const useShopCheckout = (charId) => {
   const [, setRemoved] = useSyncedState(`cnmh_removed_${charId || 'none'}`, []);
   const [orders, setOrders] = useSyncedState(`cnmh_runework_${charId || 'none'}`, []);
   const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
-  // Sale Shelf decrement (#1138): the shop store, so a bought one-of-a-kind sale
-  // ware is struck from its shelf in the same transaction. The ONLY purchase-time
-  // write to this key today — regular stocked wares stay cap-only (follow-up).
+  // The shop store, written at purchase time (#1138/#1139): a bought one-of-a-
+  // kind sale ware is struck from its shelf, and a bought STOCKED ware has its
+  // stock decremented — both in the same transaction as the gold debit.
   const [shops, setShops] = useSyncedState('cnmh_shops_global', {});
 
   const offline = connected && !foundryConnected;
@@ -77,6 +78,27 @@ export const useShopCheckout = (charId) => {
         const shelf = (loreId && Array.isArray(shops?.[loreId]?.saleShelf)) ? shops[loreId].saleShelf : [];
         const live = new Set(shelf.map((w) => w && w.saleId));
         if (saleIds.some((id) => !live.has(id))) return { rejected: 'stale-shelf' };
+      }
+
+      // Stocked-ware guard + decrement plan (#1139). Every non-sale line whose
+      // wareKey matches a stored ware carrying a numeric stock is checked against
+      // the CURRENT stock — a line over it (another buyer got there first, or the
+      // GM restocked lower mid-browse) rejects the whole checkout and writes
+      // nothing, mirroring the stale-shelf guard. Reject-not-clamp: at home-game
+      // scale the last committer refreshing their cart is the simple, honest
+      // outcome. Lines that pass become the decrement plan `boughtStock`.
+      // Generative offerings never appear in the stock map, so they stay
+      // unlimited; sale lines are the shelf guard's business above.
+      const stocks = loreId ? stockByWareKey(shops?.[loreId]) : new Map();
+      const boughtStock = new Map();
+      if (stocks.size) {
+        for (const { item, qty } of lines) {
+          if (item.saleId != null || item.wareKey == null) continue;
+          const key = String(item.wareKey);
+          if (!stocks.has(key)) continue;
+          if (qty > stocks.get(key)) return { rejected: 'stale-stock' };
+          boughtStock.set(key, qty);
+        }
       }
 
       const wareTotal = lines.reduce((sum, p) => sum + (Number(p.item.price) || 0) * p.qty, 0);
@@ -119,14 +141,20 @@ export const useShopCheckout = (charId) => {
 
       setGold((g) => (Number.isFinite(g) ? g : gold) - total);
 
-      // Strike the bought sale wares from the shop's shelf — one composed write.
-      if (saleIds.length && loreId) {
+      // Strike the bought sale wares from the shop's shelf AND decrement bought
+      // stocked wares (#1139) — one composed store write. A sold-out ware stays
+      // in the wares list at stock 0 (displayed sold out), never deleted.
+      if ((saleIds.length || boughtStock.size) && loreId) {
         const bought = new Set(saleIds);
         setShops((cur) => {
           const store = cur && typeof cur === 'object' ? cur : {};
-          const entry = store[loreId];
-          if (!entry || !Array.isArray(entry.saleShelf)) return cur;
-          return { ...store, [loreId]: { ...entry, saleShelf: entry.saleShelf.filter((w) => !(w && bought.has(w.saleId))) } };
+          let entry = store[loreId];
+          if (!entry) return cur;
+          if (bought.size && Array.isArray(entry.saleShelf)) {
+            entry = { ...entry, saleShelf: entry.saleShelf.filter((w) => !(w && bought.has(w.saleId))) };
+          }
+          entry = decrementWareStock(entry, boughtStock);
+          return entry === store[loreId] ? cur : { ...store, [loreId]: entry };
         });
       }
 
