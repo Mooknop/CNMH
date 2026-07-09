@@ -4,7 +4,7 @@
 import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import UseActionChip from '../shared/UseActionChip';
 import { formatRuneBreakdown } from '../../utils/weaponRunes';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
@@ -82,7 +82,7 @@ const ActionDetailModal = ({
         {actionText && (
           <div className="adm-meta-row">
             <span className="adm-meta-label">Cost</span>
-            <ActionIcon actionText={actionText} size="medium" showTooltip={false} />
+            <ActionSymbol actionText={actionText} size="medium" showTooltip={false} />
           </div>
         )}
 

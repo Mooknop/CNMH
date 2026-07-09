@@ -16,12 +16,12 @@ vi.mock('../shared/TraitTag', () => ({ default: ({ trait }) => (
   <span data-testid="trait-tag">{trait}</span>
 ) }));
 
-vi.mock('../shared/ActionIcon', () => ({ default: ({ actionText }) => (
-  <span data-testid="action-icon">{actionText}</span>
-) }));
-
-vi.mock('../shared/ActionSymbol', () => ({ default: ({ cost }) => (
-  <span data-testid="action-symbol">{cost}</span>
+// ActionSymbol serves both APIs since #1316: the card passes `actionText`
+// (legacy ActionIcon presentation), the detail modal passes `cost`.
+vi.mock('../shared/ActionSymbol', () => ({ default: ({ cost, actionText }) => (
+  actionText !== undefined
+    ? <span data-testid="action-icon">{actionText}</span>
+    : <span data-testid="action-symbol">{cost}</span>
 ) }));
 
 vi.mock('../shared/UseActionChip', () => ({ default: ({ verb, name, onUse }) => (
