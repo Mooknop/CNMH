@@ -117,6 +117,14 @@ describe('durabilityFor — material table (GM Core p. 252)', () => {
     );
   });
 
+  it('artifacts are untracked unless an authored block opts them in', () => {
+    const hammer = { id: 'xanderghuls-flawless-hammer', strikes: { damage: '1d12' }, artifact: { tiers: [] } };
+    expect(durabilityFor(hammer)).toBeNull();
+    expect(
+      durabilityFor({ ...hammer, durability: { hardness: 20, hp: 80 } })
+    ).toEqual({ hardness: 20, hp: 80, brokenThreshold: 40 });
+  });
+
   it('consumable weapons (bombs, holy water) are not tracked', () => {
     expect(durabilityFor({ id: 'holy-water', strikes: {}, traits: ['Consumable', 'Splash'] })).toBeNull();
     expect(durabilityFor({ id: 'acid-flask', strikes: {}, consumable: { uses: 1 } })).toBeNull();
