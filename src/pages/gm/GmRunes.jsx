@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { runeTarget } from '../../utils/runeClassify';
 import { ACCESSORY_TAGS } from '../../utils/accessoryRunes';
 import { DAMAGE_TYPES } from '../../utils/damage';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import { ArmorRuneForm, armorToForm, armorBlankRune, MODIFIER_STATS, MODIFIER_KINDS } from './GmArmorRunes';
 import './gm.css';
@@ -95,10 +94,7 @@ const fromForm = (f) => {
 
 const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'rune', isNew, existingIds, onSaved });
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
   const setCond = (i, patch) =>
@@ -110,49 +106,16 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const rmCond = (i) =>
     setE((cur) => ({ ...cur, conditions: cur.conditions.filter((_, idx) => idx !== i) }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('rune', id, payload);
-      onSaved(isNew, id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     let body;
     try {
       body = fromForm(e);
     } catch (err) {
-      setError(err.message);
+      form.setError(err.message);
       return;
     }
     const id = e.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('rune', e.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, { ...body, id });
   };
 
   return (
@@ -284,56 +247,35 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </div>
       </div>
 
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
 
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create rune' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>
               Delete
             </button>
           </>
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="rune"
-          id={e.id}
-          name={e.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setE(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete rune"
-        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
-        confirmLabel="Delete forever"
-        requireType={e.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing rune?"
-        message={`A rune with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="rune"
+        noun="rune"
+        id={e.id}
+        name={e.name}
+        isNew={isNew}
+        onRestored={(doc) => {
+          if (doc) setE(toForm(doc));
+          onRestored();
+        }}
       />
     </div>
   );
@@ -393,31 +335,14 @@ const shieldPreservedNote = (o) => {
 
 const PreserveRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored, target, noteTestId, preservedNote }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'rune', isNew, existingIds, onSaved });
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null); setBusy(true); setError(null);
-    try { await saveDocument('rune', id, payload); onSaved(isNew, id); }
-    catch (err) { setError(err.message); }
-    finally { setBusy(false); }
-  };
   const save = async () => {
     let body;
-    try { body = preserveFromForm(target, e); } catch (err) { setError(err.message); return; }
+    try { body = preserveFromForm(target, e); } catch (err) { form.setError(err.message); return; }
     const id = e.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) { setConfirm({ kind: 'collision', id, payload }); return; }
-    await submit(id, payload);
-  };
-  const doRemove = async () => {
-    setConfirm(null); setBusy(true); setError(null);
-    try { await deleteDocument('rune', e.id); onSaved(false); }
-    catch (err) { setError(err.message); }
-    finally { setBusy(false); }
+    await form.save(id, { ...body, id });
   };
 
   const note = preservedNote(e._original || {});
@@ -447,28 +372,18 @@ const PreserveRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored, ta
           Preserved on save: {note} (authored in content).
         </p>
       )}
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>History</button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>Delete</button>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>History</button>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>Delete</button>
           </>
         )}
       </div>
-      {!isNew && (
-        <HistoryModal isOpen={showHistory} collection="rune" id={e.id} name={e.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => { setShowHistory(false); if (doc) setE(preserveToForm(doc)); setError(null); onRestored(); }} />
-      )}
-      <ConfirmDialog isOpen={confirm?.kind === 'delete'} title="Delete rune"
-        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
-        confirmLabel="Delete forever" requireType={e.name}
-        onConfirm={doRemove} onCancel={() => setConfirm(null)} />
-      <ConfirmDialog isOpen={confirm?.kind === 'collision'} title="Overwrite existing rune?"
-        message={`A rune with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite" onConfirm={() => submit(confirm.id, confirm.payload)} onCancel={() => setConfirm(null)} />
+      <GmEntryDialogs form={form} collection="rune" noun="rune" id={e.id} name={e.name} isNew={isNew}
+        onRestored={(doc) => { if (doc) setE(preserveToForm(doc)); onRestored(); }} />
     </div>
   );
 };
@@ -566,10 +481,7 @@ const accFromForm = (f) => {
 
 const AccessoryRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'rune', isNew, existingIds, onSaved });
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
   const toggleUsage = (tag) =>
@@ -591,25 +503,11 @@ const AccessoryRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored })
   const rmReminder = (i) =>
     setE((cur) => ({ ...cur, reminders: cur.reminders.filter((_, idx) => idx !== i) }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null); setBusy(true); setError(null);
-    try { await saveDocument('rune', id, payload); onSaved(isNew, id); }
-    catch (err) { setError(err.message); }
-    finally { setBusy(false); }
-  };
   const save = async () => {
     let body;
-    try { body = accFromForm(e); } catch (err) { setError(err.message); return; }
+    try { body = accFromForm(e); } catch (err) { form.setError(err.message); return; }
     const id = e.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) { setConfirm({ kind: 'collision', id, payload }); return; }
-    await submit(id, payload);
-  };
-  const doRemove = async () => {
-    setConfirm(null); setBusy(true); setError(null);
-    try { await deleteDocument('rune', e.id); onSaved(false); }
-    catch (err) { setError(err.message); }
-    finally { setBusy(false); }
+    await form.save(id, { ...body, id });
   };
 
   // Content-authored activation surfaces this form never edits, only preserves.
@@ -745,28 +643,18 @@ const AccessoryRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored })
           Preserved on save: {preserved.join(' · ')} (authored in content).
         </p>
       )}
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>History</button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>Delete</button>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>History</button>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>Delete</button>
           </>
         )}
       </div>
-      {!isNew && (
-        <HistoryModal isOpen={showHistory} collection="rune" id={e.id} name={e.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => { setShowHistory(false); if (doc) setE(accToForm(doc)); setError(null); onRestored(); }} />
-      )}
-      <ConfirmDialog isOpen={confirm?.kind === 'delete'} title="Delete rune"
-        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
-        confirmLabel="Delete forever" requireType={e.name}
-        onConfirm={doRemove} onCancel={() => setConfirm(null)} />
-      <ConfirmDialog isOpen={confirm?.kind === 'collision'} title="Overwrite existing rune?"
-        message={`A rune with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite" onConfirm={() => submit(confirm.id, confirm.payload)} onCancel={() => setConfirm(null)} />
+      <GmEntryDialogs form={form} collection="rune" noun="rune" id={e.id} name={e.name} isNew={isNew}
+        onRestored={(doc) => { if (doc) setE(accToForm(doc)); onRestored(); }} />
     </div>
   );
 };

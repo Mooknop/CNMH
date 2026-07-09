@@ -1,13 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { newEntryUid } from '../../utils/uid';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { formatBulk } from '../../utils/InventoryUtils';
 import { catalogItemName } from '../../utils/spellItems';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
 import EntryListEditor from '../../components/gm/EntryListEditor';
@@ -563,11 +562,8 @@ const ItemRow = ({ item, tag, catalogList, spells, onEdit, onRemove }) => {
 
 const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
   const catalogList = Array.isArray(catalog) ? catalog : [];
-  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'character', isNew, existingIds, onSaved });
   const [tab, setTab] = useState('stats'); // active subtab
   const [editing, setEditing] = useState(null); // { path:[i] } | null — open item editor
   const [picker, setPicker] = useState(null); // { kind:'top' } | { kind:'container', path } | { kind:'change', path } | null
@@ -734,16 +730,16 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
 
   const save = async () => {
     const name = f.strings.name.trim();
-    if (!name) { setError('Name is required.'); return; }
+    if (!name) { form.setError('Name is required.'); return; }
     let rest;
     try {
       rest = f.advanced.trim() ? JSON.parse(f.advanced) : {};
     } catch {
-      setError('Advanced JSON is not valid JSON.');
+      form.setError('Advanced JSON is not valid JSON.');
       return;
     }
     if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
-      setError('Advanced JSON must be an object.');
+      form.setError('Advanced JSON must be an object.');
       return;
     }
 
@@ -781,7 +777,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         payload[s.key] = f.arrays[s.key].map((e, idx) => from(e, s.label, idx));
       });
     } catch (e) {
-      setError(e.message);
+      form.setError(e.message);
       return;
     }
     const crafting = f.crafting
@@ -796,7 +792,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         try {
           payload[s.key] = codec.from(o.form);
         } catch (e) {
-          setError(`${s.label} ${e.message}`);
+          form.setError(`${s.label} ${e.message}`);
           return;
         }
       } else {
@@ -804,50 +800,18 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         try {
           parsed = o.json.trim() ? JSON.parse(o.json) : {};
         } catch {
-          setError(`${s.label} is not valid JSON.`);
+          form.setError(`${s.label} is not valid JSON.`);
           return;
         }
         if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          setError(`${s.label} must be a JSON object.`);
+          form.setError(`${s.label} must be a JSON object.`);
           return;
         }
         payload[s.key] = parsed;
       }
     }
 
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('character', id, payload);
-      onSaved(isNew, id);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('character', f.id);
-      onSaved(false);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, payload);
   };
 
   const SUBTABS = [
@@ -1252,17 +1216,17 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         )}
       </div>
 
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create character' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>
               Delete
             </button>
           </>
@@ -1299,38 +1263,18 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         }
       />
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="character"
-          id={f.id}
-          name={f.strings.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setF(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete character"
-        message={`Permanently delete the character “${f.strings.name}”. This cannot be undone — restore it from History if you have it.`}
-        confirmLabel="Delete forever"
-        requireType={f.strings.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing entry?"
-        message={`A character with id “${confirm?.id}” already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="character"
+        noun="character"
+        id={f.id}
+        name={f.strings.name}
+        isNew={isNew}
+        onRestored={(doc) => {
+          if (doc) setF(toForm(doc));
+          onRestored();
+        }}
+        deleteMessage={`Permanently delete the character “${f.strings.name}”. This cannot be undone — restore it from History if you have it.`}
       />
     </div>
   );

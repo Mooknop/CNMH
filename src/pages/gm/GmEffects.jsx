@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import { SKILL_KEYS } from '../../utils/EffectUtils';
 import './gm.css';
@@ -67,10 +66,7 @@ const fromForm = (f) => {
 
 const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'effect', isNew, existingIds, onSaved });
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
   const setMod = (i, patch) =>
@@ -86,49 +82,16 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const rmMod = (i) =>
     setE((cur) => ({ ...cur, modifiers: cur.modifiers.filter((_, idx) => idx !== i) }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('effect', id, payload);
-      onSaved(isNew, id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     let body;
     try {
       body = fromForm(e);
     } catch (err) {
-      setError(err.message);
+      form.setError(err.message);
       return;
     }
     const id = e.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('effect', e.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, { ...body, id });
   };
 
   return (
@@ -199,23 +162,23 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </button>
       </div>
 
-      {error && (
-        <p className="gm-warn" role="alert">{error}</p>
+      {form.error && (
+        <p className="gm-warn" role="alert">{form.error}</p>
       )}
 
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create effect' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
             <button
               className="btn-danger"
-              disabled={busy}
-              onClick={() => setConfirm({ kind: 'delete' })}
+              disabled={form.busy}
+              onClick={form.requestDelete}
             >
               Delete
             </button>
@@ -223,38 +186,17 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="effect"
-          id={e.id}
-          name={e.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setE(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete effect"
-        message={`Permanently delete the effect "${e.name}". This cannot be undone.`}
-        confirmLabel="Delete forever"
-        requireType={e.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing effect?"
-        message={`An effect with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="effect"
+        noun="effect"
+        id={e.id}
+        name={e.name}
+        isNew={isNew}
+        onRestored={(doc) => {
+          if (doc) setE(toForm(doc));
+          onRestored();
+        }}
       />
     </div>
   );

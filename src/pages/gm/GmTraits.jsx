@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import {
   collectTraitReferences,
@@ -88,56 +87,20 @@ const TraitReferences = ({ references }) => (
 
 const TraitForm = ({ initial, isNew, existingIds, references = [], onSaved, onRestored }) => {
   const [t, setT] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'trait', isNew, existingIds, onSaved });
 
   const set = (patch) => setT((cur) => ({ ...cur, ...patch }));
-
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('trait', id, payload);
-      onSaved(isNew, id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const save = async () => {
     let body;
     try {
       body = fromForm(t);
     } catch (err) {
-      setError(err.message);
+      form.setError(err.message);
       return;
     }
     const id = t.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('trait', t.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, { ...body, id });
   };
 
   return (
@@ -163,23 +126,23 @@ const TraitForm = ({ initial, isNew, existingIds, references = [], onSaved, onRe
         />
       </div>
 
-      {error && (
-        <p className="gm-warn" role="alert">{error}</p>
+      {form.error && (
+        <p className="gm-warn" role="alert">{form.error}</p>
       )}
 
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create trait' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
             <button
               className="btn-danger"
-              disabled={busy}
-              onClick={() => setConfirm({ kind: 'delete' })}
+              disabled={form.busy}
+              onClick={form.requestDelete}
             >
               Delete
             </button>
@@ -189,38 +152,17 @@ const TraitForm = ({ initial, isNew, existingIds, references = [], onSaved, onRe
 
       {!isNew && <TraitReferences references={references} />}
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="trait"
-          id={t.id}
-          name={t.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setT(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete trait"
-        message={`Permanently delete the trait "${t.name}". This cannot be undone.`}
-        confirmLabel="Delete forever"
-        requireType={t.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing trait?"
-        message={`A trait with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="trait"
+        noun="trait"
+        id={t.id}
+        name={t.name}
+        isNew={isNew}
+        onRestored={(doc) => {
+          if (doc) setT(toForm(doc));
+          onRestored();
+        }}
       />
     </div>
   );

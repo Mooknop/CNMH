@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import './gm.css';
 
 // month/day/year are kept as raw strings in the form and coerced on save so a
@@ -30,37 +29,20 @@ const blankEvent = () => toForm({});
 
 const EventForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'calendar', isNew, existingIds, onSaved });
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('calendar', id, payload);
-      onSaved(isNew);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     if (!e.title.trim()) {
-      setError('Title is required.');
+      form.setError('Title is required.');
       return;
     }
     const month = numOrNull(e.month);
     const day = numOrNull(e.day);
     const recurring = e.recurring.trim();
     if (!recurring && (month == null || day == null)) {
-      setError('Provide a recurring rule, or a fixed month and day.');
+      form.setError('Provide a recurring rule, or a fixed month and day.');
       return;
     }
 
@@ -74,25 +56,7 @@ const EventForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     if (e.description.trim()) payload.description = e.description.trim();
     if (e.details.trim()) payload.details = e.details.trim();
 
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('calendar', e.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, payload);
   };
 
   return (
@@ -171,55 +135,35 @@ const EventForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       </div>
 
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create event' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>
               Delete
             </button>
           </>
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="calendar"
-          id={e.id}
-          name={e.title}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setE(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete event"
-        message={`Permanently delete the event “${e.title}”. This cannot be undone — restore it from History if you have it.`}
-        confirmLabel="Delete forever"
-        requireType={e.title}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing entry?"
-        message={`An event with id “${confirm?.id}” already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="calendar"
+        noun="event"
+        id={e.id}
+        name={e.title}
+        isNew={isNew}
+        deleteMessage={`Permanently delete the event “${e.title}”. This cannot be undone — restore it from History if you have it.`}
+        onRestored={(doc) => {
+          if (doc) setE(toForm(doc));
+          onRestored();
+        }}
       />
     </div>
   );
