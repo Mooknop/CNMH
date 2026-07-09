@@ -2,6 +2,7 @@ import { resolveExpireAt } from './expiry';
 import { newEntryUid } from './uid';
 import { freqKeyFor } from './frequency';
 import { immunityConfigFor, makeImmunityEntry, hasAbilityImmunity } from './immunity';
+import { RELAY } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -152,7 +153,7 @@ export function applyAbility({
   if (fe?.ref) {
     const feResolved = resolveApplyTargets(fe.applyTo || 'self', caster, targetCharIds, order);
     const feTargets  = feResolved.map((r) => r.entryId).filter(Boolean);
-    sendUpdate(caster.id, 'applyeffect', {
+    sendUpdate(caster.id, RELAY.APPLYEFFECT, {
       ref:     fe.ref,
       op:      'apply',
       targets: feTargets,

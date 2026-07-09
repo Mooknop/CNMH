@@ -13,6 +13,7 @@ import { recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { lingeringResult } from '../../utils/lingering';
 import { markPlayingOnCast } from '../../utils/playing';
 import './LingeringCompositionModal.css';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -41,7 +42,7 @@ const LingeringCompositionModal = ({ isOpen, onClose, spell, character, themeCol
   const characterModel = useCharacter(character);
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
   const { appendLog, encounter } = useEncounter();
   const { sendUpdate } = useSession();
   const casterEntryId = (encounter?.order || [])

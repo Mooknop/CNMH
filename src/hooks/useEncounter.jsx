@@ -15,6 +15,7 @@ import {
   nextTurnIndex,
   everyEntryHasInitiative,
 } from '../utils/encounterUtils';
+import { RELAY, globalKey } from '../sync/keys';
 
 // Shared live encounter state. Lives at cnmh_encounter_global on the campaign
 // session DO via useSyncedState (the key regex `cnmh_<type>_<id>` accepts
@@ -28,8 +29,8 @@ import {
 // semantics, but within a single client a quick spendActions+appendLog pair
 // never reads a stale closure.
 
-const ENCOUNTER_KEY  = 'cnmh_encounter_global';
-const ACTORMAP_KEY   = 'cnmh_actormap_global';
+const ENCOUNTER_KEY  = globalKey(RELAY.ENCOUNTER);
+const ACTORMAP_KEY   = globalKey(RELAY.ACTORMAP);
 const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
 const PERSISTENT_KEY = 'cnmh_persistent_global';
 const ENEMY_FX_KEY   = 'cnmh_enemyfx_global';

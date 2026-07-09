@@ -10,6 +10,7 @@
 
 import { getActorMap } from './encounter.js';
 import { getCombatTokenMap, checkFlanking, getMinionActorLinks } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 let _latest = {};
@@ -44,7 +45,7 @@ export function pushFlankedState() {
   const actorMap  = getActorMap();
   const combatMap = getCombatTokenMap(); // [{ combatantId, actorId, token }]
 
-  const send0 = () => { _latest = {}; _sendUpdate('global', 'flanked', {}); };
+  const send0 = () => { _latest = {}; _sendUpdate('global', RELAY.FLANKED, {}); };
 
   if (!combatMap.length) { send0(); return; }
 
@@ -98,5 +99,5 @@ export function pushFlankedState() {
   }
 
   _latest = result;
-  _sendUpdate('global', 'flanked', result);
+  _sendUpdate('global', RELAY.FLANKED, result);
 }

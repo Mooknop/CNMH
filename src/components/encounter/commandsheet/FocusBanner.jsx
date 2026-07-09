@@ -19,6 +19,7 @@ import {
   isIwrRevealed,
 } from '../../../utils/recallKnowledge';
 import './FocusBanner.css';
+import { RELAY, syncKey } from '../../../sync/keys';
 
 // Compact labels for the banner (the full DEFENSE_LABELS are too long here).
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
@@ -30,8 +31,8 @@ const FocusBanner = ({ charId }) => {
   // Ally state (read unconditionally to keep hook order stable; keys are inert
   // when no ally is focused).
   const allyId = focusAlly?.charId || 'none';
-  const [allyHp] = useSyncedState(`cnmh_hp_${allyId}`, null);
-  const [allyConditionsRaw] = useSyncedState(`cnmh_conditions_${allyId}`, []);
+  const [allyHp] = useSyncedState(syncKey(RELAY.HP, allyId), null);
+  const [allyConditionsRaw] = useSyncedState(syncKey(RELAY.CONDITIONS, allyId), []);
 
   // Focused ally (#429) — support context.
   if (focusAlly) {

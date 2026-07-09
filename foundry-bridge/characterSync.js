@@ -15,6 +15,7 @@ import {
   isConditionItem, getConditionItemActor,
   isEffectItem, getEffectItemActor,
 } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 
@@ -49,11 +50,11 @@ export async function handleCharacterUpdate(charId, key, value) {
   const actor = getActorById(actorId);
   if (!actor) return;
 
-  if (key === 'hp') {
+  if (key === RELAY.HP) {
     await updateActorHp(actor, { current: value.current, temp: value.temp });
   }
 
-  if (key === 'heropoints') {
+  if (key === RELAY.HEROPOINTS) {
     await updateActorHeroPoints(actor, value);
   }
 }
@@ -71,10 +72,10 @@ function onUpdateActor(actor, diff, options) {
   const heroDiff   = diff.system?.resources?.heroPoints;
 
   if (hpDiff || dyingDiff || woundedDiff || doomedDiff) {
-    _sendUpdate?.(charId, 'hp', getHp(actor));
+    _sendUpdate?.(charId, RELAY.HP, getHp(actor));
   }
   if (heroDiff) {
-    _sendUpdate?.(charId, 'heropoints', getHeroPoints(actor));
+    _sendUpdate?.(charId, RELAY.HEROPOINTS, getHeroPoints(actor));
   }
 }
 
@@ -91,11 +92,11 @@ function onConditionItemChanged(item) {
     id:    slugToAppConditionId(c.slug),
     value: c.value,
   }));
-  _sendUpdate?.(charId, 'conditions', conditions);
+  _sendUpdate?.(charId, RELAY.CONDITIONS, conditions);
 
   // …and re-push HP, since dying/wounded/doomed surface in the HP box and are
   // applied as condition items rather than direct actor-attribute writes.
-  _sendUpdate?.(charId, 'hp', getHp(actor));
+  _sendUpdate?.(charId, RELAY.HP, getHp(actor));
 }
 
 // Effect-item create/update/delete on a synced PC → push the actor's current
@@ -118,5 +119,5 @@ function onEffectItemChanged(item) {
     // buff appearing twice collapses to one entry.
     .map((e) => ({ id: `foundry-${e.effectId}`, effectId: e.effectId, source: e.source, fromFoundry: true }));
 
-  _sendUpdate?.(charId, 'foundryeffects', effects);
+  _sendUpdate?.(charId, RELAY.FOUNDRYEFFECTS, effects);
 }

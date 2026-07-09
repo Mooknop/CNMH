@@ -19,6 +19,7 @@
 // All Foundry access goes through pf2eAdapter.js.
 
 import { resolveCombatantToken, applyTypedDamage, applyDamageInstances } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 
@@ -57,7 +58,7 @@ export async function handleDamageApply(value) {
     }
   }
 
-  _sendUpdate?.('global', 'dmgdone', {
+  _sendUpdate?.('global', RELAY.DMGDONE, {
     id: id ?? null,
     sourceName: sourceName || '',
     applied,

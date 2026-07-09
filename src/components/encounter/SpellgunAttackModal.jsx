@@ -26,6 +26,7 @@ import { formatModifier } from '../../utils/CharacterUtils';
 import { itemUidOf } from '../../utils/affix';
 import { absorbedKey, retrieve as retrieveAbsorbed } from '../../utils/spellgunHost';
 import './SpellgunAttackModal.css';
+import { RELAY, globalKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   ac:     { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' },
@@ -58,7 +59,7 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
   const [, setAbsorbed] = useSyncedState(absorbedKey(character?.id || ''), {});
   const [profChoice, setProfChoice] = useSyncedState(`cnmh_spellgunatk_${character?.id || ''}`, null);
-  const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const [positionsState] = useSyncedState(globalKey(RELAY.POSITIONS), null);
 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(character?.id || '', order);
@@ -75,7 +76,7 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
   // Ranged attack: ask the bridge for fresh combatant positions so range
   // increments aren't judged off a stale snapshot (degrades to no gating).
   useEffect(() => {
-    if (isOpen) sendUpdate('global', 'positionsreq', { ts: Date.now() });
+    if (isOpen) sendUpdate('global', RELAY.POSITIONSREQ, { ts: Date.now() });
   }, [isOpen, sendUpdate]);
 
   const meta = spellgunMeta(item);
@@ -147,7 +148,7 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
       allowedEntryIds: enemyIds,
     });
     if (hits.length) {
-      sendUpdate('global', 'dmgapply', buildDamageApply({ hits, sourceName: item.name }));
+      sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits, sourceName: item.name }));
     }
 
     // Reveal any monster IWR that just modified the applied damage (#1014).

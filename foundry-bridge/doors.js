@@ -22,6 +22,7 @@ import {
   getGridSize,
 } from './pf2eAdapter.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
+import { RELAY } from './syncKeys.js';
 
 const ADJACENCY_SQUARES = 1.5;
 
@@ -35,7 +36,7 @@ export function initDoors(sendUpdateFn) {
     if (_options?.[BRIDGE_SOURCE_FLAG] === 'app') return;
     // When a door transitions to open, turn off exploration movement for everyone.
     if (change.ds === 1 && isDoor(wallDoc)) {
-      _sendUpdate?.('global', 'exploremove', false);
+      _sendUpdate?.('global', RELAY.EXPLOREMOVE, false);
     }
   });
 }
@@ -76,7 +77,7 @@ export function handleDoorRequest(charId, { ts } = {}) {
     }
   }
 
-  _sendUpdate?.(charId, 'dooropts', { doors, reqTs: ts ?? null });
+  _sendUpdate?.(charId, RELAY.DOOROPTS, { doors, reqTs: ts ?? null });
 }
 
 // Open or close a door. Ignores locked doors (ds === 2).

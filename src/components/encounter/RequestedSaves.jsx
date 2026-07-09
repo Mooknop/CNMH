@@ -12,6 +12,7 @@ import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
+import { RELAY } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -141,7 +142,7 @@ const RequestedSaves = () => {
       })
       .filter(Boolean);
     if (relayHits.length) {
-      sendUpdate('global', 'dmgapply', buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
+      sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
     }
 
     // Reveal-on-trigger (#1014): monster IWR that just modified a target's
@@ -363,7 +364,7 @@ const RequestedSaves = () => {
             })}
             <button
               className="btn-secondary"
-              onClick={() => sendUpdate('global', 'saveroll', buildSaveRoll(req))}
+              onClick={() => sendUpdate('global', RELAY.SAVEROLL, buildSaveRoll(req))}
               style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
             >
               Roll in Foundry

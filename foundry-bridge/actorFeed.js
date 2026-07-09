@@ -15,6 +15,7 @@
 import {
   getActiveCombat, getCombatState, getCombatantActorId, getChatMessageContext,
 } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;  // injected by bridge.js on init
 // Per-turn accumulator. null until a combat/turn is observed.
@@ -171,7 +172,7 @@ function prettyType(type) {
 
 function emit() {
   if (!_state?.entryId) return;  // nothing meaningful to address yet
-  _sendUpdate?.('global', 'actorfeed', {
+  _sendUpdate?.('global', RELAY.ACTORFEED, {
     entryId:  _state.entryId,
     actions:  3,
     spent:    _state.spent,

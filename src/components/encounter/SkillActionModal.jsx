@@ -25,6 +25,7 @@ import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../util
 import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import './SkillActionModal.css';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -53,7 +54,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const characterModel = useCharacter(character);
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
   // Affixed-talisman + consumed overlays — for a Trip-triggered talisman (Wolf Fang).
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
@@ -256,17 +257,17 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     // Self-condition on a maneuver/Feint crit-fail (you fall prone / off-guard).
     // Mirrors the off-guard write in useExploitVulnerability — de-dupe, then sync.
     if (outcome?.selfCondition && character?.id) {
-      const cur = getState(character.id, 'conditions') || [];
+      const cur = getState(character.id, RELAY.CONDITIONS) || [];
       if (!cur.some((c) => c.id === outcome.selfCondition)) {
-        sendUpdate(character.id, 'conditions', [...cur, { id: outcome.selfCondition, value: null }]);
+        sendUpdate(character.id, RELAY.CONDITIONS, [...cur, { id: outcome.selfCondition, value: null }]);
       }
     }
 
     // Escape success — shed grabbed/restrained/immobilized from the acting PC.
     if (outcome?.removeSelf && character?.id) {
-      const cur = getState(character.id, 'conditions') || [];
+      const cur = getState(character.id, RELAY.CONDITIONS) || [];
       const next = cur.filter((c) => !outcome.removeSelf.includes(c.id));
-      if (next.length !== cur.length) sendUpdate(character.id, 'conditions', next);
+      if (next.length !== cur.length) sendUpdate(character.id, RELAY.CONDITIONS, next);
     }
 
     // Attack-trait actions advance the Multiple Attack Penalty.

@@ -16,6 +16,7 @@ import {
   setMultipleInitiatives, rollNpcInitiatives, startCombat,
 } from './pf2eAdapter.js';
 import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate    = null;  // injected by bridge.js on init
 let _activeCombatId = null;  // stored on createCombat/updateCombat for reliable lookup
@@ -153,7 +154,7 @@ function onUpdateCombat(combat, diff, opts) {
 function pushEncounterState(combat) {
   if (!combat) return;
   const value = buildEncounterPayload(combat);
-  _sendUpdate?.('global', 'encounter', value);
+  _sendUpdate?.('global', RELAY.ENCOUNTER, value);
 }
 
 // Re-push the live combat — used as the callback when an enemy's token image
@@ -164,7 +165,7 @@ function repushActiveEncounter() {
 }
 
 function pushIdleState() {
-  _sendUpdate?.('global', 'encounter', {
+  _sendUpdate?.('global', RELAY.ENCOUNTER, {
     active: false,
     phase:  'idle',
     round:  0,

@@ -3,6 +3,7 @@ import { useDoors } from '../../hooks/useDoors';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
+import { RELAY, syncKey } from '../../sync/keys';
 
 // Encounter-mode "Interact: open/close a door" (#435). The bridge already returns
 // only the doors within reach of the actor's token (foundry-bridge/doors.js), so
@@ -21,7 +22,7 @@ const EncounterDoors = ({ charId, characterName }) => {
   const { appendLog } = useEncounter();
   // The move relay stamps a fresh reqTs on every confirmed step; use it to
   // re-scan for doors after the actor moves.
-  const [moveDone] = useSyncedState(`cnmh_movedone_${charId}`, null);
+  const [moveDone] = useSyncedState(syncKey(RELAY.MOVEDONE, charId), null);
   const { doors, interactDoor } = useDoors(charId, { refreshTs: moveDone?.reqTs });
 
   if (doors.length === 0) return null;

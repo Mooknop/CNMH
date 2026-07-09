@@ -7,6 +7,7 @@ import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
 import { heightenedEntriesFor } from '../../utils/spellHeighten';
 import './AddSummonModal.css';
+import { RELAY, globalKey } from '../../sync/keys';
 
 // Parse the creature-level cap a summon spell's heightening grants at a cast
 // rank, e.g. "The creature can be up to Level 5." → 5. Returns null if the
@@ -31,7 +32,7 @@ const AddSummonModal = ({ isOpen, onClose }) => {
   const { characters, spells } = useContent();
   const { sendUpdate } = useSession();
   const { addSummon } = useSummons();
-  const [pool] = useSyncedState('cnmh_summonpool_global', []);
+  const [pool] = useSyncedState(globalKey(RELAY.SUMMONPOOL), []);
 
   const [casterId, setCasterId] = useState('');
   const [sustainId, setSustainId] = useState('');
@@ -72,7 +73,7 @@ const AddSummonModal = ({ isOpen, onClose }) => {
     handleClose();
   };
 
-  const refreshPool = () => sendUpdate('global', 'summonpoolreq', Date.now());
+  const refreshPool = () => sendUpdate('global', RELAY.SUMMONPOOLREQ, Date.now());
 
   const canAdd = !!caster && !!sustain && !!creature;
 

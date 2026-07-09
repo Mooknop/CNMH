@@ -12,6 +12,7 @@ import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { checkBonusTalisman } from '../../utils/talismanActivation';
 import './SkillCheckModal.css';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -59,7 +60,7 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   const characterModel = useCharacter(character);
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
 
   // Affixed-talisman overlay (#254) + consumed overlay — a check-bonus talisman
   // (Sneaky Key, #1093) is offered as an opt-in on matching checks and consumed

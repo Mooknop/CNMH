@@ -1,3 +1,4 @@
+import { RELAY, globalKey } from '../sync/keys';
 // Typed damage relay to Foundry (#1016). After the damage step resolves, the
 // app pushes each enemy target's damage total WITH its type to the bridge
 // (cnmh_dmgapply_global); the bridge applies it through PF2e's own
@@ -10,8 +11,8 @@
 // Enemy-only by design: PC damage flows through cnmh_hp_<charId> (characterSync
 // writes it back), so relaying PC hits would double-apply.
 
-export const DMGAPPLY_KEY = 'cnmh_dmgapply_global';
-export const DMGDONE_KEY  = 'cnmh_dmgdone_global';
+export const DMGAPPLY_KEY = globalKey(RELAY.DMGAPPLY);
+export const DMGDONE_KEY  = globalKey(RELAY.DMGDONE);
 
 export const newDamageApplyId = () =>
   `dmg-${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;

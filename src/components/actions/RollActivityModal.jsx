@@ -9,6 +9,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
 import { newEntryUid } from '../../utils/uid';
 import './RollActivityModal.css';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const EXPLORATION_EFFECT_SOURCE = 'exploration';
 
@@ -53,7 +54,7 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(
-    `cnmh_conditions_${character?.id || 'none'}`, []
+    syncKey(RELAY.CONDITIONS, character?.id || 'none'), []
   );
   const { getState, sendUpdate } = useSession();
   const { characters: partyChars } = useContext(CharacterContext) || {};

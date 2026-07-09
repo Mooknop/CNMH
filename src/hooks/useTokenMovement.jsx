@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Shared movement state machine for both combat (TurnTrackerPanel) and
 // exploration (ExplorationMove). Handles the movereq→moveopts→moveconfirm→movedone
@@ -27,8 +28,8 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
   // requestMoveRefresh adopts them instead of paying a movereq→moveopts round-trip.
   const pendingNextOpts = useRef(null);
 
-  const [moveOpts] = useSyncedState(`cnmh_moveopts_${charId}`, null);
-  const [moveDone] = useSyncedState(`cnmh_movedone_${charId}`, null);
+  const [moveOpts] = useSyncedState(syncKey(RELAY.MOVEOPTS, charId), null);
+  const [moveDone] = useSyncedState(syncKey(RELAY.MOVEDONE, charId), null);
 
   // Opts arrived → open or refresh the picker (correlated by ts).
   useEffect(() => {
@@ -59,7 +60,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     pendingNextOpts.current = null; // a fresh probe supersedes any stale piggyback
     setPendingMoveType(moveType);
     setStage('awaiting-opts');
-    sendUpdate(charId, 'movereq', { moveType, ts });
+    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts });
   };
 
   // Keeps the picker visible while refreshing for a new origin (exploration
@@ -80,7 +81,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     sessionTs.current = ts;
     setIsRefreshing(true);
     setStage('awaiting-opts');
-    sendUpdate(charId, 'movereq', { moveType, ts });
+    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts });
   };
 
   // Sends the moveconfirm message. Callers may wrap this to add side-effects
@@ -88,7 +89,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
   // actionCost is informational (the bridge ignores it); pass the real cost so
   // the session log and tests have the correct value.
   const confirmMove = (destination, actionCost = 0) => {
-    sendUpdate(charId, 'moveconfirm', {
+    sendUpdate(charId, RELAY.MOVECONFIRM, {
       destination,
       moveType: pendingMoveType,
       actionCost,

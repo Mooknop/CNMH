@@ -5,11 +5,12 @@
 // currently holding the turn. The bridge populates this in #472b; until then the
 // key is empty and the stage shows its waiting state.
 import { useSyncedState } from './useSyncedState';
+import { RELAY, globalKey } from '../sync/keys';
 
 const EMPTY = { actions: 3, spent: 0, reaction: true, feed: [] };
 
 export const useActorFeed = (actorEntryId) => {
-  const [payload] = useSyncedState('cnmh_actorfeed_global', null);
+  const [payload] = useSyncedState(globalKey(RELAY.ACTORFEED), null);
 
   if (!payload || !actorEntryId || payload.entryId !== actorEntryId) {
     return EMPTY;

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useSession } from '../../contexts/SessionContext';
 import { useInitiativeRoll } from '../../hooks/useInitiativeRoll';
 import './GmInitiativePanel.css';
+import { RELAY } from '../../sync/keys';
 
 // One status row: reads a PC's cnmh_initroll_<charId> and reports it up so the
 // panel can tally N/M and build the commit. A separate component per PC keeps the
@@ -50,13 +51,13 @@ const GmInitiativePanel = ({ pcs }) => {
         return r ? { entryId: p.entryId, initiative: r.total } : null;
       })
       .filter(Boolean);
-    sendUpdate('global', 'initcommit', { rolls: commitRolls, rollNpcs: true });
+    sendUpdate('global', RELAY.INITCOMMIT, { rolls: commitRolls, rollNpcs: true });
   };
 
   // Retract every submitted roll so players re-enter; the bridge drops them from its
   // tally (a null initroll is the retract signal it already handles).
   const handleReopen = () => {
-    pcs.forEach((p) => sendUpdate(p.charId, 'initroll', null));
+    pcs.forEach((p) => sendUpdate(p.charId, RELAY.INITROLL, null));
   };
 
   return (

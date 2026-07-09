@@ -65,6 +65,7 @@ import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
 import './UseAbilityModal.css';
+import { RELAY, syncKey, globalKey } from '../../sync/keys';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -222,17 +223,17 @@ const UseAbilityModal = ({
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || ''), []);
   const { effects: activeEffects } = useEffects(character?.id || '');
 
   // Combatant grid positions from the bridge (#527) — drives ranged range
   // increments. Request a fresh push when the modal opens so a stale snapshot
   // doesn't misjudge distance; degrades to no range gating when absent.
-  const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const [positionsState] = useSyncedState(globalKey(RELAY.POSITIONS), null);
   const { prey } = useHuntPrey(character?.id || '');
   const isRangedStrike = ability?.type === 'ranged';
   useEffect(() => {
-    if (isOpen && isRangedStrike) sendUpdate('global', 'positionsreq', { ts: Date.now() });
+    if (isOpen && isRangedStrike) sendUpdate('global', RELAY.POSITIONSREQ, { ts: Date.now() });
   }, [isOpen, isRangedStrike, sendUpdate]);
 
   const order = encounter?.order || [];
@@ -641,7 +642,7 @@ const UseAbilityModal = ({
     // structured-effect writes and instead mirrors the result via the
     // cnmh_foundryeffects read-back. With no bridge, the authored effects[] (e.g.
     // Inspire Courage's all-allies fallback) apply as before.
-    const bridgePresent = (getState('global', 'roster') || []).length > 0;
+    const bridgePresent = (getState('global', RELAY.ROSTER) || []).length > 0;
     const foundryAuthoritative = !!ability.foundryEffect?.authoritative && bridgePresent;
 
     // Opposed reaction (#226-C) — its own resolution path. The actor's skill
@@ -791,7 +792,7 @@ const UseAbilityModal = ({
         });
       } else if (ref.damage) {
         if (entered != null) {
-          sendUpdate('global', 'dmgapply', buildDamageApply({
+          sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({
             hits: hitEnemies.map((e) => ({
               entryId: e.entryId,
               name: e.name,
@@ -1147,7 +1148,7 @@ const UseAbilityModal = ({
       allowedEntryIds: enemyEntryIds,
     });
     if (damageHits.length) {
-      sendUpdate('global', 'dmgapply', buildDamageApply({ hits: damageHits, sourceName: ability.name }));
+      sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: damageHits, sourceName: ability.name }));
     }
 
     // Reveal-on-trigger (#1014): any monster IWR that just modified a target's

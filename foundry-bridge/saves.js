@@ -17,6 +17,7 @@
 // entry remains the fallback. All Foundry access goes through pf2eAdapter.js.
 
 import { resolveCombatantToken, rollActorSave } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 
@@ -54,7 +55,7 @@ export async function handleSaveRoll(value) {
     }
   }
 
-  _sendUpdate?.('global', 'savedone', {
+  _sendUpdate?.('global', RELAY.SAVEDONE, {
     id: id ?? null,
     results,
     failed,

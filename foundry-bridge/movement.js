@@ -45,6 +45,7 @@ import {
   hasWallCollision,
   moveToken,
 } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 
@@ -116,7 +117,7 @@ export async function handleMoveRequest(charId, value) {
 
   // Echo the request ts so the app can correlate this response to its request
   // and ignore stale option sets from a previous move.
-  _sendUpdate?.(charId, 'moveopts', { ...options, reqTs: value?.ts ?? null });
+  _sendUpdate?.(charId, RELAY.MOVEOPTS, { ...options, reqTs: value?.ts ?? null });
 }
 
 // Called by bridge.js when cnmh_moveconfirm_<charId> arrives.
@@ -145,7 +146,7 @@ export async function handleMoveConfirm(charId, value) {
     col: destination.col, row: destination.row, x, y,
   });
 
-  _sendUpdate?.(charId, 'movedone', {
+  _sendUpdate?.(charId, RELAY.MOVEDONE, {
     newPosition: { col: destination.col, row: destination.row, x, y },
     feetMoved,
     reqTs: value?.ts ?? null,

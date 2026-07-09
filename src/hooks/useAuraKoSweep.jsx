@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useAura } from './useAura';
 import { useGmAuth } from './useGmAuth';
 import { useSessionLog } from './useSessionLog';
+import { RELAY, syncKey } from '../sync/keys';
 
 // KO auto-deactivation for the kinetic aura (#228): Channel Elements ends if
 // the kineticist is knocked out. HP is written from many places (AdjustHpModal,
@@ -16,7 +17,7 @@ import { useSessionLog } from './useSessionLog';
 export function useAuraKoSweep(character) {
   const charId = character?.id || 'none';
   const name = character?.name || charId;
-  const [hp] = useSyncedState(`cnmh_hp_${charId}`, null);
+  const [hp] = useSyncedState(syncKey(RELAY.HP, charId), null);
   const { active, deactivate } = useAura(charId);
   const { isGm } = useGmAuth();
   const { appendEvent } = useSessionLog();

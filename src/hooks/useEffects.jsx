@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { RELAY, syncKey } from '../sync/keys';
 
 export const useEffects = (charId) => {
   const [effects, setEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
@@ -8,7 +9,7 @@ export const useEffects = (charId) => {
   // cnmh_effects store. Merged read-only into the returned list so the EffectsPanel
   // and the computeEffectBonuses pipeline (StatsBlock / rollResolution) treat a
   // Foundry-applied buff exactly like an app-applied one.
-  const [foundryEffects] = useSyncedState(`cnmh_foundryeffects_${charId}`, []);
+  const [foundryEffects] = useSyncedState(syncKey(RELAY.FOUNDRYEFFECTS, charId), []);
 
   const removeEffect = useCallback(
     // Only app-owned entries are removable; Foundry-sourced ones carry no × in the

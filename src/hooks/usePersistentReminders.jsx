@@ -8,6 +8,7 @@ import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '
 import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { wornImmuneTo, wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
+import { RELAY } from '../sync/keys';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -49,7 +50,7 @@ export function usePersistentReminders() {
     if (!entry?.charId) return null;
     const effects = [
       ...(getState(entry.charId, 'effects') || []),
-      ...(getState(entry.charId, 'foundryeffects') || []),
+      ...(getState(entry.charId, RELAY.FOUNDRYEFFECTS) || []),
     ];
     const vsType = persistentVsType(inst);
 

@@ -15,6 +15,7 @@ import { getReactions } from '../../../utils/actionUtils';
 import { nextTurnIndex } from '../../../utils/encounterUtils';
 import { RESET_STATE, writeLocal } from './turnEnd';
 import './ActionDial.css';
+import { RELAY } from '../../../sync/keys';
 
 const formatCombatTime = (secs) => {
   const m = Math.floor(secs / 60);
@@ -100,7 +101,7 @@ const ActionDial = ({ charId, characterName, character = null }) => {
     });
 
     if (encounter.foundryCombatId) {
-      sendUpdate('global', 'turncmd', { action: 'next-turn', ts: Date.now() });
+      sendUpdate('global', RELAY.TURNCMD, { action: 'next-turn', ts: Date.now() });
     } else {
       advanceTurn();
     }

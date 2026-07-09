@@ -4,6 +4,7 @@
 // the style of treatWounds.js.
 
 import { newEntryUid } from './uid';
+import { RELAY, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -45,7 +46,7 @@ export const hasGodlessHealing = (character) =>
  * Applies a healing consumable: HP up (clamped to max), combat-log line.
  * The player rolls the dice physically and enters the final total.
  *
- * HP writes go through sendUpdate(id, 'hp', value) so the Foundry bridge
+ * HP writes go through sendUpdate(id, RELAY.HP, value) so the Foundry bridge
  * picks them up (same route as applyTreatWounds).
  *
  * @param {Object}   user       - { id, name, maxHp } — the drinking character
@@ -69,7 +70,7 @@ export function applyHealingConsumable({ user, itemName, amount, getState, sendU
 /**
  * Generic HP-up (clamped to max) with a combat-log line — the shared core of
  * healing consumables, Harrow Casting's Shields/Stars suits (#227), and any
- * future player-rolled healing. HP writes go through sendUpdate(id, 'hp', v)
+ * future player-rolled healing. HP writes go through sendUpdate(id, RELAY.HP, v)
  * so the Foundry bridge picks them up.
  *
  * @param {Object}   target   - { id, name, maxHp? } — the healed character
@@ -85,11 +86,11 @@ export function applyHealing({ target, amount, getState, sendUpdate, appendLog, 
     wounded: 0,
     doomed:  0,
   };
-  const currentHp = getState(target.id, 'hp') || seedHp;
+  const currentHp = getState(target.id, RELAY.HP) || seedHp;
   const newHp = { ...currentHp, current: Math.min(currentHp.max, currentHp.current + amount) };
 
-  writeLocal(`cnmh_hp_${target.id}`, newHp);
-  sendUpdate(target.id, 'hp', newHp);
+  writeLocal(syncKey(RELAY.HP, target.id), newHp);
+  sendUpdate(target.id, RELAY.HP, newHp);
 
   appendLog({
     type:   'action',

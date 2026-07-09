@@ -7,6 +7,7 @@
 // The app never writes this key; summons the GM creates live in cnmh_summons_global.
 
 import { getSummonFolderActors } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const DEFAULT_FOLDER = 'Summons';
@@ -23,7 +24,7 @@ function folderName() {
 
 export function pushSummonPool() {
   const pool = getSummonFolderActors(folderName());
-  _sendUpdate?.('global', 'summonpool', pool);
+  _sendUpdate?.('global', RELAY.SUMMONPOOL, pool);
 }
 
 export function initSummonPool(sendUpdateFn) {

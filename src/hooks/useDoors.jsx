@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Shared door relay for both the exploration door panel and the encounter
 // Interact action (#435). The bridge (`foundry-bridge/doors.js`) answers a
@@ -19,10 +20,10 @@ import { useSession } from '../contexts/SessionContext';
 // @returns {{ doors: Array, interactDoor: (wallId, op) => void }}
 export const useDoors = (charId, { refreshTs } = {}) => {
   const { sendUpdate } = useSession();
-  const [doorOpts] = useSyncedState(`cnmh_dooropts_${charId}`, null);
+  const [doorOpts] = useSyncedState(syncKey(RELAY.DOOROPTS, charId), null);
 
   const detect = useCallback(() => {
-    sendUpdate(charId, 'doorreq', { ts: Date.now() });
+    sendUpdate(charId, RELAY.DOORREQ, { ts: Date.now() });
   }, [charId, sendUpdate]);
 
   // Detect on mount and again whenever the refresh signal changes.
@@ -31,7 +32,7 @@ export const useDoors = (charId, { refreshTs } = {}) => {
   }, [detect, refreshTs]);
 
   const interactDoor = useCallback(
-    (wallId, op) => sendUpdate(charId, 'doorinteract', { wallId, op, ts: Date.now() }),
+    (wallId, op) => sendUpdate(charId, RELAY.DOORINTERACT, { wallId, op, ts: Date.now() }),
     [charId, sendUpdate]
   );
 
