@@ -160,7 +160,6 @@ async function resolveEffectSource(ref) {
     const items = game.items?.contents ?? (Array.isArray(game.items) ? game.items : []);
     return items.find((i) => i.slug === slug) ?? null;
   }
-  // eslint-disable-next-line no-undef
   return fromUuid(ref);
 }
 
@@ -707,4 +706,25 @@ export function hasWallCollision(fromX, fromY, toX, toY) {
     type: 'move',
     mode: 'any',
   });
+}
+
+// --- Hooks + settings seam (#1313) -------------------------------------------
+// Feature modules never touch the Hooks/game globals directly (enforced by
+// eslint no-restricted-globals); registration funnels through these so a
+// [v14-MIGRATION] hook-name or signature change is a one-file fix. bridge.js
+// (the Foundry entry point) is the only other file allowed at the globals.
+
+// Register a persistent Foundry hook handler.
+export function onHook(name, fn) {
+  Hooks.on(name, fn);
+}
+
+// Read one of this module's registered settings; undefined when the settings
+// registry isn't ready (e.g. before init) or the key is unknown.
+export function getModuleSetting(moduleId, key) {
+  try {
+    return game.settings?.get(moduleId, key);
+  } catch {
+    return undefined;
+  }
 }

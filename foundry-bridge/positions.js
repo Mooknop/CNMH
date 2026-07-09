@@ -9,7 +9,7 @@
 // dependency) — like adjacency, it's keyed purely by combatant id. Kept fresh on
 // token move + combat hooks; emits empty positions when no combat is running.
 
-import { getCombatTokenMap, getTokenGridPosition, getGridSize } from './pf2eAdapter.js';
+import { getCombatTokenMap, getTokenGridPosition, getGridSize, onHook } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
@@ -24,13 +24,13 @@ export function initPositions(sendUpdateFn) {
 
   // Re-broadcast whenever a token moves on the canvas (v13/v14: updateToken
   // fires on the token document after the move is applied).
-  Hooks.on('updateToken', () => pushPositions());
+  onHook('updateToken', () => pushPositions());
 
   // Combat lifecycle: a new fight brings new combatants/tokens; turn advances are
   // cheap to recompute; deleteCombat clears positions (no active combat → empty).
-  Hooks.on('createCombat', () => pushPositions());
-  Hooks.on('updateCombat', () => pushPositions());
-  Hooks.on('deleteCombat', () => pushPositions());
+  onHook('createCombat', () => pushPositions());
+  onHook('updateCombat', () => pushPositions());
+  onHook('deleteCombat', () => pushPositions());
 }
 
 export function pushPositions() {

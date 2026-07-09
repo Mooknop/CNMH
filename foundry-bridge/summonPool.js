@@ -6,7 +6,7 @@
 //
 // The app never writes this key; summons the GM creates live in cnmh_summons_global.
 
-import { getSummonFolderActors } from './pf2eAdapter.js';
+import { getSummonFolderActors, getModuleSetting, onHook } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -15,11 +15,7 @@ const DEFAULT_FOLDER = 'Summons';
 let _sendUpdate = null;  // injected by bridge.js on init
 
 function folderName() {
-  try {
-    return game.settings?.get(MODULE_ID, 'summonFolder') || DEFAULT_FOLDER;
-  } catch {
-    return DEFAULT_FOLDER;
-  }
+  return getModuleSetting(MODULE_ID, 'summonFolder') || DEFAULT_FOLDER;
 }
 
 export function pushSummonPool() {
@@ -31,10 +27,10 @@ export function initSummonPool(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
   // Any actor or folder edit can change the pool; it's small, so just recompute
   // from the current folder contents rather than tracking membership deltas.
-  Hooks.on('createActor', () => pushSummonPool());
-  Hooks.on('updateActor', () => pushSummonPool());
-  Hooks.on('deleteActor', () => pushSummonPool());
-  Hooks.on('updateFolder', () => pushSummonPool());
+  onHook('createActor', () => pushSummonPool());
+  onHook('updateActor', () => pushSummonPool());
+  onHook('deleteActor', () => pushSummonPool());
+  onHook('updateFolder', () => pushSummonPool());
 }
 
 // App-requested refresh (cnmh_summonpoolreq_global), e.g. the Add-summon modal's

@@ -8,8 +8,12 @@ import reactHooks from 'eslint-plugin-react-hooks';
 // react-app's effective rule surface — eslint:recommended + the two classic
 // react-hooks rules + JSX var usage — without the React-Compiler rule pack the
 // modern react-hooks plugin now bundles, to preserve the existing zero-warning
-// baseline. The `lint` script targets src/ only; e2e/ and foundry-bridge/ are
-// linted by their own tooling.
+// baseline. The `lint` script covers src/ AND foundry-bridge/ (#1313); e2e/
+// keeps its own Playwright tooling.
+
+// Foundry globals the BRIDGE is built against. Feature modules must reach them
+// through pf2eAdapter.js (the v14-migration seam) — enforced below.
+const FOUNDRY_GLOBALS = ['Hooks', 'game', 'canvas', 'CONFIG', 'ui', 'CONST', 'ChatMessage', 'fromUuid', 'fromUuidSync', 'foundry'];
 
 const vitestGlobals = {
   vi: 'readonly',
@@ -28,7 +32,7 @@ export default [
   // Never lint build output or vendored/foreign trees. (The `lint` script
   // already scopes to src/, but this keeps a bare `eslint .` sane too.)
   {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', 'e2e/**', 'foundry-bridge/**'],
+    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', 'e2e/**'],
   },
   js.configs.recommended,
   {
@@ -61,6 +65,64 @@ export default [
     files: ['**/*.test.{js,jsx}', 'src/setupTests.js'],
     languageOptions: {
       globals: { ...globals.node, ...vitestGlobals },
+    },
+  },
+  {
+    // Foundry bridge (#1313): browser env + the Foundry globals declared so
+    // no-undef stays meaningful in the files that ARE allowed to use them.
+    files: ['foundry-bridge/**/*.js'],
+    languageOptions: {
+      globals: Object.fromEntries(FOUNDRY_GLOBALS.map((g) => [g, 'readonly'])),
+    },
+  },
+  {
+    // The pf2eAdapter seam: feature modules must not touch Foundry globals —
+    // every canvas/actor/combat/hook access goes through pf2eAdapter.js so a
+    // v14 API change is a one-file fix (see foundry-bridge/MIGRATION.md).
+    // Allowed at the globals: pf2eAdapter.js itself and bridge.js (the module
+    // entry point — Foundry requires settings registration + lifecycle hooks
+    // there). Tests build the mock world, so they're exempt too.
+    files: ['foundry-bridge/**/*.js'],
+    ignores: [
+      'foundry-bridge/pf2eAdapter.js',
+      'foundry-bridge/bridge.js',
+      'foundry-bridge/test/**',
+      'foundry-bridge/**/*.test.js',
+    ],
+    rules: {
+      'no-restricted-globals': ['error',
+        ...FOUNDRY_GLOBALS.map((name) => ({
+          name,
+          message: `Foundry global — route it through pf2eAdapter.js (the v14 seam), never a feature module.`,
+        })),
+      ],
+    },
+  },
+  {
+    // CJS tooling files in the bridge (jest config) run under node.
+    files: ['foundry-bridge/jest.config.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { ...globals.node },
+    },
+  },
+  {
+    // Bridge jest tests: node-ish globals + jest, and they legitimately build
+    // the mocked Foundry world on globalThis.
+    files: ['foundry-bridge/**/*.test.js', 'foundry-bridge/test/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
     },
   },
   {

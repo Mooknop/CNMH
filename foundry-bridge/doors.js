@@ -20,6 +20,7 @@ import {
   getWallCoords,
   setDoorState,
   getGridSize,
+  onHook,
 } from './pf2eAdapter.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 import { RELAY } from './syncKeys.js';
@@ -31,7 +32,7 @@ let _sendUpdate = null;
 export function initDoors(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
-  Hooks.on('updateWall', (wallDoc, change, _options, _userId) => {
+  onHook('updateWall', (wallDoc, change, _options, _userId) => {
     // Skip echoes the bridge itself caused.
     if (_options?.[BRIDGE_SOURCE_FLAG] === 'app') return;
     // When a door transitions to open, turn off exploration movement for everyone.

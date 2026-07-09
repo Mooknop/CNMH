@@ -15,6 +15,7 @@
 // so the caller can re-push the encounter once the URL is known.
 
 import { WORKER_WSS_URL, BRIDGE_SECRET } from './config.js';
+import { getModuleSetting } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -107,7 +108,7 @@ function finish(rawImg, resolvedUrl, onResolved) {
 
 // wss://host → https://host (ws://→http://) so we can reach the Worker over HTTPS.
 function workerHttpBase() {
-  const wss = game?.settings?.get(MODULE_ID, 'workerUrl') || WORKER_WSS_URL;
+  const wss = getModuleSetting(MODULE_ID, 'workerUrl') || WORKER_WSS_URL;
   return wss.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
 }
 

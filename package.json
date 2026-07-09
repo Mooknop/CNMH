@@ -39,7 +39,7 @@
     "start": "vite",
     "build": "npm run lint && vite build && npm run test:ci",
     "build:app": "vite build",
-    "lint": "eslint src --max-warnings 0",
+    "lint": "eslint src foundry-bridge --max-warnings 0",
     "test": "vitest",
     "test:ci": "npm run lint && vitest run --coverage --passWithNoTests",
     "test:unit:ci": "vitest run --coverage --passWithNoTests",
