@@ -44,12 +44,16 @@ const resolveWsUrl = () => {
 
 const FALLBACK = defaultContent();
 
-export const ContentProvider = ({ children }) => {
+// `initialContent` is a test seam (#1311): a pre-seeded content payload that
+// replaces the snapshot fetch + live-edit socket entirely, so unit tests can
+// run the real normalization/resolution pipeline on deterministic data.
+// Production callers never pass it.
+export const ContentProvider = ({ children, initialContent }) => {
   const ws = useRef(null);
   const reconnectTimer = useRef(null);
   const unmounted = useRef(false);
-  const [serverContent, setServerContent] = useState(null); // null until first load
-  const [loading, setLoading] = useState(true);
+  const [serverContent, setServerContent] = useState(initialContent ?? null); // null until first load
+  const [loading, setLoading] = useState(!initialContent);
 
   const applyFull = useCallback((payload) => {
     if (payload && typeof payload === 'object') setServerContent(payload);
@@ -93,11 +97,13 @@ export const ContentProvider = ({ children }) => {
 
   // Initial snapshot.
   useEffect(() => {
+    if (initialContent) return; // seeded (test seam) — no fetch
     loadSnapshot();
-  }, [loadSnapshot]);
+  }, [loadSnapshot, initialContent]);
 
   // Live edits.
   useEffect(() => {
+    if (initialContent) return; // seeded (test seam) — no live socket
     unmounted.current = false;
 
     const connect = () => {
@@ -137,7 +143,7 @@ export const ContentProvider = ({ children }) => {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       try { ws.current?.close(); } catch { /* noop */ }
     };
-  }, [applyFull, applyUpsert, applyDelete]);
+  }, [applyFull, applyUpsert, applyDelete, initialContent]);
 
   // Per-collection: use the store when it holds rows, else the bundled
   // default. `source` is 'server' if ANY managed collection is populated —
