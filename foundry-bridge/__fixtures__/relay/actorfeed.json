@@ -1,0 +1,20 @@
+{
+  "characterId": "global",
+  "value": {
+    "entryId": "cbt-hero",
+    "actions": 3,
+    "spent": 1,
+    "reaction": true,
+    "feed": [
+      {
+        "n": 1,
+        "cost": 1,
+        "label": "Longsword",
+        "detail": "vs Foe",
+        "result": "Hit",
+        "type": "attack-roll",
+        "state": "done"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "characterId": "global",
+  "value": {
+    "gridSize": 100,
+    "positions": {
+      "cbt-ashka": {
+        "col": 3,
+        "row": 1
+      }
+    }
+  }
+}

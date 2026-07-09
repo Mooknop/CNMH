@@ -1,0 +1,17 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "dmg-1",
+    "sourceName": "Fireball",
+    "applied": [
+      {
+        "entryId": "cbt-gob",
+        "name": "Goblin Warrior",
+        "amount": 8,
+        "type": "fire"
+      }
+    ],
+    "failed": [],
+    "ts": 1700000000000
+  }
+}

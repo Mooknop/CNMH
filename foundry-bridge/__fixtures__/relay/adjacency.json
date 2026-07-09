@@ -1,0 +1,11 @@
+{
+  "characterId": "global",
+  "value": {
+    "cbt-a": [
+      "cbt-b"
+    ],
+    "cbt-b": [
+      "cbt-a"
+    ]
+  }
+}

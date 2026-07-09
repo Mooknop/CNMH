@@ -1,0 +1,65 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "origin": {
+      "col": 5,
+      "row": 5
+    },
+    "reachable": [
+      {
+        "col": 4,
+        "row": 4,
+        "feet": 5,
+        "terrain": "normal"
+      },
+      {
+        "col": 4,
+        "row": 6,
+        "feet": 5,
+        "terrain": "normal"
+      },
+      {
+        "col": 5,
+        "row": 4,
+        "feet": 5,
+        "terrain": "normal"
+      },
+      {
+        "col": 5,
+        "row": 6,
+        "feet": 5,
+        "terrain": "normal"
+      },
+      {
+        "col": 6,
+        "row": 4,
+        "feet": 5,
+        "terrain": "normal"
+      },
+      {
+        "col": 6,
+        "row": 5,
+        "feet": 5,
+        "terrain": "normal",
+        "passThrough": true
+      },
+      {
+        "col": 6,
+        "row": 6,
+        "feet": 5,
+        "terrain": "normal"
+      }
+    ],
+    "blocked": [
+      {
+        "col": 4,
+        "row": 5,
+        "kind": "enemy"
+      }
+    ],
+    "gridSize": 100,
+    "speed": 10,
+    "originOccupied": false,
+    "reqTs": 999
+  }
+}

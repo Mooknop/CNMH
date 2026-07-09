@@ -1,0 +1,26 @@
+{
+  "characterId": "global",
+  "value": [
+    {
+      "key": "a-zombie",
+      "name": "Zombie Shambler",
+      "level": 1,
+      "hp": {
+        "max": 24
+      },
+      "defenses": {
+        "ac": 12,
+        "saves": {
+          "fortitude": null,
+          "reflex": null,
+          "will": null
+        },
+        "immunities": [],
+        "resistances": [],
+        "weaknesses": []
+      },
+      "traits": [],
+      "img": null
+    }
+  ]
+}

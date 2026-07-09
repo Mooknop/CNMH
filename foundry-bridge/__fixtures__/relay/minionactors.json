@@ -1,0 +1,19 @@
+{
+  "characterId": "global",
+  "value": {
+    "Ashka-familiar": {
+      "foundryActorId": "actor-laz",
+      "ownerCharId": "Ashka",
+      "role": "familiar",
+      "name": "Lazarus",
+      "onScene": false
+    },
+    "Ashka-companion": {
+      "foundryActorId": "actor-zev",
+      "ownerCharId": "Ashka",
+      "role": "companion",
+      "name": "Zevira",
+      "onScene": false
+    }
+  }
+}

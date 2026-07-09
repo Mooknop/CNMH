@@ -1,0 +1,11 @@
+{
+  "characterId": "Pellias",
+  "value": [
+    {
+      "id": "foundry-inspire-courage",
+      "effectId": "inspire-courage",
+      "source": "Spell Effect: Courageous Anthem",
+      "fromFoundry": true
+    }
+  ]
+}
