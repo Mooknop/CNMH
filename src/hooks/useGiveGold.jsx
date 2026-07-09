@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { docGold } from '../utils/gold';
+import { APP, syncKey } from '../sync/keys';
 
 // Player-to-player gold push (#655). The giver's own balance is a live synced
 // number (`cnmh_gold_<giverId>`); the recipient's balance is read + written
@@ -22,7 +23,7 @@ export const useGiveGold = (giverId) => {
     () => Object.fromEntries((characters || []).map((c) => [c.id, c])),
     [characters],
   );
-  const [myGold, setMyGold] = useSyncedState(`cnmh_gold_${giverId || 'none'}`, docGold(byId[giverId]));
+  const [myGold, setMyGold] = useSyncedState(syncKey(APP.GOLD, giverId || 'none'), docGold(byId[giverId]));
 
   const give = useCallback(
     (recipientId, amount) => {
@@ -37,9 +38,9 @@ export const useGiveGold = (giverId) => {
 
       // Recipient overlay value, falling back to their doc gold when unset (so a
       // transfer to a PC who hasn't loaded their sheet doesn't wipe their gold).
-      const server = getState(recipientId, 'gold');
+      const server = getState(recipientId, APP.GOLD);
       const recipientGold = typeof server === 'number' ? server : docGold(byId[recipientId]);
-      sendUpdate(recipientId, 'gold', recipientGold + amt); // credit first
+      sendUpdate(recipientId, APP.GOLD, recipientGold + amt); // credit first
       setMyGold(myGold - amt); // debit self
       return true;
     },

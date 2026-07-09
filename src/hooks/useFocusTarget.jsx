@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useEncounter } from './useEncounter';
+import { APP, syncKey } from '../sync/keys';
 
 // Command Sheet focus target (#411, #429) — a per-viewer pointer to the one
 // combatant a player is currently "focused" on. Tapping an entry in the
@@ -14,7 +15,7 @@ import { useEncounter } from './useEncounter';
 // the live encounter on read, so a focus that leaves the order — defeated,
 // encounter ended — self-clears to null with no explicit cleanup.
 export const useFocusTarget = (charId) => {
-  const [focusId, setFocusId] = useSyncedState(`cnmh_focus_${charId || 'none'}`, null);
+  const [focusId, setFocusId] = useSyncedState(syncKey(APP.FOCUS, charId || 'none'), null);
   const { encounter } = useEncounter();
 
   const focusEntry =

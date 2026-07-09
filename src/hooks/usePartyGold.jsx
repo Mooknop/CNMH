@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '../contexts/SessionContext';
 import { docGold } from '../utils/gold';
+import { APP, syncKey } from '../sync/keys';
 
 // Live sum of every character's gold (`cnmh_gold_<charId>`). Each PC's gold is a
 // plain synced number, but useSyncedState can't be called per-character in a loop
@@ -11,7 +12,7 @@ import { docGold } from '../utils/gold';
 // stored overlay" from a stored 0 and fall back to the doc gold — #670).
 const readLocalGold = (charId) => {
   try {
-    const raw = window.localStorage.getItem(`cnmh_gold_${charId}`);
+    const raw = window.localStorage.getItem(syncKey(APP.GOLD, charId));
     const v = raw !== null ? JSON.parse(raw) : undefined;
     return typeof v === 'number' ? v : undefined;
   } catch {
@@ -23,7 +24,7 @@ const seedGold = (characters, getState, prev = {}) => {
   const out = {};
   for (const c of characters) {
     const id = c.id;
-    const server = getState(id, 'gold');
+    const server = getState(id, APP.GOLD);
     if (typeof server === 'number') out[id] = server;
     else if (typeof prev[id] === 'number') out[id] = prev[id];
     else {

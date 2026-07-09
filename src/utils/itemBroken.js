@@ -1,3 +1,4 @@
+import { APP, syncKey } from '../sync/keys';
 // src/utils/itemBroken.js
 // Broken-item overlay (#957 S4). Scepters (and future scepter-like items) gain
 // the `broken` condition when their actuated ability is Overloaded. This is a
@@ -12,7 +13,7 @@
 // repairable; daily prep UNLOCKS repair (repairable → true) without clearing it;
 // a Repair action or a minimum-rank slot sacrifice then clears it.
 
-export const itemBrokenKey = (charId) => `cnmh_itembroken_${charId || 'unknown'}`;
+export const itemBrokenKey = (charId) => syncKey(APP.ITEMBROKEN, charId || 'unknown');
 
 /** Is this item currently broken? */
 export const isItemBroken = (overlay, uid) => !!(overlay && uid != null && overlay[uid]);

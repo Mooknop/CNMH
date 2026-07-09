@@ -25,7 +25,7 @@ import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../util
 import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import './SkillActionModal.css';
-import { RELAY, syncKey } from '../../sync/keys';
+import { RELAY, APP, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -57,7 +57,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
   // Affixed-talisman + consumed overlays — for a Trip-triggered talisman (Wolf Fang).
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
   const { encounter, appendLog } = useEncounter();
   const { spendActions, recordAttack, turnState } = useTurnState(character?.id);
   const { applyCondition, stampImmunity, isImmune } = useEnemyEffects();

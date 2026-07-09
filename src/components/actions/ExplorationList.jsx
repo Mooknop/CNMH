@@ -14,6 +14,7 @@ import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationAc
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { activityHighlightLabel } from '../../utils/explorationUtils';
 import './ExplorationList.css';
+import { APP, syncKey } from '../../sync/keys';
 
 const SKILL_DISPLAY = {
   arcana: 'Arcana', nature: 'Nature', occultism: 'Occultism', religion: 'Religion',
@@ -35,10 +36,10 @@ const ExplorationList = ({ character, characterColor }) => {
   const characterKey = character?.id || 'unknown';
 
   const [activeActivityName, setActiveActivityName] = useSyncedState(
-    `cnmh_exploration_${characterKey}`,
+    syncKey(APP.EXPLORATION, characterKey),
     null
   );
-  const [followExpertLink] = useSyncedState(`cnmh_followexpert_${characterKey}`, null);
+  const [followExpertLink] = useSyncedState(syncKey(APP.FOLLOWEXPERT, characterKey), null);
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
 

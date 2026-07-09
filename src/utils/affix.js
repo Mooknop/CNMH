@@ -1,3 +1,4 @@
+import { APP, syncKey } from '../sync/keys';
 // Talisman affixing (#254/#339 folded track).
 //
 // A talisman is a discrete Consumable inventory item that gets *affixed* to a
@@ -11,7 +12,7 @@
 // (and removed from its normal inventory position). React-free.
 
 /** Synced-state key for a character's affix overlay. */
-export const affixedKey = (charId) => `cnmh_affixed_${charId}`;
+export const affixedKey = (charId) => syncKey(APP.AFFIXED, charId);
 
 /** Stable inventory identity (the loadout uid, else id, else name). */
 export const itemUidOf = (item) => item?.uid ?? item?.id ?? item?.name ?? null;

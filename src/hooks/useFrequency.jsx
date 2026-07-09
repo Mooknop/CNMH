@@ -7,6 +7,7 @@ import {
   recordUse,
   clearUse,
 } from '../utils/frequency';
+import { APP, syncKey } from '../sync/keys';
 
 /**
  * Synced per-character ability frequency ledger (cnmh_freq_<charId>).
@@ -14,7 +15,7 @@ import {
  * derived at call time from the ledger plus the clocks the caller passes in.
  */
 export const useFrequency = (charId) => {
-  const [ledger, setLedger] = useSyncedState(`cnmh_freq_${charId || 'unknown'}`, {});
+  const [ledger, setLedger] = useSyncedState(syncKey(APP.FREQ, charId || 'unknown'), {});
 
   const gateFor = useCallback(
     (ability, { nowSecs, encounter, casterEntryId } = {}) => {

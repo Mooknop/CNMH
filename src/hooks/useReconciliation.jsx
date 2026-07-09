@@ -3,6 +3,7 @@ import { useContent } from '../contexts/ContentContext';
 import { useSession } from '../contexts/SessionContext';
 import { saveDocument } from '../utils/gmApi';
 import { computePendingChanges } from '../utils/reconcile';
+import { APP, syncKey } from '../sync/keys';
 
 // GM reconciliation orchestrator (#557, epic #555). Reads the durable live
 // overlays for every PC, asks the engine (#556) for the pending live↔doc
@@ -16,10 +17,10 @@ import { computePendingChanges } from '../utils/reconcile';
 export const reconChangeId = (c) => `${c.charId}:${c.overlay}:${c.overlayRef}`;
 
 const readConsumed = (getState, id) => {
-  const server = getState(id, 'consumed');
+  const server = getState(id, APP.CONSUMED);
   if (server && typeof server === 'object') return server;
   try {
-    const raw = window.localStorage.getItem(`cnmh_consumed_${id}`);
+    const raw = window.localStorage.getItem(syncKey(APP.CONSUMED, id));
     const v = raw != null ? JSON.parse(raw) : null;
     return v && typeof v === 'object' ? v : {};
   } catch {
@@ -30,10 +31,10 @@ const readConsumed = (getState, id) => {
 // Gold overlay is a plain number; `undefined` (no overlay at all) means "no
 // opinion" so the engine surfaces nothing for that PC.
 const readGold = (getState, id) => {
-  const server = getState(id, 'gold');
+  const server = getState(id, APP.GOLD);
   if (typeof server === 'number') return server;
   try {
-    const raw = window.localStorage.getItem(`cnmh_gold_${id}`);
+    const raw = window.localStorage.getItem(syncKey(APP.GOLD, id));
     const v = raw != null ? JSON.parse(raw) : undefined;
     return typeof v === 'number' ? v : undefined;
   } catch {
@@ -48,7 +49,7 @@ const readArrayOverlay = (getState, id, type) => {
   const server = getState(id, type);
   if (Array.isArray(server)) return server;
   try {
-    const raw = window.localStorage.getItem(`cnmh_${type}_${id}`);
+    const raw = window.localStorage.getItem(syncKey(type, id));
     const v = raw != null ? JSON.parse(raw) : null;
     return Array.isArray(v) ? v : [];
   } catch {

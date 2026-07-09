@@ -5,6 +5,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { aggregateVp, skillLabel } from '../../utils/victoryPoints';
 import './SkillChallengePanel.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -17,7 +18,7 @@ const DEGREE_LABELS = {
 // target so each can subscribe to its own cnmh_vpresult key (same
 // pattern as PartyMemberRow).
 const ChallengeRow = ({ character, challengeId, onResult }) => {
-  const [result] = useSyncedState(`cnmh_vpresult_${character.id}`, null);
+  const [result] = useSyncedState(syncKey(APP.VPRESULT, character.id), null);
 
   useEffect(() => {
     onResult(character.id, result);
@@ -55,7 +56,7 @@ const SkillChallengePanel = () => {
   const { characters } = useContent();
   const { sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
-  const [challenge, setChallenge] = useSyncedState('cnmh_vpchallenge_global', null);
+  const [challenge, setChallenge] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
 
   const [results, setResults] = useState({});
   const onResult = useCallback((charId, res) => {
@@ -87,8 +88,8 @@ const SkillChallengePanel = () => {
       text: `"${challenge.name}" ended — ${total}/${challenge.threshold} VP (${total >= challenge.threshold ? 'success' : 'incomplete'})`,
     });
     for (const id of challenge.targetIds || []) {
-      sendUpdate(id, 'skillprompt', null);
-      sendUpdate(id, 'vpresult', null);
+      sendUpdate(id, APP.SKILLPROMPT, null);
+      sendUpdate(id, APP.VPRESULT, null);
     }
     setChallenge(null);
   };

@@ -17,6 +17,7 @@ import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
 import { REINFORCING } from '../../utils/shieldRunes';
 import './CharacterStateModal.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // GM Gear management (#gm-gear). Bind/unbind a character's talismans and shield
 // attachments AND edit the runes on any valid rune target (weapon / armor / ring /
@@ -184,15 +185,15 @@ const GmGearModal = ({ isOpen, onClose }) => {
   const [removed, setRemovedLocal] = useState([]);
   useEffect(() => {
     if (!isOpen || !selectedId) return;
-    setAffixedLocal(getState(selectedId, 'affixed') || {});
-    setAttachedLocal(getState(selectedId, 'attached') || {});
-    setAcquiredLocal(getState(selectedId, 'acquired') || []);
-    setRemovedLocal(getState(selectedId, 'removed') || []);
+    setAffixedLocal(getState(selectedId, APP.AFFIXED) || {});
+    setAttachedLocal(getState(selectedId, APP.ATTACHED) || {});
+    setAcquiredLocal(getState(selectedId, APP.ACQUIRED) || []);
+    setRemovedLocal(getState(selectedId, APP.REMOVED) || []);
   }, [isOpen, selectedId, getState]);
 
   const writeState = (type, next) => {
     try {
-      window.localStorage.setItem(`cnmh_${type}_${selectedId}`, JSON.stringify(next));
+      window.localStorage.setItem(syncKey(type, selectedId), JSON.stringify(next));
     } catch { /* quota — sync still carries it */ }
     // GM authoring must survive the offline-sandbox freeze (DO up, Foundry down):
     // `force` bypasses sendUpdate's per-character write-gate, the same way the

@@ -4,6 +4,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { vpForDegree, skillLabel } from '../../utils/victoryPoints';
 import './SavePrompt.css';
+import { APP, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
@@ -30,8 +31,8 @@ const DEGREE_LABELS = {
  * @param {object} skillModifiers - full skill map { arcana, intimidation, ... }
  */
 const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
-  const [prompt] = useSyncedState(`cnmh_skillprompt_${charId}`, null);
-  const [vpResult, setVpResult] = useSyncedState(`cnmh_vpresult_${charId}`, null);
+  const [prompt] = useSyncedState(syncKey(APP.SKILLPROMPT, charId), null);
+  const [vpResult, setVpResult] = useSyncedState(syncKey(APP.VPRESULT, charId), null);
   const { appendLog } = useEncounter();
 
   const [d20Input,    setD20Input]    = useState('');

@@ -9,6 +9,7 @@
 
 import { isExpired } from './expiry';
 import { hymnFastHealingFor, applyHymnFastHealing } from './hymnHealing';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -38,11 +39,11 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
     if (entry.kind !== 'pc' || !entry.charId) continue;
 
     // --- effects sweep ---
-    const effects = readLocal(`cnmh_effects_${entry.charId}`);
+    const effects = readLocal(syncKey(APP.EFFECTS, entry.charId));
     const keptFx = effects.filter((e) => !isExpired(e.expireAt, boundaries));
     if (keptFx.length !== effects.length) {
-      writeLocal(`cnmh_effects_${entry.charId}`, keptFx);
-      sendUpdate(entry.charId, 'effects', keptFx);
+      writeLocal(syncKey(APP.EFFECTS, entry.charId), keptFx);
+      sendUpdate(entry.charId, APP.EFFECTS, keptFx);
       effects
         .filter((e) => isExpired(e.expireAt, boundaries))
         .forEach((e) => {
@@ -54,20 +55,20 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
     // --- playing sweep (#935) ---
     // A Composition cast marks the caster playing through the end of their
     // next turn; without a re-up the state lapses on that boundary.
-    const playing = readLocalObj(`cnmh_playing_${entry.charId}`);
+    const playing = readLocalObj(syncKey(APP.PLAYING, entry.charId));
     if (playing?.active && isExpired(playing.expireAt, boundaries)) {
       const idle = { active: false, ts: Date.now() };
-      writeLocal(`cnmh_playing_${entry.charId}`, idle);
-      sendUpdate(entry.charId, 'playing', idle);
+      writeLocal(syncKey(APP.PLAYING, entry.charId), idle);
+      sendUpdate(entry.charId, APP.PLAYING, idle);
       appendLog({ type: 'system', text: `${entry.name} stops playing` });
     }
 
     // --- granted actions sweep ---
-    const grants = readLocal(`cnmh_grantedactions_${entry.charId}`);
+    const grants = readLocal(syncKey(APP.GRANTEDACTIONS, entry.charId));
     const keptGr = grants.filter((g) => !isExpired(g.expireAt, boundaries));
     if (keptGr.length !== grants.length) {
-      writeLocal(`cnmh_grantedactions_${entry.charId}`, keptGr);
-      sendUpdate(entry.charId, 'grantedactions', keptGr);
+      writeLocal(syncKey(APP.GRANTEDACTIONS, entry.charId), keptGr);
+      sendUpdate(entry.charId, APP.GRANTEDACTIONS, keptGr);
       grants
         .filter((g) => isExpired(g.expireAt, boundaries))
         .forEach((g) => {
@@ -96,7 +97,7 @@ export function applyTurnStartFastHealing({ order, startEntry, getState, sendUpd
   let maxHp;
   for (const entry of order || []) {
     if (entry.kind !== 'pc' || !entry.charId) continue;
-    const sustains = getState(entry.charId, 'sustains') || [];
+    const sustains = getState(entry.charId, APP.SUSTAINS) || [];
     const fh = hymnFastHealingFor(sustains, targetId);
     if (fh > amount) {
       amount = fh;

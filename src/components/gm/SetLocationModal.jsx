@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { APP, globalKey } from '../../sync/keys';
 
 // GM Quick Action modal: set the party's current location by picking one of the
 // Location Lore entries. Writes both the display title and a reference to the
@@ -14,7 +15,7 @@ const SetLocationModal = ({ isOpen, onClose }) => {
   // about it — the marquee only shows the title).
   const { allLoreEntries } = useContent();
   // Same key as PlayModeControl — writes sync to every client + that marquee.
-  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const [campaign, setCampaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   const [query, setQuery] = useState('');
 
   const locations = useMemo(() => {

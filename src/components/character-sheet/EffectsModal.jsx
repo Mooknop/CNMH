@@ -4,6 +4,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { newEntryUid } from '../../utils/uid';
+import { APP, syncKey } from '../../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -23,7 +24,7 @@ const EffectsModal = ({
   const [targetId, setTargetId] = useState(selfCharId);
 
   const handleApply = (effectDef) => {
-    const current = getState(targetId, 'effects') || [];
+    const current = getState(targetId, APP.EFFECTS) || [];
     const newEntry = {
       id: newEntryUid(),
       effectId: effectDef.id,
@@ -31,9 +32,9 @@ const EffectsModal = ({
       ts: Date.now(),
     };
     const next = [...current, newEntry];
-    const key = `cnmh_effects_${targetId}`;
+    const key = syncKey(APP.EFFECTS, targetId);
     writeLocal(key, next);
-    sendUpdate(targetId, 'effects', next);
+    sendUpdate(targetId, APP.EFFECTS, next);
 
     if (encounter && encounter.active) {
       const targetChar = characters.find((c) => c.id === targetId);

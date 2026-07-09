@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useEncounter } from './useEncounter';
 import { useGmAuth } from './useGmAuth';
 import { useSession } from '../contexts/SessionContext';
+import { APP } from '../sync/keys';
 
 // Blade Byrnie end-of-turn safety clear (#738 E4 pt.2). The transient dagger
 // normally returns to the armor the moment you Strike with it (handled in
@@ -37,9 +38,9 @@ export function useBladeCleanup() {
       // A PC's turn just ended (not a fresh mount): return any still-drawn Blade
       // Byrnie dagger to the armor.
       if (isGm && prev.token !== null && outgoing && outgoing.kind === 'pc' && outgoing.charId) {
-        const blade = getState(outgoing.charId, 'blade');
+        const blade = getState(outgoing.charId, APP.BLADE);
         if (blade && blade.active) {
-          sendUpdate(outgoing.charId, 'blade', { active: false, ts: Date.now() });
+          sendUpdate(outgoing.charId, APP.BLADE, { active: false, ts: Date.now() });
         }
       }
       const current = order[encounter.currentTurnIndex || 0] || null;

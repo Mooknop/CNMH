@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Blade Byrnie transient-dagger overlay (#728 E4). A synced flag, mirroring the
 // chambers/loadout overlays, that records whether the armor's dagger is drawn
@@ -10,7 +11,7 @@ import { useSyncedState } from './useSyncedState';
 const IDLE = { active: false };
 
 export const useBladeByrnie = (characterId) => {
-  const [blade, setBlade] = useSyncedState(`cnmh_blade_${characterId || 'none'}`, IDLE);
+  const [blade, setBlade] = useSyncedState(syncKey(APP.BLADE, characterId || 'none'), IDLE);
 
   const activate = useCallback(
     (hand = null) => setBlade({ active: true, hand, ts: Date.now() }),

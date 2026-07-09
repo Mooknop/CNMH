@@ -16,6 +16,7 @@ import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
 import ShopStorefront from '../shop/ShopStorefront';
 import './LoreDrawer.css';
+import { APP, globalKey } from '../../sync/keys';
 
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
@@ -24,7 +25,7 @@ const LoreDrawer = () => {
   const { isGm } = useGmAuth();
   const { shops } = useShops();
   const { supported } = useLocationSupport();
-  const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { locationLoreId: '' });
   const { activeCharacter } = useContext(CharacterContext) || {};
   const [shopOpen, setShopOpen] = useState(false);
   const navigate = useNavigate();

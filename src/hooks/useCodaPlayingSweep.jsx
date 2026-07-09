@@ -5,6 +5,7 @@ import { usePlaying } from './usePlaying';
 import { useGmAuth } from './useGmAuth';
 import { useSessionLog } from './useSessionLog';
 import { playingEffectRefs, reconcileCodaPlayingEffects } from '../utils/codaPlaying';
+import { APP, syncKey } from '../sync/keys';
 
 // Coda staves → skill/Speed bonuses while playing (#935). Watches the
 // character's playing flag + live inventory and reconciles the playing-gated
@@ -20,7 +21,7 @@ export function useCodaPlayingSweep(character) {
   const name = character?.name || charId;
   const charData = useCharacter(character);
   const { playing } = usePlaying(charId);
-  const [effects, setEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
+  const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, charId), []);
   const { isGm } = useGmAuth();
   const { appendEvent } = useSessionLog();
 

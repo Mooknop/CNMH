@@ -16,13 +16,14 @@
 // reads, mirroring how creature effect-consumables surface as status reminders.
 // React-free: accepts hooks' return values as plain args (like consumables.js).
 import { newEntryUid } from './uid';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
 };
 
 /** Synced-state key for a character's item-effect overlay. */
-export const itemEffectsKey = (charId) => `cnmh_itemeffects_${charId}`;
+export const itemEffectsKey = (charId) => syncKey(APP.ITEMEFFECTS, charId);
 
 /** Stable identity for an inventory item (authored id, else name). */
 export const itemKeyOf = (item) => item?.id ?? item?.name ?? null;
@@ -80,7 +81,7 @@ export function applyItemEffect({ user, targetItem, itemName, meta, nowSecs, get
         text:   `${user.name} applied ${itemName} to ${targetItem?.name || 'item'}${meta.note ? ` — ${meta.note}` : ''}`,
       });
     }
-    return getState ? (getState(user.id, 'itemeffects') || []) : [];
+    return getState ? (getState(user.id, APP.ITEMEFFECTS) || []) : [];
   }
 
   const entry = {
@@ -96,11 +97,11 @@ export function applyItemEffect({ user, targetItem, itemName, meta, nowSecs, get
       : {}),
     ts: Date.now(),
   };
-  const current = getState ? getState(user.id, 'itemeffects') : null;
+  const current = getState ? getState(user.id, APP.ITEMEFFECTS) : null;
   const next = [...(Array.isArray(current) ? current : []), entry];
 
   writeLocal(itemEffectsKey(user.id), next);
-  if (sendUpdate) sendUpdate(user.id, 'itemeffects', next);
+  if (sendUpdate) sendUpdate(user.id, APP.ITEMEFFECTS, next);
 
   if (appendLog) {
     const durationLabel = meta?.durationMinutes ? ` (${meta.durationMinutes} min)` : '';

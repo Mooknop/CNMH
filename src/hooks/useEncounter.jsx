@@ -15,7 +15,7 @@ import {
   nextTurnIndex,
   everyEntryHasInitiative,
 } from '../utils/encounterUtils';
-import { RELAY, globalKey } from '../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../sync/keys';
 
 // Shared live encounter state. Lives at cnmh_encounter_global on the campaign
 // session DO via useSyncedState (the key regex `cnmh_<type>_<id>` accepts
@@ -31,10 +31,10 @@ import { RELAY, globalKey } from '../sync/keys';
 
 const ENCOUNTER_KEY  = globalKey(RELAY.ENCOUNTER);
 const ACTORMAP_KEY   = globalKey(RELAY.ACTORMAP);
-const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
-const PERSISTENT_KEY = 'cnmh_persistent_global';
-const ENEMY_FX_KEY   = 'cnmh_enemyfx_global';
-const SUMMONS_KEY    = 'cnmh_summons_global';
+const KNOWLEDGE_KEY  = globalKey(APP.KNOWLEDGE);
+const PERSISTENT_KEY = globalKey(APP.PERSISTENT);
+const ENEMY_FX_KEY   = globalKey(APP.ENEMYFX);
+const SUMMONS_KEY    = globalKey(APP.SUMMONS);
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -281,69 +281,69 @@ export const useEncounter = () => {
       // sustain doesn't re-prompt at the start of the next encounter (#220).
       for (const entry of encounterRef.current?.order || []) {
         if (entry.kind !== 'pc' || !entry.charId) continue;
-        const key = `cnmh_sustains_${entry.charId}`;
+        const key = syncKey(APP.SUSTAINS, entry.charId);
         let cur;
         try { cur = JSON.parse(window.localStorage.getItem(key)) || []; } catch { cur = []; }
         if (cur.length) {
           window.localStorage.setItem(key, JSON.stringify([]));
-          sendUpdate(entry.charId, 'sustains', []);
+          sendUpdate(entry.charId, APP.SUSTAINS, []);
         }
 
         // Stances are encounter-bound (#224) — drop any active stance so it
         // doesn't linger into the next encounter or onto the sheet.
-        const stanceKey = `cnmh_stance_${entry.charId}`;
+        const stanceKey = syncKey(APP.STANCE, entry.charId);
         let stance;
         try { stance = JSON.parse(window.localStorage.getItem(stanceKey)); } catch { stance = null; }
         if (stance?.active) {
           const idle = { active: false, name: null, ts: 0 };
           window.localStorage.setItem(stanceKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, 'stance', idle);
+          sendUpdate(entry.charId, APP.STANCE, idle);
         }
 
         // Harmless Bystander is declared per-encounter (#226 Slice D) — drop the
         // flag so it doesn't carry into the next fight or onto the sheet.
-        const bystanderKey = `cnmh_bystander_${entry.charId}`;
+        const bystanderKey = syncKey(APP.BYSTANDER, entry.charId);
         let bystander;
         try { bystander = JSON.parse(window.localStorage.getItem(bystanderKey)); } catch { bystander = null; }
         if (bystander?.active) {
           const idle = { active: false, mod: null, ts: 0 };
           window.localStorage.setItem(bystanderKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, 'bystander', idle);
+          sendUpdate(entry.charId, APP.BYSTANDER, idle);
         }
 
         // The playing state is turn-bound (#935) — no turns outside an
         // encounter, so the performance lapses when the fight ends.
-        const playingKey = `cnmh_playing_${entry.charId}`;
+        const playingKey = syncKey(APP.PLAYING, entry.charId);
         let playing;
         try { playing = JSON.parse(window.localStorage.getItem(playingKey)); } catch { playing = null; }
         if (playing?.active) {
           const idle = { active: false, ts: 0 };
           window.localStorage.setItem(playingKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, 'playing', idle);
+          sendUpdate(entry.charId, APP.PLAYING, idle);
         }
 
         // Encounter-scoped effects (#275) — drop turn/round-bound leftovers and
         // catalog-flagged states like eld-charged so they don't linger past the
         // fight. Manual effects and clock-based immunities are kept.
-        const fxKey = `cnmh_effects_${entry.charId}`;
+        const fxKey = syncKey(APP.EFFECTS, entry.charId);
         let fx;
         try { fx = JSON.parse(window.localStorage.getItem(fxKey)) || []; } catch { fx = []; }
         if (Array.isArray(fx) && fx.length) {
           const keptFx = fx.filter((e) => !isEncounterScopedEffect(e));
           if (keptFx.length !== fx.length) {
             window.localStorage.setItem(fxKey, JSON.stringify(keptFx));
-            sendUpdate(entry.charId, 'effects', keptFx);
+            sendUpdate(entry.charId, APP.EFFECTS, keptFx);
           }
         }
 
         // A pending Lingering Composition extension (#226-B) that never got
         // spent on a composition shouldn't survive into the next encounter.
-        const lingKey = `cnmh_lingering_${entry.charId}`;
+        const lingKey = syncKey(APP.LINGERING, entry.charId);
         let ling;
         try { ling = JSON.parse(window.localStorage.getItem(lingKey)); } catch { ling = null; }
         if (ling) {
           window.localStorage.setItem(lingKey, JSON.stringify(null));
-          sendUpdate(entry.charId, 'lingering', null);
+          sendUpdate(entry.charId, APP.LINGERING, null);
         }
       }
       setEncounter(() => defaultEncounter());

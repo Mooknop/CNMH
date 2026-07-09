@@ -14,6 +14,7 @@ import {
 } from '../../utils/wealthBenchmark';
 import { groupRoomsByArea, areaLootSummary } from '../../utils/lootAreas';
 import './GmLootLedger.css';
+import { APP, globalKey } from '../../sync/keys';
 
 // World → Loot Ledger (#1281 WB3). Compares each PC's held wealth (live gold +
 // inventory value) against the GM Core Table 10-10 lump sum for the level
@@ -44,7 +45,7 @@ const GmLootLedger = () => {
   const { goldById } = usePartyGold(characters);
   // GM-assigned Dungeon Level per area letter ({ A: 4, ... }) — synced so every
   // GM device agrees; players never read it.
-  const [areaLevels, setAreaLevels] = useSyncedState('cnmh_lootareas_global', {});
+  const [areaLevels, setAreaLevels] = useSyncedState(globalKey(APP.LOOTAREAS), {});
 
   // Same item+rune merge as the treasure editor/claims, for pricing cache lines.
   const catalogById = useMemo(() => {

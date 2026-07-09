@@ -8,7 +8,7 @@ import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '
 import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { wornImmuneTo, wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
-import { RELAY } from '../sync/keys';
+import { RELAY, APP } from '../sync/keys';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -49,7 +49,7 @@ export function usePersistentReminders() {
   const resolveResistance = useCallback((entry, inst) => {
     if (!entry?.charId) return null;
     const effects = [
-      ...(getState(entry.charId, 'effects') || []),
+      ...(getState(entry.charId, APP.EFFECTS) || []),
       ...(getState(entry.charId, RELAY.FOUNDRYEFFECTS) || []),
     ];
     const vsType = persistentVsType(inst);
@@ -61,9 +61,9 @@ export function usePersistentReminders() {
     const character = (characters || []).find((c) => c.id === entry.charId);
     const inventory = buildEffectiveInventory(
       character?.inventory || [],
-      getState(entry.charId, 'loadout') || {},
+      getState(entry.charId, APP.LOADOUT) || {},
     );
-    const invested = getState(entry.charId, 'invested') || {};
+    const invested = getState(entry.charId, APP.INVESTED) || {};
     const isInvested = (uid) => !!invested[uid];
 
     return {

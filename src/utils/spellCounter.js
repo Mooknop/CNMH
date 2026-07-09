@@ -7,6 +7,7 @@
 // React-free, mirroring registerSustain / applyAbility: the cast modal passes
 // getState / sendUpdate as plain args.
 import { newEntryUid } from './uid';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -53,9 +54,9 @@ export const makeCounterEntry = ({ ability, round }) => {
  */
 export function registerSpellCounter({ ability, caster, round, getState, sendUpdate }) {
   if (!hasSpellCounter(ability) || !caster?.id) return;
-  const current = getState(caster.id, 'spellcounters') || [];
+  const current = getState(caster.id, APP.SPELLCOUNTERS) || [];
   const entry = makeCounterEntry({ ability, round });
   const next = [...current, entry];
-  writeLocal(`cnmh_spellcounters_${caster.id}`, next);
-  sendUpdate(caster.id, 'spellcounters', next);
+  writeLocal(syncKey(APP.SPELLCOUNTERS, caster.id), next);
+  sendUpdate(caster.id, APP.SPELLCOUNTERS, next);
 }

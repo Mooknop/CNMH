@@ -7,6 +7,7 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { performDailyPrep } from '../../utils/dailyPrep';
 import { toGameSeconds } from '../../utils/gameTime';
 import './PartyDailyPrepButton.css';
+import { APP } from '../../sync/keys';
 
 /**
  * GM party-wide Daily Preparations. Runs performDailyPrep for every character,
@@ -28,7 +29,7 @@ const PartyDailyPrepButton = () => {
         getState,
         sendUpdate,
         nowSecs,
-        eldChoice: getState(c.id, 'eldattune') || undefined,
+        eldChoice: getState(c.id, APP.ELDATTUNE) || undefined,
       });
     });
     appendEvent({ type: 'rest', text: 'GM: party made daily preparations' });

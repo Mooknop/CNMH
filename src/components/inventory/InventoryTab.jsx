@@ -21,6 +21,7 @@ import { useInvested } from '../../hooks/useInvested';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { docGold } from '../../utils/gold';
+import { APP, syncKey } from '../../sync/keys';
 
 /**
  * Inventory "Loadout Grid": gold header → Bulk bar → drag-and-drop bag grid.
@@ -43,10 +44,10 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Personal gold is live-synced; shown here read-only. Default to the doc's
   // gold so an unset overlay (fresh load / post-reseed) shows the committed
   // value rather than 0 (#670).
-  const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, docGold(character));
+  const [gold] = useSyncedState(syncKey(APP.GOLD, character?.id), docGold(character));
   // Consumed-consumables overlay — fully-used items disappear from the grid
   // (the GM cleanup tool removes them from authored content later).
-  const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  const [consumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
   // Item-target effects overlay (oils, #339) — surfaced as a ✨ badge on the tile.
   const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   // Affixed-talisman overlay (#254/#339) — talisman uid → host uid. Affixed
@@ -60,7 +61,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const [absorbed] = useSyncedState(absorbedKey(character?.id), {});
   // Active effects — read for the whetstone-on-weapon medallion (#1213): a
   // weapon under a whetstone effect gets the same attachment mark as a host.
-  const [charEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
+  const [charEffects] = useSyncedState(syncKey(APP.EFFECTS, character?.id), []);
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
   const { mode } = usePlayMode();

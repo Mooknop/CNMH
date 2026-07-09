@@ -12,6 +12,7 @@ import ExplorationDoors from './ExplorationDoors';
 import Take10Prompt from './Take10Prompt';
 import DowntimeTab from './DowntimeTab';
 import './ExplorationTab.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 // The Explore tab is a two-state, no-tabs flow gated by a party readiness
 // check. Until every party PC has locked in an exploration activity (or the GM
@@ -33,7 +34,7 @@ const ExplorationTab = ({ character, characterColor }) => {
   // exploration beat begins, and drives the activity-scoped self-buff. Stays in
   // sync with ExplorationList's own copy of the same key through the session's
   // local subscriber fanout.
-  const [ownActivity, setOwnActivity] = useSyncedState(`cnmh_exploration_${character?.id}`, null);
+  const [ownActivity, setOwnActivity] = useSyncedState(syncKey(APP.EXPLORATION, character?.id), null);
 
   // Apply/clear the active activity's self-buff (e.g. Defend's +2 Perception)
   // while in exploration. Cleared automatically when the pick changes, is
@@ -44,7 +45,7 @@ const ExplorationTab = ({ character, characterColor }) => {
 
   // Scout: write this character's id to the global scout bonus key while active,
   // so InitiativeEntry can show the +1 reminder to the whole party.
-  const [, setScoutBonus] = useSyncedState('cnmh_scoutbonus_global', null);
+  const [, setScoutBonus] = useSyncedState(globalKey(APP.SCOUTBONUS), null);
   const isScoutActive = mode === 'exploration' && ownActivity === 'Scout';
   useEffect(() => {
     setScoutBonus(isScoutActive ? (character?.id || null) : null);

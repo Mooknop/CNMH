@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 // Single writer for the app-managed shop store (#696 S1).
 //   cnmh_shops_global = { [loreId]: { keeper?, open?, revealed?, wares: [...] } }
@@ -13,7 +14,7 @@ import { useSyncedState } from './useSyncedState';
 // through the selectors in utils/shopUtils.js. A global key, so unlike the
 // per-character overlays there is no owner id — every client shares one store.
 export const useShops = () => {
-  const [shops, setShops] = useSyncedState('cnmh_shops_global', {});
+  const [shops, setShops] = useSyncedState(globalKey(APP.SHOPS), {});
 
   // Replace a single shop's wares list (empty array leaves it a non-shop).
   const setWares = useCallback(

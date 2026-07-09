@@ -9,6 +9,7 @@ import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 import { periodState } from '../../utils/downtimeUtils';
 import { taskDc } from '../../utils/earnIncome';
 import DowntimeResultsApproval from './DowntimeResultsApproval';
+import { APP, globalKey } from '../../sync/keys';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
 // downtime days (`cnmh_downtimeblock_global`) that players allocate to activities.
@@ -21,10 +22,10 @@ const DowntimeControl = () => {
   const { getState } = useSession();
   const { setGmMode } = usePlayMode();
   const { advanceHours, advanceDays, formatGameDate, formatClockTime, gameDate } = useGameDate();
-  const [block, setBlock] = useSyncedState('cnmh_downtimeblock_global', null);
-  const [, setSummary] = useSyncedState('cnmh_downtimesummary_global', null);
-  const [taskMap, setTaskMap] = useSyncedState('cnmh_earnincometask_global', null);
-  const [benchMap, setBenchMap] = useSyncedState('cnmh_downtimebench_global', null);
+  const [block, setBlock] = useSyncedState(globalKey(APP.DOWNTIMEBLOCK), null);
+  const [, setSummary] = useSyncedState(globalKey(APP.DOWNTIMESUMMARY), null);
+  const [taskMap, setTaskMap] = useSyncedState(globalKey(APP.EARNINCOMETASK), null);
+  const [benchMap, setBenchMap] = useSyncedState(globalKey(APP.DOWNTIMEBENCH), null);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('hours');
   const [periodValue, setPeriodValue] = useState('');
@@ -80,7 +81,7 @@ const DowntimeControl = () => {
     autoAdvancedRef.current = true;
 
     const summaryChars = (charactersRef.current || []).map((c) => {
-      const dt = getState(c.id, 'downtime');
+      const dt = getState(c.id, APP.DOWNTIME);
       const { selected, ledger } = periodState(dt, blockStartedAt);
       return { id: c.id, name: c.name, selected, ledger };
     });

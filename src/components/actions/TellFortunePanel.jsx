@@ -14,6 +14,7 @@ import {
   tellFortuneImmunityEntry,
 } from '../../utils/tellFortune';
 import './TellFortunePanel.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // Jade's Tell Fortune (#578): a 1-hour reading — Fortune-Telling Lore vs a hard
 // DC of the target's level produces an augury on a success. Targets can be a
@@ -25,7 +26,7 @@ const TellFortunePanel = ({ character }) => {
   const { gameDate, time } = useGameDate();
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
 
-  const [ledger, setLedger] = useSyncedState(`cnmh_tellfortune_${charId}`, {});
+  const [ledger, setLedger] = useSyncedState(syncKey(APP.TELLFORTUNE, charId), {});
 
   const [targetSel, setTargetSel] = useState('');
   const [creatureName, setCreatureName] = useState('');

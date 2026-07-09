@@ -5,6 +5,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { availableTake10Activities, itemTake10Activities } from '../../data/take10Activities';
 import { affixedKey } from '../../utils/affix';
 import './Take10Prompt.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // Finalize a picker selection into the allocation entry the resolver consumes.
 // Item entries snapshot everything the (inventory-blind) GM resolver needs.
@@ -38,7 +39,7 @@ const Take10Prompt = ({ character, characterColor }) => {
     addActivity, removeActivity, readyCount, allReady, ids,
   } = useTake10(charId);
   const model = useCharacter(character);
-  const [consumed] = useSyncedState(`cnmh_consumed_${charId || 'nobody'}`, {});
+  const [consumed] = useSyncedState(syncKey(APP.CONSUMED, charId || 'nobody'), {});
   const [affixed] = useSyncedState(affixedKey(charId || 'nobody'), {});
 
   // The item activity awaiting a target pick (inline picker), or null.

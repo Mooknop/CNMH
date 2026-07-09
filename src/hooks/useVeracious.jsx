@@ -4,6 +4,7 @@ import { useInvested } from './useInvested';
 import { useContent } from '../contexts/ContentContext';
 import { isPowerRing } from '../utils/InventoryUtils';
 import { runeCatalogMap } from '../utils/contentUtils';
+import { APP, syncKey } from '../sync/keys';
 
 // Veracious Spell (#967 R7) — the power ring's activation. Arming it means the
 // NEXT spell attack roll gains the ring's item bonus. This is a display-only
@@ -28,7 +29,7 @@ const IDLE = { armed: false, ts: 0 };
  *            armed: boolean, arm: Function, disarm: Function }}
  */
 export const useVeracious = (charId, inventory = []) => {
-  const [state, setState] = useSyncedState(`cnmh_veracious_${charId || 'none'}`, IDLE);
+  const [state, setState] = useSyncedState(syncKey(APP.VERACIOUS, charId || 'none'), IDLE);
   const { isInvested } = useInvested(charId);
   const { runes: catalogRunes } = useContent();
 

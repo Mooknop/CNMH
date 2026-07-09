@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { newEntryUid } from '../utils/uid';
+import { APP, syncKey } from '../sync/keys';
 
 // Tag stamped on the single exploration-activity buff entry so it can be
 // reconciled/cleared without disturbing other effects on the character.
@@ -14,7 +15,7 @@ export const EXPLORATION_EFFECT_SOURCE = 'exploration';
 // +2 Perception buff; clearing the activity, switching activities, or leaving
 // exploration removes it. All other effects are left untouched.
 export function useExplorationEffect(charId, desiredEffectId) {
-  const [effects, setEffects] = useSyncedState(`cnmh_effects_${charId || 'none'}`, []);
+  const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, charId || 'none'), []);
 
   useEffect(() => {
     if (!charId) return;

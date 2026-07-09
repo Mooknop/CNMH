@@ -26,6 +26,7 @@
 
 import { applyItemEffect } from './itemEffects';
 import { affix } from './affix';
+import { APP } from '../sync/keys';
 
 export const REFOCUS_ID = 'refocus';
 
@@ -41,15 +42,15 @@ export const REFOCUS_ID = 'refocus';
  */
 export function resolveTake10({ characters, openedAt, nowSecs, getState, sendUpdate, appendLog }) {
   (characters || []).forEach((c) => {
-    const alloc = getState(c.id, 'take10alloc');
+    const alloc = getState(c.id, APP.TAKE10ALLOC);
     if (!alloc || alloc.beatAt !== openedAt) return;
     const activities = Array.isArray(alloc.activities) ? alloc.activities : [];
     if (activities.length === 0) return;
 
     // Refocus → restore ALL Focus Points (spent back to 0).
     if (activities.some((a) => a.id === REFOCUS_ID)) {
-      const spent = Number(getState(c.id, 'focus')) || 0;
-      if (spent > 0 && sendUpdate) sendUpdate(c.id, 'focus', 0);
+      const spent = Number(getState(c.id, APP.FOCUS)) || 0;
+      if (spent > 0 && sendUpdate) sendUpdate(c.id, APP.FOCUS, 0);
     }
 
     // Item-targeted consumables resolve through the inventory machinery. getState
@@ -69,8 +70,8 @@ export function resolveTake10({ characters, openedAt, nowSecs, getState, sendUpd
         });
         // Mark the oil used (player-writable overlay; the GM is the live writer).
         if (sendUpdate) {
-          const consumed = getState(c.id, 'consumed') || {};
-          sendUpdate(c.id, 'consumed', {
+          const consumed = getState(c.id, APP.CONSUMED) || {};
+          sendUpdate(c.id, APP.CONSUMED, {
             ...consumed,
             [a.itemName]: (consumed[a.itemName] || 0) + 1,
           });
@@ -79,8 +80,8 @@ export function resolveTake10({ characters, openedAt, nowSecs, getState, sendUpd
         // Affix the talisman to its chosen host; activation (which consumes it)
         // is a combat action, not part of the block.
         if (sendUpdate) {
-          const overlay = getState(c.id, 'affixed') || {};
-          sendUpdate(c.id, 'affixed', affix(overlay, a.talismanUid, a.hostUid));
+          const overlay = getState(c.id, APP.AFFIXED) || {};
+          sendUpdate(c.id, APP.AFFIXED, affix(overlay, a.talismanUid, a.hostUid));
         }
       }
     });

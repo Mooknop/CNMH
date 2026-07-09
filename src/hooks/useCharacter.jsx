@@ -59,7 +59,7 @@ import {
 import { canActivateSpellItem } from '../utils/traditionAccess';
 
 import { calculateItemsBulk } from '../utils/InventoryUtils';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 /**
  * Data layer hook for a single character.
@@ -75,16 +75,16 @@ export const useCharacter = (character) => {
   // retrieve …). Read-only here; the Hands panel writes the same key. Empty
   // map (no SessionProvider, or untouched) ⇒ effective tree == authored tree,
   // so Bulk and inventory are byte-identical to before this layer existed.
-  const [loadout]     = useSyncedState(`cnmh_loadout_${character?.id || 'none'}`, {});
+  const [loadout]     = useSyncedState(syncKey(APP.LOADOUT, character?.id || 'none'), {});
   // Per-weapon chamber state (epic #672) — drives the loaded-chamber gate on
   // chambered ranged Strikes (Crescent Cross). Read-only here; useChambers
   // (Reload/Fire) is the sole writer. Empty map ⇒ every chamber unloaded.
-  const [chambers]    = useSyncedState(`cnmh_chambers_${character?.id || 'none'}`, {});
+  const [chambers]    = useSyncedState(syncKey(APP.CHAMBERS, character?.id || 'none'), {});
   // Blade Byrnie transient dagger (#728 E4): when active, a derived +1 striking
   // dagger strike is injected. Read-only here; useBladeByrnie is the writer.
-  const [blade]       = useSyncedState(`cnmh_blade_${character?.id || 'none'}`, { active: false });
+  const [blade]       = useSyncedState(syncKey(APP.BLADE, character?.id || 'none'), { active: false });
   // Shield attachments (#1165 Track 2): attachmentUid -> hostShieldUid overlay.
-  const [attached]    = useSyncedState(`cnmh_attached_${character?.id || 'none'}`, {});
+  const [attached]    = useSyncedState(syncKey(APP.ATTACHED, character?.id || 'none'), {});
   const [hp, setHp]   = useSyncedState(
     syncKey(RELAY.HP, character?.id || 'none'),
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
@@ -93,29 +93,29 @@ export const useCharacter = (character) => {
   // Staff preparation (#957 S6a) — the single staff prepared today and its
   // charge count for the day. null ⇒ no staff prepared (so any held staff has 0
   // charges). Read-only here; DailyPrepModal / performDailyPrep is the writer.
-  const [staffPrep] = useSyncedState(`cnmh_staffprep_${character?.id || 'none'}`, null);
+  const [staffPrep] = useSyncedState(syncKey(APP.STAFFPREP, character?.id || 'none'), null);
   // Etch-time accessory-rune config (#1055 S4) — per-uid choices baked when a
   // rune is inscribed (currently just Dragon's Breath's depicted dragon type).
   // Read-only here; ItemModal's picker is the writer. Empty ⇒ no effect.
-  const [runeConfig] = useSyncedState(`cnmh_runeconfig_${character?.id || 'none'}`, {});
+  const [runeConfig] = useSyncedState(syncKey(APP.RUNECONFIG, character?.id || 'none'), {});
   // Item-mode choices (#1093) — per-uid toggle state for items with a `modes`
   // block (Gloom Blade's light states, a hood up/down). Read-only here;
   // ItemModal's toggle is the writer. Empty ⇒ every item at its authored
   // default mode (defaults still apply — see applyItemModes).
-  const [itemModeState] = useSyncedState(`cnmh_itemmode_${character?.id || 'none'}`, {});
+  const [itemModeState] = useSyncedState(syncKey(APP.ITEMMODE, character?.id || 'none'), {});
 
   // Attunement overlay (uid ⇒ invested) — worn magic gear only contributes its
   // bonus spell slots (#1093) while invested; same gate useWornGear applies to
   // modifiers. Read-only here; the Attuned slots are the writer.
-  const [investedMap] = useSyncedState(`cnmh_invested_${character?.id || 'none'}`, {});
+  const [investedMap] = useSyncedState(syncKey(APP.INVESTED, character?.id || 'none'), {});
   // Additive runtime inventory (crafted items, loot, purchases, GM grants).
   // Authored `character.inventory` arrives already resolved; acquired entries
   // are unresolved refs, so resolve them against the live catalog the same way
   // before merging. An empty/absent overlay ⇒ effective tree unchanged.
-  const [acquired] = useSyncedState(`cnmh_acquired_${character?.id || 'none'}`, []);
+  const [acquired] = useSyncedState(syncKey(APP.ACQUIRED, character?.id || 'none'), []);
   // Given-away overlay (#656) — uids handed to another PC, masked out of the
   // effective tree + Bulk. Empty/absent ⇒ no effect.
-  const [removed] = useSyncedState(`cnmh_removed_${character?.id || 'none'}`, []);
+  const [removed] = useSyncedState(syncKey(APP.REMOVED, character?.id || 'none'), []);
   // Active conditions ({ id, value } entries, cnmh_conditions_) — read-only
   // here; StatsBlock's condition tracker is the sole writer. Feeds the Speed
   // spine (SP1, #1220) so the derived total reflects Encumbered et al.
@@ -124,7 +124,7 @@ export const useCharacter = (character) => {
   // over the encumbered threshold derives Encumbered + Clumsy 1. GM/player can
   // suppress it (containers, mounts and party hauling make raw Bulk math wrong
   // at real tables); the setter is exposed as encumbrance.setAuto.
-  const [encAuto, setEncAuto] = useSyncedState(`cnmh_encauto_${character?.id || 'none'}`, true);
+  const [encAuto, setEncAuto] = useSyncedState(syncKey(APP.ENCAUTO, character?.id || 'none'), true);
   // Active effects (#507) — the merged app + Foundry buff list, the same source
   // StatsBlock's effect engine reads. Used here for the Dexterity-cap
   // adjustment that feeds the AC derivation (caps can't ride the additive effect

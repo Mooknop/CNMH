@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Single writer for the durable live-loadout map
 // cnmh_loadout_<characterId> = { [uid]: { state?, container?, hand? } }.
@@ -13,7 +14,7 @@ import { useSyncedState } from './useSyncedState';
 // persist, so the stored map stays clean.
 export const useLoadout = (characterId) => {
   const [loadout, setLoadout] = useSyncedState(
-    `cnmh_loadout_${characterId || 'none'}`,
+    syncKey(APP.LOADOUT, characterId || 'none'),
     {}
   );
 

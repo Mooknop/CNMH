@@ -2,7 +2,7 @@ import { resolveExpireAt } from './expiry';
 import { newEntryUid } from './uid';
 import { freqKeyFor } from './frequency';
 import { immunityConfigFor, makeImmunityEntry, hasAbilityImmunity } from './immunity';
-import { RELAY } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -122,13 +122,13 @@ export function applyAbility({
       : eff;
     const resolved = resolveApplyTargets(eff.applyTo, caster, targetCharIds, order);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
-      const current  = getState(targetCharId, 'effects') || [];
+      const current  = getState(targetCharId, APP.EFFECTS) || [];
       const newEntry = buildEffectEntry({
         eff: effForApply, caster, abilityName: name, encounter, casterEntryId, targetEntryId, nowSecs,
       });
       const next = [...current, newEntry];
-      writeLocal(`cnmh_effects_${targetCharId}`, next);
-      sendUpdate(targetCharId, 'effects', next);
+      writeLocal(syncKey(APP.EFFECTS, targetCharId), next);
+      sendUpdate(targetCharId, APP.EFFECTS, next);
       appendLog({
         type:   'action',
         charId: caster.id,
@@ -167,7 +167,7 @@ export function applyAbility({
     const resolved = resolveApplyTargets(grant.applyTo || 'ally', caster, targetCharIds, order);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
       const expireAt = resolveExpireAt(grant.duration || null, encounter, casterEntryId, targetEntryId);
-      const current  = getState(targetCharId, 'grantedactions') || [];
+      const current  = getState(targetCharId, APP.GRANTEDACTIONS) || [];
       const newGrant = {
         id:        newEntryUid(),
         action:    grant.action,
@@ -177,8 +177,8 @@ export function applyAbility({
         ts:        Date.now(),
       };
       const next = [...current, newGrant];
-      writeLocal(`cnmh_grantedactions_${targetCharId}`, next);
-      sendUpdate(targetCharId, 'grantedactions', next);
+      writeLocal(syncKey(APP.GRANTEDACTIONS, targetCharId), next);
+      sendUpdate(targetCharId, APP.GRANTEDACTIONS, next);
       appendLog({
         type:   'action',
         charId: caster.id,
@@ -209,14 +209,14 @@ export function applyAbilityImmunity({ ability, caster, targetCharIds, nowSecs, 
   const abilityKey  = ability.immunityKey || freqKeyFor(ability);
   const abilityName = ability.name || '';
   (targetCharIds || []).forEach((targetCharId) => {
-    const current = getState(targetCharId, 'effects') || [];
+    const current = getState(targetCharId, APP.EFFECTS) || [];
     if (hasAbilityImmunity(current, { abilityKey, casterId: caster.id, scope: config.scope, nowSecs })) return;
     const entry = makeImmunityEntry({
       abilityKey, abilityName, casterId: caster.id, nowSecs, durationSecs: config.durationSecs,
     });
     const next = [...current, entry];
-    writeLocal(`cnmh_effects_${targetCharId}`, next);
-    sendUpdate(targetCharId, 'effects', next);
+    writeLocal(syncKey(APP.EFFECTS, targetCharId), next);
+    sendUpdate(targetCharId, APP.EFFECTS, next);
   });
 }
 
@@ -242,7 +242,7 @@ export function applyRiderChoice({
   appendLog,
 }) {
   if (!option) return;
-  let current = getState(caster.id, 'effects') || [];
+  let current = getState(caster.id, APP.EFFECTS) || [];
   let changed = false;
 
   if (option.removesEffectId) {
@@ -270,8 +270,8 @@ export function applyRiderChoice({
   }
 
   if (changed) {
-    writeLocal(`cnmh_effects_${caster.id}`, current);
-    sendUpdate(caster.id, 'effects', current);
+    writeLocal(syncKey(APP.EFFECTS, caster.id), current);
+    sendUpdate(caster.id, APP.EFFECTS, current);
   }
 
   appendLog({

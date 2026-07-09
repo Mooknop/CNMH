@@ -10,6 +10,7 @@ import { buildReactionSources, castSourceOf } from '../../utils/reactionSources'
 import UseAbilityModal from './UseAbilityModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './SavePrompt.css';
+import { APP, syncKey } from '../../sync/keys';
 
 /**
  * Appears on a player's device when a GM-fired trigger event (#221) wakes one
@@ -32,7 +33,7 @@ import './SavePrompt.css';
  */
 const ReactionPrompt = ({ character, themeColor }) => {
   const charId = character.id;
-  const [prompt, setPrompt] = useSyncedState(`cnmh_reactprompt_${charId}`, null);
+  const [prompt, setPrompt] = useSyncedState(syncKey(APP.REACTPROMPT, charId), null);
   const { encounter } = useEncounter();
   const { turnState } = useTurnState(charId);
   const {
@@ -49,7 +50,7 @@ const ReactionPrompt = ({ character, themeColor }) => {
   } = useCharacter(character);
   const { raised, broken } = useShield(charId, inventory);
   const { spells: catalogSpells } = useContent();
-  const [attunedSource] = useSyncedState(`cnmh_eldattune_${charId}`, '');
+  const [attunedSource] = useSyncedState(syncKey(APP.ELDATTUNE, charId), '');
   const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
 
   // Shared source list (character reactions + reaction-cost spells from every

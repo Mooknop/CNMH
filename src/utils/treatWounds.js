@@ -4,7 +4,7 @@
 
 import { newEntryUid } from './uid';
 import { removeInstance } from './persistentDamage';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 // PF2e Treat Wounds DC table.
 // requiredRank: minimum Medicine proficiency rank to unlock this DC.
@@ -128,7 +128,7 @@ export function applyTreatWounds({
 
   // Immunity is applied only when healing is delivered (success/crit success).
   if (degree === 'success' || degree === 'criticalSuccess') {
-    const currentEffects = getState(target.id, 'effects') || [];
+    const currentEffects = getState(target.id, APP.EFFECTS) || [];
     // Battle Medicine immunity lasts 1 day, Treat Wounds 1 hour. The absolute
     // game-seconds expiry lets the clock sweep clear it automatically; the
     // entry stays GM-removable too (× in EffectsPanel).
@@ -142,8 +142,8 @@ export function applyTreatWounds({
       ts:        Date.now(),
     };
     const nextEffects = [...currentEffects, immunityEntry];
-    writeLocal(`cnmh_effects_${target.id}`, nextEffects);
-    sendUpdate(target.id, 'effects', nextEffects);
+    writeLocal(syncKey(APP.EFFECTS, target.id), nextEffects);
+    sendUpdate(target.id, APP.EFFECTS, nextEffects);
   }
 }
 
@@ -211,7 +211,7 @@ export function applyStaunchBleeding({
   });
 
   // Same 1-hour Treat Wounds immunity as a normal treat (it is Treat Wounds).
-  const currentEffects = getState(target.id, 'effects') || [];
+  const currentEffects = getState(target.id, APP.EFFECTS) || [];
   const immunityEntry = {
     id:        newEntryUid(),
     effectId:  IMMUNITY_EFFECT_ID,
@@ -221,6 +221,6 @@ export function applyStaunchBleeding({
     ts:        Date.now(),
   };
   const nextEffects = [...currentEffects, immunityEntry];
-  writeLocal(`cnmh_effects_${target.id}`, nextEffects);
-  sendUpdate(target.id, 'effects', nextEffects);
+  writeLocal(syncKey(APP.EFFECTS, target.id), nextEffects);
+  sendUpdate(target.id, APP.EFFECTS, nextEffects);
 }

@@ -15,7 +15,7 @@ import { getReactions } from '../../../utils/actionUtils';
 import { nextTurnIndex } from '../../../utils/encounterUtils';
 import { RESET_STATE, writeLocal } from './turnEnd';
 import './ActionDial.css';
-import { RELAY } from '../../../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../../../sync/keys';
 
 const formatCombatTime = (secs) => {
   const m = Math.floor(secs / 60);
@@ -29,7 +29,7 @@ const ActionDial = ({ charId, characterName, character = null }) => {
   const { sendUpdate } = useSession();
   const omen = useOmen(charId);
   const { sustains, end: endSustain } = useSustains(charId);
-  const [combatSecs] = useSyncedState('cnmh_combatsecs_global', 0);
+  const [combatSecs] = useSyncedState(globalKey(APP.COMBATSECS), 0);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -107,9 +107,9 @@ const ActionDial = ({ charId, characterName, character = null }) => {
     }
 
     if (nextEntry && nextEntry.kind === 'pc') {
-      const key = `cnmh_turnstate_${nextEntry.charId}`;
+      const key = syncKey(APP.TURNSTATE, nextEntry.charId);
       writeLocal(key, RESET_STATE);
-      sendUpdate(nextEntry.charId, 'turnstate', RESET_STATE);
+      sendUpdate(nextEntry.charId, APP.TURNSTATE, RESET_STATE);
     }
   };
 

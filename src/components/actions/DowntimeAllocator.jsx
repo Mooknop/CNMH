@@ -8,6 +8,7 @@ import { downtimeExpertFor } from '../../utils/downtimeExperts';
 import { dailyReductionCp } from '../../utils/craftingOutcome';
 import { cpToGp } from '../../utils/earnIncome';
 import './DowntimeAllocator.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const firstNameOf = (name) => (name || '?').split(' ')[0];
 
@@ -33,9 +34,9 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
   const charId = character?.id || 'unknown';
   const themeColor = characterColor || 'var(--color-theme)';
   const characterModel = useCharacter(character);
-  const [downtime, setDowntime] = useSyncedState(`cnmh_downtime_${charId}`, null);
-  const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
-  const [bench] = useSyncedState('cnmh_downtimebench_global', null);
+  const [downtime, setDowntime] = useSyncedState(syncKey(APP.DOWNTIME, charId), null);
+  const [craftProjects, setCraftProjects] = useSyncedState(syncKey(APP.CRAFTPROJECTS, charId), null);
+  const [bench] = useSyncedState(globalKey(APP.DOWNTIMEBENCH), null);
 
   const startedAt = block?.startedAt;
   const { plan, status, craftApplied, paired } = periodState(downtime, startedAt);

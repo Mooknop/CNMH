@@ -63,4 +63,23 @@ export default [
       globals: { ...globals.node, ...vitestGlobals },
     },
   },
+  {
+    // #1307: every cnmh_ sync key must come from the registry (src/sync/keys.js
+    // → foundry-bridge/syncKeys.js). Tests are exempt on purpose — literal key
+    // strings there double as guards on the builders' output.
+    files: ['src/**/*.{js,jsx}'],
+    ignores: ['**/*.test.{js,jsx}'],
+    rules: {
+      'no-restricted-syntax': ['error',
+        {
+          selector: 'Literal[value=/^cnmh_/]',
+          message: 'Hand-written cnmh_ key — import it from the sync-key registry (src/sync/keys.js) instead.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/^cnmh_/]',
+          message: 'Hand-written cnmh_ key template — compose it with syncKey()/globalKey() from src/sync/keys.js.',
+        },
+      ],
+    },
+  },
 ];

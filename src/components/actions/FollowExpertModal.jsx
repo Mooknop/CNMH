@@ -5,6 +5,7 @@ import { CharacterContext } from '../../contexts/CharacterContext';
 import { EXPLORATION_ACTIVITIES } from '../../data/explorationActivities';
 import { getExpertHighlightSkill, skillProficienciesFor } from '../../utils/explorationUtils';
 import './FollowExpertModal.css';
+import { APP, syncKey } from '../../sync/keys';
 
 const SKILL_DISPLAY = {
   arcana: 'Arcana', nature: 'Nature', occultism: 'Occultism', religion: 'Religion',
@@ -33,7 +34,7 @@ const FollowExpertModal = ({ isOpen, onClose, follower, themeColor }) => {
   const eligible = (characters || [])
     .filter((pc) => pc.id !== follower.id)
     .reduce((acc, pc) => {
-      const activityName = getState(pc.id, 'exploration');
+      const activityName = getState(pc.id, APP.EXPLORATION);
       if (!activityName) return acc;
       const activity = EXPLORATION_ACTIVITIES.find((a) => a.name === activityName);
       if (!activity) return acc;
@@ -45,12 +46,12 @@ const FollowExpertModal = ({ isOpen, onClose, follower, themeColor }) => {
     }, []);
 
   const handlePick = (expertCharId, skillId) => {
-    const key = `cnmh_followexpert_${follower.id}`;
+    const key = syncKey(APP.FOLLOWEXPERT, follower.id);
     const payload = { expertCharId, skillId };
     try { window.localStorage.setItem(key, JSON.stringify(payload)); } catch { /* noop */ }
-    sendUpdate(follower.id, 'followexpert', payload);
+    sendUpdate(follower.id, APP.FOLLOWEXPERT, payload);
     // Also set the activity
-    sendUpdate(follower.id, 'exploration', 'Follow the Expert');
+    sendUpdate(follower.id, APP.EXPLORATION, 'Follow the Expert');
     onClose();
   };
 

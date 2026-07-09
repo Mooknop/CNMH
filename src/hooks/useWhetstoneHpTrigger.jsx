@@ -7,7 +7,7 @@ import { toGameSeconds } from '../utils/gameTime';
 import { newEntryUid } from '../utils/uid';
 import { resolveExpireAt } from '../utils/expiry';
 import { MINUTE_ROUNDS } from '../utils/whetstone';
-import { RELAY, syncKey, globalKey } from '../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../sync/keys';
 
 // HP-threshold whetstone triggers (#1216 — Valorous Coin). An active whetstone
 // effect carrying `effect.hpTrigger` fires once when the wielder drops below
@@ -24,7 +24,7 @@ export function useWhetstoneHpTrigger(character) {
   const name = character?.name || charId;
   const level = character?.level || 0;
   const [hp, setHp] = useSyncedState(syncKey(RELAY.HP, charId), null);
-  const [effects, setEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
+  const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, charId), []);
   const [encounter] = useSyncedState(globalKey(RELAY.ENCOUNTER), null);
   const { isGm } = useGmAuth();
   const { appendEvent } = useSessionLog();

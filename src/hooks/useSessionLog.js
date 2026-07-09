@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 const LOG_CAP = 50;
 let _counter = 0;
@@ -11,7 +12,7 @@ const makeEntry = (entry) => ({
 });
 
 export function useSessionLog() {
-  const [log, setLog] = useSyncedState('cnmh_sessionlog_global', []);
+  const [log, setLog] = useSyncedState(globalKey(APP.SESSIONLOG), []);
 
   const appendEvent = useCallback(
     (entry) =>

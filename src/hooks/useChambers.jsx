@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { normalizeChamberState, fireChamberState } from '../utils/ammunition';
+import { APP, syncKey } from '../sync/keys';
 
 // Single writer for the durable per-weapon chamber map
 //   cnmh_chambers_<characterId> = { [weaponUid]: { chambers: [null|ref], pointer } }.
@@ -13,7 +14,7 @@ import { normalizeChamberState, fireChamberState } from '../utils/ammunition';
 // normalised to the right size before patching; reads go through `stateFor`.
 export const useChambers = (characterId) => {
   const [chambers, setChambers] = useSyncedState(
-    `cnmh_chambers_${characterId || 'none'}`,
+    syncKey(APP.CHAMBERS, characterId || 'none'),
     {}
   );
 

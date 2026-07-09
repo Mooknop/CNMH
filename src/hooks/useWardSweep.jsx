@@ -6,6 +6,7 @@ import { useSessionLog } from './useSessionLog';
 import { useCharacter } from './useCharacter';
 import { useShield } from './useShield';
 import { isWardEntry } from '../utils/ward';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -33,12 +34,12 @@ export function useWardSweep(character) {
   useEffect(() => {
     if (!isGm || raised) return;
     (characters || []).forEach((c) => {
-      const effects = getState(c.id, 'effects');
+      const effects = getState(c.id, APP.EFFECTS);
       if (!Array.isArray(effects) || effects.length === 0) return;
       const remaining = effects.filter((e) => !isWardEntry(e, warderId));
       if (remaining.length === effects.length) return;
-      writeLocal(`cnmh_effects_${c.id}`, remaining);
-      sendUpdate(c.id, 'effects', remaining);
+      writeLocal(syncKey(APP.EFFECTS, c.id), remaining);
+      sendUpdate(c.id, APP.EFFECTS, remaining);
       appendEvent({
         type: 'expire',
         text: `${warderName}'s ward on ${c.name} ends — shield no longer raised`,

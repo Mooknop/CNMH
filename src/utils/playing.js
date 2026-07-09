@@ -13,6 +13,7 @@
 // clears any leftover flag.
 
 import { resolveExpireAt } from './expiry';
+import { APP, syncKey } from '../sync/keys';
 
 export const PLAYING_IDLE = { active: false, ts: 0 };
 
@@ -45,7 +46,7 @@ export function markPlayingOnCast({ ability, caster, casterEntryId, encounter, s
   if (!isCompositionCast(ability)) return false;
   if (encounter?.phase !== 'in-progress' || !casterEntryId || !caster?.id) return false;
 
-  const key = `cnmh_playing_${caster.id}`;
+  const key = syncKey(APP.PLAYING, caster.id);
   const prev = readLocal(key);
   const next = {
     active: true,
@@ -53,7 +54,7 @@ export function markPlayingOnCast({ ability, caster, casterEntryId, encounter, s
     ts: Date.now(),
   };
   writeLocal(key, next);
-  sendUpdate(caster.id, 'playing', next);
+  sendUpdate(caster.id, APP.PLAYING, next);
   if (!prev?.active) {
     appendLog?.({ type: 'action', charId: caster.id, text: `${caster.name} is playing (${ability.name})` });
   }

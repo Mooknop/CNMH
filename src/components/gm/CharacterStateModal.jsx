@@ -13,6 +13,7 @@ import { performDailyPrep } from '../../utils/dailyPrep';
 import { defaultTurnState } from '../../hooks/useTurnState';
 import { toGameSeconds } from '../../utils/gameTime';
 import './CharacterStateModal.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // A new turn at full economy — matches useTurnState.resetForNewTurn.
 const freshTurnState = () => ({
@@ -252,7 +253,7 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
   // Persist a single key + log, then re-snapshot so the view reflects it.
   const pushState = useCallback((type, value) => {
     try {
-      window.localStorage.setItem(`cnmh_${type}_${selectedId}`, JSON.stringify(value));
+      window.localStorage.setItem(syncKey(type, selectedId), JSON.stringify(value));
     } catch { /* quota / serialization — sync still carries it */ }
     sendUpdate(selectedId, type, value);
   }, [selectedId, sendUpdate]);
@@ -274,13 +275,13 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
     setConfirm(null);
     // Read the shared clock straight off the session (cnmh_clock_global) so the
     // modal doesn't depend on GameDateProvider being mounted above it.
-    const nowSecs = toGameSeconds(getState('global', 'clock') || DEFAULT_CLOCK);
+    const nowSecs = toGameSeconds(getState('global', APP.CLOCK) || DEFAULT_CLOCK);
     const { summary } = performDailyPrep({
       character,
       getState,
       sendUpdate,
       nowSecs,
-      eldChoice: getState(selectedId, 'eldattune') || undefined,
+      eldChoice: getState(selectedId, APP.ELDATTUNE) || undefined,
     });
     appendEvent({ type: 'gm', text: `GM: daily preparations for ${charName} — ${summary}` });
     refresh();

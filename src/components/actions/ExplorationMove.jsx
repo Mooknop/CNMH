@@ -8,6 +8,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { formatSpeedBreakdown } from '../../utils/speed';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import './ExplorationMove.css';
+import { APP, globalKey } from '../../sync/keys';
 
 // Exploration-mode token movement panel. When the GM enables movement and the
 // effective mode is 'exploration', a player walks their Foundry token one 5-ft
@@ -21,7 +22,7 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
   const { mode, moveEnabled } = usePlayMode();
   const { isGm } = useGmAuth();
   const [feetTotal, setFeetTotal] = useState(0);
-  const [, setExploreDist] = useSyncedState('cnmh_exploredist_global', 0);
+  const [, setExploreDist] = useSyncedState(globalKey(APP.EXPLOREDIST), 0);
   // App-derived Speed (#1223) — context for the walk (exploration steps carry
   // no action cost, but pacing math reads the character's real speed). The
   // grid itself stays Foundry-authoritative. Hidden when the roster has no

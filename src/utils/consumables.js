@@ -4,7 +4,7 @@
 // the style of treatWounds.js.
 
 import { newEntryUid } from './uid';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -123,10 +123,10 @@ export function applyEffectConsumable({ user, itemName, meta, nowSecs, getState,
       : {}),
     ts: Date.now(),
   };
-  const nextEffects = [...(getState(user.id, 'effects') || []), entry];
+  const nextEffects = [...(getState(user.id, APP.EFFECTS) || []), entry];
 
-  writeLocal(`cnmh_effects_${user.id}`, nextEffects);
-  sendUpdate(user.id, 'effects', nextEffects);
+  writeLocal(syncKey(APP.EFFECTS, user.id), nextEffects);
+  sendUpdate(user.id, APP.EFFECTS, nextEffects);
 
   const durationLabel = meta.durationMinutes ? ` (${meta.durationMinutes} min)` : '';
   appendLog({

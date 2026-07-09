@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Read + mutate a character's sustained-spell ledger (#220), synced at
 // `cnmh_sustains_<charId>`. Registration happens React-free in the cast modal
 // (utils/sustain.registerSustain); this hook drives the turn-tracker prompt.
 export const useSustains = (charId) => {
-  const [sustains, setSustains] = useSyncedState(`cnmh_sustains_${charId}`, []);
+  const [sustains, setSustains] = useSyncedState(syncKey(APP.SUSTAINS, charId), []);
 
   // Mark a sustain as sustained this round (keeps it alive past turn submit).
   const sustain = useCallback(

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 // Single writer for the party's Sandpoint location support (#1152 S1).
 //   cnmh_support_global = { [employerId]: { earnedAt } }
@@ -13,7 +14,7 @@ import { useSyncedState } from './useSyncedState';
 // Key type token is `support` (single token, no underscores) per the synced-key
 // rule cnmh_<type>_<id>.
 export const useLocationSupport = () => {
-  const [supported, setSupported] = useSyncedState('cnmh_support_global', {});
+  const [supported, setSupported] = useSyncedState(globalKey(APP.SUPPORT), {});
 
   const isSupported = useCallback(
     (id) => Boolean(id && (supported || {})[id]),

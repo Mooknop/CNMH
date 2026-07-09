@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 // Player-authored field notes for the Specimen Dex (#780). One short note per
 // creature, keyed by creatureKey, last-writer-wins, synced campaign-wide so the
 // whole party sees each other's scribbles. Stored as { [creatureKey]: text }.
 // It's GM-and-player writable (a `_global` store), so it stays editable even in
 // the offline sandbox.
-const FIELD_NOTES_KEY = 'cnmh_fieldnotes_global';
+const FIELD_NOTES_KEY = globalKey(APP.FIELDNOTES);
 
 export const useBestiaryNotes = () => {
   const [notes, setNotes] = useSyncedState(FIELD_NOTES_KEY, {});

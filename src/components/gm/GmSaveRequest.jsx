@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
+import { APP } from '../../sync/keys';
 
 const SAVE_OPTIONS = ['fortitude', 'reflex', 'will'];
 const SAVE_LABELS  = { fortitude: 'Fortitude', reflex: 'Reflex', will: 'Will' };
@@ -32,7 +33,7 @@ const GmSaveRequest = ({ pcEntries = [] }) => {
       : pcEntries.filter((e) => e.charId === target);
 
     for (const entry of targets) {
-      sendUpdate(entry.charId, 'saveprompt', {
+      sendUpdate(entry.charId, APP.SAVEPROMPT, {
         reqId: `${reqIdBase}-${entry.charId}`,
         save,
         dc: dcNum,

@@ -5,6 +5,7 @@ import { useVeracious } from '../../hooks/useVeracious';
 import { getFocusInfo } from '../../utils/SpellUtils';
 import { focusGlyphForClass } from '../../utils/gameGlyphs';
 import GameGlyph from '../shared/GameGlyph';
+import { APP, syncKey } from '../../sync/keys';
 
 /**
  * Compact spellcasting stat trio: Atk · DC · Focus (focus as arcane slot pips).
@@ -29,7 +30,7 @@ const SpellsHeader = ({ character }) => {
   // Read-only mirror of the focus-spent count owned by FocusSpellsList via the
   // same synced key, so the header pips stay in sync without duplicating writes.
   const [pointsSpent] = useLocalStorage(
-    `cnmh_focus_${character?.id || 'unknown'}`,
+    syncKey(APP.FOCUS, character?.id || 'unknown'),
     focusMax - (focusInfo?.current ?? focusMax)
   );
   const focusRemaining = Math.max(0, focusMax - (pointsSpent || 0));

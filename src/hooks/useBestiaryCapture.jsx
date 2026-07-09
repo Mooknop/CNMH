@@ -4,6 +4,7 @@ import { useSyncedState } from './useSyncedState';
 import { useContent } from '../contexts/ContentContext';
 import { useGmAuth } from './useGmAuth';
 import { saveDocument } from '../utils/gmApi';
+import { APP, globalKey } from '../sync/keys';
 
 // GM-only writer that snapshots each enemy's full stat block into the `monster`
 // collection the moment it enters an encounter (#332). The Foundry bridge packs
@@ -24,7 +25,7 @@ export function useBestiaryCapture() {
   // The party's current location is a Lore entry (GM-set via SetLocationModal).
   // We stamp it onto each capture so the bestiary entry can link back to the
   // location's lore page, and the lore page can list monsters fought there (#334).
-  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   // `creatureKey@locationLoreId` pairs already captured this mount — avoids a PUT
   // storm when the content store re-broadcasts our own write back through
   // `monsters`, while still recording a fresh location if the same creature is

@@ -5,6 +5,7 @@
 // so we convert via cpToGp.
 
 import { cpToGp } from './earnIncome';
+import { APP, syncKey } from '../sync/keys';
 
 const DEGREE_LABEL = {
   criticalSuccess: 'Critical Success',
@@ -19,7 +20,7 @@ const writeLocal = (key, value) => {
 
 const readLocalGold = (charId) => {
   try {
-    const raw = window.localStorage.getItem(`cnmh_gold_${charId}`);
+    const raw = window.localStorage.getItem(syncKey(APP.GOLD, charId));
     return raw !== null ? JSON.parse(raw) : 0;
   } catch {
     return 0;
@@ -29,7 +30,7 @@ const readLocalGold = (charId) => {
 // Current gold for a character: prefer live server state, fall back to the
 // locally-persisted value (same precedence as usePartyGold).
 function readGold(charId, getState) {
-  const server = getState ? getState(charId, 'gold') : undefined;
+  const server = getState ? getState(charId, APP.GOLD) : undefined;
   if (typeof server === 'number') return server;
   return readLocalGold(charId);
 }
@@ -52,8 +53,8 @@ export function creditEarnIncome({ entry, getState, sendUpdate, appendLog }) {
   const current = readGold(charId, getState);
   const next = current + gain;
 
-  writeLocal(`cnmh_gold_${charId}`, next);
-  if (sendUpdate) sendUpdate(charId, 'gold', next);
+  writeLocal(syncKey(APP.GOLD, charId), next);
+  if (sendUpdate) sendUpdate(charId, APP.GOLD, next);
 
   if (appendLog) {
     const label = DEGREE_LABEL[degree] || degree;

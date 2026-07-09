@@ -9,7 +9,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
 import { newEntryUid } from '../../utils/uid';
 import './RollActivityModal.css';
-import { RELAY, syncKey } from '../../sync/keys';
+import { RELAY, APP, syncKey } from '../../sync/keys';
 
 const EXPLORATION_EFFECT_SOURCE = 'exploration';
 
@@ -95,7 +95,7 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
   }, [skillId, character, characterModel, activeConditions, effects, effectCatalog]);
 
   // Follow the Expert: check if a +2 circumstance applies for the current skill
-  const followExpert = getState(character?.id, 'followexpert');
+  const followExpert = getState(character?.id, APP.FOLLOWEXPERT);
   const followExpertBonus = (followExpert?.skillId && followExpert.skillId === skillId) ? 2 : 0;
   const followExpertLabel = followExpertBonus ? 'Follow the Expert' : '';
 
@@ -120,13 +120,13 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
 
   const handleApplyEffect = () => {
     if (!effectTargetId || !onSuccessEffectId) return;
-    const current = getState(effectTargetId, 'effects') || [];
+    const current = getState(effectTargetId, APP.EFFECTS) || [];
     const next = [
       ...current,
       { id: newEntryUid(), effectId: onSuccessEffectId, source: EXPLORATION_EFFECT_SOURCE, ts: Date.now() },
     ];
-    try { window.localStorage.setItem(`cnmh_effects_${effectTargetId}`, JSON.stringify(next)); } catch { /* noop */ }
-    sendUpdate(effectTargetId, 'effects', next);
+    try { window.localStorage.setItem(syncKey(APP.EFFECTS, effectTargetId), JSON.stringify(next)); } catch { /* noop */ }
+    sendUpdate(effectTargetId, APP.EFFECTS, next);
     setEffectApplied(true);
   };
 

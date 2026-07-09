@@ -10,6 +10,7 @@ import { getCharacterColor } from '../utils/CharacterUtils';
 import CharacterCarousel from '../components/dashboard/CharacterCarousel';
 import { PARTY_NAME } from '../data/campaign';
 import './Dashboard.css';
+import { APP, globalKey } from '../sync/keys';
 
 const OpenIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
@@ -23,7 +24,7 @@ const Dashboard = () => {
   const { openLore } = useLore();
   const { characters } = useContext(CharacterContext) || {};
   const { total: partyGold } = usePartyGold(characters);
-  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   const currentLocation = campaign?.location || '';
   const locationLoreId = campaign?.locationLoreId || '';
 

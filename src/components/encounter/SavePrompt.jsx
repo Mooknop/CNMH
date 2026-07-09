@@ -7,6 +7,7 @@ import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { saveBonusTalisman } from '../../utils/talismanActivation';
 import './SavePrompt.css';
+import { APP, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
@@ -33,11 +34,11 @@ const SAVE_LABELS = {
  * @param {object} [character] - raw character (resolves an affixed save-bonus talisman, #254)
  */
 const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => {
-  const [prompt] = useSyncedState(`cnmh_saveprompt_${charId}`, null);
+  const [prompt] = useSyncedState(syncKey(APP.SAVEPROMPT, charId), null);
   const { appendLog } = useEncounter();
   const charData = useCharacter(character);
   const [affixed, setAffixed] = useSyncedState(affixedKey(charId), {});
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${charId}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, charId), {});
 
   const [d20Input, setD20Input] = useState('');
   const [pinOn,    setPinOn]    = useState(false); // Sanitizing Pin toggle

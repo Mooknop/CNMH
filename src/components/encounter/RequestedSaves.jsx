@@ -12,7 +12,7 @@ import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
-import { RELAY } from '../../sync/keys';
+import { RELAY, APP } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -189,7 +189,7 @@ const RequestedSaves = () => {
       if (triggered) {
         const caster = { id: ce.casterId, name: ce.casterName };
         (ce.targets || []).forEach(({ charId, entryId }) => {
-          const current  = getState(charId, 'effects') || [];
+          const current  = getState(charId, APP.EFFECTS) || [];
           const newEntry = buildEffectEntry({
             eff: { effectId: ce.def.effectId, duration: ce.def.duration || null },
             caster,
@@ -198,7 +198,7 @@ const RequestedSaves = () => {
             casterEntryId: ce.casterEntryId || null,
             targetEntryId: entryId,
           });
-          sendUpdate(charId, 'effects', [...current, newEntry]);
+          sendUpdate(charId, APP.EFFECTS, [...current, newEntry]);
         });
         appendLog({
           type:   'action',

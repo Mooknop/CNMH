@@ -17,6 +17,7 @@ import {
   claimedDelta,
   accumulateClaimed,
 } from '../utils/lootDrop';
+import { APP, globalKey } from '../sync/keys';
 
 // The treasure-distribution lifecycle (#1090/#1091, epic #1085 T4/T5). One drop
 // at a time, session-wide, on the synced global cnmh_lootdrop_global:
@@ -38,7 +39,7 @@ export const useLootDrop = () => {
   const { connected, foundryConnected, getState, sendUpdate } = useSession();
   const { characters = [], rooms = [], items = [], runes = [], refresh } = useContent();
   const { appendEvent } = useSessionLog();
-  const [drop, setDrop] = useSyncedState('cnmh_lootdrop_global', null);
+  const [drop, setDrop] = useSyncedState(globalKey(APP.LOOTDROP), null);
 
   const isOpen = !!drop && drop.status === 'open';
   const offline = connected && !foundryConnected;
@@ -126,15 +127,15 @@ export const useLootDrop = () => {
         for (let i = 0; i < charClaimQty(line, cid); i += 1) entries.push(acquiredEntry(line));
       });
       if (entries.length) {
-        const cur = getState(cid, 'acquired');
-        sendUpdate(cid, 'acquired', [...(Array.isArray(cur) ? cur : []), ...entries]);
+        const cur = getState(cid, APP.ACQUIRED);
+        sendUpdate(cid, APP.ACQUIRED, [...(Array.isArray(cur) ? cur : []), ...entries]);
       }
       // Credit the gold share onto the live balance (default to the committed
       // doc value so an unset balance reflects real gold, not 0 — like #670).
       if (goldShare > 0) {
-        const cur = getState(cid, 'gold');
+        const cur = getState(cid, APP.GOLD);
         const base = typeof cur === 'number' ? cur : docGold(byId[cid]);
-        sendUpdate(cid, 'gold', base + goldShare);
+        sendUpdate(cid, APP.GOLD, base + goldShare);
       }
       appendEvent({
         type: 'action',

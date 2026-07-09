@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Active harrow omen (#227) — set by drawing from the physical deck (the
 // player picks the drawn suit in the Harrowing panel), cleared by Avoid Dire
@@ -12,7 +13,7 @@ const IDLE_OMEN = { suit: null, ts: 0 };
 
 export const useOmen = (charId) => {
   const [omenState, setOmenState] = useSyncedState(
-    `cnmh_omen_${charId || 'none'}`,
+    syncKey(APP.OMEN, charId || 'none'),
     IDLE_OMEN
   );
 

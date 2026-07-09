@@ -3,6 +3,7 @@ import { useEncounter } from './useEncounter';
 import { useGmAuth } from './useGmAuth';
 import { useGameDate } from '../contexts/GameDateContext';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 // Tracks elapsed combat time and folds it into the master clock when the
 // encounter ends. Designed to be mounted once app-wide via EncounterClockSync.
@@ -22,7 +23,7 @@ export function useEncounterClock() {
   const { encounter } = useEncounter();
   const { isGm } = useGmAuth();
   const { advanceSeconds } = useGameDate();
-  const [combatSecs, setCombatSecs] = useSyncedState('cnmh_combatsecs_global', 0);
+  const [combatSecs, setCombatSecs] = useSyncedState(globalKey(APP.COMBATSECS), 0);
 
   const prevRoundRef = useRef(0);
   const prevActiveRef = useRef(false);

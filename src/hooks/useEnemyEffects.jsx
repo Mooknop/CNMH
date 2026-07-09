@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { makeImmunityEntry, hasAbilityImmunity } from '../utils/immunity';
+import { APP, globalKey } from '../sync/keys';
 
 // Per-enemy conditions + ability-immunity timers (#260).
 //
@@ -22,7 +23,7 @@ import { makeImmunityEntry, hasAbilityImmunity } from '../utils/immunity';
 // so no turn-sweep is needed; the whole map is wiped when the encounter ends
 // (useEncounter.endEncounter), the same way knowledge is.
 
-const ENEMY_FX_KEY = 'cnmh_enemyfx_global';
+const ENEMY_FX_KEY = globalKey(APP.ENEMYFX);
 
 const emptyRecord = () => ({ conditions: [], effects: [] });
 

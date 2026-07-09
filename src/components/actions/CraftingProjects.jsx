@@ -9,6 +9,7 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { periodState } from '../../utils/downtimeUtils';
 import { catalogItemName } from '../../utils/spellItems';
 import './CraftingProjects.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const DEGREE_LABEL = {
   criticalSuccess: 'Critical Success',
@@ -21,11 +22,11 @@ const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).sl
 
 const CraftingProjects = ({ character }) => {
   const charId = character?.id || 'unknown';
-  const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${charId}`, 0);
-  const [, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
-  const [block] = useSyncedState('cnmh_downtimeblock_global', null);
-  const [downtime] = useSyncedState(`cnmh_downtime_${charId}`, null);
+  const [craftProjects, setCraftProjects] = useSyncedState(syncKey(APP.CRAFTPROJECTS, charId), null);
+  const [gold, setGold] = useSyncedState(syncKey(APP.GOLD, charId), 0);
+  const [, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
+  const [block] = useSyncedState(globalKey(APP.DOWNTIMEBLOCK), null);
+  const [downtime] = useSyncedState(syncKey(APP.DOWNTIME, charId), null);
   const { items, spells } = useContent();
 
   // Follow-the-Expert (downtime): a Crafting pairing this period grants +2

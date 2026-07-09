@@ -12,7 +12,7 @@ import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { checkBonusTalisman } from '../../utils/talismanActivation';
 import './SkillCheckModal.css';
-import { RELAY, syncKey } from '../../sync/keys';
+import { RELAY, APP, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -66,7 +66,7 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   // (Sneaky Key, #1093) is offered as an opt-in on matching checks and consumed
   // only when actually used, mirroring SavePrompt's save-bonus flow.
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id || 'none'), {});
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || 'none'}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id || 'none'), {});
 
   const [d20, setD20] = useState('');
   const [dcInput, setDcInput] = useState('');

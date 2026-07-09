@@ -2,6 +2,7 @@ import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
+import { APP, syncKey } from '../../sync/keys';
 
 const StaffInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
@@ -25,7 +26,7 @@ const StaffInfoBox = ({ themeColor }) => (
 const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character, prepared = true, onCast }) => {
   const chargesMax = staff.charges?.max ?? 0;
   const [chargesSpent, setChargesSpent] = useLocalStorage(
-    `cnmh_staff_${character?.id || 'unknown'}`,
+    syncKey(APP.STAFF, character?.id || 'unknown'),
     chargesMax - (staff.charges?.current ?? chargesMax)
   );
 

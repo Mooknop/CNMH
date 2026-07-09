@@ -5,8 +5,9 @@ import {
   defaultRecord,
   applyRecallKnowledge,
 } from '../utils/recallKnowledge';
+import { APP, globalKey } from '../sync/keys';
 
-const KNOWLEDGE_KEY = 'cnmh_knowledge_global';
+const KNOWLEDGE_KEY = globalKey(APP.KNOWLEDGE);
 
 const degreeLabel = {
   criticalSuccess: 'Critical Success',

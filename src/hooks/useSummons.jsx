@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { newEntryUid } from '../utils/uid';
+import { APP, globalKey } from '../sync/keys';
 
 // GM-added summons (#261) tied to a caster's sustained spell. Kept in a single
 // global key the Foundry bridge never touches (the bridge full-replaces
@@ -14,7 +15,7 @@ import { newEntryUid } from '../utils/uid';
 const EMPTY = [];
 
 export const useSummons = () => {
-  const [summons, setSummons] = useSyncedState('cnmh_summons_global', EMPTY);
+  const [summons, setSummons] = useSyncedState(globalKey(APP.SUMMONS), EMPTY);
 
   // Create a summon. Caller supplies the chosen pool creature's stats; we stamp
   // a stable entryId and initialise current HP to max.

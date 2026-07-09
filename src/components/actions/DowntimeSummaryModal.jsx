@@ -3,12 +3,13 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { getHoursForActivity, getRollsForActivity } from '../../utils/downtimeUtils';
 import './DowntimeSummaryModal.css';
+import { APP, globalKey } from '../../sync/keys';
 
 // Shown to all players (and the GM) when a downtime period completes. Reads the
 // synced cnmh_downtimesummary_global key; renders null when the key is absent.
 // The "Got it" button clears the key for everyone.
 const DowntimeSummaryModal = () => {
-  const [summary, setSummary] = useSyncedState('cnmh_downtimesummary_global', null);
+  const [summary, setSummary] = useSyncedState(globalKey(APP.DOWNTIMESUMMARY), null);
   if (!summary) return null;
 
   const { period, chars = [] } = summary;
