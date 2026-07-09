@@ -35,8 +35,8 @@
   background: var(--color-surface, rgba(26, 22, 18, 0.6));
 }
 .rune-work-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
-.rune-work-weapon { font-weight: 600; color: var(--color-text, #f5ede4); }
-.rune-work-rune { font-size: 0.8rem; color: var(--color-arcane, #7a54ba); }
+.rune-work-weapon { font-weight: 600; color: var(--color-text, var(--theme-text)); }
+.rune-work-rune { font-size: 0.8rem; color: var(--color-arcane, var(--arcane-mid)); }
 .rune-work-status { font-size: 0.74rem; color: var(--color-text-tertiary, rgba(255, 255, 255, 0.55)); }
-.rune-work-status.is-ready { color: var(--color-verdant, #3d9458); font-weight: 600; }
+.rune-work-status.is-ready { color: var(--color-verdant, var(--verdant-mid)); font-weight: 600; }
 .rune-work-collect { flex-shrink: 0; }

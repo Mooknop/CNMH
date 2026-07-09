@@ -143,6 +143,6 @@
 
 .dp-confirm {
   background: var(--color-theme, var(--color-accent));
-  color: #fff;
+  color: var(--color-text-on-primary);
   border-color: transparent;
 }

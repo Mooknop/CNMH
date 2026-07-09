@@ -5,16 +5,16 @@
 .trait-description {
   font-size: 1rem;
   line-height: 1.5;
-  color: #333;
+  color: var(--void-mid);
   margin: 0 0 2rem 0;
 }
 
 .trait-source {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--iron-base);
   font-style: italic;
   text-align: right;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--iron-pale);
   padding-top: 1rem;
 }
 

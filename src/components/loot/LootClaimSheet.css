@@ -45,14 +45,14 @@
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary, var(--color-text-on-primary));
   font: inherit;
   cursor: pointer;
 }
 .loot-claim-toggle.is-mine {
   border-color: var(--loot-theme, var(--color-theme));
   background: var(--loot-theme, var(--color-theme));
-  color: #111;
+  color: var(--void-deepest);
 }
 .loot-claim-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -63,7 +63,7 @@
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary, var(--color-text-on-primary));
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;

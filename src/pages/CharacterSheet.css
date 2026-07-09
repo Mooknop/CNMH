@@ -652,11 +652,11 @@
 }
 
 .character-sheet .btn-danger {
-  color: #ef5350;
+  color: var(--peril-light);
   border-color: rgba(239, 83, 80, 0.5);
 }
 
 .character-sheet .btn-danger:hover {
   background-color: rgba(183, 28, 28, 0.8);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }

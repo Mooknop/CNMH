@@ -65,7 +65,7 @@
 .catalog-picker-option.active {
   background: var(--accent-tint, rgba(192, 68, 14, 0.14));
   border-color: var(--accent-outline, var(--color-primary));
-  color: var(--accent-text, var(--ember-light, #f5803e));
+  color: var(--accent-text, var(--ember-light, var(--ember-light)));
 }
 
 .catalog-picker-preview {

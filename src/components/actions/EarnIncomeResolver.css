@@ -101,7 +101,7 @@
 }
 
 .eir-bonus {
-  border-left-color: var(--color-success, #38a169);
+  border-left-color: var(--color-success, var(--verdant-mid));
   color: var(--theme-text, var(--shell-text));
 }
 
@@ -128,12 +128,12 @@
 
 .eir-preview--success,
 .eir-preview--criticalSuccess {
-  border-left-color: var(--color-success, #38a169);
+  border-left-color: var(--color-success, var(--verdant-mid));
 }
 
 .eir-preview--failure,
 .eir-preview--criticalFailure {
-  border-left-color: var(--color-danger, #e53e3e);
+  border-left-color: var(--color-danger, var(--peril-light));
 }
 
 .eir-degree {
@@ -162,7 +162,7 @@
   background: var(--theme-accent, var(--accent-bg));
   border: 1px solid var(--theme-accent, var(--accent-bg));
   border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: var(--text-sm);

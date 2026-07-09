@@ -20,12 +20,12 @@
 
 .eia-row--success,
 .eia-row--criticalSuccess {
-  border-left-color: var(--color-success, #38a169);
+  border-left-color: var(--color-success, var(--verdant-mid));
 }
 
 .eia-row--failure,
 .eia-row--criticalFailure {
-  border-left-color: var(--color-danger, #e53e3e);
+  border-left-color: var(--color-danger, var(--peril-light));
 }
 
 .eia-info {

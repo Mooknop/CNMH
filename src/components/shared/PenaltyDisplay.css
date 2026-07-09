@@ -38,8 +38,8 @@
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: #1a1a1a;
-  color: #f0f0f0;
+  background: var(--shell-surface-raised);
+  color: var(--iron-pale);
   border-radius: 6px;
   padding: 0.45rem 0.65rem;
   min-width: 180px;
@@ -60,7 +60,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: #1a1a1a;
+  border-top-color: var(--shell-surface-raised);
 }
 
 .pd-wrapper:hover .pd-tooltip {
@@ -75,7 +75,7 @@
   color: #aaa;
   margin-bottom: 0.3rem;
   padding-bottom: 0.25rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--void-mid);
 }
 
 .pd-tooltip-row {
@@ -85,7 +85,7 @@
 }
 
 .pd-tooltip-label {
-  color: #f0f0f0;
+  color: var(--iron-pale);
 }
 
 .pd-tooltip-penalty {

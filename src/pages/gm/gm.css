@@ -2515,7 +2515,7 @@ p.gm-live-note {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   background: var(--peril-light);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .gm-room-readaloud {
   margin: var(--space-3) 0;
@@ -2568,7 +2568,7 @@ p.gm-live-note {
   padding: 1px 6px;
   border-radius: var(--radius-full);
   background: var(--peril-light);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .gm-room-hazards { margin: var(--space-2) 0 0; padding-left: 1.2em; }
 .gm-room-hazards li { color: var(--shell-text-secondary); margin: 2px 0; }

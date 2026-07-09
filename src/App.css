@@ -21,8 +21,8 @@
   right: 0;
   height: 22px;
   z-index: 9999;
-  background: #7a4f10;
-  color: #fff3dc;
+  background: var(--gold-dark);
+  color: var(--gold-pale);
   text-align: center;
   font-size: 0.7rem;
   font-weight: 700;
@@ -37,7 +37,7 @@
 }
 
 .staging-banner-link:hover {
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .app-staging .main-content {
@@ -91,7 +91,7 @@
 /* Primary — accent tint + opaque outline */
 .btn-primary {
   background-color: var(--accent-tint, rgba(192, 68, 14, 0.14));
-  color: var(--accent-text, #e85d1a);
+  color: var(--accent-text, var(--ember-mid));
   border-color: var(--accent-outline, var(--color-primary));
 }
 
@@ -136,7 +136,7 @@
 
 .btn-danger:hover {
   background-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .btn-danger:disabled {

@@ -2,6 +2,6 @@
 .ttp-playing-chip {
   font-size: var(--text-xs);
   margin: 0 2px;
-  color: #e0b64d;
+  color: var(--gold-light);
   vertical-align: middle;
 }

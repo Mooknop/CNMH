@@ -375,8 +375,8 @@
 .inventory-grid .icon-tile {
   --tile: 52px;
   --tile-c: var(--iron-light);
-  --face1: #211c17;
-  --face2: #15110d;
+  --face1: var(--shell-surface-raised);
+  --face2: var(--theme-bg);
   position: relative;
   width: var(--tile);
   height: var(--tile);
@@ -407,7 +407,7 @@
   font-size: calc(var(--tile) * 0.2);
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--tile-c) 80%, #fff 30%);
+  color: color-mix(in srgb, var(--tile-c) 80%, var(--color-text-on-primary) 30%);
   position: relative;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
@@ -429,7 +429,7 @@
   font-family: var(--font-mono);
   font-size: calc(var(--tile) * 0.19);
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text-on-primary);
   background: rgba(0, 0, 0, 0.6);
   border-radius: 5px;
   padding: 0 4px;
@@ -455,7 +455,7 @@
   min-width: 20px;
   min-height: 20px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 30%, #2a231b, #14100c);
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
   border: 1px solid var(--color-theme, var(--gold-light));
   box-shadow:
     0 0 8px color-mix(in srgb, var(--color-theme, var(--gold-light)) 60%, transparent),

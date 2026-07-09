@@ -31,7 +31,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--shell-text-primary));
   cursor: pointer;
 }
 

@@ -482,7 +482,7 @@
 }
 
 .heightened-effect {
-  color: #333;
+  color: var(--void-mid);
 }
 
 .empty-state {

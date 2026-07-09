@@ -1,5 +1,5 @@
 /* Target picker + flanked badge styles. Relocated from TurnTrackerPanel.css
-   (#425); keeps the ttp- class names for continuity. */
+   (var(--arcane-dark)); keeps the ttp- class names for continuity. */
 
 /* Flanked badge (also reused by the order-strip persistent chip family). */
 .ttp-flanked-badge {

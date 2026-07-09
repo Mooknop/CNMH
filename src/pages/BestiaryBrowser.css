@@ -46,7 +46,7 @@
    ════════════════════════════════════════════════════════════ */
 .dex-browser {
   background: var(--surface-card);
-  border: 1px solid #2c2924;
+  border: 1px solid var(--void-base);
   border-radius: var(--radius-lg, 10px);
   overflow: hidden;
 }
@@ -56,7 +56,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid #2c2924;
+  border-bottom: 1px solid var(--void-base);
 }
 
 .dex-br-title {
@@ -64,7 +64,7 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.4rem;
-  color: var(--shell-text-primary, #f6efe3);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .dex-br-title small {
@@ -85,7 +85,7 @@
   font-size: 0.72rem;
   color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid #34302a;
+  border: 1px solid var(--void-mid);
   border-radius: var(--radius-md, 6px);
 }
 .dex-search::placeholder { color: rgba(255, 255, 255, 0.4); }
@@ -113,8 +113,8 @@
 
 .bestiary-trait-chip--active {
   background: var(--accent-tint, rgba(192, 68, 14, 0.18));
-  border-color: var(--accent-outline, var(--color-primary, #c0440e));
-  color: var(--accent-text, #e85d1a);
+  border-color: var(--accent-outline, var(--color-primary, var(--ember-base)));
+  color: var(--accent-text, var(--ember-mid));
 }
 
 /* The grid */
@@ -131,17 +131,17 @@
   width: 100%;
   padding: 0;
   text-align: left;
-  border: 1px solid #2e2a24;
+  border: 1px solid var(--void-base);
   border-radius: 8px;
   overflow: hidden;
-  background: #100d0b;
+  background: var(--void-deepest);
   cursor: pointer;
   transition: border-color 0.15s, transform 0.15s;
 }
 
 .dex-card:hover {
   transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--cc, var(--wisp)) 55%, #2e2a24);
+  border-color: color-mix(in srgb, var(--cc, var(--wisp)) 55%, var(--void-base));
 }
 
 .dex-card-screen {
@@ -159,7 +159,7 @@
 .dex-card-noart {
   background:
     radial-gradient(70% 55% at 50% 44%, color-mix(in srgb, var(--cc, var(--wisp)) 24%, transparent), transparent 70%),
-    linear-gradient(160deg, #15211f, #0a1110 70%);
+    linear-gradient(160deg, var(--steel-deep), var(--theme-bg) 70%);
 }
 
 .dex-card-screen::after {
@@ -186,7 +186,7 @@
 
 .dex-card-meta {
   padding: 8px 10px;
-  border-top: 1px solid #26221d;
+  border-top: 1px solid var(--void-base);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
 }
 
@@ -260,7 +260,7 @@
 
 .dex-back:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 /* ---------- Encountered-at block ---------- */
@@ -294,7 +294,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--accent-text, #e85d1a);
+  color: var(--accent-text, var(--ember-mid));
   font: inherit;
   font-weight: 600;
   text-decoration: underline;

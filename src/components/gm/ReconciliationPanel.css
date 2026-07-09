@@ -92,5 +92,5 @@
 }
 
 .gm-recon-result-fail {
-  color: var(--color-danger, #ef5350);
+  color: var(--color-danger, var(--peril-light));
 }
