@@ -46,6 +46,8 @@ const EntryListEditor = ({
     const q = query.trim().toLowerCase();
     if (!q) return all;
     return all.filter(({ e }) => display(e).toLowerCase().includes(q));
+    // display depends only on the `nameOf` prop; adding it (a fresh closure each
+    // render) would defeat the memo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, query]);
 

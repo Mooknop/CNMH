@@ -53,6 +53,8 @@ export const useActorMapAutoMatch = () => {
       if (match) additions[entry.foundryActorId] = match.id;
     }
     applyAdditions(additions);
+  // deliberately keyed to combat identity/size only; actorMap and characters are
+  // re-checked at write time by the functional updater (see Safety note above)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encounter?.foundryCombatId, order.length]);
 
@@ -69,6 +71,8 @@ export const useActorMapAutoMatch = () => {
       if (match) additions[entry.actorId] = match.id;
     }
     applyAdditions(additions);
+  // deliberately keyed to roster pushes only; actorMap and characters are
+  // re-checked at write time by the functional updater (see Safety note above)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster]);
 };

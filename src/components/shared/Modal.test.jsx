@@ -39,3 +39,55 @@ describe('Modal', () => {
     expect(screen.getByRole('heading', { name: 'Sheet' })).toBeInTheDocument();
   });
 });
+
+// #1319: shared keyboard/focus behavior — every consumer inherits these.
+describe('Modal accessibility', () => {
+  const { fireEvent } = require('@testing-library/react');
+
+  it('closes on Escape', () => {
+    const onClose = vi.fn();
+    render(<Modal isOpen onClose={onClose} title="Esc">body</Modal>);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('focuses the dialog on open and restores the opener on close', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    const { rerender } = render(<Modal isOpen onClose={() => {}} title="Focus">body</Modal>);
+    expect(document.activeElement).toBe(screen.getByRole('dialog'));
+    rerender(<Modal isOpen={false} onClose={() => {}} title="Focus">body</Modal>);
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it('wraps Tab from the last focusable element back to the first', () => {
+    render(
+      <Modal isOpen onClose={() => {}} title="Trap">
+        <button>first</button>
+        <button>last</button>
+      </Modal>
+    );
+    // The header close button is the first focusable; "last" is the last.
+    screen.getByRole('button', { name: 'last' }).focus();
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' }));
+  });
+
+  it('wraps Shift+Tab from the dialog itself to the last focusable element', () => {
+    render(
+      <Modal isOpen onClose={() => {}} title="Trap">
+        <button>only</button>
+      </Modal>
+    );
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'only' }));
+  });
+
+  it('exposes dialog semantics', () => {
+    render(<Modal isOpen onClose={() => {}} title="Named">body</Modal>);
+    const dialog = screen.getByRole('dialog', { name: 'Named' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+  });
+});

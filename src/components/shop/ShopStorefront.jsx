@@ -729,6 +729,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     if (!isOpen) return;
     setSelectedId(list.length === 1 ? list[0].id : null);
     resetView();
+    // open-only: re-running on `list`/`resetView` identity would wipe the cart mid-browse
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 

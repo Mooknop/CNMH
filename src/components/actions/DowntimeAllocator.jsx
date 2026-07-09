@@ -71,6 +71,7 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
     const alloc = Object.fromEntries(projects.map((p) => [p.id, 0]));
     alloc[furthest.id] = availableToBank;
     setProjectAllocations(alloc);
+    // projectSig is the stable signature of `projects` (a fresh array each render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableToBank, projectSig]);
 

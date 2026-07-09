@@ -51,6 +51,7 @@ export function useTake10(charId = null) {
     const bump = () => setTick((t) => t + 1);
     const unsubs = ids.map((id) => subscribe(id, 'take10alloc', bump));
     return () => unsubs.forEach((u) => u());
+    // idKey is the stable signature of `ids` (a fresh array each render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe]);
 

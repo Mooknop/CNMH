@@ -81,6 +81,7 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
       (best, s) => (optionModifier(s) > optionModifier(best) ? s : best),
       skillOptions[0]
     );
+    // optionModifier derives solely from `character`, which is already a dep
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skillOptions, character, action]);
   const activeSkill = pickedSkill || defaultSkill;

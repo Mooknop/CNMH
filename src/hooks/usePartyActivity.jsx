@@ -27,6 +27,7 @@ export function usePartyActivity(stateType, { youId, deriveStatus, youFirst = tr
     const bump = () => setTick((t) => t + 1);
     const unsubs = roster.map((c) => subscribe(c.id, stateType, bump));
     return () => unsubs.forEach((u) => u());
+    // idKey is the stable signature of `roster` (a fresh array each render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe, stateType]);
 

@@ -29,6 +29,7 @@ export function useDowntimePartyReady(blockDays, startedAt) {
       subscribe(id, 'craftprojects', bump),
     ]);
     return () => unsubs.forEach((u) => u());
+    // idKey is the stable signature of `ids` (a fresh array each render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe]);
 
