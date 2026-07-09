@@ -9,13 +9,23 @@ devices.
 
 | File | Role |
 | --- | --- |
-| `bridge.js` | Entry point. WebSocket lifecycle + incoming-message dispatch. |
+| `bridge.js` | Entry point. WebSocket lifecycle + incoming-message dispatch + roster push. |
 | `encounter.js` | Combat hooks ↔ app encounter/turn tracker. |
-| `characterSync.js` | HP / conditions / hero points sync (both directions). |
-| `movement.js` | Token movement: reachable-square picker + move write-back. |
+| `actorFeed.js` | Active-combatant chat-message feed + per-turn action economy (#472b). |
+| `characterSync.js` | HP / conditions / hero points sync (both directions) + Foundry effect items → app. |
+| `minionSync.js` | Companion/familiar HP + conditions ↔ linked Foundry actors (#362). |
+| `minionActors.js` | Ownership-derived minion→PC links + spawn-token handler (#362). |
+| `summonPool.js` | Summons-folder actor snapshot for the GM's Add-summon modal (#261). |
+| `movement.js` | Token movement: 8-direction step probe + move write-back. |
+| `doors.js` | Door detection near the PC token + open/close interaction. |
 | `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets; off-guard annotation for flanking melee strikes. |
+| `effects.js` | Apply compendium effect items to target actors on app request. |
+| `damageApply.js` | Apply the app damage step's typed totals via PF2e `applyDamage` (#1016). |
+| `saves.js` | Roll enemy saving throws natively for the app's save-request rail (#1275). |
 | `flanking.js` | Pure geometry — `computeFlanking` (no Foundry globals). |
 | `flankingPush.js` | Hooks into token-move / turn-advance to push flanked state to the app. |
+| `adjacency.js` | Pure geometry — `computeAdjacency` (no Foundry globals). |
+| `adjacencyPush.js` | Hooks into token-move / combat lifecycle to push combatant adjacency (#430). |
 | `positions.js` | Hooks into token-move / combat lifecycle to push each combatant's grid cell to the app (range-increment measurement). |
 | `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
 | `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
@@ -34,18 +44,32 @@ from it.
 
 | Key | Direction | charId | Payload |
 | --- | --- | --- | --- |
+| `roster` | bridge → app | `global` | `[{ actorId, name, speed }]` — PC actor roster, pushed on connect and actor create/delete so the app can resolve charId → token before any combat |
+| `rosterreq` | app → bridge | `global` | _(no payload)_ — request a fresh `roster` push (reconnect) |
 | `actormap` | app → bridge | `global` | `{ [foundryActorId]: charId }` |
 | `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` |
 | `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
 | `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative, statistic? }], rollNpcs }` — batch-write PC initiatives (`setMultipleInitiatives`), roll NPCs, then `startCombat` (idempotent; no-op once started) |
 | `initroll` | app → bridge | charId | `{ d20, mod, total, skill, ts }` — a player's setup-phase initiative roll; survives `encounter` overwrites. The bridge tallies these against the PC combatant set and auto-runs `initcommit` once every expected PC has rolled |
+| `actorfeed` | bridge → app | `global` | `{ entryId, actions, spent, reaction, feed:[{ n, cost?, label, detail?, result?, tone?, type, attackRange?, targetActorId?, state }] }` — the active combatant's chat-derived action feed + per-turn economy; clears and re-keys on every turn change (#472b) |
 | `hp` | both | charId | `{ current, max, temp, dying, wounded, doomed }` |
 | `conditions` | bridge → app | charId | `[{ id, value }]` |
 | `heropoints` | both | charId | `number` |
+| `foundryeffects` | bridge → app | charId | `[{ id, effectId, source, fromFoundry: true }]` — the PC's app-modelled Foundry effect items. Full-list replace; bridge-owned, so it never clobbers the app's own `effects` key |
+| `minions` | both | ownerCharId | `{ [role]: { hp: { current, max, temp }, conditions: [{ id, value }], … } }` — combined companion+familiar object per owner. Bridge → app pushes MERGE one role into the cached object (never replace); app → bridge writes each role's HP to its linked Foundry actor (#362) |
+| `minionactors` | bridge → app | `global` | `{ ["<ownerCharId>-<role>"]: { foundryActorId, ownerCharId, role, name, onScene } }` — ownership-derived minion links; bridge-owned snapshot, re-pushed on actor/token changes |
+| `minionactorsreq` | app → bridge | `global` | _(no payload)_ — request a fresh `minionactors` push (reconnect / manual refresh) |
+| `spawnminion` | app → bridge | `global` | `{ ownerCharId, role }` — create the linked minion's token in an open cell adjacent to its owner's token |
+| `summonpool` | bridge → app | `global` | `[{ key, name, level, hp: { max }, defenses, traits, img }]` — actors in the designated Summons folder, re-pushed on any actor/folder change (#261) |
+| `summonpoolreq` | app → bridge | `global` | _(no payload)_ — request a fresh `summonpool` push (Add-summon modal refresh / reconnect) |
 | `movereq` | app → bridge | charId | `{ moveType, ts }` |
-| `moveopts` | bridge → app | charId | `{ origin, reachable[], blocked[], gridSize, maxFeet, reqTs }` |
+| `moveopts` | bridge → app | charId | `{ origin, reachable[], blocked[], gridSize, speed, originOccupied, reqTs }` — `reachable[]` entries `{ col, row, feet, terrain, passThrough? }`; `blocked[]` entries `{ col, row, kind: 'wall'\|'ally'\|'enemy' }`; `speed` = actor land Speed in feet (action accounting); `originOccupied` = token currently shares its cell with an ally, so the move may not END here |
 | `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts }` |
-| `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs }` |
+| `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs, nextOpts }` — `nextOpts` is the `moveopts` payload for the destination cell (same shape), piggybacked so a chained step skips a `movereq`→`moveopts` round-trip (#451); consumed by `useTokenMovement` |
+| `doorreq` | app → bridge | charId | `{ ts }` — request doors near the PC token |
+| `dooropts` | bridge → app | charId | `{ doors: [{ wallId, state, x, y }], reqTs }` — doors within ~1.5 grid squares; secret doors only when already open |
+| `doorinteract` | app → bridge | charId | `{ wallId, op: 'open'\|'close', ts }` — locked doors (ds 2) are ignored |
+| `exploremove` | both | `global` | `boolean` — exploration-movement toggle. App-owned (`usePlayMode`); the bridge force-writes `false` when any door opens (auto-off) |
 | `shieldraise` | app (↔ Foundry mirror TBD) | charId | `{ raised, uid, ts }` — Raise a Shield state |
 | `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set; bridge annotates each target with `offGuard:true` if attacker is a flanker |
 | `applyeffect` | app → bridge | charId | `{ ref, op:'apply', targets:[entryId], source, ts }` — bridge clones the compendium effect item onto each target actor (apply-only; removal is Foundry's own concern) |
@@ -54,13 +78,14 @@ from it.
 | `saveroll` | app → bridge | `global` | `{ id, save, dc, targets:[{ entryId, name }], ts }` — roll each target combatant's saving throw (`fortitude`\|`reflex`\|`will`) natively via PF2e `Statistic#roll` (#1275); `id` is the originating save request's id. Live modifiers apply; the roll lands in Foundry chat as a GM roll |
 | `savedone` | bridge → app | `global` | `{ id, results:[{ entryId, name, d20, total }], failed:[{ entryId, name }], ts }` — ack for `saveroll` (`id` echoes). Degrees are recomputed app-side (`computeSaveDegree`); `failed` targets fall back to the GM's manual d20 entry |
 | `flanked` | bridge → app | `global` | `{ [enemyEntryId]: { byCharIds:[charId,...] } }` — pushed on token-move and turn-advance |
+| `adjacency` | bridge → app | `global` | `{ [entryId]: [adjacentEntryId, …] }` — combatant adjacency map, pushed on token-move / turn-advance / combat start; the app (`useAdjacency`) gates reach-limited actions on it (#430) |
 | `positions` | bridge → app | `global` | `{ gridSize, positions: { [entryId]: { col, row } } }` — each combatant's current grid cell; pushed on token-move and combat lifecycle, empty when no combat. App measures attacker→target distance for ranged range increments (#527) |
 | `positionsreq` | app → bridge | `global` | _(no payload)_ — request a fresh `positions` push (reconnect / resolver open) |
 
 ## Tests
 
 The bridge has its own jest project (it lives outside `src/`, so it does not run
-under the CRA `react-scripts test`):
+under the app's Vitest suite):
 
 ```sh
 npm run test:bridge            # one-shot

@@ -117,14 +117,14 @@ describe('ExplorationMove', () => {
 
   it('shows picker when stage is picking', () => {
     mockMovement.stage = 'picking';
-    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30, originOccupied: false };
     render(<ExplorationMove charId="char-1" />);
     expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();
   });
 
   it('calls confirmMove when a square is selected', () => {
     mockMovement.stage = 'picking';
-    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30, originOccupied: false };
     render(<ExplorationMove charId="char-1" />);
     fireEvent.click(screen.getByRole('button', { name: 'Select Square' }));
     expect(mockMovement.confirmMove).toHaveBeenCalledWith({ x: 100, y: 200 });
@@ -168,7 +168,7 @@ describe('ExplorationMove', () => {
   it('shows Updating overlay and picker while refreshing with opts', () => {
     mockMovement.stage = 'awaiting-opts';
     mockMovement.isRefreshing = true;
-    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30, originOccupied: false };
     render(<ExplorationMove charId="char-1" />);
     expect(screen.getByText(/updating/i)).toBeInTheDocument();
     expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();

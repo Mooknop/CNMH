@@ -2,6 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MoveGridPicker from './MoveGridPicker';
 
+// Shaped like the bridge's cnmh_moveopts payload (movement.js): it carries
+// `speed` + `originOccupied`, never maxFeet — that's a component-only prop
+// (default 25) exercised explicitly in the radius tests below.
 const baseProps = {
   origin: { col: 10, row: 10 },
   reachable: [
@@ -9,7 +12,8 @@ const baseProps = {
     { col: 12, row: 10, feet: 10, terrain: 'difficult' },
   ],
   blocked: [{ col: 10, row: 9 }],
-  maxFeet: 25,
+  speed: 25,
+  originOccupied: false,
 };
 
 describe('MoveGridPicker', () => {
@@ -59,7 +63,8 @@ describe('MoveGridPicker', () => {
         { col: 11, row: 9, kind: 'ally' },
         { col: 9, row: 9, kind: 'enemy' },
       ],
-      maxFeet: 25,
+      speed: 25,
+      originOccupied: false,
     };
     const { container } = render(
       <MoveGridPicker {...props} onSelect={vi.fn()} onCancel={vi.fn()} />
@@ -176,7 +181,8 @@ describe('MoveGridPicker', () => {
         { col: 11, row: 10, feet: 5, terrain: 'normal', passThrough: true },
       ],
       blocked: [],
-      maxFeet: 25,
+      speed: 25,
+      originOccupied: false,
     };
 
     it("renders an ally's square as a clickable pass-through button", () => {
