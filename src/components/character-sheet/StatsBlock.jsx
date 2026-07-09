@@ -17,11 +17,12 @@ import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from 
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
 import { speedModifier } from '../../utils/speed';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities');
   const characterKey = character?.id || 'unknown';
-  const [activeConditions, setActiveConditions] = useLocalStorage(`cnmh_conditions_${characterKey}`, []);
+  const [activeConditions, setActiveConditions] = useLocalStorage(syncKey(RELAY.CONDITIONS, characterKey), []);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
 
   // Synced state stores only the dynamic shape `{ id, value }`; static

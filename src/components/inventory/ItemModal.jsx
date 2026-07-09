@@ -55,6 +55,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds } from '../../utils/gameTime';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import './ItemModal.css';
+import { RELAY, globalKey } from '../../sync/keys';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
   // Hooks must run unconditionally (before the early return).
@@ -89,7 +90,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Whetstone application (#1213) needs the encounter for round-ticked expiry
   // and an apply-time choice pick (Morph Jewel's damage type). Raw key read —
   // the modal only checks active/round/order, no need for the full hook.
-  const [encounter] = useSyncedState('cnmh_encounter_global', null);
+  const [encounter] = useSyncedState(globalKey(RELAY.ENCOUNTER), null);
   const [whetstonePick, setWhetstonePick] = useState(null);
   const { appendEvent } = useSessionLog();
   // Player-to-player item transfer (#656/#657) — out of combat only.

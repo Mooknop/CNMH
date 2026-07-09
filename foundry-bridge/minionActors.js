@@ -20,6 +20,7 @@ import {
   findOpenAdjacentCell,
   createTokenForActor,
 } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;  // injected by bridge.js on init
 
@@ -32,7 +33,7 @@ export function pushMinionActors() {
   for (const link of links) {
     map[linkKey(link.ownerCharId, link.role)] = link;
   }
-  _sendUpdate?.('global', 'minionactors', map);
+  _sendUpdate?.('global', RELAY.MINIONACTORS, map);
 }
 
 export function initMinionActors(sendUpdateFn) {

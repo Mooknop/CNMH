@@ -44,6 +44,7 @@ import { isSpellgun } from '../utils/spellgun';
 import { isDragonbreath } from '../utils/dragonbreath';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
+import { RELAY, syncKey } from '../sync/keys';
 
 const RAIL_TABS = [
   { id: 'stats',     icon: 'ti-chart-dots', label: 'Stats'     },
@@ -117,7 +118,7 @@ const CharacterSheet = () => {
   // synced key. We read it here — without touching useCharacter — so the
   // masthead can show conditions "always in view". hydrateConditions re-derives
   // the display fields (name, value, …) from the stored { id, value } shape.
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
   const hydratedConditions = useMemo(
     () => hydrateConditions(activeConditions),
     [activeConditions]

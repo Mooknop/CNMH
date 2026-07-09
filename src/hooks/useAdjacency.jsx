@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useEncounter } from './useEncounter';
+import { RELAY, globalKey } from '../sync/keys';
 
 // Command Sheet reach gate (#430). Reads the bridge adjacency relay
-// (`cnmh_adjacency_global` = { [entryId]: [adjacentEntryId, …] }, keyed by the
+// (globalKey(RELAY.ADJACENCY) = { [entryId]: [adjacentEntryId, …] }, keyed by the
 // Foundry combatant id, which equals the app order entryId) and answers "is the
 // viewer's token adjacent to <entryId>?" for reach-limited support actions.
 //
@@ -11,7 +12,7 @@ import { useEncounter } from './useEncounter';
 // map) or the viewer has no order entry, `inReach` returns true — we never
 // hard-disable an action on absent/stale position data.
 export const useAdjacency = (charId) => {
-  const [map] = useSyncedState('cnmh_adjacency_global', {});
+  const [map] = useSyncedState(globalKey(RELAY.ADJACENCY), {});
   const { encounter } = useEncounter();
 
   const hasData = !!map && Object.keys(map).length > 0;

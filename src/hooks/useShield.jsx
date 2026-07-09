@@ -4,6 +4,7 @@ import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -27,7 +28,7 @@ const IDLE_RAISE = { raised: false, uid: null, ts: 0 };
  */
 export const useShield = (charId, inventory = []) => {
   const [raiseState, setRaiseState] = useSyncedState(
-    `cnmh_shieldraise_${charId || 'none'}`,
+    syncKey(RELAY.SHIELDRAISE, charId || 'none'),
     IDLE_RAISE
   );
 

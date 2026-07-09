@@ -1,4 +1,5 @@
 import { useSyncedState } from './useSyncedState';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Manages the Fatigued condition in the character's conditions key on behalf of
 // the downtime commit flow. Applying Fatigued is idempotent; clearing it removes
@@ -6,7 +7,7 @@ import { useSyncedState } from './useSyncedState';
 // rest day (no night block) clears the condition outright.
 export function useDowntimeFatigue(charId) {
   const [conditions, setConditions] = useSyncedState(
-    `cnmh_conditions_${charId || 'none'}`,
+    syncKey(RELAY.CONDITIONS, charId || 'none'),
     []
   );
 

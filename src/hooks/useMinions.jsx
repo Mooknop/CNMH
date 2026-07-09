@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Allied-minion live state (#261) — companion/familiar HP and conditions that the
 // owner sheet, the GM HP-adjust modal, and the encounter share. Synced so the GM
@@ -15,7 +16,7 @@ const EMPTY_CONDITIONS = [];
 
 export const useMinions = (ownerId) => {
   const [minions, setMinions] = useSyncedState(
-    `cnmh_minions_${ownerId || 'none'}`,
+    syncKey(RELAY.MINIONS, ownerId || 'none'),
     EMPTY_MINIONS
   );
 

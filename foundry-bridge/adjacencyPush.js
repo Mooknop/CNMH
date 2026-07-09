@@ -14,6 +14,7 @@
 
 import { getCombatTokenMap, getGridSize } from './pf2eAdapter.js';
 import { computeAdjacency } from './adjacency.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 let _latest = {};
@@ -39,11 +40,11 @@ export function pushAdjacencyState() {
   const combatMap = getCombatTokenMap(); // [{ combatantId, actorId, token }]
   if (!combatMap.length) {
     _latest = {};
-    _sendUpdate('global', 'adjacency', {});
+    _sendUpdate('global', RELAY.ADJACENCY, {});
     return;
   }
 
   const result = computeAdjacency(combatMap, getGridSize());
   _latest = result;
-  _sendUpdate('global', 'adjacency', result);
+  _sendUpdate('global', RELAY.ADJACENCY, result);
 }

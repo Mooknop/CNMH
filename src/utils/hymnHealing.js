@@ -1,3 +1,4 @@
+import { RELAY, syncKey } from '../sync/keys';
 // Hymn of Healing (#226, Slice A) — pure helpers + React-free apply functions
 // shared by the cast modal, the Sustain prompt, and the turn-start fast-healing
 // tick.
@@ -63,10 +64,10 @@ export const hymnFastHealingFor = (sustains, targetId) =>
  * @returns the new temp-HP total.
  */
 export function applyHymnTempHp({ getState, sendUpdate, target, amount }) {
-  const hp = getState(target.id, 'hp') || seedHp(target.maxHp);
+  const hp = getState(target.id, RELAY.HP) || seedHp(target.maxHp);
   const next = grantTempHp(hp, amount);
-  writeLocal(`cnmh_hp_${target.id}`, next);
-  sendUpdate(target.id, 'hp', next);
+  writeLocal(syncKey(RELAY.HP, target.id), next);
+  sendUpdate(target.id, RELAY.HP, next);
   return next.temp;
 }
 
@@ -75,10 +76,10 @@ export function applyHymnTempHp({ getState, sendUpdate, target, amount }) {
  * @returns the amount actually healed (0 when already full / no HP tracked).
  */
 export function applyHymnFastHealing({ getState, sendUpdate, target, amount }) {
-  const hp = getState(target.id, 'hp') || seedHp(target.maxHp);
+  const hp = getState(target.id, RELAY.HP) || seedHp(target.maxHp);
   const { hp: next, healed } = healHp(hp, amount);
   if (healed <= 0) return 0;
-  writeLocal(`cnmh_hp_${target.id}`, next);
-  sendUpdate(target.id, 'hp', next);
+  writeLocal(syncKey(RELAY.HP, target.id), next);
+  sendUpdate(target.id, RELAY.HP, next);
   return healed;
 }

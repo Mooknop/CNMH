@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { minionTurnId } from '../utils/minionUtils';
+import { RELAY, globalKey } from '../sync/keys';
 
 // Minion ↔ Foundry actor links (#362). The Foundry bridge derives which
 // companion/familiar actor belongs to which PC (by shared ownership) and pushes a
@@ -14,8 +15,8 @@ import { minionTurnId } from '../utils/minionUtils';
 const EMPTY_LINKS = {};
 
 export const useMinionActors = () => {
-  const [links] = useSyncedState('cnmh_minionactors_global', EMPTY_LINKS);
-  const [, setSpawnReq] = useSyncedState('cnmh_spawnminion_global', null);
+  const [links] = useSyncedState(globalKey(RELAY.MINIONACTORS), EMPTY_LINKS);
+  const [, setSpawnReq] = useSyncedState(globalKey(RELAY.SPAWNMINION), null);
 
   // The link for a given owner/role, or null when the minion isn't linked to a
   // Foundry actor (e.g. no matching actor / ownership in Foundry yet).

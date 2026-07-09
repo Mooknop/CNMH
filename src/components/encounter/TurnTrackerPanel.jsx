@@ -15,6 +15,7 @@ import { readiedExpireLog } from '../../utils/readiedAction';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
+import { RELAY } from '../../sync/keys';
 
 // Residual turn panel (#411, #415): initiative order, round/status, action pips,
 // MAP, reaction and End Turn live in the Command Sheet (InitiativeStrip + ActionDial);
@@ -173,7 +174,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     // PF2e's aura engine refreshes the buff and re-evaluates which allies are
     // currently in range. No-op when the bridge isn't carrying the aura.
     if (s.foundryAura?.ref) {
-      sendUpdate(charId, 'applyeffect', {
+      sendUpdate(charId, RELAY.APPLYEFFECT, {
         ref:     s.foundryAura.ref,
         op:      'apply',
         targets: [s.foundryAura.casterEntryId].filter(Boolean),

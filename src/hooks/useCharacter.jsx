@@ -59,6 +59,7 @@ import {
 import { canActivateSpellItem } from '../utils/traditionAccess';
 
 import { calculateItemsBulk } from '../utils/InventoryUtils';
+import { RELAY, syncKey } from '../sync/keys';
 
 /**
  * Data layer hook for a single character.
@@ -85,10 +86,10 @@ export const useCharacter = (character) => {
   // Shield attachments (#1165 Track 2): attachmentUid -> hostShieldUid overlay.
   const [attached]    = useSyncedState(`cnmh_attached_${character?.id || 'none'}`, {});
   const [hp, setHp]   = useSyncedState(
-    `cnmh_hp_${character?.id || 'none'}`,
+    syncKey(RELAY.HP, character?.id || 'none'),
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
   );
-  const [heroPoints, setHeroPoints] = useSyncedState(`cnmh_heropoints_${character?.id || 'none'}`, 0);
+  const [heroPoints, setHeroPoints] = useSyncedState(syncKey(RELAY.HEROPOINTS, character?.id || 'none'), 0);
   // Staff preparation (#957 S6a) — the single staff prepared today and its
   // charge count for the day. null ⇒ no staff prepared (so any held staff has 0
   // charges). Read-only here; DailyPrepModal / performDailyPrep is the writer.
@@ -118,7 +119,7 @@ export const useCharacter = (character) => {
   // Active conditions ({ id, value } entries, cnmh_conditions_) — read-only
   // here; StatsBlock's condition tracker is the sole writer. Feeds the Speed
   // spine (SP1, #1220) so the derived total reflects Encumbered et al.
-  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  const [activeConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, character?.id || 'none'), []);
   // Bulk-derived encumbrance auto-toggle (SP3, #1222) — default ON: carrying
   // over the encumbered threshold derives Encumbered + Clumsy 1. GM/player can
   // suppress it (containers, mounts and party hauling make raw Bulk math wrong

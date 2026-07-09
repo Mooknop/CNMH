@@ -16,6 +16,7 @@ import { useChambers } from '../../../hooks/useChambers';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
 import { suggestNow } from './suggestNow';
 import './ActionGrid.css';
+import { RELAY, syncKey } from '../../../sync/keys';
 
 const CAT_LABEL = {
   all: 'All',
@@ -42,7 +43,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
   // Chamber overlay drives the Reload tile gating (#675) — read-only here, the
   // ReloadSheet (via useChambers) is the writer.
   const { chambers } = useChambers(character.id);
-  const [hp] = useSyncedState(`cnmh_hp_${character.id}`, null);
+  const [hp] = useSyncedState(syncKey(RELAY.HP, character.id), null);
   const hasFocus = !!focusEnemy;
   const allyFocused = !!focusAlly;
   // A focused ally out of reach hard-disables ally-support tiles (#430). No relay

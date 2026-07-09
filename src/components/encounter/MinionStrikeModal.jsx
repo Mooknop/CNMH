@@ -15,6 +15,7 @@ import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncr
 import { preyMatches } from '../../utils/huntPrey';
 import { minionStrikeAttackMod, minionStrikeDamage, minionTurnId } from '../../utils/minionUtils';
 import './MinionStrikeModal.css';
+import { RELAY, globalKey } from '../../sync/keys';
 
 // Degree → log label for an AC attack (mirrors TargetRollResolver's AC labels).
 const DEGREE_LABELS_AC = {
@@ -59,13 +60,13 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
   // don't, so they never reach this strike modal). Surface it as an off-guard
   // cue — like the PC flanked badge, it's informational; the GM applies the −2 in
   // Foundry. The action-economy epic (#391) is where this could feed roll math.
-  const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
+  const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
 
   // Hunt Prey inheritance (#408): a ranged companion Strike against the owner's
   // designated prey ignores the second-range-increment penalty, just like the
   // owner's own ranged Strikes. Resolve the companion's own combatant cell via
   // its linked Foundry actor, then measure against the target.
-  const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const [positionsState] = useSyncedState(globalKey(RELAY.POSITIONS), null);
   const { prey } = useHuntPrey(ownerId);
   const { linkFor } = useMinionActors();
   const companionLink = linkFor(ownerId, role);

@@ -22,6 +22,7 @@ import {
   getActorById, getActorId, getHp, updateActorHp, getMinionActorLinks,
   getConditions, isConditionItem, getConditionItemActor,
 } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 
@@ -77,7 +78,7 @@ function mergeAndPushRole(ownerCharId, role, patch) {
     [role]: { ...(prev[role] || {}), ...patch },
   };
   cacheMinions(ownerCharId, merged);
-  _sendUpdate?.(ownerCharId, 'minions', merged);
+  _sendUpdate?.(ownerCharId, RELAY.MINIONS, merged);
 }
 
 // Resolve a Foundry actor to its minion link, or null when it isn't a linked minion.

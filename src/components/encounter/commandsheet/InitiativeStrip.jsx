@@ -18,10 +18,11 @@ import PlayingChip from '../PlayingChip';
 import HuntPreyBadge from '../HuntPreyBadge';
 import EnemyConditionBadge from '../EnemyConditionBadge';
 import './InitiativeStrip.css';
+import { RELAY, globalKey } from '../../../sync/keys';
 
 const InitiativeStrip = ({ charId }) => {
   const { encounter } = useEncounter();
-  const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
+  const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
   const { focusId, toggleFocus } = useFocusTarget(charId);
 
   if (!encounter || encounter.phase === 'idle') return null;

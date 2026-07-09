@@ -4,6 +4,7 @@
 
 import { newEntryUid } from './uid';
 import { removeInstance } from './persistentDamage';
+import { RELAY, syncKey } from '../sync/keys';
 
 // PF2e Treat Wounds DC table.
 // requiredRank: minimum Medicine proficiency rank to unlock this DC.
@@ -57,7 +58,7 @@ const writeLocal = (key, value) => {
  * Applies a Treat Wounds / Battle Medicine resolution to the target.
  * React-free — accepts hooks' return values as plain arguments.
  *
- * HP writes go through sendUpdate(targetId, 'hp', value) so the Foundry bridge
+ * HP writes go through sendUpdate(targetId, RELAY.HP, value) so the Foundry bridge
  * picks them up via characterSync.js and writes system.attributes.hp back onto
  * the linked Foundry actor (bridge.js key === 'hp' route).
  *
@@ -103,7 +104,7 @@ export function applyTreatWounds({
     wounded: 0,
     doomed:  0,
   };
-  const currentHp = getState(target.id, 'hp') || seedHp;
+  const currentHp = getState(target.id, RELAY.HP) || seedHp;
 
   let newHp;
   let logText;
@@ -120,8 +121,8 @@ export function applyTreatWounds({
     logText = `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${label} — healed ${amount}`;
   }
 
-  writeLocal(`cnmh_hp_${target.id}`, newHp);
-  sendUpdate(target.id, 'hp', newHp);
+  writeLocal(syncKey(RELAY.HP, target.id), newHp);
+  sendUpdate(target.id, RELAY.HP, newHp);
 
   appendLog({ type: 'action', charId: healer.id, text: logText });
 

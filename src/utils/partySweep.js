@@ -11,6 +11,7 @@
 // Only writes state that's actually dirty, so the log summary stays meaningful.
 import { defaultTurnState } from '../hooks/useTurnState';
 import { isEncounterScopedEffect } from './EffectUtils';
+import { RELAY } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -28,7 +29,7 @@ function computeCombatResets(character, getState) {
     resets.push({ type: 'turnstate', value: defaultTurnState(), label: 'turn economy' });
   }
 
-  const shield = getState(id, 'shieldraise');
+  const shield = getState(id, RELAY.SHIELDRAISE);
   if (shield?.raised) {
     resets.push({ type: 'shieldraise', value: { raised: false, ts: 0 }, label: 'raised shield' });
   }

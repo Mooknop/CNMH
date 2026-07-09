@@ -42,6 +42,10 @@ Request/response pairs correlate via an echoed `ts` / `reqTs` (or `reqId`).
 **Keep this table in sync when adding a channel** — the app and bridge both read
 from it.
 
+The channel tokens are defined in code in [`syncKeys.js`](./syncKeys.js)
+(`RELAY.*`), which the app consumes via `src/sync/keys.js` — when adding a
+channel, add its token there too so neither side hand-writes the string.
+
 | Key | Direction | charId | Payload |
 | --- | --- | --- | --- |
 | `roster` | bridge → app | `global` | `[{ actorId, name, speed }]` — PC actor roster, pushed on connect and actor create/delete so the app can resolve charId → token before any combat |

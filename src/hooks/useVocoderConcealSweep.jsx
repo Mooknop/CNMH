@@ -5,6 +5,7 @@ import { usePlaying } from './usePlaying';
 import { useGmAuth } from './useGmAuth';
 import { useSessionLog } from './useSessionLog';
 import { hasVocoder, withVocoderConcealed, withoutVocoderConcealed } from '../utils/vocoderConceal';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Vocoder of Invisibility → Concealed while playing (#935). Watches the
 // character's playing flag + live inventory and writes the real `concealed`
@@ -23,7 +24,7 @@ export function useVocoderConcealSweep(character) {
   const name = character?.name || charId;
   const charData = useCharacter(character);
   const { playing } = usePlaying(charId);
-  const [conditions, setConditions] = useSyncedState(`cnmh_conditions_${charId}`, []);
+  const [conditions, setConditions] = useSyncedState(syncKey(RELAY.CONDITIONS, charId), []);
   const { isGm } = useGmAuth();
   const { appendEvent } = useSessionLog();
 

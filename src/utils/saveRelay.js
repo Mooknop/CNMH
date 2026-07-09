@@ -1,3 +1,4 @@
+import { RELAY, globalKey } from '../sync/keys';
 // Enemy save-roll relay to Foundry (#1275, AA4 of epic #1098). The GM's
 // RequestedSaves panel pushes a pending save request's targets to the bridge
 // (cnmh_saveroll_global); the bridge rolls each combatant's saving throw via
@@ -12,8 +13,8 @@
 // and stay on the GM's manual d20 entry — offline/sandbox mode (#553) degrades
 // to today's flow (nothing answers, inputs stay editable).
 
-export const SAVEROLL_KEY = 'cnmh_saveroll_global';
-export const SAVEDONE_KEY = 'cnmh_savedone_global';
+export const SAVEROLL_KEY = globalKey(RELAY.SAVEROLL);
+export const SAVEDONE_KEY = globalKey(RELAY.SAVEDONE);
 
 // savedone is a persisted synced key, so a fresh mount hydrates with the LAST
 // ack ever sent. Only acks stamped within this window count as live — same

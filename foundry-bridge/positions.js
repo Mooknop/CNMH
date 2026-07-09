@@ -10,6 +10,7 @@
 // token move + combat hooks; emits empty positions when no combat is running.
 
 import { getCombatTokenMap, getTokenGridPosition, getGridSize } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
 let _latest = { gridSize: 0, positions: {} };
@@ -38,7 +39,7 @@ export function pushPositions() {
   const combatMap = getCombatTokenMap(); // [{ combatantId, actorId, token }]
   if (!combatMap.length) {
     _latest = { gridSize: 0, positions: {} };
-    _sendUpdate('global', 'positions', _latest);
+    _sendUpdate('global', RELAY.POSITIONS, _latest);
     return;
   }
 
@@ -50,5 +51,5 @@ export function pushPositions() {
   }
 
   _latest = { gridSize, positions };
-  _sendUpdate('global', 'positions', _latest);
+  _sendUpdate('global', RELAY.POSITIONS, _latest);
 }

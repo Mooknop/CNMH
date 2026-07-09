@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Per-player initiative-roll channel for the Foundry-linked initiative flow (#494,
 // Slice 2). cnmh_initroll_<charId> = { d20, mod, total, skill, ts }.
@@ -16,7 +17,7 @@ import { useSyncedState } from './useSyncedState';
 // numbers in.
 
 export const useInitiativeRoll = (charId) => {
-  const [roll, setRoll] = useSyncedState(`cnmh_initroll_${charId || 'none'}`, null);
+  const [roll, setRoll] = useSyncedState(syncKey(RELAY.INITROLL, charId || 'none'), null);
 
   const submit = useCallback(
     ({ d20, mod, total, skill }) =>

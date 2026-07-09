@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useContent } from '../contexts/ContentContext';
 import { useEncounter } from './useEncounter';
 import { useSyncedState } from './useSyncedState';
+import { RELAY, globalKey } from '../sync/keys';
 
 // Auto-match Foundry actors to CNMH characters by exact name and write to
 // cnmh_actormap_global. Runs on every connected client (mounted at app root via
@@ -19,7 +20,7 @@ import { useSyncedState } from './useSyncedState';
 export const useActorMapAutoMatch = () => {
   const { characters } = useContent();
   const { encounter, actorMap, setActorMap } = useEncounter();
-  const [roster] = useSyncedState('cnmh_roster_global', []);
+  const [roster] = useSyncedState(globalKey(RELAY.ROSTER), []);
   const order = encounter?.order || [];
 
   const applyAdditions = (additions) => {

@@ -2,6 +2,7 @@ import { useEncounter } from './useEncounter';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { usePlayModeOverride } from '../contexts/PlayModeOverrideContext';
+import { RELAY, globalKey } from '../sync/keys';
 
 // Derives the effective play mode from Foundry combat state + the GM-set
 // non-combat mode. Encounter always wins when combat is active.
@@ -30,7 +31,7 @@ export function usePlayMode() {
   const { connected, foundryConnected } = useSession();
   const { localMode, setLocalMode } = usePlayModeOverride();
   const [gmMode, setGmMode] = useSyncedState('cnmh_playmode_global', 'exploration');
-  const [moveEnabled, setMoveEnabled] = useSyncedState('cnmh_exploremove_global', false);
+  const [moveEnabled, setMoveEnabled] = useSyncedState(globalKey(RELAY.EXPLOREMOVE), false);
   const [moveOverride, setMoveOverride] = useSyncedState('cnmh_exploreoverride_global', false);
 
   const sandbox = connected && !foundryConnected;

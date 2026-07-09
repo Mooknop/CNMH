@@ -25,6 +25,7 @@ import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPoo
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
 import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
+import { RELAY } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -93,7 +94,7 @@ Hooks.once('ready', () => {
 function pushRoster() {
   const actors = getPlayerActors();
   const roster = actors.map((a) => ({ actorId: getActorId(a), name: a.name, speed: getSpeed(a) }));
-  sendUpdate('global', 'roster', roster);
+  sendUpdate('global', RELAY.ROSTER, roster);
 }
 
 Hooks.on('createActor', (actor) => { if (actor.hasPlayerOwner) pushRoster(); });
@@ -189,25 +190,25 @@ function dispatch(msg) {
   if (!characterId || !key) return;
 
   // App requests a fresh roster (e.g. after reconnect).
-  if (characterId === 'global' && key === 'rosterreq') {
+  if (characterId === 'global' && key === RELAY.ROSTERREQ) {
     pushRoster();
     return;
   }
 
   // App requests a fresh summon pool (Add-summon modal refresh / reconnect).
-  if (characterId === 'global' && key === 'summonpoolreq') {
+  if (characterId === 'global' && key === RELAY.SUMMONPOOLREQ) {
     handleSummonPoolReq();
     return;
   }
 
   // App requests fresh combatant positions (range-increment resolver / reconnect).
-  if (characterId === 'global' && key === 'positionsreq') {
+  if (characterId === 'global' && key === RELAY.POSITIONSREQ) {
     pushPositions();
     return;
   }
 
   // Actor map updated by GM in GmEncounter → refresh bridge-side resolution.
-  if (characterId === 'global' && key === 'actormap') {
+  if (characterId === 'global' && key === RELAY.ACTORMAP) {
     updateActorMap(value);
     pushFlankedState();  // PC set changed — re-evaluate immediately
     pushMinionActors();  // minion→PC links resolve through the actor map
@@ -215,88 +216,88 @@ function dispatch(msg) {
   }
 
   // App requests a fresh minion-actor link map (reconnect / refresh).
-  if (characterId === 'global' && key === 'minionactorsreq') {
+  if (characterId === 'global' && key === RELAY.MINIONACTORSREQ) {
     handleMinionActorsReq();
     return;
   }
 
   // App asked to spawn a linked minion's token on the active scene.
-  if (characterId === 'global' && key === 'spawnminion') {
+  if (characterId === 'global' && key === RELAY.SPAWNMINION) {
     handleSpawnMinion(value);
     return;
   }
 
   // Encounter turn command from app → drive Foundry combat.
-  if (characterId === 'global' && key === 'turncmd') {
+  if (characterId === 'global' && key === RELAY.TURNCMD) {
     handleTurnCommand(value);
     return;
   }
 
   // Initiative commit from app → write inits, roll NPCs, start Foundry combat (#495).
-  if (characterId === 'global' && key === 'initcommit') {
+  if (characterId === 'global' && key === RELAY.INITCOMMIT) {
     handleInitCommit(value);
     return;
   }
 
   // Player setup-phase initiative roll → tally; auto-commits when all PCs are in (#497).
-  if (key === 'initroll') {
+  if (key === RELAY.INITROLL) {
     handleInitRoll(characterId, value);
     return;
   }
 
   // Movement requests.
-  if (key === 'movereq') {
+  if (key === RELAY.MOVEREQ) {
     handleMoveRequest(characterId, value);
     return;
   }
-  if (key === 'moveconfirm') {
+  if (key === RELAY.MOVECONFIRM) {
     handleMoveConfirm(characterId, value);
     return;
   }
 
   // Door detection / interaction.
-  if (key === 'doorreq') {
+  if (key === RELAY.DOORREQ) {
     handleDoorRequest(characterId, value);
     return;
   }
-  if (key === 'doorinteract') {
+  if (key === RELAY.DOORINTERACT) {
     handleDoorInteract(characterId, value);
     return;
   }
 
   // HP / hero points write-back from app → Foundry actor.
-  if (key === 'hp' || key === 'heropoints') {
+  if (key === RELAY.HP || key === RELAY.HEROPOINTS) {
     handleCharacterUpdate(characterId, key, value);
     return;
   }
 
   // Minion (companion/familiar) HP write-back from app → linked Foundry actor(s).
-  if (key === 'minions') {
+  if (key === RELAY.MINIONS) {
     handleMinionsUpdate(characterId, value);
     return;
   }
 
   // Action targeting from app → set Foundry's user target set.
-  if (key === 'action') {
+  if (key === RELAY.ACTION) {
     handleAction(characterId, value);
     return;
   }
 
   // Foundry effect application from app → clone effect item onto target actors.
-  if (key === 'applyeffect') {
+  if (key === RELAY.APPLYEFFECT) {
     handleApplyEffect(characterId, value);
     return;
   }
 
   // Typed damage from the app's damage step → PF2e applyDamage (IWR nets there).
-  if (characterId === 'global' && key === 'dmgapply') {
+  if (characterId === 'global' && key === RELAY.DMGAPPLY) {
     handleDamageApply(value);
     return;
   }
 
   // Enemy saving throws for the app's save-request rail (#1275) — rolled
   // natively so the actor's live modifiers apply; acked on cnmh_savedone_global.
-  if (characterId === 'global' && key === 'saveroll') {
+  if (characterId === 'global' && key === RELAY.SAVEROLL) {
     handleSaveRoll(value);
     return;
   }

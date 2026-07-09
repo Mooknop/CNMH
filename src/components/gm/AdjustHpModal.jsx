@@ -12,6 +12,7 @@ import { DAMAGE_TYPES } from '../../utils/damage';
 import { clearsOnDamageType, isImmuneTo, resistanceFor, weaknessFor } from '../../utils/EffectUtils';
 import PF2E_EFFECTS from '../../data/pf2eEffects';
 import './AdjustHpModal.css';
+import { RELAY, syncKey } from '../../sync/keys';
 
 const EMPTY_HP = { current: 0, max: 0, temp: 0, dying: 0, wounded: 0, doomed: 0 };
 
@@ -46,7 +47,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   // only the one matching the current selection is read/written.
   const charId = sel?.kind === 'char' ? sel.id : 'none';
   const [charHp, setCharHp] = useSyncedState(
-    `cnmh_hp_${charId}`,
+    syncKey(RELAY.HP, charId),
     () => ({ ...EMPTY_HP }),
   );
   const [charEffects, setCharEffects] = useSyncedState(`cnmh_effects_${charId}`, () => []);
