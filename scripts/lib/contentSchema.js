@@ -53,6 +53,9 @@ const COLLECTION_SPECS = {
     description: opt('string'), price: opt('number'), weight: opt('number'),
     // strikeUtils tolerates both the array and single-object strike shapes.
     traits: opt('array'), strikes: opt(['array', 'object']),
+    // Durability (#540): material drives the GM Core stats table; an authored
+    // durability block overrides it (see src/utils/itemDurability.js).
+    material: opt('string'), durability: opt('object'),
   },
   spell: {
     id: req('string'), name: req('string'), level: req('number'),
