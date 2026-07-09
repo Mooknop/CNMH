@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { validateSnapshot } = require('./lib/contentSchema.js');
 
 const DEFAULT_BASE = 'https://cnmh.mooknop.workers.dev';
 const COLLECTION_KEYS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme'];
@@ -58,6 +59,17 @@ const outDir = path.join(__dirname, '..', 'src', 'data', 'snapshot');
       );
       process.exit(1);
     }
+  }
+
+  // Schema gate (#1314): a malformed doc in the live DO must not land in the
+  // committed seed. CNMH_SNAPSHOT_NO_VALIDATE=1 skips it (disaster recovery —
+  // e.g. pulling a broken state on purpose to inspect it).
+  const problems = validateSnapshot(snapshot);
+  if (problems.length && process.env.CNMH_SNAPSHOT_NO_VALIDATE !== '1') {
+    console.error(`  ✗ Schema validation failed (${problems.length} problem${problems.length === 1 ? '' : 's'}):`);
+    for (const p of problems) console.error(`      ${p}`);
+    console.error('    Fix the docs in the live DO (GM editors), or rerun with CNMH_SNAPSHOT_NO_VALIDATE=1.');
+    process.exit(1);
   }
 
   // Build output with a stable key order, and within each collection sort docs
