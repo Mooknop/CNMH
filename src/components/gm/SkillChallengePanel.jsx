@@ -4,15 +4,9 @@ import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { aggregateVp, skillLabel } from '../../utils/victoryPoints';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './SkillChallengePanel.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 // Hooks must be called at component top level — one ChallengeRow per
 // target so each can subscribe to its own cnmh_vpresult key (same

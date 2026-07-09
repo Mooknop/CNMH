@@ -13,15 +13,9 @@ import {
   EARN_INCOME_EMPLOYERS,
   employerById,
 } from '../../data/earnIncomeEmployers';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './EarnIncomeResolver.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
-
-const DEGREE_LABEL = {
-  criticalSuccess: 'Critical Success',
-  success: 'Success',
-  failure: 'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const RANK_LABEL = { 0: 'Untrained', 1: 'Trained', 2: 'Expert', 3: 'Master', 4: 'Legendary' };
 
@@ -234,7 +228,7 @@ const EarnIncomeResolver = ({ character }) => {
 
           {canResolve && (
             <div className={`eir-preview eir-preview--${degree}`} role="status">
-              <span className="eir-degree">{DEGREE_LABEL[degree]}</span>
+              <span className="eir-degree">{DEGREE_LABELS[degree]}</span>
               <span className="eir-payout">
                 {degree === 'criticalFailure'
                   ? 'No income'

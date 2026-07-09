@@ -7,14 +7,8 @@ import { moveRuneDc, moveRuneCost, weaponMovableRunes, MOVE_RUNE_HOURS } from '.
 import {
   propertySlotCapacity, freePropertySlots, usedPropertySlots, weaponPropertyRunes,
 } from '../../utils/weaponRunes';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './MoveRunePanel.css';
-
-const DEGREE_LABEL = {
-  criticalSuccess: 'Critical Success',
-  success: 'Success',
-  failure: 'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 // Move a rune (#803) — a 1-hour Crafting activity that relocates a property rune
 // between a weapon and a runestone. Pick what to move (a rune on a weapon, or a
@@ -228,7 +222,7 @@ const MoveRunePanel = ({ character }) => {
 
       {result && (
         <div className={`mr-result mr-result--${result.degree}`} role="status">
-          <span className="mr-result-degree">{DEGREE_LABEL[result.degree]}</span>
+          <span className="mr-result-degree">{DEGREE_LABELS[result.degree]}</span>
           <span className="mr-result-note">{resultNote(result)}</span>
         </div>
       )}

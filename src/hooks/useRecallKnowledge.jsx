@@ -5,16 +5,10 @@ import {
   defaultRecord,
   applyRecallKnowledge,
 } from '../utils/recallKnowledge';
+import { DEGREE_LABELS } from '../utils/degreeDisplay';
 import { APP, globalKey } from '../sync/keys';
 
 const KNOWLEDGE_KEY = globalKey(APP.KNOWLEDGE);
-
-const degreeLabel = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 export const useRecallKnowledge = () => {
   const [knowledge, setKnowledge] = useSyncedState(KNOWLEDGE_KEY, {});
@@ -62,7 +56,7 @@ export const useRecallKnowledge = () => {
 
       appendLog({
         type: 'system',
-        text: `${byName} recalled knowledge (${skill}): ${degreeLabel[degree] || degree} — ${learnedStr}`,
+        text: `${byName} recalled knowledge (${skill}): ${DEGREE_LABELS[degree] || degree} — ${learnedStr}`,
       });
     },
     [setKnowledge, appendLog]

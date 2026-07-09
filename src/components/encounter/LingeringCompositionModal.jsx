@@ -12,15 +12,9 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { lingeringResult } from '../../utils/lingering';
 import { markPlayingOnCast } from '../../utils/playing';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './LingeringCompositionModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
 

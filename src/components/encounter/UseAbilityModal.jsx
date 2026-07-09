@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver, { DEGREE_LABELS_SAVE } from './TargetRollResolver';
+import { DEGREE_LABELS, ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
 import OpposedReactionResolver from './OpposedReactionResolver';
 import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
@@ -1045,9 +1046,7 @@ const UseAbilityModal = ({
 
     if (rayGroups.length) {
       const defLabel = DEFENSE_LABELS[effectiveDefense] || effectiveDefense;
-      const degreeMap = effectiveDefense === 'ac'
-        ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
-        : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
+      const degreeMap = effectiveDefense === 'ac' ? ATTACK_DEGREE_LABELS : DEGREE_LABELS;
       rayGroups.forEach((g) => {
         const rayPrefix = g.rayIndex != null ? ` — ray ${g.rayIndex + 1}` : '';
         g.results.forEach((r) => {
@@ -1080,7 +1079,7 @@ const UseAbilityModal = ({
         const strikeNum = chainResults.mode === 'flurry' ? ` (${rollIdx + 1})` : '';
         rollSet.forEach((r) => {
           const degreeLabel = r.degree
-            ? ({ criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }[r.degree] || r.degree)
+            ? (ATTACK_DEGREE_LABELS[r.degree] || r.degree)
             : null;
           const dmgText = r.damage?.final != null
             ? ` · damage ${formatDamageBreakdown(r.damage)}`
@@ -1362,9 +1361,7 @@ const UseAbilityModal = ({
       if (chainResults.rollResults) {
         // Attack-roll chains read as hits/misses; everything else keeps
         // success/failure wording.
-        const chainDegreeMap = chainResults.rollProfile?.defense === 'ac'
-          ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
-          : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
+        const chainDegreeMap = chainResults.rollProfile?.defense === 'ac' ? ATTACK_DEGREE_LABELS : DEGREE_LABELS;
         // Multi-ray chained casts (#581, Blazing Bolt) return grouped results
         // [{rayIndex, results}]; single-roll casts return a flat array. Normalise
         // to ray groups so both share one logging path (mirrors the direct path).

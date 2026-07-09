@@ -7,6 +7,7 @@
 // (utils/immunity.js), so the clock/expiry sweep clears it automatically.
 
 import { makeImmunityEntry, hasAbilityImmunity } from './immunity';
+import { DEGREE_LABELS } from './degreeDisplay';
 
 export const TELL_FORTUNE_ABILITY_KEY = 'tell-fortune';
 export const TELL_FORTUNE_NAME = 'Tell Fortune';
@@ -33,10 +34,10 @@ export function hardDcForLevel(level) {
 //   reading  — whether the GM gives the caster a woe / weal / both / nothing answer
 //   reliable — whether that answer can be trusted (false on a misleading reading)
 const OUTCOMES = {
-  criticalSuccess: { reading: true,  reliable: true,  label: 'Critical Success', note: 'A clear augury — the GM gives a reliable reading.' },
-  success:         { reading: true,  reliable: true,  label: 'Success',          note: 'Augury — the GM gives a woe / weal / both / nothing reading.' },
-  failure:         { reading: false, reliable: false, label: 'Failure',          note: 'No useful reading.' },
-  criticalFailure: { reading: true,  reliable: false, label: 'Critical Failure', note: 'A misleading reading — the GM may give false information.' },
+  criticalSuccess: { reading: true,  reliable: true,  label: DEGREE_LABELS.criticalSuccess, note: 'A clear augury — the GM gives a reliable reading.' },
+  success:         { reading: true,  reliable: true,  label: DEGREE_LABELS.success,         note: 'Augury — the GM gives a woe / weal / both / nothing reading.' },
+  failure:         { reading: false, reliable: false, label: DEGREE_LABELS.failure,         note: 'No useful reading.' },
+  criticalFailure: { reading: true,  reliable: false, label: DEGREE_LABELS.criticalFailure, note: 'A misleading reading — the GM may give false information.' },
 };
 
 /** The augury result for a degree of success (unknown degrees read as failure). */

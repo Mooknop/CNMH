@@ -23,14 +23,16 @@ import {
   spellgunRiderNote,
 } from '../../utils/spellgun';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { DEGREE_LABELS, ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { itemUidOf } from '../../utils/affix';
 import { absorbedKey, retrieve as retrieveAbsorbed } from '../../utils/spellgunHost';
 import './SpellgunAttackModal.css';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
-const DEGREE_LABELS = {
-  ac:     { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' },
-  reflex: { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' },
+// Per-defense degree vocabulary: AC speaks attack terms, Reflex speaks save terms.
+const DEFENSE_DEGREE_LABELS = {
+  ac:     ATTACK_DEGREE_LABELS,
+  reflex: DEGREE_LABELS,
 };
 
 /**
@@ -125,7 +127,7 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
     const results = resolverRef.current?.getResults();
     if (!results || results.length === 0) return;
 
-    const degreeMap = DEGREE_LABELS[defense] || DEGREE_LABELS.ac;
+    const degreeMap = DEFENSE_DEGREE_LABELS[defense] || DEFENSE_DEGREE_LABELS.ac;
     const defLabel = DEFENSE_LABELS[defense] || defense;
 
     results.forEach((r) => {

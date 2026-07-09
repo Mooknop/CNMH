@@ -8,15 +8,9 @@ import { buildCraftingResult } from '../../utils/earnIncomeResults';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { periodState } from '../../utils/downtimeUtils';
 import { catalogItemName } from '../../utils/spellItems';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './CraftingProjects.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
-
-const DEGREE_LABEL = {
-  criticalSuccess: 'Critical Success',
-  success: 'Success',
-  failure: 'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -255,7 +249,7 @@ const CraftingProjects = ({ character }) => {
                 {status === 'completed' ? (
                   <div className="cp-completed" role="status">
                     <span className="cp-completed-badge">✓ Completed</span>
-                    <span className="cp-project-meta">{DEGREE_LABEL[p.craftDegree] || 'Done'} — awaiting GM grant</span>
+                    <span className="cp-project-meta">{DEGREE_LABELS[p.craftDegree] || 'Done'} — awaiting GM grant</span>
                   </div>
                 ) : isCheckStage ? (
                   <div className="cp-ready">
@@ -300,7 +294,7 @@ const CraftingProjects = ({ character }) => {
                   </div>
                 ) : status === 'awaiting-decision' ? (
                   <div className="cp-decision">
-                    <span className={`cp-degree cp-degree--${p.craftDegree}`}>{DEGREE_LABEL[p.craftDegree]}</span>
+                    <span className={`cp-degree cp-degree--${p.craftDegree}`}>{DEGREE_LABELS[p.craftDegree]}</span>
                     {(p.craftDegree === 'success' || p.craftDegree === 'criticalSuccess') && (
                       <>
                         <span className="cp-project-meta">
