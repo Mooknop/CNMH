@@ -2,7 +2,7 @@
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import { useOmen } from '../../hooks/useOmen';
 import { HARROW_SUITS, suitById } from '../../utils/harrow';
 import './Harrowing.css';
@@ -199,7 +199,7 @@ const Harrowing = ({ character, themeColor }) => {
                 <h4 >Harrow Casting</h4>
                 <div className="feat-meta">
                   <div className="feat-actions">
-                    <ActionIcon actionText="One Action" color={themeColor} />
+                    <ActionSymbol actionText="One Action" />
                   </div>
                   <TraitTag trait="Uncommon" />
                   <TraitTag trait="Archetype" />

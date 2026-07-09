@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { deriveHands } from '../../utils/hands';
-import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import Modal from '../shared/Modal';
 import './HandsPanel.css';
 
@@ -70,7 +70,7 @@ const HandsPanel = ({ character, characterColor }) => {
       <div className="hands-header">
         <h3>Hands</h3>
         <button className="btn-small btn-primary" data-testid="hands-swap" onClick={openSwap}>
-          Swap <ActionIcon actionText="One Action" size="small" showTooltip={false} />
+          Swap <ActionSymbol actionText="One Action" size="small" showTooltip={false} />
         </button>
       </div>
 
@@ -146,7 +146,7 @@ const HandsPanel = ({ character, characterColor }) => {
 
           <div className="hands-swap-actions">
             <button className="btn-small btn-primary" data-testid="hands-confirm" onClick={confirm}>
-              Confirm <ActionIcon actionText="One Action" size="small" showTooltip={false} />
+              Confirm <ActionSymbol actionText="One Action" size="small" showTooltip={false} />
             </button>
             <button className="btn-small btn-secondary" data-testid="hands-cancel" onClick={cancel}>
               Cancel

@@ -17,8 +17,8 @@ vi.mock('../shared/Modal', () => ({
 
 vi.mock('../shared/TraitTag', () => ({ default: ({ trait }) => <span data-testid="trait">{trait}</span> }));
 
-vi.mock('../shared/ActionIcon', () => ({
-  default: function DummyActionIcon({ actionText }) {
+vi.mock('../shared/ActionSymbol', () => ({
+  default: function DummyActionSymbol({ actionText }) {
     return <span data-testid="action-icon">{actionText}</span>;
   }
 }));

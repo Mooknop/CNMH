@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import UseAbilityModal from '../encounter/UseAbilityModal';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useFrequency } from '../../hooks/useFrequency';
@@ -143,7 +143,7 @@ const EldPowers = ({ eldPowers, themeColor, characterLevel, character }) => {
                 <h3>{power.name}</h3>
                 {power.actions && (
                   <div className="power-actions-indicator">
-                    <ActionIcon actionText={power.actions} color={themeColor} />
+                    <ActionSymbol actionText={power.actions} />
                   </div>
                 )}
               </>

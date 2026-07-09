@@ -1,4 +1,6 @@
-/* ActionIcon — Cinzel action-economy glyphs (◆ ◆◆ ◆◆◆ ↺ ⬦) */
+/* ActionSymbol — legacy `actionText` presentation path (former ActionIcon,
+ * #1316): sized wrapper + PF2e-font glyph + hover tooltip. The bare `cost`
+ * path is styled by .action-sym in pf2e-tokens.css. */
 
 .action-icon-wrapper {
   position: relative;
