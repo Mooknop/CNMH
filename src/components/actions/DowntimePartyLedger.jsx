@@ -30,7 +30,7 @@ const Ribbon = ({ plan, paired, blockDays }) => {
           <div
             key={i}
             className={`dpl-seg${g.name ? ' assigned' : ' free'}${g.paired ? ' paired' : ''}`}
-            style={{ flexGrow: g.days, flexBasis: 0, background: g.name ? g.hue : undefined }}
+            style={g.name ? { '--seg-grow': g.days, '--seg-c': g.hue } : { '--seg-grow': g.days }}
             title={g.name ? `${g.name} · ${g.days}d` : `${g.days} free`}
           >
             {g.paired && <span className="dpl-seg-mark">✦</span>}
@@ -87,11 +87,11 @@ const DowntimePartyLedger = ({ character, block }) => {
       <div className="dpl-legend">
         {DOWNTIME_ACTIVITIES.map((a) => (
           <div key={a.name} className="dpl-legend-item">
-            <span className="dpl-legend-sw" style={{ background: a.hue }} />{a.name}
+            <span className="dpl-legend-sw" style={{ '--seg-c': a.hue }} />{a.name}
           </div>
         ))}
         <div className="dpl-legend-item">
-          <span className="dpl-legend-sw" style={{ background: 'var(--act-free)' }} />Free
+          <span className="dpl-legend-sw" />Free
         </div>
       </div>
     </div>

@@ -4,6 +4,12 @@
   margin-top: 1rem;
 }
 
+.rkr-resolver-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
 .rkr-dc-row {
   display: flex;
   align-items: center;

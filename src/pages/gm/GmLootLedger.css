@@ -130,8 +130,10 @@
   overflow: hidden;
 }
 
+/* --fill-w: data-driven fill width, set inline as a custom property */
 .gm-ledger-bar-fill {
   height: 100%;
+  width: var(--fill-w, 0%);
   border-radius: var(--radius-full);
   background: var(--d-succ-bg);
   transition: width 0.3s ease;
@@ -155,8 +157,11 @@
   opacity: 0.8;
 }
 
+/* --flush-left: FLUSH_RATIO/BAR_SCALE from the component, so the JS constant
+   stays the single source of truth. */
 .gm-ledger-bar-tick.tick-flush {
   opacity: 0.4;
+  left: var(--flush-left, 50%);
 }
 
 .gm-ledger-breakdown {

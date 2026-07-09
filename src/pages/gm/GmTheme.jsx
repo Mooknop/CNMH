@@ -43,11 +43,12 @@ const toHex = (color) => {
 
 // Mini preview of one action card + a spell chip + a tab, rendered using
 // the previewVars injected as inline style on the preview container.
+// --preview-accent: dynamic accent from the draft palette (custom-property bridge)
 const ThemePreview = ({ themeColor }) => (
-  <div className="theme-preview-card">
-    <div className="preview-card-header" style={{ borderLeft: `4px solid ${themeColor}` }}>
-      <span className="preview-card-name" style={{ color: themeColor }}>Strike: Longsword</span>
-      <span className="preview-chip" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)`, border: `1px solid ${themeColor}`, color: themeColor }}>◆ Use</span>
+  <div className="theme-preview-card" style={{ '--preview-accent': themeColor }}>
+    <div className="preview-card-header">
+      <span className="preview-card-name">Strike: Longsword</span>
+      <span className="preview-chip">◆ Use</span>
     </div>
     <div className="preview-card-body">
       <div className="preview-detail-row">
@@ -60,11 +61,11 @@ const ThemePreview = ({ themeColor }) => (
       </div>
     </div>
     <div className="preview-tabs">
-      <button className="preview-tab active" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)`, borderBottomColor: themeColor, color: themeColor }}>Encounter</button>
+      <button className="preview-tab active">Encounter</button>
       <button className="preview-tab">Inventory</button>
       <button className="preview-tab">Spells</button>
     </div>
-    <div className="preview-table-header" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)` }}>
+    <div className="preview-table-header">
       <span>Item</span><span>Bulk</span><span>Value</span>
     </div>
   </div>
@@ -147,7 +148,7 @@ const GmTheme = () => {
   return (
     <div className="gm-theme">
       {/* SVG colorblind simulation filter definitions */}
-      <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }}>
+      <svg aria-hidden="true" className="gm-theme-svgdefs">
         <defs>
           <filter id="cb-deuter">
             <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0" />
@@ -175,8 +176,9 @@ const GmTheme = () => {
             >
               <span className="preset-name">{p.name}</span>
               <span className="preset-dots">
+                {/* --pdot-color: per-preset palette swatch color (custom-property bridge) */}
                 {['accent', 'gold', 'arcane', 'verdant'].map((k) => (
-                  <span key={k} className="pdot" style={{ background: p.palette[k] }} />
+                  <span key={k} className="pdot" style={{ '--pdot-color': p.palette[k] }} />
                 ))}
               </span>
               <span className="preset-tag">{p.tag}</span>

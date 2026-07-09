@@ -116,22 +116,21 @@ const ChainedStrikeSection = forwardRef(({
 
   if (filteredStrikes.length === 0) {
     return (
-      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+      <div className="uam-chain-empty">
         No qualifying strikes{chain.strikeTrait ? ` with trait "${chain.strikeTrait}"` : ''} available.
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: '0.5rem' }}>
+    <div className="uam-chain-section">
       {optional && (
-        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+        <label className="uam-chain-check">
           <input
             type="checkbox"
             checked={included}
             onChange={(e) => setIncluded(e.target.checked)}
             aria-label={`Include ${chain.heading || 'strike'}`}
-            style={{ marginRight: '6px' }}
           />
           Include {chain.heading || 'strike'}
         </label>
@@ -139,9 +138,9 @@ const ChainedStrikeSection = forwardRef(({
 
       {strikeIncluded && (<>
       {modes.length > 1 && (
-        <div style={{ marginBottom: '0.5rem' }}>
+        <div className="uam-chain-modes">
           {modes.map((m) => (
-            <label key={m} style={{ marginRight: '12px', fontSize: '0.85rem', cursor: 'pointer' }}>
+            <label key={m} className="uam-chain-mode">
               <input
                 type="radio"
                 name="chain-mode"
@@ -149,7 +148,6 @@ const ChainedStrikeSection = forwardRef(({
                 checked={selectedMode === m}
                 onChange={() => setSelectedMode(m)}
                 aria-label={m === 'strike' ? 'Strike' : 'Flurry of Blows'}
-                style={{ marginRight: '4px' }}
               />
               {m === 'strike' ? 'Strike' : 'Flurry of Blows'}
             </label>
@@ -161,7 +159,7 @@ const ChainedStrikeSection = forwardRef(({
         aria-label="strike picker"
         value={selectedStrikeName}
         onChange={(e) => setSelectedStrikeName(e.target.value)}
-        style={{ marginBottom: '0.5rem', width: '100%', fontSize: '0.85rem' }}
+        className="uam-chain-select"
       >
         {filteredStrikes.map((s) => (
           <option key={s.name} value={s.name}>{s.name}</option>
@@ -169,14 +167,14 @@ const ChainedStrikeSection = forwardRef(({
       </select>
 
       {selectedStrike && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-          <span>
+        <div className="uam-chain-note">
+          <span className="uam-chain-stat">
             Attack: <strong>{augmentedBonus != null ? formatModifier(augmentedBonus) : '?'}</strong>
             {chain.attackBonus
               ? ` (base ${formatModifier(baseRoll.bonus ?? 0)} + ${chain.attackBonus} status)`
               : null}
           </span>
-          <span style={{ marginLeft: '12px' }}>
+          <span className="uam-chain-stat">
             Damage: <strong>{augmentedDamage}</strong>
           </span>
         </div>
@@ -192,8 +190,8 @@ const ChainedStrikeSection = forwardRef(({
       />
 
       {selectedMode === 'flurry' && (
-        <div style={{ marginTop: '0.75rem' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
+        <div className="uam-chain-sub">
+          <div className="uam-chain-subnote">
             Strike 2 (MAP {formatModifier(strike2Penalty)}):
           </div>
           <TargetRollResolver

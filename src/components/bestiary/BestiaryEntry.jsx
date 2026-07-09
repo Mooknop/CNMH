@@ -17,7 +17,7 @@ import '../encounter/BestiaryModal.css';
 export const Redacted = ({ width = '4ch', label = 'redacted', block = false }) => (
   <span
     className={`bm-redacted${block ? ' bm-redacted--block' : ''}`}
-    style={block ? undefined : { width }}
+    style={block ? undefined : { '--redacted-w': width }}
     aria-label={label}
     aria-hidden="true"
   />

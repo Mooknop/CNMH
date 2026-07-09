@@ -167,7 +167,7 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
                 <span className="bm-list-name">
                   {identityRevealed
                     ? rep.name
-                    : <span className="bm-redacted bm-redacted--inline" style={{ width: '7ch' }} aria-label="name redacted" aria-hidden="true" />}
+                    : <span className="bm-redacted bm-redacted--inline bm-redacted--name" aria-label="name redacted" aria-hidden="true" />}
                 </span>
                 {members.length > 1 && (
                   <span className="bm-list-count" aria-label={`${members.length} of this type`}>

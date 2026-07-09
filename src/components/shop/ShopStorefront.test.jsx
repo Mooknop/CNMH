@@ -174,7 +174,9 @@ describe('ShopStorefront', () => {
       const grid = screen.getByLabelText('wares');
       const img = grid.querySelector('[data-testid="ware-antidote"] img.ps-tile-img');
       expect(img).toHaveAttribute('src', '/api/images/antidote.png');
-      expect(img).toHaveStyle({ objectPosition: '50% 25%' });
+      // Crop focus flows through the --ps-img-pos bridge (resolved by
+      // .ps-tile-img in ShopStorefront.css; jsdom doesn't apply stylesheets).
+      expect(img).toHaveStyle({ '--ps-img-pos': '50% 25%' });
       // spellbook has no image → letter crest, no img.
       const spellbook = grid.querySelector('[data-testid="ware-spellbook"]');
       expect(spellbook.querySelector('img')).toBeNull();

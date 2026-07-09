@@ -46,6 +46,7 @@
 
 .t10-budget-fill {
   height: 100%;
+  width: var(--t10-fill, 0%);
   background: var(--t10-theme, var(--color-theme));
   transition: width 0.2s ease;
 }

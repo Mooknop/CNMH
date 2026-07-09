@@ -41,6 +41,11 @@
   overflow-y: auto;
 }
 
+/* Invisible auto-scroll anchor at the bottom of the list. */
+.combat-log-sentinel {
+  list-style: none;
+}
+
 .combat-log-entry {
   display: flex;
   align-items: baseline;

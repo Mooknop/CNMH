@@ -81,18 +81,19 @@ const ImageField = ({ value, onChange, position, onPositionChange, ariaLabel = '
             onClick={onPositionChange ? handleFocalClick : undefined}
             aria-label={onPositionChange ? `${ariaLabel}-focal-area` : undefined}
             title={onPositionChange ? 'Click to set focal point' : undefined}
+            // --focal-x/--focal-y: dynamic focal point (custom-property bridge)
+            // consumed by the preview's object-position and the focal dot.
+            style={{ '--focal-x': `${pos.x}%`, '--focal-y': `${pos.y}%` }}
           >
             <img
               src={`/api/images/${value}`}
               alt={current.name}
               className="image-field-preview"
-              style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
               aria-label={`${ariaLabel}-preview`}
             />
             {onPositionChange && (
               <span
                 className="image-field-focal-dot"
-                style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                 aria-hidden="true"
               />
             )}
@@ -133,7 +134,7 @@ const ImageField = ({ value, onChange, position, onPositionChange, ariaLabel = '
             type="file"
             accept=".jpg,.jpeg,.png,.webp"
             aria-label={`${ariaLabel}-file-input`}
-            style={{ display: 'none' }}
+            className="image-field-file-input"
             onChange={onFileChange}
           />
         </div>

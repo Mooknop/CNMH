@@ -161,6 +161,8 @@
   vertical-align: middle;
   height: 1.05em;
   min-width: 2.5ch;
+  /* --redacted-w: per-instance blot width, set inline by <Redacted width>. */
+  width: var(--redacted-w, 4ch);
   border-radius: 47% 53% 58% 42% / 55% 48% 52% 45%;
   background: radial-gradient(circle at 38% 34%, #241a12, #0d0906 78%);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -192,6 +194,11 @@
 /* Inline list rows — a shorter stain. */
 .bm-redacted--inline {
   height: 0.8em;
+}
+
+/* Redacted name in the enemy list — fixed name-sized blot. */
+.bm-redacted--name {
+  width: 7ch;
 }
 
 /* Full-width description redaction — gentler block edge. */

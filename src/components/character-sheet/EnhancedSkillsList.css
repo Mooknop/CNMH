@@ -66,6 +66,15 @@
   font-size: var(--text-sm);
   line-height: 1.4;
   color: var(--shell-text-secondary);
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--color-theme, var(--color-primary));
+  border-radius: 4px;
+}
+
+.feat-notice strong {
+  color: var(--color-theme, var(--color-primary));
 }
 
 /* Skill header row */
@@ -174,7 +183,7 @@
 .item-bonus-label {
   font-weight: 600;
   margin-right: var(--space-2);
-  color: var(--shell-text-secondary);
+  color: var(--color-theme, var(--shell-text-secondary));
 }
 
 .item-bonus-value {

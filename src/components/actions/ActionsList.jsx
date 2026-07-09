@@ -239,7 +239,7 @@ const ActionsList = ({ character, characterColor }) => {
 
   return (
     <div className="actions-list">
-      <h2 style={{ color: themeColor }}>Encounter</h2>
+      <h2 style={{ '--color-theme': themeColor }}>Encounter</h2>
 
       {encounterMode && grantedActions.length > 0 && (
         <div className="granted-actions-section" aria-label="Granted actions">

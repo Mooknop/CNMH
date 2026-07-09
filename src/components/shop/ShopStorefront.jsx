@@ -82,7 +82,7 @@ const WareCrest = ({ group, imgClass, caseClass }) =>
       src={`/api/images/${group.image}`}
       alt=""
       aria-hidden="true"
-      style={group.imagePosition ? { objectPosition: `${group.imagePosition.x}% ${group.imagePosition.y}%` } : undefined}
+      style={group.imagePosition ? { '--ps-img-pos': `${group.imagePosition.x}% ${group.imagePosition.y}%` } : undefined}
     />
   ) : (
     <span className={caseClass} aria-hidden="true">{firstLetter(group.name)}</span>

@@ -76,8 +76,7 @@ const EffectsSubform = ({ value = [], onChange, idPrefix = '' }) => {
       {value.map((eff, i) => (
         <div
           key={i}
-          className="gm-row gm-rank-row"
-          style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px', marginBottom: '6px' }}
+          className="gm-row gm-rank-row gm-effects-row"
         >
           <select
             aria-label={`${idPrefix}effect-id-${i}`}
@@ -110,7 +109,7 @@ const EffectsSubform = ({ value = [], onChange, idPrefix = '' }) => {
               min="1"
               value={eff.duration.rounds}
               onChange={(ev) => setEffDur(i, { rounds: ev.target.value })}
-              style={{ width: '60px' }}
+              className="gm-input-xxs"
             />
           )}
           <button className="btn-small btn-danger" onClick={() => rmEff(i)}>Remove</button>

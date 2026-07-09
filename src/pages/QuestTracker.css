@@ -45,6 +45,11 @@
 }
 
 /* Quest count summary */
+.quest-count-note {
+  margin-bottom: 15px;
+  color: #666;
+}
+
 .quest-count-display {
   margin-bottom: 1.5rem;
   padding: 1rem 1.5rem;

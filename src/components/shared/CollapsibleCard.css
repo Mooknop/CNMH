@@ -50,7 +50,7 @@
 .expand-icon {
   font-size: 0.8rem;
   flex-shrink: 0;
-  color: var(--shell-text-tertiary);
+  color: var(--collapsible-accent, var(--shell-text-tertiary));
   transition: transform 0.2s ease;
 }
 

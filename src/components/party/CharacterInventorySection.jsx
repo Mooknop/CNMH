@@ -52,10 +52,7 @@ const CharacterInventorySection = ({
   const headerContent = (
     <div className="character-section-header">
       <div className="character-info">
-        <div 
-          className="character-name-large" 
-          style={{ color: characterColor }}
-        >
+        <div className="character-name-large">
           {name}
         </div>
         <div className="character-class-level">
@@ -105,11 +102,10 @@ const CharacterInventorySection = ({
             </thead>
             <tbody>
               {sortedItems.map((item, idx) => (
-                <tr 
+                <tr
                   key={item.uniqueId}
-                  className="inventory-row" 
+                  className={`inventory-row${onItemClick ? ' is-clickable' : ''}`}
                   onClick={() => onItemClick && onItemClick(item)}
-                  style={{ cursor: onItemClick ? 'pointer' : 'default' }}
                 >
                   <td className="item-cell">
                     <div className="item-name">{item.name}</div>
@@ -142,7 +138,7 @@ const CharacterInventorySection = ({
       header={headerContent}
       themeColor={characterColor}
       initialExpanded={false}
-      style={{ borderLeft: `4px solid ${characterColor || 'var(--color-theme)'}` }}
+      style={{ '--color-theme': characterColor }}
     >
       {collapsibleContent}
     </CollapsibleCard>

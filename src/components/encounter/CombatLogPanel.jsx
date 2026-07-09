@@ -48,7 +48,7 @@ const CombatLogPanel = () => {
               <span className="combat-log-text">{entry.text}</span>
             </li>
           ))}
-          <li ref={bottomRef} aria-hidden="true" style={{ listStyle: 'none' }} />
+          <li ref={bottomRef} aria-hidden="true" className="combat-log-sentinel" />
         </ol>
       )}
     </div>

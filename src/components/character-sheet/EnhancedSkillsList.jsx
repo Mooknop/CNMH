@@ -289,18 +289,12 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
 
   
   return (
-    <div className="enhanced-skills-list">
-      
+    <div className="enhanced-skills-list" style={{ '--color-theme': themeColor }}>
+
       {/* Display Untrained Improvisation notice if character has it */}
       {hasUntrainedImprovisation && (
-        <div className="feat-notice" style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '0.75rem', 
-          marginBottom: '1rem',
-          borderLeft: `4px solid ${themeColor}`,
-          borderRadius: '4px'
-        }}>
-          <strong style={{ color: themeColor }}>Untrained Improvisation:</strong> Your proficiency bonus to untrained skill checks is equal to 
+        <div className="feat-notice">
+          <strong>Untrained Improvisation:</strong> Your proficiency bonus to untrained skill checks is equal to
           {level >= 7
             ? ` your full level (${level})`
             : ` half your level (${Math.floor(level / 2)})`
@@ -356,7 +350,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
             <div className="skill-actions">
               {itemBonus > 0 && (
                 <div className="skill-item-bonus">
-                  <span className="item-bonus-label" style={{ color: themeColor }}>Item Bonus:</span>
+                  <span className="item-bonus-label">Item Bonus:</span>
                   <span className="item-bonus-value">+{itemBonus} from {
                     inventory
                       .filter(item => item.bonus && item.bonus[0] === skill.id)
@@ -365,7 +359,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
                   }</span>
                 </div>
               )}
-              <h4 style={{ color: themeColor }}>Skill Actions</h4>
+              <h4>Skill Actions</h4>
               <ul className="actions-list">
                 {skill.actions.map((action, index) => (
                   <li key={index} className="skill-action">

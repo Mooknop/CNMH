@@ -93,15 +93,13 @@ const CharacterCarousel = ({ characters, active, setActive, onOpen }) => {
                 className="cc-card"
                 onClick={() => handleCardClick(i)}
                 style={{
-                  transform: `translateX(${s.translateX}px) scale(${s.scale})`,
-                  opacity: s.opacity,
-                  zIndex: s.zIndex,
-                  filter: s.blur
+                  '--cc-x': `${s.translateX}px`,
+                  '--cc-scale': s.scale,
+                  '--cc-opacity': s.opacity,
+                  '--cc-z': s.zIndex,
+                  '--cc-filter': s.blur
                     ? `brightness(${s.brightness}) blur(${s.blur}px)`
                     : `brightness(${s.brightness})`,
-                  transition: dragging
-                    ? 'none'
-                    : 'transform 0.42s cubic-bezier(.22,.61,.36,1), opacity 0.42s ease, filter 0.42s ease',
                 }}
               >
                 <CharacterCard character={ch} accent={getCharacterColor(i)} />
@@ -134,7 +132,7 @@ const CharacterCarousel = ({ characters, active, setActive, onOpen }) => {
             type="button"
             key={ch.id}
             className={`cc-dot${i === active ? ' active' : ''}`}
-            style={i === active ? { background: getCharacterColor(i) } : undefined}
+            style={i === active ? { '--cc-dot-c': getCharacterColor(i) } : undefined}
             onClick={() => setActive(i)}
             aria-label={`Go to ${ch.name}`}
             aria-current={i === active}
