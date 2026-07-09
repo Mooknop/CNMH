@@ -455,6 +455,21 @@ describe('GmItems', () => {
     expect(saveDocument.mock.calls[0][2].bonus).toBe(1);
   });
 
+  it('round-trips durability + material via the raw-JSON box (#540)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    selectItem('Minor Elixir of Life');
+    const form = screen.getByTestId('item-form-minor-elixir-of-life');
+    fireEvent.change(within(form).getByLabelText('rest-json'), {
+      target: { value: '{"material": "Cold Iron", "durability": {"hardness": 13, "hp": 40, "brokenThreshold": 20}}' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].material).toBe('Cold Iron');
+    expect(saveDocument.mock.calls[0][2].durability).toEqual({ hardness: 13, hp: 40, brokenThreshold: 20 });
+  });
+
   it('drops a potency pasted into the raw-JSON box (retired in favor of the runes dropdowns)', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
