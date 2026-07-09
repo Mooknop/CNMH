@@ -108,7 +108,9 @@ test.describe('Familiar maneuvers', () => {
     // Pool empty → maneuvers hard-blocked until Command (encounterMode confirmed above).
     const maneuvers = page.locator('.familiar-maneuvers');
     await expect(maneuvers.getByRole('button', { name: 'Trip' })).toBeDisabled();
-    await page.getByRole('button', { name: '×' }).click();
+    // The shared Modal close button's accessible name is "Close" (aria-label,
+    // #1331 a11y pass) — its × glyph no longer names it.
+    await page.getByRole('button', { name: 'Close' }).click();
 
     // Command: owner spends 1 action, familiar granted 2 (cross-actor key).
     await page.getByRole('button', { name: `Command ${FAMILIAR_NAME}` }).click();
