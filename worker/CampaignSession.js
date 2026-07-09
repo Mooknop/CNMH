@@ -6,6 +6,22 @@
 
 const STATE_KEY = 'sessionState';
 
+// Wire-message guards (#1309). `key` is the bare cnmh <type> token (clients
+// compose the full cnmh_<type>_<id> string locally), so it must be one short
+// lowercase token — the same constraint the sync-key registry enforces
+// (foundry-bridge/syncKeys.js). `characterId` is a character id or 'global'.
+// Malformed or oversized frames are dropped BEFORE touching storage, so one
+// misbehaving peer can't poison the shared state every client hydrates from.
+export const KEY_TOKEN = /^[a-z0-9]{1,32}$/;
+export const CHARACTER_ID = /^\S{1,64}$/;
+// Object keys that would write through to Object.prototype instead of the
+// state map (prototype pollution) — never valid ids.
+const FORBIDDEN_IDS = new Set(['__proto__', 'constructor', 'prototype']);
+// Generous ceiling: the largest legitimate payloads (encounter order with
+// bestiary blocks, moveopts grids) are a few KB. The whole session state
+// persists as ONE storage value, so unbounded frames could brick it.
+export const MAX_MESSAGE_CHARS = 64 * 1024;
+
 export class CampaignSession {
   constructor(state, env) {
     this.state = state;
@@ -100,6 +116,12 @@ export class CampaignSession {
   }
 
   async webSocketMessage(ws, raw) {
+    // Binary frames are never part of the protocol; oversized ones get dropped
+    // before the JSON parse even looks at them.
+    if (typeof raw !== 'string' || raw.length > MAX_MESSAGE_CHARS) {
+      console.warn('CampaignSession: dropped non-string or oversized frame');
+      return;
+    }
     let msg;
     try {
       msg = JSON.parse(raw);
@@ -109,7 +131,13 @@ export class CampaignSession {
     if (msg.type !== 'UPDATE') return;
 
     const { characterId, key, value } = msg;
-    if (!characterId || !key) return;
+    if (
+      typeof characterId !== 'string' || !CHARACTER_ID.test(characterId) || FORBIDDEN_IDS.has(characterId) ||
+      typeof key !== 'string' || !KEY_TOKEN.test(key) || FORBIDDEN_IDS.has(key)
+    ) {
+      console.warn(`CampaignSession: dropped invalid UPDATE key (${String(characterId)}/${String(key)})`);
+      return;
+    }
 
     const sessionState = (await this.state.storage.get(STATE_KEY)) || {};
     if (!sessionState[characterId]) sessionState[characterId] = {};
