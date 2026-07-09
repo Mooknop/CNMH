@@ -37,13 +37,13 @@ export default defineConfig({
         statements: 80,
         // #1309 ratchet: worker/ gets its own gate so a DO coverage regression
         // fails test:ci (files matching the glob leave the global 80% bucket).
-        // The floor is set by index.js (0% — the hand-rolled router; its tests
-        // arrive with the #1318 route-table rework). Raise these as it grows.
+        // Raised with the #1318 route-table rework (dispatcher + route smoke
+        // tests took index.js 0% → ~42%). Keep raising as it grows.
         'worker/**': {
-          branches: 42,
-          functions: 64,
-          lines: 45,
-          statements: 44,
+          branches: 58,
+          functions: 68,
+          lines: 62,
+          statements: 60,
         },
       },
     },
