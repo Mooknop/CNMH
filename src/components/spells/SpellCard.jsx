@@ -1,7 +1,7 @@
 // src/components/spells/SpellCard.js
 import React, { useState } from 'react';
 import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import SpellDetailModal from './SpellDetailModal';
 
 /**
@@ -41,7 +41,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
             </h3>
             <div className="spell-header-icons">
               {spell.actions && (
-                <ActionIcon actionText={spell.actions} size="small" showTooltip={false} />
+                <ActionSymbol actionText={spell.actions} size="small" showTooltip={false} />
               )}
               <span className="spell-rank-badge">
                 {spell.level === 0

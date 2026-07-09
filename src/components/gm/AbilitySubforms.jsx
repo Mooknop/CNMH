@@ -517,7 +517,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
 //             (char strikes/actions read variableActionCount; the feat-strike
 //              path in strikeUtils only derives a range from a STRING
 //              actionCount, hence both keys, kept consistent)
-//   R       -> actions:"Reaction"  (ActionIcon renders the reaction glyph)
+//   R       -> actions:"Reaction"  (ActionSymbol renders the reaction glyph)
 // mode === '' means the cost is not modelled here; the original cost keys are
 // left untouched in `rest` so an exotic value (e.g. actions:"Special") survives.
 const COST_KEYS = ['action', 'actionCount', 'variableActionCount', 'actions'];
