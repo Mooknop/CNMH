@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { newEntryUid } from '../utils/uid';
+import { APP, syncKey } from '../sync/keys';
 
 // Player-to-player item push (#656, #657). The recipient receives a clean,
 // freshly uid'd copy on their additive `cnmh_acquired_` overlay — stored inline
@@ -41,9 +42,9 @@ const subtreeUids = (item) => {
 
 export const useGiveItem = (giverId) => {
   const { getState, sendUpdate, connected, foundryConnected } = useSession();
-  const [acquired, setAcquired] = useSyncedState(`cnmh_acquired_${giverId || 'none'}`, []);
-  const [, setRemoved] = useSyncedState(`cnmh_removed_${giverId || 'none'}`, []);
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${giverId || 'none'}`, {});
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, giverId || 'none'), []);
+  const [, setRemoved] = useSyncedState(syncKey(APP.REMOVED, giverId || 'none'), []);
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, giverId || 'none'), {});
 
   const offline = connected && !foundryConnected;
 
@@ -51,9 +52,9 @@ export const useGiveItem = (giverId) => {
   // write through the session — recipient varies at call time).
   const creditRecipient = useCallback(
     (recipientId, entry) => {
-      const cur = getState(recipientId, 'acquired');
+      const cur = getState(recipientId, APP.ACQUIRED);
       const list = Array.isArray(cur) ? cur : [];
-      sendUpdate(recipientId, 'acquired', [...list, entry]);
+      sendUpdate(recipientId, APP.ACQUIRED, [...list, entry]);
     },
     [getState, sendUpdate],
   );

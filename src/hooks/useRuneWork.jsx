@@ -7,6 +7,7 @@ import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { toGameSeconds } from '../utils/gameTime';
 import { createHandoffOrder, isOrderReady, foldRuneIntoWeapon, applyRunesToGear } from '../utils/runeWorkOrder';
+import { APP, syncKey, globalKey } from '../sync/keys';
 
 // Rune work orders (#802). "Etch" pays the rune's price, takes the weapon from
 // the owner (an authored entry is masked via `cnmh_removed_`, a bought one is
@@ -25,11 +26,11 @@ export const useRuneWork = (charId) => {
     [characters],
   );
 
-  const [orders, setOrders] = useSyncedState(`cnmh_runework_${charId || 'none'}`, []);
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${charId || 'none'}`, docGold(byId[charId]));
-  const [acquired, setAcquired] = useSyncedState(`cnmh_acquired_${charId || 'none'}`, []);
-  const [, setRemoved] = useSyncedState(`cnmh_removed_${charId || 'none'}`, []);
-  const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
+  const [orders, setOrders] = useSyncedState(syncKey(APP.RUNEWORK, charId || 'none'), []);
+  const [gold, setGold] = useSyncedState(syncKey(APP.GOLD, charId || 'none'), docGold(byId[charId]));
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, charId || 'none'), []);
+  const [, setRemoved] = useSyncedState(syncKey(APP.REMOVED, charId || 'none'), []);
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { locationLoreId: '' });
 
   const offline = connected && !foundryConnected;
   const nowSeconds = toGameSeconds({ ...gameDate, ...time });

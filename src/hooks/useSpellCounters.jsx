@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Read + mutate a character's per-spell counter ledger (#220), synced at
 // `cnmh_spellcounters_<charId>`. Registration happens React-free in the cast
 // modal (utils/spellCounter.registerSpellCounter); this hook drives the
 // EffectsPanel controls (pop an image / grow an emanation / end).
 export const useSpellCounters = (charId) => {
-  const [counters, setCounters] = useSyncedState(`cnmh_spellcounters_${charId}`, []);
+  const [counters, setCounters] = useSyncedState(syncKey(APP.SPELLCOUNTERS, charId), []);
 
   // Change a counter by `delta`, clamped to its floor. Counters that end at the
   // floor (Mirror Image's last image) drop off the ledger when they reach it.

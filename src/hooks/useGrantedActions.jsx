@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 export const useGrantedActions = (charId) => {
   const [grantedActions, setGrantedActions] = useSyncedState(
-    `cnmh_grantedactions_${charId}`,
+    syncKey(APP.GRANTEDACTIONS, charId),
     []
   );
 

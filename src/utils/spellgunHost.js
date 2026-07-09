@@ -15,9 +15,10 @@
 
 import { itemUidOf } from './affix';
 import { isSpellgun } from './spellgun';
+import { APP, syncKey } from '../sync/keys';
 
 /** Synced-state key for a character's spellgun-absorption overlay. */
-export const absorbedKey = (charId) => `cnmh_absorbed_${charId}`;
+export const absorbedKey = (charId) => syncKey(APP.ABSORBED, charId);
 
 /** Whether an item is a spellgun host (carries a `spellgunHost` block). */
 export const isSpellgunHost = (item) =>

@@ -21,6 +21,7 @@ import {
   applyStaunchBleeding,
 } from '../../utils/treatWounds';
 import './TreatWoundsModal.css';
+import { APP } from '../../sync/keys';
 
 const GODLESS_HEALING_BONUS = 2;
 const STAUNCH_TWO_ACTION_DC_REDUCTION = 10;
@@ -71,7 +72,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const dcs = availableDcs(medicineRank);
 
   const selectedTarget = characters.find((c) => c.id === selectedTargetId) || null;
-  const targetEffects  = selectedTarget ? (getState(selectedTarget.id, 'effects') || []) : [];
+  const targetEffects  = selectedTarget ? (getState(selectedTarget.id, APP.EFFECTS) || []) : [];
   const isImmune       = selectedTarget && hasImmunityFrom(targetEffects, healer?.id);
 
   // Staunch Bleeding (#224) — the two-action variant lowers the DC by 10, and

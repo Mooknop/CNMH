@@ -12,7 +12,7 @@ import { toGameSeconds } from '../../utils/gameTime';
 import { IMMUNITY_EFFECT_ID } from '../../utils/treatWounds';
 import { ABILITY_IMMUNITY_EFFECT_ID } from '../../utils/immunity';
 import { withWhetstoneArmedVs } from '../../utils/whetstone';
-import { RELAY, globalKey } from '../../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
 const FROM_NAME_EFFECT_IDS = [IMMUNITY_EFFECT_ID, ABILITY_IMMUNITY_EFFECT_ID];
 
@@ -29,7 +29,7 @@ const EffectsPanel = ({ charId, themeColor }) => {
   // Armable whetstone bonuses (#1216 — Chivalric Emblem): the player arms the
   // effect against the enemy that downed/crit an ally (witnessing is a table
   // call); the strike surface then offers the bonus vs that enemy.
-  const [, setRawEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
+  const [, setRawEffects] = useSyncedState(syncKey(APP.EFFECTS, charId), []);
   const [encounterState] = useSyncedState(globalKey(RELAY.ENCOUNTER), null);
   const enemyEntries = (encounterState?.order || []).filter((e) => e.kind === 'enemy');
   const armVs = (entryId, target) => setRawEffects((cur) => withWhetstoneArmedVs(cur, entryId, target));

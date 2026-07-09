@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 export const useEffects = (charId) => {
-  const [effects, setEffects] = useSyncedState(`cnmh_effects_${charId}`, []);
+  const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, charId), []);
   // Foundry-sourced effects (#455) — the bridge owns this key outright (full-list
   // replace on every effect-item change), so it never collides with the app's own
   // cnmh_effects store. Merged read-only into the returned list so the EffectsPanel

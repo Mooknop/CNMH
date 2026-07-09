@@ -2,6 +2,7 @@ import { useContext, useEffect, useState, useCallback } from 'react';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useSession } from '../contexts/SessionContext';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey, globalKey } from '../sync/keys';
 
 // Coordination spine for the party "Take 10" flow (epic #536).
 //
@@ -33,12 +34,12 @@ const minutesOf = (a, openedAt) =>
 export function useTake10(charId = null) {
   const { characters } = useContext(CharacterContext) || {};
   const { getState, subscribe } = useSession();
-  const [global, setGlobal] = useSyncedState('cnmh_take10_global', {
+  const [global, setGlobal] = useSyncedState(globalKey(APP.TAKE10), {
     active: false,
     openedAt: 0,
     startedBy: null,
   });
-  const [alloc, setAlloc] = useSyncedState(`cnmh_take10alloc_${charId || 'nobody'}`, null);
+  const [alloc, setAlloc] = useSyncedState(syncKey(APP.TAKE10ALLOC, charId || 'nobody'), null);
 
   const ids = (characters || []).map((c) => c.id);
   const idKey = ids.join(',');
@@ -102,12 +103,12 @@ export function useTake10(charId = null) {
   // Block length = party-max total allocation, floored at MIN_BLOCK.
   const minutes = Math.max(
     MIN_BLOCK,
-    ...ids.map((id) => minutesOf(getState(id, 'take10alloc'), openedAt))
+    ...ids.map((id) => minutesOf(getState(id, APP.TAKE10ALLOC), openedAt))
   );
 
   const readyCount = active
     ? ids.filter((id) => {
-        const a = getState(id, 'take10alloc');
+        const a = getState(id, APP.TAKE10ALLOC);
         return a && a.beatAt === openedAt && a.ready;
       }).length
     : 0;

@@ -5,6 +5,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePartyGold } from '../../hooks/usePartyGold';
 import { docGold } from '../../utils/gold';
 import './PartyGoldModal.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // One editable row per character. Each row owns its own useSyncedState so the
 // per-character `cnmh_gold_<id>` keys can be edited without breaking rules of
@@ -13,7 +14,7 @@ const GoldRow = ({ character }) => {
   // Authoritative GM write: setting party gold is authoring, not a player
   // resource burn, so it must stay editable even while Foundry is offline (the
   // offline-sandbox freeze would otherwise make the input uneditable).
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${character.id}`, docGold(character), {
+  const [gold, setGold] = useSyncedState(syncKey(APP.GOLD, character.id), docGold(character), {
     authoritative: true,
   });
 

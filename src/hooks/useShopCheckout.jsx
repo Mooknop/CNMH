@@ -9,6 +9,7 @@ import { toGameSeconds } from '../utils/gameTime';
 import { createHandoffOrder } from '../utils/runeWorkOrder';
 import { expandWare, lineQty } from '../utils/shopPurchase';
 import { stockByWareKey, decrementWareStock } from '../utils/shopUtils';
+import { APP, syncKey, globalKey } from '../sync/keys';
 
 // Unified shop checkout (#878). One hook that owns ALL the overlays a single
 // storefront transaction touches — gold, acquired, removed, and rune work orders
@@ -36,15 +37,15 @@ export const useShopCheckout = (charId) => {
     [characters],
   );
 
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${charId || 'none'}`, docGold(byId[charId]));
-  const [acquired, setAcquired] = useSyncedState(`cnmh_acquired_${charId || 'none'}`, []);
-  const [, setRemoved] = useSyncedState(`cnmh_removed_${charId || 'none'}`, []);
-  const [orders, setOrders] = useSyncedState(`cnmh_runework_${charId || 'none'}`, []);
-  const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
+  const [gold, setGold] = useSyncedState(syncKey(APP.GOLD, charId || 'none'), docGold(byId[charId]));
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, charId || 'none'), []);
+  const [, setRemoved] = useSyncedState(syncKey(APP.REMOVED, charId || 'none'), []);
+  const [orders, setOrders] = useSyncedState(syncKey(APP.RUNEWORK, charId || 'none'), []);
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { locationLoreId: '' });
   // The shop store, written at purchase time (#1138/#1139): a bought one-of-a-
   // kind sale ware is struck from its shelf, and a bought STOCKED ware has its
   // stock decremented — both in the same transaction as the gold debit.
-  const [shops, setShops] = useSyncedState('cnmh_shops_global', {});
+  const [shops, setShops] = useSyncedState(globalKey(APP.SHOPS), {});
 
   const offline = connected && !foundryConnected;
   const nowSeconds = toGameSeconds({ ...gameDate, ...time });

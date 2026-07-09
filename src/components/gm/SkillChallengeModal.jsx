@@ -7,6 +7,7 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import './SkillChallengeModal.css';
+import { APP, globalKey } from '../../sync/keys';
 
 const SKILL_KEYS = Object.keys(SKILL_ABILITY_MAP);
 
@@ -23,7 +24,7 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
   const { characters } = useContent();
   const { sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
-  const [challenge, setChallenge] = useSyncedState('cnmh_vpchallenge_global', null);
+  const [challenge, setChallenge] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
 
   const [name,      setName]      = useState('');
   const [rows,      setRows]      = useState([emptyRow()]);
@@ -63,8 +64,8 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
     });
 
     for (const c of targets) {
-      sendUpdate(c.id, 'vpresult', null);
-      sendUpdate(c.id, 'skillprompt', {
+      sendUpdate(c.id, APP.VPRESULT, null);
+      sendUpdate(c.id, APP.SKILLPROMPT, {
         reqId:       `${reqIdBase}-${c.id}`,
         challengeId: id,
         skills,

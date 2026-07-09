@@ -5,6 +5,7 @@ import { useContent } from '../contexts/ContentContext';
 import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { reuid, lineQty } from '../utils/shopPurchase';
+import { APP, syncKey } from '../sync/keys';
 
 // Shop purchase (#696 S6, the keystone). Mirrors the proven transfer primitives
 // (#654): the buyer credits items onto their own additive `cnmh_acquired_`
@@ -27,8 +28,8 @@ export const useBuyItems = (buyerId) => {
     () => Object.fromEntries((characters || []).map((c) => [c.id, c])),
     [characters],
   );
-  const [acquired, setAcquired] = useSyncedState(`cnmh_acquired_${buyerId || 'none'}`, []);
-  const [myGold, setMyGold] = useSyncedState(`cnmh_gold_${buyerId || 'none'}`, docGold(byId[buyerId]));
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, buyerId || 'none'), []);
+  const [myGold, setMyGold] = useSyncedState(syncKey(APP.GOLD, buyerId || 'none'), docGold(byId[buyerId]));
 
   const offline = connected && !foundryConnected;
 

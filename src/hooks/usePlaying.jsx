@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { PLAYING_IDLE } from '../utils/playing';
+import { APP, syncKey } from '../sync/keys';
 
 // 'While playing' state (#935) — reader for the Composition-sustained flag.
 // Setting happens in the cast flows (markPlayingOnCast); expiry in the
@@ -10,7 +11,7 @@ import { PLAYING_IDLE } from '../utils/playing';
 
 export const usePlaying = (charId) => {
   const [playingState, setPlayingState] = useSyncedState(
-    `cnmh_playing_${charId || 'none'}`,
+    syncKey(APP.PLAYING, charId || 'none'),
     PLAYING_IDLE
   );
 

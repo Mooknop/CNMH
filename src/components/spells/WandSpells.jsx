@@ -2,6 +2,7 @@ import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
+import { APP, syncKey } from '../../sync/keys';
 
 const WandInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
@@ -30,7 +31,7 @@ const wandKey = (spell) => spell.wandName || spell.id;
 const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character, onCast }) => {
   const characterKey = character?.id || 'unknown';
   const [wandStates, setWandStates] = useLocalStorage(
-    `cnmh_wands_${characterKey}`,
+    syncKey(APP.WANDS, characterKey),
     () => Object.fromEntries(spells.map(s => [wandKey(s), 'available']))
   );
 

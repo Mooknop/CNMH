@@ -5,9 +5,10 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { buildReadied } from '../utils/readiedAction';
+import { APP, syncKey } from '../sync/keys';
 
 export const useReadiedAction = (charId) => {
-  const [readied, setReadied] = useSyncedState(`cnmh_readied_${charId || 'unknown'}`, null);
+  const [readied, setReadied] = useSyncedState(syncKey(APP.READIED, charId || 'unknown'), null);
 
   const declare = useCallback(
     ({ actionName, trigger, round }) => setReadied(buildReadied({ actionName, trigger, round })),

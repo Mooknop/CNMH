@@ -6,6 +6,7 @@ import GameGlyph from '../shared/GameGlyph';
 import { focusGlyphForClass } from '../../utils/gameGlyphs';
 import { useContent } from '../../contexts/ContentContext';
 import { spellCatalogMap, resolveFocusSpells } from '../../utils/contentUtils';
+import { APP, syncKey } from '../../sync/keys';
 
 const FocusSpellsList = ({ character, characterColor, onCast }) => {
   const themeColor = characterColor || 'var(--color-primary)';
@@ -50,7 +51,7 @@ const FocusSpellsList = ({ character, characterColor, onCast }) => {
   const focusGlyph = focusGlyphForClass(character?.class);
 
   const [pointsSpent, setPointsSpent] = useLocalStorage(
-    `cnmh_focus_${character?.id || 'unknown'}`,
+    syncKey(APP.FOCUS, character?.id || 'unknown'),
     focusMax - (focusInfo?.current ?? focusMax)
   );
 

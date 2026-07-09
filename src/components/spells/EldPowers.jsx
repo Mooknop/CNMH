@@ -11,6 +11,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
 import { scaleEldPower, ELD_FREQUENCY_RULE } from '../../utils/eldScaling';
 import './EldPowers.css';
+import { APP, syncKey } from '../../sync/keys';
 
 // Degree label → shared degree-of-success palette class. The authored degree
 // keys are display strings ("Critical Success"), not the engine's camelCase.
@@ -34,7 +35,7 @@ const EldPowers = ({ eldPowers, themeColor, characterLevel, character }) => {
   // DailyPrepModal / PartyDailyPrepButton / the GM override. Never from here:
   // the dropdown below only browses.
   const [attunedSource] = useSyncedState(
-    `cnmh_eldattune_${character?.id || 'unknown'}`,
+    syncKey(APP.ELDATTUNE, character?.id || 'unknown'),
     '',
   );
 

@@ -7,6 +7,7 @@ import { docGold } from '../utils/gold';
 import { computeSaveDegree } from '../utils/saveDegree';
 import { foldRuneIntoWeapon } from '../utils/runeWorkOrder';
 import { moveRuneDc, moveRuneOutcome, removeRuneFromWeapon, runestoneEntryFor } from '../utils/moveRune';
+import { APP, syncKey } from '../sync/keys';
 
 // Move a rune (#803). A 1-hour Crafting check relocates a property rune between
 // a weapon and a runestone: Standard DC vs the rune's level-based DC, resolved
@@ -30,9 +31,9 @@ export const useMoveRune = (charId) => {
     [characters],
   );
 
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${charId || 'none'}`, docGold(byId[charId]));
-  const [acquired, setAcquired] = useSyncedState(`cnmh_acquired_${charId || 'none'}`, []);
-  const [, setRemoved] = useSyncedState(`cnmh_removed_${charId || 'none'}`, []);
+  const [gold, setGold] = useSyncedState(syncKey(APP.GOLD, charId || 'none'), docGold(byId[charId]));
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, charId || 'none'), []);
+  const [, setRemoved] = useSyncedState(syncKey(APP.REMOVED, charId || 'none'), []);
 
   const offline = connected && !foundryConnected;
   const who = byId[charId]?.name || 'Someone';

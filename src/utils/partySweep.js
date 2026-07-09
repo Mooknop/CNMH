@@ -11,7 +11,7 @@
 // Only writes state that's actually dirty, so the log summary stays meaningful.
 import { defaultTurnState } from '../hooks/useTurnState';
 import { isEncounterScopedEffect } from './EffectUtils';
-import { RELAY } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -23,7 +23,7 @@ function computeCombatResets(character, getState) {
   const id = character?.id;
   const resets = [];
 
-  const turn = getState(id, 'turnstate');
+  const turn = getState(id, APP.TURNSTATE);
   if (turn && (turn.actionsSpent || turn.attacksMade || turn.reactionSpent || turn.hasStartedFirstTurn
     || (turn.actionsLog || []).length)) {
     resets.push({ type: 'turnstate', value: defaultTurnState(), label: 'turn economy' });
@@ -34,22 +34,22 @@ function computeCombatResets(character, getState) {
     resets.push({ type: 'shieldraise', value: { raised: false, ts: 0 }, label: 'raised shield' });
   }
 
-  const stance = getState(id, 'stance');
+  const stance = getState(id, APP.STANCE);
   if (stance?.active) {
     resets.push({ type: 'stance', value: { active: false, name: null, ts: 0 }, label: 'stance' });
   }
 
-  const aura = getState(id, 'aura');
+  const aura = getState(id, APP.AURA);
   if (aura?.active) {
     resets.push({ type: 'aura', value: { active: false, ts: 0 }, label: 'aura' });
   }
 
-  const huntprey = getState(id, 'huntprey');
+  const huntprey = getState(id, APP.HUNTPREY);
   if (huntprey) {
     resets.push({ type: 'huntprey', value: null, label: 'Hunt Prey' });
   }
 
-  const sustains = getState(id, 'sustains');
+  const sustains = getState(id, APP.SUSTAINS);
   if (Array.isArray(sustains) && sustains.length) {
     resets.push({ type: 'sustains', value: [], label: 'sustained spells' });
   }
@@ -62,7 +62,7 @@ function computeCombatResets(character, getState) {
 // (#275). Manual effects (no expiry) and clock-based immunities (`expireAtSecs`)
 // survive the sweep.
 function expireEncounterEffects(character, getState) {
-  const effects = getState(character?.id, 'effects');
+  const effects = getState(character?.id, APP.EFFECTS);
   if (!Array.isArray(effects) || effects.length === 0) return null;
   const kept = effects.filter((e) => !isEncounterScopedEffect(e));
   return kept.length === effects.length ? null : kept;
@@ -86,7 +86,7 @@ export function performEncounterSweep({ character, getState, sendUpdate }) {
   if (effectsDrop) resets.push({ type: 'effects', value: effectsDrop, label: 'encounter effects' });
 
   resets.forEach(({ type, value }) => {
-    writeLocal(`cnmh_${type}_${id}`, value);
+    writeLocal(syncKey(type, id), value);
     sendUpdate(id, type, value);
   });
 

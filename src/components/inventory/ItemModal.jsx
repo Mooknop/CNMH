@@ -55,7 +55,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds } from '../../utils/gameTime';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import './ItemModal.css';
-import { RELAY, globalKey } from '../../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
   // Hooks must run unconditionally (before the early return).
@@ -73,20 +73,20 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [attached, setAttached] = useSyncedState(attachedKey(character?.id), {});
   // Spellgun-absorption overlay (#1208) — spellgunUid → host glove uid.
   const [absorbed, setAbsorbed] = useSyncedState(absorbedKey(character?.id), {});
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
   // Etch-time accessory-rune config (#1055 S4) — the depicted dragon type for a
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
   // when it derives the rune's Widen Spellshape free action.
-  const [runeConfig, setRuneConfig] = useSyncedState(`cnmh_runeconfig_${character?.id}`, {});
+  const [runeConfig, setRuneConfig] = useSyncedState(syncKey(APP.RUNECONFIG, character?.id), {});
   // Item-mode toggle (#1093) — the player-facing switch between an item's
   // authored states (Gloom Blade's light, a hood up/down). This modal is the
   // sole writer; useCharacter applies the choice to the effective inventory.
-  const [itemModeState, setItemModeState] = useSyncedState(`cnmh_itemmode_${character?.id}`, {});
+  const [itemModeState, setItemModeState] = useSyncedState(syncKey(APP.ITEMMODE, character?.id), {});
   // Active-effects store (#1055 S5) — an actuated block may apply a lasting
   // self-effect on activation (Trackless (Greater)'s 8-hour emanation). Written
   // here on activate; EffectsPanel renders it with a Dismiss ×. Also read for
   // the whetstone-on-weapon child line (#1213).
-  const [effects, setEffects] = useSyncedState(`cnmh_effects_${character?.id}`, []);
+  const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, character?.id), []);
   // Whetstone application (#1213) needs the encounter for round-ticked expiry
   // and an apply-time choice pick (Morph Jewel's damage type). Raw key read —
   // the modal only checks active/round/order, no need for the full hook.

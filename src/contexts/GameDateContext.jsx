@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { GOLARION_MONTHS, totalDaysSince4700 } from '../utils/gameTime';
+import { APP, globalKey } from '../sync/keys';
 
 // Calendar data lives in utils/gameTime.js (pure module shared with the
 // frequency engine); re-exported here so existing importers keep working.
@@ -127,7 +128,7 @@ export const GameDateProvider = ({ children }) => {
   // Single synced source of truth for date + time. Shared across every client
   // (GM and players) via the campaign session; degrades to localStorage when
   // no SessionProvider is present.
-  const [clock, setClock] = useSyncedState('cnmh_clock_global', DEFAULT_CLOCK);
+  const [clock, setClock] = useSyncedState(globalKey(APP.CLOCK), DEFAULT_CLOCK);
 
   // Date and time views derived from the clock. Existing helpers default their
   // `date` argument to `gameDate`, so keeping this shape preserves their API.

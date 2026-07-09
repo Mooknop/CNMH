@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 export const defaultTurnState = () => ({
   actionsSpent: 0,
@@ -16,7 +17,7 @@ export const defaultTurnState = () => ({
 
 export const useTurnState = (charId) => {
   const [turnState, setTurnState] = useSyncedState(
-    `cnmh_turnstate_${charId}`,
+    syncKey(APP.TURNSTATE, charId),
     defaultTurnState()
   );
 

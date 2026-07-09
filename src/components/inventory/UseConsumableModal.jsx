@@ -20,6 +20,7 @@ import {
 } from '../../utils/consumables';
 import { applyItemEffect, itemKeyOf } from '../../utils/itemEffects';
 import './UseConsumableModal.css';
+import { APP, syncKey } from '../../sync/keys';
 
 /**
  * Confirmation modal for using a consumable item (#217).
@@ -46,7 +47,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
   const { encounter, appendLog } = useEncounter();
   const { appendEvent } = useSessionLog();
   const { spendActions } = useTurnState(character?.id || 'nobody');
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
   const charData = useCharacter(character);
 
   const [amountInput, setAmountInput] = useState('');

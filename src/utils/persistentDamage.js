@@ -1,3 +1,4 @@
+import { APP, globalKey } from '../sync/keys';
 // Persistent-damage tracking (#272, #222 slice 3). Tracked entries live in a
 // single synced map at cnmh_persistent_global keyed by encounter entryId —
 // PCs and enemies alike. Deliberately NOT cnmh_conditions_<charId>: the
@@ -13,7 +14,7 @@
 // All helpers are pure so the recorder, watcher, chip, and tests share one
 // algebra (same pattern as encounterUtils).
 
-export const PERSISTENT_KEY = 'cnmh_persistent_global';
+export const PERSISTENT_KEY = globalKey(APP.PERSISTENT);
 
 export const newPersistentId = () =>
   `pd-${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;

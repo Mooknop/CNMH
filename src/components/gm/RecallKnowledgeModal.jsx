@@ -5,6 +5,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { KNOWLEDGE_SKILLS, recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import './RecallKnowledgeModal.css';
+import { APP } from '../../sync/keys';
 
 const SKILL_LABELS = {
   arcana:    'Arcana',
@@ -50,7 +51,7 @@ const RecallKnowledgeModal = ({ isOpen, onClose }) => {
       : (characters || []).filter((c) => c.id === target);
 
     for (const c of targets) {
-      sendUpdate(c.id, 'skillprompt', {
+      sendUpdate(c.id, APP.SKILLPROMPT, {
         reqId:  `${reqIdBase}-${c.id}`,
         skill,
         dc:     dcNum,

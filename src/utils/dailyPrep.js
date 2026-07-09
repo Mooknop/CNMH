@@ -13,6 +13,7 @@ import { pruneLedgerByPer } from './frequency';
 import { staffPrepValue } from './staffPrep';
 import { clampSlotAllocation } from './slotSacrifice';
 import { unlockRepairs, hasLockedBroken } from './itemBroken';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -31,7 +32,7 @@ function computeResets(character, getState) {
   const resets = [];
 
   // Spell slots — map of rank -> spent count.
-  const slots = getState(id, 'slots');
+  const slots = getState(id, APP.SLOTS);
   if (slots && typeof slots === 'object' && Object.values(slots).some((n) => Number(n) > 0)) {
     resets.push({
       type: 'slots',
@@ -41,19 +42,19 @@ function computeResets(character, getState) {
   }
 
   // Focus points — single integer of points spent.
-  const focus = getState(id, 'focus');
+  const focus = getState(id, APP.FOCUS);
   if (Number(focus) > 0) {
     resets.push({ type: 'focus', value: 0, label: 'focus points' });
   }
 
   // Staff charges — single integer of charges spent.
-  const staff = getState(id, 'staff');
+  const staff = getState(id, APP.STAFF);
   if (Number(staff) > 0) {
     resets.push({ type: 'staff', value: 0, label: 'staff charges' });
   }
 
   // Wand uses — map of wandKey -> 'available' | 'used' | 'overcharged'.
-  const wands = getState(id, 'wands');
+  const wands = getState(id, APP.WANDS);
   if (wands && typeof wands === 'object' && Object.values(wands).some((s) => s !== 'available')) {
     resets.push({
       type: 'wands',
@@ -65,46 +66,46 @@ function computeResets(character, getState) {
   // Broken items (#957 S4) — daily prep UNLOCKS repair for anything broken
   // (source: "can't be repaired before your next daily preparations"). It does
   // not auto-repair; a Repair action or minimum-rank slot sacrifice clears it.
-  const itembroken = getState(id, 'itembroken');
+  const itembroken = getState(id, APP.ITEMBROKEN);
   if (hasLockedBroken(itembroken)) {
     resets.push({ type: 'itembroken', value: unlockRepairs(itembroken), label: 'broken items (repair unlocked)' });
   }
 
   // Daily ability frequencies — prune per:'day' records from the ledger.
-  const freq = getState(id, 'freq');
+  const freq = getState(id, APP.FREQ);
   if (freq && typeof freq === 'object'
     && Object.values(freq).some((records) => (records || []).some((r) => r.per === 'day'))) {
     resets.push({ type: 'freq', value: pruneLedgerByPer(freq, 'day'), label: 'daily abilities' });
   }
 
   // Hunt Prey designation (key reserved for #223 — just cleared here).
-  const huntprey = getState(id, 'huntprey');
+  const huntprey = getState(id, APP.HUNTPREY);
   if (huntprey) {
     resets.push({ type: 'huntprey', value: null, label: 'Hunt Prey' });
   }
 
   // Sustained spells (#220) — any lingering sustain ledger is cleared on rest.
-  const sustains = getState(id, 'sustains');
+  const sustains = getState(id, APP.SUSTAINS);
   if (Array.isArray(sustains) && sustains.length) {
     resets.push({ type: 'sustains', value: [], label: 'sustained spells' });
   }
 
   // Per-spell counters (#220) — Mirror Image / Bless trackers cleared on rest.
-  const spellcounters = getState(id, 'spellcounters');
+  const spellcounters = getState(id, APP.SPELLCOUNTERS);
   if (Array.isArray(spellcounters) && spellcounters.length) {
     resets.push({ type: 'spellcounters', value: [], label: 'tracked spells' });
   }
 
   // Stance (#224) — a lingering stance is dropped on rest (you don't wake up
   // mid-stance). Cleared defensively; encounter end is the usual clear path.
-  const stance = getState(id, 'stance');
+  const stance = getState(id, APP.STANCE);
   if (stance?.active) {
     resets.push({ type: 'stance', value: { active: false, name: null, ts: 0 }, label: 'stance' });
   }
 
   // Harmless Bystander (#226 Slice D) — a leftover declaration is dropped on
   // rest; encounter end is the usual clear path.
-  const bystander = getState(id, 'bystander');
+  const bystander = getState(id, APP.BYSTANDER);
   if (bystander?.active) {
     resets.push({ type: 'bystander', value: { active: false, mod: null, ts: 0 }, label: 'Harmless Bystander' });
   }
@@ -115,7 +116,7 @@ function computeResets(character, getState) {
 // Effects that expire at daily preparations (Mystic/Mage Armor, Light, …) plus
 // any clock-immunity already past expiry, opportunistically swept here.
 function nextEffects(character, getState, nowSecs) {
-  const effects = getState(character?.id, 'effects');
+  const effects = getState(character?.id, APP.EFFECTS);
   if (!Array.isArray(effects) || effects.length === 0) return null;
   const kept = effects.filter((e) => {
     if (e.expireOnDailyPrep === true) return false;
@@ -139,7 +140,7 @@ export function dailyPrepPlanFor(character, getState) {
     resets,
     hasEld: eldSources.length > 0,
     eldSources,
-    currentEldSource: getState(character?.id, 'eldattune') || eldSources[0] || null,
+    currentEldSource: getState(character?.id, APP.ELDATTUNE) || eldSources[0] || null,
   };
 }
 
@@ -168,7 +169,7 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
   if (effectsDrop) resets.push({ type: 'effects', value: effectsDrop, label: 'daily effects' });
 
   resets.forEach(({ type, value }) => {
-    writeLocal(`cnmh_${type}_${id}`, value);
+    writeLocal(syncKey(type, id), value);
     sendUpdate(id, type, value);
   });
 
@@ -177,8 +178,8 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
   const labels = resets.map((r) => r.label);
   const eldSources = eldSourcesOf(character);
   if (eldChoice && eldSources.includes(eldChoice)) {
-    writeLocal(`cnmh_eldattune_${id}`, eldChoice);
-    sendUpdate(id, 'eldattune', eldChoice);
+    writeLocal(syncKey(APP.ELDATTUNE, id), eldChoice);
+    sendUpdate(id, APP.ELDATTUNE, eldChoice);
     labels.push(`attuned to ${eldChoice}`);
   }
 
@@ -197,23 +198,23 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
     expendedForStaff = staffChoice ? clampSlotAllocation(maxes, staffSlots) : null;
     nextStaffPrep = staffPrepValue(character, staffChoice, expendedForStaff);
   } else {
-    const prev = getState(id, 'staffprep');
+    const prev = getState(id, APP.STAFFPREP);
     // GM party-loop refresh recomputes base charges only (it can't know the
     // day's slot allocation), so any prior slot bonus is dropped on refresh.
     nextStaffPrep = prev?.staffId ? staffPrepValue(character, prev.staffId) : undefined;
   }
   if (nextStaffPrep !== undefined) {
-    writeLocal(`cnmh_staffprep_${id}`, nextStaffPrep);
-    sendUpdate(id, 'staffprep', nextStaffPrep);
+    writeLocal(syncKey(APP.STAFFPREP, id), nextStaffPrep);
+    sendUpdate(id, APP.STAFFPREP, nextStaffPrep);
     // A fresh preparation starts with full charges — clear any spent count.
-    writeLocal(`cnmh_staff_${id}`, 0);
-    sendUpdate(id, 'staff', 0);
+    writeLocal(syncKey(APP.STAFF, id), 0);
+    sendUpdate(id, APP.STAFF, 0);
 
     // Expend the slots allocated to the staff — spent as if cast. The slot reset
     // above zeroed cnmh_slots, so re-write it with the clamped allocation.
     if (expendedForStaff && Object.values(expendedForStaff).some((n) => n > 0)) {
-      writeLocal(`cnmh_slots_${id}`, expendedForStaff);
-      sendUpdate(id, 'slots', expendedForStaff);
+      writeLocal(syncKey(APP.SLOTS, id), expendedForStaff);
+      sendUpdate(id, APP.SLOTS, expendedForStaff);
     }
 
     if (nextStaffPrep) {

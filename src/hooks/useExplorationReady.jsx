@@ -1,5 +1,6 @@
 import { usePartyActivity } from './usePartyActivity';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 // Derives whether the whole party is ready to leave the exploration Activity
 // state and move. "Ready" = every party PC has locked in an exploration activity
@@ -16,7 +17,7 @@ import { useSyncedState } from './useSyncedState';
 //   override  — GM "Start movement" override
 //   ids       — party PC ids considered
 export function useExplorationReady() {
-  const [override] = useSyncedState('cnmh_exploreoverride_global', false);
+  const [override] = useSyncedState(globalKey(APP.EXPLOREOVERRIDE), false);
   const { party, total } = usePartyActivity('exploration', {
     deriveStatus: (state) => (state != null ? 'ready' : 'planning'),
   });

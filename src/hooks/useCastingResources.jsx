@@ -12,6 +12,7 @@ import { useCallback, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useCharacter } from './useCharacter';
 import { getFocusInfo } from '../utils/SpellUtils';
+import { APP, syncKey } from '../sync/keys';
 
 const EMPTY_SLOTS = {};
 
@@ -47,22 +48,22 @@ export const useCastingResources = (character) => {
 
   // Pool states — keys and initializers identical to the pip components.
   const [slotsSpent, setSlotsSpent] = useSyncedState(
-    `cnmh_slots_${charId}`,
+    syncKey(APP.SLOTS, charId),
     () => Object.fromEntries(Object.keys(spellSlots || {}).map((k) => [k, 0]))
   );
   const [focusSpent, setFocusSpent] = useSyncedState(
-    `cnmh_focus_${charId}`,
+    syncKey(APP.FOCUS, charId),
     focusMax - (focusInfo?.current ?? focusMax)
   );
   const [staffSpent, setStaffSpent] = useSyncedState(
-    `cnmh_staff_${charId}`,
+    syncKey(APP.STAFF, charId),
     chargesMax - (staff?.charges?.current ?? chargesMax)
   );
   const [wandStates, setWandStates] = useSyncedState(
-    `cnmh_wands_${charId}`,
+    syncKey(APP.WANDS, charId),
     () => Object.fromEntries((wandSpells || []).map((s) => [wandKeyFor(s), 'available']))
   );
-  const [consumed, setConsumed] = useSyncedState(`cnmh_consumed_${charId}`, {});
+  const [consumed, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, charId), {});
 
   const slotRemainingFor = useCallback(
     (rank) => (spellSlots[String(rank)] || 0) - ((slotsSpent || {})[String(rank)] || 0),

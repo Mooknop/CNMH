@@ -8,9 +8,10 @@ import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import './EldAttunementControl.css';
+import { APP, syncKey } from '../../sync/keys';
 
 const AttunementRow = ({ character }) => {
-  const [attuned, setAttuned] = useSyncedState(`cnmh_eldattune_${character.id}`, '');
+  const [attuned, setAttuned] = useSyncedState(syncKey(APP.ELDATTUNE, character.id), '');
   const { appendEvent } = useSessionLog();
   const sources = (character.spellcasting?.eldPowers || []).map((s) => s.source);
 

@@ -13,7 +13,7 @@ import { recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { lingeringResult } from '../../utils/lingering';
 import { markPlayingOnCast } from '../../utils/playing';
 import './LingeringCompositionModal.css';
-import { RELAY, syncKey } from '../../sync/keys';
+import { RELAY, APP, syncKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -97,8 +97,8 @@ const LingeringCompositionModal = ({ isOpen, onClose, spell, character, themeCol
     // so a stale prior attempt never lingers).
     const id = character?.id;
     const next = rounds ? { rounds, ts: Date.now() } : null;
-    writeLocal(`cnmh_lingering_${id}`, next);
-    sendUpdate(id, 'lingering', next);
+    writeLocal(syncKey(APP.LINGERING, id), next);
+    sendUpdate(id, APP.LINGERING, next);
 
     if (spendFocus) resources.focus.spend();
 

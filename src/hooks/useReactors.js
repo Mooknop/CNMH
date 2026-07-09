@@ -8,11 +8,12 @@
 // stale entries is handled separately (#477).
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, globalKey } from '../sync/keys';
 
 const EMPTY = [];
 
 export const useReactors = () => {
-  const [reactors, setReactors] = useSyncedState('cnmh_reactors_global', EMPTY);
+  const [reactors, setReactors] = useSyncedState(globalKey(APP.REACTORS), EMPTY);
 
   // Add (or refresh) this PC's declaration. Replaces any prior entry for the
   // same pcId so a re-press never stacks duplicates.

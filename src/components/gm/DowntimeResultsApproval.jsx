@@ -9,6 +9,7 @@ import { grantCraftedItem } from '../../utils/applyCrafting';
 import { saveDocument } from '../../utils/gmApi';
 import { pendingResults, markConfirmed, removeResult } from '../../utils/earnIncomeResults';
 import './DowntimeResultsApproval.css';
+import { APP, globalKey } from '../../sync/keys';
 
 const DEGREE_LABEL = {
   criticalSuccess: 'Crit Success',
@@ -23,7 +24,7 @@ const DEGREE_LABEL = {
 // drops it. Earn Income credits gold; Crafting grants the item to the character
 // doc (durable via saveDocument). Nothing commits until the GM confirms.
 const DowntimeResultsApproval = () => {
-  const [results, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
+  const [results, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
   const { getState, sendUpdate } = useSession();
   const { rawCharacters, refresh } = useContent();
   const { appendLog } = useEncounter();

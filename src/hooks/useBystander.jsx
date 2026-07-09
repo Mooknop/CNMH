@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Harmless Bystander state (#226 Slice D) — Izzy's level-4 skill feat lets her
 // roll initiative with Deception instead of Perception and pretend she's not
@@ -14,7 +15,7 @@ const IDLE_BYSTANDER = { active: false, mod: null, ts: 0 };
 
 export const useBystander = (charId) => {
   const [state, setState] = useSyncedState(
-    `cnmh_bystander_${charId || 'none'}`,
+    syncKey(APP.BYSTANDER, charId || 'none'),
     IDLE_BYSTANDER
   );
 

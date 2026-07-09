@@ -19,6 +19,7 @@ import { useGameDate } from '../contexts/GameDateContext';
 import { buildReactionSources, castSourceOf } from '../utils/reactionSources';
 import { readiedAbility } from '../utils/readiedAction';
 import { toGameSeconds, formatAvailableAt } from '../utils/gameTime';
+import { APP, syncKey } from '../sync/keys';
 
 export const useReactionOptions = (character) => {
   const charId = character?.id;
@@ -43,7 +44,7 @@ export const useReactionOptions = (character) => {
   const { gameDate, time } = useGameDate();
   const { readied } = useReadiedAction(charId);
   // Attunement gates which eld source is usable today (read-only here).
-  const [attunedSource] = useSyncedState(`cnmh_eldattune_${charId || 'unknown'}`, '');
+  const [attunedSource] = useSyncedState(syncKey(APP.ELDATTUNE, charId || 'unknown'), '');
 
   const repertoireSpells = spellcasting?.spells;
 

@@ -19,9 +19,10 @@ import { itemUidOf } from './affix';
 import { flattenInventory } from './InventoryUtils';
 import { resolveItemStrikes } from './strikeUtils';
 import { shieldHasFinesse } from './shieldRunes';
+import { APP, syncKey } from '../sync/keys';
 
 /** Synced-state key for a character's shield-attachment overlay. */
-export const attachedKey = (charId) => `cnmh_attached_${charId}`;
+export const attachedKey = (charId) => syncKey(APP.ATTACHED, charId);
 
 /**
  * Whether an item is a shield attachment: a weapon (carries `strikes`) marked

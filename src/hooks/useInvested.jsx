@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Player-writable attunement overlay for the inventory "Loadout Grid".
 //   cnmh_invested_<characterId> = { [uid]: true }
@@ -13,7 +14,7 @@ export const ATTUNE_CAP = 10;
 
 export const useInvested = (characterId) => {
   const [invested, setInvested] = useSyncedState(
-    `cnmh_invested_${characterId || 'none'}`,
+    syncKey(APP.INVESTED, characterId || 'none'),
     {}
   );
 

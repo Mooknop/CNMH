@@ -8,6 +8,7 @@ import {
   hasAccumulateResult,
 } from '../../utils/earnIncomeResults';
 import './DowntimeCompletion.css';
+import { APP, globalKey } from '../../sync/keys';
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const RETRAIN_TYPES = ['Feat', 'Skill', 'Class option', 'Other'];
@@ -19,8 +20,8 @@ const RETRAIN_TYPES = ['Feat', 'Skill', 'Class option', 'Other'];
 const DowntimeCompletion = ({ character, activity, startedAt, hoursBanked }) => {
   const charId = character?.id || 'unknown';
   const charData = useCharacter(character);
-  const [benchMap] = useSyncedState('cnmh_downtimebench_global', null);
-  const [results, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
+  const [benchMap] = useSyncedState(globalKey(APP.DOWNTIMEBENCH), null);
+  const [results, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
 
   const [retrainType, setRetrainType] = useState('');
   const [fromLabel, setFromLabel] = useState('');

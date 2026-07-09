@@ -4,7 +4,7 @@ import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -35,7 +35,7 @@ export const useShield = (charId, inventory = []) => {
   // Per-shield mutable HP map. Keyed by item uid; falls back to the authored
   // shield.hp when no block has been recorded this session.
   const [shieldState, setShieldState] = useSyncedState(
-    `cnmh_shieldstate_${charId || 'none'}`,
+    syncKey(APP.SHIELDSTATE, charId || 'none'),
     {}
   );
 

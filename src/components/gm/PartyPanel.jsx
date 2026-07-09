@@ -13,6 +13,7 @@ import { performEncounterSweep } from '../../utils/partySweep';
 import { clearUse } from '../../utils/frequency';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
 import { getCharacterColor } from '../../utils/CharacterUtils';
+import { syncKey } from '../../sync/keys';
 
 // ─── HP status tier ──────────────────────────────────────────
 // Used as a data-status attribute so CSS can colour the bar
@@ -329,7 +330,7 @@ const PartyPanel = () => {
   // auditable in the session log.
   const writeFor = (character) => (type, value, logText) => {
     try {
-      window.localStorage.setItem(`cnmh_${type}_${character.id}`, JSON.stringify(value));
+      window.localStorage.setItem(syncKey(type, character.id), JSON.stringify(value));
     } catch { /* quota / serialization — sync still carries it */ }
     sendUpdate(character.id, type, value);
     if (logText) appendEvent({ type: 'gm', text: `GM: ${character.name} — ${logText}` });

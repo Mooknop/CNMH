@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Kinetic aura state (#228) — Channel Elements activates a 10-ft aura that
 // stays up until the kineticist is knocked out, uses an overflow impulse, or
@@ -13,7 +14,7 @@ const IDLE_AURA = { active: false, ts: 0 };
 
 export const useAura = (charId) => {
   const [auraState, setAuraState] = useSyncedState(
-    `cnmh_aura_${charId || 'none'}`,
+    syncKey(APP.AURA, charId || 'none'),
     IDLE_AURA
   );
 

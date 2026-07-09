@@ -26,7 +26,7 @@ import { formatModifier } from '../../utils/CharacterUtils';
 import { itemUidOf } from '../../utils/affix';
 import { absorbedKey, retrieve as retrieveAbsorbed } from '../../utils/spellgunHost';
 import './SpellgunAttackModal.css';
-import { RELAY, globalKey } from '../../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
 const DEGREE_LABELS = {
   ac:     { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' },
@@ -56,9 +56,9 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
   const { appendEvent } = useSessionLog();
   const { spendActions } = useTurnState(character?.id || 'nobody');
   const { revealFiredIwr } = useIwrReveal();
-  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id || ''), {});
   const [, setAbsorbed] = useSyncedState(absorbedKey(character?.id || ''), {});
-  const [profChoice, setProfChoice] = useSyncedState(`cnmh_spellgunatk_${character?.id || ''}`, null);
+  const [profChoice, setProfChoice] = useSyncedState(syncKey(APP.SPELLGUNATK, character?.id || ''), null);
   const [positionsState] = useSyncedState(globalKey(RELAY.POSITIONS), null);
 
   const order = useMemo(() => encounter?.order || [], [encounter]);

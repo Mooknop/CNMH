@@ -6,6 +6,7 @@ import { useBystander } from '../../hooks/useBystander';
 import { useInitiativeRoll } from '../../hooks/useInitiativeRoll';
 import { hasFeat } from '../../utils/CharacterUtils';
 import './InitiativeEntry.css';
+import { APP, globalKey } from '../../sync/keys';
 
 const fmtMod = (n) => `${n >= 0 ? '+' : ''}${n}`;
 const skillLabel = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
@@ -32,7 +33,7 @@ const skillLabel = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const InitiativeEntry = ({ charId: charIdProp, character }) => {
   const charId = character?.id ?? charIdProp;
   const { encounter, setInitiative } = useEncounter();
-  const [scoutBonusCharId] = useSyncedState('cnmh_scoutbonus_global', null);
+  const [scoutBonusCharId] = useSyncedState(globalKey(APP.SCOUTBONUS), null);
   const model = useCharacter(character);
   const { active: bystanderActive, declare, clear } = useBystander(charId);
   const { roll, submit } = useInitiativeRoll(charId);

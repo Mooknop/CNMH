@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { APP, syncKey } from '../sync/keys';
 
 // Stance state (#224) — Dragon Stance and other 1-action stances. Entering a
 // stance unlocks its gated strikes (e.g. Dragon Tail) and persists until the
@@ -14,7 +15,7 @@ const IDLE_STANCE = { active: false, name: null, ts: 0 };
 
 export const useStance = (charId) => {
   const [stance, setStance] = useSyncedState(
-    `cnmh_stance_${charId || 'none'}`,
+    syncKey(APP.STANCE, charId || 'none'),
     IDLE_STANCE
   );
 

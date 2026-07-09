@@ -65,7 +65,7 @@ import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
 import './UseAbilityModal.css';
-import { RELAY, syncKey, globalKey } from '../../sync/keys';
+import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -144,7 +144,7 @@ const UseAbilityModal = ({
   // the confirm marks it Dropped in the live loadout unless a returning rune
   // flies it back.
   const { drop: dropThrownWeapon } = useLoadout(character?.id || 'nobody');
-  const [consumed, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  const [consumed, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id || ''), {});
   // Catalyst adds (#1209) — held catalysts the player chooses to fold into this
   // cast (by uid). Eligibility is computed once the cast spell/inventory are known.
   const [catalystIds, setCatalystIds] = useState([]);
@@ -405,7 +405,7 @@ const UseAbilityModal = ({
   const immuneTargets = immunityConfig
     ? targetCharIds
         .map((cid) => {
-          const tEffects = getState(cid, 'effects') || [];
+          const tEffects = getState(cid, APP.EFFECTS) || [];
           const immune = tEffects.find(
             (e) => e.effectId === 'ability-immunity'
               && e.abilityKey === immunityAbilityKey
@@ -989,7 +989,7 @@ const UseAbilityModal = ({
     if (hasEffects) {
       // Lingering Composition (#226-B): a pending extension on the caster
       // lengthens this composition's effect, then is consumed.
-      const lingering = getState(character.id, 'lingering');
+      const lingering = getState(character.id, APP.LINGERING);
       const effectDurationOverride = lingeringDurationOverride(ability, lingering) || undefined;
 
       applyAbility({
@@ -1015,8 +1015,8 @@ const UseAbilityModal = ({
       });
 
       if (effectDurationOverride) {
-        try { window.localStorage.setItem(`cnmh_lingering_${character.id}`, JSON.stringify(null)); } catch { /* noop */ }
-        sendUpdate(character.id, 'lingering', null);
+        try { window.localStorage.setItem(syncKey(APP.LINGERING, character.id), JSON.stringify(null)); } catch { /* noop */ }
+        sendUpdate(character.id, APP.LINGERING, null);
         appendLog({
           type: 'action',
           charId: character.id,
@@ -1499,11 +1499,11 @@ const UseAbilityModal = ({
           })
         : null;
       if (chainSelfEffect) {
-        const nextEffects = [...(getState(character.id, 'effects') || []), chainSelfEffect];
+        const nextEffects = [...(getState(character.id, APP.EFFECTS) || []), chainSelfEffect];
         try {
-          window.localStorage.setItem(`cnmh_effects_${character.id}`, JSON.stringify(nextEffects));
+          window.localStorage.setItem(syncKey(APP.EFFECTS, character.id), JSON.stringify(nextEffects));
         } catch { /* noop */ }
-        sendUpdate(character.id, 'effects', nextEffects);
+        sendUpdate(character.id, APP.EFFECTS, nextEffects);
         const m = chainSelfEffect.modifiers[0];
         appendLog({
           type: 'action', charId: character.id,

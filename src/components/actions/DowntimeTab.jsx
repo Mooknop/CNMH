@@ -19,6 +19,7 @@ import TellFortunePanel from './TellFortunePanel';
 import RepairShieldPanel from './RepairShieldPanel';
 import DowntimeCompletion from './DowntimeCompletion';
 import './DowntimeTab.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 // Player-facing Downtime view, shown in the mode-aware "play" slot when the GM
 // has set the play mode to Downtime. Shows the GM-granted day budget, the
@@ -27,9 +28,9 @@ import './DowntimeTab.css';
 const DowntimeTab = ({ character, characterColor }) => {
   const { formatGameDate, formatClockTime, getCurrentWeekday } = useGameDate();
   const { loreEntries, items, runes, spells } = useContent();
-  const [block] = useSyncedState('cnmh_downtimeblock_global', null);
-  const [downtime] = useSyncedState(`cnmh_downtime_${character?.id || 'unknown'}`, null);
-  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const [block] = useSyncedState(globalKey(APP.DOWNTIMEBLOCK), null);
+  const [downtime] = useSyncedState(syncKey(APP.DOWNTIME, character?.id || 'unknown'), null);
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   const { shops } = useShops();
   const charData = useCharacter(character);
   const [isCraftingOpen, setIsCraftingOpen] = useState(false);

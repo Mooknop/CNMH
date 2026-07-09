@@ -16,6 +16,7 @@ import PartyDailyPrepButton from './PartyDailyPrepButton';
 import ExplorationTimeControl from './ExplorationTimeControl';
 import GmIcon from '../../pages/gm/GmIcon';
 import './PlayModeControl.css';
+import { APP, globalKey } from '../../sync/keys';
 
 // GM play-mode area, split per the spec into two stacked sections:
 //   1. Marquee  — mode pills (Exploration / Downtime / Encounter) + clock
@@ -49,7 +50,7 @@ const PlayModeControl = () => {
 
   // Campaign meta has no home in the content model, so the GM edits it inline
   // here, synced for every client. Party level is derived from the roster.
-  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const [campaign, setCampaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   const location = campaign?.location ?? '';
   const locationLoreId = campaign?.locationLoreId ?? '';
   const { total: partyGold } = usePartyGold(characters);
@@ -69,7 +70,7 @@ const PlayModeControl = () => {
     prevMode.current = mode;
     if (mode === 'exploration' && was !== 'exploration') {
       setMoveOverride(false);
-      (characters || []).forEach((c) => sendUpdate(c.id, 'exploration', null));
+      (characters || []).forEach((c) => sendUpdate(c.id, APP.EXPLORATION, null));
     }
   }, [mode, characters, sendUpdate, setMoveOverride]);
 

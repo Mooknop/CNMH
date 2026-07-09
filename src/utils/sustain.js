@@ -8,6 +8,7 @@
 // arguments, mirroring the applyAbility pattern, so the cast modal can call it
 // directly on confirm without owning the synced state.
 import { newEntryUid } from './uid';
+import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -59,11 +60,11 @@ export const makeSustainEntry = ({ ability, round, castRank, heal, foundryAura }
  */
 export function registerSustain({ ability, caster, round, castRank, heal, foundryAura, getState, sendUpdate, appendLog }) {
   if (!isSustainedSpell(ability) || !caster?.id) return;
-  const current = getState(caster.id, 'sustains') || [];
+  const current = getState(caster.id, APP.SUSTAINS) || [];
   const entry = makeSustainEntry({ ability, round, castRank, heal, foundryAura });
   const next = [...current, entry];
-  writeLocal(`cnmh_sustains_${caster.id}`, next);
-  sendUpdate(caster.id, 'sustains', next);
+  writeLocal(syncKey(APP.SUSTAINS, caster.id), next);
+  sendUpdate(caster.id, APP.SUSTAINS, next);
   appendLog?.({
     type: 'system',
     text: `${caster.name} is sustaining ${entry.spellName}`,

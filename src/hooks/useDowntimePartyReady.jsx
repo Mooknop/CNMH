@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useSession } from '../contexts/SessionContext';
 import { periodState } from '../utils/downtimeUtils';
+import { APP } from '../sync/keys';
 
 // Derives how many party PCs have locked in their downtime plan. Mirrors
 // useExplorationReady: subscribes to each PC's cnmh_downtime_<id> key so callers
@@ -35,11 +36,11 @@ export function useDowntimePartyReady(blockDays, startedAt) {
   const days = blockDays != null && blockDays > 0 ? blockDays : null;
   const total = ids.length;
   const readyCount = days == null ? 0 : ids.filter((id) => {
-    const dt = getState(id, 'downtime');
+    const dt = getState(id, APP.DOWNTIME);
     const locked = periodState(dt, startedAt).status === 'ready';
     // A project awaiting its finish decision holds the party — the player must
     // choose to complete or keep working before time advances.
-    const cp = getState(id, 'craftprojects');
+    const cp = getState(id, APP.CRAFTPROJECTS);
     const awaiting = (cp?.projects || []).some((p) => p.status === 'awaiting-decision');
     return locked && !awaiting;
   }).length;

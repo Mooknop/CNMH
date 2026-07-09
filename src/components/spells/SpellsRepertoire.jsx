@@ -3,6 +3,7 @@ import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import GameGlyph from '../shared/GameGlyph';
 import SpellCard from './SpellCard';
+import { APP, syncKey } from '../../sync/keys';
 
 /**
  * Read-only slot-pip ledger shown in a rank header. Reflects slots spent by
@@ -35,7 +36,7 @@ const SpellsRepertoire = ({
   // Read-only view of the slot ledger. The sole player-side writer is the cast
   // path (useCastingResources.spend); daily preparations reset it.
   const [slotsSpent] = useLocalStorage(
-    `cnmh_slots_${characterKey}`,
+    syncKey(APP.SLOTS, characterKey),
     () => Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
   );
 

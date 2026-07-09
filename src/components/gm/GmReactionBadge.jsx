@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { APP, syncKey } from '../../sync/keys';
 
 const LABELS = {
   unavailable: 'reaction unavailable',
@@ -15,7 +16,7 @@ const LABELS = {
  * (no reaction until the PC's first turn has started).
  */
 const GmReactionBadge = ({ charId, name }) => {
-  const [turnState] = useSyncedState(`cnmh_turnstate_${charId}`, null);
+  const [turnState] = useSyncedState(syncKey(APP.TURNSTATE, charId), null);
 
   const state = !turnState?.hasStartedFirstTurn
     ? 'unavailable'

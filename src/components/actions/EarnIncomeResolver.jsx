@@ -14,6 +14,7 @@ import {
   employerById,
 } from '../../data/earnIncomeEmployers';
 import './EarnIncomeResolver.css';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const DEGREE_LABEL = {
   criticalSuccess: 'Critical Success',
@@ -47,10 +48,10 @@ const EarnIncomeResolver = ({ character }) => {
   const charData = useCharacter(character);
   const { supported } = useLocationSupport();
 
-  const [block] = useSyncedState('cnmh_downtimeblock_global', null);
-  const [downtime] = useSyncedState(`cnmh_downtime_${charId}`, null);
-  const [taskMap] = useSyncedState('cnmh_earnincometask_global', null);
-  const [results, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
+  const [block] = useSyncedState(globalKey(APP.DOWNTIMEBLOCK), null);
+  const [downtime] = useSyncedState(syncKey(APP.DOWNTIME, charId), null);
+  const [taskMap] = useSyncedState(globalKey(APP.EARNINCOMETASK), null);
+  const [results, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
 
   const [jobId, setJobId] = useState(FREELANCE_ID);
   const [skillKey, setSkillKey] = useState('');

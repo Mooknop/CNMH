@@ -7,6 +7,7 @@ import { dailyPrepPlanFor, performDailyPrep } from '../../utils/dailyPrep';
 import { highestCastableRank, chargesFromSlots } from '../../utils/staffPrep';
 import { toGameSeconds } from '../../utils/gameTime';
 import './DailyPrepModal.css';
+import { APP } from '../../sync/keys';
 
 /**
  * Daily Preparations flow for a single character. Shows what will be restored,
@@ -29,7 +30,7 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
   // raw-object callers (and the closed modal) simply see none.
   const staves = (isOpen && character?.staves) || [];
   const currentStaffId =
-    (isOpen && character ? (getState(character.id, 'staffprep') || {}).staffId : '') || '';
+    (isOpen && character ? (getState(character.id, APP.STAFFPREP) || {}).staffId : '') || '';
   const [staffChoice, setStaffChoice] = useState(currentStaffId);
   // Slots expended for extra staff charges (#957 S6b) — rank -> count.
   const [staffSlots, setStaffSlots] = useState({});

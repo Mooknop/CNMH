@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { RELAY, globalKey } from '../../sync/keys';
+import { RELAY, APP, globalKey } from '../../sync/keys';
 
 // GM control for advancing time during exploration. Provides quick buttons
 // (+10 min, +30 min, +1 hr) and a custom input, plus an optional "suggest
@@ -17,7 +17,7 @@ import { RELAY, globalKey } from '../../sync/keys';
 
 const ExplorationTimeControl = () => {
   const { advanceMinutes, advanceSeconds, formatGameDate, formatClockTime } = useGameDate();
-  const [exploreDist, setExploreDist] = useSyncedState('cnmh_exploredist_global', 0);
+  const [exploreDist, setExploreDist] = useSyncedState(globalKey(APP.EXPLOREDIST), 0);
   const [roster] = useSyncedState(globalKey(RELAY.ROSTER), []);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('min');
