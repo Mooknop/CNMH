@@ -29,15 +29,8 @@ describe('deriveSpellshapeChain', () => {
 });
 
 describe('getActions', () => {
-  it('falls back to the basic Stride/Step/Strike set when the character has no actions anywhere', () => {
-    expect(getActions({}).map((a) => a.name)).toEqual(['Stride', 'Step', 'Strike']);
-  });
-
-  it('a single action from any source suppresses the basic fallback entirely', () => {
-    const actions = getActions({
-      inventory: [{ name: 'Torch', state: 'held1', actions: [{ name: 'Light' }] }],
-    });
-    expect(actions.map((a) => a.name)).toEqual(['Light']); // no Stride/Step/Strike
+  it('returns [] when the character has no actions anywhere — the basics (Stride/Step/Strike) are merged by buildActionCatalog, never injected here', () => {
+    expect(getActions({})).toEqual([]);
   });
 
   it('resolves action-text counts, including variable "One to Three Actions" ranges', () => {
@@ -103,15 +96,19 @@ describe('getActions', () => {
     ]);
   });
 
-  it('does NOT surface accessory-rune actions (current behavior — only reactions/freeActions ride that path)', () => {
-    const actions = getActions({
-      inventory: [{
-        name: 'Gloves',
-        runes: { accessory: { name: 'Test Rune', actions: [{ name: 'Hidden Action' }] } },
-      }],
+  it('surfaces accessory-rune actions sourced "Item (Rune)", normalized and gated on the host being equipped', () => {
+    const accessory = { name: 'Test Rune', actions: [{ name: 'Rune Action', actions: 'Two Actions' }] };
+    const [worn] = getActions({
+      inventory: [{ name: 'Gloves', runes: { accessory } }], // no state → worn default
     });
-    // Falls all the way through to the basic fallback: the rune's action is invisible.
-    expect(actions.map((a) => a.name)).toEqual(['Stride', 'Step', 'Strike']);
+    expect(worn).toMatchObject({
+      name: 'Rune Action', actionCount: 2, source: 'Gloves (Test Rune)', active: true,
+    });
+
+    const [dropped] = getActions({
+      inventory: [{ name: 'Gloves', state: 'dropped', runes: { accessory } }],
+    });
+    expect(dropped.active).toBe(false);
   });
 });
 
