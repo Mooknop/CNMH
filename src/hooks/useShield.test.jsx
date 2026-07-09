@@ -20,6 +20,7 @@ vi.mock('./useSyncedState', () => {
 
 import { __reset } from './useSyncedState';
 import { useShield } from './useShield';
+import { CharacterContext } from '../contexts/CharacterContext';
 
 const heldSteelShield = {
   uid: 'shield-1',
@@ -157,5 +158,59 @@ describe('useShield — repairShield (#579)', () => {
     act(() => result.current.applyBlock(10)); // 20 − 5 = 15
     act(() => result.current.repairShield(0));
     expect(result.current.heldShield.shield.hp).toBe(15);
+  });
+});
+
+describe('useShield — Rust Blessing (campaign boon)', () => {
+  const withCharacters = (characters) => ({ children }) => (
+    <CharacterContext.Provider value={{ characters, getCharacter: (id) => characters.find((c) => c.id === id) || null }}>
+      {children}
+    </CharacterContext.Provider>
+  );
+  const pellias = { id: 'Pellias', feats: [{ name: 'Rust Blessing' }] };
+
+  it('a broken shield stays usable and raised for a blessed wielder', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]), {
+      wrapper: withCharacters([pellias]),
+    });
+    act(() => result.current.raiseShield('shield-1'));
+    act(() => result.current.applyBlock(15)); // 20 − 10 = 10 = BT → broken
+    expect(result.current.broken).toBe(true);
+    expect(result.current.wieldBroken).toBe(true);
+    expect(result.current.usable).toBe(true);
+    // raised survives the break; the Raised Shield AC effect stays live.
+    expect(result.current.raised).toBe(true);
+    expect(result.current.shieldEffect).not.toBeNull();
+  });
+
+  it('destruction at 0 HP still ends it for a blessed wielder', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]), {
+      wrapper: withCharacters([pellias]),
+    });
+    act(() => result.current.raiseShield('shield-1'));
+    act(() => result.current.applyBlock(99));
+    expect(result.current.destroyed).toBe(true);
+    expect(result.current.usable).toBe(false);
+    expect(result.current.raised).toBe(false);
+  });
+
+  it('an unblessed wielder keeps the RAW gate', () => {
+    const ashka = { id: 'Ashka', feats: [{ name: 'Hefty Hauler' }] };
+    const { result } = renderHook(() => useShield('Ashka', [heldSteelShield]), {
+      wrapper: withCharacters([ashka]),
+    });
+    act(() => result.current.raiseShield('shield-1'));
+    act(() => result.current.applyBlock(15));
+    expect(result.current.broken).toBe(true);
+    expect(result.current.wieldBroken).toBe(false);
+    expect(result.current.usable).toBe(false);
+    expect(result.current.raised).toBe(false);
+  });
+
+  it('outside a CharacterProvider the boon is simply off', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]));
+    act(() => result.current.applyBlock(15));
+    expect(result.current.wieldBroken).toBe(false);
+    expect(result.current.usable).toBe(false);
   });
 });

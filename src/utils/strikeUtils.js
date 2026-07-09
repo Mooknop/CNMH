@@ -9,6 +9,8 @@ import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRune
 import { dragonbreathRunes, dragonbreathDisplayName, dragonbreathStrikeDamageType } from './dragonbreath';
 import { isCapacityWeapon, strikeAmmoCapacity, normalizeChamberState, loadedCount } from './ammunition';
 import { applyWhetstoneStrikeAlterations } from './whetstone';
+import { entryHpStatus } from './itemDurability';
+import { hasRustBlessing, BROKEN_WEAPON_ATTACK_PENALTY } from './rustBlessing';
 
 // ── Thrown Strikes (#1230) ─────────────────────────────────────────────────────
 // A ranged Strike with the Thrown trait leaves the wielder's hand when it
@@ -121,10 +123,23 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6', opts = {}) 
  * @param {Object} [whetstoneEntry=null] - The active whetstone effect entry bound
  *   to this weapon (cnmh_effects_ overlay, #1214) — its payload alters the
  *   resolved strikes (damage type, traits, riders, material tags, range).
+ * @param {Object} [liveItemHp=null] - This weapon's record from the
+ *   cnmh_itemhp_ overlay ({ hp }, #541). Drives the Broken/Destroyed gate:
+ *   a destroyed weapon's Strikes are inactive for everyone; a broken one is
+ *   RAW-unusable — unless the wielder has Rust Blessing, in which case the
+ *   Strike stays active at a −2 item penalty to attack.
  * @returns {Array} - Resolved strike objects ({ name, attackMod, damage, … })
  */
-export const resolveItemStrikes = (item, character, chamberState = null, whetstoneEntry = null) => {
+export const resolveItemStrikes = (item, character, chamberState = null, whetstoneEntry = null, liveItemHp = null) => {
   if (!item || !item.strikes || !character) return [];
+
+  // Durability gate (#539/#541): null for untracked items (consumable throwers,
+  // artifacts) — those never break.
+  const hpStatus = entryHpStatus(item, liveItemHp || undefined);
+  const broken = !!hpStatus?.broken;
+  const destroyed = !!hpStatus?.destroyed;
+  const blessed = broken && !destroyed && hasRustBlessing(character);
+  const brokenPenalty = blessed ? BROKEN_WEAPON_ATTACK_PENALTY : 0;
 
   // Weapon-rune resolution (#548): when an item carries a declarative `runes`
   // block, fold it into attack bonus, scaled damage dice, derived display name,
@@ -159,7 +174,7 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
   return strikesArray.map(weaponStrike => {
     const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character, undefined, whetstoneOpts);
 
-    const attackBonus = baseBonus + potencyBonus;
+    const attackBonus = baseBonus + potencyBonus + brokenPenalty;
     const damage = resolved ? scaleDamageDice(damageString, resolved.extraDice) : damageString;
 
     const strikeName = weaponStrike.name ||
@@ -192,8 +207,15 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded
-      // (held), unless the catalog flags it noHandRequired.
-      active: itemAbilitiesActive(item),
+      // (held), unless the catalog flags it noHandRequired. A destroyed
+      // weapon is unusable outright; a broken one is RAW-unusable except
+      // for a Rust-Blessed wielder (already attacking at −2 above).
+      active: itemAbilitiesActive(item) && !destroyed && (!broken || blessed),
+      // Durability flags (#539) — the action tiles/detail modal read these to
+      // explain WHY a strike is disabled (or penalized, for Rust Blessing).
+      ...(broken ? { broken: true } : {}),
+      ...(destroyed ? { destroyed: true } : {}),
+      ...(brokenPenalty ? { brokenPenalty } : {}),
     };
 
     // Thrown Strike (#1230): tag the ranged throw with its inventory uid so the
@@ -250,9 +272,11 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
  *   loaded-chamber gate on capacity/chambered ranged Strikes.
  * @param {Object} [whetstonesByUid={}] - Active whetstone effect entries keyed
  *   by weapon uid (whetstonesByWeaponUid over cnmh_effects_, #1214).
+ * @param {Object} [itemHpByUid={}] - Live item-HP overlay keyed by entry uid
+ *   (cnmh_itemhp_<id>, #541) — drives the Broken/Destroyed strike gate.
  * @returns {Array} - Array of strike objects with computed attack modifiers
  */
-export const getStrikes = (character, chambersByUid = {}, whetstonesByUid = {}) => {
+export const getStrikes = (character, chambersByUid = {}, whetstonesByUid = {}, itemHpByUid = {}) => {
   let allStrikes = [];
 
   // Character-defined strikes
@@ -339,6 +363,7 @@ export const getStrikes = (character, chambersByUid = {}, whetstonesByUid = {}) 
         character,
         (chambersByUid || {})[item.uid],
         (whetstonesByUid || {})[item.uid],
+        (itemHpByUid || {})[item.uid],
       ));
     allStrikes = [...allStrikes, ...weaponStrikes];
   }

@@ -155,6 +155,29 @@ export const durabilityFor = (item) => {
 export const isDurableItem = (item) => durabilityFor(item) !== null;
 
 /**
+ * Full durability status for an inventory entry given its cnmh_itemhp_ overlay
+ * record ({ hp } or undefined ⇒ authored max). React-free twin of
+ * useItemHp.statusFor so strike/AC derivations can run outside hooks.
+ *
+ * @param {Object} item - resolved catalog item / inventory entry
+ * @param {Object} [overlayRecord] - the overlay's { hp } record for this uid
+ * @returns {{ hp, maxHp, hardness, brokenThreshold, broken, destroyed }|null}
+ */
+export const entryHpStatus = (item, overlayRecord) => {
+  const dur = durabilityFor(item);
+  if (!dur) return null;
+  const hp = overlayRecord?.hp ?? dur.hp;
+  return {
+    hp,
+    maxHp: dur.hp,
+    hardness: dur.hardness,
+    brokenThreshold: dur.brokenThreshold,
+    broken: isBrokenHp(hp, dur.brokenThreshold),
+    destroyed: isDestroyedHp(hp),
+  };
+};
+
+/**
  * Apply one instance of damage to an item: Hardness prevents its own value,
  * the remainder comes off HP (floored at 0). `hardnessBonus` raises effective
  * Hardness for this hit only (e.g. a deflecting shield vs ranged, #1196 G1);

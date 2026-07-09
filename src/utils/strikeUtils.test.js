@@ -589,3 +589,69 @@ describe('whetstone proficiency floor (#1216)', () => {
     expect(floored.attackMod).toBe(plain.attackMod + 8);
   });
 });
+
+describe('broken/destroyed weapon gate (#539 + Rust Blessing)', () => {
+  const char = {
+    ...minimalCharacter,
+    level: 3,
+    abilities: { ...minimalCharacter.abilities, strength: 18 },
+    proficiencies: { weapons: { simple: { proficiency: 1 }, martial: { proficiency: 1 } } },
+  };
+  const blessedChar = { ...char, feats: [{ name: 'Rust Blessing' }] };
+  // Thin steel weapon: 20 HP, BT 10. Held so the hand gate passes.
+  const sword = () => ({
+    id: 'longsword', uid: 'e-sword', name: 'Longsword', state: 'held1',
+    strikes: { name: 'Longsword Strike', proficiency: 'martial', type: 'melee', damage: '1d8' },
+  });
+
+  test('an undamaged weapon strikes normally', () => {
+    const [s] = resolveItemStrikes(sword(), char, null, null, undefined);
+    expect(s.active).toBe(true);
+    expect(s.broken).toBeUndefined();
+    expect(s.attackMod).toBe(9);
+  });
+
+  test('a broken weapon is RAW-unusable (active false, flagged)', () => {
+    const [s] = resolveItemStrikes(sword(), char, null, null, { hp: 10 });
+    expect(s.active).toBe(false);
+    expect(s.broken).toBe(true);
+    expect(s.destroyed).toBeUndefined();
+    // The attack mod is untouched on the RAW path — the strike just can't fire.
+    expect(s.attackMod).toBe(9);
+  });
+
+  test('Rust Blessing keeps a broken weapon usable at −2', () => {
+    const [s] = resolveItemStrikes(sword(), blessedChar, null, null, { hp: 10 });
+    expect(s.active).toBe(true);
+    expect(s.broken).toBe(true);
+    expect(s.brokenPenalty).toBe(-2);
+    expect(s.attackMod).toBe(7);
+  });
+
+  test('a destroyed weapon is unusable even with Rust Blessing', () => {
+    const [s] = resolveItemStrikes(sword(), blessedChar, null, null, { hp: 0 });
+    expect(s.active).toBe(false);
+    expect(s.destroyed).toBe(true);
+    expect(s.brokenPenalty).toBeUndefined();
+    expect(s.attackMod).toBe(9);
+  });
+
+  test('untracked items (consumable throwers) never break', () => {
+    const vial = {
+      id: 'acid-flask', uid: 'e-vial', name: 'Acid Flask', state: 'held1',
+      consumable: { uses: 1 },
+      strikes: { name: 'Acid Flask', proficiency: 'simple', type: 'ranged', damage: '1d6' },
+    };
+    const [s] = resolveItemStrikes(vial, char, null, null, { hp: 0 });
+    expect(s.active).toBe(true);
+    expect(s.broken).toBeUndefined();
+  });
+
+  test('getStrikes threads the itemhp overlay by uid', () => {
+    const c = { ...blessedChar, inventory: [sword()] };
+    const [s] = getStrikes(c, {}, {}, { 'e-sword': { hp: 10 } })
+      .filter((x) => x.name === 'Longsword Strike');
+    expect(s.broken).toBe(true);
+    expect(s.brokenPenalty).toBe(-2);
+  });
+});
