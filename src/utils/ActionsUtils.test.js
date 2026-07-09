@@ -869,11 +869,8 @@ describe('ActionsUtils', () => {
   });
 
   describe('getActions — additional branch coverage', () => {
-    it('returns default stride/step/strike when no actions, inventory, or feats', () => {
-      const result = getActions({});
-      expect(result.some(a => a.name === 'Stride')).toBe(true);
-      expect(result.some(a => a.name === 'Step')).toBe(true);
-      expect(result.some(a => a.name === 'Strike')).toBe(true);
+    it('returns [] when no actions, inventory, or feats — basics come from buildActionCatalog', () => {
+      expect(getActions({})).toEqual([]);
     });
 
     it('processes variable action text in character.actions', () => {
