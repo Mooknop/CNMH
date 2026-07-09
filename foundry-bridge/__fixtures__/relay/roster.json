@@ -1,0 +1,10 @@
+{
+  "characterId": "global",
+  "value": [
+    {
+      "actorId": "actor-pellias",
+      "name": "Pellias",
+      "speed": 30
+    }
+  ]
+}

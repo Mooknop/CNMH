@@ -1,0 +1,14 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "doors": [
+      {
+        "wallId": "w1",
+        "state": 0,
+        "x": 450,
+        "y": 500
+      }
+    ],
+    "reqTs": 42
+  }
+}

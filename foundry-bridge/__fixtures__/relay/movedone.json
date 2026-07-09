@@ -1,0 +1,73 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "newPosition": {
+      "col": 6,
+      "row": 5,
+      "x": 600,
+      "y": 500
+    },
+    "feetMoved": 5,
+    "reqTs": 42,
+    "nextOpts": {
+      "origin": {
+        "col": 6,
+        "row": 5
+      },
+      "reachable": [
+        {
+          "col": 5,
+          "row": 4,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 5,
+          "row": 5,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 5,
+          "row": 6,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 6,
+          "row": 4,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 6,
+          "row": 6,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 7,
+          "row": 4,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 7,
+          "row": 5,
+          "feet": 5,
+          "terrain": "normal"
+        },
+        {
+          "col": 7,
+          "row": 6,
+          "feet": 5,
+          "terrain": "normal"
+        }
+      ],
+      "blocked": [],
+      "gridSize": 100,
+      "speed": 10,
+      "originOccupied": true
+    }
+  }
+}

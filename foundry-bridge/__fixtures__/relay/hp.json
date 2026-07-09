@@ -1,0 +1,11 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "current": 20,
+    "max": 40,
+    "temp": 3,
+    "dying": 0,
+    "wounded": 1,
+    "doomed": 0
+  }
+}

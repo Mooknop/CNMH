@@ -1,0 +1,58 @@
+{
+  "characterId": "global",
+  "value": {
+    "active": true,
+    "phase": "in-progress",
+    "round": 1,
+    "currentTurnIndex": 1,
+    "order": [
+      {
+        "entryId": "cbt-goblin",
+        "kind": "enemy",
+        "name": "Goblin",
+        "initiative": 22,
+        "foundryActorId": "actor-goblin",
+        "defenses": {
+          "ac": null,
+          "saves": {
+            "fortitude": null,
+            "reflex": null,
+            "will": null
+          },
+          "immunities": [],
+          "resistances": [],
+          "weaknesses": []
+        },
+        "bestiary": {
+          "img": null,
+          "level": null,
+          "rarity": "common",
+          "traits": [],
+          "perception": null,
+          "speed": 25,
+          "hp": {
+            "current": 12,
+            "max": 12,
+            "temp": 0,
+            "dying": 0,
+            "wounded": 0,
+            "doomed": 0
+          },
+          "description": "",
+          "creatureKey": "goblin-l0"
+        },
+        "creatureKey": "goblin-l0"
+      },
+      {
+        "entryId": "cbt-pellias",
+        "kind": "pc",
+        "name": "Pellias",
+        "initiative": 18,
+        "foundryActorId": "actor-pellias",
+        "charId": "Pellias"
+      }
+    ],
+    "log": [],
+    "foundryCombatId": "combat1"
+  }
+}

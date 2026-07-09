@@ -55,6 +55,16 @@ dozens of suites — don't write new ones.
 Test files may keep literal `cnmh_*` key strings (they guard the sync-key
 registry's builder output); production code must use `src/sync/keys.js`.
 
+## Relay fixtures (#1308)
+
+`relayFixtures.js` loads the bridge-emission payloads RECORDED by
+`foundry-bridge/relayContract.test.js` (one JSON per channel under
+`foundry-bridge/__fixtures__/relay/`). Use `pushRelayFixture(session, RELAY.X,
+{ charId, ...overrides })` to feed a consumer the real wire shape instead of a
+hand-rolled payload — `relayConsumers.test.jsx` does this for the movement
+chain, encounter, adjacency, hp/conditions, minions, and doors. Never hand-edit
+a fixture; re-record from the bridge suite (`RELAY_FIXTURES=record`).
+
 ## localStorage isolation
 
 `useSyncedState` persists every write (and every incoming update) to

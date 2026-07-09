@@ -1,0 +1,16 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "savereq-1",
+    "results": [
+      {
+        "entryId": "cbt-gob",
+        "name": "Goblin Warrior",
+        "d20": 14,
+        "total": 21
+      }
+    ],
+    "failed": [],
+    "ts": 1700000000000
+  }
+}

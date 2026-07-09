@@ -107,3 +107,11 @@ factories in `test/foundryMock.js`. Two layers:
   data shapes, driven by captured fixtures in `__fixtures__/<version>/`. These
   are the early-warning tripwire for a version bump. See
   [`__fixtures__/README.md`](./__fixtures__/README.md).
+- **Relay contract tests** (`relayContract.test.js`, #1308) — the same tripwire
+  idea for the bridge→app seam. Every emitted channel is driven against the
+  mock world and shape-checked (field names + types) against the recorded
+  payload in `__fixtures__/relay/<channel>.json`; the app's vitest suite
+  consumes the SAME files (`src/test/relayFixtures.js`), so a payload rename
+  fails a named test on both sides. After an intentional payload change,
+  re-record with `RELAY_FIXTURES=record npm run test:bridge -- --testPathPattern=relayContract`
+  and fix the failing app consumers.

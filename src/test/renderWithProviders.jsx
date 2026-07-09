@@ -16,7 +16,7 @@
 // that seeded data, so normalization, catalog resolution, and useSyncedState
 // all run for real.
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ContentProvider } from '../contexts/ContentContext';
 import { SessionContext } from '../contexts/SessionContext';
@@ -28,12 +28,7 @@ import { PlayModeOverrideProvider } from '../contexts/PlayModeOverrideContext';
 import { makeContent } from './factories';
 import { makeSessionBus } from './sessionBus';
 
-export function renderWithProviders(ui, {
-  content,
-  session,
-  route = '/',
-  ...renderOptions
-} = {}) {
+function buildWrapper({ content, session, route = '/' } = {}) {
   const bus = session && typeof session.subscribe === 'function'
     ? session
     : makeSessionBus(session);
@@ -59,7 +54,19 @@ export function renderWithProviders(ui, {
     </MemoryRouter>
   );
 
+  return { Wrapper, bus };
+}
+
+export function renderWithProviders(ui, { content, session, route, ...renderOptions } = {}) {
+  const { Wrapper, bus } = buildWrapper({ content, session, route });
   return { ...render(ui, { wrapper: Wrapper, ...renderOptions }), session: bus };
+}
+
+// renderHook counterpart — same provider stack, for testing hooks directly:
+//   const { result, session } = renderHookWithProviders(() => useTokenMovement('pc-1'));
+export function renderHookWithProviders(callback, { content, session, route, ...renderOptions } = {}) {
+  const { Wrapper, bus } = buildWrapper({ content, session, route });
+  return { ...renderHook(callback, { wrapper: Wrapper, ...renderOptions }), session: bus };
 }
 
 export { makeSessionBus } from './sessionBus';

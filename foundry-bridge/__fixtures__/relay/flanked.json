@@ -1,0 +1,10 @@
+{
+  "characterId": "global",
+  "value": {
+    "cbt-goblin": {
+      "byCharIds": [
+        "Pellias"
+      ]
+    }
+  }
+}
