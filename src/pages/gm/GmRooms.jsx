@@ -55,7 +55,7 @@ const RoomNotesEditor = ({ room }) => {
 // World → Rooms: the read-only adventure-room browser (#1077). Site rail on the
 // left, room detail on the right, plus a "Pin to dashboard" action that sets the
 // GM's Current Room (useCurrentRoom). Rooms are the live `room` collection,
-// imported via scripts/importAdventureRooms.js — empty until then.
+// imported via scripts/importAdventureRooms.mjs — empty until then.
 const GmRooms = () => {
   const { rooms } = useContent();
   const { pinnedId, pinRoom } = useCurrentRoom(rooms);
