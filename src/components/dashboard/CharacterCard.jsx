@@ -6,9 +6,10 @@ import './CharacterCard.css';
 const CharacterCard = ({ character, accent }) => {
   const kicker = [character.ancestry, character.class].filter(Boolean).join(' · ');
   const monogram = (character.name || '').trim().charAt(0).toUpperCase();
+  // Data-driven crop point; the CSS default (50% 0%) applies when unset.
   const objectPosition = character.imagePosition
     ? `${character.imagePosition.x ?? 50}% ${character.imagePosition.y ?? 0}%`
-    : '50% 0%';
+    : undefined;
 
   return (
     <div className="sigil-card-inner" style={{ '--c': accent }}>
@@ -20,7 +21,7 @@ const CharacterCard = ({ character, accent }) => {
             src={`/api/images/${character.image}`}
             alt={`Portrait of ${character.name}`}
             className="sigil-portrait-img"
-            style={{ objectPosition }}
+            style={objectPosition ? { '--portrait-pos': objectPosition } : undefined}
           />
         ) : (
           <div className="sigil-mono" aria-hidden="true">{monogram}</div>

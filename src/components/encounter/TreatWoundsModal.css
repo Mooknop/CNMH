@@ -69,29 +69,8 @@
   font-weight: 700;
 }
 
-.tw-degree--crit-success {
-  background: var(--d-crit-bg);
-  border-color: var(--d-crit-border);
-  color: var(--d-crit-fg);
-}
-
-.tw-degree--success {
-  background: var(--d-succ-bg);
-  border-color: var(--d-succ-border);
-  color: var(--d-succ-fg);
-}
-
-.tw-degree--failure {
-  background: var(--d-fail-bg);
-  border-color: var(--d-fail-border);
-  color: var(--d-fail-fg);
-}
-
-.tw-degree--crit-failure {
-  background: var(--d-cf-bg);
-  border-color: var(--d-cf-border);
-  color: var(--d-cf-fg);
-}
+/* Degree colors now come from the shared save-* classes (utils/degreeDisplay
+   DEGREE_CLASS, styled in SavePrompt.css) — the local tw-degree--* copies are gone. */
 
 .tw-hint-label {
   font-size: var(--text-sm);

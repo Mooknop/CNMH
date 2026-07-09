@@ -163,7 +163,7 @@ export const VariantsControl = ({ value, onChange, idPrefix }) => {
             placeholder="DC ±"
             value={r.dcDelta}
             onChange={(e) => setRow(i, { dcDelta: e.target.value })}
-            style={{ width: '70px' }}
+            className="gm-input-xs"
           />
           <button className="btn-small btn-danger" onClick={() => rm(i)}>Remove</button>
         </div>
@@ -275,7 +275,7 @@ export const RollSourceControl = ({ value, onChange, idPrefix }) => {
           aria-label={`${idPrefix}-roll-skill`}
           value={value.skill}
           onChange={(e) => set({ skill: e.target.value })}
-          style={{ marginTop: '4px' }}
+          className="gm-ctl-top"
         >
           <option value="">— pick skill</option>
           {ROLL_SKILL_IDS.map((s) => (
@@ -290,7 +290,7 @@ export const RollSourceControl = ({ value, onChange, idPrefix }) => {
           placeholder="bonus"
           value={value.bonus}
           onChange={(e) => set({ bonus: e.target.value })}
-          style={{ marginTop: '4px', width: '80px' }}
+          className="gm-ctl-top gm-input-sm"
         />
       )}
     </div>
@@ -332,7 +332,7 @@ export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
         placeholder="Compendium.pf2e.spell-effects.Item.…"
         value={value.ref}
         onChange={(e) => set({ ref: e.target.value })}
-        style={{ width: '100%' }}
+        className="gm-input-full"
       />
       {value.ref.trim() && (
         <>
@@ -340,7 +340,7 @@ export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
             aria-label={`${idPrefix}-foundry-effect-apply-to`}
             value={value.applyTo}
             onChange={(e) => set({ applyTo: e.target.value })}
-            style={{ marginTop: '4px' }}
+            className="gm-ctl-top"
           >
             <option value="">— apply to (default: self)</option>
             <option value="self">self</option>
@@ -348,7 +348,7 @@ export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
             <option value="all-allies">all allies</option>
             <option value="target">target (picked)</option>
           </select>
-          <label style={{ display: 'block', marginTop: '4px' }}>
+          <label className="gm-check-line">
             <input
               type="checkbox"
               aria-label={`${idPrefix}-foundry-effect-authoritative`}
@@ -427,7 +427,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
           aria-label={`${idPrefix}-chain-cost`}
           value={value.cost}
           onChange={(e) => set({ cost: e.target.value })}
-          style={{ marginTop: '4px' }}
+          className="gm-ctl-top"
         >
           <option value="included">included in parent cost</option>
           <option value="added">added on top of sub-action cost</option>
@@ -436,7 +436,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
 
       {value.into === 'strike' && (
         <>
-          <div className="gm-row" style={{ marginTop: '4px' }}>
+          <div className="gm-row gm-ctl-top">
             <label>
               <input
                 type="checkbox"
@@ -446,7 +446,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
               />{' '}
               Strike
             </label>
-            <label style={{ marginLeft: '12px' }}>
+            <label className="gm-inline-gap">
               <input
                 type="checkbox"
                 aria-label={`${idPrefix}-chain-mode-flurry`}
@@ -461,7 +461,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
             placeholder="strike trait filter (e.g. Unarmed — blank = any)"
             value={value.strikeTrait}
             onChange={(e) => set({ strikeTrait: e.target.value })}
-            style={{ marginTop: '4px', width: '100%' }}
+            className="gm-ctl-top gm-input-full"
           />
           <input
             type="number"
@@ -469,14 +469,14 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
             placeholder="attack bonus (e.g. 1)"
             value={value.attackBonus}
             onChange={(e) => set({ attackBonus: e.target.value })}
-            style={{ marginTop: '4px', width: '80px' }}
+            className="gm-ctl-top gm-input-sm"
           />
           <input
             aria-label={`${idPrefix}-chain-damage-bonus`}
             placeholder="damage bonus (e.g. 1d6)"
             value={value.damageBonus}
             onChange={(e) => set({ damageBonus: e.target.value })}
-            style={{ marginTop: '4px', marginLeft: '8px', width: '80px' }}
+            className="gm-ctl-top gm-inline-gap-sm gm-input-sm"
           />
         </>
       )}
@@ -487,7 +487,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
             aria-label={`${idPrefix}-chain-spell-filter`}
             value={value.spellFilter}
             onChange={(e) => set({ spellFilter: e.target.value })}
-            style={{ marginTop: '4px' }}
+            className="gm-ctl-top"
           >
             <option value="any">any spell</option>
             <option value="has-range">spells with a range (not touch/self)</option>
@@ -497,7 +497,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
             placeholder="modifier note (e.g. Range increased by 30 feet)"
             value={value.modifier}
             onChange={(e) => set({ modifier: e.target.value })}
-            style={{ marginTop: '4px', width: '100%' }}
+            className="gm-ctl-top gm-input-full"
           />
         </>
       )}

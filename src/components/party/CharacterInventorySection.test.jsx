@@ -205,22 +205,24 @@ describe('CharacterInventorySection', () => {
     expect(onItemClick).toHaveBeenCalledWith(item);
   });
 
-  it('renders rows with cursor pointer when onItemClick is provided', () => {
+  it('marks rows clickable when onItemClick is provided', () => {
     const item = makeItem({ name: 'Sword' });
     const { container } = render(
       <CharacterInventorySection {...defaultProps} items={[item]} onItemClick={vi.fn()} />
     );
+    // cursor now comes from .inventory-row(.is-clickable) in PartyWealth.css —
+    // jsdom doesn't apply stylesheets, so assert the class.
     const row = container.querySelector('tbody tr');
-    expect(row).toHaveStyle('cursor: pointer');
+    expect(row).toHaveClass('is-clickable');
   });
 
-  it('renders rows with cursor default when onItemClick is absent', () => {
+  it('does not mark rows clickable when onItemClick is absent', () => {
     const item = makeItem({ name: 'Sword' });
     const { container } = render(
       <CharacterInventorySection {...defaultProps} items={[item]} onItemClick={undefined} />
     );
     const row = container.querySelector('tbody tr');
-    expect(row).toHaveStyle('cursor: default');
+    expect(row).not.toHaveClass('is-clickable');
   });
 
   it('renders "—" for value cell when item.price is absent', () => {

@@ -18,11 +18,10 @@ const CollapsibleCard = ({
       <div className="collapsible-header">
         <div
           className="collapsible-toggle"
-          style={{ cursor: 'pointer' }}
           onClick={() => setIsExpanded(prev => !prev)}
         >
           {header}
-          <div className="expand-icon" style={{ color: themeColor }}>
+          <div className="expand-icon" style={{ '--collapsible-accent': themeColor }}>
             {isExpanded ? '▼' : '▶'}
           </div>
         </div>

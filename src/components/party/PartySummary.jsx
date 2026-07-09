@@ -133,78 +133,24 @@ const PartySummary = () => {
       {/* Character Details Grid */}
       <div className="summary-content">
             <h3>Party Members</h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1rem'
-            }}>
-              {partyAbilityData.map((char, index) => (
-                <div key={char.name} style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  border: `3px solid ${char.color}`,
-                  boxShadow: '0 4px 12px rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(3px)'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem'
-                  }}>
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      borderRadius: '50%',
-                      backgroundColor: char.color,
-                      marginRight: '0.5rem'
-                    }}></div>
+            <div className="party-members-grid">
+              {partyAbilityData.map((char) => (
+                <div key={char.name} className="member-card" style={{ '--color-theme': char.color }}>
+                  <div className="member-card-header">
+                    <div className="member-color-dot"></div>
                     <div>
-                      <h4 style={{ 
-                        margin: 0, 
-                        color: char.color,
-                        fontSize: '1.1rem',
-                        fontWeight: '700',
-                        textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8)'
-                      }}>
-                        {char.name}
-                      </h4>
-                      <p style={{ 
-                        margin: 0, 
-                        color: '#666',
-                        fontSize: '0.9rem',
-                        fontWeight: '500'
-                      }}>
-                        {char.class}
-                      </p>
+                      <h4 className="member-name">{char.name}</h4>
+                      <p className="member-class">{char.class}</p>
                     </div>
                   </div>
-                  
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '0.5rem',
-                    fontSize: '0.85rem'
-                  }}>
+
+                  <div className="member-abilities-grid">
                     {Object.entries(char.abilities).map(([ability, modifier]) => (
-                      <div key={ability} style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '0.25rem 0.5rem',
-                        background: 'rgba(94, 41, 41, 0.1)',
-                        borderRadius: '4px'
-                      }}>
-                        <span style={{ 
-                          fontWeight: '600',
-                          color: '#5e2929',
-                          textTransform: 'capitalize'
-                        }}>
+                      <div key={ability} className="member-ability">
+                        <span className="member-ability-label">
                           {ability.slice(0, 3)}:
                         </span>
-                        <span style={{ 
-                          fontWeight: '700',
-                          color: modifier >= 0 ? '#228B22' : '#DC143C'
-                        }}>
+                        <span className={`member-ability-mod ${modifier >= 0 ? 'member-ability-mod--pos' : 'member-ability-mod--neg'}`}>
                           {modifier >= 0 ? `+${modifier}` : modifier}
                         </span>
                       </div>
@@ -218,15 +164,7 @@ const PartySummary = () => {
         <div className="ability-comparison-container">
           <h3>Ability Comparison</h3>
           {/* Enhanced Radar Chart */}
-            <div style={{ 
-              width: '100%', 
-              height: '500px', 
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
-              padding: '1rem',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(94, 41, 41, 0.2)'
-            }}>
+            <div className="radar-chart-panel">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart 
                   outerRadius={150} 
@@ -303,7 +241,7 @@ const PartySummary = () => {
                 <div
                   key={skillName}
                   className="skill-specialist-card"
-                  style={{ borderLeftColor: data.color, '--color-theme': data.color }}
+                  style={{ '--color-theme': data.color }}
                 >
                   <div className="skill-name">{formatSkillName(skillName)}</div>
                   <div className="specialist-info">

@@ -73,7 +73,7 @@ const Take10Prompt = ({ character, characterColor }) => {
       {/* Budget meter — how full this player's block is vs the party-max. */}
       <div className="t10-budget">
         <div className="t10-budget-bar" aria-hidden="true">
-          <div className="t10-budget-fill" style={{ width: `${fillPct}%` }} />
+          <div className="t10-budget-fill" style={{ '--t10-fill': `${fillPct}%` }} />
         </div>
         <span className="t10-budget-label">{myMinutes} / {minutes} min allocated</span>
       </div>

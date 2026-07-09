@@ -8,6 +8,8 @@
 
 .mgp-grid {
   display: grid;
+  /* --mgp-span: per-render column count (radius * 2 + 1), set inline. */
+  grid-template-columns: repeat(var(--mgp-span, 3), 1fr);
   gap: 2px;
   max-width: 100%;
   overflow: auto;

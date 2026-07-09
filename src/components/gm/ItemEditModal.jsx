@@ -439,7 +439,7 @@ const ItemEditModal = ({
         </>
       )}
 
-      <div className="gm-actions" style={{ justifyContent: 'flex-end' }}>
+      <div className="gm-actions gm-actions--end">
         <button type="button" className="btn-primary" onClick={onClose}>
           Done
         </button>

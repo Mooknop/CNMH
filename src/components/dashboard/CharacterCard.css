@@ -32,7 +32,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 0%;
+  object-position: var(--portrait-pos, 50% 0%);
 }
 
 /* No-image fallback: oversized monogram over an accent gradient */

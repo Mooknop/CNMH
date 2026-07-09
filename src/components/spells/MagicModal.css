@@ -1,5 +1,13 @@
 /* src/components/spells/MagicModal.css */
 
+/* Empty-state note when no spell categories are available. The .modal-body
+   co-selector outranks Modal.css's `.modal-body p` body-text default. */
+.magic-empty-note,
+.modal-body .magic-empty-note {
+  padding: 1rem;
+  color: var(--shell-text-tertiary);
+}
+
 .magic-category-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -155,7 +155,7 @@ const SpellsList = ({ character, characterColor }) => {
   if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing && !hasScrolls && !hasWands && !hasStaff) {
     return (
       <div className="spells-list">
-        <h2 style={{ color: themeColor }}>Spellcasting</h2>
+        <h2 style={{ '--color-theme': themeColor }}>Spellcasting</h2>
         <div className="empty-state">
           <p>This character doesn't have spellcasting, innate, focus magic abilities, or Eld Powers.</p>
         </div>
@@ -167,7 +167,7 @@ const SpellsList = ({ character, characterColor }) => {
   if (viewMode === null) {
     return (
       <div className="spells-list">
-        <h2 style={{ color: themeColor }}>Spellcasting</h2>
+        <h2 style={{ '--color-theme': themeColor }}>Spellcasting</h2>
         <div className="empty-state">
           <p>Loading spells...</p>
         </div>

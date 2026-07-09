@@ -712,6 +712,9 @@
 }
 .drag-ghost {
   position: fixed;
+  /* Pointer position bridged from dnd.jsx via custom properties. */
+  left: var(--drag-x);
+  top: var(--drag-y);
   z-index: 9999;
   transform: translate(-50%, -50%) scale(1.12) rotate(-3deg);
   pointer-events: none;

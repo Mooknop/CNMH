@@ -107,9 +107,11 @@ describe('CollapsibleCard', () => {
         <p>Content</p>
       </CollapsibleCard>
     );
-    
+
     const icon = container.querySelector('.expand-icon');
-    expect(icon).toHaveStyle('color: #ff0000');
+    // Color flows through the --collapsible-accent bridge; the CSS class
+    // resolves it (jsdom doesn't apply stylesheets, so assert the variable).
+    expect(icon).toHaveStyle({ '--collapsible-accent': '#ff0000' });
   });
 
   it('should render complex header and content', () => {
@@ -130,14 +132,18 @@ describe('CollapsibleCard', () => {
     expect(screen.getByText('Second paragraph')).toBeInTheDocument();
   });
 
-  it('should have cursor pointer on the toggle area', () => {
+  it('should toggle expansion when the toggle area is clicked', () => {
     const { container } = render(
       <CollapsibleCard header="Test">
         <p>Content</p>
       </CollapsibleCard>
     );
 
+    // cursor:pointer now lives on .collapsible-toggle in CollapsibleCard.css
+    // (jsdom doesn't apply stylesheets) — assert the behavior instead.
     const toggle = container.querySelector('.collapsible-toggle');
-    expect(toggle).toHaveStyle('cursor: pointer');
+    expect(toggle).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByText('Content')).toBeInTheDocument();
   });
 });

@@ -144,6 +144,13 @@
   border: 1px solid var(--shell-border);
 }
 
+/* --color-theme is the character's accent, bridged from the section. The
+   double class outranks .collapsible-card's border shorthand regardless of
+   stylesheet order (the accent stripe used to be an inline override). */
+.collapsible-card.character-inventory-section {
+  border-left: 4px solid var(--color-theme);
+}
+
 .character-inventory-header {
   background: var(--surface-inset);
   padding: 1.5rem;
@@ -175,6 +182,14 @@
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--shell-border);
   color: var(--shell-text-secondary);
+}
+
+.inventory-row {
+  cursor: default;
+}
+
+.inventory-row.is-clickable {
+  cursor: pointer;
 }
 
 .inventory-row:hover {
@@ -228,6 +243,10 @@
   font-weight: 700;
   margin: 0;
   color: var(--shell-text-primary);
+}
+
+.character-inventory-section .character-name-large {
+  color: var(--color-theme);
 }
 
 .character-class-level {

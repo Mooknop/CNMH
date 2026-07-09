@@ -51,11 +51,19 @@
   height: 348px;
   margin-left: -122px;
   margin-top: -174px;
+  transform: translateX(var(--cc-x, 0px)) scale(var(--cc-scale, 1));
+  opacity: var(--cc-opacity, 1);
+  z-index: var(--cc-z, 0);
+  filter: var(--cc-filter, none);
+  transition: transform 0.42s cubic-bezier(.22, .61, .36, 1), opacity 0.42s ease, filter 0.42s ease;
   will-change: transform, opacity;
   cursor: grab;
   -webkit-tap-highlight-color: transparent;
 }
-.cc-stage.dragging .cc-card { cursor: grabbing; }
+.cc-stage.dragging .cc-card {
+  cursor: grabbing;
+  transition: none;
+}
 
 /* Arrows — outside the scaled cards */
 .cc-arrow {
@@ -108,6 +116,7 @@
   opacity: 1;
   width: 22px;
   border-radius: 4px;
+  background: var(--cc-dot-c, var(--shell-text-tertiary));
   filter: brightness(1.1);
 }
 
