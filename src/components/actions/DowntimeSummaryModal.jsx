@@ -2,22 +2,24 @@ import React from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { getHoursForActivity, getRollsForActivity } from '../../utils/downtimeUtils';
+import Modal from '../shared/Modal';
 import './DowntimeSummaryModal.css';
 import { APP, globalKey } from '../../sync/keys';
 
 // Shown to all players (and the GM) when a downtime period completes. Reads the
 // synced cnmh_downtimesummary_global key; renders null when the key is absent.
-// The "Got it" button clears the key for everyone.
+// The "Got it" button (or the shared Modal's close/Escape) clears the key for
+// everyone. Rides the shared Modal shell (#1319) — this was the last
+// hand-rolled overlay among the app's modals.
 const DowntimeSummaryModal = () => {
   const [summary, setSummary] = useSyncedState(globalKey(APP.DOWNTIMESUMMARY), null);
   if (!summary) return null;
 
   const { period, chars = [] } = summary;
+  const close = () => setSummary(null);
 
   return (
-    <div className="dsm-overlay" role="dialog" aria-modal="true" aria-label="Downtime Summary">
-      <div className="dsm-modal">
-        <h2 className="dsm-title">Downtime Complete</h2>
+    <Modal isOpen onClose={close} title="Downtime Complete" maxWidth="480px" className="modal--downtime-summary">
         {period?.days != null && (
           <p className="dsm-period">
             {period.days} day{period.days === 1 ? '' : 's'} elapsed
@@ -66,12 +68,11 @@ const DowntimeSummaryModal = () => {
         </div>
 
         <div className="dsm-footer">
-          <button className="dsm-close-btn" onClick={() => setSummary(null)}>
+          <button className="dsm-close-btn" onClick={close}>
             Got it
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

@@ -582,7 +582,7 @@ describe('AdjustHpModal', () => {
   it('calls onClose when the modal is closed', () => {
     const onClose = vi.fn();
     render(<AdjustHpModal isOpen={true} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: /×/ }));
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
     expect(onClose).toHaveBeenCalled();
   });
 });

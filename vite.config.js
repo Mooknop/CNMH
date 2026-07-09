@@ -25,7 +25,6 @@ export default defineConfig({
       include: ['src/**/*.{js,jsx}', 'worker/**/*.js'],
       exclude: [
         'src/index.jsx',
-        'src/reportWebVitals.js',
         'src/**/*.test.{js,jsx}',
         'src/**/__mocks__/**',
         'worker/**/*.test.js',

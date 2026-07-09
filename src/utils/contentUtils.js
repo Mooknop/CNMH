@@ -39,22 +39,31 @@ export const slugify = (str) =>
 export const existingIdSet = (list) =>
   new Set((Array.isArray(list) ? list : []).map((d) => String(d && d.id)));
 
+// Shared collection plumbing (#1319): every collection stamps a stable id the
+// same way (keep an existing id, else slug a label field, index-suffixed so
+// accidental duplicates stay distinct) and normalizes via the same list walk.
+// The per-collection withXId helpers keep only their genuinely bespoke bits
+// (quest notes, faction ranks, lore visibility, rune type defaults, ...).
+const stampId = (doc, index, label) =>
+  doc.id || `${slugify(label)}${index ? `-${index}` : ''}`;
+
+const normalizeList = (arr, fn) => (Array.isArray(arr) ? arr : []).map(fn);
+
 // Ensure a quest has an `id`. Existing ids are preserved; otherwise derive
 // from the title. Notes get index-stable ids for React keys.
 export const withQuestId = (quest, index = 0) => {
-  const id = quest.id || `${slugify(quest.title)}${index ? `-${index}` : ''}`;
+  const id = stampId(quest, index, quest.title);
   const notes = Array.isArray(quest.notes)
     ? quest.notes.map((n, i) => ({ id: n.id || `${id}-note-${i}`, content: n.content }))
     : [];
   return { ...quest, id, notes };
 };
 
-export const normalizeQuests = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((q, i) => withQuestId(q, i));
+export const normalizeQuests = (arr) => normalizeList(arr, withQuestId);
 
 // Ensure a faction has an `id` (slug of its name) and index-stable rank ids.
 export const withFactionId = (faction, index = 0) => {
-  const id = faction.id || `${slugify(faction.name)}${index ? `-${index}` : ''}`;
+  const id = stampId(faction, index, faction.name);
   const ranks = Array.isArray(faction.ranks)
     ? faction.ranks.map((r, i) => ({
         id: r.id || `${id}-rank-${i}`,
@@ -67,20 +76,17 @@ export const withFactionId = (faction, index = 0) => {
   return { ...faction, id, ranks };
 };
 
-export const normalizeFactions = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((f, i) => withFactionId(f, i));
+export const normalizeFactions = (arr) => normalizeList(arr, withFactionId);
 
 // Calendar events vary: some carry `title`, some `name`; some have a fixed
 // `date {year?,month,day}`, some only a `recurring` rule string. Preserve all
 // original fields untouched — just stamp a stable id (slug of title|name).
-export const withCalendarId = (event, index = 0) => {
-  const label = event.title || event.name;
-  const id = event.id || `${slugify(label)}${index ? `-${index}` : ''}`;
-  return { ...event, id };
-};
+export const withCalendarId = (event, index = 0) => ({
+  ...event,
+  id: stampId(event, index, event.title || event.name),
+});
 
-export const normalizeCalendar = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((e, i) => withCalendarId(e, i));
+export const normalizeCalendar = (arr) => normalizeList(arr, withCalendarId);
 
 // Lore entries already carry an `id`; keep it (fall back to a slug of the
 // title) and preserve every other field (category/summary/content/related/
@@ -89,55 +95,55 @@ export const normalizeCalendar = (arr) =>
 // no field at all) stays GM-only until the GM reveals it.
 export const withLoreId = (entry, index = 0) => ({
   ...entry,
-  id: entry.id || `${slugify(entry.title)}${index ? `-${index}` : ''}`,
+  id: stampId(entry, index, entry.title),
   visibility: entry.visibility === 'revealed' ? 'revealed' : 'gm',
 });
 
-export const normalizeLore = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((e, i) => withLoreId(e, i));
+export const normalizeLore = (arr) => normalizeList(arr, withLoreId);
 
 // Traits are reference data ({ name, description }); id is a slug of the name.
 export const withTraitId = (trait, index = 0) => ({
   ...trait,
-  id: trait.id || `${slugify(trait.name)}${index ? `-${index}` : ''}`,
+  id: stampId(trait, index, trait.name),
 });
 
-export const normalizeTraits = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((t, i) => withTraitId(t, i));
+export const normalizeTraits = (arr) => normalizeList(arr, withTraitId);
 
 // Catalog items are the shared definitions (name/price/weight/traits/
 // description + optional mechanical blocks: container{capacity,ignored},
 // scroll, wand, strikes, potency, shield, actions). id is a slug of the name.
 export const withItemId = (item, index = 0) => ({
   ...item,
-  id: item.id || `${slugify(item.name)}${index ? `-${index}` : ''}`,
+  id: stampId(item, index, item.name),
 });
 
-export const normalizeItems = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((it, i) => withItemId(it, i));
+export const normalizeItems = (arr) => normalizeList(arr, withItemId);
 
-// id -> catalog item, for resolving inventory references.
-export const itemCatalogMap = (items) => {
+// id -> doc, for resolving catalog references. One builder backs the item,
+// spell, and rune maps (kept as distinct named exports for their importers).
+const catalogMap = (list) => {
   const map = new Map();
-  (Array.isArray(items) ? items : []).forEach((it) => {
-    if (it && it.id != null) map.set(String(it.id), it);
+  (Array.isArray(list) ? list : []).forEach((d) => {
+    if (d && d.id != null) map.set(String(d.id), d);
   });
   return map;
 };
+
+// id -> catalog item, for resolving inventory references.
+export const itemCatalogMap = catalogMap;
 
 // Spell catalog: shared spell definitions referenced by wand/scroll/staff
 // blocks (`spellRef`, or a staff-spell entry's `ref`). id is a slug of the
 // name — exactly like items. Mirrors withItemId/normalizeItems/itemCatalogMap.
 export const withSpellId = (spell, index = 0) => ({
   ...spell,
-  id: spell.id || `${slugify(spell.name)}${index ? `-${index}` : ''}`,
+  id: stampId(spell, index, spell.name),
 });
 
-export const normalizeSpells = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((s, i) => withSpellId(s, i));
+export const normalizeSpells = (arr) => normalizeList(arr, withSpellId);
 
 export const normalizeEffects = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((e) => ({
+  normalizeList(arr, (e) => ({
     ...e,
     id: e.id || slugify(e.name),
     modifiers: Array.isArray(e.modifiers) ? e.modifiers : [],
@@ -146,7 +152,7 @@ export const normalizeEffects = (arr) =>
 // Property runes (#548 Slice 3) — id-keyed like effects, referenced from an
 // item's `runes.property` array.
 export const normalizeRunes = (arr) =>
-  (Array.isArray(arr) ? arr : []).map((r) => ({
+  normalizeList(arr, (r) => ({
     ...r,
     id: r.id || slugify(r.name),
     type: r.type || 'property',
@@ -176,22 +182,10 @@ export const mergeFundamentalRunes = (runes) => {
 };
 
 // id -> property-rune doc, for resolving an item's runes.property references.
-export const runeCatalogMap = (runes) => {
-  const map = new Map();
-  (Array.isArray(runes) ? runes : []).forEach((r) => {
-    if (r && r.id != null) map.set(String(r.id), r);
-  });
-  return map;
-};
+export const runeCatalogMap = catalogMap;
 
 // id -> catalog spell, for resolving wand/scroll/staff spell references.
-export const spellCatalogMap = (spells) => {
-  const map = new Map();
-  (Array.isArray(spells) ? spells : []).forEach((s) => {
-    if (s && s.id != null) map.set(String(s.id), s);
-  });
-  return map;
-};
+export const spellCatalogMap = catalogMap;
 
 // Resolve a focus/devotion/ki spell list. Each entry references a catalog spell
 // by `spellRef` (epic #622 — no inline spells), replaced by the catalog spell

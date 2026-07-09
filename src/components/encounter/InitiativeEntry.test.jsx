@@ -129,6 +129,7 @@ describe('InitiativeEntry', () => {
   });
 
   it('does not show Scout reminder when the character is the scout', () => {
+    // Mount-only seed of the scout bonus key, as in the previous test.
     const ScoutSetter = ({ value }) => {
       const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
       React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -267,6 +268,7 @@ describe('InitiativeEntry — Foundry-linked', () => {
     return null;
   };
 
+  // Mount-only seed of the scout bonus key (as in the tests above).
   const ScoutSetter = ({ value }) => {
     const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
     React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps

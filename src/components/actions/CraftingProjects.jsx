@@ -67,6 +67,8 @@ const CraftingProjects = ({ character }) => {
     setCraftProjects(prev => ({
       projects: (prev?.projects || []).filter(p => p.status !== 'completed'),
     }));
+  // completedSig is the stable signature of the completed set; craftProjects is
+  // re-read fresh inside and the synced setters are stable.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completedSig]);
 

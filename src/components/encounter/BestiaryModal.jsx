@@ -119,6 +119,8 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
     return [...byKey.values()];
   }, [enemies]);
 
+  // Open-only: seed focus to the first group. Re-running on `groups` changes
+  // would yank the player's focus when enemies update mid-fight.
   useEffect(() => {
     if (isOpen) {
       setFocusKey(groups[0]?.key ?? null);

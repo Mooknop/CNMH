@@ -1,36 +1,6 @@
-/* Full-screen overlay — sits above the character sheet content. */
-.dsm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 900;
-  padding: var(--space-4);
-}
+/* Downtime-summary body styles — rendered inside the shared Modal shell (#1319). */
 
-.dsm-modal {
-  background: var(--shell-bg, #1a1a2e);
-  border: 1px solid var(--shell-border, #333);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6) var(--space-6) var(--space-4);
-  max-width: 480px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
 
-.dsm-title {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  color: var(--arcane-mid, var(--theme-arcane));
-  margin: 0;
-  text-align: center;
-}
 
 .dsm-period {
   font-family: var(--font-ui);
