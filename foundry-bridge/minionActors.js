@@ -19,6 +19,7 @@ import {
   getMinionActorLinks,
   findOpenAdjacentCell,
   createTokenForActor,
+  onHook,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
@@ -40,11 +41,11 @@ export function initMinionActors(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
   // Links depend on actor ownership/type; presence on the scene depends on tokens.
   // The set is small, so recompute from scratch on any relevant change.
-  Hooks.on('createActor', () => pushMinionActors());
-  Hooks.on('updateActor', () => pushMinionActors());
-  Hooks.on('deleteActor', () => pushMinionActors());
-  Hooks.on('createToken', () => pushMinionActors());
-  Hooks.on('deleteToken', () => pushMinionActors());
+  onHook('createActor', () => pushMinionActors());
+  onHook('updateActor', () => pushMinionActors());
+  onHook('deleteActor', () => pushMinionActors());
+  onHook('createToken', () => pushMinionActors());
+  onHook('deleteToken', () => pushMinionActors());
 }
 
 // App-requested refresh (cnmh_minionactorsreq_global) — reconnect / manual.

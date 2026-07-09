@@ -14,6 +14,7 @@
 
 import {
   getActiveCombat, getCombatState, getCombatantActorId, getChatMessageContext,
+  onHook,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
@@ -24,10 +25,10 @@ let _state = null;
 
 export function initActorFeed(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
-  Hooks.on('createChatMessage', (message)        => onChatMessage(message));
-  Hooks.on('createCombat',      ()               => resetForActiveCombatant());
-  Hooks.on('updateCombat',      (combat, diff)   => onUpdateCombat(combat, diff));
-  Hooks.on('deleteCombat',      ()               => { _state = null; });
+  onHook('createChatMessage', (message)        => onChatMessage(message));
+  onHook('createCombat',      ()               => resetForActiveCombatant());
+  onHook('updateCombat',      (combat, diff)   => onUpdateCombat(combat, diff));
+  onHook('deleteCombat',      ()               => { _state = null; });
 }
 
 // --- turn lifecycle -------------------------------------------------------

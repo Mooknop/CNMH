@@ -12,7 +12,7 @@
 // Mirrors flankingPush.js. Adjacency is general (all combat tokens, keyed by
 // combatant id) so it can also back future melee-reach / door-reach checks.
 
-import { getCombatTokenMap, getGridSize } from './pf2eAdapter.js';
+import { getCombatTokenMap, getGridSize, onHook } from './pf2eAdapter.js';
 import { computeAdjacency } from './adjacency.js';
 import { RELAY } from './syncKeys.js';
 
@@ -27,11 +27,11 @@ export function initAdjacencyPush(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
   // Recompute whenever a token moves (the document update fires after the move).
-  Hooks.on('updateToken', () => pushAdjacencyState());
+  onHook('updateToken', () => pushAdjacencyState());
   // Turn advance / combat changes (cheap; positions may matter for the new actor).
-  Hooks.on('updateCombat', () => pushAdjacencyState());
+  onHook('updateCombat', () => pushAdjacencyState());
   // Combat start — combatants and their tokens are now known.
-  Hooks.on('createCombat', () => pushAdjacencyState());
+  onHook('createCombat', () => pushAdjacencyState());
 }
 
 export function pushAdjacencyState() {

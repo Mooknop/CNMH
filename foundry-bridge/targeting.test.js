@@ -7,8 +7,6 @@ import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { updateActorMap } from './encounter.js';
 import { makeCombat, makeCombatant, makeToken } from './test/foundryMock.js';
 
-const G = 100;
-function tok(id, col, row) { return makeToken({ id, x: col * G, y: row * G }); }
 
 // Active combat with two combatants, each tied to a placed token.
 function setupCombat() {

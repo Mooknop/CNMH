@@ -14,6 +14,7 @@ import {
   getActorById, getActorId, updateActorHp, updateActorHeroPoints,
   isConditionItem, getConditionItemActor,
   isEffectItem, getEffectItemActor,
+  onHook,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
@@ -22,23 +23,23 @@ let _sendUpdate = null;
 export function initCharacterSync(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
-  Hooks.on('updateActor', onUpdateActor);
+  onHook('updateActor', onUpdateActor);
   // Conditions — including dying/wounded/doomed — are condition-type Items on the
   // actor. Foundry fires per-document hooks (createItem/updateItem/deleteItem),
   // not a generic createEmbeddedDocuments hook. updateItem catches badge changes
   // (e.g. Dying 1 → 2).
-  Hooks.on('createItem', onConditionItemChanged);
-  Hooks.on('updateItem', onConditionItemChanged);
-  Hooks.on('deleteItem', onConditionItemChanged);
+  onHook('createItem', onConditionItemChanged);
+  onHook('updateItem', onConditionItemChanged);
+  onHook('deleteItem', onConditionItemChanged);
 
   // Effect items — Foundry → app effect read-back (#455). The Courageous Anthem
   // aura grants the stock spell effect to allied tokens in range; mirroring those
   // effect items into cnmh_foundryeffects_<charId> lets the app show + apply the
   // +1 the same way an app-applied effect would. Enter/leave the aura fires
   // create/delete on the ally actor, so membership tracking is automatic.
-  Hooks.on('createItem', onEffectItemChanged);
-  Hooks.on('updateItem', onEffectItemChanged);
-  Hooks.on('deleteItem', onEffectItemChanged);
+  onHook('createItem', onEffectItemChanged);
+  onHook('updateItem', onEffectItemChanged);
+  onHook('deleteItem', onEffectItemChanged);
 }
 
 // Called by bridge.js when an incoming relay UPDATE arrives for a character key.

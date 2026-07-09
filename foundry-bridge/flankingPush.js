@@ -9,7 +9,7 @@
 // off-guard (−2 circumstance to AC, attacker-relative).
 
 import { getActorMap } from './encounter.js';
-import { getCombatTokenMap, checkFlanking, getMinionActorLinks } from './pf2eAdapter.js';
+import { getCombatTokenMap, checkFlanking, getMinionActorLinks, onHook } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
@@ -24,14 +24,14 @@ export function initFlankingPush(sendUpdateFn) {
 
   // Re-evaluate flanking every time a token moves on the canvas.
   // v13/v14: updateToken fires on the token document after the move is applied.
-  Hooks.on('updateToken', () => pushFlankedState());
+  onHook('updateToken', () => pushFlankedState());
 
   // Re-evaluate at every turn advance (tokens haven't moved, but the "can act"
   // status may change — and it's cheap to recompute).
-  Hooks.on('updateCombat', () => pushFlankedState());
+  onHook('updateCombat', () => pushFlankedState());
 
   // Re-evaluate when combat starts (combatants and tokens are now known).
-  Hooks.on('createCombat', () => pushFlankedState());
+  onHook('createCombat', () => pushFlankedState());
 
   // If combat is already active when the bridge connects, the actormap will
   // arrive via FULL_STATE a moment later (bridge.js calls pushFlankedState after

@@ -32,8 +32,12 @@ devices.
 | `config.js` | Per-campaign config (worker URL, secret, actor/token maps). |
 
 Feature modules hold logic and never touch a Foundry global directly — all of
-that goes through `pf2eAdapter.js`. See [`MIGRATION.md`](./MIGRATION.md) for why
-and how that protects version upgrades.
+that goes through `pf2eAdapter.js`, including hook registration (`onHook`) and
+module-settings reads (`getModuleSetting`). See [`MIGRATION.md`](./MIGRATION.md)
+for why and how that protects version upgrades. Since #1313 this is **enforced
+by ESLint** (`npm run lint` covers `foundry-bridge/`): a bare `game`/`canvas`/
+`CONFIG`/`ui`/`Hooks`/… reference in a feature module fails the build; only
+`pf2eAdapter.js` and `bridge.js` (the Foundry entry point) may use them.
 
 ## Relay keys (single source of truth)
 

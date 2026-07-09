@@ -14,6 +14,7 @@ import {
   getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   setMultipleInitiatives, rollNpcInitiatives, startCombat,
+  onHook,
 } from './pf2eAdapter.js';
 import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
 import { RELAY } from './syncKeys.js';
@@ -45,13 +46,13 @@ export function initEncounter(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
   initTokenImages();
 
-  Hooks.on('createCombat',    (combat)             => { _activeCombatId = combat.id; _initRolls = {}; pushEncounterState(combat); });
-  Hooks.on('deleteCombat',    ()                   => { _activeCombatId = null; _initRolls = {}; pushIdleState(); });
-  Hooks.on('createCombatant', (combatant)          => pushEncounterState(combatant.combat));
+  onHook('createCombat',    (combat)             => { _activeCombatId = combat.id; _initRolls = {}; pushEncounterState(combat); });
+  onHook('deleteCombat',    ()                   => { _activeCombatId = null; _initRolls = {}; pushIdleState(); });
+  onHook('createCombatant', (combatant)          => pushEncounterState(combatant.combat));
   // A PC removed mid-setup shrinks the expected set — the remaining rolls may now
   // be complete, so re-check after the push.
-  Hooks.on('deleteCombatant', (combatant)          => { pushEncounterState(combatant.combat); maybeCommitInitiative(combatant.combat); });
-  Hooks.on('updateCombat',    (combat, diff, opts) => { _activeCombatId = combat.id; onUpdateCombat(combat, diff, opts); });
+  onHook('deleteCombatant', (combatant)          => { pushEncounterState(combatant.combat); maybeCommitInitiative(combatant.combat); });
+  onHook('updateCombat',    (combat, diff, opts) => { _activeCombatId = combat.id; onUpdateCombat(combat, diff, opts); });
 }
 
 // Resolve the live combat the bridge should act on. Prefer the stored id over the

@@ -21,6 +21,7 @@ import { isBridgeEcho, slugToAppConditionId } from './utils.js';
 import {
   getActorById, getActorId, getHp, updateActorHp, getMinionActorLinks,
   getConditions, isConditionItem, getConditionItemActor,
+  onHook,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
@@ -32,12 +33,12 @@ const _minionsCache = new Map();
 
 export function initMinionSync(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
-  Hooks.on('updateActor', onUpdateActorMinion);
+  onHook('updateActor', onUpdateActorMinion);
   // Conditions (incl. dying/wounded/doomed) are condition-type Items, so Foundry
   // fires per-document hooks rather than updateActor — same as PCs.
-  Hooks.on('createItem', onMinionConditionItemChanged);
-  Hooks.on('updateItem', onMinionConditionItemChanged);
-  Hooks.on('deleteItem', onMinionConditionItemChanged);
+  onHook('createItem', onMinionConditionItemChanged);
+  onHook('updateItem', onMinionConditionItemChanged);
+  onHook('deleteItem', onMinionConditionItemChanged);
 }
 
 // Seed/refresh the per-owner cache. Called from bridge.js on FULL_STATE and on
