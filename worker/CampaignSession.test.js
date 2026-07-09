@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
-import { CampaignSession } from './CampaignSession.js';
+import { CampaignSession, MAX_MESSAGE_CHARS } from './CampaignSession.js';
 
 // The DO is a plain class; we drive it with a mock `state` that stands in for
 // the hibernation runtime. Each fake socket carries its own attachment (the
@@ -169,5 +169,112 @@ describe('CampaignSession presence', () => {
     await session.webSocketError(bridge);
 
     expect(lastPresence(app)).toEqual({ type: 'PRESENCE', foundry: false });
+  });
+});
+
+// #1309: the core relay path — persist + fanout + validation.
+describe('CampaignSession webSocketMessage', () => {
+  const update = (characterId, key, value) =>
+    JSON.stringify({ type: 'UPDATE', characterId, key, value });
+  const updates = (socket) => socket.sent.filter((m) => m.type === 'UPDATE');
+
+  async function threePeers() {
+    const state = makeState();
+    const session = new CampaignSession(state, {});
+    const sender = await connect(session, state, '/session/camp');
+    const other = await connect(session, state, '/session/camp');
+    const bridge = await connect(session, state, '/bridge/camp');
+    [sender, other, bridge].forEach((s) => { s.sent.length = 0; });
+    return { state, session, sender, other, bridge };
+  }
+
+  test('a valid UPDATE persists and fans out to every peer except the sender', async () => {
+    const { state, session, sender, other, bridge } = await threePeers();
+
+    await session.webSocketMessage(sender, update('pc-1', 'hp', { current: 12, max: 30 }));
+
+    const stored = await state.storage.get('sessionState');
+    expect(stored['pc-1'].hp).toEqual({ current: 12, max: 30 });
+    const expected = { type: 'UPDATE', characterId: 'pc-1', key: 'hp', value: { current: 12, max: 30 } };
+    expect(updates(other)).toEqual([expected]);
+    expect(updates(bridge)).toEqual([expected]);
+    expect(updates(sender)).toEqual([]);
+  });
+
+  test('later UPDATEs merge into existing state; a new connect hydrates from it', async () => {
+    const { state, session, sender } = await threePeers();
+    await session.webSocketMessage(sender, update('pc-1', 'hp', { current: 12 }));
+    await session.webSocketMessage(sender, update('pc-1', 'gold', 42));
+    await session.webSocketMessage(sender, update('global', 'playmode', 'downtime'));
+
+    const late = await connect(session, state, '/session/camp');
+
+    const full = late.sent.find((m) => m.type === 'FULL_STATE');
+    expect(full.payload).toEqual({
+      'pc-1': { hp: { current: 12 }, gold: 42 },
+      global: { playmode: 'downtime' },
+    });
+  });
+
+  test('null values ride through (channels use null as reset)', async () => {
+    const { state, session, sender, other } = await threePeers();
+    await session.webSocketMessage(sender, update('pc-1', 'moveopts', null));
+    expect((await state.storage.get('sessionState'))['pc-1'].moveopts).toBeNull();
+    expect(updates(other)[0].value).toBeNull();
+  });
+
+  const rejects = async (raw) => {
+    const { state, session, sender, other } = await threePeers();
+    await session.webSocketMessage(sender, raw);
+    expect(await state.storage.get('sessionState')).toBeUndefined();
+    expect(updates(other)).toEqual([]);
+  };
+
+  test('malformed JSON is dropped without throwing', async () => {
+    await rejects('{not json');
+  });
+
+  test('non-UPDATE message types are ignored', async () => {
+    await rejects(JSON.stringify({ type: 'GM_BATCH', characterId: 'pc-1', key: 'hp', value: 1 }));
+  });
+
+  test('missing characterId or key is dropped', async () => {
+    await rejects(JSON.stringify({ type: 'UPDATE', key: 'hp', value: 1 }));
+    await rejects(JSON.stringify({ type: 'UPDATE', characterId: 'pc-1', value: 1 }));
+  });
+
+  test('a key that is not a bare lowercase token is dropped (registry constraint)', async () => {
+    await rejects(update('pc-1', 'cnmh_hp_pc-1', 1)); // full key instead of bare type
+    await rejects(update('pc-1', 'HP', 1));
+    await rejects(update('pc-1', 'h p', 1));
+    await rejects(update('pc-1', 'x'.repeat(33), 1));
+  });
+
+  test('non-string ids and whitespace/oversized characterIds are dropped', async () => {
+    await rejects(update({ evil: true }, 'hp', 1));
+    await rejects(update('pc 1', 'hp', 1));
+    await rejects(update('x'.repeat(65), 'hp', 1));
+  });
+
+  test('__proto__ ids are dropped and Object.prototype stays clean', async () => {
+    await rejects(update('__proto__', 'hp', { polluted: true }));
+    expect({}.hp).toBeUndefined();
+    await rejects(update('constructor', 'hp', 1));
+  });
+
+  test('oversized frames are dropped before parsing', async () => {
+    const big = update('pc-1', 'hp', 'x'.repeat(MAX_MESSAGE_CHARS));
+    await rejects(big);
+  });
+
+  test('binary (non-string) frames are dropped gracefully', async () => {
+    await rejects(new ArrayBuffer(8));
+  });
+
+  test('a frame at a realistic payload size passes', async () => {
+    const { state, session, sender } = await threePeers();
+    const reachable = Array.from({ length: 200 }, (_, i) => ({ col: i, row: i, feet: 5, terrain: 'normal' }));
+    await session.webSocketMessage(sender, update('pc-1', 'moveopts', { reachable }));
+    expect((await state.storage.get('sessionState'))['pc-1'].moveopts.reachable).toHaveLength(200);
   });
 });
