@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
@@ -17,10 +16,7 @@ const blankRank = () => ({ name: '', min: 0, max: 0, effect: '' });
 
 const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'faction', isNew, existingIds, onSaved });
 
   const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
   const setRank = (i, patch) =>
@@ -32,23 +28,9 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const removeRank = (i) =>
     setF((cur) => ({ ...cur, ranks: cur.ranks.filter((_, idx) => idx !== i) }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('faction', id, payload);
-      onSaved(isNew, id);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     if (!f.name.trim()) {
-      setError('Name is required.');
+      form.setError('Name is required.');
       return;
     }
     const id = f.id || slugify(f.name);
@@ -63,25 +45,7 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         return rank;
       }),
     };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('faction', f.id);
-      onSaved(false);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, payload);
   };
 
   return (
@@ -146,55 +110,35 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </button>
       </div>
 
-      {error && <p className="gm-warn" role="alert">{error}</p>}
+      {form.error && <p className="gm-warn" role="alert">{form.error}</p>}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create faction' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
-            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+            <button className="btn-danger" disabled={form.busy} onClick={form.requestDelete}>
               Delete
             </button>
           </>
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="faction"
-          id={f.id}
-          name={f.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setF(doc);
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete faction"
-        message={`Permanently delete the faction "${f.name}". This cannot be undone — restore it from History if you have it.`}
-        confirmLabel="Delete forever"
-        requireType={f.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing entry?"
-        message={`A faction with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="faction"
+        noun="faction"
+        id={f.id}
+        name={f.name}
+        isNew={isNew}
+        deleteMessage={`Permanently delete the faction "${f.name}". This cannot be undone — restore it from History if you have it.`}
+        onRestored={(doc) => {
+          if (doc) setF(doc);
+          onRestored();
+        }}
       />
     </div>
   );

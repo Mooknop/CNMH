@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import EffectsSubform, { effectsToForm, effectsFromForm } from '../../components/gm/EffectsSubform';
 import {
   rollToForm, rollFromForm, RollSourceControl,
@@ -113,10 +112,7 @@ const fromForm = (f) => {
 
 const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'spell', isNew, existingIds, onSaved });
 
   const setStr = (k, v) => setE((cur) => ({ ...cur, str: { ...cur.str, [k]: v } }));
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
@@ -137,49 +133,16 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const rmH = (i) =>
     setE((cur) => ({ ...cur, heightened: cur.heightened.filter((_, idx) => idx !== i) }));
 
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('spell', id, payload);
-      onSaved(isNew, id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const save = async () => {
     let body;
     try {
       body = fromForm(e);
     } catch (err) {
-      setError(err.message);
+      form.setError(err.message);
       return;
     }
     const id = e.id || slugify(body.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('spell', e.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, { ...body, id });
   };
 
   return (
@@ -316,24 +279,24 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       </div>
 
-      {error && (
+      {form.error && (
         <p className="gm-warn" role="alert">
-          {error}
+          {form.error}
         </p>
       )}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create spell' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
             <button
               className="btn-danger"
-              disabled={busy}
-              onClick={() => setConfirm({ kind: 'delete' })}
+              disabled={form.busy}
+              onClick={form.requestDelete}
             >
               Delete
             </button>
@@ -341,38 +304,18 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="spell"
-          id={e.id}
-          name={e.str.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setE(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete spell"
-        message={`Permanently delete the spell "${e.str.name}". Scrolls, wands, and staves that reference it will show "(unknown spell)" until repointed. This cannot be undone — restore it from History if you have it.`}
-        confirmLabel="Delete forever"
-        requireType={e.str.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing spell?"
-        message={`A spell with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="spell"
+        noun="spell"
+        id={e.id}
+        name={e.str.name}
+        isNew={isNew}
+        deleteMessage={`Permanently delete the spell "${e.str.name}". Scrolls, wands, and staves that reference it will show "(unknown spell)" until repointed. This cannot be undone — restore it from History if you have it.`}
+        onRestored={(doc) => {
+          if (doc) setE(toForm(doc));
+          onRestored();
+        }}
       />
     </div>
   );

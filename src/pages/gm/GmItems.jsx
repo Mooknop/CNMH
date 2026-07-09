@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { isRuneItem } from '../../utils/runeClassify';
-import ConfirmDialog from '../../components/shared/ConfirmDialog';
-import HistoryModal from '../../components/gm/HistoryModal';
+import { useGmEntryForm } from '../../hooks/useGmEntryForm';
+import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import {
   strikeToForm,
   strikeFromForm,
@@ -498,10 +497,7 @@ const VariantSubform = ({ variant, idPrefix, onChange }) => {
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const { spells, effects, runes: runeCatalog } = useContent();
   const [e, setE] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
-  const [showHistory, setShowHistory] = useState(false);
+  const form = useGmEntryForm({ collection: 'item', isNew, existingIds, onSaved });
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
   const setStrike = (i, next) =>
@@ -515,20 +511,6 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const addVariant = () => setE((cur) => ({ ...cur, variants: [...cur.variants, blankVariant()] }));
   const rmVariant = (i) =>
     setE((cur) => ({ ...cur, variants: cur.variants.filter((_, idx) => idx !== i) }));
-
-  const submit = async (id, payload) => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('item', id, payload);
-      onSaved(isNew, id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   // For a scroll or wand, the item's name is generated from the contained
   // spell ("Scroll of <Spell>" / "Wand of <Spell>"). Recompute on every render
@@ -632,30 +614,11 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     try {
       body = itemFromForm(candidate);
     } catch (err) {
-      setError(err.message);
+      form.setError(err.message);
       return;
     }
     const id = candidate.id || slugify(candidate.name);
-    const payload = { ...body, id };
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
-      return;
-    }
-    await submit(id, payload);
-  };
-
-  const doRemove = async () => {
-    setConfirm(null);
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteDocument('item', e.id);
-      onSaved(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+    await form.save(id, { ...body, id });
   };
 
   return (
@@ -1149,24 +1112,24 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       </div>
 
-      {error && (
+      {form.error && (
         <p className="gm-warn" role="alert">
-          {error}
+          {form.error}
         </p>
       )}
       <div className="gm-actions">
-        <button className="btn-primary" disabled={busy} onClick={save}>
+        <button className="btn-primary" disabled={form.busy} onClick={save}>
           {isNew ? 'Create item' : 'Save'}
         </button>
         {!isNew && (
           <>
-            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+            <button className="btn-secondary" disabled={form.busy} onClick={() => form.setShowHistory(true)}>
               History
             </button>
             <button
               className="btn-danger"
-              disabled={busy}
-              onClick={() => setConfirm({ kind: 'delete' })}
+              disabled={form.busy}
+              onClick={form.requestDelete}
             >
               Delete
             </button>
@@ -1174,38 +1137,18 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         )}
       </div>
 
-      {!isNew && (
-        <HistoryModal
-          isOpen={showHistory}
-          collection="item"
-          id={e.id}
-          name={e.name}
-          onClose={() => setShowHistory(false)}
-          onRestored={(doc) => {
-            setShowHistory(false);
-            if (doc) setE(toForm(doc));
-            setError(null);
-            onRestored();
-          }}
-        />
-      )}
-
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'delete'}
-        title="Delete catalog item"
-        message={`Permanently delete the catalog item "${e.name}". Characters that reference it will show "(unknown item)" until repointed. This cannot be undone — restore it from History if you have it.`}
-        confirmLabel="Delete forever"
-        requireType={e.name}
-        onConfirm={doRemove}
-        onCancel={() => setConfirm(null)}
-      />
-      <ConfirmDialog
-        isOpen={confirm?.kind === 'collision'}
-        title="Overwrite existing item?"
-        message={`A catalog item with id "${confirm?.id}" already exists. Saving will overwrite it.`}
-        confirmLabel="Overwrite"
-        onConfirm={() => submit(confirm.id, confirm.payload)}
-        onCancel={() => setConfirm(null)}
+      <GmEntryDialogs
+        form={form}
+        collection="item"
+        noun="catalog item"
+        id={e.id}
+        name={e.name}
+        isNew={isNew}
+        onRestored={(doc) => {
+          if (doc) setE(toForm(doc));
+          onRestored();
+        }}
+        deleteMessage={`Permanently delete the catalog item "${e.name}". Characters that reference it will show "(unknown item)" until repointed. This cannot be undone — restore it from History if you have it.`}
       />
     </div>
   );
