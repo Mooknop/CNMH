@@ -366,7 +366,7 @@
 .pmc-btn--primary {
   background: var(--theme-accent);
   border-color: var(--theme-accent);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .pmc-btn--primary:hover:not(:disabled) {
@@ -404,7 +404,7 @@
   background: var(--theme-accent, var(--accent-bg));
   border: 1px solid var(--theme-accent, var(--accent-bg));
   border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: var(--text-xs);
@@ -455,8 +455,8 @@
 }
 
 .pmc-take10-cancel:hover {
-  color: var(--color-danger, #d9534f);
-  border-color: var(--color-danger, #d9534f);
+  color: var(--color-danger, var(--d-cf-fg));
+  border-color: var(--color-danger, var(--d-cf-fg));
 }
 
 /* Downtime time-advance controls */

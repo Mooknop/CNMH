@@ -53,7 +53,7 @@
 .party-summary h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #ffffff;
+  color: var(--color-text-on-primary);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
   padding-bottom: 0.5rem;
@@ -64,7 +64,7 @@
 .party-summary h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: var(--color-text-on-primary);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   font-size: 1.5rem;
 }
@@ -72,7 +72,7 @@
 .party-summary h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #ffffff;
+  color: var(--color-text-on-primary);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   font-size: 1.2rem;
 }
@@ -124,7 +124,7 @@
 
 .char-class {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--iron-base);
 }
 
 .ability-row {
@@ -136,7 +136,7 @@
 .ability-label {
   width: 40px;
   font-weight: 600;
-  color: #444;
+  color: var(--iron-dark);
   font-size: 0.95rem;
 }
 
@@ -218,7 +218,7 @@
 
 .legend-class {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--iron-base);
 }
 
 /* Character Strengths Styles */
@@ -260,7 +260,7 @@
 
 .strength-class {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--iron-base);
 }
 
 .strength-abilities {
@@ -311,7 +311,7 @@
 
 .member-class {
   margin: 0;
-  color: #666;
+  color: var(--iron-base);
   font-size: 0.9rem;
   font-weight: 500;
 }

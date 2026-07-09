@@ -204,7 +204,7 @@
   border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.07));
   border-radius: var(--radius-lg);
   overflow: hidden;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
 }
 
 .preview-card-header {
@@ -254,7 +254,7 @@
 .preview-value {
   font-weight: 700;
   font-size: 1rem;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
 }
 
 .preview-tabs {
@@ -288,7 +288,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
   background: color-mix(in srgb, var(--preview-accent) 14%, transparent);
 }
 

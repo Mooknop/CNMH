@@ -50,5 +50,5 @@
 .modal-body .magic-category-btn:hover,
 .modal-body .magic-category-btn:active {
   background-color: var(--category-color, var(--color-theme, var(--theme-accent)));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }

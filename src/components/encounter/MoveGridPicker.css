@@ -105,7 +105,7 @@
   display: flex;
   gap: var(--space-3);
   font-size: 0.65rem;
-  color: var(--theme-text-secondary, #888);
+  color: var(--theme-text-secondary, var(--color-text-muted));
 }
 
 .mgp-legend-item {
@@ -145,7 +145,7 @@
   margin: 0;
   font-size: 0.65rem;
   text-align: center;
-  color: var(--theme-text-secondary, #888);
+  color: var(--theme-text-secondary, var(--color-text-muted));
 }
 
 /* ── Step-pad mode (8-direction D-pad) ──────────────────────────────────────

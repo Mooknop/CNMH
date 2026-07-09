@@ -400,9 +400,9 @@
 }
 
 .event-item.campaign    h3 { color: #c47a45; }
-.event-item.holiday     h3 { color: #e85555; }
+.event-item.holiday     h3 { color: var(--peril-light); }
 .event-item.world-event h3 { color: #a07bca; }
-.event-item.personal    h3 { color: #62c278; }
+.event-item.personal    h3 { color: var(--verdant-light); }
 .event-item.recurring   h3 { color: #9a7045; }
 
 .event-type {
@@ -418,9 +418,9 @@
 }
 
 .event-item.campaign    .event-type { background: rgba(139, 69, 19, 0.18); color: #c47a45; border-color: rgba(139, 69, 19, 0.4); }
-.event-item.holiday     .event-type { background: rgba(220, 20, 60, 0.18); color: #e85555; border-color: rgba(220, 20, 60, 0.4); }
+.event-item.holiday     .event-type { background: rgba(220, 20, 60, 0.18); color: var(--peril-light); border-color: rgba(220, 20, 60, 0.4); }
 .event-item.world-event .event-type { background: rgba(123, 94, 167, 0.18); color: #a07bca; border-color: rgba(123, 94, 167, 0.4); }
-.event-item.personal    .event-type { background: rgba(34, 139, 34, 0.18); color: #62c278; border-color: rgba(34, 139, 34, 0.4); }
+.event-item.personal    .event-type { background: rgba(34, 139, 34, 0.18); color: var(--verdant-light); border-color: rgba(34, 139, 34, 0.4); }
 .event-item.recurring   .event-type { background: rgba(107, 66, 38, 0.18); color: #9a7045; border-color: rgba(107, 66, 38, 0.4); }
 
 .event-description,

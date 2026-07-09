@@ -47,7 +47,7 @@
 /* Quest count summary */
 .quest-count-note {
   margin-bottom: 15px;
-  color: #666;
+  color: var(--iron-base);
 }
 
 .quest-count-display {

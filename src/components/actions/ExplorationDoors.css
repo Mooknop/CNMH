@@ -16,12 +16,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-muted, var(--color-text-muted));
 }
 
 .ed-empty {
   font-size: 0.85rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-muted, var(--color-text-muted));
   margin: 0;
 }
 
@@ -41,17 +41,17 @@
   padding: 8px 10px;
   border-radius: 6px;
   background: var(--color-surface-raised, rgba(255,255,255,0.04));
-  border-left: 3px solid var(--color-text-muted, #888);
+  border-left: 3px solid var(--color-text-muted, var(--color-text-muted));
   transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 /* State-tinted card accent — open doors glow with the theme accent. */
-.ed-door--0 { border-left-color: var(--color-text-muted, #888); }
+.ed-door--0 { border-left-color: var(--color-text-muted, var(--color-text-muted)); }
 .ed-door--1 {
   border-left-color: var(--color-theme, #7aa2f7);
   background: var(--accent-tint, rgba(122,162,247,0.10));
 }
-.ed-door--2 { border-left-color: var(--color-text-muted, #888); }
+.ed-door--2 { border-left-color: var(--color-text-muted, var(--color-text-muted)); }
 
 /* Door glyph. Remounts on state change (key=state) to replay the pop. */
 .ed-door-icon {
@@ -73,7 +73,7 @@
 
 .ed-door-state--0 { color: var(--color-text, inherit); }
 .ed-door-state--1 { color: var(--color-theme, #7aa2f7); }
-.ed-door-state--2 { color: var(--color-text-muted, #888); }
+.ed-door-state--2 { color: var(--color-text-muted, var(--color-text-muted)); }
 
 .ed-door-actions {
   display: flex;
@@ -100,6 +100,6 @@
 
 .ed-door-locked {
   font-size: 0.8rem;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-muted, var(--color-text-muted));
   font-style: italic;
 }

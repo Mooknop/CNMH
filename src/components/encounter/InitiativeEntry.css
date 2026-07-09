@@ -12,7 +12,7 @@
 .initiative-entry-scout {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--gold-mid, #c49a2e);
+  color: var(--gold-mid, var(--gold-mid));
   letter-spacing: 0.04em;
 }
 
@@ -27,7 +27,7 @@
 .initiative-entry-prompt {
   flex: 1 1 320px;
   font-size: 0.95rem;
-  color: var(--gold-light, #e8be56);
+  color: var(--gold-light, var(--gold-light));
 }
 
 .initiative-entry-field {
@@ -35,7 +35,7 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: var(--gold-light, #e8be56);
+  color: var(--gold-light, var(--gold-light));
 }
 
 .initiative-entry-field input {
@@ -44,7 +44,7 @@
   border: 1px solid rgba(196, 154, 46, 0.5);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.06);
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
   font-size: 1rem;
 }
 
@@ -55,7 +55,7 @@
   gap: 0.5rem;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--gold-light, #e8be56);
+  color: var(--gold-light, var(--gold-light));
   cursor: pointer;
 }
 
@@ -63,7 +63,7 @@
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: var(--gold-mid, #c49a2e);
+  color: var(--gold-mid, var(--gold-mid));
 }
 
 .initiative-entry-field select {
@@ -71,7 +71,7 @@
   border: 1px solid rgba(196, 154, 46, 0.5);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.06);
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
   font-size: 0.95rem;
 }
 
@@ -86,7 +86,7 @@
   border: 1px solid rgba(196, 154, 46, 0.5);
   border-radius: var(--radius-sm);
   background: rgba(196, 154, 46, 0.18);
-  color: var(--gold-light, #e8be56);
+  color: var(--gold-light, var(--gold-light));
   font-weight: 700;
   font-size: var(--text-sm);
   cursor: pointer;
@@ -107,5 +107,5 @@
 .initiative-entry-submitted-flag {
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: var(--success, #6fbf73);
+  color: var(--success, var(--verdant-light));
 }

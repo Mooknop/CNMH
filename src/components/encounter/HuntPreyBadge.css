@@ -1,5 +1,5 @@
 /* Hunt Prey (#223) — prey marker on the designated enemy in the order strip.
-   Relocated from TurnTrackerPanel.css (#425); keeps the ttp- name for continuity. */
+   Relocated from TurnTrackerPanel.css (var(--arcane-dark)); keeps the ttp- name for continuity. */
 .ttp-prey-badge {
   font-size: var(--text-xs);
   margin: 0 2px;

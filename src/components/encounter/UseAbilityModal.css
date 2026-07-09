@@ -140,7 +140,7 @@
 
 .uam-freq-clear {
   background: none;
-  border: 1px solid var(--color-border, #444);
+  border: 1px solid var(--color-border, var(--iron-dark));
   border-radius: 4px;
   color: var(--color-text-muted);
   font-size: var(--text-xs, 0.75rem);

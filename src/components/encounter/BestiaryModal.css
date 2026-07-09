@@ -37,13 +37,13 @@
 
 .bm-list-item:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .bm-list-item--active {
   background: var(--accent-tint, rgba(192, 68, 14, 0.14));
-  border-color: var(--accent-outline, var(--color-primary, #c0440e));
-  color: var(--accent-text, #e85d1a);
+  border-color: var(--accent-outline, var(--color-primary, var(--ember-base)));
+  color: var(--accent-text, var(--ember-mid));
 }
 
 .bm-thumb {
@@ -78,7 +78,7 @@
   padding: 1px 6px;
   border-radius: 10px;
   background: var(--accent-tint, rgba(192, 68, 14, 0.18));
-  color: var(--accent-text, #e85d1a);
+  color: var(--accent-text, var(--ember-mid));
 }
 
 /* ---------- Right detail pane ---------- */
@@ -100,7 +100,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.15rem;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .bm-stat-label {
@@ -114,7 +114,7 @@
 .bm-stat-value {
   font-weight: 600;
   font-size: 0.95rem;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 /* Per-token HP list when same-type enemies are collapsed into one row. */
@@ -164,7 +164,7 @@
   /* --redacted-w: per-instance blot width, set inline by <Redacted width>. */
   width: var(--redacted-w, 4ch);
   border-radius: 47% 53% 58% 42% / 55% 48% 52% 45%;
-  background: radial-gradient(circle at 38% 34%, #241a12, #0d0906 78%);
+  background: radial-gradient(circle at 38% 34%, var(--shell-surface-raised), var(--void-deepest) 78%);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -173,7 +173,7 @@
   content: '';
   position: absolute;
   border-radius: 50%;
-  background: #100a06;
+  background: var(--void-deepest);
 }
 
 .bm-redacted::before {
@@ -188,7 +188,7 @@
   height: 0.34em;
   right: -0.12em;
   bottom: -0.05em;
-  box-shadow: 0.5em -0.2em 0 -0.06em #160e08;
+  box-shadow: 0.5em -0.2em 0 -0.06em var(--void-deepest);
 }
 
 /* Inline list rows — a shorter stain. */
@@ -233,7 +233,7 @@
   border-left: 3px solid #dc143c;
   border-radius: 0 4px 4px 0;
   font-size: 0.85rem;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .bm-exploit-label {
@@ -243,7 +243,7 @@
 .bm-rk-locked {
   margin: 6px 0 0;
   font-size: 0.82rem;
-  color: var(--save-crit-failure-fg, #d94f4f);
+  color: var(--save-crit-failure-fg, var(--d-cf-fg));
   font-style: italic;
 }
 
@@ -266,15 +266,15 @@
   font-size: 0.8rem;
   padding: 2px 8px;
   border-radius: var(--radius-sm, 4px);
-  border: 1px solid var(--save-crit-failure-fg, #d94f4f);
+  border: 1px solid var(--save-crit-failure-fg, var(--d-cf-fg));
   background: transparent;
-  color: var(--save-crit-failure-fg, #d94f4f);
+  color: var(--save-crit-failure-fg, var(--d-cf-fg));
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .bm-rk-unlock-btn:hover {
-  background: color-mix(in srgb, var(--save-crit-failure-fg, #d94f4f) 15%, transparent);
+  background: color-mix(in srgb, var(--save-crit-failure-fg, var(--d-cf-fg)) 15%, transparent);
 }
 
 /* ---------- Empty states ---------- */
@@ -297,20 +297,20 @@
   display: flex;
   gap: 14px;
   padding: 16px;
-  color: var(--shell-text-primary, #ede4d6);
+  color: var(--shell-text-primary, var(--ember-pale));
   font-family: var(--font-ui);
-  border: 1px solid #2c2924;
+  border: 1px solid var(--void-base);
   border-radius: var(--radius-md, 6px);
   overflow: hidden;
   background:
     radial-gradient(100% 70% at 50% -10%, color-mix(in srgb, var(--acc) 8%, transparent), transparent 60%),
-    linear-gradient(168deg, #16130f, #100d0b 72%);
+    linear-gradient(168deg, var(--theme-bg), var(--void-deepest) 72%);
 }
 
 /* Brushed-metal bezel for the art frame (shared by both dex surfaces). */
 .dex-mini .metal,
 .dex-full .metal {
-  background: linear-gradient(150deg, var(--steel-hi), var(--steel) 22%, var(--steel-lo) 60%, #1b1e24);
+  background: linear-gradient(150deg, var(--steel-hi), var(--steel) 22%, var(--steel-lo) 60%, var(--steel-deep));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.5),
@@ -373,7 +373,7 @@
   height: 100%;
   background:
     radial-gradient(70% 55% at 50% 44%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%),
-    linear-gradient(160deg, #15211f, #0a1110 70%);
+    linear-gradient(160deg, var(--steel-deep), var(--theme-bg) 70%);
 }
 
 .dex-mini-no {
@@ -384,7 +384,7 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.6rem;
-  color: #fff;
+  color: var(--color-text-on-primary);
   background: rgba(12, 10, 8, 0.7);
   border-radius: 3px;
   padding: 1px 5px;
@@ -402,7 +402,7 @@
   font-weight: 800;
   font-size: 1.5rem;
   line-height: 0.95;
-  color: var(--shell-text-primary, #f6efe3);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .dex-mini-sub {
@@ -438,7 +438,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   margin-top: 12px;
-  border: 1px solid #2e2a24;
+  border: 1px solid var(--void-base);
   border-radius: var(--radius-md, 6px);
   overflow: hidden;
 }
@@ -446,7 +446,7 @@
 .dex-mini-stats .st {
   text-align: center;
   padding: 6px 2px;
-  border-right: 1px solid #26221d;
+  border-right: 1px solid var(--void-base);
   background: rgba(255, 255, 255, 0.02);
 }
 .dex-mini-stats .st:last-child { border-right: none; }
@@ -464,7 +464,7 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.98rem;
-  color: #f3eadc;
+  color: var(--ember-pale);
   line-height: 1.1;
 }
 
@@ -490,7 +490,7 @@
 }
 
 /* ============================================================
-   Specimen Dex — full vertical entry (#778)
+   Specimen Dex — full vertical entry (var(--steel-hi))
    The /bestiary detail pane + GM editor preview. Art-forward
    device panel; `--acc` set per creature on the root.
    ============================================================ */
@@ -499,14 +499,14 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  color: var(--shell-text-primary, #ede4d6);
+  color: var(--shell-text-primary, var(--ember-pale));
   font-family: var(--font-ui);
-  border: 1px solid #2c2924;
+  border: 1px solid var(--void-base);
   border-radius: var(--radius-lg, 10px);
   overflow: hidden;
   background:
     radial-gradient(100% 70% at 50% -10%, color-mix(in srgb, var(--acc) 8%, transparent), transparent 60%),
-    linear-gradient(168deg, #16130f, #100d0b 72%);
+    linear-gradient(168deg, var(--theme-bg), var(--void-deepest) 72%);
 }
 
 /* Status bar */
@@ -515,14 +515,14 @@
   align-items: center;
   gap: 12px;
   padding: 11px 16px;
-  border-bottom: 1px solid #2c2924;
+  border-bottom: 1px solid var(--void-base);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
 }
 .dex-no {
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 1.15rem;
-  color: #fff;
+  color: var(--color-text-on-primary);
   letter-spacing: 0.02em;
 }
 .dex-no small { color: var(--acc); font-size: 0.7em; margin-right: 0.15em; }
@@ -533,7 +533,7 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.45);
   padding-left: 12px;
-  border-left: 1px solid #34302a;
+  border-left: 1px solid var(--void-mid);
 }
 
 /* Hero art viewport */
@@ -561,7 +561,7 @@
   height: 240px;
   background:
     radial-gradient(70% 55% at 50% 44%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%),
-    linear-gradient(160deg, #15211f, #0a1110 70%);
+    linear-gradient(160deg, var(--steel-deep), var(--theme-bg) 70%);
 }
 .dex-hero-glow {
   position: absolute;
@@ -588,7 +588,7 @@
   z-index: 4;
   font-family: var(--font-rune);
   font-size: 1rem;
-  color: color-mix(in srgb, var(--acc) 70%, #fff 20%);
+  color: color-mix(in srgb, var(--acc) 70%, var(--color-text-on-primary) 20%);
   opacity: 0.55;
 }
 .dex-hero-tab {
@@ -616,7 +616,7 @@
   font-weight: 800;
   font-size: 2.1rem;
   line-height: 1;
-  color: var(--shell-text-primary, #f6efe3);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 .dex-level {
   margin-top: 4px;
@@ -636,7 +636,7 @@
 /* Readout grid */
 .dex-readout {
   margin: 14px 18px 0;
-  border: 1px solid #2e2a24;
+  border: 1px solid var(--void-base);
   border-radius: 8px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.025);
@@ -645,8 +645,8 @@
 .dex-cell {
   padding: 9px 6px;
   text-align: center;
-  border-right: 1px solid #26221d;
-  border-bottom: 1px solid #26221d;
+  border-right: 1px solid var(--void-base);
+  border-bottom: 1px solid var(--void-base);
 }
 .dex-cell:nth-child(4n) { border-right: none; }
 .dex-cell:nth-last-child(-n + 4) { border-bottom: none; }
@@ -663,7 +663,7 @@
   font-weight: 700;
   font-size: 1.15rem;
   line-height: 1;
-  color: #f3eadc;
+  color: var(--ember-pale);
 }
 .dex-cell .v.dex-cell-sm { font-size: 0.84rem; }
 .dex-cell .v .bm-redacted { height: 0.9em; }
@@ -674,7 +674,7 @@
   flex-wrap: wrap;
   gap: 6px 18px;
   padding: 10px 12px;
-  border-top: 1px solid #26221d;
+  border-top: 1px solid var(--void-base);
   font-family: var(--font-body);
   font-size: 0.95rem;
 }
@@ -725,7 +725,7 @@
   border-radius: 6px;
   font-family: var(--font-rune);
   font-size: 0.9rem;
-  color: #efe6ff;
+  color: var(--arcane-pale);
   background: rgba(122, 84, 186, 0.35);
   border: 1px solid rgba(164, 125, 224, 0.5);
 }
@@ -734,7 +734,7 @@
   font-weight: 800;
   font-size: 1.35rem;
   line-height: 0.9;
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .dex-dc .l {
   font-family: var(--font-type);
@@ -805,7 +805,7 @@
   resize: vertical;
   font-family: var(--font-hand);
   font-size: 1.05rem;
-  color: #3a2c1a;
+  color: var(--void-base);
   background: linear-gradient(160deg, #e7dbbe, #d6c5a0);
   border: 1px solid #c3ad84;
   border-radius: 2px;

@@ -49,8 +49,8 @@
   width: 80px;
   height: 80px;
   border-radius: 6px;
-  background: var(--surface, #1e1e2e);
-  border: 1px dashed var(--border, #444);
+  background: var(--surface, var(--steel-lo));
+  border: 1px dashed var(--border, var(--iron-dark));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,10 +76,10 @@
 
 .image-field-picker {
   margin-top: 0.6rem;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border, var(--iron-dark));
   border-radius: 6px;
   padding: 0.6rem;
-  background: var(--surface, #1e1e2e);
+  background: var(--surface, var(--steel-lo));
 }
 
 .image-field-tabs {
@@ -91,8 +91,8 @@
   box-sizing: border-box;
   margin-bottom: 0.5rem;
   padding: 0.35rem 0.5rem;
-  background: var(--input-bg, #12121e);
-  border: 1px solid var(--border, #444);
+  background: var(--input-bg, var(--steel-deep));
+  border: 1px solid var(--border, var(--iron-dark));
   border-radius: 4px;
   color: var(--text, #cdd6f4);
 }

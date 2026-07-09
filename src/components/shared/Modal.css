@@ -19,7 +19,7 @@
 
 /* ---------- Dialog container ---------- */
 .modal-container {
-  background-color: var(--shell-surface, #1a1612);
+  background-color: var(--shell-surface, var(--theme-surface));
   background-image: linear-gradient(
     135deg,
     rgba(40, 28, 16, 0.4) 0%,
@@ -66,7 +66,7 @@
 }
 
 .modal-header--themed h2 {
-  color: var(--accent-text, #e85d1a);
+  color: var(--accent-text, var(--ember-mid));
 }
 
 .modal-header--themed .modal-close-button {
@@ -79,7 +79,7 @@
 }
 
 .modal-header:not(.modal-header--themed) h2 {
-  color: var(--ember-light, #f5803e);
+  color: var(--ember-light, var(--ember-light));
 }
 
 /* ---------- Close button ---------- */
@@ -105,7 +105,7 @@
 
 .modal-header:not(.modal-header--themed) .modal-close-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 /* ---------- Body ---------- */
@@ -113,7 +113,7 @@
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 /* Body text defaults — anything not explicitly coloured reads light */
@@ -126,7 +126,7 @@
 }
 
 .modal-body strong {
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 /* Form fields inside modals */
@@ -135,7 +135,7 @@
 .modal-body select {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
   border-radius: var(--radius-md);
 }
 

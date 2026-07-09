@@ -22,7 +22,7 @@
 .ps-frame {
   /* local token bridge → app palette */
   --ps-screen: var(--void-deep);
-  --ps-void: #100d0a;
+  --ps-void: var(--void-deepest);
   --ps-line: rgba(255, 255, 255, 0.12);
   --ps-line-soft: rgba(255, 255, 255, 0.07);
   --ps-raised: rgba(255, 255, 255, 0.05);
@@ -726,7 +726,7 @@
   min-height: 48px; cursor: pointer; border: none; border-radius: var(--radius-lg);
   font-family: var(--font-ui); font-weight: 700; font-size: 14px;
   background: linear-gradient(135deg, var(--ps-accent), color-mix(in srgb, var(--ps-accent) 60%, #000));
-  color: #fff; transition: transform 0.14s;
+  color: var(--color-text-on-primary); transition: transform 0.14s;
 }
 .ps-checkout:hover:not(:disabled) { transform: translateY(-1px); }
 .ps-checkout:disabled { filter: grayscale(0.6); opacity: 0.5; cursor: default; }
