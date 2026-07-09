@@ -133,9 +133,22 @@ const ActionDetailModal = ({
           </p>
         )}
 
-        {/* Inactive hint */}
+        {/* Inactive hint — durability reasons (#539) win over the held gate */}
         {item.active === false && (
-          <p className="adm-inactive-hint">Not in hand — hold this item to use it.</p>
+          <p className="adm-inactive-hint">
+            {item.destroyed
+              ? 'Destroyed — this item is beyond repair.'
+              : item.broken
+              ? "Broken — it can't be used until Repaired."
+              : 'Not in hand — hold this item to use it.'}
+          </p>
+        )}
+
+        {/* Rust Blessing (campaign boon): broken but still swinging, at −2 */}
+        {item.active !== false && item.brokenPenalty && (
+          <p className="adm-inactive-hint">
+            Broken — Rust Blessing keeps it usable at {item.brokenPenalty} to attack rolls.
+          </p>
         )}
 
         {/* Footer actions */}

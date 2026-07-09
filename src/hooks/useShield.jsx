@@ -1,10 +1,13 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useContext, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useItemHp } from './useItemHp';
+import { CharacterContext } from '../contexts/CharacterContext';
 import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
+import { isDestroyedHp } from '../utils/itemDurability';
+import { hasRustBlessing } from '../utils/rustBlessing';
 import { RELAY, syncKey } from '../sync/keys';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
@@ -58,12 +61,23 @@ export const useShield = (charId, inventory = []) => {
   }, [inventory, hpFor]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;
+  const destroyed = heldShield ? isDestroyedHp(heldShield.shield?.hp ?? 0) : false;
+
+  // Rust Blessing (campaign boon): the wielder keeps using a BROKEN shield —
+  // full AC bonus and Shield Block — though destruction at 0 HP still ends it.
+  // Resolved from the character doc by id so every useShield call site agrees;
+  // outside a CharacterProvider (bare hook tests) the boon is simply off.
+  const characterCtx = useContext(CharacterContext);
+  const wieldBroken = hasRustBlessing(characterCtx?.getCharacter?.(charId));
+
+  // Can the held shield be used at all right now (Raise / Block)?
+  const usable = !!heldShield && !destroyed && (!broken || wieldBroken);
 
   const raised =
     !!raiseState?.raised &&
     !!heldShield &&
     raiseState.uid === heldShield.uid &&
-    !broken;
+    usable;
 
   const raiseShield = useCallback(
     (uid) => setRaiseState({ raised: true, uid, ts: Date.now() }),
@@ -124,7 +138,7 @@ export const useShield = (charId, inventory = []) => {
     };
   }, [raised, heldShield]);
 
-  return { heldShield, raised, broken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
+  return { heldShield, raised, broken, destroyed, usable, wieldBroken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
 };
 
 export default useShield;

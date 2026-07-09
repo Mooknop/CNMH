@@ -80,6 +80,10 @@ export const useCharacter = (character) => {
   // chambered ranged Strikes (Crescent Cross). Read-only here; useChambers
   // (Reload/Fire) is the sole writer. Empty map ⇒ every chamber unloaded.
   const [chambers]    = useSyncedState(syncKey(APP.CHAMBERS, character?.id || 'none'), {});
+  // Live item HP (#541) — drives the Broken/Destroyed strike gate (and the
+  // Rust Blessing −2 path). Read-only here; useItemHp is the writer. Empty
+  // map ⇒ every item at its authored max HP.
+  const [itemHpState] = useSyncedState(syncKey(APP.ITEMHP, character?.id || 'none'), {});
   // Blade Byrnie transient dagger (#728 E4): when active, a derived +1 striking
   // dagger strike is injected. Read-only here; useBladeByrnie is the writer.
   const [blade]       = useSyncedState(syncKey(APP.BLADE, character?.id || 'none'), { active: false });
@@ -373,7 +377,7 @@ export const useCharacter = (character) => {
     // ── Combat ──────────────────────────────────────────────────────────────
     const strikes     = [
       // Active whetstone effects alter their bound weapon's strikes (#1214).
-      ...getStrikes(charEff, chambers, whetstonesByWeaponUid(activeEffects)),
+      ...getStrikes(charEff, chambers, whetstonesByWeaponUid(activeEffects), itemHpState),
       ...(blade?.active ? bladeStrikes(charEff) : []),
       // A shield attachment bound to a HELD shield contributes its own Strike.
       ...attachmentStrikes(charEff, attached),
@@ -596,7 +600,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeConditions, encAuto, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, itemHpState, blade, attached, staffPrep, runeConfig, itemModeState, investedMap, resolvedAcquired, removed, activeConditions, encAuto, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

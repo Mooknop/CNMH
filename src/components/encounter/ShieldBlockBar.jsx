@@ -35,7 +35,7 @@ import './ShieldBlockBar.css';
  * broke the shield the bar unmounts with it — the rider is lost with the arm.
  */
 const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
-  const { heldShield, raised, broken, lowerShield, applyBlock } = useShield(charId, inventory);
+  const { heldShield, raised, wieldBroken, lowerShield, applyBlock } = useShield(charId, inventory);
   const { turnState, spendReaction } = useTurnState(charId);
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { gameDate, time } = useGameDate();
@@ -75,8 +75,10 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
 
   const { reactionAvailable, reactionSpent, hasStartedFirstTurn } = turnState;
 
+  // `raised` already folds in usability (a broken shield stays raised only for
+  // a Rust-Blessed wielder; a destroyed one never does).
   const canShieldBlock =
-    raised && !broken && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
+    raised && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
 
   const enemies = (encounter?.order || []).filter((e) => e && e.kind === 'enemy');
   const riderReady = liveRider && gate.available;
@@ -96,9 +98,15 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     spendReaction('Shield Block');
     setBlockDamage('');
     setRanged(false);
-    if (result.broken) lowerShield();
-    const detail = result.broken
-      ? `shield broke! (${result.prevented} prevented)`
+    // Breaking ends the raise — unless the wielder's Rust Blessing keeps the
+    // broken shield in play. Destruction (0 HP) ends it for everyone.
+    if (result.destroyed || (result.broken && !wieldBroken)) lowerShield();
+    const detail = result.destroyed
+      ? `shield DESTROYED! (${result.prevented} prevented)`
+      : result.broken
+      ? wieldBroken
+        ? `shield broke — Rust Blessing keeps it in the fight (${result.prevented} prevented, shield → ${result.shieldHpAfter} HP)`
+        : `shield broke! (${result.prevented} prevented)`
       : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
