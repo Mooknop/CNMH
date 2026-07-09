@@ -1,11 +1,9 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import {
-  durabilityFor,
+  entryHpStatus,
   applyItemDamage,
   restoreItemHp,
-  isBrokenHp,
-  isDestroyedHp,
 } from '../utils/itemDurability';
 import { APP, syncKey } from '../sync/keys';
 
@@ -43,17 +41,8 @@ export const useItemHp = (charId) => {
   // the engine doesn't track. `hp` is live; `maxHp` is the authored full value.
   const statusFor = useCallback(
     (entry) => {
-      const dur = durabilityFor(entry);
-      if (!dur) return null;
-      const hp = hpFor(entry?.uid) ?? dur.hp;
-      return {
-        hp,
-        maxHp: dur.hp,
-        hardness: dur.hardness,
-        brokenThreshold: dur.brokenThreshold,
-        broken: isBrokenHp(hp, dur.brokenThreshold),
-        destroyed: isDestroyedHp(hp),
-      };
+      const hp = hpFor(entry?.uid);
+      return entryHpStatus(entry, hp !== undefined ? { hp } : undefined);
     },
     [hpFor]
   );
