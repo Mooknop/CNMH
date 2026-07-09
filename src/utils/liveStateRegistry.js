@@ -138,7 +138,17 @@ export const LIVE_STATE_REGISTRY = [
     edit: { kind: 'count', read: (v) => clampMin0(v), write: (n) => clampMin0(n) },
   },
   {
-    type: 'shieldstate', group: 'resources', label: 'Shield HP', editor: 'json',
+    // Shared item-HP overlay (#541) — weapons/armor/shields keyed by entry uid.
+    type: 'itemhp', group: 'resources', label: 'Item HP', editor: 'json',
+    format: (v) => {
+      const entries = Object.entries(asObject(v));
+      if (!entries.length) return 'none';
+      return entries.map(([uid, s]) => `${uid}: ${s?.hp ?? '?'} HP`).join(', ');
+    },
+  },
+  {
+    // Pre-durability-epic shield HP; new writes land on itemhp (#541).
+    type: 'shieldstate', group: 'resources', label: 'Shield HP (legacy)', editor: 'json',
     format: (v) => {
       const entries = Object.entries(asObject(v));
       if (!entries.length) return 'none';

@@ -1,4 +1,5 @@
 // PF2e Shield Block math — pure function, no React, no Foundry.
+import { applyItemDamage } from './itemDurability';
 //
 // Shield Block (reaction): when you have your shield raised and take physical
 // damage, your shield's Hardness prevents that much damage; you and the shield
@@ -25,18 +26,15 @@
  * }}
  */
 export function applyShieldBlock({ dealt, hardness, shieldHp, brokenThreshold, hardnessBonus = 0 }) {
-  const effectiveHardness = hardness + Math.max(0, hardnessBonus || 0);
-  const prevented      = Math.min(dealt, effectiveHardness);
-  const remaining      = dealt - prevented;
-  const shieldHpAfter  = Math.max(0, shieldHp - remaining);
-  const broken         = shieldHpAfter <= brokenThreshold;
-  const destroyed      = shieldHpAfter <= 0;
+  // Same math as any item taking damage (#541) — Shield Block just splits the
+  // remainder onto both the character and the shield.
+  const r = applyItemDamage({ dealt, hardness, hp: shieldHp, brokenThreshold, hardnessBonus });
   return {
-    prevented,
-    characterTakes: remaining,
-    shieldTakes:    remaining,
-    shieldHpAfter,
-    broken,
-    destroyed,
+    prevented:      r.prevented,
+    characterTakes: r.taken,
+    shieldTakes:    r.taken,
+    shieldHpAfter:  r.hpAfter,
+    broken:         r.broken,
+    destroyed:      r.destroyed,
   };
 }

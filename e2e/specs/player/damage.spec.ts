@@ -114,6 +114,7 @@ test.describe('Damage result surface', () => {
       'cnmh_encounter_global',
       (v) => Array.isArray(v?.log) && v.log.some((e: any) => String(e.text).includes('Shield Blocked')),
     );
-    await session.expectSent('cnmh_shieldstate_e2e-fighter', (v) => v?.['uid-shield-1']?.hp !== undefined);
+    // Shield HP lands on the shared item-HP overlay (#541).
+    await session.expectSent('cnmh_itemhp_e2e-fighter', (v) => v?.['uid-shield-1']?.hp !== undefined);
   });
 });

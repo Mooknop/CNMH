@@ -42,6 +42,7 @@ const RESOURCE_CHIPS = [
   { type: 'slots',       label: 'Slots' },
   { type: 'staff',       label: 'Staff' },
   { type: 'wands',       label: 'Wands' },
+  { type: 'itemhp',      label: 'Gear'  },
   { type: 'shieldstate', label: 'Shield' },
   { type: 'consumed',    label: 'Used'  },
 ];

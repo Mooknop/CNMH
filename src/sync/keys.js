@@ -50,6 +50,7 @@ export const APP = Object.freeze({
   INVESTED: 'invested',
   ITEMBROKEN: 'itembroken',
   ITEMEFFECTS: 'itemeffects',
+  ITEMHP: 'itemhp',
   ITEMMODE: 'itemmode',
   KNOWLEDGE: 'knowledge',
   LINGERING: 'lingering',
