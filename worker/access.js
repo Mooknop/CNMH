@@ -44,6 +44,22 @@ const getKeys = async (teamDomain) => {
   return certsCache.keys;
 };
 
+// Guard for GM-only routes. Returns the verified identity ({ email }) when the
+// request is an authenticated GM, else a ready-to-return 403 Response. Callers:
+//
+//   const gm = await requireGm(request, env);
+//   if (gm instanceof Response) return gm;
+//
+// The denial is always 403 Forbidden, never 401: a 401 promises a
+// WWW-Authenticate challenge this Worker never issues — interactive login is
+// handled upstream by Cloudflare Access at the edge, and machine peers use a
+// bearer/service token. The Worker also can't distinguish "no credentials"
+// from "bad credentials" without leaking why verification failed.
+export async function requireGm(request, env) {
+  const gm = await verifyAccess(request, env);
+  return gm || new Response('Forbidden', { status: 403 });
+}
+
 // Returns { email } when the request carries a valid GM Access token, else null.
 export async function verifyAccess(request, env) {
   if (env.GM_DEV_BYPASS === 'true') {

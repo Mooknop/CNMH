@@ -5,7 +5,7 @@
 
 import { CampaignSession } from './CampaignSession.js';
 import { CampaignContent } from './CampaignContent.js';
-import { verifyAccess } from './access.js';
+import { requireGm } from './access.js';
 import { scanImageReferences } from './imageReferences.js';
 import { computeImageOrphans, computeUnregisteredImages } from './imageOrphans.js';
 
@@ -129,9 +129,11 @@ export default {
     }
 
     // GM identity probe — used by the client only to show/hide GM UI.
+    // (Previously the lone 401 among the GM routes; now the shared 403 from
+    // requireGm. useGmAuth only checks res.ok, so the exact code is inert.)
     if (url.pathname === '/api/gm/whoami') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Unauthorized', { status: 401 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
       return Response.json({ email: gm.email });
     }
 
@@ -139,8 +141,8 @@ export default {
     // Wipes both DOs so each test run starts from a clean slate.
     // ?keep_session=1 and ?keep_content=1 opt out of clearing that DO.
     if (request.method === 'POST' && url.pathname === '/api/gm/_test/reset') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
       if (!['staging', 'e2e'].includes(env.ENVIRONMENT)) return new Response('Not found', { status: 404 });
       const resetUrl = new URL('/_internal/reset', request.url);
       if (url.searchParams.has('keep_session')) resetUrl.searchParams.set('keep_session', '1');
@@ -153,16 +155,16 @@ export default {
 
     // DO write-budget chip — read-only, no writes.
     if (request.method === 'GET' && url.pathname === '/api/gm/usage') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
       return contentStub(env).fetch(new Request(new URL('/_internal/usage', request.url).toString()));
     }
 
     // Image upload: POST /api/gm/images — Access-gated, writes bytes to R2,
     // then records the catalog entry in the content DO.
     if (request.method === 'POST' && url.pathname === '/api/gm/images') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       let formData;
       try {
@@ -206,8 +208,8 @@ export default {
 
     // Image delete: POST /api/gm/images/:id/delete — checks for references first.
     if (request.method === 'POST' && url.pathname.match(/^\/api\/gm\/images\/[^/]+\/delete$/)) {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       const id = decodeURIComponent(url.pathname.split('/')[4]);
 
@@ -237,8 +239,8 @@ export default {
     // Reports orphaned R2 objects + stale catalog rows in three buckets so a GM
     // can review before reclaiming (the sweep is a separate, explicit action).
     if (request.method === 'GET' && url.pathname === '/api/gm/images/audit') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       const report = await imageAuditReport(env, url.origin);
       return Response.json({ ...report, graceWindowHours: IMAGE_GC_GRACE_HOURS, scannedAt: Date.now() });
@@ -249,8 +251,8 @@ export default {
     // orphaned (and still outside the grace window) at this moment — a referenced
     // or too-new id requested from a stale dry-run report is skipped, never reaped.
     if (request.method === 'POST' && url.pathname === '/api/gm/images/audit/sweep') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       let body;
       try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400 }); }
@@ -287,8 +289,8 @@ export default {
     // R2 objects with no catalog row, so a GM can register ("adopt") them and
     // manage them in GM Tools → Images like any uploaded image (#757).
     if (request.method === 'GET' && url.pathname === '/api/gm/images/unregistered') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       const unregistered = await listUnregisteredImages(env, url.origin);
       return Response.json({ unregistered, scannedAt: Date.now() });
@@ -300,8 +302,8 @@ export default {
     // whose bytes are gone is skipped, never overwritten (re-validated here so a
     // stale client listing can't clobber an existing entry).
     if (request.method === 'POST' && url.pathname === '/api/gm/images/adopt') {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
 
       let body;
       try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400 }); }
@@ -404,8 +406,8 @@ export default {
 
     // GM writes — verified server-side before reaching the content DO.
     if (url.pathname.startsWith('/api/gm/')) {
-      const gm = await verifyAccess(request, env);
-      if (!gm) return new Response('Forbidden', { status: 403 });
+      const gm = await requireGm(request, env);
+      if (gm instanceof Response) return gm;
       return contentStub(env).fetch(request);
     }
 
