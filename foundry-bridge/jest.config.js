@@ -1,9 +1,9 @@
 // Standalone jest project for the Foundry bridge module.
 //
-// The app's tests run under react-scripts (CRA) scoped to src/. The bridge lives
+// The app's tests run under Vitest (Vite) scoped to src/. The bridge lives
 // outside src/ and is plain ESM with no React, so it runs under the root-installed
 // jest with an inline @babel/preset-env transform (no shared babelrc, so this
-// config can never perturb the CRA build).
+// config can never perturb the Vite build).
 //
 //   npm run test:bridge          # one-shot
 //   npm run test:bridge -- --watch
