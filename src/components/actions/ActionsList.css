@@ -74,12 +74,6 @@
 
 /* Section tabs removed in #424 — all action types live in the one grid now. */
 
-/* Flat row list — used by ActionCardList */
-.action-row-list {
-  display: flex;
-  flex-direction: column;
-}
-
 /* Strikes still use a grid of detail slabs (they have atk/dmg numbers) */
 .strikes-grid {
   display: grid;
