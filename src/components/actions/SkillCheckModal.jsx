@@ -6,6 +6,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/CharacterUtils';
 import { getCondition } from '../../data/pf2eConditions';
 import { flattenInventory } from '../../utils/InventoryUtils';
@@ -13,13 +14,6 @@ import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../util
 import { checkBonusTalisman } from '../../utils/talismanActivation';
 import './SkillCheckModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
 

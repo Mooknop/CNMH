@@ -3,18 +3,12 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { saveBonusTalisman } from '../../utils/talismanActivation';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
-  success:         { label: 'Success',           cls: 'save-success' },
-  failure:         { label: 'Failure',           cls: 'save-failure' },
-  criticalFailure: { label: 'Critical Failure',  cls: 'save-crit-failure' },
-};
 
 const SAVE_LABELS = {
   fortitude: 'Fortitude',
@@ -72,7 +66,7 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
     if (pinCritFailToFail && degree === 'criticalFailure') degree = 'failure';
     const res = { degree, total, d20 };
     setResult(res);
-    const label = DEGREE_LABELS[degree]?.label ?? degree;
+    const label = degreeLabel(degree);
     const pinTag = pinOn && pin ? ` (${pin.name})` : '';
     appendLog({
       type:   'action',
@@ -85,7 +79,9 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
 
   const handleDismiss = () => setResult(null);
 
-  const degreeInfo = result ? DEGREE_LABELS[result.degree] : null;
+  const degreeInfo = result
+    ? { label: degreeLabel(result.degree), cls: degreeClass(result.degree) }
+    : null;
   const modStr = modifier >= 0 ? `+${modifier}` : `${modifier}`;
 
   return (

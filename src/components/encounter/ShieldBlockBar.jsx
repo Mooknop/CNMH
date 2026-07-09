@@ -8,15 +8,9 @@ import { toGameSeconds } from '../../utils/gameTime';
 import { itemUidOf } from '../../utils/affix';
 import { accessoryRuneOf, runeOnBlock } from '../../utils/accessoryRunes';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import './ShieldBlockBar.css';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 /**
  * Shield Block damage-split bar — extracted from TurnTrackerPanel so the

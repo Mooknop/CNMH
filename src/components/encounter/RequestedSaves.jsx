@@ -3,6 +3,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
@@ -13,20 +14,6 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { RELAY, APP } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
-
-const DEGREE_CLASSES = {
-  criticalSuccess: 'save-crit-success',
-  success:         'save-success',
-  failure:         'save-failure',
-  criticalFailure: 'save-crit-failure',
-};
 
 /**
  * GM panel that lists pending save requests from players.
@@ -346,7 +333,7 @@ const RequestedSaves = () => {
                     <span className="gm-save-req-total">= {total}</span>
                   )}
                   {degree && (
-                    <span className={`trr-result-degree ${DEGREE_CLASSES[degree]}`}>
+                    <span className={`trr-result-degree ${DEGREE_CLASS[degree]}`}>
                       {DEGREE_LABELS[degree]}
                     </span>
                   )}

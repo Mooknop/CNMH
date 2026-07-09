@@ -7,14 +7,16 @@ import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import UseActionChip from '../shared/UseActionChip';
 import { formatRuneBreakdown } from '../../utils/weaponRunes';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './ActionDetailModal.css';
 
-// Degree label → CSS modifier
+// Degree label → CSS modifier. Keyed on the shared display labels (authored
+// degree headings are display strings); the modifier names are local CSS.
 const DEGREE_MOD = {
-  'Critical Success': 'crit-success',
-  'Success':          'success',
-  'Failure':          'failure',
-  'Critical Failure': 'crit-failure',
+  [DEGREE_LABELS.criticalSuccess]: 'crit-success',
+  [DEGREE_LABELS.success]:         'success',
+  [DEGREE_LABELS.failure]:         'failure',
+  [DEGREE_LABELS.criticalFailure]: 'crit-failure',
 };
 
 const degreeModifier = (label) => {

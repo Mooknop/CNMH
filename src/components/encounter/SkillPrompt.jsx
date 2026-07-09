@@ -2,16 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { vpForDegree, skillLabel } from '../../utils/victoryPoints';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
-
-const DEGREE_LABELS = {
-  criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
-  success:         { label: 'Success',           cls: 'save-success'      },
-  failure:         { label: 'Failure',           cls: 'save-failure'      },
-  criticalFailure: { label: 'Critical Failure',  cls: 'save-crit-failure' },
-};
 
 /**
  * Appears on a player's device when the GM pushes a skill check prompt
@@ -73,7 +67,7 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
     const modifier = skillModifiers[selected.skill] ?? 0;
     const total  = d20 + modifier;
     const degree = computeSaveDegree({ d20, total, dc: selected.dc });
-    const label  = DEGREE_LABELS[degree]?.label ?? degree;
+    const label  = degreeLabel(degree);
 
     if (isChallenge) {
       const vp = vpForDegree(degree);
@@ -105,7 +99,9 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
 
   const handleDismiss = () => setResult(null);
 
-  const degreeInfo = effectiveResult ? DEGREE_LABELS[effectiveResult.degree] : null;
+  const degreeInfo = effectiveResult
+    ? { label: degreeLabel(effectiveResult.degree), cls: degreeClass(effectiveResult.degree) }
+    : null;
   const showChooser = options.length > 1 && !effectiveResult;
   const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
 

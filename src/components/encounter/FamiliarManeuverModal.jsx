@@ -5,14 +5,8 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useTurnState } from '../../hooks/useTurnState';
 import { familiarSkillBonus, minionTurnId, MINION_FAMILIAR } from '../../utils/minionUtils';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './FamiliarManeuverModal.css';
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 // Outcome phrasing per maneuver, logged for the GM. No enemy-state mutation —
 // the result goes to the GM via the combat log, like the minion strike resolver.

@@ -10,16 +10,18 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
 import { scaleEldPower, ELD_FREQUENCY_RULE } from '../../utils/eldScaling';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './EldPowers.css';
 import { APP, syncKey } from '../../sync/keys';
 
 // Degree label → shared degree-of-success palette class. The authored degree
-// keys are display strings ("Critical Success"), not the engine's camelCase.
+// keys are display strings ("Critical Success"), not the engine's camelCase —
+// keyed off the shared label vocabulary; the d-* classes are EldPowers.css-local.
 const DEGREE_CLASS = {
-  'Critical Success': 'd-crit',
-  'Success': 'd-succ',
-  'Failure': 'd-fail',
-  'Critical Failure': 'd-cf',
+  [DEGREE_LABELS.criticalSuccess]: 'd-crit',
+  [DEGREE_LABELS.success]:         'd-succ',
+  [DEGREE_LABELS.failure]:         'd-fail',
+  [DEGREE_LABELS.criticalFailure]: 'd-cf',
 };
 
 /**

@@ -1,25 +1,22 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import DamagePanel from './DamagePanel';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS, ATTACK_DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { computeTargetDamage, damageEntryParts } from '../../utils/damage';
 import './TargetRollResolver.css';
 
-// Degree labels differ by context: AC uses attack terminology, saves use save terminology.
-const DEGREE_LABELS_AC = {
-  criticalSuccess: { label: 'Critical Hit',   cls: 'save-crit-success' },
-  success:         { label: 'Hit',            cls: 'save-success' },
-  failure:         { label: 'Miss',           cls: 'save-failure' },
-  criticalFailure: { label: 'Critical Miss',  cls: 'save-crit-failure' },
-};
+// Degree labels differ by context: AC uses attack terminology, saves use save
+// terminology. The {label, cls} rows are assembled from the shared vocabulary
+// in utils/degreeDisplay so no degree string lives here.
+const toLabelCls = (labels) =>
+  Object.fromEntries(
+    Object.entries(labels).map(([degree, label]) => [degree, { label, cls: DEGREE_CLASS[degree] }]),
+  );
 
-export const DEGREE_LABELS_SAVE = {
-  criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
-  success:         { label: 'Success',          cls: 'save-success' },
-  failure:         { label: 'Failure',          cls: 'save-failure' },
-  criticalFailure: { label: 'Critical Failure', cls: 'save-crit-failure' },
-};
+const DEGREE_LABELS_AC = toLabelCls(ATTACK_DEGREE_LABELS);
+export const DEGREE_LABELS_SAVE = toLabelCls(DEGREE_LABELS);
 
 function degreeLabels(defense) {
   return defense === 'ac' ? DEGREE_LABELS_AC : DEGREE_LABELS_SAVE;
@@ -36,14 +33,6 @@ function ordinalSuffix(n) {
     default: return 'th';
   }
 }
-
-// Authored degree-text maps (ability.degrees) key on the rulebook headings.
-const DEGREE_TEXT_KEYS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 /**
  * Inline roll-resolver for the UseAbilityModal. The player enters a RAW d20 face;
@@ -264,7 +253,8 @@ const TargetRollResolver = forwardRef(({
         <div className="trr-results">
           {results.map((r) => {
             const info = r.degree ? labels[r.degree] : null;
-            const degreeText = r.degree ? degrees?.[DEGREE_TEXT_KEYS[r.degree]] : null;
+            // Authored degree-text maps (ability.degrees) key on the rulebook headings.
+            const degreeText = r.degree ? degrees?.[DEGREE_LABELS[r.degree]] : null;
             return (
               <div
                 key={r.entryId}

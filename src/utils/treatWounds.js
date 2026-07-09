@@ -3,6 +3,7 @@
 // React-free — mirrors the style of applyAbility.js.
 
 import { newEntryUid } from './uid';
+import { degreeLabel } from './degreeDisplay';
 import { removeInstance } from './persistentDamage';
 import { RELAY, APP, syncKey } from '../sync/keys';
 
@@ -112,13 +113,12 @@ export function applyTreatWounds({
   if (degree === 'criticalFailure') {
     const newCurrent = Math.max(0, currentHp.current - amount);
     newHp = { ...currentHp, current: newCurrent };
-    logText = `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): Critical Failure — ${amount} damage`;
+    logText = `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${degreeLabel(degree)} — ${amount} damage`;
   } else {
     // 'success' | 'criticalSuccess'
     const newCurrent = Math.min(currentHp.max, currentHp.current + amount);
     newHp = { ...currentHp, current: newCurrent };
-    const label = degree === 'criticalSuccess' ? 'Critical Success' : 'Success';
-    logText = `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${label} — healed ${amount}`;
+    logText = `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${degreeLabel(degree)} — healed ${amount}`;
   }
 
   writeLocal(syncKey(RELAY.HP, target.id), newHp);
@@ -183,7 +183,7 @@ export function applyStaunchBleeding({
   const actionName = 'Staunch Bleeding';
 
   if (degree === 'failure' || degree === 'criticalFailure') {
-    const label = degree === 'criticalFailure' ? 'Critical Failure' : 'Failure';
+    const label = degreeLabel(degree);
     appendLog({
       type:   'action',
       charId: healer.id,
@@ -200,7 +200,7 @@ export function applyStaunchBleeding({
     );
   }
 
-  const label = degree === 'criticalSuccess' ? 'Critical Success' : 'Success';
+  const label = degreeLabel(degree);
   const tail = cleared.length
     ? `stopped ${cleared.length === 1 ? 'the bleeding' : `${cleared.length} bleeds`}`
     : 'no tracked bleeding to clear';

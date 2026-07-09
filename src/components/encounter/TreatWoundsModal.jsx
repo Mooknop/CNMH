@@ -20,6 +20,7 @@ import {
   applyTreatWounds,
   applyStaunchBleeding,
 } from '../../utils/treatWounds';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './TreatWoundsModal.css';
 import { APP } from '../../sync/keys';
 
@@ -27,10 +28,10 @@ const GODLESS_HEALING_BONUS = 2;
 const STAUNCH_TWO_ACTION_DC_REDUCTION = 10;
 
 const DEGREE_INFO = {
-  criticalSuccess: { label: 'Critical Success', cls: 'tw-degree--crit-success' },
-  success:         { label: 'Success',           cls: 'tw-degree--success'      },
-  failure:         { label: 'Failure',           cls: 'tw-degree--failure'      },
-  criticalFailure: { label: 'Critical Failure',  cls: 'tw-degree--crit-failure' },
+  criticalSuccess: { label: DEGREE_LABELS.criticalSuccess, cls: 'tw-degree--crit-success' },
+  success:         { label: DEGREE_LABELS.success,         cls: 'tw-degree--success'      },
+  failure:         { label: DEGREE_LABELS.failure,         cls: 'tw-degree--failure'      },
+  criticalFailure: { label: DEGREE_LABELS.criticalFailure, cls: 'tw-degree--crit-failure' },
 };
 
 /**

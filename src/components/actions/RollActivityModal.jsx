@@ -6,6 +6,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSession } from '../../contexts/SessionContext';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { useContent } from '../../contexts/ContentContext';
 import { newEntryUid } from '../../utils/uid';
 import './RollActivityModal.css';
@@ -21,13 +22,6 @@ function degreeOfSuccess(total, dc) {
   if (total <= dc - 10) return 'criticalFailure';
   return 'failure';
 }
-
-const DEGREE_LABELS = {
-  criticalSuccess: 'Critical Success',
-  success:         'Success',
-  failure:         'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const SKILL_DISPLAY = {
   arcana: 'Arcana', nature: 'Nature', occultism: 'Occultism', religion: 'Religion',

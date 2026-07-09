@@ -4,14 +4,8 @@ import { useShield } from '../../hooks/useShield';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { isShieldBroken } from '../../utils/InventoryUtils';
 import { repairHp, repairDc, repairTimeLabel } from '../../utils/repair';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './RepairShieldPanel.css';
-
-const DEGREE_LABEL = {
-  criticalSuccess: 'Critical Success',
-  success: 'Success',
-  failure: 'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 // Repair the held shield (#579, shield-only interim). A Crafting check vs the
 // shield's level DC restores HP by degree + Crafting rank; Quick Repair just
@@ -109,7 +103,7 @@ const RepairShieldPanel = ({ character }) => {
 
       {result && (
         <div className={`rs-result rs-result--${result.degree}`} role="status">
-          <span className="rs-result-degree">{DEGREE_LABEL[result.degree]}</span>
+          <span className="rs-result-degree">{DEGREE_LABELS[result.degree]}</span>
           <span className="rs-result-note">
             {result.restored > 0 ? `Restored ${result.restored} HP (now ${result.newHp}).` : 'No HP restored.'}
           </span>

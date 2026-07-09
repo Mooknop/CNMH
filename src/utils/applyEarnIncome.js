@@ -5,14 +5,8 @@
 // so we convert via cpToGp.
 
 import { cpToGp } from './earnIncome';
+import { DEGREE_LABELS } from './degreeDisplay';
 import { APP, syncKey } from '../sync/keys';
-
-const DEGREE_LABEL = {
-  criticalSuccess: 'Critical Success',
-  success: 'Success',
-  failure: 'Failure',
-  criticalFailure: 'Critical Failure',
-};
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -57,7 +51,7 @@ export function creditEarnIncome({ entry, getState, sendUpdate, appendLog }) {
   if (sendUpdate) sendUpdate(charId, APP.GOLD, next);
 
   if (appendLog) {
-    const label = DEGREE_LABEL[degree] || degree;
+    const label = DEGREE_LABELS[degree] || degree;
     appendLog({
       type: 'action',
       charId,

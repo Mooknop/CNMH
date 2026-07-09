@@ -14,16 +14,9 @@ import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { preyMatches } from '../../utils/huntPrey';
 import { minionStrikeAttackMod, minionStrikeDamage, minionTurnId } from '../../utils/minionUtils';
+import { ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './MinionStrikeModal.css';
 import { RELAY, globalKey } from '../../sync/keys';
-
-// Degree → log label for an AC attack (mirrors TargetRollResolver's AC labels).
-const DEGREE_LABELS_AC = {
-  criticalSuccess: 'Critical Hit',
-  success:         'Hit',
-  failure:         'Miss',
-  criticalFailure: 'Critical Miss',
-};
 
 /**
  * A minion's Strike resolved through the shared roll resolver (#261).
@@ -139,7 +132,7 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
     if (!results || results.length === 0) return;
 
     results.forEach((r) => {
-      const degreeLabel = r.degree ? DEGREE_LABELS_AC[r.degree] : null;
+      const degreeLabel = r.degree ? ATTACK_DEGREE_LABELS[r.degree] : null;
       const dmgSuffix = r.damage?.final != null ? ` · damage ${formatDamageBreakdown(r.damage)}` : '';
       const text = degreeLabel
         ? `${companionData.name} ${strike.name} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel}${dmgSuffix}`

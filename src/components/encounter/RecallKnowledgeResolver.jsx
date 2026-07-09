@@ -6,6 +6,7 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS, rkKeyFor } from '../../utils/recallKnowledge';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './RecallKnowledgeResolver.css';
 
 const SKILL_LABELS = {
@@ -33,10 +34,10 @@ const CHOICE_OPTIONS = [
 ];
 
 const DEGREE_INFO = {
-  criticalSuccess: { label: 'Critical Success', cls: 'tw-degree--crit-success' },
-  success:         { label: 'Success',           cls: 'tw-degree--success'      },
-  failure:         { label: 'Failure',           cls: 'tw-degree--failure'      },
-  criticalFailure: { label: 'Critical Failure',  cls: 'tw-degree--crit-failure' },
+  criticalSuccess: { label: DEGREE_LABELS.criticalSuccess, cls: 'tw-degree--crit-success' },
+  success:         { label: DEGREE_LABELS.success,         cls: 'tw-degree--success'      },
+  failure:         { label: DEGREE_LABELS.failure,         cls: 'tw-degree--failure'      },
+  criticalFailure: { label: DEGREE_LABELS.criticalFailure, cls: 'tw-degree--crit-failure' },
 };
 
 // How many facts the player picks per degree.
