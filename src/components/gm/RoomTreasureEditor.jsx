@@ -16,7 +16,7 @@ import CatalogPickerModal from './CatalogPickerModal';
 // manual repair path for anything the import didn't cover.
 //
 // `distributedAt` is a top-level room field (set later by T4 Distribute — see
-// mergeGmFields in scripts/importAdventureRooms.js). While it's set the cache is
+// mergeGmFields in scripts/importAdventureRooms.mjs). While it's set the cache is
 // locked read-only behind a "Reopen cache" guard so a room can't be distributed
 // twice by accident.
 

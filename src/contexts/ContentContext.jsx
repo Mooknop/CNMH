@@ -249,7 +249,7 @@ export const ContentProvider = ({ children, initialContent }) => {
     monsters: serverMonsters,
     // Adventure-room guide (#1074). Capture-only + live-DO-only (Paizo text,
     // public repo), so there's no bundled fallback — an empty array until the
-    // GM imports rooms via scripts/importAdventureRooms.js.
+    // GM imports rooms via scripts/importAdventureRooms.mjs.
     rooms: serverRooms,
     // Chapter-event tracker (#1112). Same capture-only, live-DO-only shape as
     // rooms — imported from the same Foundry journal dump, empty until then.

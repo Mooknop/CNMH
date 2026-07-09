@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { importRooms, importEvents } from '../../utils/gmApi';
-import { transformDump, mergeGmFields } from '../../../scripts/importAdventureRooms';
+// Explicit .mjs: vite.config.js overrides resolve.extensions without '.mjs',
+// so the extensionless specifier would not resolve.
+import { transformDump, mergeGmFields } from '../../../scripts/importAdventureRooms.mjs';
 
 // One-click import of a Foundry adventure-module export (#1074/#1112). The GM
 // picks the raw journal dump downloaded by

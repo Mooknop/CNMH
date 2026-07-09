@@ -4,8 +4,10 @@
  * PR #1073) into `room` collection docs. No fs / fetch / process here — this
  * module is imported by BOTH the Node CLI (scripts/importAdventureRoomsCli.js)
  * AND the in-app GM upload button (src/components/gm/RoomsImportButton.jsx), so
- * it must stay side-effect-free and browser-safe. It's CommonJS (module.exports)
- * so the CJS CLI can require it; Vite/Vitest import it via CJS→ESM interop.
+ * it must stay side-effect-free and browser-safe. It's native ESM (.mjs): the
+ * Vite dev server does NOT interop CJS for first-party files, so a CommonJS
+ * version here fails the app's whole eager module graph before React mounts
+ * (blank page). The CJS CLI reaches it via dynamic import().
  *
  * The parser is regex-based on purpose: the input is one consistent premium
  * module, so a full DOM parser would be a dependency we don't need. Every
@@ -515,7 +517,7 @@ function mergeGmFields(docs, existingDocs) {
   });
 }
 
-module.exports = {
+export {
   transformDump,
   mergeGmFields,
   isChapterJournal,
@@ -538,5 +540,4 @@ module.exports = {
   extractHazards,
   extractBody,
   buildHazardIndex,
-  transformDump,
 };

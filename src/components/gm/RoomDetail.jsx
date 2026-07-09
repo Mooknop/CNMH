@@ -4,7 +4,7 @@ import { roomTreasureCache } from '../../utils/rooms';
 // Shared renderer for one imported adventure room (or a site "Features" doc),
 // used by both the World → Rooms browser and the dashboard's Current Room
 // panel (#1077). Text fields carry safe inline HTML produced by the transform
-// (scripts/importAdventureRooms.js): @Check enrichers become <strong>DC N
+// (scripts/importAdventureRooms.mjs): @Check enrichers become <strong>DC N
 // Skill</strong>, @UUID links are flattened to labels, images stripped. The
 // content is GM-authored campaign data behind Cloudflare Access, so rendering
 // it as HTML here is intended.
