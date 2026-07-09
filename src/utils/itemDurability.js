@@ -111,7 +111,11 @@ export const durabilityFor = (item) => {
     };
   }
 
-  // 2. Shields author their own stat block; fold the reinforcing rune in the
+  // 2. Artifacts can't be damaged by normal means (PF2e) — untracked unless
+  //    an authored durability block above explicitly opts one in.
+  if (item.artifact) return null;
+
+  // 3. Shields author their own stat block; fold the reinforcing rune in the
   //    same way useShield does so both surfaces agree (#1165 S1).
   if (item.shield && typeof item.shield === 'object') {
     const s = normalizeShield(resolveShieldBlock(item));
@@ -123,7 +127,7 @@ export const durabilityFor = (item) => {
     };
   }
 
-  // 3. Armor: material field, else group, else category.
+  // 4. Armor: material field, else group, else category.
   if (item.armor && typeof item.armor === 'object') {
     const key =
       materialKey(item.material) ||
@@ -134,7 +138,7 @@ export const durabilityFor = (item) => {
     return { ...(row.items || row.thin) };
   }
 
-  // 4. Weapons: thin-item row of their material. Thrown alchemical gear
+  // 5. Weapons: thin-item row of their material. Thrown alchemical gear
   //    (bombs, holy water) is consumable — used up, not tracked.
   if (hasStrikes(item) && !isConsumableGear(item)) {
     const key =
