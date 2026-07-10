@@ -14,12 +14,22 @@
   top: 0;
   left: 50%;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
   pointer-events: none;
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   animation: hp-fx-float-rise var(--fx-duration-bloom) var(--fx-ease-out) forwards;
+}
+
+/* Damage-type / heal glyph beside the number — inherits the floater tint */
+.hp-fx-sym {
+  width: 1em;
+  height: 1em;
+  flex: none;
 }
 
 .hp-fx-float--down { color: var(--peril-light); }

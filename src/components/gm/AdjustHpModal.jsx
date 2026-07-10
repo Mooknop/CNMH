@@ -122,9 +122,13 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
           : 0;
       const incoming = immune ? 0 : Math.max(0, n + weak - resisted);
 
+      // `damageType` rides the hp payload as transient display info: HpFx picks
+      // the floating-number glyph from it. Stamped on typed damage, stripped on
+      // heals (undefined drops out of JSON) so a stale type never outlives the
+      // write that knew it; bridge writes rebuild hp without it (generic burst).
       let newHp;
       if (mode === 'heal') {
-        newHp = { ...hp, current: Math.min(hp.max, hp.current + n) };
+        newHp = { ...hp, current: Math.min(hp.max, hp.current + n), damageType: undefined };
       } else {
         const tempAbsorb = Math.min(hp.temp || 0, incoming);
         const remainder = incoming - tempAbsorb;
@@ -132,6 +136,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
           ...hp,
           temp: (hp.temp || 0) - tempAbsorb,
           current: Math.max(0, hp.current - remainder),
+          damageType: damageType || undefined,
         };
       }
       setCharHp(newHp);

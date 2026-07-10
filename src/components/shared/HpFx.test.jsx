@@ -93,6 +93,39 @@ describe('HpFx', () => {
     expect(el).not.toHaveAttribute('data-fx-temp');
   });
 
+  it('typed damage shows its damage-type glyph beside the −N', () => {
+    const { push } = setup();
+    push(HP({ current: 30 }));
+    push(HP({ current: 21, damageType: 'fire' }));
+    const float = screen.getByTestId('hpfx').querySelector('.hp-fx-float');
+    expect(float.querySelector('[data-fx-sym="fire"]')).toBeInTheDocument();
+    expect(float).toHaveTextContent('−9');
+  });
+
+  it('untyped damage falls back to the generic burst glyph', () => {
+    const { push } = setup();
+    push(HP({ current: 30 }));
+    push(HP({ current: 24 }));
+    const float = screen.getByTestId('hpfx').querySelector('.hp-fx-float');
+    expect(float.querySelector('[data-fx-sym="untyped"]')).toBeInTheDocument();
+  });
+
+  it('healing shows the heal glyph regardless of any stale damageType', () => {
+    const { push } = setup();
+    push(HP({ current: 18, damageType: 'fire' }));
+    push(HP({ current: 25, damageType: 'fire' })); // stale field carried by a spread
+    const float = screen.getByTestId('hpfx').querySelector('.hp-fx-float');
+    expect(float.querySelector('[data-fx-sym="heal"]')).toBeInTheDocument();
+  });
+
+  it('an unknown damageType string falls back to the generic burst', () => {
+    const { push } = setup();
+    push(HP({ current: 30 }));
+    push(HP({ current: 26, damageType: 'chaos-goo' }));
+    const float = screen.getByTestId('hpfx').querySelector('.hp-fx-float');
+    expect(float.querySelector('[data-fx-sym="untyped"]')).toBeInTheDocument();
+  });
+
   it('a damage write and a temp-HP write in quick succession do not eat each other', () => {
     const { push } = setup();
     push(HP({ current: 30, temp: 0 }));
