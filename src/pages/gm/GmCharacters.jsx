@@ -353,6 +353,10 @@ const scFromForm = (f) => {
 const toForm = (c) => {
   const rest = { ...c };
   delete rest.id;
+  // Owned by the dedicated ImageField — must not leak into rest, or the save
+  // path's `{ ...rest }` resurrects a removed portrait (same bug as GmItems).
+  delete rest.image;
+  delete rest.imagePosition;
   STRINGS.forEach((k) => delete rest[k]);
   NUMS.forEach((k) => delete rest[k]);
   delete rest.abilities;
@@ -767,6 +771,10 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
     WEAPONS.forEach((w) => { payload.proficiencies.weapons[w] = tierEntry(toInt(f.prof.weapons[w])); });
     ARMOR.forEach((a) => { payload.proficiencies.armor[a] = tierEntry(toInt(f.prof.armor[a])); });
 
+    // Scrub any stale copy from rest, then emit only when set — clearing the
+    // ImageField genuinely removes the portrait.
+    delete payload.image;
+    delete payload.imagePosition;
     if (f.image) { payload.image = f.image; payload.imagePosition = f.imagePosition; }
     if (f.hasSpellcasting) payload.spellcasting = scFromForm(f);
 
