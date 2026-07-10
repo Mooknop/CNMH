@@ -1,9 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
-import TargetRollResolver, { DEGREE_LABELS_SAVE } from './TargetRollResolver';
+import TargetRollResolver from './TargetRollResolver';
 import { DEGREE_LABELS, ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
-import OpposedReactionResolver from './OpposedReactionResolver';
 import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
@@ -31,33 +30,33 @@ import { useCatalystSection } from '../../hooks/useCatalystSection';
 import { useChamberFireSection } from '../../hooks/useChamberFireSection';
 import { useBloodMagicSection } from '../../hooks/useBloodMagicSection';
 import { useFlatCheckSection } from '../../hooks/useFlatCheckSection';
+import { useSaveDamageInput } from '../../hooks/useSaveDamageInput';
+import { useOpposedReactionResolution } from '../../hooks/useOpposedReactionResolution';
 import { useVeracious } from '../../hooks/useVeracious';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
 import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
-import { buildChainSelfEffect } from '../../utils/spellshapeTransform';
+import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { markPlayingOnCast } from '../../utils/playing';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { DEFENSE_LABELS } from '../../utils/defense';
-import { resolveActionRoll, isBasicDefense } from '../../utils/rollResolution';
+import { resolveActionRoll } from '../../utils/rollResolution';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { preyMatches } from '../../utils/huntPrey';
-import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
-import { skillLabel } from '../../utils/victoryPoints';
-import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
+import { conditionalTogglesFor } from '../../utils/EffectUtils';
+import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
+import { buildTargetSaveRequest } from '../../utils/saveRequest';
+import { applyChainStrikeResults, applyChainSpellResults } from '../../utils/chainResultsAppliers';
 import { PERSISTENT_KEY, applyPersistentFromResults } from '../../utils/persistentDamage';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { relayDamageAndRevealIwr } from '../../utils/damageRelay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from '../../utils/whetstoneOnHit';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
 import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
-import { HARROW_CAST_DC } from '../../utils/harrow';
-import { applyHealing } from '../../utils/consumables';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import './UseAbilityModal.css';
@@ -121,7 +120,6 @@ const UseAbilityModal = ({
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
-  const opposedRef  = useRef(null);
 
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
   // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
@@ -170,10 +168,11 @@ const UseAbilityModal = ({
   const { armed: veraciousArmed, disarm: disarmVeracious } =
     useVeracious(character?.id || 'nobody', charData?.inventory || []);
 
-  // Save-based damage entry (#270): the caster's rolled total and rider
-  // toggles, carried into the save request for GM-side per-degree resolution.
-  const [saveDmgInput, setSaveDmgInput] = useState('');
-  const [saveRiderState, setSaveRiderState] = useState({});
+  // Save-based damage entry (#270, extracted #1317 D3): the caster's rolled
+  // total and rider toggles, carried into the save request for GM-side
+  // per-degree resolution (buildTargetSaveRequest snapshots it on confirm).
+  const { saveDmgInput, setSaveDmgInput, saveRiderState, toggleRider: toggleSaveRider } =
+    useSaveDamageInput();
 
   // Persistent-damage tracking (#272) — confirm records per-target entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -279,6 +278,31 @@ const UseAbilityModal = ({
   const flatCheckSection = useFlatCheckSection({ ability, activeConditions, isAttack, effectiveVerb });
   const { flatChecks, allFlatChecksRolled, failedFlatCheck } = flatCheckSection;
 
+  // Multiple Attack Penalty step: attacks already made this turn, or the override.
+  // A reaction Strike fires off-turn (AoO, Retributive Strike) so its MAP starts
+  // at 0 rather than the stale attacksMade from the player's last turn (#475).
+  // Hoisted above the ability guard so the opposed-reaction hook below can
+  // resolve its skill profile from the same MAP inputs (#1317 D3).
+  const autoStep = autoMapStep({
+    isReaction: explicitCost === 'reaction',
+    attacksMade: turnState?.attacksMade ?? 0,
+  });
+  const mapStep  = mapOverride ?? autoStep;
+
+  // Opposed reaction (#226-C, extracted #1317 D3) — owns the resolver ref, the
+  // opposedSection JSX (rendered in both effect branches below) and the entire
+  // early-return confirm path (resolve).
+  const opposedReaction = useOpposedReactionResolution({
+    ability,
+    character,
+    order,
+    activeConditions,
+    activeEffects,
+    effectCatalog,
+    mapStep,
+  });
+  const { isOpposedReaction, section: opposedSection } = opposedReaction;
+
   if (!ability || !character) return null;
 
   const effects     = Array.isArray(ability.effects) ? ability.effects : [];
@@ -347,15 +371,6 @@ const UseAbilityModal = ({
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
 
-  // Multiple Attack Penalty step: attacks already made this turn, or the override.
-  // A reaction Strike fires off-turn (AoO, Retributive Strike) so its MAP starts
-  // at 0 rather than the stale attacksMade from the player's last turn (#475).
-  const autoStep = autoMapStep({
-    isReaction: explicitCost === 'reaction',
-    attacksMade: turnState?.attacksMade ?? 0,
-  });
-  const mapStep  = mapOverride ?? autoStep;
-
   // Resolve roll profile — includes condition/effect netting for the actor.
   const rollProfile = resolveActionRoll(ability, character, {
     conditions: activeConditions || [],
@@ -367,32 +382,6 @@ const UseAbilityModal = ({
   // Save DC with the chosen variant's adjustment applied (#215) — e.g. spending
   // 2 actions on Staunch Bleeding lowers the DC by 10.
   const saveDc = rollProfile.dc != null ? rollProfile.dc + (variant?.dcDelta ?? 0) : rollProfile.dc;
-
-  // Opposed reaction (#226-C): a reaction-cost ability whose roll config carries
-  // `opposed: true`. It resolves the actor's skill total (already in
-  // rollProfile.bonus) against a GM-called DC the player relays, not a target's
-  // defense — so it bypasses the defense-driven resolver entirely.
-  const isOpposedReaction = ability.roll?.opposed === true;
-  const enemyOptions = isOpposedReaction ? order.filter((e) => e.kind === 'enemy') : [];
-  const opposedSkillLabel = rollProfile.skill ? skillLabel(rollProfile.skill) : null;
-
-  // Skill picker (#445 — Upstage): when the ability authors `roll.skillChoice`,
-  // the player may roll any of the 16 skills (the one the enemy used), not just
-  // the authored default. Precompute each skill's net bonus with the same
-  // condition/effect netting as the live roll by reusing resolveActionRoll with
-  // a skill-overridden ability — no duplicated netting logic. `null` for plain
-  // opposed reactions (Disrupting Performance) so the resolver shows no picker.
-  const hasSkillChoice = isOpposedReaction && ability.roll?.skillChoice === true;
-  const opposedSkillOptions = hasSkillChoice
-    ? SKILL_KEYS.map((skill) => {
-        const p = resolveActionRoll(
-          { ...ability, roll: { ...ability.roll, skill } },
-          character,
-          { conditions: activeConditions || [], effects: activeEffects || [], effectCatalog, mapStep },
-        );
-        return { skill, label: skillLabel(skill), bonus: p.bonus };
-      })
-    : null;
 
   // Which defense to show on the resolver (actor-roll only).
   const effectiveDefense = rollProfile.mode === 'actor-roll'
@@ -531,65 +520,30 @@ const UseAbilityModal = ({
     const bridgePresent = (getState('global', RELAY.ROSTER) || []).length > 0;
     const foundryAuthoritative = !!ability.foundryEffect?.authoritative && bridgePresent;
 
-    // Opposed reaction (#226-C) — its own resolution path. The actor's skill
-    // roll is compared to the GM-called DC; the authored self effect and any
-    // per-enemy immunity land only on a success. Returns early so none of the
+    // Opposed reaction (#226-C, extracted #1317 D3) — its own resolution path
+    // (useOpposedReactionResolution.resolve). The actor's skill roll is
+    // compared to the GM-called DC; the authored self effect and any per-enemy
+    // immunity land only on a success. Returns early so none of the
     // target-defense / save-request / MAP machinery below ever runs for it.
     if (isOpposedReaction) {
-      const res = opposedRef.current?.getResults() ?? null;
-      const succeeded = res?.degree === 'success' || res?.degree === 'criticalSuccess';
-
-      // Authored self effect (Upstage's +1 status buff). Crit and plain success
-      // both apply at the engine level; the "only if the enemy failed" caveat is
-      // the rendered success note, not auto-enforced.
-      if (succeeded && hasEffects) {
-        applyAbility({
-          ability,
-          caster: character,
-          casterEntryId,
-          targetCharIds: [],
-          enemyTargetNames: [],
-          order,
-          encounter,
-          characters,
-          getState,
-          sendUpdate,
-          appendLog,
-          verb: effectiveVerb,
-          nowSecs,
-        });
-      }
-
-      // Per-enemy immunity (Disrupting Performance's 1-minute lockout) — only
-      // when the check succeeded and a triggering enemy was picked.
-      if (succeeded && immunityGate.immunityConfig && res?.enemyEntryId) {
-        stampImmunity(res.enemyEntryId, {
-          abilityKey:   immunityGate.immunityAbilityKey,
-          abilityName:  ability.name,
-          casterId:     character.id,
-          nowSecs,
-          durationSecs: immunityGate.immunityConfig.durationSecs,
-        });
-      }
-
-      const degreeLabel = res?.degree ? (DEGREE_LABELS_SAVE[res.degree]?.label || res.degree) : null;
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   (res?.degree != null && res?.dc != null)
-          ? `${character.name}'s ${ability.name}${res.skill ? ` (${res.skill})` : ''} vs DC ${res.dc}: ${res.total} → ${degreeLabel}`
-            + (res.enemyName ? ` (${res.enemyName})` : '')
-          : `${character.name} ${effectiveVerb} ${ability.name}`,
+      opposedReaction.resolve({
+        hasEffects,
+        casterEntryId,
+        encounter,
+        characters,
+        getState,
+        sendUpdate,
+        appendLog,
+        effectiveVerb,
+        nowSecs,
+        immunityConfig: immunityGate.immunityConfig,
+        immunityAbilityKey: immunityGate.immunityAbilityKey,
+        stampImmunity,
+        effectiveCost,
+        verb,
+        spendReaction,
+        onClose,
       });
-
-      // A Composition reaction (Counter Performance) is still a cast — it
-      // marks the caster playing (#935) whatever the opposed check said.
-      markPlayingOnCast({ ability, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
-
-      if (effectiveCost === 'reaction') {
-        spendReaction(`${verb} ${ability.name}`);
-      }
-      onClose();
       return;
     }
 
@@ -802,59 +756,11 @@ const UseAbilityModal = ({
       });
     }
 
-    // Log chained strike results (Inner Upheaval and similar). Results with a
-    // resolved damage entry log the real per-target total (#222); the static
-    // dice string stays as the fallback when no total was entered.
+    // Log chained strike results (Inner Upheaval and similar; extracted #1317
+    // D3): per-target totals (#222) with the static dice string as fallback,
+    // plus the Flurry of Blows combined-damage line.
     if (chainResults && hasChainStrike) {
-      const strikeLabel = chainResults.mode === 'flurry' ? 'Flurry of Blows' : chainResults.strikeName;
-      chainResults.rolls.forEach((rollSet, rollIdx) => {
-        if (!rollSet) return;
-        const strikeNum = chainResults.mode === 'flurry' ? ` (${rollIdx + 1})` : '';
-        rollSet.forEach((r) => {
-          const degreeLabel = r.degree
-            ? (ATTACK_DEGREE_LABELS[r.degree] || r.degree)
-            : null;
-          const dmgText = r.damage?.final != null
-            ? ` · damage ${formatDamageBreakdown(r.damage)}`
-            : ` · dmg ${chainResults.damage}`;
-          // Situational bonus reason (#511): note any applied circumstance toggles,
-          // mirroring the single-roll resolver's log suffix (#274).
-          const adjustSuffix = r.adjust
-            ? ` (incl. ${r.adjust > 0 ? '+' : ''}${r.adjust}: ${(r.adjustSources || []).join(', ')})`
-            : '';
-          const resultText = degreeLabel
-            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel}${adjustSuffix}${dmgText}`
-            : `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum}${dmgText}`;
-          appendLog({ type: 'action', charId: character.id, text: resultText });
-        });
-        if (!rollSet.length) {
-          appendLog({ type: 'action', charId: character.id, text: `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} · dmg ${chainResults.damage}` });
-        }
-      });
-
-      // Flurry of Blows combines its damage before resistances/weaknesses —
-      // log the per-target sum when both strikes resolved damage on one target.
-      if (chainResults.mode === 'flurry') {
-        const sums = new Map();
-        chainResults.rolls.forEach((rollSet) => {
-          (rollSet || []).forEach((r) => {
-            if (r.damage?.final == null) return;
-            const cur = sums.get(r.entryId) || { name: r.name, total: 0, count: 0 };
-            cur.total += r.damage.final;
-            cur.count += 1;
-            sums.set(r.entryId, cur);
-          });
-        });
-        sums.forEach((s) => {
-          if (s.count > 1) {
-            appendLog({
-              type:   'action',
-              charId: character.id,
-              text:   `Flurry of Blows combined vs ${s.name}: ${s.total} damage (apply resistance/weakness once)`,
-            });
-          }
-        });
-      }
+      applyChainStrikeResults(chainResults, { character, ability, effectiveVerb, appendLog });
     }
 
     // Persistent-damage tracking (#272): record each target's persistent
@@ -909,231 +815,48 @@ const UseAbilityModal = ({
       appendLog,
     });
 
-    // Push a save request to the GM for target-save abilities. When a damage
-    // profile exists (#270), the caster's entered total and rider snapshot
-    // travel with it — RequestedSaves derives per-degree totals GM-side.
-    if (rollProfile.mode === 'target-save' && saveTargets.length > 0 && rollProfile.dc != null) {
-      const targets = saveTargets.map((e) => ({
-        entryId: e.entryId,
-        name: e.name,
-        saveMod: e.defenses?.saves?.[rollProfile.defense] ?? null,
-      }));
-      let damage;
-      if (damageProfile) {
-        const enteredNum = parseInt(saveDmgInput, 10);
-        const savedRiders = serializeRidersForSave(damageProfile.riders, saveRiderState);
-        if (!Number.isNaN(enteredNum) || savedRiders.length > 0) {
-          damage = {
-            entered: Number.isNaN(enteredNum) ? null : enteredNum,
-            expression: damageProfile.expression ?? null,
-            typeLabel: damageProfile.typeLabel ?? null,
-            riders: savedRiders,
-            ...(damageProfile.degrees && { degrees: damageProfile.degrees }),
-          };
-        }
-      }
-      // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned
-      // bonus): resolve the ally targets now and ride them along; RequestedSaves
-      // applies the effect on the matching save degrees.
-      let casterEffect;
-      if (ability.saveOutcomeEffect?.effectId) {
-        const soe = ability.saveOutcomeEffect;
-        const resolved = resolveApplyTargets(soe.applyTo || 'self', character, [], order);
-        casterEffect = {
-          def: { effectId: soe.effectId, duration: soe.duration || null, onDegrees: soe.onDegrees || [] },
-          targets: resolved,
-          casterId: character.id,
-          casterName: character.name,
-          casterEntryId,
-        };
-      }
-      addSaveRequest({
-        casterId: character.id,
-        casterName: character.name,
-        abilityName: ability.name,
-        save: rollProfile.defense,
-        dc: saveDc,
-        basic: !!(ability.basic) || isBasicDefense(ability.defense),
-        rank: directCastRank,
-        targets,
-        ...(damage && { damage }),
-        ...(casterEffect && { casterEffect }),
-      });
-    }
+    // Push a save request to the GM for target-save abilities (builder
+    // extracted #1317 D3). When a damage profile exists (#270), the caster's
+    // entered total and rider snapshot travel with it — RequestedSaves derives
+    // per-degree totals GM-side.
+    const saveRequest = buildTargetSaveRequest({
+      rollProfile,
+      saveTargets,
+      damageProfile,
+      saveDmgInput,
+      saveRiderState,
+      ability,
+      character,
+      casterEntryId,
+      order,
+      saveDc,
+      directCastRank,
+    });
+    if (saveRequest) addSaveRequest(saveRequest);
 
-    // Log chained spell results (Reach Spell, Harrow Casting, etc.).
+    // Consume chained spell results (Reach Spell, Harrow Casting, etc.;
+    // extracted #1317 D3): resource spend via the section's castOption (#235),
+    // per-ray logging (#581) with the Split Shot note (#227), the chained save
+    // request, Harrow Casting's drawn-card mechanics (#227) and the spellshape
+    // self-effect (#1001 S2).
     if (hasChainSpell && chainResults) {
-      // Chained casts spend the option the section picked (#235) — signature
-      // spells can heighten, cantrips stay free. Sections rendered without the
-      // resources prop report no option; fall back to the native-rank spend.
-      let chainSuffix = '';
-      if (chainResults.castOption) {
-        if (chainResults.castOption.enabled) {
-          const { label } = resources.spend(chainResults.castOption);
-          if (label) chainSuffix = ` (${label})`;
-        } else {
-          chainSuffix = ` (no rank-${chainResults.castRank} slots left — not spent)`;
-        }
-      } else if (chainResults.spellRank > 0) {
-        if (resources.slots.remainingFor(chainResults.spellRank) > 0) {
-          resources.slots.spend(chainResults.spellRank);
-          chainSuffix = ` (rank ${chainResults.spellRank} slot)`;
-        } else {
-          chainSuffix = ` (no rank-${chainResults.spellRank} slots left — not spent)`;
-        }
-      }
-      const label = (chainResults.modifier
-        ? `${chainResults.spellName} [${chainResults.modifier}]`
-        : chainResults.spellName) + chainSuffix;
-      if (chainResults.rollResults) {
-        // Attack-roll chains read as hits/misses; everything else keeps
-        // success/failure wording.
-        const chainDegreeMap = chainResults.rollProfile?.defense === 'ac' ? ATTACK_DEGREE_LABELS : DEGREE_LABELS;
-        // Multi-ray chained casts (#581, Blazing Bolt) return grouped results
-        // [{rayIndex, results}]; single-roll casts return a flat array. Normalise
-        // to ray groups so both share one logging path (mirrors the direct path).
-        const chainRayGroups = chainResults.multiRay
-          ? chainResults.rollResults
-          : [{ rayIndex: null, results: chainResults.rollResults }];
-        chainRayGroups.forEach((g) => {
-          const rayPrefix = g.rayIndex != null ? ` — ray ${g.rayIndex + 1}` : '';
-          g.results.forEach((r) => {
-            const degreeLabel = r.degree ? (chainDegreeMap[r.degree] || r.degree) : null;
-            // Split Shot (#227): the designated second target takes half damage.
-            const isSplitSecondary = chainResults.splitShot?.secondaryEntryId === r.entryId;
-            const splitSuffix = isSplitSecondary
-              ? ' · second target — half damage, no other effects'
-              : '';
-            // Damage step result (#571): per-target total with the rider breakdown.
-            // Suppressed on the Split Shot second target — its damage is halved and
-            // the note above already says so, so the full number would mislead.
-            const dmgSuffix = (r.damage?.final != null && !isSplitSecondary)
-              ? ` · damage ${formatDamageBreakdown(r.damage)}`
-              : '';
-            appendLog({
-              type: 'action', charId: character.id,
-              text: degreeLabel
-                ? `${character.name} ${effectiveVerb} ${ability.name} → ${label}${rayPrefix} vs ${r.name}: ${r.total} → ${degreeLabel}${dmgSuffix}${splitSuffix}`
-                : `${character.name} ${effectiveVerb} ${ability.name} → ${label}${rayPrefix}`,
-            });
-          });
-        });
-      } else {
-        appendLog({
-          type: 'action', charId: character.id,
-          text: `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
-        });
-      }
-      // Push save request for the chained spell if it's target-save.
-      if (chainResults.rollProfile?.mode === 'target-save'
-          && chainResults.saveTargets?.length > 0
-          && chainResults.rollProfile.dc != null) {
-        addSaveRequest({
-          casterId: character.id, casterName: character.name,
-          abilityName: `${ability.name} → ${chainResults.spellName}`,
-          save: chainResults.rollProfile.defense,
-          dc: chainResults.rollProfile.dc,
-          basic: !!chainResults.spellBasic,
-          rank: chainResults.castRank > 0 ? chainResults.castRank : undefined,
-          targets: chainResults.saveTargets.map((e) => ({
-            entryId: e.entryId, name: e.name,
-            saveMod: e.defenses?.saves?.[chainResults.rollProfile.defense] ?? null,
-          })),
-          ...(chainResults.damage && { damage: chainResults.damage }),
-        });
-      }
-
-      // Harrow Casting (#227): the drawn card, the flat check, and the suit's
-      // mechanics. Key/Star effects are real catalog entries (until the start
-      // of the caster's next turn); Shields/Stars healing is player-rolled;
-      // Hammers stays a manual rider note until chained-spell damage (#281).
-      const hc = chainResults.harrow;
-      if (hc?.drawnSuit) {
-        const flatText = hc.flatD20 != null
-          ? ` — flat check DC ${HARROW_CAST_DC}: ${hc.flatD20} (${hc.flatPassed ? 'passed' : 'failed'})`
-          : '';
-        appendLog({
-          type:   'action',
-          charId: character.id,
-          text:   `${character.name} draws ${hc.drawnSuit}${hc.match ? ' — omen match!' : ''}${flatText}`,
-        });
-        if (hc.flatPassed === false) {
-          omen.flagPendingLoss();
-          appendLog({
-            type: 'system',
-            text: `${character.name}'s harrow omen (${omen.suit || '—'}) will be lost at the end of their turn (failed Harrow Cast flat check)`,
-          });
-        }
-        const heff = hc.effect;
-        if (heff?.kind === 'self-effect') {
-          applyAbility({
-            ability: { name: `Harrow Casting — ${hc.drawnSuit}`, effects: [{ effectId: heff.effectId, applyTo: 'self', duration: { until: 'caster-turn-start' } }] },
-            caster: character, casterEntryId, targetCharIds: [], enemyTargetNames: [],
-            order, encounter, characters, getState, sendUpdate, appendLog,
-            verb: 'gains', nowSecs,
-          });
-        } else if (heff?.kind === 'self-heal') {
-          if (hc.healEntered != null) {
-            applyHealing({
-              target: character, amount: hc.healEntered, getState, sendUpdate, appendLog,
-              logText: `${character.name} healed ${hc.healEntered} HP (Harrow Casting — ${hc.drawnSuit})`,
-            });
-          } else {
-            appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
-          }
-        } else if (heff?.kind === 'target-heal') {
-          const healTargetId = targetCharIds[0] || null;
-          const healTarget = healTargetId ? characters.find((c) => c.id === healTargetId) : null;
-          if (hc.healEntered != null && healTarget) {
-            applyHealing({
-              target: healTarget, amount: hc.healEntered, getState, sendUpdate, appendLog,
-              logText: `${healTarget.name} healed ${hc.healEntered} HP (Harrow Casting — ${hc.drawnSuit})`,
-            });
-          } else {
-            appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
-          }
-          if (heff.effectId && healTargetId) {
-            applyAbility({
-              ability: { name: `Harrow Casting — ${hc.drawnSuit}`, effects: [{ effectId: heff.effectId, applyTo: 'ally', duration: { until: 'caster-turn-start' } }] },
-              caster: character, casterEntryId, targetCharIds: [healTargetId], enemyTargetNames: [],
-              order, encounter, characters, getState, sendUpdate, appendLog,
-              verb: 'grants', nowSecs,
-            });
-          }
-        } else if (heff) {
-          appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
-        }
-      }
-
-      // Spellshape self-effect (#1001 S2): a chained spellshape can grant the
-      // caster a buff parametrized by the chained spell's rank + a chosen
-      // descriptor (Energy Ablation — resistance vs a chosen energy type = the
-      // spell's rank, until the end of your next turn). Inline modifiers, so it
-      // can't ride applyAbility's static-catalog path.
-      const chainSelfEffect = ability.chain?.selfEffect
-        ? buildChainSelfEffect({
-            selfEffect: ability.chain.selfEffect,
-            castRank: chainResults.castRank,
-            choice: chainResults.selfEffectChoice,
-            caster: character,
-            abilityName: ability.name,
-            casterEntryId,
-            encounter,
-            nowSecs,
-          })
-        : null;
-      if (chainSelfEffect) {
-        const nextEffects = [...(getState(character.id, APP.EFFECTS) || []), chainSelfEffect];
-        try {
-          window.localStorage.setItem(syncKey(APP.EFFECTS, character.id), JSON.stringify(nextEffects));
-        } catch { /* noop */ }
-        sendUpdate(character.id, APP.EFFECTS, nextEffects);
-        const m = chainSelfEffect.modifiers[0];
-        appendLog({
-          type: 'action', charId: character.id,
-          text: `${character.name} gains ${chainSelfEffect.name || 'a spellshape effect'} (${m.stat} ${m.amount} vs ${m.vs})`,
-        });
-      }
+      applyChainSpellResults(chainResults, {
+        character,
+        ability,
+        effectiveVerb,
+        casterEntryId,
+        targetCharIds,
+        order,
+        encounter,
+        characters,
+        getState,
+        sendUpdate,
+        appendLog,
+        addSaveRequest,
+        resources,
+        omen,
+        nowSecs,
+      });
     }
 
     // Blood magic (#227): the bloodline rider lands on the caster as a catalog
@@ -1263,21 +986,9 @@ const UseAbilityModal = ({
     </>
   ) : null;
 
-  // Opposed-reaction resolver (#226-C) — DC entry + optional enemy picker + the
-  // actor's skill roll. Replaces the defense-driven roll section for these.
-  const opposedSection = isOpposedReaction ? (
-    <OpposedReactionResolver
-      ref={opposedRef}
-      rollBonus={rollProfile.bonus}
-      enemyOptions={enemyOptions}
-      skillLabel={opposedSkillLabel}
-      skillOptions={opposedSkillOptions}
-      defaultSkill={ability.roll?.skill || 'performance'}
-      successNote={ability.roll?.successNote || null}
-    />
-  ) : null;
-
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
+  // (The opposed-reaction resolver, #226-C, is `opposedSection` from
+  // useOpposedReactionResolution above.)
   // Multi-ray attack spells render one resolver row per ray instead of a single roll.
   let rollSection = null;
   if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
@@ -1323,7 +1034,7 @@ const UseAbilityModal = ({
             entered={saveDmgInput}
             onEntered={setSaveDmgInput}
             riderState={saveRiderState}
-            onToggleRider={(id, on) => setSaveRiderState((cur) => ({ ...cur, [id]: on }))}
+            onToggleRider={toggleSaveRider}
           />
         )}
       </>
