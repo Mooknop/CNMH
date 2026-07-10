@@ -735,6 +735,17 @@ describe('groupWares', () => {
     expect(groups[0].image).toBeUndefined();
   });
 
+  it('carries thassilonianRune onto the group for the rune crest (#1361)', () => {
+    const map = new Map([
+      ['carnasia-tattoo', { id: 'carnasia-tattoo', name: 'Carnasia Tattoo', price: 60,
+        traits: ['Invested', 'Magical', 'Tattoo'], thassilonianRune: 'lust' }],
+    ]);
+    const [group] = groupWares(resolveShopWares('s', { s: { wares: [
+      { ref: 'carnasia-tattoo' },
+    ] } }, map));
+    expect(group.thassilonianRune).toBe('lust');
+  });
+
   it('ignores idless entries and non-array input', () => {
     expect(groupWares([{ name: 'no id' }, null])).toEqual([]);
     expect(groupWares(null)).toEqual([]);

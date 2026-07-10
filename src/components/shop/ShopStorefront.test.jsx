@@ -190,6 +190,28 @@ describe('ShopStorefront', () => {
       expect(preview.querySelector('img.ps-preview-img')).toHaveAttribute('src', '/api/images/antidote.png');
     });
 
+    it('a rune-marked imageless ware shows its tinted rune crest on tile and preview (#1361)', () => {
+      const tattoo = { id: 'carnasia-tattoo', name: 'Carnasia Tattoo', price: 60, weight: 0,
+        traits: ['Invested', 'Magical', 'Tattoo'], thassilonianRune: 'lust' };
+      renderShop({
+        items: [...items, tattoo],
+        waresStore: { rings: { wares: [{ ref: 'antidote' }, { ref: 'carnasia-tattoo' }] } },
+      });
+      const grid = screen.getByLabelText('wares');
+      const tile = grid.querySelector('[data-testid="ware-carnasia-tattoo"]');
+      const rune = tile.querySelector('.ps-tile-case.ps-crest-rune svg.thassilonian-rune');
+      expect(rune).not.toBeNull();
+      expect(rune).toHaveAttribute('data-rune', 'lust');
+      expect(rune).toHaveClass('rune-tint');
+      expect(tile.querySelector('img')).toBeNull();
+
+      fireEvent.keyDown(within(grid).getByTestId('ware-carnasia-tattoo'), { key: 'Enter' });
+      const preview = screen.getByTestId('ware-preview');
+      expect(
+        preview.querySelector('.ps-preview-crest.ps-crest-rune svg.thassilonian-rune')
+      ).not.toBeNull();
+    });
+
     it('surfaces item activations in the takeover preview (#882)', () => {
       renderShop();
       fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'), { key: 'Enter' });
