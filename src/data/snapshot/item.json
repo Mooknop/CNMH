@@ -1047,6 +1047,7 @@
     ],
     "name": "Avaria Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Tailwind once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "greed",
     "traits": [
       "Invested",
       "Magical",
@@ -1071,6 +1072,7 @@
     ],
     "name": "Avidais Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Vanishing Tracks once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "envy",
     "traits": [
       "Invested",
       "Magical",
@@ -2214,6 +2216,7 @@
     ],
     "name": "Carnasia Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Liberating Command once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "lust",
     "traits": [
       "Invested",
       "Magical",
@@ -5720,6 +5723,7 @@
     ],
     "name": "Idolis Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Thoughtful Gift once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "sloth",
     "traits": [
       "Invested",
       "Magical",
@@ -8046,6 +8050,7 @@
     ],
     "name": "Ragario Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Concordant Choir once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "wrath",
     "traits": [
       "Invested",
       "Magical",
@@ -11379,6 +11384,33 @@
     "id": "sulfur-bomb"
   },
   {
+    "actions": [
+      {
+        "name": "Cast Ventriloquism",
+        "actionCount": 2,
+        "traits": [
+          "Auditory",
+          "Concentrate",
+          "Illusion",
+          "Manipulate"
+        ],
+        "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+      }
+    ],
+    "name": "Superbia Tattoo",
+    "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "pride",
+    "traits": [
+      "Invested",
+      "Magical",
+      "Tattoo",
+      "Illusion"
+    ],
+    "price": 60,
+    "weight": 0,
+    "id": "superbia-tattoo"
+  },
+  {
     "id": "swallow-spike",
     "name": "Swallow-Spike",
     "price": 200,
@@ -12187,29 +12219,22 @@
   {
     "actions": [
       {
-        "name": "Cast Ventriloquism",
-        "actionCount": 2,
+        "name": "Cast Guidance",
+        "actionCount": 1,
         "traits": [
-          "Auditory",
-          "Concentrate",
-          "Illusion",
-          "Manipulate"
+          "Concentrate"
         ],
-        "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+        "description": "Frequency once per day; Range 30 feet; Targets 1 creature; Duration until the start of your next turn. The tattoo's foresight guides your ally: the target gains a +1 status bonus to one attack roll, Perception check, saving throw, or skill check it attempts before the duration ends. The target is then temporarily immune to Guidance for 1 hour."
       }
     ],
     "name": "Vangloris Tattoo",
-    "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
-    "image": "img_b7a8c519-1f0b-4b8f-a67f-d6c59334b2a1.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    },
+    "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Guidance once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "vainglory",
     "traits": [
       "Invested",
       "Magical",
       "Tattoo",
-      "Transmutation"
+      "Divination"
     ],
     "price": 60,
     "weight": 0,
@@ -12489,6 +12514,7 @@
     ],
     "name": "Voratalo Tattoo",
     "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Cleanse Cuisine once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "gluttony",
     "traits": [
       "Invested",
       "Magical",
@@ -13155,6 +13181,7 @@
       ]
     },
     "name": "Xanderghul's Flawless Hammer",
+    "thassilonianRune": "pride",
     "strikes": {
       "attackStat": "spellAttackOrMartial",
       "proficiency": "simple",
