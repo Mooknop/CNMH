@@ -2,12 +2,14 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver from './TargetRollResolver';
-import { DEGREE_LABELS, ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
 import MultiRayResolver from './MultiRayResolver';
-import ChainedStrikeSection from './ChainedStrikeSection';
-import ChainedSpellSection from './ChainedSpellSection';
 import DamagePanel from './DamagePanel';
-import HeightenedNotes from './HeightenedNotes';
+import {
+  AbilitySummarySection,
+  StaticEffectsList,
+  ChainedActionsSwitch,
+  GrantActionsSection,
+} from './UseAbilitySections';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
@@ -17,7 +19,6 @@ import { useTargeting } from '../../hooks/useTargeting';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { useEffects } from '../../hooks/useEffects';
-import { useCastingResources } from '../../hooks/useCastingResources';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useFrequencyGate } from '../../hooks/useFrequencyGate';
@@ -32,69 +33,70 @@ import { useBloodMagicSection } from '../../hooks/useBloodMagicSection';
 import { useFlatCheckSection } from '../../hooks/useFlatCheckSection';
 import { useSaveDamageInput } from '../../hooks/useSaveDamageInput';
 import { useOpposedReactionResolution } from '../../hooks/useOpposedReactionResolution';
+import { useAbilityCastPlan } from '../../hooks/useAbilityCastPlan';
 import { useVeracious } from '../../hooks/useVeracious';
-import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
+import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
-import { lingeringDurationOverride } from '../../utils/lingering';
-import { isSustainedSpell, registerSustain } from '../../utils/sustain';
-import { markPlayingOnCast } from '../../utils/playing';
-import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
+import { abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
-import { preyMatches } from '../../utils/huntPrey';
-import { conditionalTogglesFor } from '../../utils/EffectUtils';
-import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
+import { buildDamageProfile } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
 import { applyChainStrikeResults, applyChainSpellResults } from '../../utils/chainResultsAppliers';
-import { PERSISTENT_KEY, applyPersistentFromResults } from '../../utils/persistentDamage';
-import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
-import { relayDamageAndRevealIwr } from '../../utils/damageRelay';
-import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from '../../utils/whetstoneOnHit';
+import {
+  buildRayGroups,
+  applyCastRegistrations,
+  applyEffectsOrLogGeneric,
+  logRayGroupResults,
+  applyPostRollEffects,
+} from '../../utils/confirmAppliers';
+import { buildAttackToggles } from '../../utils/attackToggles';
+import { buildStrikeRangeGating } from '../../utils/strikeRangeGating';
+import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
-import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
-import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
+import { isAttackAbility } from '../../utils/map';
 import { toGameSeconds } from '../../utils/gameTime';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import './UseAbilityModal.css';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
-// Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
-const parseActionCost = (actionsText) => {
-  if (!actionsText) return 1;
-  const t = String(actionsText).toLowerCase();
-  if (t.includes('free')) return 0;
-  if (t.includes('reaction')) return 'reaction';
-  if (t.includes('three') || t === '3') return 3;
-  if (t.includes('two') || t === '2') return 2;
-  if (t.includes('one') || t === '1') return 1;
-  const n = parseInt(t);
-  return Number.isNaN(n) ? 1 : n;
-};
-
-const costToDisplay = (ability, explicitCost) => {
-  if (ability.actions) return ability.actions;
-  if (explicitCost === 'reaction') return 'Reaction';
-  if (explicitCost === 'free' || explicitCost === 0) return 'Free';
-  if (typeof explicitCost === 'number') return String(explicitCost);
-  return '?';
-};
-
 /**
- * Unified modal for using any encounter ability (action / reaction / spell).
+ * UseAbilityModal — orchestrator for using any encounter ability
+ * (action / reaction / spell). Post-decomposition (#1317 D1–D4) it owns only:
  *
- * If the ability has structured effects[] or grants[], shows a shared TargetPicker
- * and applies them to the chosen targets on confirm. Otherwise just logs the use.
+ *   - targeting: useTargeting + the focused-foe preselect, the caster entry,
+ *     and the PC/enemy target splits every module consumes
+ *   - the roll hub: rollProfile → effectiveDefense / resolverTargets /
+ *     saveTargets, damageProfile and saveDc
+ *   - the confirmEnabled fold: picker + every gate's gateOk + flat checks + range
+ *   - handleConfirm sequencing: two early returns (opposed-reaction resolve,
+ *     failed flat check), the log-suffix collector order (castPlan spend first,
+ *     then the gates), the action/reaction spend and the MAP recordAttack
+ *   - the render skeleton, mounting each module's `section` in its fixed slot
  *
- * @param {Object}        ability      - The action / spell object
- * @param {number|string} [cost]       - Explicit action cost (optional; parsed from ability.actions if omitted)
- * @param {string}        verb         - 'Cast' | 'Use' — shown in title and confirm button
- * @param {string}        [castSource] - Which list the cast started from ('slot'|'focus'|'staff'|'wand'|'scroll'|'innate')
- * @param {Object}        character    - The acting character
- * @param {string}        themeColor   - Theme colour
+ * Module inventory:
+ *   - gates (D1): useFrequencyGate / useAuraGate / useShieldGate / useOmenGate /
+ *     useImmunityGate — uniform { gateOk, section, applyOnConfirm } shape
+ *   - sections (D2): useRiderChoiceSection / useCatalystSection /
+ *     useChamberFireSection / useBloodMagicSection / useFlatCheckSection
+ *   - casting arithmetic (D4): useAbilityCastPlan — MAP/action-count/resource
+ *     cluster + its render pieces and the confirm-time resource spend
+ *   - appliers (D3/D4): saveRequest, chainResultsAppliers, confirmAppliers —
+ *     pure functions fed an explicit ctx bag, no modal state
+ *
+ * Adding a NEW mechanic:
+ *   (a) gate → new useXxxGate hook (D1 shape); wire one gateOk into the fold,
+ *       render one {gate.section}, call one gate.applyOnConfirm(ctx) in sequence
+ *   (b) post-roll effect → pure applier util (ctx bag) called from the matching
+ *       handleConfirm position
+ *   (c) never add raw useState for a mechanic to this file — own it in a hook
+ *
+ * Props: ability, cost (explicit action cost), verb ('Cast'|'Use'), castSource
+ * ('slot'|'focus'|'staff'|'wand'|'scroll'|'innate'), character, themeColor,
+ * isOpen, onClose.
  */
 const UseAbilityModal = ({
   isOpen,
@@ -135,29 +137,10 @@ const UseAbilityModal = ({
   const { drop: dropThrownWeapon } = useLoadout(character?.id || 'nobody');
   const [consumed, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id || ''), {});
 
-  // Tracks the spell-chain total cost so the confirm button label stays accurate.
-  const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
-  const onSpellChainCostChange = useCallback((cost) => setSpellChainTotalCost(cost), []);
-
   // The spell currently picked inside a chained cast (#227) — blood magic
   // triggers when it carries the bloodline flag.
   const [chainSpell, setChainSpell] = useState(null);
   const onChainSpellChange = useCallback((spell) => setChainSpell(spell), []);
-
-  // Multiple Attack Penalty — auto step from attacks already made this turn,
-  // with a manual override for table corrections. null = follow the auto step.
-  const [mapOverride, setMapOverride] = useState(null);
-
-  // Variable action-cost abilities (#215): chosen action count. null = default
-  // to the explicit cost picked upstream (UseActionChip) or the range minimum.
-  // For per-action multi-ray spells (Blazing Bolt) this doubles as the ray count.
-  const [actionCountOverride, setActionCountOverride] = useState(null);
-
-  // Casting resources — which pool pays for the cast, and the empty-pool
-  // override for table rulings. null index = default to first enabled option.
-  const resources = useCastingResources(character);
-  const [castOptionIdx, setCastOptionIdx] = useState(null);
-  const [castOverride, setCastOverride] = useState(false);
 
   // The character's derived data — feeds the shield gate's inventory and the
   // catalyst eligibility below.
@@ -278,16 +261,27 @@ const UseAbilityModal = ({
   const flatCheckSection = useFlatCheckSection({ ability, activeConditions, isAttack, effectiveVerb });
   const { flatChecks, allFlatChecksRolled, failedFlatCheck } = flatCheckSection;
 
-  // Multiple Attack Penalty step: attacks already made this turn, or the override.
-  // A reaction Strike fires off-turn (AoO, Retributive Strike) so its MAP starts
-  // at 0 rather than the stale attacksMade from the player's last turn (#475).
-  // Hoisted above the ability guard so the opposed-reaction hook below can
-  // resolve its skill profile from the same MAP inputs (#1317 D3).
-  const autoStep = autoMapStep({
-    isReaction: explicitCost === 'reaction',
-    attacksMade: turnState?.attacksMade ?? 0,
+  // Casting arithmetic (#1317 D4) — the MAP step (auto + override, #475), the
+  // variable action count (#215), multi-ray count, casting-resource wiring
+  // (#235) and the cost displays, plus the actions-selector / casting-cost /
+  // MAP-row render pieces. Hoisted above the ability guard so the
+  // opposed-reaction hook below can resolve its skill profile from the same
+  // MAP inputs (#1317 D3).
+  const castPlan = useAbilityCastPlan({
+    ability,
+    character,
+    explicitCost,
+    effectiveVerb,
+    castSource,
+    turnState,
+    isChamberedFire,
+    fireExtra,
   });
-  const mapStep  = mapOverride ?? autoStep;
+  const {
+    resources, mapStep, effectiveCost, castCost, variant,
+    hasChainStrike, hasChainSpell, isMultiRay, rayCount,
+    directCastRank, castGateOk,
+  } = castPlan;
 
   // Opposed reaction (#226-C, extracted #1317 D3) — owns the resolver ref, the
   // opposedSection JSX (rendered in both effect branches below) and the entire
@@ -309,64 +303,6 @@ const UseAbilityModal = ({
   const grants      = Array.isArray(ability.grants)  ? ability.grants  : [];
   const hasEffects  = effects.length > 0 || grants.length > 0;
   const needsPicker = abilityNeedsPicker(ability);
-
-  const hasChainStrike = ability.chain?.into === 'strike';
-  const hasChainSpell  = ability.chain?.into === 'spell';
-
-  const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
-
-  // Variable action-cost abilities (#215): the in-modal picker is authoritative
-  // for the spend. Reactions/free actions and chained abilities (which own their
-  // own total-cost arithmetic) opt out.
-  const variableRange =
-    (effectiveCost === 'reaction' || effectiveCost === 'free' || hasChainSpell || hasChainStrike)
-      ? null
-      : getVariableActionRange(ability);
-  // An explicit numeric cost picked upstream (UseActionChip dropdown) seeds the
-  // picker but stays changeable here.
-  const seedCount = (variableRange
-    && typeof explicitCost === 'number'
-    && explicitCost >= variableRange.min
-    && explicitCost <= variableRange.max)
-    ? explicitCost
-    : variableRange?.min;
-  const chosenActions = variableRange
-    ? Math.min(Math.max(actionCountOverride ?? seedCount, variableRange.min), variableRange.max)
-    : null;
-  // The declared consequence of the chosen count (scaling note, DC change).
-  const variant = variableRange ? variantFor(ability, chosenActions) : null;
-
-  // Multi-ray attack spells fire one attack roll per ray. `rolls: 'per-action'` makes
-  // the ray count = chosen action count (variable, e.g. Blazing Bolt 1–3); `rollCount: N`
-  // is a fixed multi-ray count. The count drives the number of resolver rows.
-  const perActionRange = ability.rolls === 'per-action' ? variableRange : null;
-  const fixedRayCount  = (typeof ability.rollCount === 'number' && ability.rollCount > 1) ? ability.rollCount : null;
-  const isMultiRay     = perActionRange != null || fixedRayCount != null;
-  const rayCount = perActionRange ? chosenActions : (fixedRayCount ?? 1);
-  const castCost = variableRange ? chosenActions : effectiveCost;
-
-  // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
-  // Only casts pay a resource; plain actions get an empty list and no section.
-  const castOptions = effectiveVerb === 'cast' ? resources.optionsFor(ability, castSource) : [];
-  const defaultCastIdx = Math.max(0, castOptions.findIndex((o) => o.enabled));
-  const selectedCastIdx = castOptionIdx ?? defaultCastIdx;
-  const selectedCastOption = castOptions[selectedCastIdx] || null;
-  // Free options (cantrip/innate) need no picker UI — just a muted cost line.
-  const castIsFree = castOptions.length === 1
-    && (castOptions[0].type === 'cantrip' || castOptions[0].type === 'innate');
-  // For spell chains the total cost = parent + chosen spell; use it in the button once known.
-  const confirmCost   = (hasChainSpell && spellChainTotalCost != null) ? spellChainTotalCost : effectiveCost;
-  // Variable-cost abilities show the chosen numeric count; spell-chain total is numeric
-  // too (bypass costToDisplay, which would show ability.actions instead).
-  const costDisplay   = variableRange != null
-    ? String(chosenActions)
-    : (hasChainSpell && typeof confirmCost === 'number')
-      ? String(confirmCost)
-      : costToDisplay(ability, confirmCost);
-  // Chambered fire shows the combined Strike + Activate cost (#676).
-  const costDisplayFinal = (isChamberedFire && typeof effectiveCost === 'number')
-    ? String(effectiveCost + fireExtra)
-    : costDisplay;
 
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
@@ -393,69 +329,30 @@ const UseAbilityModal = ({
     ? enemyWithDefenses
     : [];
 
-  // Situational bonus toggles (#274): conditional ('vs X') effect modifiers on the
-  // rolled attack stat become opt-in toggles in the resolver. The stat depends on
-  // whether this is a spell attack or a weapon strike.
-  const attackStat = (rollProfile.mode === 'actor-roll' && effectiveDefense === 'ac')
-    ? (/spell-attack/.test(rollProfile.source) ? 'spellAttack'
-      : ability.type === 'ranged' ? 'rangedAttack' : 'meleeAttack')
-    : null;
-  // Off-guard (#348): an AC-attack target that is off-guard to this attacker
-  // (scoped via Feint) or off-guard generally (flanking/prone) takes a −2
-  // circumstance penalty to AC — surfaced as an opt-in +2 toggle, the same
-  // situational-bonus pattern as #274's conditional effect modifiers. Like those
-  // toggles it adjusts the roll uniformly, so it's exact for the common
-  // single-target attack; the player flips it only on the off-guard target.
-  // attackStat is non-null only for AC attacks (the only defense off-guard lowers).
-  const offGuardToggle = attackStat
-    && offGuardAppliesTo(resolverTargets.map((t) => effectsFor(t.entryId)), character.id)
-    ? [{ id: 'target-off-guard', label: 'Off-guard target', bonus: 2 }]
-    : [];
-  const attackToggles = [
-    ...(attackStat ? conditionalTogglesFor(activeEffects || [], attackStat, effectCatalog) : []),
-    ...offGuardToggle,
-    // Armed whetstone bonus (#1216 — Chivalric Emblem): once armed against an
-    // enemy, the +1 circumstance to attacks with the bound weapon surfaces as
-    // an opt-in toggle (flip it when attacking that enemy); the damage side
-    // rides as a per-target rider on the strike.
-    ...(attackStat && ability.whetstoneArmedVs
-      ? [{
-          id: 'whetstone-armed',
-          label: `${ability.whetstoneArmedVs.itemName} (vs ${ability.whetstoneArmedVs.name})`,
-          bonus: ability.whetstoneArmedVs.bonus ?? 1,
-        }]
-      : []),
-  ];
+  // Situational bonus toggles (#274, #348 off-guard, #1216 armed whetstone,
+  // extracted #1317 D4): opt-in circumstance toggles on the rolled attack stat.
+  const attackToggles = buildAttackToggles({
+    ability,
+    character,
+    rollProfile,
+    effectiveDefense,
+    resolverTargets,
+    effectsFor,
+    activeEffects,
+    effectCatalog,
+  });
 
-  // Ranged range increments (#530): for a ranged weapon Strike with a parseable
-  // range increment, measure attacker→target distance from the bridge positions
-  // and compute the per-target increment penalty. A target beyond 4× the
-  // increment is out of range and hard-blocks the Strike. Melee strikes, missing
-  // positions, or an unparseable range all degrade to no gating.
-  const rangeIncrementFt = isRangedStrike ? parseRangeIncrement(ability.range) : null;
-  const positions = positionsState?.positions || null;
-  const rangeFrom = rangeIncrementFt && positions ? positions[casterEntryId] : null;
-  const rangeByEntry = {};
-  if (rangeFrom) {
-    for (const t of resolverTargets) {
-      const to = positions[t.entryId];
-      // Hunt Prey (#408): a ranged attack against the designated prey ignores the
-      // second-range-increment penalty.
-      if (to) rangeByEntry[t.entryId] = rangeIncrementResult({
-        from: rangeFrom, to, incrementFt: rangeIncrementFt,
-        waiveSecondIncrement: preyMatches(prey, t),
-      });
-    }
-  }
-  const hasRangeData = Object.keys(rangeByEntry).length > 0;
-  const anyTargetOutOfRange = resolverTargets.some((t) => rangeByEntry[t.entryId]?.beyondMaxRange);
-
-  // The rank this cast happens at (#235): the chosen slot option's rank, or
-  // the spell's native rank for free/focus casts. Non-spell actions: none.
-  const directCastRank = selectedCastOption?.rank
-    ?? (effectiveVerb === 'cast' && typeof ability.level === 'number' && ability.level > 0
-      ? ability.level
-      : undefined);
+  // Ranged range increments (#530, extracted #1317 D4): per-target increment
+  // penalties from the bridge positions; a target beyond 4× the increment is
+  // out of range and hard-blocks the Strike.
+  const { rangeByEntry, hasRangeData, anyTargetOutOfRange } = buildStrikeRangeGating({
+    ability,
+    isRangedStrike,
+    positionsState,
+    casterEntryId,
+    resolverTargets,
+    prey,
+  });
 
   // For target-save: enemy targets whose save mod we can read (used in the save request).
   const saveTargets = rollProfile.mode === 'target-save'
@@ -483,10 +380,6 @@ const UseAbilityModal = ({
       })
     : null;
 
-  // Block the cast while the chosen pool is empty, unless overridden.
-  const castGateOk =
-    castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
-
   // Abilities that interact with the omen surface its current suit.
   const showsOmen = ability.requiresOmen === true || ability.clearsOmen === true;
 
@@ -503,8 +396,6 @@ const UseAbilityModal = ({
     && (flatChecks.length === 0 || allFlatChecksRolled)
     && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
 
-  const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
-
   const handleConfirm = () => {
     // Veracious Spell (#967 R7): every path through this handler is a committed
     // use, so any cast — even one that fizzles on a flat check downstream —
@@ -520,6 +411,14 @@ const UseAbilityModal = ({
     const bridgePresent = (getState('global', RELAY.ROSTER) || []).length > 0;
     const foundryAuthoritative = !!ability.foundryEffect?.authoritative && bridgePresent;
 
+    // Shared applier context (#1317 D4) — every confirm-time applier
+    // destructures the keys it needs from this bag plus call-specific extras;
+    // unused keys are harmless.
+    const ctx = {
+      ability, character, caster: character, casterEntryId, order, encounter,
+      characters, getState, sendUpdate, appendLog, effectiveVerb, nowSecs,
+    };
+
     // Opposed reaction (#226-C, extracted #1317 D3) — its own resolution path
     // (useOpposedReactionResolution.resolve). The actor's skill roll is
     // compared to the GM-called DC; the authored self effect and any per-enemy
@@ -527,15 +426,8 @@ const UseAbilityModal = ({
     // target-defense / save-request / MAP machinery below ever runs for it.
     if (isOpposedReaction) {
       opposedReaction.resolve({
+        ...ctx,
         hasEffects,
-        casterEntryId,
-        encounter,
-        characters,
-        getState,
-        sendUpdate,
-        appendLog,
-        effectiveVerb,
-        nowSecs,
         immunityConfig: immunityGate.immunityConfig,
         immunityAbilityKey: immunityGate.immunityAbilityKey,
         stampImmunity,
@@ -550,32 +442,18 @@ const UseAbilityModal = ({
     const rawResults   = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
 
-    // Normalise resolver output into ray groups so single-roll and multi-ray casts
-    // share one logging path. Single-roll returns a flat result array → one group
-    // with rayIndex null (no "ray N" prefix). Multi-ray returns [{ rayIndex, results }].
-    const isMultiRayResult = isMultiRay && rollProfile.mode === 'actor-roll';
-    const rayGroups = !rawResults
-      ? []
-      : isMultiRayResult
-        ? rawResults
-        : (rawResults.length ? [{ rayIndex: null, results: rawResults }] : []);
+    // Normalise resolver output into ray groups so single-roll and multi-ray
+    // casts share one logging path (extracted #1317 D4).
+    const rayGroups = buildRayGroups(rawResults, isMultiRay && rollProfile.mode === 'actor-roll');
 
     // Log-suffix collector (#1317 D1) — the casting-resource spend and each
     // gate's applyOnConfirm contribute in the same order the old sourceSuffix
     // string was built, so the joined suffix composes identically.
     const suffixes = [];
     const addSuffix = (s) => suffixes.push(s);
-    // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
-    // override casts without decrementing — the manual pips stay the
-    // remediation surface and pools never go negative.
-    if (selectedCastOption) {
-      if (selectedCastOption.enabled) {
-        const { label } = resources.spend(selectedCastOption);
-        if (label) addSuffix(` (${label})`);
-      } else if (castOverride) {
-        addSuffix(' (override — no resource spent)');
-      }
-    }
+    // Spend the casting resource (slot/focus/staff/wand/scroll) — the cast
+    // plan's confirm slice runs FIRST among the suffix contributors (#1317 D4).
+    castPlan.applyOnConfirm({ addSuffix });
     frequencyGate.applyOnConfirm({ addSuffix, appendLog });
     auraGate.applyOnConfirm({ addSuffix, appendLog });
     shieldGate.applyOnConfirm({ addSuffix, appendLog });
@@ -611,208 +489,49 @@ const UseAbilityModal = ({
       return;
     }
 
-    let suffixLogged = false;
-
     // Catalysts (#1209): consume each added catalyst (by name, like potions) and
     // log its rider effect. The extra actions fold into the cast spend below.
     catalystSection.applyOnConfirm({ appendLog });
-
-    // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
-    const coveredByRoll = new Set(
-      rayGroups.flatMap((g) => g.results.filter((r) => r.degree != null).map((r) => r.entryId))
-    );
 
     // Stamp clock-expiring immunity on picked PC targets (Guidance, Tell
     // Fortune, …). Independent of effects[]; idempotent on already-immune.
     immunityGate.applyOnConfirm({ addSuffix, appendLog });
 
-    // Sustained spells (#220) — register on the caster's ledger so the turn
-    // tracker can prompt "Sustain a Spell" each turn. Only in an active
-    // encounter, where turn-start prompts exist.
-    if (isSustainedSpell(ability) && encounter?.phase === 'in-progress' && casterEntryId) {
-      registerSustain({
-        ability,
-        caster: character,
-        round: encounter.round,
-        castRank: directCastRank,
-        // Foundry-authoritative aura (#455): carry the effect ref so each Sustain
-        // re-clones it onto the caster and PF2e re-evaluates aura membership.
-        foundryAura: (foundryAuthoritative && ability.foundryEffect?.ref)
-          ? { ref: ability.foundryEffect.ref, casterEntryId }
-          : undefined,
-        getState,
-        sendUpdate,
-        appendLog,
-      });
-    }
-
-    // 'While playing' (#935) — a Composition cast marks the caster playing
-    // through the end of their next turn; the turn-boundary sweep lapses it.
-    markPlayingOnCast({ ability, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
-
-    // Per-spell counters (#220) — Mirror Image images, Bless emanation radius.
-    // Not turn-bound, so registered on any cast (the EffectsPanel surfaces them).
-    if (hasSpellCounter(ability)) {
-      registerSpellCounter({
-        ability,
-        caster: character,
-        round: encounter?.round,
-        getState,
-        sendUpdate,
-      });
-    }
+    // Cast registrations (extracted #1317 D4): the sustained-spell ledger
+    // (#220), the 'while playing' composition mark (#935) and per-spell
+    // counters (#220 — Mirror Image images, Bless emanation radius).
+    applyCastRegistrations({ ...ctx, directCastRank, foundryAuthoritative });
 
     // Rider choice (#225) — apply/remove the chosen rider's caster-scoped
     // effect (e.g. gain eld-charged, or Discharge to consume it).
-    riderChoiceSection.applyOnConfirm({
-      caster: character,
-      casterEntryId,
-      encounter,
-      nowSecs,
-      getState,
-      sendUpdate,
-      appendLog,
+    riderChoiceSection.applyOnConfirm(ctx);
+
+    // Structured effects (with the Lingering Composition extension, #226-B) or
+    // the generic action line (extracted #1317 D4); true when the resource
+    // suffix already landed on a log line.
+    const suffixLogged = applyEffectsOrLogGeneric({
+      ...ctx, hasEffects, targetCharIds, enemyTargetNames, selectedEntries,
+      rayGroups, directCastRank, foundryAuthoritative, sourceSuffix,
     });
 
-    if (hasEffects) {
-      // Lingering Composition (#226-B): a pending extension on the caster
-      // lengthens this composition's effect, then is consumed.
-      const lingering = getState(character.id, APP.LINGERING);
-      const effectDurationOverride = lingeringDurationOverride(ability, lingering) || undefined;
-
-      applyAbility({
-        ability,
-        caster: character,
-        casterEntryId,
-        targetCharIds,
-        enemyTargetNames,
-        order,
-        encounter,
-        characters,
-        getState,
-        sendUpdate,
-        appendLog,
-        verb: effectiveVerb,
-        // Only when heightened above native — native casts keep their log
-        // text, and cantrips (auto-heightened, #271) never decorate it.
-        rank: (typeof ability.level === 'number' && ability.level > 0
-          && directCastRank > ability.level) ? directCastRank : undefined,
-        nowSecs,
-        effectDurationOverride,
-        suppressStructuredEffects: foundryAuthoritative,
-      });
-
-      if (effectDurationOverride) {
-        try { window.localStorage.setItem(syncKey(APP.LINGERING, character.id), JSON.stringify(null)); } catch { /* noop */ }
-        sendUpdate(character.id, APP.LINGERING, null);
-        appendLog({
-          type: 'action',
-          charId: character.id,
-          text: `${character.name}'s ${ability.name} is extended to ${effectDurationOverride.rounds} rounds (Lingering Composition)`,
-        });
-      }
-    } else {
-      // Generic action log — omit enemies whose roll result will be logged below.
-      const genericNames = [
-        ...targetCharIds.map(charName),
-        ...selectedEntries
-          .filter((e) => e.kind === 'enemy' && !coveredByRoll.has(e.entryId))
-          .map((e) => e.name),
-      ].join(', ');
-      if (genericNames || coveredByRoll.size === 0) {
-        appendLog({
-          type:   'action',
-          charId: character.id,
-          text:   (genericNames
-            ? `${character.name} ${effectiveVerb} ${ability.name} on ${genericNames}`
-            : `${character.name} ${effectiveVerb} ${ability.name}`) + sourceSuffix,
-        });
-        suffixLogged = !!sourceSuffix;
-      }
-    }
-
-    if (rayGroups.length) {
-      const defLabel = DEFENSE_LABELS[effectiveDefense] || effectiveDefense;
-      const degreeMap = effectiveDefense === 'ac' ? ATTACK_DEGREE_LABELS : DEGREE_LABELS;
-      rayGroups.forEach((g) => {
-        const rayPrefix = g.rayIndex != null ? ` — ray ${g.rayIndex + 1}` : '';
-        g.results.forEach((r) => {
-          if (!r.degree) return;
-          const degreeLabel = degreeMap[r.degree] || r.degree;
-          // Damage step result (#222): per-target total with the rider breakdown.
-          const dmgSuffix = r.damage?.final != null
-            ? ` · damage ${formatDamageBreakdown(r.damage)}`
-            : '';
-          // Situational bonus reason (#274): note the applied circumstance toggles.
-          const adjustSuffix = r.adjust
-            ? ` (incl. ${r.adjust > 0 ? '+' : ''}${r.adjust}: ${(r.adjustSources || []).join(', ')})`
-            : '';
-          appendLog({
-            type:   'action',
-            charId: character.id,
-            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}${adjustSuffix}${dmgSuffix}`,
-          });
-        });
-      });
-    }
+    // Per-target rolled results (#222, #274; extracted #1317 D4) — one log
+    // line per resolved degree, with damage totals and toggle reasons.
+    logRayGroupResults({ ...ctx, rayGroups, effectiveDefense });
 
     // Log chained strike results (Inner Upheaval and similar; extracted #1317
     // D3): per-target totals (#222) with the static dice string as fallback,
     // plus the Flurry of Blows combined-damage line.
     if (chainResults && hasChainStrike) {
-      applyChainStrikeResults(chainResults, { character, ability, effectiveVerb, appendLog });
+      applyChainStrikeResults(chainResults, ctx);
     }
 
-    // Persistent-damage tracking (#272): record each target's persistent
-    // entries (already crit-doubled by computeTargetDamage) so the turn
-    // tracker chips them and the watcher reminds at their turn end.
-    applyPersistentFromResults({
-      rayGroups,
-      chainResults: hasChainStrike ? chainResults : null,
-      abilityName: ability.name,
-      setPersistentMap,
-    });
-
-    // Typed damage relay (#1016) + reveal-on-trigger (#1014): push each enemy
-    // target's RAW typed total to the bridge (Foundry nets the monster's IWR)
-    // and stamp any IWR that just fired into the RK record.
-    relayDamageAndRevealIwr({
-      rayGroups,
-      chainResults: hasChainStrike ? chainResults : null,
-      order,
-      typeLabel: damageProfile?.typeLabel ?? null,
-      sourceName: ability.name,
-      sendUpdate,
-      revealFiredIwr,
-    });
-
-    // Whetstone on-hit riders (#1215) — Analysis Eye / Leeching Fangs /
-    // Limning Gem fire off successful results.
-    applyWhetstoneOnHit({
-      ability,
-      character,
-      rayGroups,
-      chainResults: hasChainStrike ? chainResults : null,
-      order,
-      getState,
-      sendUpdate,
-      appendLog,
-      applyEnemyCondition,
-      recordFor,
-      mergeRecord,
-    });
-
-    // Triggered whetstone saves (#1216) — Reactive Flash (reaction Strike) and
-    // Chroma Kaleidoscope (critical Strike) push saves to the GM rail.
-    applyWhetstoneReactionAndCrit({
-      ability,
-      character,
-      castCost,
-      rayGroups,
-      chainResults: hasChainStrike ? chainResults : null,
-      order,
-      addSaveRequest,
-      appendLog,
+    // Post-roll effect riders (extracted #1317 D4): persistent-damage tracking
+    // (#272), the typed damage relay + IWR reveal-on-trigger (#1016/#1014),
+    // whetstone on-hit riders (#1215) and triggered whetstone saves (#1216).
+    applyPostRollEffects({
+      ...ctx, castCost, rayGroups, chainResults, hasChainStrike, damageProfile,
+      setPersistentMap, addSaveRequest, applyEnemyCondition, revealFiredIwr,
+      recordFor, mergeRecord,
     });
 
     // Push a save request to the GM for target-save abilities (builder
@@ -820,17 +539,8 @@ const UseAbilityModal = ({
     // entered total and rider snapshot travel with it — RequestedSaves derives
     // per-degree totals GM-side.
     const saveRequest = buildTargetSaveRequest({
-      rollProfile,
-      saveTargets,
-      damageProfile,
-      saveDmgInput,
-      saveRiderState,
-      ability,
-      character,
-      casterEntryId,
-      order,
-      saveDc,
-      directCastRank,
+      ...ctx, rollProfile, saveTargets, damageProfile, saveDmgInput,
+      saveRiderState, saveDc, directCastRank,
     });
     if (saveRequest) addSaveRequest(saveRequest);
 
@@ -841,38 +551,14 @@ const UseAbilityModal = ({
     // self-effect (#1001 S2).
     if (hasChainSpell && chainResults) {
       applyChainSpellResults(chainResults, {
-        character,
-        ability,
-        effectiveVerb,
-        casterEntryId,
-        targetCharIds,
-        order,
-        encounter,
-        characters,
-        getState,
-        sendUpdate,
-        appendLog,
-        addSaveRequest,
-        resources,
-        omen,
-        nowSecs,
+        ...ctx, targetCharIds, addSaveRequest, resources, omen,
       });
     }
 
     // Blood magic (#227): the bloodline rider lands on the caster as a catalog
     // effect until the start of their next turn. Re-derived from chainResults
     // (not the live chainSpell state) so confirm matches what was actually cast.
-    bloodMagicSection.applyOnConfirm({
-      chainResults,
-      casterEntryId,
-      order,
-      encounter,
-      characters,
-      getState,
-      sendUpdate,
-      appendLog,
-      nowSecs,
-    });
+    bloodMagicSection.applyOnConfirm({ ...ctx, chainResults });
 
     // Resource suffix not carried by a line above (effects/roll paths) gets a
     // dedicated entry so the log always shows what paid for the cast.
@@ -933,58 +619,13 @@ const UseAbilityModal = ({
     onClose();
   };
 
-  const staticEffects = effects.filter(
-    (e) => e.applyTo === 'self' || e.applyTo === 'all-allies'
-  );
-
   // MAP toggle — shown for Attack-trait abilities with an inline resolver, and for
-  // strike chains (the child section applies the step to both strikes).
+  // strike chains (the child section applies the step to both strikes). The row
+  // itself lives in useAbilityCastPlan; like rollSection it is a hoisted value
+  // rendered in two branches below.
   const showMapToggle =
     (isAttack && rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) || hasChainStrike;
-  const mapSection = showMapToggle ? (
-    <div className="uam-map-row" role="group" aria-label="Multiple Attack Penalty">
-      <span className="uam-map-label">MAP</span>
-      {[0, 1, 2].map((step) => (
-        <button
-          key={step}
-          type="button"
-          className={`uam-map-btn${mapStep === step ? ' uam-map-btn--active' : ''}`}
-          aria-pressed={mapStep === step}
-          onClick={() => setMapOverride(step === autoStep ? null : step)}
-        >
-          {step === 0 ? '0' : `${mapPenaltyFor(ability, step)}`}
-          {step === autoStep ? ' (auto)' : ''}
-        </button>
-      ))}
-    </div>
-  ) : null;
-
-  // Action-count picker for variable-cost abilities (#215): Force Barrage 1–3,
-  // Elemental Blast 1–2, per-action multi-ray spells (Blazing Bolt). Each button
-  // carries its variant note as a tooltip; the chosen variant's note renders below.
-  const actionsSelector = (variableRange && variableRange.max > variableRange.min) ? (
-    <>
-      <div className="uam-actions-row" role="radiogroup" aria-label="Number of actions">
-        <span className="uam-actions-label">Actions</span>
-        {Array.from(
-          { length: variableRange.max - variableRange.min + 1 },
-          (_, k) => variableRange.min + k
-        ).map((n) => (
-          <button
-            key={n}
-            type="button"
-            className={`uam-actions-btn${chosenActions === n ? ' uam-actions-btn--active' : ''}`}
-            aria-pressed={chosenActions === n}
-            title={variantFor(ability, n)?.note || undefined}
-            onClick={() => setActionCountOverride(n)}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-      {variant?.note && <div className="uam-variant-note">{variant.note}</div>}
-    </>
-  ) : null;
+  const mapSection = showMapToggle ? castPlan.mapRow : null;
 
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
   // (The opposed-reaction resolver, #226-C, is `opposedSection` from
@@ -1051,31 +692,14 @@ const UseAbilityModal = ({
       placement="bottom"
       highZ
     >
-      {/* Ability summary */}
-      <section className="ct-section">
-        <div className="uam-meta-line">
-          {ability.actions && <span>Actions: {ability.actions} · </span>}
-          {ability.range   && <span>Range: {ability.range} · </span>}
-          {ability.targets && <span>Targets: {ability.targets}</span>}
-        </div>
-        {ability.description && (
-          <p className="uam-desc">
-            {ability.description}
-          </p>
-        )}
-        {allyResistance != null && (
-          <p className="uam-ally-resistance">
-            Ally gains resistance {allyResistance} against the triggering damage.
-          </p>
-        )}
-        {showsOmen && (
-          <p className="uam-omen-line">
-            Active harrow omen: {omen.suit || 'none'}
-            {ability.clearsOmen === true && omen.suit ? ' — spent on use' : ''}
-          </p>
-        )}
-        {actionsSelector}
-      </section>
+      {/* Ability summary — meta, description, notes + the actions selector */}
+      <AbilitySummarySection
+        ability={ability}
+        allyResistance={allyResistance}
+        showsOmen={showsOmen}
+        omen={omen}
+        actionsSelector={castPlan.actionsSelector}
+      />
 
       {/* Chamber selection (#676) — which loaded chamber to fire */}
       {chamberFireSection.section}
@@ -1096,52 +720,7 @@ const UseAbilityModal = ({
       {immunityGate.section}
 
       {/* Casting cost — source/rank picker, empty-pool block + override */}
-      {castOptions.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            {!castIsFree && <h3 className="ct-section-title">Casting Cost</h3>}
-            {castOptions.length === 1 ? (
-              <div className="uam-cost-single">{castOptions[0].label}</div>
-            ) : (
-              <div className="uam-cost-options" role="radiogroup" aria-label="Casting source">
-                {castOptions.map((opt, idx) => (
-                  <label
-                    key={`${opt.type}-${opt.rank ?? opt.key ?? idx}`}
-                    className={`uam-cost-option${!opt.enabled ? ' uam-cost-option--disabled' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="cast-source"
-                      checked={selectedCastIdx === idx}
-                      onChange={() => { setCastOptionIdx(idx); setCastOverride(false); }}
-                    />
-                    {opt.label}
-                  </label>
-                ))}
-              </div>
-            )}
-            {(selectedCastOption?.type === 'slot' || selectedCastOption?.type === 'staff-slot') && (
-              <HeightenedNotes spell={ability} castRank={selectedCastOption.rank} />
-            )}
-            {selectedCastOption && !selectedCastOption.enabled && (
-              <>
-                <div className="uam-cost-empty">
-                  {selectedCastOption.reason || 'Resource exhausted'}
-                </div>
-                <label className="uam-cost-override">
-                  <input
-                    type="checkbox"
-                    checked={castOverride}
-                    onChange={(e) => setCastOverride(e.target.checked)}
-                  />
-                  Override (GM ruling) — cast without spending
-                </label>
-              </>
-            )}
-          </section>
-        </>
-      )}
+      {castPlan.castSection}
 
       {/* Target concealment + condition flat checks (#262) */}
       {flatCheckSection.section}
@@ -1161,22 +740,7 @@ const UseAbilityModal = ({
           <section className="ct-section">
             <h3 className="ct-section-title">Apply Effects</h3>
 
-            {staticEffects.map((eff, idx) => (
-              <div key={idx} className="uam-meta-line">
-                <span>{eff.effectId}</span>
-                {eff.applyTo === 'self' && (
-                  <span className="uam-inline-gap">→ {character.name}</span>
-                )}
-                {eff.applyTo === 'all-allies' && (
-                  <span className="uam-inline-gap">→ all allies</span>
-                )}
-                {eff.duration && (
-                  <span className="uam-duration-note">
-                    ({eff.duration.until === 'rounds' ? `${eff.duration.rounds} rounds` : eff.duration.until})
-                  </span>
-                )}
-              </div>
-            ))}
+            <StaticEffectsList effects={effects} characterName={character.name} />
 
             {isOpposedReaction ? opposedSection : (
               <>
@@ -1195,29 +759,7 @@ const UseAbilityModal = ({
         </>
       )}
 
-      {grants.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Grant Actions</h3>
-            {grants.map((grant, idx) => (
-              <div key={idx} className="uam-grant-line">
-                <span>{grant.action?.name || ability.name}</span>
-                {grant.action?.description && (
-                  <span className="uam-grant-desc">
-                    {grant.action.description}
-                  </span>
-                )}
-                {grant.duration && (
-                  <span className="uam-duration-note">
-                    ({grant.duration.until === 'rounds' ? `${grant.duration.rounds} rounds` : grant.duration.until})
-                  </span>
-                )}
-              </div>
-            ))}
-          </section>
-        </>
-      )}
+      <GrantActionsSection grants={grants} ability={ability} />
 
       {!hasEffects && isOpposedReaction && (
         <>
@@ -1237,55 +779,25 @@ const UseAbilityModal = ({
               isTargeted={isTargeted}
               onToggle={toggleTarget}
             />
-            {hasChainStrike ? (
-              <>
-                <h3 className="ct-section-title uam-chain-title">
-                  {ability.chain.heading
-                    || (ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike')}
-                  <span className="uam-chain-title-cost">
-                    (included in {effectiveCost})
-                  </span>
-                </h3>
-                {mapSection}
-                <ChainedStrikeSection
-                  ref={chainRef}
-                  character={character}
-                  chain={ability.chain}
-                  enemyTargets={enemyWithDefenses}
-                  conditions={activeConditions || []}
-                  effects={activeEffects || []}
-                  mapStep={mapStep}
-                  exploit={exploitFor(character.id)}
-                  order={order}
-                />
-              </>
-            ) : hasChainSpell ? (
-              <>
-                <h3 className="ct-section-title uam-chain-title">
-                  Cast a Spell
-                </h3>
-                <ChainedSpellSection
-                  ref={chainRef}
-                  character={character}
-                  chain={ability.chain}
-                  parentCost={effectiveCost}
-                  enemyTargets={enemyWithDefenses}
-                  conditions={activeConditions || []}
-                  effects={activeEffects || []}
-                  onTotalCostChange={onSpellChainCostChange}
-                  onSpellChange={onChainSpellChange}
-                  mapStep={mapStep}
-                  resources={resources}
-                  exploit={exploitFor(character.id)}
-                  order={order}
-                />
-              </>
-            ) : (
-              <>
-                {mapSection}
-                {rollSection}
-              </>
-            )}
+            <ChainedActionsSwitch
+              ability={ability}
+              character={character}
+              chainRef={chainRef}
+              hasChainStrike={hasChainStrike}
+              hasChainSpell={hasChainSpell}
+              effectiveCost={effectiveCost}
+              enemyWithDefenses={enemyWithDefenses}
+              activeConditions={activeConditions}
+              activeEffects={activeEffects}
+              mapStep={mapStep}
+              mapSection={mapSection}
+              rollSection={rollSection}
+              exploit={exploitFor(character.id)}
+              order={order}
+              resources={resources}
+              onTotalCostChange={castPlan.onSpellChainCostChange}
+              onSpellChange={onChainSpellChange}
+            />
           </section>
         </>
       )}
@@ -1298,7 +810,7 @@ const UseAbilityModal = ({
           disabled={!confirmEnabled}
           aria-label="confirm-cast"
         >
-          {verb} ({costDisplayFinal})
+          {verb} ({castPlan.costDisplayFinal})
         </button>
       </div>
     </Modal>
