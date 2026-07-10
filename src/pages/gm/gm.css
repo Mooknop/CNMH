@@ -1802,6 +1802,12 @@
   padding: var(--space-2) 0;
 }
 
+/* Juice (#1346): ability-use bloom in the PC's accent — bridge the row's
+   --x-theme into the fx vocabulary's accent read. */
+.gm-party-row[data-fx='bloom'] {
+  --accent-outline: var(--x-theme);
+}
+
 .gm-party-head {
   display: grid;
   grid-template-columns: 9rem 1fr auto;

@@ -1,6 +1,8 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { renderWithProviders } from '../../../test/renderWithProviders';
+import { APP } from '../../../sync/keys';
 import StagePortrait from './StagePortrait';
 
 describe('StagePortrait', () => {
@@ -22,5 +24,23 @@ describe('StagePortrait', () => {
   it('applies the caller size class to the box', () => {
     const { container } = render(<StagePortrait name="X" className="stage-banner-portrait" />);
     expect(container.querySelector('.stage-portrait.stage-banner-portrait')).toBeInTheDocument();
+  });
+
+  it('blooms when a fresh fx event matches its charId (#1346)', () => {
+    window.localStorage.clear();
+    const { session, container } = renderWithProviders(
+      <>
+        <StagePortrait name="Izzy" charId="izzy" />
+        <StagePortrait name="Ogre" />
+      </>
+    );
+    act(() =>
+      session.push('global', APP.FX, [
+        { id: 'fx-1', kind: 'ability', charId: 'izzy', ts: Date.now() },
+      ])
+    );
+    const boxes = container.querySelectorAll('.stage-portrait');
+    expect(boxes[0]).toHaveAttribute('data-fx', 'bloom');
+    expect(boxes[1]).not.toHaveAttribute('data-fx');
   });
 });

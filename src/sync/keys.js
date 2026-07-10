@@ -44,6 +44,7 @@ export const APP = Object.freeze({
   FOCUS: 'focus',
   FOLLOWEXPERT: 'followexpert',
   FREQ: 'freq',
+  FX: 'fx',
   GOLD: 'gold',
   GRANTEDACTIONS: 'grantedactions',
   HUNTPREY: 'huntprey',

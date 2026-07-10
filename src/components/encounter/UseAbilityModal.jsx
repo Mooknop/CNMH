@@ -60,6 +60,7 @@ import { logThrownWeaponResolution } from '../../utils/thrownResolution';
 import { isAttackAbility } from '../../utils/map';
 import { toGameSeconds } from '../../utils/gameTime';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
+import { useFxChannel } from '../../hooks/useFxChannel';
 import './UseAbilityModal.css';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
@@ -119,6 +120,8 @@ const UseAbilityModal = ({
   // Whetstone on-hit reveals (#1215 — Analysis Eye) write the creature's RK
   // record directly (one weakness/resistance, not damage-fired).
   const { recordFor, mergeRecord } = useRecallKnowledge();
+  // Juice broadcast (#1346) — remote devices bloom this character's card.
+  const { emitFx } = useFxChannel();
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -397,6 +400,11 @@ const UseAbilityModal = ({
     && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
 
   const handleConfirm = () => {
+    // Juice (#1346): every path through this handler is a committed use, so the
+    // one emit here covers all of them — early returns, catalysts, action-folds.
+    // Fire-and-forget: nothing downstream gates on it.
+    emitFx({ kind: 'ability', charId: character.id });
+
     // Veracious Spell (#967 R7): every path through this handler is a committed
     // use, so any cast — even one that fizzles on a flat check downstream —
     // consumes the armed state. Re-arming stays a SpellsHeader action.

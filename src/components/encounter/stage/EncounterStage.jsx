@@ -97,6 +97,7 @@ const EncounterStage = ({ character, characterColor }) => {
           src={art.src}
           name={actor.name}
           imagePosition={art.imagePosition}
+          charId={actor.kind === 'pc' ? actor.charId : null}
         />
         <div className="stage-banner-id">
           <div className="stage-banner-live">
