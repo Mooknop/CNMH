@@ -47,4 +47,28 @@ describe('IconTile', () => {
     expect(container.querySelector('.icon-tile-code')).not.toBeNull();
     expect(container.querySelector('.icon-tile-rune-art')).toBeNull();
   });
+
+  it('flags broken gear with the warning badge (#539/#542)', () => {
+    const { container } = render(
+      <IconTile item={{ name: 'Longsword', durabilityState: 'broken' }} />
+    );
+    const badge = container.querySelector('.icon-tile-broken');
+    expect(badge).not.toBeNull();
+    expect(badge).toHaveAttribute('title', 'Broken');
+    expect(badge).not.toHaveClass('is-destroyed');
+  });
+
+  it('flags destroyed gear with the skull badge', () => {
+    const { container } = render(
+      <IconTile item={{ name: 'Longsword', durabilityState: 'destroyed' }} />
+    );
+    const badge = container.querySelector('.icon-tile-broken');
+    expect(badge).toHaveClass('is-destroyed');
+    expect(badge).toHaveAttribute('title', 'Destroyed');
+  });
+
+  it('renders no durability badge on intact gear', () => {
+    const { container } = render(<IconTile item={{ name: 'Longsword' }} />);
+    expect(container.querySelector('.icon-tile-broken')).toBeNull();
+  });
 });

@@ -76,6 +76,15 @@ const IconTile = ({ item, size = 52, glow = true }) => {
           <GameGlyph name="attachment" title="Has an attachment" />
         </span>
       )}
+      {item?.durabilityState && (
+        <span
+          className={`icon-tile-broken${item.durabilityState === 'destroyed' ? ' is-destroyed' : ''}`}
+          title={item.durabilityState === 'destroyed' ? 'Destroyed' : 'Broken'}
+          aria-label={item.durabilityState === 'destroyed' ? 'Destroyed' : 'Broken'}
+        >
+          {item.durabilityState === 'destroyed' ? '💀' : '⚠️'}
+        </span>
+      )}
       {qty > 1 && <span className="icon-tile-qty">{qty}</span>}
       {charges && (
         <span

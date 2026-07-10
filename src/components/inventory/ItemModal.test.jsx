@@ -73,9 +73,16 @@ const mockSetItemModes = vi.fn((next) => {
 // Encounter state (#1213) — whetstone expiry branches on encounter.active.
 let mockEncounter = null;
 const mockSetEncounter = vi.fn();
+// Live item-HP overlay (#539/#542) — drives the durability panel.
+let mockItemHp = {};
+const mockSetItemHp = vi.fn((next) => {
+  mockItemHp = typeof next === 'function' ? next(mockItemHp) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_encounter_')) return [mockEncounter, mockSetEncounter];
+    if (String(key).startsWith('cnmh_itemhp_')) return [mockItemHp, mockSetItemHp];
+    if (String(key).startsWith('cnmh_shieldstate_')) return [{}, vi.fn()];
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
     if (String(key).startsWith('cnmh_absorbed_')) return [mockAbsorbed, mockSetAbsorbed];
@@ -176,6 +183,8 @@ beforeEach(() => {
   mockCharacters = [];
   mockSpells = [];
   mockItemAct = makeItemAct();
+  mockItemHp = {};
+  mockSetItemHp.mockClear();
 });
 
 const baseItem = {
@@ -2056,5 +2065,84 @@ describe('ItemModal — whetstone application (#1213)', () => {
   it('hides the apply section when the stack is used up', () => {
     open(stone({ quantity: 0 }));
     expect(screen.queryByTestId('item-whetstone')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — durability panel (#539/#542)', () => {
+  const character = { id: 'c1', name: 'Ashka' };
+  const sword = {
+    uid: 'w1', name: 'Longsword', state: 'held1',
+    strikes: [{ type: 'melee', damage: '1d8' }],
+  };
+  const open = (item, char = character) =>
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} character={char} />);
+
+  it('shows derived live HP / Hardness / Broken Threshold for a steel weapon', () => {
+    open(sword);
+    const panel = screen.getByTestId('item-durability');
+    expect(screen.getByTestId('durability-hp')).toHaveTextContent('20/20');
+    expect(within(panel).getByText('Hardness').nextSibling).toHaveTextContent('5');
+    expect(within(panel).getByText('Broken Threshold').nextSibling).toHaveTextContent('10');
+    expect(screen.queryByTestId('durability-state')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('durability-repair')).not.toBeInTheDocument(); // at full HP
+  });
+
+  it('reads the live overlay and flags Broken with the RAW weapon hint', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword);
+    expect(screen.getByTestId('durability-hp')).toHaveTextContent('8/20');
+    expect(screen.getByTestId('durability-state')).toHaveTextContent('Broken');
+    expect(screen.getByTestId('durability-hint')).toHaveTextContent('Strikes are unavailable');
+  });
+
+  it('a Rust-Blessed wielder sees the −2 broken-weapon hint instead', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword, { ...character, feats: [{ name: 'Rust Blessing' }] });
+    expect(screen.getByTestId('durability-hint')).toHaveTextContent('usable at −2');
+  });
+
+  it('broken worn armor explains the auto-applied AC status penalty', () => {
+    mockItemHp = { a1: { hp: 18 } }; // steel armor: 9/36/18 — at the threshold
+    open({ uid: 'a1', name: 'Full Plate', state: 'worn', armor: { category: 'heavy', group: 'plate', acBonus: 6 } });
+    expect(screen.getByTestId('durability-state')).toHaveTextContent('Broken');
+    expect(screen.getByTestId('durability-hint')).toHaveTextContent('-3 status penalty to AC');
+  });
+
+  it('applies damage through Hardness and logs the result', () => {
+    open(sword);
+    fireEvent.change(screen.getByLabelText('Damage to apply'), { target: { value: '12' } });
+    fireEvent.click(screen.getByTestId('durability-apply-damage'));
+    expect(mockItemHp).toEqual({ w1: { hp: 13 } }); // 12 dealt − 5 hardness = 7 taken
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining("Ashka's Longsword took 7 damage (5 prevented by Hardness) — 13/20 HP"),
+    }));
+  });
+
+  it('repairs HP toward max and logs it', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword);
+    fireEvent.change(screen.getByLabelText('Hit Points to repair'), { target: { value: '4' } });
+    fireEvent.click(screen.getByTestId('durability-repair'));
+    expect(mockItemHp).toEqual({ w1: { hp: 12 } });
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Ashka repaired Longsword — 12/20 HP'),
+    }));
+  });
+
+  it('a destroyed item offers neither damage nor repair', () => {
+    mockItemHp = { w1: { hp: 0 } };
+    open(sword);
+    expect(screen.getByTestId('durability-state')).toHaveTextContent('Destroyed');
+    expect(screen.queryByTestId('durability-apply-damage')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('durability-repair')).not.toBeInTheDocument();
+    expect(screen.getByText(/can’t be Repaired/)).toBeInTheDocument();
+  });
+
+  it('untracked gear and catalog previews (no uid) get no panel', () => {
+    const { unmount } = open({ uid: 'g1', name: 'Rope', state: 'worn' }); // plain gear — untracked
+    expect(screen.queryByTestId('item-durability')).not.toBeInTheDocument();
+    unmount();
+    open({ ...sword, uid: undefined }); // no inventory uid — nothing to key the overlay
+    expect(screen.queryByTestId('item-durability')).not.toBeInTheDocument();
   });
 });

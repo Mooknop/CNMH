@@ -16,6 +16,7 @@ import { absorbedKey, absorbedUidSet } from '../../utils/spellgunHost';
 import { attachedKey, attachedUidSet } from '../../utils/shieldAttach';
 import { whetstoneHostUids } from '../../utils/whetstone';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useItemHp } from '../../hooks/useItemHp';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useInvested } from '../../hooks/useInvested';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -62,6 +63,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Active effects — read for the whetstone-on-weapon medallion (#1213): a
   // weapon under a whetstone effect gets the same attachment mark as a host.
   const [charEffects] = useSyncedState(syncKey(APP.EFFECTS, character?.id), []);
+  // Live item HP (#539/#542) — read for the Broken/Destroyed tile badge.
+  const { statusFor: durabilityFor } = useItemHp(character?.id);
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
   const { mode } = usePlayMode();
@@ -97,8 +100,16 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   );
   const stampHosts = (items) =>
     items.map((it) => (hostUids.has(itemUidOf(it)) ? { ...it, hasAttachment: true } : it));
+  // Tracked gear at or below its Broken Threshold gets a `durabilityState`
+  // stamp ('broken' | 'destroyed') so IconTile can flag it (#539/#542).
+  const stampDurability = (items) =>
+    items.map((it) => {
+      const status = durabilityFor(it);
+      if (!status || (!status.broken && !status.destroyed)) return it;
+      return { ...it, durabilityState: status.destroyed ? 'destroyed' : 'broken' };
+    });
   const prep = (items) =>
-    stampHosts(stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects));
+    stampDurability(stampHosts(stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects)));
   const gridInventory = prep(inventory).map((item) =>
     isContainer(item)
       ? { ...item, container: { ...item.container, contents: prep(item.container.contents) } }
