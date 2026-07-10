@@ -1,5 +1,6 @@
 import React from 'react';
 import { useFxBloom } from '../../hooks/useFxChannel';
+import Flourish from '../fx/Flourish';
 import './CharacterCard.css';
 
 // Sigil card face — the locked card design from the player-dashboard handoff.
@@ -51,6 +52,10 @@ const CharacterCard = ({ character, accent }) => {
         <div className="sigil-name">{character.name}</div>
         {kicker && <div className="sigil-kicker">{kicker}</div>}
       </div>
+
+      {/* Signature flourish (#1347) — last child so it paints over the chrome;
+          unknown/missing id renders nothing and the accent bloom carries. */}
+      {bloom && <Flourish id={bloom.flourish} />}
     </div>
   );
 };

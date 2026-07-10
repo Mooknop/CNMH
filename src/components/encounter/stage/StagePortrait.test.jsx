@@ -43,4 +43,26 @@ describe('StagePortrait', () => {
     expect(boxes[0]).toHaveAttribute('data-fx', 'bloom');
     expect(boxes[1]).not.toHaveAttribute('data-fx');
   });
+
+  it('renders the signature flourish overlay when the event carries one (#1347)', () => {
+    window.localStorage.clear();
+    const { session, container } = renderWithProviders(
+      <StagePortrait name="Izzy" charId="izzy" />
+    );
+    act(() =>
+      session.push('global', APP.FX, [
+        { id: 'fx-1', kind: 'ability', charId: 'izzy', ts: Date.now(), flourish: 'composition-burst' },
+      ])
+    );
+    expect(container.querySelector('[data-flourish="composition-burst"]')).toBeInTheDocument();
+    // Unknown hint → no overlay, plain bloom only.
+    act(() =>
+      session.push('global', APP.FX, [
+        { id: 'fx-1', kind: 'ability', charId: 'izzy', ts: Date.now(), flourish: 'composition-burst' },
+        { id: 'fx-2', kind: 'ability', charId: 'izzy', ts: Date.now(), flourish: 'from-the-future' },
+      ])
+    );
+    expect(container.querySelector('.fx-flourish')).toBeNull();
+    expect(container.querySelector('.stage-portrait')).toHaveAttribute('data-fx', 'bloom');
+  });
 });
