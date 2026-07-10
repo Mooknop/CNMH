@@ -255,14 +255,16 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText('Shield Block')).toBeDisabled();
   });
 
-  it('Block button is disabled after the reaction is spent', () => {
+  it('using Shield Block ends the raise (bar unmounts, Raise offered again)', () => {
     let drv;
     render(<><EncounterDriver onReady={(e) => (drv = e)} /><TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} /></>);
     startAndRaiseShield(() => drv);
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
     fireEvent.click(screen.getByLabelText('Shield Block'));
-    // After spending the reaction the button should be disabled.
-    expect(screen.getByLabelText('Shield Block')).toBeDisabled();
+    // Table rule: a raised-shield reaction consumes the raise on use, so the
+    // block bar unmounts and the Raise action is back on offer.
+    expect(screen.queryByLabelText('Shield Block')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Raise a Shield')).toBeInTheDocument();
   });
 
   // ── Flanking badge ────────────────────────────────────────────────────────

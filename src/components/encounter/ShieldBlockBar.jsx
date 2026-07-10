@@ -35,7 +35,7 @@ import './ShieldBlockBar.css';
  * broke the shield the bar unmounts with it — the rider is lost with the arm.
  */
 const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
-  const { heldShield, raised, wieldBroken, lowerShield, applyBlock } = useShield(charId, inventory);
+  const { heldShield, raised, lowerShield, applyBlock } = useShield(charId, inventory);
   const { turnState, spendReaction } = useTurnState(charId);
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { gameDate, time } = useGameDate();
@@ -98,16 +98,16 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     spendReaction('Shield Block');
     setBlockDamage('');
     setRanged(false);
-    // Breaking ends the raise — unless the wielder's Rust Blessing keeps the
-    // broken shield in play. Destruction (0 HP) ends it for everyone.
-    if (result.destroyed || (result.broken && !wieldBroken)) lowerShield();
+    // Table rule: using a reaction that requires a raised shield (Shield Block
+    // today; the #1191 shield reactions will share this) ends the raise —
+    // whether or not the shield broke. Re-raising costs the action as normal
+    // (and Rust Blessing is what lets a broken shield be re-raised at all).
+    lowerShield();
     const detail = result.destroyed
       ? `shield DESTROYED! (${result.prevented} prevented)`
       : result.broken
-      ? wieldBroken
-        ? `shield broke — Rust Blessing keeps it in the fight (${result.prevented} prevented, shield → ${result.shieldHpAfter} HP)`
-        : `shield broke! (${result.prevented} prevented)`
-      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
+      ? `shield broke! (${result.prevented} prevented)`
+      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP · shield lowered`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
     appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${deflectNote}${runeNote}` });
