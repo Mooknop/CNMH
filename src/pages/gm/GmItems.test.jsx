@@ -881,6 +881,28 @@ describe('GmItems', () => {
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
     });
+
+    it('removing the image actually removes it from the saved doc (Vangloris bug)', async () => {
+      // Regression: image/imagePosition used to leak into the raw-JSON rest
+      // blob, so the cleared ImageField couldn't delete them — the save
+      // resurrected the art from rest.
+      const withImage = {
+        ...items[0], image: 'img_elixir.jpg', imagePosition: { x: 30, y: 60 },
+      };
+      useContent.mockReturnValue({ items: [withImage], spells: [], images: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Minor Elixir of Life');
+      const form = screen.getByTestId('item-form-minor-elixir-of-life');
+      // The image must not surface in the raw-JSON extra-fields box.
+      expect(within(form).getByLabelText('rest-json').value).not.toMatch(/image/);
+      fireEvent.click(within(form).getByLabelText('item-image-remove'));
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const body = saveDocument.mock.calls[0][2];
+      expect(body.image).toBeUndefined();
+      expect(body.imagePosition).toBeUndefined();
+    });
   });
 
   describe('weapon runes (#548 Slice 2)', () => {
