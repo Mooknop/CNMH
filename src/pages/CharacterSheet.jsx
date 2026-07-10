@@ -35,6 +35,7 @@ import SpellsList from '../components/spells/SpellsList';
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
 import DailyPrepModal from '../components/character-sheet/DailyPrepModal';
+import HpFx from '../components/shared/HpFx';
 import { useCharacter } from '../hooks/useCharacter';
 import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
@@ -344,13 +345,13 @@ const CharacterSheet = () => {
 
         {/* ── Vitals strip ──────────────────────────────────────── */}
         <div className="cs-vitals" role="region" aria-label="Character vitals">
-          <div className="cs-vital">
+          <HpFx hp={characterModel.hp} className="cs-vital">
             <span className="cs-vital-val cs-vital-val--hp" aria-label="Hit points">
               {characterModel.hp?.current ?? '—'}
               <span className="cs-vital-max">/{characterModel.maxHp}</span>
             </span>
             <span className="cs-vital-lbl">HP</span>
-          </div>
+          </HpFx>
           <div className="cs-vital">
             <span className="cs-vital-val" aria-label="Armor class">
               {characterModel.armorClass?.value ?? characterModel.ac ?? '—'}

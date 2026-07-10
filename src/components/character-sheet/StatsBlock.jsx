@@ -5,6 +5,7 @@ import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
+import HpFx from '../shared/HpFx';
 import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useResolvedEffects } from '../../hooks/useResolvedEffects';
@@ -448,7 +449,7 @@ const StatsBlock = ({ character, characterColor }) => {
     <div className="stats-block" style={{ '--color-theme': themeColor }}>
       <div className="core-stats">
         <div className="hp-defense">
-          <div className="hp-box">
+          <HpFx hp={hp} className="hp-box">
             <div className="defense-name">HP</div>
             <div className="defense-value">
               <span className="hp-current">{hp?.current ?? maxHp}</span>
@@ -456,7 +457,7 @@ const StatsBlock = ({ character, characterColor }) => {
               <PenaltyDisplay base={maxHp} penalty={mod('maxHp')} />
             </div>
             {hp?.temp > 0 && (
-              <div className="hp-temp">+{hp.temp} temp</div>
+              <div className="hp-temp hp-fx-temp">+{hp.temp} temp</div>
             )}
             {(hp?.dying > 0 || hp?.wounded > 0) && (
               <div className="hp-status">
@@ -464,7 +465,7 @@ const StatsBlock = ({ character, characterColor }) => {
                 {hp.wounded > 0 && <span className="hp-wounded">Wounded {hp.wounded}</span>}
               </div>
             )}
-          </div>
+          </HpFx>
           <div className="ac-box" title={acSourceLabel}>
             <div className="defense-name">AC</div>
             <div className="defense-value">
