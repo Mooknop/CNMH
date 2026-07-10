@@ -105,7 +105,10 @@ const variantFromForm = (vf) => {
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable', 'runes', 'potency', 'armor'].forEach(
+  // `image`/`imagePosition` are owned by the dedicated ImageField — they must
+  // NOT leak into the raw-JSON rest blob, or itemFromForm's `{ ...rest }`
+  // resurrects a removed image on save (the un-deletable Vangloris art bug).
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'image', 'imagePosition', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable', 'runes', 'potency', 'armor'].forEach(
     (k) => delete rest[k]
   );
   // Weapon runes (#548 Slice 2): potency/striking are authored via dropdowns,
@@ -258,6 +261,11 @@ const itemFromForm = (f) => {
     out.potency = f.legacyPotency;
   }
   if (f.description.trim()) out.description = f.description.trim();
+  // The ImageField is the single source of truth: scrub any copy that arrived
+  // via the raw-JSON box, then emit only when an image is actually set — so
+  // clearing the field genuinely removes the art from the saved doc.
+  delete out.image;
+  delete out.imagePosition;
   if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   const traits = toList(f.traits);
   if (traits.length) out.traits = traits;

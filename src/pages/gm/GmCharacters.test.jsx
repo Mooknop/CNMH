@@ -1064,5 +1064,22 @@ describe('GmCharacters', () => {
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
     });
+
+    it('removing the portrait actually removes it from the saved doc', async () => {
+      // Regression: image/imagePosition leaked into `rest`, so the payload's
+      // `{ ...rest }` spread resurrected a removed portrait (same bug as
+      // GmItems' un-deletable item art).
+      const withImage = { ...pellias, image: 'img_portrait.jpg', imagePosition: { x: 30, y: 60 } };
+      setContent([withImage]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      fireEvent.click(within(form).getByLabelText('character-image-remove'));
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const body = saveDocument.mock.calls[0][2];
+      expect(body.image).toBeUndefined();
+      expect(body.imagePosition).toBeUndefined();
+    });
   });
 });
