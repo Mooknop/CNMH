@@ -7,8 +7,8 @@ import { RELAY } from '../../../sync/keys';
 import StageDamageJuice from './StageDamageJuice';
 
 const ORDER = [
-  { kind: 'pc', entryId: 'e-thorn', charId: 'thorn' },
-  { kind: 'pc', entryId: 'e-lira', charId: 'lira' },
+  { kind: 'pc', entryId: 'e-thorn', charId: 'thorn', foundryActorId: 'fa-thorn' },
+  { kind: 'pc', entryId: 'e-lira', charId: 'lira', foundryActorId: 'fa-lira' },
   { kind: 'enemy', entryId: 'e-skel', name: 'Skeleton Guard' },
 ];
 const CHARACTERS = [
@@ -27,6 +27,12 @@ const setup = () => {
     ...view,
     dealt: (apply) => act(() => view.session.push('global', RELAY.DMGAPPLY, apply)),
     hp: (charId, value) => act(() => view.session.push(charId, RELAY.HP, value)),
+    feed: (entries) =>
+      act(() =>
+        view.session.push('global', RELAY.ACTORFEED, {
+          entryId: 'e-skel', actions: 3, spent: 1, reaction: true, feed: entries,
+        })
+      ),
   };
 };
 
@@ -129,6 +135,35 @@ describe('StageDamageJuice — taken bursts', () => {
     hp('lira', HP({ current: 22 }));
     hp('lira', HP({ current: 30 }));
     expect(screen.queryByTestId('juice-taken')).toBeNull();
+  });
+
+  it('a fresh feed damage-roll targeting the PC types the burst (#1355 correlation)', () => {
+    const { hp, feed } = setup();
+    hp('lira', HP({ current: 30 }));
+    feed([{
+      n: 1, type: 'damage-roll', label: 'Claw', targetActorId: 'fa-lira',
+      damageTotal: 12, ts: Date.now(), state: 'done',
+      damageInstances: [{ amount: 9, type: 'slashing' }, { amount: 3, type: 'fire' }],
+    }]);
+    hp('lira', HP({ current: 22 }));
+    const card = screen.getByTestId('juice-taken');
+    expect(card.querySelector('[data-fx-sym="slashing"]')).toBeInTheDocument();
+    expect(card.querySelector('[data-fx-sym="fire"]')).toBeInTheDocument();
+    expect(card).toHaveTextContent('−8'); // the hp delta stays the number truth
+  });
+
+  it('a stale feed entry never types the burst (fallback to untyped)', () => {
+    const { hp, feed } = setup();
+    hp('lira', HP({ current: 30 }));
+    feed([{
+      n: 1, type: 'damage-roll', label: 'Claw', targetActorId: 'fa-lira',
+      damageTotal: 12, ts: Date.now() - 10_000, state: 'done',
+      damageInstances: [{ amount: 12, type: 'slashing' }],
+    }]);
+    hp('lira', HP({ current: 22 }));
+    const card = screen.getByTestId('juice-taken');
+    expect(card.querySelector('[data-fx-sym="untyped"]')).toBeInTheDocument();
+    expect(card.querySelector('[data-fx-sym="slashing"]')).toBeNull();
   });
 
   it('the first hp value after mount is baseline — no burst on hydration', () => {

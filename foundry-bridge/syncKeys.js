@@ -12,6 +12,18 @@
 
 export const GLOBAL_ID = 'global';
 
+// App↔bridge wire protocol version (#1310). The bridge announces it on
+// cnmh_bridgehello_global every time it connects; the app warns the GM when a
+// connected bridge's protocol predates the app's minimum (or when no hello
+// arrives at all — a pre-handshake module).
+//
+// BUMP POLICY: any change to a relay payload shape bumps this — new fields
+// included (an old bridge silently not sending a field the app now expects is
+// exactly the degradation this exists to surface). Bump it in the same PR as
+// the payload change; the app-side minimum (src/hooks/useBridgeStatus.js)
+// decides when old protocols stop being acceptable.
+export const PROTOCOL_VERSION = 1;
+
 // App ↔ bridge relay channels. Values are the bare <type> tokens carried as
 // the `key` field on the wire and used as the middle segment of storage keys.
 export const RELAY = Object.freeze({
@@ -20,6 +32,7 @@ export const RELAY = Object.freeze({
   ACTORMAP: 'actormap',
   ADJACENCY: 'adjacency',
   APPLYEFFECT: 'applyeffect',
+  BRIDGEHELLO: 'bridgehello',
   CONDITIONS: 'conditions',
   DMGAPPLY: 'dmgapply',
   DMGDONE: 'dmgdone',

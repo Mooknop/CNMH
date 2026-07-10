@@ -259,6 +259,7 @@ export function makeChatMessage(opts = {}) {
     ranged = null,          // true → item.isRanged; false → item.isMelee (weapons only)
     targetName = null,
     targetActorId = null,   // message.target.actor.id
+    damageInstances = null, // [{ type, total }] → message.rolls[0].instances (damage rolls, #1355)
   } = opts;
 
   const context = type ? { type, ...(outcome ? { outcome } : {}) } : undefined;
@@ -289,6 +290,8 @@ export function makeChatMessage(opts = {}) {
     target,
     speaker: { actor: actorId },
     flags: { pf2e: context ? { context } : {} },
+    // PF2e DamageRoll#instances: DamageInstance exposes `type` + `total`.
+    ...(damageInstances ? { rolls: [{ instances: damageInstances }] } : {}),
   };
 }
 
@@ -363,6 +366,8 @@ export function makeGame(opts = {}) {
       register: jest.fn(),
       get: jest.fn((_mod, key) => (opts.settings ?? {})[key]),
     },
+    // game.modules.get(id).version — the bridge reads its own for the hello (#1310).
+    modules: new Map(Object.entries(opts.modules ?? { 'cnmh-bridge': { version: '0.0.0-test' } })),
   };
 }
 

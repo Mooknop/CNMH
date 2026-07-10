@@ -27,6 +27,10 @@ import './StageDamageJuice.css';
 
 const MAX_BURSTS = 3; // concurrent cards — a fireball is one grouped card, not five
 const MAX_HIT_LINES = 3;
+// A feed damage-roll entry only types an hp drop when it landed within this
+// window (#1355) — the glyph comes from the correlation, the NUMBER always
+// stays the hp delta (what actually landed after PC IWR / temp absorption).
+const FEED_CORRELATION_MS = 3000;
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -77,6 +81,12 @@ const TakenCard = ({ burst, characters, self }) => {
   const character = (characters || []).find((c) => c && c.id === burst.charId);
   const name = character?.name || burst.charId;
   const art = entryPortrait({ kind: 'pc', charId: burst.charId }, characters);
+  // Glyphs prefer the correlated feed instances (typed Foundry hits, #1355),
+  // then the hp payload's own damageType (GM typed flow), then the burst.
+  const glyphTypes =
+    Array.isArray(burst.instances) && burst.instances.length
+      ? [...new Set(burst.instances.map((i) => symbolTypeFor(i.type)))].slice(0, 3)
+      : [symbolTypeFor(burst.damageType)];
   return (
     <div
       className={`stage-juice-card stage-juice-card--taken${self ? ' stage-juice-card--self' : ''}`}
@@ -90,7 +100,9 @@ const TakenCard = ({ burst, characters, self }) => {
       />
       <span className="stage-juice-target">{name}</span>
       <span className="stage-juice-packet">
-        <HpFxSymbol type={symbolTypeFor(burst.damageType)} />
+        {glyphTypes.map((t) => (
+          <HpFxSymbol key={t} type={t} />
+        ))}
         −{burst.amount}
       </span>
     </div>
@@ -101,6 +113,40 @@ const StageDamageJuice = ({ order, characters, viewerCharId }) => {
   const [bursts, setBursts] = useState([]);
   const seqRef = useRef(0);
   const timersRef = useRef(new Set());
+
+  // The bridge's actor feed — its damage-roll entries carry typed instances
+  // (#1355) used to type Foundry-originated hp drops. Ref-read at burst time;
+  // the feed re-rendering must not re-fire anything.
+  const [feedPayload] = useSyncedState(globalKey(RELAY.ACTORFEED), null);
+  const feedRef = useRef(null);
+  feedRef.current = feedPayload;
+  const orderRef = useRef(order);
+  orderRef.current = order;
+
+  // Latest fresh damage-roll feed entry targeting this PC, or null. Matched by
+  // foundryActorId off the encounter order (bridge PC entries carry it).
+  const typedInstancesFor = useCallback((charId) => {
+    const foundryActorId = (orderRef.current || []).find(
+      (e) => e && e.kind === 'pc' && e.charId === charId
+    )?.foundryActorId;
+    if (!foundryActorId) return null;
+    const entries = feedRef.current?.feed;
+    if (!Array.isArray(entries)) return null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const en = entries[i];
+      if (
+        en?.type === 'damage-roll' &&
+        en.targetActorId === foundryActorId &&
+        Array.isArray(en.damageInstances) &&
+        en.damageInstances.length &&
+        typeof en.ts === 'number' &&
+        Date.now() - en.ts <= FEED_CORRELATION_MS
+      ) {
+        return en.damageInstances;
+      }
+    }
+    return null;
+  }, []);
 
   const pushBurst = useCallback((burst) => {
     const key = ++seqRef.current;
@@ -137,9 +183,15 @@ const StageDamageJuice = ({ order, characters, viewerCharId }) => {
 
   const onTaken = useCallback(
     ({ charId, amount, damageType }) => {
-      pushBurst({ kind: 'taken', charId, amount, damageType });
+      pushBurst({
+        kind: 'taken',
+        charId,
+        amount,
+        damageType,
+        instances: typedInstancesFor(charId),
+      });
     },
-    [pushBurst]
+    [pushBurst, typedInstancesFor]
   );
 
   const pcs = (order || []).filter((e) => e && e.kind === 'pc' && e.charId);

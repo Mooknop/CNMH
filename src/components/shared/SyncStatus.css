@@ -23,3 +23,10 @@
   color: #757575;
   background: rgba(120, 120, 120, 0.15);
 }
+
+/* Bridge protocol behind the app's minimum (#1310) — louder than sandbox:
+   the game LOOKS live but relay features are silently degraded. */
+.sync-stale {
+  color: var(--peril-light);
+  background: rgba(183, 28, 28, 0.16);
+}

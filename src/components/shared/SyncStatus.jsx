@@ -1,10 +1,13 @@
 import React from 'react';
 import { useSession } from '../../contexts/SessionContext';
+import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import './SyncStatus.css';
 
-// Three states, keyed off the campaign DO link (`connected`) and Foundry bridge
-// presence (`foundryConnected`):
-//   Live     — DO up + Foundry up: the game is running, changes are saved.
+// Four states, keyed off the campaign DO link (`connected`), Foundry bridge
+// presence (`foundryConnected`), and the bridge protocol handshake (#1310):
+//   Live     — DO up + Foundry up on a current bridge: changes are saved.
+//   Stale    — DO up + Foundry up, but the bridge module predates the app's
+//              minimum protocol (or never said hello): update it in Foundry.
 //   Sandbox  — DO up, Foundry down: explore freely, but nothing is saved (#553).
 //   Offline  — DO down: no connection to the campaign at all.
 const STATES = {
@@ -12,6 +15,11 @@ const STATES = {
     className: 'sync-live',
     label: '⚡ Live',
     title: 'Live — the game is running, your changes are saved',
+  },
+  stale: {
+    className: 'sync-stale',
+    label: '⚠ Bridge outdated',
+    title: 'Foundry is connected but the CNMH Bridge module is out of date — features will misbehave. Update the module in Foundry (Add-on Modules) and reload.',
   },
   sandbox: {
     className: 'sync-sandbox',
@@ -27,7 +35,14 @@ const STATES = {
 
 const SyncStatus = () => {
   const { connected, foundryConnected } = useSession();
-  const key = !connected ? 'offline' : foundryConnected ? 'live' : 'sandbox';
+  const { outdated } = useBridgeStatus();
+  const key = !connected
+    ? 'offline'
+    : !foundryConnected
+    ? 'sandbox'
+    : outdated
+    ? 'stale'
+    : 'live';
   const state = STATES[key];
   return (
     <span

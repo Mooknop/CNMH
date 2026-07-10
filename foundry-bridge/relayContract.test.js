@@ -46,13 +46,22 @@ const grab = (send, key) => {
   return { characterId: call[0], value: call[2] };
 };
 
-// Stamp a stable ts when recording (dmgdone/savedone carry Date.now(); the
-// contract only checks the field's TYPE).
+// Stamp a stable ts when recording (dmgdone/savedone/bridgehello carry
+// Date.now(), actorfeed stamps each entry; the contract only checks the
+// field's TYPE).
+const STABLE_TS = 1700000000000;
 const stableTs = (captured) => {
-  if (captured.value && typeof captured.value === 'object' && typeof captured.value.ts === 'number') {
-    return { ...captured, value: { ...captured.value, ts: 1700000000000 } };
+  let value = captured.value;
+  if (value && typeof value === 'object') {
+    if (typeof value.ts === 'number') value = { ...value, ts: STABLE_TS };
+    if (Array.isArray(value.feed)) {
+      value = {
+        ...value,
+        feed: value.feed.map((e) => (typeof e?.ts === 'number' ? { ...e, ts: STABLE_TS } : e)),
+      };
+    }
   }
-  return captured;
+  return value === captured.value ? captured : { ...captured, value };
 };
 
 // --- shared worlds -----------------------------------------------------------
@@ -342,12 +351,46 @@ const RECIPES = {
     });
     global.game.combat = combat;
     global.Hooks.fire('createCombat', combat);
-    // Populate feed[] with a representative strike entry.
+    // Populate feed[] with a representative strike entry + its typed damage
+    // roll (#1355 — damageTotal/damageInstances are part of the contract).
     global.Hooks.fire('createChatMessage', makeChatMessage({
       actorId: 'actor-hero', type: 'attack-roll', outcome: 'success',
       itemName: 'Longsword', itemType: 'weapon', targetName: 'Foe',
     }));
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'damage-roll',
+      itemName: 'Longsword', itemType: 'weapon',
+      targetName: 'Foe', targetActorId: 'actor-foe',
+      damageInstances: [{ type: 'slashing', total: 9 }, { type: 'fire', total: 3 }],
+    }));
     return grab(send, RELAY.ACTORFEED);
+  },
+
+  [RELAY.BRIDGEHELLO]: () => {
+    // Mirrors the ROSTER recipe: isolate bridge.js, fire 'ready', open the
+    // tracked socket → pushHello() (#1310).
+    jest.useFakeTimers();
+    try {
+      let lastInstance = null;
+      class TrackedWS {
+        constructor() { this.readyState = 1; this.sentMsgs = []; lastInstance = this; }
+        send(data) { this.sentMsgs.push(data); }
+        close() { this.readyState = 3; }
+      }
+      TrackedWS.CONNECTING = 0; TrackedWS.OPEN = 1; TrackedWS.CLOSING = 2; TrackedWS.CLOSED = 3;
+      global.WebSocket = TrackedWS;
+      global.game = makeGame({});
+      jest.isolateModules(() => {
+        require('./bridge.js');
+        global.Hooks.fire('ready');
+        lastInstance.onopen();
+      });
+      const msg = lastInstance.sentMsgs.map((s) => JSON.parse(s)).find((m) => m.key === RELAY.BRIDGEHELLO);
+      if (!msg) throw new Error('no bridgehello emission captured');
+      return { characterId: msg.characterId, value: msg.value };
+    } finally {
+      jest.useRealTimers();
+    }
   },
 
   [RELAY.EXPLOREMOVE]: () => {

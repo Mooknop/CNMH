@@ -106,6 +106,12 @@ function buildEntry(ctx, cost, n) {
     type: ctx.type,
     ...(ctx.attackRange   ? { attackRange:   ctx.attackRange }   : {}),
     ...(ctx.targetActorId ? { targetActorId: ctx.targetActorId } : {}),
+    // Typed damage read-out (#1355) — amount + per-type instances off the
+    // DamageRoll, so the app's taken-damage juice can correlate an hp drop to
+    // its types. `ts` bounds that correlation (stage matches within ~seconds).
+    ...(ctx.damageTotal != null ? { damageTotal: ctx.damageTotal } : {}),
+    ...(ctx.damageInstances ? { damageInstances: ctx.damageInstances } : {}),
+    ts: Date.now(),
     state: 'done',
   };
 }
