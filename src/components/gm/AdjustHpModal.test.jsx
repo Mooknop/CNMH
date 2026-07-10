@@ -268,6 +268,25 @@ describe('AdjustHpModal', () => {
     expect(appendLogMock).not.toHaveBeenCalled();
   });
 
+  it('stamps damageType on typed damage writes and strips it on heals (#1343 juice)', () => {
+    __store['cnmh_hp_thorn'] = { ...THORN_HP };
+    render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+    act(() => {
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+    fireEvent.change(screen.getByLabelText('damage type'), { target: { value: 'fire' } });
+    fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '6' } });
+    fireEvent.click(screen.getByLabelText('Apply damage'));
+    expect(__store['cnmh_hp_thorn'].damageType).toBe('fire');
+
+    // A later heal must not carry the stale type forward
+    fireEvent.click(screen.getByRole('button', { name: /heal/i }));
+    fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '4' } });
+    fireEvent.click(screen.getByLabelText('Apply heal'));
+    expect(__store['cnmh_hp_thorn'].damageType).toBeUndefined();
+  });
+
   // ─── incoming typed resistance (#900 stretch) ───────────────
   describe('typed resistance on incoming damage (#900)', () => {
     // A live-catalog effect granting resistance 5 to fire — the GM HP-apply flow

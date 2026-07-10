@@ -1,5 +1,6 @@
 import React from 'react';
 import { useValueFlash } from '../../hooks/useValueFlash';
+import { HpFxSymbol, symbolTypeFor } from './hpFxSymbols';
 import './HpFx.css';
 
 // Damage ≥ 25% of max escalates to the shake variant (big-hit garnish).
@@ -48,6 +49,12 @@ const HpFx = ({ hp, className = '', children, ...rest }) => {
           className={`hp-fx-float ${flash.delta < 0 ? 'hp-fx-float--down' : 'hp-fx-float--up'}`}
           aria-hidden="true"
         >
+          {/* Damage-type glyph: writers that know the type stamp a transient
+            * `damageType` on the hp payload (AdjustHpModal); the same payload
+            * that moved hp.current is the one rendering this flash, so reading
+            * it off the prop is correlation enough. Untyped writes (the
+            * Foundry bridge rebuilds hp without it) get the generic burst. */}
+          <HpFxSymbol type={flash.delta > 0 ? 'heal' : symbolTypeFor(hp?.damageType)} />
           {formatDelta(flash.delta)}
         </span>
       )}
