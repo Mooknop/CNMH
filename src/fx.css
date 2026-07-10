@@ -1,0 +1,81 @@
+/*
+ * ============================================================
+ *  FX VOCABULARY — one-shot juice keyframes (#1344, epic #1343)
+ *
+ *  Consumed declaratively: components set data-fx="damage" (via
+ *  useValueFlash or directly) and the binding below plays the
+ *  matching one-shot. Rules of the house:
+ *    - every effect ≤ ~600ms, fire-and-forget, never blocking
+ *    - compositor-only properties: transform / opacity / filter
+ *    - names describe MEANING (fx-flash-bad), not look
+ *    - per-character color flows through the accent recipe
+ *      (--accent-outline follows --color-theme / --x-theme)
+ *    - prefers-reduced-motion kills everything (guard at bottom)
+ * ============================================================
+ */
+
+:root {
+  /* FX timing tokens */
+  --fx-duration-quick: 250ms; /* flashes, shakes, pops        */
+  --fx-duration-bloom: 600ms; /* glows and accent blooms      */
+  --fx-ease-out:  cubic-bezier(0.22, 1, 0.36, 1);    /* decisive, settles soft */
+  --fx-ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot, for pops    */
+}
+
+/* — Keyframes ————————————————————————————————————————————— */
+
+/* Something bad landed here (damage, a failure) — red-shifted double blink */
+@keyframes fx-flash-bad {
+  0%   { filter: none; }
+  20%  { filter: sepia(0.4) hue-rotate(-30deg) saturate(3) brightness(1.25); }
+  45%  { filter: none; }
+  65%  { filter: sepia(0.4) hue-rotate(-30deg) saturate(3) brightness(1.15); }
+  100% { filter: none; }
+}
+
+/* Something good happened here (healing, a recovery) — soft green-lit swell */
+@keyframes fx-glow-good {
+  0%   { filter: none; }
+  30%  { filter: drop-shadow(0 0 8px var(--theme-verdant)) saturate(1.3) brightness(1.15); }
+  100% { filter: none; }
+}
+
+/* Physical jolt (a hit taken, a break) — quick horizontal rattle */
+@keyframes fx-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(2px); }
+}
+
+/* Generic "this just changed" — small scale pop with overshoot */
+@keyframes fx-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Character acted — accent-colored bloom in their theme color */
+@keyframes fx-bloom-accent {
+  0%   { filter: none; }
+  25%  { filter: drop-shadow(0 0 10px var(--accent-outline)) brightness(1.12); }
+  100% { filter: none; }
+}
+
+/* — data-fx bindings ——————————————————————————————————————
+ * Attribute values name the MOMENT; the keyframe supplies the look.
+ * useValueFlash re-triggers cleanly via key-bump (remount restarts
+ * the animation), so no class-toggle dance is needed here.        */
+
+[data-fx='damage']  { animation: fx-flash-bad   var(--fx-duration-quick) var(--fx-ease-out); }
+[data-fx='shake']   { animation: fx-shake       var(--fx-duration-quick) var(--fx-ease-out); }
+[data-fx='heal']    { animation: fx-glow-good   var(--fx-duration-bloom) var(--fx-ease-out); }
+[data-fx='bloom']   { animation: fx-bloom-accent var(--fx-duration-bloom) var(--fx-ease-out); }
+[data-fx='changed'],
+[data-fx='pop']     { animation: fx-pop         var(--fx-duration-quick) var(--fx-ease-snap); }
+
+/* — House reduced-motion guard ————————————————————————————— */
+@media (prefers-reduced-motion: reduce) {
+  [data-fx] { animation: none !important; }
+}
