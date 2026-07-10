@@ -11265,33 +11265,6 @@
     "material": "Leather"
   },
   {
-    "actions": [
-      {
-        "name": "Cast Ventriloquism",
-        "actionCount": 2,
-        "traits": [
-          "Auditory",
-          "Concentrate",
-          "Illusion",
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
-      }
-    ],
-    "name": "Superbia Tattoo",
-    "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
-    "thassilonianRune": "pride",
-    "traits": [
-      "Invested",
-      "Magical",
-      "Tattoo",
-      "Illusion"
-    ],
-    "price": 60,
-    "weight": 0,
-    "id": "superbia-tattoo"
-  },
-  {
     "name": "Sulfur Bomb",
     "description": "A reeking bomb whose acrid fumes choke and sicken. Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1.",
     "traits": [
@@ -11409,6 +11382,33 @@
       }
     ],
     "id": "sulfur-bomb"
+  },
+  {
+    "actions": [
+      {
+        "name": "Cast Ventriloquism",
+        "actionCount": 2,
+        "traits": [
+          "Auditory",
+          "Concentrate",
+          "Illusion",
+          "Manipulate"
+        ],
+        "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+      }
+    ],
+    "name": "Superbia Tattoo",
+    "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+    "thassilonianRune": "pride",
+    "traits": [
+      "Invested",
+      "Magical",
+      "Tattoo",
+      "Illusion"
+    ],
+    "price": 60,
+    "weight": 0,
+    "id": "superbia-tattoo"
   },
   {
     "id": "swallow-spike",
