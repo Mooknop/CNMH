@@ -26,22 +26,24 @@ import { useAuraGate } from '../../hooks/useAuraGate';
 import { useShieldGate } from '../../hooks/useShieldGate';
 import { useOmenGate } from '../../hooks/useOmenGate';
 import { useImmunityGate } from '../../hooks/useImmunityGate';
+import { useRiderChoiceSection } from '../../hooks/useRiderChoiceSection';
+import { useCatalystSection } from '../../hooks/useCatalystSection';
+import { useChamberFireSection } from '../../hooks/useChamberFireSection';
+import { useBloodMagicSection } from '../../hooks/useBloodMagicSection';
+import { useFlatCheckSection } from '../../hooks/useFlatCheckSection';
 import { useVeracious } from '../../hooks/useVeracious';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
-import { useChambers } from '../../hooks/useChambers';
 import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
+import { applyAbility, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
 import { buildChainSelfEffect } from '../../utils/spellshapeTransform';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { markPlayingOnCast } from '../../utils/playing';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
-import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
 import { DEFENSE_LABELS } from '../../utils/defense';
-import { ammoSaveDc } from '../../utils/ammunition';
 import { resolveActionRoll, isBasicDefense } from '../../utils/rollResolution';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { preyMatches } from '../../utils/huntPrey';
@@ -50,15 +52,12 @@ import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, applyPersistentFromResults } from '../../utils/persistentDamage';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
-import { buildDamageApply, relayDamageAndRevealIwr } from '../../utils/damageRelay';
+import { relayDamageAndRevealIwr } from '../../utils/damageRelay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from '../../utils/whetstoneOnHit';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
 import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
 import { HARROW_CAST_DC } from '../../utils/harrow';
-import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
 import { applyHealing } from '../../utils/consumables';
-import { itemUidOf } from '../../utils/affix';
-import { eligibleCatalystsFor, sumCatalystActions, catalystSummary, catalystAddActions } from '../../utils/catalyst';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import './UseAbilityModal.css';
@@ -129,9 +128,6 @@ const UseAbilityModal = ({
   // also feeds the off-guard attack toggle (#348).
   const { stampImmunity, effectsFor, applyCondition: applyEnemyCondition } = useEnemyEffects();
 
-  // Chambered-weapon fire (#676, S4) — the live chamber overlay + the discharge
-  // writer. Special-ammo depletion reuses the consumed overlay (like consumables).
-  const { stateFor: chamberStateFor, fire: fireChamber } = useChambers(character?.id || 'nobody');
   // Blade Byrnie (#738 E4 pt.2): a Strike with the transient dagger returns it to
   // the armor. The dagger strike is tagged bladeByrnie:true (utils/bladeByrnie).
   const { returnToArmor: returnBlade } = useBladeByrnie(character?.id || 'nobody');
@@ -140,13 +136,6 @@ const UseAbilityModal = ({
   // flies it back.
   const { drop: dropThrownWeapon } = useLoadout(character?.id || 'nobody');
   const [consumed, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id || ''), {});
-  // Catalyst adds (#1209) — held catalysts the player chooses to fold into this
-  // cast (by uid). Eligibility is computed once the cast spell/inventory are known.
-  const [catalystIds, setCatalystIds] = useState([]);
-  const [fireChamberIdx, setFireChamberIdx] = useState(null);
-  // Rolled total for the loaded ammo's on-hit damage payload (#1271, AA2 —
-  // Storm Arrow's 3d12): entered by the player like every other damage roll.
-  const [ammoDmgInput, setAmmoDmgInput] = useState('');
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
@@ -156,9 +145,6 @@ const UseAbilityModal = ({
   // triggers when it carries the bloodline flag.
   const [chainSpell, setChainSpell] = useState(null);
   const onChainSpellChange = useCallback((spell) => setChainSpell(spell), []);
-
-  // Blood magic (#227) — Imperial: +1 status to AC or saves, caster's pick.
-  const [bloodMagicChoice, setBloodMagicChoice] = useState('ac');
 
   // Multiple Attack Penalty — auto step from attacks already made this turn,
   // with a manual override for table corrections. null = follow the auto step.
@@ -184,19 +170,10 @@ const UseAbilityModal = ({
   const { armed: veraciousArmed, disarm: disarmVeracious } =
     useVeracious(character?.id || 'nobody', charData?.inventory || []);
 
-  // Rider choice (#225) — which either/or rider option is picked. null =
-  // default to the first available option.
-  const [riderChoiceId, setRiderChoiceId] = useState(null);
-
   // Save-based damage entry (#270): the caster's rolled total and rider
   // toggles, carried into the save request for GM-side per-degree resolution.
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
-
-  // Condition flat checks (#262): raw d20 per required check (keyed by condition id).
-  const [flatCheckRolls, setFlatCheckRolls] = useState({});
-  // Manually-flagged target concealment (#262) — 'none' | 'concealed' | 'hidden'.
-  const [concealment, setConcealment] = useState('none');
 
   // Persistent-damage tracking (#272) — confirm records per-target entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -268,6 +245,40 @@ const UseAbilityModal = ({
   // line and the Harrow-Casting narrative block below.
   const omen = omenGate.omen;
 
+  const effectiveVerb = verb.toLowerCase();
+  const isAttack = isAttackAbility(ability);
+
+  // Mechanic section hooks (#1317 D2) — each owns its state, derivations,
+  // section JSX and confirm slice, mirroring the D1 gate hooks. The
+  // orchestrator folds their outputs into confirmEnabled / the cost spend,
+  // renders each `section` where its block always sat, and calls each confirm
+  // slice at the same handleConfirm sequence position.
+  const riderChoiceSection = useRiderChoiceSection(ability, activeEffects);
+  const { selectedRider } = riderChoiceSection;
+  const catalystSection = useCatalystSection({
+    effectiveVerb,
+    charData,
+    ability,
+    character,
+    consumed,
+    setConsumed,
+  });
+  const { catalystActionBump } = catalystSection;
+  const chamberFireSection = useChamberFireSection({
+    ability,
+    character,
+    setConsumed,
+    order,
+    appendLog,
+    addSaveRequest,
+    sendUpdate,
+    applyEnemyCondition,
+  });
+  const { isChamberedFire, fireExtra } = chamberFireSection;
+  const bloodMagicSection = useBloodMagicSection({ character, ability, effectiveVerb, chainSpell });
+  const flatCheckSection = useFlatCheckSection({ ability, activeConditions, isAttack, effectiveVerb });
+  const { flatChecks, allFlatChecksRolled, failedFlatCheck } = flatCheckSection;
+
   if (!ability || !character) return null;
 
   const effects     = Array.isArray(ability.effects) ? ability.effects : [];
@@ -278,59 +289,7 @@ const UseAbilityModal = ({
   const hasChainStrike = ability.chain?.into === 'strike';
   const hasChainSpell  = ability.chain?.into === 'spell';
 
-  // Rider choice (#225): an either/or rider picked at use time (e.g. the
-  // electric Eld powers' "become Charged" vs "Discharge"). Options that
-  // require an active effect (requiresEffectId) are disabled until the
-  // caster has it.
-  const riderChoice =
-    ability.riderChoice && Array.isArray(ability.riderChoice.options)
-    && ability.riderChoice.options.length > 0
-      ? ability.riderChoice
-      : null;
-  const riderAvailable = (opt) =>
-    !opt.requiresEffectId
-    || (activeEffects || []).some((e) => e.effectId === opt.requiresEffectId);
-  const selectedRider = riderChoice
-    ? (riderChoice.options.find((o) => o.id === riderChoiceId && riderAvailable(o))
-        || riderChoice.options.find(riderAvailable)
-        || null)
-    : null;
-
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
-  const effectiveVerb = verb.toLowerCase();
-
-  // Chambered ranged fire (#676, S4): a capacity Strike carrying its inventory
-  // uid (resolveItemStrikes). Read the live chambers, list the loaded ones, and
-  // default the selection to the auto-advance pointer (else the first loaded).
-  const isChamberedFire = ability.capacity != null && ability.weaponUid != null;
-  const liveChamberState = isChamberedFire
-    ? chamberStateFor(ability.weaponUid, ability.capacity)
-    : null;
-  const loadedChambers = liveChamberState
-    ? liveChamberState.chambers
-        .map((ref, index) => (ref ? { index, ref } : null))
-        .filter(Boolean)
-    : [];
-  const pointerLoaded = liveChamberState && liveChamberState.chambers[liveChamberState.pointer]
-    ? liveChamberState.pointer
-    : (loadedChambers[0]?.index ?? -1);
-  const selectedFireIdx = (fireChamberIdx != null && loadedChambers.some((c) => c.index === fireChamberIdx))
-    ? fireChamberIdx
-    : pointerLoaded;
-  const selectedChamberRef = (isChamberedFire && selectedFireIdx >= 0)
-    ? liveChamberState.chambers[selectedFireIdx]
-    : null;
-  // Extra actions the chosen ammo costs to fire (Activate) — folded into the cost
-  // glyph + the action spend, mirroring the consumable 1 + drawCost model.
-  const fireExtra = (selectedChamberRef?.activate || 0);
-
-  // Blood magic (#227): a bloodline-flagged spell — cast directly or as the
-  // spell a Spellshape chains into — triggers the bloodline's rider.
-  const bloodMagicActive = bloodMagicTriggered(
-    character,
-    effectiveVerb === 'cast' ? ability : null,
-    hasChainSpell ? chainSpell : null
-  );
 
   // Variable action-cost abilities (#215): the in-modal picker is authoritative
   // for the spend. Reactions/free actions and chained abilities (which own their
@@ -362,17 +321,6 @@ const UseAbilityModal = ({
   const rayCount = perActionRange ? chosenActions : (fixedRayCount ?? 1);
   const castCost = variableRange ? chosenActions : effectiveCost;
 
-  // Catalysts (#1209) — held catalysts whose target spell matches this cast are
-  // offered as opt-in adds. Selecting one consumes it and folds its extra actions
-  // into the cast cost; its rider effect is logged for the GM.
-  const eligibleCatalysts = effectiveVerb === 'cast'
-    ? eligibleCatalystsFor(charData?.inventory, ability.id, consumed)
-    : [];
-  const selectedCatalysts = eligibleCatalysts.filter((c) => catalystIds.includes(itemUidOf(c)));
-  const catalystActionBump = sumCatalystActions(selectedCatalysts);
-  const toggleCatalyst = (uid) =>
-    setCatalystIds((cur) => (cur.includes(uid) ? cur.filter((x) => x !== uid) : [...cur, uid]));
-
   // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
   // Only casts pay a resource; plain actions get an empty list and no section.
   const castOptions = effectiveVerb === 'cast' ? resources.optionsFor(ability, castSource) : [];
@@ -402,7 +350,6 @@ const UseAbilityModal = ({
   // Multiple Attack Penalty step: attacks already made this turn, or the override.
   // A reaction Strike fires off-turn (AoO, Retributive Strike) so its MAP starts
   // at 0 rather than the stale attacksMade from the player's last turn (#475).
-  const isAttack = isAttackAbility(ability);
   const autoStep = autoMapStep({
     isReaction: explicitCost === 'reaction',
     attacksMade: turnState?.attacksMade ?? 0,
@@ -560,26 +507,6 @@ const UseAbilityModal = ({
       + (ability.allyResistance.addLevel ? (character.level || 0) : 0)
     : null;
 
-  // Condition flat checks (#262): stupefied on a spell cast, grabbed/restrained
-  // on a Manipulate action. The player rolls a raw d20 per required check before
-  // the action resolves; a failed check loses the action (the cost is still
-  // spent). `isCast` is the spell-cast flow (verb "Cast").
-  // Attacking a concealed/hidden target imposes its own flat check (DC 5 / 11) —
-  // a failed check loses the attack. Concealment isn't in the targeting payload,
-  // so it's a manual flag on attack abilities only; it flows through the same gate.
-  const concealmentCheck = isAttack ? concealmentFlatCheck(concealment) : null;
-  const flatChecks = [
-    ...requiredFlatChecks(ability, activeConditions || [], { isCast: effectiveVerb === 'cast' }),
-    ...(concealmentCheck ? [concealmentCheck] : []),
-  ];
-  const flatCheckResults = flatChecks.map((fc) => {
-    const raw = flatCheckRolls[fc.id];
-    const d20 = /^\d+$/.test(raw || '') ? parseInt(raw, 10) : null;
-    return { ...fc, d20, passed: d20 != null && flatCheckPasses(d20, fc.dc) };
-  });
-  const allFlatChecksRolled = flatCheckResults.every((r) => r.d20 != null);
-  const failedFlatCheck = flatCheckResults.find((r) => r.d20 != null && !r.passed) || null;
-
   const confirmEnabled =
     (!needsPicker || targets.length > 0)
     && castGateOk && frequencyGate.gateOk && immunityGate.gateOk
@@ -679,104 +606,6 @@ const UseAbilityModal = ({
         ? rawResults
         : (rawResults.length ? [{ rayIndex: null, results: rawResults }] : []);
 
-    // Chambered fire bookkeeping (#676, S4): empty the fired chamber + advance the
-    // pointer, decrement special ammo from inventory (plain bolts are infinite),
-    // and on a hit apply the ammo's on-hit payload to the struck enemies. Runs on
-    // every fire path — including a lost concealment flat check below (the bolt is
-    // still spent), where `hitEntryIds` is empty so no on-hit payload lands.
-    //
-    // On-hit payload v2 (#1271, AA2): beyond the effectId condition, the ammo may
-    // force a save (per-degree conditions ride the GM rail, damage resolves per
-    // degree GM-side) and/or deal extra typed damage (no save → straight to the
-    // dmgapply relay, Foundry nets IWR). The damage total is player-entered
-    // (ammoDmgInput) like every other rolled damage in the app.
-    const commitChamberFire = (hitEntryIds) => {
-      if (!isChamberedFire || selectedFireIdx < 0) return;
-      const ref = selectedChamberRef;
-      fireChamber(ability.weaponUid, selectedFireIdx, ability.capacity);
-      if (ref && !ref.default && ref.item) {
-        setConsumed((cur) => ({ ...(cur || {}), [ref.item]: ((cur || {})[ref.item] || 0) + 1 }));
-      }
-      const appliedOnHit = !!(ref && ref.onHit && ref.effectId && hitEntryIds.length > 0);
-      if (appliedOnHit) {
-        hitEntryIds.forEach((eid) => applyEnemyCondition(eid, { id: ref.effectId, source: ref.name }));
-      }
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   `${character.name} fires the ${ability.source || ability.name} — ${ref?.name || 'bolt'}`
-          + ` (${ability.nock ? 'nocked' : `chamber ${selectedFireIdx + 1}`})${appliedOnHit ? ` · ${ref.name} effect applied` : ''}`,
-      });
-
-      // Damage/save payloads apply to struck ENEMIES only — PC damage flows
-      // through cnmh_hp and enemy saves need the bestiary save mods.
-      const hitEnemies = hitEntryIds
-        .map((eid) => (order || []).find((e) => e.entryId === eid))
-        .filter((e) => e && e.kind === 'enemy');
-      if (!ref || !ref.onHit || hitEnemies.length === 0) return;
-      const enteredRaw = parseInt(ammoDmgInput, 10);
-      const entered = Number.isNaN(enteredRaw) ? null : enteredRaw;
-
-      if (ref.save) {
-        const save = ref.save.stat || 'reflex';
-        const dc = ammoSaveDc(ref.save, ability);
-        addSaveRequest({
-          casterId: character.id,
-          casterName: character.name,
-          abilityName: ref.name,
-          save,
-          dc,
-          basic: !!ref.save.basic,
-          ...(ref.save.rank != null ? { rank: ref.save.rank } : {}),
-          targets: hitEnemies.map((e) => ({
-            entryId: e.entryId,
-            name: e.name,
-            saveMod: e.defenses?.saves?.[save] ?? null,
-          })),
-          ...(ref.damage ? {
-            damage: {
-              entered,
-              expression: ref.damage.dice ?? null,
-              typeLabel: ref.damage.type ?? null,
-              riders: [],
-              ...(ref.save.degrees ? { degrees: ref.save.degrees } : {}),
-            },
-          } : {}),
-          ...(ref.save.conditions ? { conditions: ref.save.conditions } : {}),
-        });
-        appendLog({
-          type: 'system',
-          text: `${ref.name}: ${DEFENSE_LABELS[save] || save} save DC ${dc} pushed to the GM`
-            + (ref.damage ? ` — ${ref.damage.dice} ${ref.damage.type}${entered == null ? ' (roll not entered)' : ''}` : ''),
-        });
-      } else if (ref.damage) {
-        if (entered != null) {
-          sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({
-            hits: hitEnemies.map((e) => ({
-              entryId: e.entryId,
-              name: e.name,
-              amount: entered,
-              type: ref.damage.type || '',
-            })),
-            sourceName: ref.name,
-          }));
-          appendLog({
-            type: 'action',
-            charId: character.id,
-            text: `${ref.name}: ${entered} ${ref.damage.type || ''} damage → ${hitEnemies.map((e) => e.name).join(', ')}`,
-          });
-        } else {
-          appendLog({
-            type: 'system',
-            text: `${ref.name}: roll not entered — apply ${ref.damage.dice} ${ref.damage.type || ''} to ${hitEnemies.map((e) => e.name).join(', ')} manually`,
-          });
-        }
-      }
-      if (ref.note) {
-        appendLog({ type: 'action', charId: character.id, text: `${ref.name}: ${ref.note}` });
-      }
-    };
-
     // Log-suffix collector (#1317 D1) — the casting-resource spend and each
     // gate's applyOnConfirm contribute in the same order the old sourceSuffix
     // string was built, so the joined suffix composes identically.
@@ -823,7 +652,7 @@ const UseAbilityModal = ({
         spendActions(castCost + fireExtra, `${verb} ${ability.name}`);
       }
       // The bolt is spent even on a lost flat check; no on-hit (the attack missed).
-      commitChamberFire([]);
+      chamberFireSection.commit([]);
       onClose();
       return;
     }
@@ -832,14 +661,7 @@ const UseAbilityModal = ({
 
     // Catalysts (#1209): consume each added catalyst (by name, like potions) and
     // log its rider effect. The extra actions fold into the cast spend below.
-    selectedCatalysts.forEach((cat) => {
-      setConsumed((cur) => ({ ...(cur || {}), [cat.name]: ((cur || {})[cat.name] || 0) + 1 }));
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   `${character.name} adds ${cat.name} to ${ability.name} — ${catalystSummary(cat)}`,
-      });
-    });
+    catalystSection.applyOnConfirm({ appendLog });
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
     const coveredByRoll = new Set(
@@ -888,19 +710,15 @@ const UseAbilityModal = ({
 
     // Rider choice (#225) — apply/remove the chosen rider's caster-scoped
     // effect (e.g. gain eld-charged, or Discharge to consume it).
-    if (selectedRider) {
-      applyRiderChoice({
-        option: selectedRider,
-        ability,
-        caster: character,
-        casterEntryId,
-        encounter,
-        nowSecs,
-        getState,
-        sendUpdate,
-        appendLog,
-      });
-    }
+    riderChoiceSection.applyOnConfirm({
+      caster: character,
+      casterEntryId,
+      encounter,
+      nowSecs,
+      getState,
+      sendUpdate,
+      appendLog,
+    });
 
     if (hasEffects) {
       // Lingering Composition (#226-B): a pending extension on the caster
@@ -1321,23 +1139,17 @@ const UseAbilityModal = ({
     // Blood magic (#227): the bloodline rider lands on the caster as a catalog
     // effect until the start of their next turn. Re-derived from chainResults
     // (not the live chainSpell state) so confirm matches what was actually cast.
-    const bloodMagicFires = bloodMagicTriggered(
-      character,
-      effectiveVerb === 'cast' ? ability : null,
-      hasChainSpell && chainResults?.spellBloodline ? { bloodline: true } : null
-    );
-    if (bloodMagicFires) {
-      const bmOption = bloodMagicOption(bloodMagicChoice);
-      applyAbility({
-        ability: {
-          name: `Blood Magic (${character.spellcasting.bloodline.name || 'bloodline'})`,
-          effects: [{ effectId: bmOption.effectId, applyTo: 'self', duration: { until: 'caster-turn-start' } }],
-        },
-        caster: character, casterEntryId, targetCharIds: [], enemyTargetNames: [],
-        order, encounter, characters, getState, sendUpdate, appendLog,
-        verb: 'gains', nowSecs,
-      });
-    }
+    bloodMagicSection.applyOnConfirm({
+      chainResults,
+      casterEntryId,
+      order,
+      encounter,
+      characters,
+      getState,
+      sendUpdate,
+      appendLog,
+      nowSecs,
+    });
 
     // Resource suffix not carried by a line above (effects/roll paths) gets a
     // dedicated entry so the log always shows what paid for the cast.
@@ -1368,7 +1180,7 @@ const UseAbilityModal = ({
           .filter((r) => r.degree === 'success' || r.degree === 'criticalSuccess')
           .map((r) => r.entryId)
       );
-      commitChamberFire(hitEntryIds);
+      chamberFireSection.commit(hitEntryIds);
     }
 
     // Count attacks for MAP. Multi-roll casts (flurry, multi-ray) increment once
@@ -1554,54 +1366,8 @@ const UseAbilityModal = ({
         {actionsSelector}
       </section>
 
-      {/* Chamber selection (#676) — which loaded chamber to fire. Defaults to the
-          auto-advance pointer; firing special ammo adds its Activate cost. A nock
-          weapon (#1270) has a single slot, so this reads "Nocked: <ammo>". */}
-      {isChamberedFire && loadedChambers.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">{ability.nock ? 'Ammunition' : 'Chamber'}</h3>
-            <div className="uam-cost-options" role="radiogroup" aria-label="Chamber to fire">
-              {loadedChambers.map(({ index, ref }) => (
-                <label key={index} className="uam-cost-option">
-                  <input
-                    type="radio"
-                    name="fire-chamber"
-                    checked={selectedFireIdx === index}
-                    onChange={() => setFireChamberIdx(index)}
-                  />
-                  {ability.nock ? 'Nocked' : `Chamber ${index + 1}`}: {ref.name}
-                  {ref.activate > 0 ? ` (+${ref.activate} to fire)` : ''}
-                </label>
-              ))}
-            </div>
-            {/* On-hit damage payload (#1271, AA2) — the player rolls the ammo's
-                dice and enters the total; it rides the save request (basic save
-                resolves per degree GM-side) or goes straight to dmgapply. */}
-            {selectedChamberRef?.damage && (
-              <label className="uam-ammo-dmg">
-                {selectedChamberRef.name} on-hit damage ({selectedChamberRef.damage.dice} {selectedChamberRef.damage.type})
-                {selectedChamberRef.save ? ` — ${selectedChamberRef.save.basic ? 'basic ' : ''}${DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} DC ${ammoSaveDc(selectedChamberRef.save, ability)}` : ''}
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={ammoDmgInput}
-                  onChange={(e) => setAmmoDmgInput(e.target.value)}
-                  placeholder="rolled total"
-                  aria-label="ammo damage roll"
-                />
-              </label>
-            )}
-            {selectedChamberRef?.save && !selectedChamberRef.damage && (
-              <p className="uam-ammo-save-hint">
-                On hit: {DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} save
-                {' '}DC {ammoSaveDc(selectedChamberRef.save, ability)} → GM
-              </p>
-            )}
-          </section>
-        </>
-      )}
+      {/* Chamber selection (#676) — which loaded chamber to fire */}
+      {chamberFireSection.section}
 
       {/* Frequency lock — derived from the synced ledger; GM can override or clear */}
       {frequencyGate.section}
@@ -1666,159 +1432,17 @@ const UseAbilityModal = ({
         </>
       )}
 
-      {/* Target concealment (#262) — manual flag on attacks. Picking Concealed
-          (DC 5) or Hidden (DC 11) injects a flat check below; concealment isn't
-          in the targeting payload, so the attacker sets it here. */}
-      {isAttack && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Target Concealment</h3>
-            <div className="uam-conceal-row" role="radiogroup" aria-label="Target concealment">
-              {CONCEALMENT_LEVELS.map((lvl) => (
-                <button
-                  key={lvl.id}
-                  type="button"
-                  className={`uam-conceal-btn${concealment === lvl.id ? ' uam-conceal-btn--active' : ''}`}
-                  aria-pressed={concealment === lvl.id}
-                  onClick={() => {
-                    setConcealment(lvl.id);
-                    setFlatCheckRolls((cur) => { const next = { ...cur }; delete next.concealed; delete next.hidden; return next; });
-                  }}
-                >
-                  {lvl.label}{lvl.dc != null ? ` (DC ${lvl.dc})` : ''}
-                </button>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* Condition flat checks (#262) — stupefied cast / grabbed-manipulate, plus
-          a flagged concealed/hidden target. The player rolls a raw d20 per check;
-          a failed check loses the action (cost still spent). Confirm stays
-          disabled until each is entered. */}
-      {flatChecks.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Flat Check</h3>
-            {flatCheckResults.map((fc) => (
-              <div key={fc.id} className="uam-flatcheck-row">
-                <div className="uam-flatcheck-head">
-                  <span className="uam-flatcheck-label">{fc.label} — DC {fc.dc}</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="20"
-                    className="uam-flatcheck-input"
-                    aria-label={`${fc.label} flat check d20`}
-                    value={flatCheckRolls[fc.id] ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === '' || (/^\d+$/.test(v) && +v >= 1 && +v <= 20)) {
-                        setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: v }));
-                      }
-                    }}
-                  />
-                  {fc.d20 != null && (
-                    <span className={`uam-flatcheck-result uam-flatcheck-result--${fc.passed ? 'pass' : 'fail'}`}>
-                      {fc.passed ? 'Pass' : `Fail — ${fc.fail}`}
-                    </span>
-                  )}
-                </div>
-                <p className="uam-flatcheck-hint">{fc.reason}</p>
-              </div>
-            ))}
-          </section>
-        </>
-      )}
+      {/* Target concealment + condition flat checks (#262) */}
+      {flatCheckSection.section}
 
       {/* Blood magic (#227) — bloodline spell cast: pick the rider */}
-      {bloodMagicActive && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">
-              Blood Magic{character.spellcasting?.bloodline?.name ? ` (${character.spellcasting.bloodline.name})` : ''}
-            </h3>
-            <div className="uam-variant-note">{character.spellcasting.bloodline.blood_magic}</div>
-            <div className="uam-cost-options" role="radiogroup" aria-label="Blood magic choice">
-              {BLOOD_MAGIC_OPTIONS.map((opt) => (
-                <label key={opt.id} className="uam-cost-option">
-                  <input
-                    type="radio"
-                    name="blood-magic-choice"
-                    checked={bloodMagicChoice === opt.id}
-                    onChange={() => setBloodMagicChoice(opt.id)}
-                  />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
+      {bloodMagicSection.section}
 
       {/* Rider choice (#225) — either/or rider picked at use time */}
-      {riderChoice && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">{riderChoice.prompt || 'Rider'}</h3>
-            <div className="uam-cost-options" role="radiogroup" aria-label="Rider choice">
-              {riderChoice.options.map((opt) => {
-                const available = riderAvailable(opt);
-                return (
-                  <label
-                    key={opt.id}
-                    className={`uam-cost-option${!available ? ' uam-cost-option--disabled' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="rider-choice"
-                      disabled={!available}
-                      checked={selectedRider?.id === opt.id}
-                      onChange={() => setRiderChoiceId(opt.id)}
-                    />
-                    {opt.label}
-                  </label>
-                );
-              })}
-            </div>
-            {selectedRider?.note && <div className="uam-variant-note">{selectedRider.note}</div>}
-          </section>
-        </>
-      )}
+      {riderChoiceSection.section}
 
-      {eligibleCatalysts.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Catalysts</h3>
-            <div className="uam-cost-options" role="group" aria-label="Catalysts">
-              {eligibleCatalysts.map((cat) => {
-                const uid = itemUidOf(cat);
-                const extra = catalystAddActions(cat);
-                return (
-                  <label key={uid} className="uam-cost-option">
-                    <input
-                      type="checkbox"
-                      data-testid={`catalyst-${uid}`}
-                      checked={catalystIds.includes(uid)}
-                      onChange={() => toggleCatalyst(uid)}
-                    />
-                    {cat.name}{extra ? ` (+${extra} action${extra === 1 ? '' : 's'})` : ''}
-                  </label>
-                );
-              })}
-            </div>
-            {selectedCatalysts.map((cat) => (
-              <div key={itemUidOf(cat)} className="uam-variant-note">{catalystSummary(cat)}</div>
-            ))}
-          </section>
-        </>
-      )}
+      {/* Catalysts (#1209) — opt-in adds for this cast */}
+      {catalystSection.section}
 
       {hasEffects && (
         <>
