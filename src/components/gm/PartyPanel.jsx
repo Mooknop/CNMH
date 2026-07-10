@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import HpFx from '../shared/HpFx';
 import { useFxBloom } from '../../hooks/useFxChannel';
+import Flourish from '../fx/Flourish';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -182,6 +183,9 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
       style={{ '--x-theme': color, '--hp-pct': `${pct}%` }}
       data-testid={`party-row-${character.id}`}
     >
+      {/* Signature flourish (#1347) — overlays the whole row (slice-cropped);
+          unknown/missing id renders nothing and the accent bloom carries. */}
+      {bloom && <Flourish id={bloom.flourish} />}
       <HpFx hp={hp} className="gm-party-head">
         <span className="gm-party-name">{character.name}</span>
         <div className="gm-party-bar" aria-hidden="true">

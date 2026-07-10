@@ -37,4 +37,19 @@ describe('CharacterCard — ability-use bloom (#1346)', () => {
     act(() => vi.advanceTimersByTime(FX_FLASH_MS));
     expect(container.querySelector('[data-fx="bloom"]')).toBeNull();
   });
+
+  it('renders the signature flourish overlay when the event carries one, and clears it (#1347)', () => {
+    const { session, container } = renderWithProviders(
+      <CharacterCard character={IZZY} accent="#c03030" />
+    );
+    act(() =>
+      session.push('global', APP.FX, [
+        { id: 'fx-1', kind: 'ability', charId: 'izzy', ts: Date.now(), flourish: 'composition-burst' },
+      ])
+    );
+    expect(container.querySelector('[data-flourish="composition-burst"]')).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(FX_FLASH_MS));
+    expect(container.querySelector('.fx-flourish')).toBeNull();
+  });
 });

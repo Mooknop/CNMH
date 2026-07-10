@@ -87,7 +87,9 @@ export const useBloodMagicSection = ({ character, ability, effectiveVerb, chainS
     </>
   ) : null;
 
-  return { section, applyOnConfirm };
+  // `active` mirrors the render-time gate (the section the caster can see) —
+  // the flourish resolver (#1347) keys Jade's loud variant off it at confirm.
+  return { section, applyOnConfirm, active: bloodMagicActive };
 };
 
 export default useBloodMagicSection;

@@ -13,6 +13,7 @@
 // the remount is free.
 import React from 'react';
 import { useFxBloom } from '../../../hooks/useFxChannel';
+import Flourish from '../../fx/Flourish';
 
 const monogramOf = (name) => (name || '?').trim().charAt(0).toUpperCase() || '?';
 
@@ -40,6 +41,8 @@ const StagePortrait = ({ src, name, imagePosition, className = '', charId = null
           {monogramOf(name)}
         </span>
       )}
+      {/* Signature flourish (#1347); unknown/missing id → plain bloom only. */}
+      {bloom && <Flourish id={bloom.flourish} />}
     </div>
   );
 };

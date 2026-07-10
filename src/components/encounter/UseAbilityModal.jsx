@@ -54,6 +54,7 @@ import {
   applyPostRollEffects,
 } from '../../utils/confirmAppliers';
 import { buildAttackToggles } from '../../utils/attackToggles';
+import { flourishFor } from '../../utils/flourishFor';
 import { buildStrikeRangeGating } from '../../utils/strikeRangeGating';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
@@ -402,8 +403,13 @@ const UseAbilityModal = ({
   const handleConfirm = () => {
     // Juice (#1346): every path through this handler is a committed use, so the
     // one emit here covers all of them — early returns, catalysts, action-folds.
-    // Fire-and-forget: nothing downstream gates on it.
-    emitFx({ kind: 'ability', charId: character.id });
+    // Fire-and-forget: nothing downstream gates on it. Signature moments carry
+    // a flourish hint (#1347); the conditional spread keeps a no-match emit
+    // free of an undefined field on the wire.
+    const flourish = flourishFor({
+      ability, castSource, character, bloodMagicActive: bloodMagicSection.active,
+    });
+    emitFx({ kind: 'ability', charId: character.id, ...(flourish ? { flourish } : {}) });
 
     // Veracious Spell (#967 R7): every path through this handler is a committed
     // use, so any cast — even one that fizzles on a flat check downstream —

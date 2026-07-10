@@ -125,6 +125,22 @@ describe('UseAbilityModal — blood magic (direct cast)', () => {
     render(<UseAbilityModal {...props} character={noBloodline} ability={forceBarrage} verb="Cast" />);
     expect(screen.queryByText(/Blood Magic/)).toBeNull();
   });
+
+  it('the fx emit escalates to blood-swirl-loud when slot cast + rider land together (#1347)', () => {
+    const sorcJade = { ...jade, class: 'Sorcerer' };
+    render(
+      <UseAbilityModal {...props} character={sorcJade} ability={forceBarrage} verb="Cast" castSource="slot" />
+    );
+    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    const fxWrites = mockSendUpdate.mock.calls.filter(([, key]) => key === 'fx');
+    expect(fxWrites).toHaveLength(1);
+    const buffer = fxWrites[0][2];
+    expect(buffer.at(-1)).toMatchObject({
+      kind: 'ability',
+      charId: 'JadeInferno',
+      flourish: 'blood-swirl-loud',
+    });
+  });
 });
 
 describe('UseAbilityModal — blood magic (chained cast)', () => {

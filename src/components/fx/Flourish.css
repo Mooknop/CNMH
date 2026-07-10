@@ -1,0 +1,192 @@
+/*
+ * ============================================================
+ *  SIGNATURE FLOURISHES (#1347, epic #1343) — bespoke one-shot
+ *  overlays for each PC's signature moments. House rules apply:
+ *    - every effect ≤ ~600ms including stagger, fire-and-forget
+ *    - compositor-only properties: transform / opacity / filter
+ *    - per-element stagger (angle/delay) lives here as
+ *      nth-of-type custom properties, keeping the JSX style-free
+ *    - prefers-reduced-motion kills everything (guard at bottom;
+ *      Flourish.jsx also skips rendering under it)
+ *  Ported 1:1 from the tuned scoping preview (flourish.html).
+ * ============================================================
+ */
+
+.fx-flourish {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.fx-flourish svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+/* Centered animated groups rotate/scale about their own box, not the SVG origin. */
+.fx-flourish .flx-ctr {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* — shadow-tendrils (Ashka) — wisps curl up, dissipate. 420ms + 60ms×3 stagger */
+.flx-wisp {
+  fill: none;
+  stroke: #7c3aed;
+  stroke-linecap: round;
+  opacity: 0;
+  filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.7));
+  transform-origin: 50% 100%;
+  animation: flx-tendril 420ms cubic-bezier(0.3, 0.6, 0.4, 1) var(--d, 0ms) forwards;
+}
+.flx-wisp-dk { stroke: #4c1d95; }
+.flx-wisp:nth-of-type(1) { --d: 0ms;   --sw: -3deg; }
+.flx-wisp:nth-of-type(2) { --d: 60ms;  --sw: 2deg; }
+.flx-wisp:nth-of-type(3) { --d: 120ms; --sw: -2deg; }
+.flx-wisp:nth-of-type(4) { --d: 180ms; --sw: 3deg; }
+@keyframes flx-tendril {
+  0%   { opacity: 0; transform: translateY(16px) scaleY(0.45); }
+  30%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-7px) scaleY(1.08) rotate(var(--sw, 0deg)); }
+}
+
+/* — dragon-lightning (Blu) — electric-blue staggered flicker. 320ms + 90ms×2 */
+.flx-bolt {
+  opacity: 0;
+  animation: flx-bolt 320ms steps(1, end) var(--d, 0ms) forwards;
+}
+.flx-bolt:nth-of-type(1) { --d: 0ms; }
+.flx-bolt:nth-of-type(2) { --d: 90ms; }
+.flx-bolt:nth-of-type(3) { --d: 180ms; }
+.flx-bolt-glow {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.9));
+}
+.flx-bolt-core {
+  fill: none;
+  stroke: #e0f2fe;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+@keyframes flx-bolt {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  30%  { opacity: 0.15; }
+  45%  { opacity: 1; }
+  78%  { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* — composition-burst (Izzy) — clef pops with overshoot, notes fly. 600ms */
+.flx-clef {
+  fill: #e9b44c;
+  filter: drop-shadow(0 0 5px rgba(233, 180, 76, 0.75));
+  animation: flx-pop 600ms cubic-bezier(0.34, 1.56, 0.5, 1) forwards;
+}
+.flx-note {
+  fill: #c084fc;
+  opacity: 0;
+  filter: drop-shadow(0 0 2px rgba(192, 132, 252, 0.7));
+  animation: flx-note 540ms cubic-bezier(0.2, 0.6, 0.4, 1) 60ms forwards;
+}
+.flx-note:nth-of-type(2) { --a: -30deg; } /* nth 1 is the clef group */
+.flx-note:nth-of-type(3) { --a: 40deg; }
+.flx-note:nth-of-type(4) { --a: 120deg; }
+.flx-note:nth-of-type(5) { --a: 200deg; }
+.flx-note:nth-of-type(6) { --a: 270deg; }
+@keyframes flx-pop {
+  0%   { opacity: 0; transform: scale(0); }
+  55%  { opacity: 1; transform: scale(1.18); }
+  75%  { transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+@keyframes flx-note {
+  0%   { opacity: 0; transform: rotate(var(--a)) translateX(5px) scale(0.5); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(calc(var(--a) + 22deg)) translateX(38px) scale(1); }
+}
+
+/* — blood-swirl (Jade) — crimson nova spin-up. 600ms.
+   Contrast recipe: bright #ff3860 core over a blurred deep glow — reads on the
+   dark shell; the drop-shadow keeps depth on light surfaces. */
+.flx-swirl-glow {
+  fill: #9f1239;
+  filter: blur(4px);
+  opacity: 0;
+  animation: flx-swirl 600ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.flx-swirl-core {
+  fill: #ff3860;
+  filter: drop-shadow(0 1px 3px rgba(127, 29, 29, 0.8));
+  opacity: 0;
+  animation: flx-swirl 600ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+@keyframes flx-swirl {
+  0%   { opacity: 0; transform: rotate(-160deg) scale(0.3); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(0deg) scale(1.05); }
+}
+/* Loud variant (repertoire cast + blood-magic rider on one confirm) */
+.flx-loud .flx-swirl-glow,
+.flx-loud .flx-swirl-core { animation-name: flx-swirl-loud; }
+.flx-shockring {
+  fill: none;
+  stroke: #ff3860;
+  stroke-width: 2.6;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px rgba(255, 56, 96, 0.8));
+  animation: flx-shockring 520ms cubic-bezier(0.2, 0.7, 0.3, 1) 60ms forwards;
+}
+@keyframes flx-swirl-loud {
+  0%   { opacity: 0; transform: rotate(-220deg) scale(0.25); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(0deg) scale(1.3); }
+}
+@keyframes flx-shockring {
+  0%   { opacity: 0; transform: scale(0.35); }
+  30%  { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
+/* — rust-bloom (Pellias) — dashed ring expands, oxide flakes tumble out. 600ms */
+.flx-rustring {
+  fill: none;
+  stroke: #c2570a;
+  stroke-width: 2.4;
+  stroke-dasharray: 6 5;
+  opacity: 0;
+  animation: flx-rustring 600ms cubic-bezier(0.25, 0.7, 0.35, 1) forwards;
+}
+.flx-flake {
+  opacity: 0;
+  filter: drop-shadow(0 0 2px rgba(194, 87, 10, 0.6));
+  animation: flx-flake 540ms cubic-bezier(0.25, 0.7, 0.4, 1) var(--d, 0ms) forwards;
+}
+/* nth-of-type counts per element type: the ring is a <circle>, so the flake
+   <g>s number 1–8 regardless of it. */
+.flx-flake:nth-of-type(1) { --a: 0deg;   --d: 0ms; }
+.flx-flake:nth-of-type(2) { --a: 47deg;  --d: 40ms; }
+.flx-flake:nth-of-type(3) { --a: 95deg;  --d: 10ms; }
+.flx-flake:nth-of-type(4) { --a: 140deg; --d: 55ms; }
+.flx-flake:nth-of-type(5) { --a: 185deg; --d: 25ms; }
+.flx-flake:nth-of-type(6) { --a: 230deg; --d: 50ms; }
+.flx-flake:nth-of-type(7) { --a: 275deg; --d: 15ms; }
+.flx-flake:nth-of-type(8) { --a: 320deg; --d: 35ms; }
+@keyframes flx-rustring {
+  0%   { opacity: 0; transform: scale(0.25); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+@keyframes flx-flake {
+  0%   { opacity: 0; transform: rotate(var(--a)) translateX(7px) rotate(0deg) scale(0.7); }
+  25%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(36px) rotate(150deg) scale(1.8); }
+}
+
+/* — House reduced-motion guard (belt; the component also skips rendering) — */
+@media (prefers-reduced-motion: reduce) {
+  .fx-flourish { display: none; }
+}
