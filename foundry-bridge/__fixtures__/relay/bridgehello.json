@@ -1,0 +1,8 @@
+{
+  "characterId": "global",
+  "value": {
+    "protocol": 1,
+    "module": "0.0.0-test",
+    "ts": 1700000000000
+  }
+}

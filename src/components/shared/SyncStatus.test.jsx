@@ -1,17 +1,27 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-
-let mockSession;
-vi.mock('../../contexts/SessionContext', () => ({
-  useSession: () => mockSession,
-}));
-
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../../test/renderWithProviders';
+import { RELAY } from '../../sync/keys';
 import SyncStatus from './SyncStatus';
 
+// A current-protocol bridge hello (#1310) — seeded as session state so the
+// live case models a healthy, handshaking bridge.
+const hello = (protocol = 1) => ({ protocol, module: '1.9.0', ts: Date.now() });
+
+const renderStatus = ({ connected, foundryConnected, bridgehello } = {}) =>
+  renderWithProviders(<SyncStatus />, {
+    session: {
+      connected,
+      foundryConnected,
+      ...(bridgehello ? { state: { global: { [RELAY.BRIDGEHELLO]: bridgehello } } } : {}),
+    },
+  });
+
+beforeEach(() => window.localStorage.clear());
+
 describe('SyncStatus', () => {
-  it('shows the live badge when DO and Foundry are both connected', () => {
-    mockSession = { connected: true, foundryConnected: true };
-    render(<SyncStatus />);
+  it('shows the live badge when DO and a current bridge are both connected', () => {
+    renderStatus({ connected: true, foundryConnected: true, bridgehello: hello() });
     const badge = screen.getByText(/Live/);
     expect(badge).toHaveClass('sync-live');
     expect(badge).toHaveAttribute('data-state', 'live');
@@ -20,8 +30,7 @@ describe('SyncStatus', () => {
   });
 
   it('shows the sandbox badge when the DO is up but Foundry is disconnected', () => {
-    mockSession = { connected: true, foundryConnected: false };
-    render(<SyncStatus />);
+    renderStatus({ connected: true, foundryConnected: false });
     const badge = screen.getByText(/Sandbox/);
     expect(badge).toHaveClass('sync-sandbox');
     expect(badge).toHaveAttribute('data-state', 'sandbox');
@@ -30,8 +39,7 @@ describe('SyncStatus', () => {
   });
 
   it('shows the offline badge when the DO link is down', () => {
-    mockSession = { connected: false, foundryConnected: false };
-    render(<SyncStatus />);
+    renderStatus({ connected: false, foundryConnected: false });
     const badge = screen.getByText(/Offline/);
     expect(badge).toHaveClass('sync-offline');
     expect(badge).toHaveAttribute('data-state', 'offline');
@@ -39,8 +47,25 @@ describe('SyncStatus', () => {
   });
 
   it('treats a downed DO as offline even if a stale Foundry flag lingers', () => {
-    mockSession = { connected: false, foundryConnected: true };
-    render(<SyncStatus />);
+    renderStatus({ connected: false, foundryConnected: true });
     expect(screen.getByText(/Offline/)).toHaveAttribute('data-state', 'offline');
+  });
+
+  it('warns when a connected bridge never said hello (pre-handshake module, #1310)', () => {
+    renderStatus({ connected: true, foundryConnected: true });
+    const badge = screen.getByText(/Bridge outdated/);
+    expect(badge).toHaveClass('sync-stale');
+    expect(badge).toHaveAttribute('data-state', 'stale');
+    expect(badge).toHaveAttribute('data-connected', 'true');
+  });
+
+  it('warns when the announced protocol predates the app minimum', () => {
+    renderStatus({ connected: true, foundryConnected: true, bridgehello: hello(0) });
+    expect(screen.getByText(/Bridge outdated/)).toHaveAttribute('data-state', 'stale');
+  });
+
+  it('an old hello never warns while Foundry is offline (sandbox wins)', () => {
+    renderStatus({ connected: true, foundryConnected: false, bridgehello: hello(0) });
+    expect(screen.getByText(/Sandbox/)).toHaveAttribute('data-state', 'sandbox');
   });
 });

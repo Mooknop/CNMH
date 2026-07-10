@@ -48,7 +48,7 @@ describe('chat-message parsing', () => {
     expect(p.feed).toHaveLength(1);
     expect(p.feed[0]).toEqual({
       n: 1, cost: 1, label: 'Longsword', detail: 'vs Foe', result: 'Hit',
-      type: 'attack-roll', state: 'done',
+      type: 'attack-roll', ts: expect.any(Number), state: 'done',
     });
     expect(p.spent).toBe(1);
   });
@@ -157,6 +157,33 @@ describe('action economy', () => {
     expect(p.feed).toHaveLength(2);
     expect(p.feed[1]).toMatchObject({ type: 'damage-roll', targetActorId: 'actor-kestrel' });
     expect(p.feed[1].cost).toBeUndefined();
+  });
+
+  test('a damage roll with readable instances carries damageTotal + typed instances (#1355)', () => {
+    startCombat();
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'damage-roll', itemName: 'Flaming Longsword',
+      targetName: 'Kestrel', targetActorId: 'actor-kestrel',
+      damageInstances: [{ type: 'piercing', total: 13 }, { type: 'fire', total: 4 }],
+    }));
+    const entry = lastPayload().feed[0];
+    expect(entry.damageTotal).toBe(17);
+    expect(entry.damageInstances).toEqual([
+      { amount: 13, type: 'piercing' },
+      { amount: 4, type: 'fire' },
+    ]);
+    expect(typeof entry.ts).toBe('number');
+  });
+
+  test('a damage roll without readable rolls degrades to the pre-#1355 shape', () => {
+    startCombat();
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'damage-roll', itemName: 'Longsword',
+      targetActorId: 'actor-kestrel',
+    }));
+    const entry = lastPayload().feed[0];
+    expect(entry.damageTotal).toBeUndefined();
+    expect(entry.damageInstances).toBeUndefined();
   });
 
   test('a saving throw adds an entry but costs nothing', () => {

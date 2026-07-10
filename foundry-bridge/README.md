@@ -52,6 +52,7 @@ channel, add its token there too so neither side hand-writes the string.
 
 | Key | Direction | charId | Payload |
 | --- | --- | --- | --- |
+| `bridgehello` | bridge → app | `global` | `{ protocol, module, ts }` — protocol handshake (#1310), pushed on every connect. `protocol` = `PROTOCOL_VERSION` from `syncKeys.js` (bump on ANY relay payload change); `module` = installed module version. The app warns the table (`SyncStatus` "Bridge outdated") when a connected bridge's protocol predates its minimum — or when no hello arrives at all |
 | `roster` | bridge → app | `global` | `[{ actorId, name, speed }]` — PC actor roster, pushed on connect and actor create/delete so the app can resolve charId → token before any combat |
 | `rosterreq` | app → bridge | `global` | _(no payload)_ — request a fresh `roster` push (reconnect) |
 | `actormap` | app → bridge | `global` | `{ [foundryActorId]: charId }` |
@@ -59,7 +60,7 @@ channel, add its token there too so neither side hand-writes the string.
 | `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
 | `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative, statistic? }], rollNpcs }` — batch-write PC initiatives (`setMultipleInitiatives`), roll NPCs, then `startCombat` (idempotent; no-op once started) |
 | `initroll` | app → bridge | charId | `{ d20, mod, total, skill, ts }` — a player's setup-phase initiative roll; survives `encounter` overwrites. The bridge tallies these against the PC combatant set and auto-runs `initcommit` once every expected PC has rolled |
-| `actorfeed` | bridge → app | `global` | `{ entryId, actions, spent, reaction, feed:[{ n, cost?, label, detail?, result?, tone?, type, attackRange?, targetActorId?, state }] }` — the active combatant's chat-derived action feed + per-turn economy; clears and re-keys on every turn change (#472b) |
+| `actorfeed` | bridge → app | `global` | `{ entryId, actions, spent, reaction, feed:[{ n, cost?, label, detail?, result?, tone?, type, attackRange?, targetActorId?, damageTotal?, damageInstances?, ts, state }] }` — the active combatant's chat-derived action feed + per-turn economy; clears and re-keys on every turn change (#472b). `damage-roll` entries carry `damageTotal` + `damageInstances:[{ amount, type }]` off the PF2e `DamageRoll` (#1355) so the app's taken-damage juice can type an hp drop; `ts` bounds that correlation |
 | `hp` | both | charId | `{ current, max, temp, dying, wounded, doomed }` |
 | `conditions` | bridge → app | charId | `[{ id, value }]` |
 | `heropoints` | both | charId | `number` |

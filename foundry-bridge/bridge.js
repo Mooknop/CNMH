@@ -24,8 +24,8 @@ import { initPositions, pushPositions } from './positions.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
-import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
-import { RELAY } from './syncKeys.js';
+import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
+import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -89,6 +89,19 @@ Hooks.once('ready', () => {
   connect();
 });
 
+// Protocol handshake (#1310): announce the wire-protocol version + module
+// version on every connect. The app compares against its minimum and shows a
+// GM-facing "bridge outdated" warning instead of letting a stale module
+// degrade silently. Persisted like any synced key, so gate reads on live
+// Foundry presence app-side.
+function pushHello() {
+  sendUpdate('global', RELAY.BRIDGEHELLO, {
+    protocol: PROTOCOL_VERSION,
+    module: getModuleVersion(MODULE_ID),
+    ts: Date.now(),
+  });
+}
+
 // Push the PC roster once connected so the app can resolve charId → token
 // even before a combat has run (exploration movement depends on actorMap).
 function pushRoster() {
@@ -120,6 +133,7 @@ function connect() {
     console.log('CNMH Bridge | Connected to session relay');
     clearTimeout(_reconnTimer);
     schedulePing();
+    pushHello();
     pushRoster();
     pushSummonPool();
     pushMinionActors();

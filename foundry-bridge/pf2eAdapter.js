@@ -267,7 +267,15 @@ export function getChatMessageContext(message) {
     ? (item?.isRanged === true ? 'ranged' : item?.isMelee === true ? 'melee' : null)
     : null;
 
+  // Typed damage read-out (#1355): a damage-roll message's DamageRoll exposes
+  // per-type instances — the same IWR-relevant typing the app relays outward on
+  // cnmh_dmgapply_global. Surfaced so the actor feed can carry real numbers and
+  // types for the app's taken-damage juice. Messages without readable rolls
+  // degrade to the pre-#1355 shape (no damage fields).
+  const damage = context.type === 'damage-roll' ? damageRollInfo(message) : null;
+
   return {
+    ...(damage ?? {}),
     type:       context.type,                 // attack-roll|spell-cast|skill-check|saving-throw|damage-roll|…
     outcome:    context.outcome ?? null,       // degree of success for checks
     actorId:    actor?.id ?? message.speaker?.actor ?? null,
@@ -281,6 +289,32 @@ export function getChatMessageContext(message) {
     targetActorId: target?.actor?.id ?? null,              // who the action targets (damage/attack)
     targetName:  target?.token?.name ?? target?.actor?.name ?? null,
   };
+}
+
+// Per-type totals off a damage-roll message's rolls, or null when nothing is
+// readable. Zero/negative instances are dropped; `type` may be '' (untyped).
+//
+// v14 MIGRATION: DamageRoll#instances and DamageInstance#type/#total are stable
+// getters in PF2e 6.x; re-verify if PF2e reworks its roll classes.
+function damageRollInfo(message) {
+  const rolls = Array.isArray(message?.rolls) ? message.rolls : [];
+  const instances = [];
+  let total = 0;
+  for (const roll of rolls) {
+    for (const inst of roll?.instances ?? []) {
+      const amount = Number(inst?.total) || 0;
+      if (amount <= 0) continue;
+      instances.push({ amount, type: inst?.type || '' });
+      total += amount;
+    }
+  }
+  return instances.length ? { damageTotal: total, damageInstances: instances } : null;
+}
+
+// The installed version of a module (the bridge reads its own for the
+// protocol hello, #1310). Null outside Foundry / before modules are ready.
+export function getModuleVersion(moduleId) {
+  return game.modules?.get?.(moduleId)?.version ?? null;
 }
 
 export function getActiveCombat() {

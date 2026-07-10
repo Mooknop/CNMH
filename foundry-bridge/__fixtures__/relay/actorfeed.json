@@ -13,6 +13,27 @@
         "detail": "vs Foe",
         "result": "Hit",
         "type": "attack-roll",
+        "ts": 1700000000000,
+        "state": "done"
+      },
+      {
+        "n": 2,
+        "label": "Longsword",
+        "detail": "vs Foe",
+        "type": "damage-roll",
+        "targetActorId": "actor-foe",
+        "damageTotal": 12,
+        "damageInstances": [
+          {
+            "amount": 9,
+            "type": "slashing"
+          },
+          {
+            "amount": 3,
+            "type": "fire"
+          }
+        ],
+        "ts": 1700000000000,
         "state": "done"
       }
     ]

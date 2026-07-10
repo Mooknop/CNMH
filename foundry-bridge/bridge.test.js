@@ -7,6 +7,7 @@
 // foundryMock is replaced with a tracking subclass so we can inspect sent data.
 
 import { makeActor, makeGame } from './test/foundryMock.js';
+import { PROTOCOL_VERSION } from './syncKeys.js';
 
 // --- helpers ---------------------------------------------------------------
 
@@ -108,5 +109,19 @@ describe('pushRoster', () => {
     const rosterMsg = msgs.find((m) => m.key === 'roster');
 
     expect(rosterMsg).toMatchObject({ type: 'UPDATE', characterId: 'global', key: 'roster' });
+  });
+});
+
+describe('pushHello (#1310)', () => {
+  test('connect announces protocol + module version on cnmh_bridgehello_global', () => {
+    const actor = makePlayerActor({ id: 'actor-x', speed: 25 });
+
+    const msgs = loadAndPushRoster([actor]);
+    const hello = msgs.find((m) => m.key === 'bridgehello');
+
+    expect(hello).toMatchObject({ type: 'UPDATE', characterId: 'global', key: 'bridgehello' });
+    expect(hello.value.protocol).toBe(PROTOCOL_VERSION);
+    expect(hello.value.module).toBe('0.0.0-test'); // makeGame's default module registry
+    expect(typeof hello.value.ts).toBe('number');
   });
 });
