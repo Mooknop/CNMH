@@ -237,6 +237,18 @@
     linear-gradient(135deg, color-mix(in srgb, var(--ps-ware-accent, var(--gold-mid)) 30%, transparent), transparent);
   border-bottom: 1px solid var(--ps-line-soft);
 }
+/* Rune crest (#1361): a rune-marked, imageless ware shows its tinted
+   Thassilonian rune in the crest slot — same case/crest container, rune
+   instead of the first letter. Sized per context below. */
+.ps-crest-rune .thassilonian-rune {
+  width: 42px;
+  height: 42px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+.ps-preview-crest.ps-crest-rune .thassilonian-rune {
+  width: 46px;
+  height: 46px;
+}
 .ps-tile-img {
   display: block; width: 100%; height: 54px; object-fit: cover;
   /* --ps-img-pos bridges a ware's stored crop focus (imagePosition). */

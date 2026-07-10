@@ -28,6 +28,8 @@ import { useShopCheckout } from '../../hooks/useShopCheckout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import ItemActivations from '../shared/ItemActivations';
+import ThassilonianRune from '../shared/ThassilonianRune';
+import { runeForName } from '../../utils/thassilonianRunes';
 import RuneMechanics from '../shared/RuneMechanics';
 import SpellMechanics from '../spells/SpellMechanics';
 import './ShopStorefront.css';
@@ -74,19 +76,29 @@ const topTraits = (groups, limit = 8) => {
 };
 
 // Ware crest: the item's R2 image when it has one (mirrors the inventory
-// ItemModal art tile), else the typographic first-letter fallback (#881).
-const WareCrest = ({ group, imgClass, caseClass }) =>
-  group.image ? (
-    <img
-      className={imgClass}
-      src={`/api/images/${group.image}`}
-      alt=""
-      aria-hidden="true"
-      style={group.imagePosition ? { '--ps-img-pos': `${group.imagePosition.x}% ${group.imagePosition.y}%` } : undefined}
-    />
-  ) : (
-    <span className={caseClass} aria-hidden="true">{firstLetter(group.name)}</span>
-  );
+// ItemModal art tile), else its tinted Thassilonian rune (#1361 — the tattoos),
+// else the typographic first-letter fallback (#881).
+const WareCrest = ({ group, imgClass, caseClass }) => {
+  if (group.image) {
+    return (
+      <img
+        className={imgClass}
+        src={`/api/images/${group.image}`}
+        alt=""
+        aria-hidden="true"
+        style={group.imagePosition ? { '--ps-img-pos': `${group.imagePosition.x}% ${group.imagePosition.y}%` } : undefined}
+      />
+    );
+  }
+  if (runeForName(group.thassilonianRune)) {
+    return (
+      <span className={`${caseClass} ps-crest-rune`} aria-hidden="true">
+        <ThassilonianRune name={group.thassilonianRune} tint />
+      </span>
+    );
+  }
+  return <span className={caseClass} aria-hidden="true">{firstLetter(group.name)}</span>;
+};
 
 // Tile inner content, shared by the draggable (town) and static (read-only)
 // tiles. A Sale Shelf ware (#1137) wears a "Sale" ribbon and shows its full

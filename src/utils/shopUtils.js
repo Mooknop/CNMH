@@ -828,6 +828,9 @@ export function groupWares(resolvedWares) {
       // base item's art, so the headline crest renders it when present.
       image: head.image,
       imagePosition: head.imagePosition,
+      // Rune-marked gear (#1361): the crest renders the item's Thassilonian
+      // rune when it has no image, same precedence as the inventory IconTile.
+      thassilonianRune: head.thassilonianRune,
       forms,
       from: Number(head.price) || 0,
       formCount: forms.length,
