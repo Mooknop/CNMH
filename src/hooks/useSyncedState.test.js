@@ -55,6 +55,20 @@ describe('useSyncedState', () => {
     expect(mockSession.sendUpdate).toHaveBeenLastCalledWith('IzzyUncut', 'focus', 2, { force: false });
   });
 
+  it('adopts server state that lands in the render→subscribe gap (FULL_STATE race)', () => {
+    // FULL_STATE can arrive after computeInitial reads the (still empty) store
+    // but before the subscribe effect runs — the notification is missed, so
+    // without the effect's re-read this instance would stay frozen at
+    // initialValue forever while later mounts of the same key see the value
+    // (the familiar-maneuvers E2E flake). Simulate: store empty on the render
+    // read, populated by the effect's read.
+    let reads = 0;
+    mockSession.getState = () => (reads++ === 0 ? undefined : { active: true });
+    const { result } = renderHook(() => useSyncedState('cnmh_encounter_global', { active: false }));
+    expect(result.current[0]).toEqual({ active: true });
+    expect(JSON.parse(localStorage.getItem('cnmh_encounter_global'))).toEqual({ active: true });
+  });
+
   it('applies incoming subscribed updates and caches them locally', () => {
     let captured;
     mockSession.subscribe = vi.fn((c, t, cb) => { captured = cb; return vi.fn(); });
