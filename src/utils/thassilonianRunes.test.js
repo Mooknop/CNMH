@@ -6,11 +6,11 @@ import {
 } from './thassilonianRunes';
 
 describe('THASSILONIAN_RUNES', () => {
-  it('holds all seven sins and seven virtues', () => {
+  it('holds all eight sins and eight virtues', () => {
     const names = Object.keys(THASSILONIAN_RUNES);
-    expect(names).toHaveLength(14);
-    expect(names.filter((n) => THASSILONIAN_RUNES[n].kind === 'sin')).toHaveLength(7);
-    expect(names.filter((n) => THASSILONIAN_RUNES[n].kind === 'virtue')).toHaveLength(7);
+    expect(names).toHaveLength(16);
+    expect(names.filter((n) => THASSILONIAN_RUNES[n].kind === 'sin')).toHaveLength(8);
+    expect(names.filter((n) => THASSILONIAN_RUNES[n].kind === 'virtue')).toHaveLength(8);
   });
 
   it('gives every rune a label and a non-trivial path', () => {
@@ -22,7 +22,7 @@ describe('THASSILONIAN_RUNES', () => {
   });
 
   it('opposes links are symmetric and match SIN_VIRTUE_PAIRS', () => {
-    expect(SIN_VIRTUE_PAIRS).toHaveLength(7);
+    expect(SIN_VIRTUE_PAIRS).toHaveLength(8);
     for (const [sin, virtue] of SIN_VIRTUE_PAIRS) {
       expect(THASSILONIAN_RUNES[sin].kind).toBe('sin');
       expect(THASSILONIAN_RUNES[virtue].kind).toBe('virtue');
@@ -31,10 +31,12 @@ describe('THASSILONIAN_RUNES', () => {
     }
   });
 
-  it('every sin carries a school of magic', () => {
+  it('every classical sin carries a school of magic', () => {
     for (const [sin] of SIN_VIRTUE_PAIRS) {
+      if (sin === 'vainglory') continue; // homebrew eighth sin — no Thassilonian school
       expect(THASSILONIAN_RUNES[sin].school, sin).toBeTruthy();
     }
+    expect(THASSILONIAN_RUNES.vainglory.school).toBeUndefined();
   });
 });
 

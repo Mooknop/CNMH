@@ -1,12 +1,14 @@
 // Thassilonian sin/virtue runes — original hand-drawn calligraphic glyphs
 // evoking the seven rune motifs of ancient Thassilon (Pathfinder lore): the
-// seven sins and the seven virtues of rule they were corrupted from. Each
+// seven sins and the seven virtues of rule they were corrupted from — plus
+// the campaign's homebrew eighth pair, vainglory/foresight. Each
 // entry is a single filled path in a 100×100 viewBox, rendered by
 // ThassilonianRune with `fill: currentColor` (and `fill-rule: evenodd` — the
 // ring/outline glyphs rely on it) so CSS drives color like every other glyph.
 //
-// `opposes` links each sin to its counterpart virtue and vice versa; sins also
-// carry their associated Thassilonian school of magic.
+// `opposes` links each sin to its counterpart virtue and vice versa; the seven
+// classical sins also carry their associated Thassilonian school of magic
+// (vainglory, being homebrew, has none).
 
 export const THASSILONIAN_RUNES = {
   // ---- Sins ----
@@ -59,6 +61,15 @@ export const THASSILONIAN_RUNES = {
     school: 'evocation',
     d: 'M14 22 L40 14 L33 24 L38 26 C31 36 26 46 24 58 C22 46 23 36 27 26 L20 29 Z M46 30 L72 22 L65 32 L70 34 C63 44 58 54 56 66 C54 54 55 44 59 34 L52 37 Z',
   },
+  // A circle bisecting seven crescents arranged equidistantly, each crescent
+  // laid perpendicular to the ring's stroke (the evenodd overlap knocks out
+  // the crossings, so the ring visibly passes through every crescent).
+  vainglory: {
+    label: 'Vainglory',
+    kind: 'sin',
+    opposes: 'foresight',
+    d: 'M50 16 a34 34 0 1 0 0.01 0 Z M50 21 a29 29 0 1 1 -0.01 0 Z M50 29.5 A11.22 11.22 0 0 0 50 7.5 A19.04 19.04 0 0 1 50 29.5 Z M66.03 37.22 A11.22 11.22 0 0 0 83.23 23.5 A19.04 19.04 0 0 1 66.03 37.22 Z M69.99 54.56 A11.22 11.22 0 0 0 91.43 59.46 A19.04 19.04 0 0 1 69.99 54.56 Z M58.89 68.47 A11.22 11.22 0 0 0 68.44 88.29 A19.04 19.04 0 0 1 58.89 68.47 Z M41.11 68.47 A11.22 11.22 0 0 0 31.56 88.29 A19.04 19.04 0 0 1 41.11 68.47 Z M30.01 54.56 A11.22 11.22 0 0 0 8.57 59.46 A19.04 19.04 0 0 1 30.01 54.56 Z M33.97 37.22 A11.22 11.22 0 0 0 16.77 23.5 A19.04 19.04 0 0 1 33.97 37.22 Z',
+  },
 
   // ---- Virtues ----
   love: {
@@ -103,6 +114,14 @@ export const THASSILONIAN_RUNES = {
     opposes: 'wrath',
     d: 'M50 10 C64 26 74 44 74 54 C74 68 64 80 50 90 C36 80 26 68 26 54 C26 44 36 26 50 10 Z M50 20 C60 32 68 46 68 54 C68 64 60 74 50 82 C40 74 32 64 32 54 C32 46 40 32 50 20 Z M47 36 L53 36 L54 64 L46 64 Z M50 26 a3.5 3.5 0 1 1 -0.1 0.01 Z',
   },
+  // An eye-sun rising over a horizon arc, pupil and rays swept toward what
+  // is coming.
+  foresight: {
+    label: 'Foresight',
+    kind: 'virtue',
+    opposes: 'vainglory',
+    d: 'M12 74 A58.6 58.6 0 0 1 88 74 A94.3 94.3 0 0 0 12 74 Z M50 24 a15 15 0 1 0 0.01 0 Z M50 29 a10 10 0 1 1 -0.01 0 Z M53 34.5 a4.5 4.5 0 1 1 -0.1 0.01 Z M61.3 8 L58.9 22 L54.2 20.3 Z M75.4 21.2 L66.2 30.8 L63.3 26.6 Z M42 9 L47.8 21 L42.9 22.4 Z',
+  },
 };
 
 // Sin/virtue counterpart pairs, in the traditional order.
@@ -114,6 +133,7 @@ export const SIN_VIRTUE_PAIRS = [
   ['gluttony', 'temperance'],
   ['pride', 'humility'],
   ['wrath', 'kindness'],
+  ['vainglory', 'foresight'],
 ];
 
 /** The rune entry for a name (case-insensitive), or null. */
