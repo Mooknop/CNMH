@@ -62,14 +62,38 @@ export const useSyncedState = (key, initialValue, options) => {
   }
   latest.current = current;
 
+  // Which key the render→subscribe gap-read below has already run for. Once
+  // per key only: after that the live subscription covers every change, and
+  // re-reading on later effect re-runs would loop forever under test mocks
+  // that rebuild the session per render AND return a fresh object per
+  // getState call (adopt → re-render → adopt …).
+  const gapRead = useRef(null);
+
   useEffect(() => {
     if (!synced) return undefined;
-    return subscribe(characterId, stateType, (incoming) => {
+    const unsubscribe = subscribe(characterId, stateType, (incoming) => {
       latest.current = incoming;
       setValue(incoming);
       writeLocal(key, incoming);
     });
-  }, [synced, characterId, stateType, key, subscribe]);
+    // Close the render→subscribe gap: FULL_STATE (or a peer UPDATE) that lands
+    // after computeInitial ran but before this effect subscribed would
+    // otherwise be missed forever — this instance stays frozen at initialValue
+    // while later-mounted consumers of the same key read the store fresh (the
+    // familiar-maneuvers E2E flake: an always-mounted modal's useEncounter
+    // never saw the seeded encounter). Safe against clobbering local writes:
+    // sendUpdate keeps the serverState cache current too.
+    if (gapRead.current !== key) {
+      gapRead.current = key;
+      const server = getState(characterId, stateType);
+      if (server !== undefined && server !== latest.current) {
+        latest.current = server;
+        setValue(server);
+        writeLocal(key, server);
+      }
+    }
+    return unsubscribe;
+  }, [synced, characterId, stateType, key, subscribe, getState]);
 
   const setAndSync = useCallback((updater) => {
     // Offline sandbox (#553): when the DO is up but Foundry isn't, synced
