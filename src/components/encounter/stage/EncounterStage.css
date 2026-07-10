@@ -4,6 +4,8 @@
    (--d-fail-*) — no new color tokens. Per-character accent rides --color-theme. */
 
 .stage {
+  /* relative: anchors the damage-juice overlay (#1354) */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;

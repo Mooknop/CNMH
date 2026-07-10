@@ -24,6 +24,7 @@ import StagePortrait from './StagePortrait';
 import ReactorAvatars from './ReactorAvatars';
 import ActorFeed from './ActorFeed';
 import ArmedReactionBar from './ArmedReactionBar';
+import StageDamageJuice from './StageDamageJuice';
 import UseAbilityModal from '../UseAbilityModal';
 import './EncounterStage.css';
 
@@ -137,6 +138,14 @@ const EncounterStage = ({ character, characterColor }) => {
 
       {/* Armed reactions — your reactions, your call (#474). */}
       <ArmedReactionBar character={character} themeColor={characterColor} />
+
+      {/* Damage juice overlay (#1354) — dealt/taken bursts, absolutely
+          positioned over the stage; never intercepts a tap. */}
+      <StageDamageJuice
+        order={order}
+        characters={characters}
+        viewerCharId={character?.id}
+      />
 
       {/* Inline cue cards resolve through the same modal as the armed footer. */}
       {using && (
