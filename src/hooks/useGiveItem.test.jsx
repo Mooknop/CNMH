@@ -79,6 +79,15 @@ describe('useGiveItem', () => {
     ]);
   });
 
+  it('refuses body-bound gear (a tattoo) without touching any overlay', () => {
+    const { result } = renderHook(() => useGiveItem('a'));
+    const tattoo = { uid: 't1', name: 'Carnasia Tattoo', state: 'worn', traits: ['Invested', 'Magical', 'Tattoo'] };
+    expect(result.current.give('b', tattoo)).toBe(false);
+    expect(mockSendUpdate).not.toHaveBeenCalled();
+    expect(mockSetRemoved).not.toHaveBeenCalled();
+    expect(mockSetAcquired).not.toHaveBeenCalled();
+  });
+
   it('masks an authored item via the removed overlay', () => {
     const { result } = renderHook(() => useGiveItem('a'));
     result.current.give('b', authored);

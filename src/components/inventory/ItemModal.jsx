@@ -10,7 +10,7 @@ import CastSpellModal from '../encounter/CastSpellModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
-import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
+import { ITEM_STATE_LABEL, isHeldState, isBodyBound, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { isSpellgun } from '../../utils/spellgun';
 import { isDragonbreath } from '../../utils/dragonbreath';
@@ -414,8 +414,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const act = (fn) => { fn(); onClose(); };
 
   // Attunement is slot-driven (drag into the Attuned area); the modal only
-  // reflects the status as a chip.
-  const invested = isInvested(uid);
+  // reflects the status as a chip. Body-bound gear (tattoos) is permanently
+  // invested — the chip shows regardless of the attunement overlay.
+  const bodyBound = isBodyBound(item);
+  const invested = isInvested(uid) || bodyBound;
 
   // ── Item modes (#1093) ──
   // The grid hands us the effective entry (mode already applied), so
@@ -444,7 +446,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     uid != null &&
     (item.state === 'worn' || item.state === STOWED) &&
     !talisman &&
-    !hostsAffixedTalisman;
+    !hostsAffixedTalisman &&
+    !bodyBound; // a tattoo is inked on — it can't change owners
   const recipients = (characters || []).filter((c) => c.id !== character?.id);
 
   // Consumable stack-splitting (#657): offer a quantity picker when there's
@@ -469,6 +472,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
   const renderActions = () => {
     if (!uid) return null;
+    // Body-bound (tattoo): no placement actions at all — it can't be dropped,
+    // stowed, handed, or removed. A quiet note says why.
+    if (bodyBound) {
+      return (
+        <span className="item-bound-note" data-testid="item-bound-note">
+          Tattooed on the body — cannot be removed or stowed
+        </span>
+      );
+    }
     const st = item.state;
     if (st === 'dropped') {
       return (

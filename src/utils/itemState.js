@@ -24,10 +24,20 @@ export const normalizeItemState = (s) =>
 export const HELD_STATES = ['held1', 'held2'];
 export const isHeldState = (s) => HELD_STATES.includes(s);
 
+// Body-bound gear: an item carrying the Tattoo trait is inked onto its owner.
+// It is invested by default and permanently — no un-investing, no stowing in
+// containers, no handing to another PC, no dropping. Placement/transfer
+// surfaces (BagGrid, HandsStrip, ItemModal actions + give) all gate on this.
+export const isBodyBound = (item) =>
+  !!item &&
+  (item.traits || []).some((t) => String(t).toLowerCase() === 'tattoo');
+
 // Whether an item's granted abilities (strikes, item actions, scroll/wand/
-// staff spells) are currently usable. True when the item is in a hand, or the
+// staff spells) are currently usable. True when the item is in a hand, the
 // catalog explicitly marks it usable without a hand (`noHandRequired`) — the
-// escape hatch for worn-but-functional gear. Anything else (worn/stowed/
-// dropped/unknown) is inactive: the ability is still shown, just disabled.
+// escape hatch for worn-but-functional gear — or it's body-bound (a tattoo is
+// always on you and always invested). Anything else (worn/stowed/dropped/
+// unknown) is inactive: the ability is still shown, just disabled.
 export const itemAbilitiesActive = (item) =>
-  !!item && (isHeldState(item.state) || item.noHandRequired === true);
+  !!item &&
+  (isHeldState(item.state) || item.noHandRequired === true || isBodyBound(item));

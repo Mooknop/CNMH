@@ -84,6 +84,19 @@ vi.mock('../../hooks/useCharacter', () => ({
         skillProficiencies: { crafting: 0 },
       };
     }
+    if (character.id === 'tattooed') {
+      return {
+        id: 'tattooed',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 1,
+        inventory: [
+          { uid: 'tat', id: 'tat', name: 'Carnasia Tattoo', weight: 0, state: 'worn',
+            traits: ['Invested', 'Magical', 'Tattoo'], thassilonianRune: 'lust' },
+          { uid: 'sword', id: 'sword', name: 'Longsword', weight: 1, state: 'worn', strikes: [{ damage: '1d8' }] },
+        ],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
     if (character.id === 'hands') {
       return {
         id: 'hands',
@@ -397,6 +410,17 @@ describe('InventoryTab', () => {
       render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
       tapTile(screen.getByTestId('attuned-tile-amulet'));
       expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'amulet', name: "Mother's Amulet" }));
+    });
+
+    it('a body-bound tattoo is Attuned by default, without an overlay entry', () => {
+      mockInvested = {}; // nothing manually attuned
+      render(<InventoryTab character={{ id: 'tattooed' }} characterColor="#7E8C9A" />);
+      // The tattoo renders as an attuned tile (never a bag tile) and counts.
+      expect(screen.getByTestId('attuned-tile-tat')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-tat')).not.toBeInTheDocument();
+      expect(screen.getByTestId('attuned-area')).toHaveTextContent('1 / 10 invested');
+      // Ordinary gear is unaffected.
+      expect(screen.getByTestId('grid-cell-sword')).toBeInTheDocument();
     });
   });
 

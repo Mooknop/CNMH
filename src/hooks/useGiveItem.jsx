@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { newEntryUid } from '../utils/uid';
+import { isBodyBound } from '../utils/itemState';
 import { APP, syncKey } from '../sync/keys';
 
 // Player-to-player item push (#656, #657). The recipient receives a clean,
@@ -61,9 +62,12 @@ export const useGiveItem = (giverId) => {
 
   // Give a whole item (gear or a container with its contents). Every uid in the
   // subtree leaves the giver: acquired ones are spliced, authored ones masked.
+  // Body-bound gear (tattoos) never transfers — the ItemModal hides the give
+  // UI; this guard is belt for any other caller.
   const give = useCallback(
     (recipientId, item) => {
       if (offline) return false;
+      if (isBodyBound(item)) return false;
       const uid = item?.uid;
       if (!giverId || !recipientId || recipientId === giverId || uid == null) return false;
 
