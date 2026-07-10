@@ -48,7 +48,7 @@ const ReactionPrompt = ({ character, themeColor }) => {
     eldPowers,
     level,
   } = useCharacter(character);
-  const { raised, broken } = useShield(charId, inventory);
+  const { raised } = useShield(charId, inventory);
   const { spells: catalogSpells } = useContent();
   const [attunedSource] = useSyncedState(syncKey(APP.ELDATTUNE, charId), '');
   const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
@@ -92,8 +92,10 @@ const ReactionPrompt = ({ character, themeColor }) => {
   }
 
   const matched = matchingReactions(sources, prompt.eventId)
-    // Shield Block is only a live option while the shield is raised (and whole).
-    .filter((r) => r.name !== 'Shield Block' || (raised && !broken));
+    // Shield Block is only a live option while the shield is raised — and
+    // `raised` already requires a usable shield (unbroken, or broken in a
+    // Rust-Blessed wielder's hands; never destroyed).
+    .filter((r) => r.name !== 'Shield Block' || raised);
   const available =
     !!turnState?.hasStartedFirstTurn &&
     !!turnState?.reactionAvailable &&

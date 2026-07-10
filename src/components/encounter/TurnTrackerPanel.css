@@ -10,7 +10,7 @@
 /* The pips/MAP/reaction/Submit/status/order-strip moved to the Command Sheet
    (ActionDial / InitiativeStrip) in #411; movement moved to MoveActionSheet in
    #415. The order-strip chip + target-picker + use-chip styles this file used to
-   host for *other* components were relocated to those components' own CSS in #425.
+   host for *other* components were relocated to those components' own CSS in var(--arcane-dark).
    What remains is the residual panel: Raise/Lower Shield, Dismiss aura, turn-start
    offers, and sustain prompts. */
 .ttp-controls {

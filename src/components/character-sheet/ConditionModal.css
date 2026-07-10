@@ -7,7 +7,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #666;
+  color: var(--iron-base);
   margin: 0 0 0.75rem;
 }
 
@@ -61,7 +61,7 @@
   height: 1.4rem;
   border-radius: 50%;
   background: var(--color-theme, var(--theme-accent));
-  color: var(--theme-bg, #12100e);
+  color: var(--theme-bg, var(--theme-bg));
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -77,7 +77,7 @@
   height: 1.75rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  background: #f5f5f5;
+  background: var(--color-text-inverse);
   font-size: 1rem;
   font-weight: 700;
   line-height: 1;
@@ -102,7 +102,7 @@
   height: 1.75rem;
   border: 1px solid #f0a0a0;
   border-radius: 4px;
-  background: #fff0f0;
+  background: var(--peril-pale);
   font-size: 1.1rem;
   font-weight: 700;
   line-height: 1;
@@ -120,7 +120,7 @@
 
 .ct-active-effect {
   font-size: 0.82rem;
-  color: #444;
+  color: var(--iron-dark);
   margin: 0;
   line-height: 1.4;
 }
@@ -129,8 +129,8 @@
   display: inline-block;
   margin-top: 0.3rem;
   font-size: 0.72rem;
-  color: #888;
-  background: #f0f0f0;
+  color: var(--color-text-muted);
+  background: var(--iron-pale);
   border-radius: 3px;
   padding: 1px 5px;
 }
@@ -143,8 +143,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #888;
-  background: #f0f0f0;
+  color: var(--color-text-muted);
+  background: var(--iron-pale);
   border-radius: 3px;
   padding: 2px 6px;
 }
@@ -163,12 +163,12 @@
 
 .ct-encumbrance-detail {
   font-weight: 400;
-  color: #888;
+  color: var(--color-text-muted);
 }
 
 .ct-encumbrance-hint {
   font-size: 0.78rem;
-  color: #666;
+  color: var(--iron-base);
   line-height: 1.4;
   margin: 0.4rem 0 0;
 }
@@ -204,7 +204,7 @@
 }
 
 .ct-browser-card:hover {
-  background: #f5f5f5;
+  background: var(--color-text-inverse);
   border-color: #aaa;
 }
 
@@ -219,8 +219,8 @@
 
 .ct-browser-valued-tag {
   font-size: 0.68rem;
-  color: #888;
-  background: #eee;
+  color: var(--color-text-muted);
+  background: var(--iron-pale);
   border-radius: 3px;
   padding: 1px 4px;
   width: fit-content;
@@ -228,7 +228,7 @@
 
 .ct-browser-summary {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--iron-base);
   line-height: 1.3;
 }
 
@@ -253,7 +253,7 @@
 }
 
 .ct-active-name {
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .ct-active-effect {
@@ -263,7 +263,7 @@
 .ct-ctrl-btn {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--shell-border-strong, rgba(255, 255, 255, 0.12));
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .ct-ctrl-btn:hover:not(:disabled) {
@@ -273,7 +273,7 @@
 .ct-remove-btn {
   background: rgba(183, 28, 28, 0.15);
   border-color: rgba(239, 83, 80, 0.4);
-  color: #ef5350;
+  color: var(--peril-light);
 }
 
 .ct-remove-btn:hover {
@@ -296,7 +296,7 @@
 }
 
 .ct-browser-name {
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .ct-browser-summary {
@@ -311,7 +311,7 @@
 }
 
 .ct-encumbrance-label {
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
 }
 
 .ct-encumbrance-detail,

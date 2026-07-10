@@ -121,8 +121,10 @@ describe('ImageField', () => {
       const { container } = render(
         <ImageField value="img_abc.jpg" onChange={vi.fn()} position={{ x: 30, y: 70 }} onPositionChange={vi.fn()} ariaLabel="test" />
       );
-      const img = container.querySelector('.image-field-preview');
-      expect(img.style.objectPosition).toBe('30% 70%');
+      // The focal point rides the --focal-x/--focal-y bridge on the wrap;
+      // ImageField.css maps it to object-position (jsdom doesn't apply stylesheets).
+      const wrap = container.querySelector('.image-field-preview-wrap');
+      expect(wrap).toHaveStyle({ '--focal-x': '30%', '--focal-y': '70%' });
     });
 
     it('shows focal dot when onPositionChange is provided', () => {

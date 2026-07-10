@@ -4,6 +4,12 @@
   margin-top: 1rem;
 }
 
+.rkr-resolver-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
 .rkr-dc-row {
   display: flex;
   align-items: center;
@@ -22,7 +28,7 @@
 .rkr-dc-value {
   font-weight: 700;
   font-size: 1rem;
-  color: var(--accent-text, #e85d1a);
+  color: var(--accent-text, var(--ember-mid));
 }
 
 .rkr-dc-note {
@@ -47,18 +53,18 @@
   border: 1px solid var(--shell-border-strong, rgba(255,255,255,0.12));
   background: transparent;
   cursor: pointer;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--theme-text));
   transition: border-color 0.15s, background 0.15s;
   font-size: 0.8rem;
 }
 
 .rkr-skill-btn:hover {
-  border-color: var(--accent-outline, #c0440e);
+  border-color: var(--accent-outline, var(--ember-base));
 }
 
 .rkr-skill-btn--on {
   background: var(--accent-tint, rgba(192,68,14,0.14));
-  border-color: var(--accent-outline, #c0440e);
+  border-color: var(--accent-outline, var(--ember-base));
 }
 
 .rkr-skill-btn--recommended .rkr-skill-name::after {
@@ -104,13 +110,13 @@
 }
 
 .rkr-choice-item input[type="checkbox"] {
-  accent-color: var(--accent-outline, #c0440e);
+  accent-color: var(--accent-outline, var(--ember-base));
 }
 
 .rkr-lockout-notice {
   margin: 0.5rem 0;
   font-size: 0.85rem;
-  color: var(--save-crit-failure-fg, #d94f4f);
+  color: var(--save-crit-failure-fg, var(--d-cf-fg));
   font-style: italic;
 }
 

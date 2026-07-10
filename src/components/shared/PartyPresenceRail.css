@@ -7,8 +7,8 @@
   position: relative; width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-weight: 700; font-size: 16px;
-  color: color-mix(in srgb, var(--c) 70%, #fff 30%);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 30%, #14110e), #100d0b);
+  color: color-mix(in srgb, var(--c) 70%, var(--color-text-on-primary) 30%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 30%, var(--theme-bg)), var(--void-deepest));
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent);
 }
 .ppr-avatar.is-you {
@@ -16,7 +16,7 @@
 }
 .ppr-status {
   position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;
-  border-radius: 50%; border: 2px solid var(--theme-bg, var(--shell-bg, #12100e));
+  border-radius: 50%; border: 2px solid var(--theme-bg, var(--shell-bg, var(--theme-bg)));
 }
 .ppr-status.ready { background: var(--verdant-mid, #4caf6a); box-shadow: 0 0 6px var(--verdant-mid, #4caf6a); }
 .ppr-status.planning { background: var(--gold-mid); animation: ppr-pulse 1.8s ease-in-out infinite; }

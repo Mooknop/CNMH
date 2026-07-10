@@ -140,7 +140,7 @@
 
 .uam-freq-clear {
   background: none;
-  border: 1px solid var(--color-border, #444);
+  border: 1px solid var(--color-border, var(--iron-dark));
   border-radius: 4px;
   color: var(--color-text-muted);
   font-size: var(--text-xs, 0.75rem);
@@ -180,11 +180,15 @@
   font-weight: 600;
 }
 
-.uam-flatcheck-result--pass {
+/* .modal-body co-selectors so the degree colors beat Modal.css's
+   `.modal-body span/strong` body-text defaults inside modals. */
+.uam-flatcheck-result--pass,
+.modal-body .uam-flatcheck-result--pass {
   color: var(--color-success);
 }
 
-.uam-flatcheck-result--fail {
+.uam-flatcheck-result--fail,
+.modal-body .uam-flatcheck-result--fail {
   color: var(--color-danger);
 }
 
@@ -217,4 +221,242 @@
   border-color: var(--accent-outline, currentColor);
   color: var(--accent-text, inherit);
   font-weight: 700;
+}
+
+/* Ability summary + effect/grant listings */
+
+.uam-meta-line {
+  margin-bottom: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm, 0.85rem);
+}
+
+/* The .modal-body co-selectors outrank Modal.css's `.modal-body p/span/strong`
+   body-text defaults (0,1,1), which the inline styles these replaced used to beat. */
+.uam-desc,
+.modal-body .uam-desc {
+  font-size: var(--text-sm, 0.85rem);
+  margin: 0 0 0.25rem;
+  color: var(--color-text-muted);
+}
+
+.uam-ally-resistance,
+.uam-omen-line {
+  font-size: var(--text-sm, 0.85rem);
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.uam-ammo-dmg {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm, 0.85rem);
+}
+
+.uam-ammo-dmg input {
+  display: block;
+  width: 7rem;
+  margin-top: 0.25rem;
+}
+
+.uam-ammo-save-hint,
+.modal-body .uam-ammo-save-hint {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+}
+
+.uam-inline-gap {
+  margin-left: 0.5rem;
+}
+
+.uam-duration-note {
+  margin-left: 0.5rem;
+  font-size: var(--text-xs, 0.75rem);
+}
+
+.uam-grant-line {
+  margin-bottom: 0.75rem;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+}
+
+.uam-grant-desc {
+  display: block;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.uam-footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Save-request preview (also used by ChainedSpellSection) */
+
+.ct-save-request-preview {
+  margin-top: 0.5rem;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+}
+
+.ct-save-request-preview ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+/* Chained sub-action sections (ChainedStrikeSection / ChainedSpellSection) */
+
+.ct-section-title.uam-chain-title {
+  margin-top: 0.75rem;
+}
+
+.uam-chain-title-cost,
+.modal-body .uam-chain-title-cost {
+  margin-left: 8px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: normal;
+  color: var(--color-text-muted);
+}
+
+.uam-chain-section {
+  margin-top: 0.5rem;
+}
+
+.uam-chain-empty {
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+}
+
+.uam-chain-select {
+  width: 100%;
+  font-size: var(--text-sm, 0.85rem);
+  margin-bottom: 0.5rem;
+}
+
+/* Small stat/modifier note under the picker (attack + damage, spell modifier) */
+.uam-chain-note {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.uam-chain-note--italic {
+  font-style: italic;
+}
+
+.uam-chain-stat + .uam-chain-stat {
+  margin-left: 12px;
+}
+
+.uam-chain-check {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: var(--text-sm, 0.85rem);
+  cursor: pointer;
+}
+
+.uam-chain-check input {
+  margin-right: 6px;
+}
+
+.uam-chain-modes {
+  margin-bottom: 0.5rem;
+}
+
+.uam-chain-mode {
+  margin-right: 12px;
+  font-size: var(--text-sm, 0.85rem);
+  cursor: pointer;
+}
+
+.uam-chain-mode input {
+  margin-right: 4px;
+}
+
+/* Flurry second strike */
+.uam-chain-sub {
+  margin-top: 0.75rem;
+}
+
+.uam-chain-subnote {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+/* Dashed option group (Harrow Cast, Split Shot) */
+.uam-chain-group {
+  margin: 0.4rem 0;
+  padding: 0.5rem;
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: 6px;
+}
+
+.uam-chain-line {
+  font-size: var(--text-sm, 0.85rem);
+  margin-bottom: 0.35rem;
+}
+
+.uam-chain-text {
+  font-size: var(--text-sm, 0.85rem);
+}
+
+.uam-chain-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.uam-chain-radios--spaced {
+  margin-bottom: 0.4rem;
+}
+
+.uam-chain-radio {
+  font-size: var(--text-sm, 0.85rem);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.uam-chain-radio input {
+  margin-right: 4px;
+}
+
+.uam-chain-field {
+  display: block;
+  font-size: var(--text-sm, 0.85rem);
+  margin-bottom: 0.4rem;
+}
+
+.uam-chain-field--after {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+.uam-chain-flat-result {
+  margin-left: 6px;
+}
+
+.uam-chain-hint {
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+}
+
+.uam-chain-hint--danger {
+  color: var(--color-danger);
+}
+
+.uam-chain-total {
+  font-size: var(--text-sm, 0.85rem);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.uam-chain-total-note,
+.modal-body .uam-chain-total-note {
+  font-weight: normal;
+  margin-left: 6px;
+  color: var(--color-text-muted);
 }

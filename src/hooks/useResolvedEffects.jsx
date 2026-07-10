@@ -1,9 +1,13 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { useEffects } from './useEffects';
 import { useShield } from './useShield';
 import { useWornGear } from './useWornGear';
+import { useSyncedState } from './useSyncedState';
 import { heldShieldRuneEffects } from '../utils/shieldRuneEffects';
+import { brokenArmorEffect } from '../utils/rustBlessing';
 import { useContent } from '../contexts/ContentContext';
+import { CharacterContext } from '../contexts/CharacterContext';
+import { APP, syncKey } from '../sync/keys';
 
 // The character's full active-effect universe plus the catalog needed to resolve
 // it (#922 S2). One source of truth for every effect reader:
@@ -28,14 +32,22 @@ export const useResolvedEffects = (charId, inventory = []) => {
   const { effects: contentCatalog } = useContent();
   const { shieldEffect } = useShield(charId, inventory);
   const { wornEffects } = useWornGear(charId, inventory);
+  // Broken worn armor (#539): a status penalty to AC (−1/−2/−3 by category;
+  // one step kinder under Rust Blessing) synthesized into the effect universe
+  // so it nets against other status modifiers in the normal engine.
+  const [itemHpState] = useSyncedState(syncKey(APP.ITEMHP, charId || 'none'), {});
+  const characterCtx = useContext(CharacterContext);
+  const characterDoc = characterCtx?.getCharacter?.(charId) || null;
 
   return useMemo(() => {
+    const brokenArmor = brokenArmorEffect(inventory, itemHpState, characterDoc);
     const synth = [
       ...(shieldEffect ? [shieldEffect] : []),
       ...wornEffects,
       // Held-shield property runes (#1196 G3): passive effects from a wielded
       // shield (e.g. Energy-Resistant resistance vs its chosen type).
       ...heldShieldRuneEffects(inventory),
+      ...(brokenArmor ? [brokenArmor] : []),
     ];
     if (!synth.length) {
       return { effects: activeEffects, catalog: contentCatalog };
@@ -44,7 +56,7 @@ export const useResolvedEffects = (charId, inventory = []) => {
       effects: [...activeEffects, ...synth.map((s) => s.entry)],
       catalog: [...(contentCatalog || []), ...synth.map((s) => s.def)],
     };
-  }, [activeEffects, contentCatalog, shieldEffect, wornEffects, inventory]);
+  }, [activeEffects, contentCatalog, shieldEffect, wornEffects, inventory, itemHpState, characterDoc]);
 };
 
 export default useResolvedEffects;

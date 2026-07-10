@@ -24,7 +24,7 @@
   font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: var(--gold-mid, #c49a2e);
+  color: var(--gold-mid, var(--gold-mid));
 }
 
 .gm-init-list {
@@ -48,7 +48,7 @@
 
 .gm-init-name {
   font-weight: 600;
-  color: var(--shell-text-primary, #f5ede4);
+  color: var(--shell-text-primary, var(--shell-text-primary));
 }
 
 .gm-init-state {
@@ -57,7 +57,7 @@
 }
 
 .gm-init-state.is-in {
-  color: var(--success, #6fbf73);
+  color: var(--success, var(--verdant-light));
 }
 
 .gm-init-state.is-waiting {

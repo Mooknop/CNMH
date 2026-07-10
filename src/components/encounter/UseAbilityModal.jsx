@@ -1496,9 +1496,9 @@ const UseAbilityModal = ({
     const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
     rollSection = (
       <>
-        <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+        <div className="ct-save-request-preview">
           <strong>Save request → GM:</strong> {saveLabel} DC {saveDc}
-          <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
+          <ul>
             {saveTargets.map((e) => (
               <li key={e.entryId}>{e.name}</li>
             ))}
@@ -1530,23 +1530,23 @@ const UseAbilityModal = ({
     >
       {/* Ability summary */}
       <section className="ct-section">
-        <div style={{ marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+        <div className="uam-meta-line">
           {ability.actions && <span>Actions: {ability.actions} · </span>}
           {ability.range   && <span>Range: {ability.range} · </span>}
           {ability.targets && <span>Targets: {ability.targets}</span>}
         </div>
         {ability.description && (
-          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem', color: 'var(--color-text-muted)' }}>
+          <p className="uam-desc">
             {ability.description}
           </p>
         )}
         {allyResistance != null && (
-          <p className="uam-ally-resistance" style={{ fontSize: '0.85rem', fontWeight: 600, margin: '0 0 0.25rem' }}>
+          <p className="uam-ally-resistance">
             Ally gains resistance {allyResistance} against the triggering damage.
           </p>
         )}
         {showsOmen && (
-          <p className="uam-omen-line" style={{ fontSize: '0.85rem', fontWeight: 600, margin: '0 0 0.25rem' }}>
+          <p className="uam-omen-line">
             Active harrow omen: {omen.suit || 'none'}
             {ability.clearsOmen === true && omen.suit ? ' — spent on use' : ''}
           </p>
@@ -1580,7 +1580,7 @@ const UseAbilityModal = ({
                 dice and enters the total; it rides the save request (basic save
                 resolves per degree GM-side) or goes straight to dmgapply. */}
             {selectedChamberRef?.damage && (
-              <label className="uam-ammo-dmg" style={{ display: 'block', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+              <label className="uam-ammo-dmg">
                 {selectedChamberRef.name} on-hit damage ({selectedChamberRef.damage.dice} {selectedChamberRef.damage.type})
                 {selectedChamberRef.save ? ` — ${selectedChamberRef.save.basic ? 'basic ' : ''}${DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} DC ${ammoSaveDc(selectedChamberRef.save, ability)}` : ''}
                 <input
@@ -1590,12 +1590,11 @@ const UseAbilityModal = ({
                   onChange={(e) => setAmmoDmgInput(e.target.value)}
                   placeholder="rolled total"
                   aria-label="ammo damage roll"
-                  style={{ display: 'block', width: '7rem', marginTop: '0.25rem' }}
                 />
               </label>
             )}
             {selectedChamberRef?.save && !selectedChamberRef.damage && (
-              <p className="uam-ammo-save-hint" style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              <p className="uam-ammo-save-hint">
                 On hit: {DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} save
                 {' '}DC {ammoSaveDc(selectedChamberRef.save, ability)} → GM
               </p>
@@ -1828,16 +1827,16 @@ const UseAbilityModal = ({
             <h3 className="ct-section-title">Apply Effects</h3>
 
             {staticEffects.map((eff, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              <div key={idx} className="uam-meta-line">
                 <span>{eff.effectId}</span>
                 {eff.applyTo === 'self' && (
-                  <span style={{ marginLeft: '0.5rem' }}>→ {character.name}</span>
+                  <span className="uam-inline-gap">→ {character.name}</span>
                 )}
                 {eff.applyTo === 'all-allies' && (
-                  <span style={{ marginLeft: '0.5rem' }}>→ all allies</span>
+                  <span className="uam-inline-gap">→ all allies</span>
                 )}
                 {eff.duration && (
-                  <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+                  <span className="uam-duration-note">
                     ({eff.duration.until === 'rounds' ? `${eff.duration.rounds} rounds` : eff.duration.until})
                   </span>
                 )}
@@ -1867,15 +1866,15 @@ const UseAbilityModal = ({
           <section className="ct-section">
             <h3 className="ct-section-title">Grant Actions</h3>
             {grants.map((grant, idx) => (
-              <div key={idx} style={{ marginBottom: '0.75rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              <div key={idx} className="uam-grant-line">
                 <span>{grant.action?.name || ability.name}</span>
                 {grant.action?.description && (
-                  <span style={{ display: 'block', fontStyle: 'italic', fontSize: '0.8rem' }}>
+                  <span className="uam-grant-desc">
                     {grant.action.description}
                   </span>
                 )}
                 {grant.duration && (
-                  <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+                  <span className="uam-duration-note">
                     ({grant.duration.until === 'rounds' ? `${grant.duration.rounds} rounds` : grant.duration.until})
                   </span>
                 )}
@@ -1905,10 +1904,10 @@ const UseAbilityModal = ({
             />
             {hasChainStrike ? (
               <>
-                <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
+                <h3 className="ct-section-title uam-chain-title">
                   {ability.chain.heading
                     || (ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike')}
-                  <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>
+                  <span className="uam-chain-title-cost">
                     (included in {effectiveCost})
                   </span>
                 </h3>
@@ -1927,7 +1926,7 @@ const UseAbilityModal = ({
               </>
             ) : hasChainSpell ? (
               <>
-                <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
+                <h3 className="ct-section-title uam-chain-title">
                   Cast a Spell
                 </h3>
                 <ChainedSpellSection
@@ -1956,7 +1955,7 @@ const UseAbilityModal = ({
         </>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+      <div className="uam-footer">
         <button className="btn-secondary" onClick={onClose}>Cancel</button>
         <button
           className="btn-primary"

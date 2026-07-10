@@ -73,7 +73,7 @@
   background: var(--theme-accent, var(--accent-bg));
   border: 1px solid var(--theme-accent, var(--accent-bg));
   border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: var(--text-sm);

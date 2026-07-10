@@ -7,7 +7,7 @@
   inset: 0;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #100d0b;
+  background: var(--void-deepest);
   box-shadow: var(--shadow-lg);
 }
 
@@ -15,7 +15,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 26%, #14110e) 0%, #100d0b 55%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 26%, var(--theme-bg)) 0%, var(--void-deepest) 55%);
 }
 
 /* Portrait, clipped diagonally (bottom edge slopes up to the right) */
@@ -32,7 +32,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 0%;
+  object-position: var(--portrait-pos, 50% 0%);
 }
 
 /* No-image fallback: oversized monogram over an accent gradient */
@@ -49,7 +49,7 @@
   color: color-mix(in srgb, var(--c) 55%, transparent);
   background:
     radial-gradient(80% 60% at 50% 32%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%),
-    linear-gradient(160deg, color-mix(in srgb, var(--c) 16%, #14110e), #100d0b 75%);
+    linear-gradient(160deg, color-mix(in srgb, var(--c) 16%, var(--theme-bg)), var(--void-deepest) 75%);
   text-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -62,7 +62,7 @@
   z-index: 2;
   height: 120px;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, #0c0a08 72%);
+  background: linear-gradient(180deg, transparent, var(--void-deepest) 72%);
   clip-path: polygon(0 38%, 100% 14%, 100% 100%, 0 100%);
 }
 
@@ -102,7 +102,7 @@
   align-items: center;
   line-height: 0.95;
   padding: 9px 10px 7px;
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   font-weight: 700;
   background: var(--c);
@@ -125,7 +125,7 @@
   font-weight: 700;
   font-size: 27px;
   line-height: 0.98;
-  color: #fff;
+  color: var(--color-text-on-primary);
   text-shadow: 0 3px 16px rgba(0, 0, 0, 0.8);
   text-wrap: balance;
 }
@@ -135,5 +135,5 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--c) 65%, #fff 35%);
+  color: color-mix(in srgb, var(--c) 65%, var(--color-text-on-primary) 35%);
 }

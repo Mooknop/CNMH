@@ -35,7 +35,7 @@ import './ShieldBlockBar.css';
  * broke the shield the bar unmounts with it — the rider is lost with the arm.
  */
 const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
-  const { heldShield, raised, broken, lowerShield, applyBlock } = useShield(charId, inventory);
+  const { heldShield, raised, lowerShield, applyBlock } = useShield(charId, inventory);
   const { turnState, spendReaction } = useTurnState(charId);
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { gameDate, time } = useGameDate();
@@ -75,8 +75,10 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
 
   const { reactionAvailable, reactionSpent, hasStartedFirstTurn } = turnState;
 
+  // `raised` already folds in usability (a broken shield stays raised only for
+  // a Rust-Blessed wielder; a destroyed one never does).
   const canShieldBlock =
-    raised && !broken && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
+    raised && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
 
   const enemies = (encounter?.order || []).filter((e) => e && e.kind === 'enemy');
   const riderReady = liveRider && gate.available;
@@ -96,10 +98,16 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     spendReaction('Shield Block');
     setBlockDamage('');
     setRanged(false);
-    if (result.broken) lowerShield();
-    const detail = result.broken
+    // Table rule: using a reaction that requires a raised shield (Shield Block
+    // today; the #1191 shield reactions will share this) ends the raise —
+    // whether or not the shield broke. Re-raising costs the action as normal
+    // (and Rust Blessing is what lets a broken shield be re-raised at all).
+    lowerShield();
+    const detail = result.destroyed
+      ? `shield DESTROYED! (${result.prevented} prevented)`
+      : result.broken
       ? `shield broke! (${result.prevented} prevented)`
-      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
+      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP · shield lowered`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
     appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${deflectNote}${runeNote}` });

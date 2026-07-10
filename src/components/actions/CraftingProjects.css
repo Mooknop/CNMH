@@ -38,7 +38,7 @@
 
 .cp-new-btn:hover {
   background: var(--theme-accent, var(--accent-bg));
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
 }
 
 /* Project list */
@@ -88,7 +88,7 @@
 }
 
 .cp-abandon-btn:hover {
-  color: var(--color-danger, #e53e3e);
+  color: var(--color-danger, var(--peril-light));
 }
 
 .cp-progress-row {
@@ -140,7 +140,7 @@
 }
 
 .cp-cost-warn {
-  color: var(--color-danger, #e53e3e);
+  color: var(--color-danger, var(--peril-light));
 }
 
 /* Finish decision (awaiting-decision / reducing). */
@@ -165,12 +165,12 @@
 
 .cp-degree--success,
 .cp-degree--criticalSuccess {
-  color: var(--color-success, #38a169);
+  color: var(--color-success, var(--verdant-mid));
 }
 
 .cp-degree--failure,
 .cp-degree--criticalFailure {
-  color: var(--color-danger, #e53e3e);
+  color: var(--color-danger, var(--peril-light));
 }
 
 .cp-continue-btn {
@@ -200,7 +200,7 @@
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--color-success, #38a169);
+  color: var(--color-success, var(--verdant-mid));
 }
 
 /* Ready state — project has met its hour threshold */
@@ -268,7 +268,7 @@
   background: var(--theme-accent, var(--accent-bg));
   border: 1px solid var(--theme-accent, var(--accent-bg));
   border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: var(--text-sm);
@@ -325,7 +325,7 @@
 .cp-add-tab--active {
   background: var(--theme-accent, var(--accent-bg));
   border-color: var(--theme-accent, var(--accent-bg));
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
 }
 
 /* Recipe list */
@@ -418,7 +418,7 @@
   background: var(--theme-accent, var(--accent-bg));
   border: 1px solid var(--theme-accent, var(--accent-bg));
   border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+  color: var(--theme-bg, var(--color-text-on-primary));
   cursor: pointer;
   font-family: var(--font-ui);
   font-size: var(--text-sm);

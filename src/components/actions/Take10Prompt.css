@@ -46,6 +46,7 @@
 
 .t10-budget-fill {
   height: 100%;
+  width: var(--t10-fill, 0%);
   background: var(--t10-theme, var(--color-theme));
   transition: width 0.2s ease;
 }
@@ -99,7 +100,7 @@
 }
 
 .t10-remove:hover {
-  color: var(--color-danger, #d9534f);
+  color: var(--color-danger, var(--d-cf-fg));
 }
 
 /* Available activities to add */
@@ -255,5 +256,5 @@
 
 .t10-ready-btn--on {
   background: var(--t10-theme, var(--color-theme));
-  color: var(--theme-on-accent, #fff);
+  color: var(--theme-on-accent, var(--color-text-on-primary));
 }

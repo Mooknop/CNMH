@@ -1,5 +1,5 @@
 /* Enemy condition chip (#260) — frightened from Demoralize, etc.
-   Relocated from TurnTrackerPanel.css (#425). */
+   Relocated from TurnTrackerPanel.css (var(--arcane-dark)). */
 .ttp-condition-badge {
   font-size: var(--text-2xs, 0.65rem);
   font-weight: 700;

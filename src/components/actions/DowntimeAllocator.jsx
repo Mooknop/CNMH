@@ -183,7 +183,7 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
             <div
               key={i}
               className={`dta-pip${hue ? ' full' : ''}`}
-              style={hue ? { background: hue, color: hue } : undefined}
+              style={hue ? { '--ac': hue } : undefined}
             />
           );
         })}
@@ -203,7 +203,7 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
           return (
             <div className="dta-act" key={a.name}>
               <div className="dta-act-top">
-                <span className="dta-sw" style={{ background: a.hue, color: a.hue }} />
+                <span className="dta-sw" style={{ '--ac': a.hue }} />
                 <div className="dta-act-id">
                   <div className="dta-act-name">{a.name}</div>
                   <div className="dta-act-tag">{accumulate ? 'Banks hours' : 'One roll per day'}</div>

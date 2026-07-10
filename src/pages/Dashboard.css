@@ -106,7 +106,7 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.03em;
-  color: #fff;
+  color: var(--color-text-on-primary);
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, #fff 8%), color-mix(in srgb, var(--accent) 78%, #000 22%));
   box-shadow: 0 6px 20px -4px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
   transition: transform 0.16s ease, box-shadow 0.3s ease, background 0.4s ease;

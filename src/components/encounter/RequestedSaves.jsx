@@ -350,17 +350,15 @@ const RequestedSaves = () => {
               );
             })}
             <button
-              className="btn-secondary"
+              className="btn-secondary gm-save-req-btn gm-save-req-btn--roll"
               onClick={() => sendUpdate('global', RELAY.SAVEROLL, buildSaveRoll(req))}
-              style={{ marginTop: '0.5rem', marginRight: '0.5rem' }}
             >
               Roll in Foundry
             </button>
             <button
-              className="btn-primary"
+              className="btn-primary gm-save-req-btn"
               onClick={() => resolveRequest(req)}
               disabled={!allFilled}
-              style={{ marginTop: '0.5rem' }}
             >
               Log Results
             </button>

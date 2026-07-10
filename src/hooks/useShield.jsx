@@ -1,10 +1,14 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useContext, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { useItemHp } from './useItemHp';
+import { CharacterContext } from '../contexts/CharacterContext';
 import { isHeldState } from '../utils/itemState';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
-import { RELAY, APP, syncKey } from '../sync/keys';
+import { isDestroyedHp } from '../utils/itemDurability';
+import { hasRustBlessing } from '../utils/rustBlessing';
+import { RELAY, syncKey } from '../sync/keys';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -16,8 +20,10 @@ import { RELAY, APP, syncKey } from '../sync/keys';
 //
 // All shield state lives in the app:
 //   cnmh_shieldraise_<charId>  = { raised, uid, ts }
-//   cnmh_shieldstate_<charId>  = { [uid]: { hp } }   — mutable HP per shield
-// Neither key syncs back to Foundry; the shield is a self-contained item.
+//   cnmh_itemhp_<charId>       = { [uid]: { hp } }   — shared item-HP overlay (#541)
+// Shield HP predating the durability epic lives on cnmh_shieldstate_<charId>;
+// useItemHp reads that as a fallback. Neither key syncs back to Foundry; the
+// shield is a self-contained item.
 export const RAISED_SHIELD_EFFECT_ID = 'raised-shield';
 
 const IDLE_RAISE = { raised: false, uid: null, ts: 0 };
@@ -32,12 +38,9 @@ export const useShield = (charId, inventory = []) => {
     IDLE_RAISE
   );
 
-  // Per-shield mutable HP map. Keyed by item uid; falls back to the authored
-  // shield.hp when no block has been recorded this session.
-  const [shieldState, setShieldState] = useSyncedState(
-    syncKey(APP.SHIELDSTATE, charId || 'none'),
-    {}
-  );
+  // Shared per-item mutable HP map (#541). Keyed by item uid; falls back to
+  // the authored shield.hp when no block has been recorded this session.
+  const { hpFor, setHp } = useItemHp(charId);
 
   // The shield currently in a hand. First held entry wins. `maxHp` is the
   // authored (full) HP — the cap the live overlay is restored toward.
@@ -50,20 +53,31 @@ export const useShield = (charId, inventory = []) => {
     // so Hardness/HP/BT (and maxHp) reflect the etched rune (#1165 S1).
     const base = normalizeShield(resolveShieldBlock(entry));
     // Overlay the session HP if a block has been recorded.
-    const liveHp = shieldState?.[entry.uid]?.hp;
+    const liveHp = hpFor(entry.uid);
     const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
     // Resolved Remaster name ("Minor Reinforcing Steel Shield") for every held-
     // shield surface; a non-reinforced shield keeps its own name (#1165 S4).
     return { uid: entry.uid, name: shieldDisplayName(entry), shield, maxHp: base.hp };
-  }, [inventory, shieldState]);
+  }, [inventory, hpFor]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;
+  const destroyed = heldShield ? isDestroyedHp(heldShield.shield?.hp ?? 0) : false;
+
+  // Rust Blessing (campaign boon): the wielder keeps using a BROKEN shield —
+  // full AC bonus and Shield Block — though destruction at 0 HP still ends it.
+  // Resolved from the character doc by id so every useShield call site agrees;
+  // outside a CharacterProvider (bare hook tests) the boon is simply off.
+  const characterCtx = useContext(CharacterContext);
+  const wieldBroken = hasRustBlessing(characterCtx?.getCharacter?.(charId));
+
+  // Can the held shield be used at all right now (Raise / Block)?
+  const usable = !!heldShield && !destroyed && (!broken || wieldBroken);
 
   const raised =
     !!raiseState?.raised &&
     !!heldShield &&
     raiseState.uid === heldShield.uid &&
-    !broken;
+    usable;
 
   const raiseShield = useCallback(
     (uid) => setRaiseState({ raised: true, uid, ts: Date.now() }),
@@ -90,13 +104,10 @@ export const useShield = (charId, inventory = []) => {
         brokenThreshold,
         hardnessBonus,
       });
-      setShieldState((cur) => ({
-        ...(cur || {}),
-        [heldShield.uid]: { hp: result.shieldHpAfter },
-      }));
+      setHp(heldShield.uid, result.shieldHpAfter);
       return result;
     },
-    [heldShield, setShieldState]
+    [heldShield, setHp]
   );
 
   // Repair (#579): restore HP to the held shield, capped at its full HP. A
@@ -108,13 +119,10 @@ export const useShield = (charId, inventory = []) => {
       const max = heldShield.maxHp ?? heldShield.shield?.hp ?? 0;
       const current = heldShield.shield?.hp ?? 0;
       const next = Math.min(max, current + amount);
-      setShieldState((cur) => ({
-        ...(cur || {}),
-        [heldShield.uid]: { hp: next },
-      }));
+      setHp(heldShield.uid, next);
       return next;
     },
-    [heldShield, setShieldState]
+    [heldShield, setHp]
   );
 
   const shieldEffect = useMemo(() => {
@@ -130,7 +138,7 @@ export const useShield = (charId, inventory = []) => {
     };
   }, [raised, heldShield]);
 
-  return { heldShield, raised, broken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
+  return { heldShield, raised, broken, destroyed, usable, wieldBroken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
 };
 
 export default useShield;

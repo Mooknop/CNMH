@@ -323,19 +323,19 @@ const ChainedSpellSection = forwardRef(({
 
   if (filteredSpells.length === 0) {
     return (
-      <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+      <div className="uam-chain-empty">
         No qualifying spells{chain.spellFilter === 'has-range' ? ' with a range' : ''} available.
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: '0.5rem' }}>
+    <div className="uam-chain-section">
       <select
         aria-label="spell picker"
         value={selectedSpellId}
         onChange={(e) => { setSelectedSpellId(e.target.value); setChainCastIdx(null); setChainActionOverride(null); }}
-        style={{ width: '100%', fontSize: '0.85rem', marginBottom: '0.4rem' }}
+        className="uam-chain-select"
       >
         {filteredSpells.map((s) => (
           <option key={s.id} value={s.id}>
@@ -345,19 +345,19 @@ const ChainedSpellSection = forwardRef(({
       </select>
 
       {chain.modifier && selectedSpell && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.4rem', fontStyle: 'italic' }}>
+        <div className="uam-chain-note uam-chain-note--italic">
           {chain.modifier}
         </div>
       )}
 
       {selfEffect?.choose && selfEffectOptions.length > 0 && (
-        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+        <label className="uam-chain-field">
           {selfEffect.choose.label || 'Choose'}:{' '}
           <select
             aria-label={selfEffect.choose.label || 'Self-effect choice'}
             value={selfEffectChoice ?? ''}
             onChange={(e) => setSelfEffectChoice(e.target.value)}
-            style={{ fontSize: '0.85rem' }}
+            className="uam-chain-text"
           >
             {selfEffectOptions.map((o) => (
               <option key={o} value={o}>{o}</option>
@@ -370,27 +370,26 @@ const ChainedSpellSection = forwardRef(({
         <div
           role="group"
           aria-label="Harrow Cast"
-          style={{ margin: '0.4rem 0', padding: '0.5rem', border: '1px dashed var(--shell-border-strong)', borderRadius: '6px' }}
+          className="uam-chain-group"
         >
-          <div style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
+          <div className="uam-chain-line">
             Active omen: <strong>{omenSuit || 'none'}</strong>
           </div>
-          <div role="radiogroup" aria-label="Card drawn" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '0.4rem' }}>
+          <div role="radiogroup" aria-label="Card drawn" className="uam-chain-radios uam-chain-radios--spaced">
             {HARROW_SUITS.map((s) => (
-              <label key={s.id} style={{ fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <label key={s.id} className="uam-chain-radio">
                 <input
                   type="radio"
                   name="harrow-drawn-suit"
                   checked={drawnSuit === s.id}
                   onChange={() => setDrawnSuit(s.id)}
                   aria-label={`drawn-${s.id}`}
-                  style={{ marginRight: '4px' }}
                 />
                 {s.id}{omenSuit === s.id ? ' ★' : ''}
               </label>
             ))}
           </div>
-          <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: '0.35rem' }}>
+          <label className="uam-chain-field">
             Flat check (DC {HARROW_CAST_DC}) — d20:{' '}
             <input
               type="number"
@@ -400,7 +399,7 @@ const ChainedSpellSection = forwardRef(({
               onChange={(e) => setFlatD20(e.target.value)}
             />
             {flatPassed != null && (
-              <strong style={{ marginLeft: '6px', color: flatPassed ? 'var(--color-success, #6abf69)' : 'var(--color-danger)' }}>
+              <strong className={`uam-chain-flat-result ${flatPassed ? 'uam-flatcheck-result--pass' : 'uam-flatcheck-result--fail'}`}>
                 {flatPassed ? 'passed' : 'failed — omen lost at end of turn'}
               </strong>
             )}
@@ -411,7 +410,7 @@ const ChainedSpellSection = forwardRef(({
             </div>
           )}
           {(harrowEffect?.kind === 'self-heal' || harrowEffect?.kind === 'target-heal') && (
-            <label style={{ fontSize: '0.85rem', display: 'block', marginTop: '0.35rem' }}>
+            <label className="uam-chain-field uam-chain-field--after">
               Healing rolled ({harrowEffect.dice}):{' '}
               <input
                 type="number"
@@ -429,31 +428,30 @@ const ChainedSpellSection = forwardRef(({
         <div
           role="group"
           aria-label="Split Shot"
-          style={{ margin: '0.4rem 0', padding: '0.5rem', border: '1px dashed var(--shell-border-strong)', borderRadius: '6px' }}
+          className="uam-chain-group"
         >
           {resolverTargets.length < 2 && (
-            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+            <div className="uam-chain-hint">
               Select two enemy targets — one attack roll is compared to both ACs (one attack for MAP).
             </div>
           )}
           {resolverTargets.length > 2 && (
-            <div style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+            <div className="uam-chain-hint uam-chain-hint--danger">
               Split Shot allows exactly two targets — deselect {resolverTargets.length - 2}.
             </div>
           )}
           {secondaryEntry && (
             <>
-              <div role="radiogroup" aria-label="Second target" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ fontSize: '0.85rem' }}>Second target:</span>
+              <div role="radiogroup" aria-label="Second target" className="uam-chain-radios">
+                <span className="uam-chain-text">Second target:</span>
                 {resolverTargets.map((e) => (
-                  <label key={e.entryId} style={{ fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <label key={e.entryId} className="uam-chain-radio">
                     <input
                       type="radio"
                       name="split-shot-secondary"
                       checked={secondaryEntry.entryId === e.entryId}
                       onChange={() => setSecondaryOverride(e.entryId)}
                       aria-label={`second-target-${e.name}`}
-                      style={{ marginRight: '4px' }}
                     />
                     {e.name}
                   </label>
@@ -526,9 +524,9 @@ const ChainedSpellSection = forwardRef(({
         <div className="uam-variant-note" data-testid="chain-area-note">{areaNote}</div>
       )}
 
-      <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+      <div className="uam-chain-total">
         Total: {costLabel(totalCost)} action{typeof totalCost === 'number' && totalCost !== 1 ? 's' : ''}
-        <span style={{ fontWeight: 'normal', marginLeft: '6px', color: 'var(--color-text-muted)' }}>
+        <span className="uam-chain-total-note">
           ({costLabel(parentCost)} + {costLabel(castActionCost)})
         </span>
       </div>
@@ -557,9 +555,9 @@ const ChainedSpellSection = forwardRef(({
       )}
 
       {saveTargets.length > 0 && (
-        <div className="ct-save-request-preview" style={{ marginTop: '0.4rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+        <div className="ct-save-request-preview">
           <strong>Save request → GM:</strong> {DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense} DC {rollProfile.dc}
-          <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
+          <ul>
             {saveTargets.map((e) => <li key={e.entryId}>{e.name}</li>)}
           </ul>
         </div>

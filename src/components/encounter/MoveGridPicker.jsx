@@ -104,7 +104,7 @@ const MoveGridPicker = ({
     <div className={`mgp${stepMode ? ' mgp--step' : ''}`} role="group" aria-label="Movement grid">
       <div
         className="mgp-grid"
-        style={{ gridTemplateColumns: `repeat(${span}, 1fr)` }}
+        style={{ '--mgp-span': span }}
       >
         {cells.map((c) => {
           if (c.status === 'reachable' || c.status === 'difficult' || c.status === 'passthrough') {

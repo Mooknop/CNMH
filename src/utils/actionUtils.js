@@ -111,7 +111,10 @@ export const getActions = (character) => {
     const runeActions = character.inventory.flatMap((item) =>
       runeAbilities(item, 'actions').map(processActionText)
     );
-    allActions = [...allActions, ...inventoryActions, ...runeActions];
+    const accessoryActions = character.inventory.flatMap((item) =>
+      accessoryRuneAbilities(item, 'actions').map(processActionText)
+    );
+    allActions = [...allActions, ...inventoryActions, ...runeActions, ...accessoryActions];
   }
 
   if (character.feats) {
@@ -123,14 +126,9 @@ export const getActions = (character) => {
     allActions = [...allActions, ...featActions];
   }
 
-  if (allActions.length === 0) {
-    allActions = [
-      { name: 'Stride', actionCount: 1, traits: ['Move'], description: 'You move up to your Speed.' },
-      { name: 'Step', actionCount: 1, traits: ['Move'], description: "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement." },
-      { name: 'Strike', actionCount: 1, traits: ['Attack'], description: 'You attack with a weapon or unarmed attack.' },
-    ];
-  }
-
+  // No basic-action fallback here: Stride/Step/Strike (and the rest of the
+  // basics) are owned by data/encounterActions.js and merged unconditionally
+  // by buildActionCatalog, with the move-controller wiring the grid needs.
   return allActions;
 };
 

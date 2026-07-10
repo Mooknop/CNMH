@@ -325,7 +325,7 @@ const MaintenancePanel = () => {
             type="file"
             accept="application/json,.json"
             aria-label="restore-file"
-            style={{ display: 'none' }}
+            className="gm-file-hidden"
             onChange={onPickRestore}
           />
         </div>

@@ -273,7 +273,7 @@ const GmImages = () => {
       </nav>
 
       <div className="gm-images-toolbar">
-        <div className="form-group" style={{ flex: 1 }}>
+        <div className="form-group gm-images-filter">
           <input
             aria-label="filter"
             placeholder={`Filter ${inTab.length} image${inTab.length !== 1 ? 's' : ''}…`}
@@ -308,7 +308,7 @@ const GmImages = () => {
           type="file"
           accept=".jpg,.jpeg,.png,.webp"
           aria-label="upload-file"
-          style={{ display: 'none' }}
+          className="gm-file-hidden"
           onChange={onFileChange}
         />
       </div>

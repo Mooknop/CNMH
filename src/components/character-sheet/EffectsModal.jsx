@@ -5,6 +5,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { newEntryUid } from '../../utils/uid';
 import { APP, syncKey } from '../../sync/keys';
+import './EffectsModal.css';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -65,9 +66,9 @@ const EffectsModal = ({
         <h3 className="ct-section-title">Apply To</h3>
         <select
           aria-label="effect-target"
+          className="effects-target-select"
           value={targetId}
           onChange={(e) => setTargetId(e.target.value)}
-          style={{ marginBottom: '1rem', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
         >
           {targetOptions.map((c) => (
             <option key={c.id} value={c.id}>
@@ -89,7 +90,6 @@ const EffectsModal = ({
               className="ct-browser-card"
               onClick={() => handleApply(def)}
               title={def.description}
-              style={{ textAlign: 'left' }}
             >
               <span className="ct-browser-name">{def.name}</span>
               <span className="ct-browser-summary">{def.description}</span>

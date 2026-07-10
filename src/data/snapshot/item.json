@@ -107,7 +107,8 @@
     ],
     "price": 0.1,
     "weight": 1,
-    "id": "1-striking-pick"
+    "id": "1-striking-pick",
+    "material": "Steel"
   },
   {
     "name": "Acid Flask",
@@ -2862,7 +2863,8 @@
     ],
     "price": 4,
     "weight": 0.1,
-    "id": "crescent-cross"
+    "id": "crescent-cross",
+    "material": "Steel"
   },
   {
     "id": "crossbow",
@@ -4577,7 +4579,8 @@
       "speedPenalty": 10,
       "group": "plate"
     },
-    "id": "full-plate"
+    "id": "full-plate",
+    "material": "Steel"
   },
   {
     "name": "Gate Attenuator",
@@ -6119,7 +6122,8 @@
     ],
     "price": 6,
     "weight": 2,
-    "id": "longbow"
+    "id": "longbow",
+    "material": "Wood"
   },
   {
     "id": "longsword",
@@ -7084,7 +7088,8 @@
       "strength": 10,
       "group": "cloth"
     },
-    "id": "padded-armor"
+    "id": "padded-armor",
+    "material": "Cloth"
   },
   {
     "name": "Pavise",
@@ -8651,7 +8656,13 @@
     "name": "Rusty, Broken Full Plate Armor",
     "weight": 5,
     "price": 30,
-    "description": "Large red rubies you pried from a statue of Xar-Azmak."
+    "description": "Large red rubies you pried from a statue of Xar-Azmak.",
+    "material": "Steel",
+    "durability": {
+      "hardness": 9,
+      "hp": 36,
+      "brokenThreshold": 18
+    }
   },
   {
     "name": "Salve of Antiparalysis",
@@ -9512,7 +9523,8 @@
         "Attack",
         "Melee"
       ]
-    }
+    },
+    "material": "Steel"
   },
   {
     "id": "shortbow",
@@ -9602,7 +9614,8 @@
     ],
     "price": 2,
     "weight": 0,
-    "id": "shuriken"
+    "id": "shuriken",
+    "material": "Steel"
   },
   {
     "name": "Silver Orb",
@@ -9860,9 +9873,13 @@
     "weight": 0,
     "description": "Sleep arrows often have shafts of deep blue or black, and their fletching is exceptionally soft and downy. An activated sleep arrow deals no damage, but a living creature hit by it is subject to the effects of a sleep spell (DC 17).\n\nCritical Success The creature is unaffected.\nSuccess The creature takes a –1 status penalty to Perception checks for 1 round.\nFailure The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.\nCritical Failure The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically.",
     "ammunition": {
-      "types": ["arrow"],
+      "types": [
+        "arrow"
+      ],
       "activate": 1,
-      "traits": ["Manipulate"],
+      "traits": [
+        "Manipulate"
+      ],
       "onHit": true,
       "save": {
         "stat": "will",
@@ -11111,9 +11128,13 @@
     "weight": 0,
     "description": "The head of this arrow is made from gleaming copper. When an activated storm arrow hits a target, it's buffeted by raging winds and struck by a bolt of lightning that deals 3d12 electricity damage, and the target must attempt a DC 25 Reflex saving throw. If this arrow is shot from a weapon with a shock property rune, the save DC increases to 27, though the attack doesn't benefit from the shock property rune itself.\n\nCritical Success The creature is unaffected.\nSuccess The creature takes half damage and isn't affected by the wind.\nFailure The creature takes full damage and is buffeted by winds for 1 round, taking a –2 circumstance penalty to ranged attack rolls and a –10-foot circumstance penalty to its fly Speed.\nCritical Failure As failure, but the creature takes double damage.",
     "ammunition": {
-      "types": ["arrow"],
+      "types": [
+        "arrow"
+      ],
       "activate": 1,
-      "traits": ["Manipulate"],
+      "traits": [
+        "Manipulate"
+      ],
       "onHit": true,
       "damage": {
         "dice": "3d12",
@@ -11235,7 +11256,8 @@
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "material": "Leather"
   },
   {
     "name": "Sulfur Bomb",

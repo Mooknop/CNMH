@@ -92,7 +92,7 @@ export function DndProvider({ renderGhost, children }) {
             'drag-ghost' +
             (drag.valid ? ' is-valid' : drag.zone ? ' is-invalid' : '')
           }
-          style={{ left: drag.x, top: drag.y }}
+          style={{ '--drag-x': `${drag.x}px`, '--drag-y': `${drag.y}px` }}
         >
           {renderGhost(drag.item)}
         </div>

@@ -5,6 +5,11 @@
   margin-bottom: 0.5rem;
 }
 
+/* Filter box takes the leftover toolbar width */
+.gm-images-filter {
+  flex: 1;
+}
+
 .gm-images-layout {
   display: flex;
   gap: 1.5rem;

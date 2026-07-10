@@ -204,7 +204,7 @@
 .moon-lore {
   margin: 0;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--iron-base);
   font-style: italic;
   text-align: center;
   line-height: 1.4;

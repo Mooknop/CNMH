@@ -1,6 +1,6 @@
 // Helpers for the GM chapter-event tracker (#1112). Events are the live `event`
 // collection imported from the adventure's chapter journals (see
-// scripts/importAdventureRooms.js) — the scripted happenings between dungeons.
+// scripts/importAdventureRooms.mjs) — the scripted happenings between dungeons.
 // The World → Events browser (#1114) and the dashboard panel (#1116) share
 // this module.
 import { GOLARION_MONTHS, totalDaysSince4700 } from './gameTime';

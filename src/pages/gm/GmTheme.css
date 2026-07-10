@@ -9,6 +9,13 @@
   font-size: 1.6rem;
 }
 
+/* Invisible host for the colorblind-simulation SVG filter defs */
+.gm-theme-svgdefs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
 /* ── Presets ──────────────────────────────────────────────── */
 
 .gm-theme-presets h2,
@@ -63,12 +70,14 @@
   gap: 0.3rem;
 }
 
+/* --pdot-color: per-preset swatch color, set inline as a custom property */
 .pdot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.25);
   display: inline-block;
+  background: var(--pdot-color);
 }
 
 .preset-tag {
@@ -188,13 +197,14 @@
 .gm-theme-preview.cb-protan { filter: url(#cb-protan); }
 .gm-theme-preview.cb-tritan { filter: url(#cb-tritan); }
 
-/* Preview mini-card — renders using the themeable --theme-* vars */
+/* Preview mini-card — renders using the themeable --theme-* vars.
+   --preview-accent is the draft accent color, injected inline on the card. */
 .theme-preview-card {
   background: var(--theme-surface-card, rgba(28, 24, 18, 0.9));
   border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.07));
   border-radius: var(--radius-lg);
   overflow: hidden;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
 }
 
 .preview-card-header {
@@ -203,11 +213,13 @@
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: var(--theme-surface-inset, rgba(255, 255, 255, 0.04));
+  border-left: 4px solid var(--preview-accent);
 }
 
 .preview-card-name {
   font-weight: 600;
   font-size: 0.95rem;
+  color: var(--preview-accent);
 }
 
 .preview-chip {
@@ -215,6 +227,9 @@
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
   font-weight: 600;
+  background: color-mix(in srgb, var(--preview-accent) 14%, transparent);
+  border: 1px solid var(--preview-accent);
+  color: var(--preview-accent);
 }
 
 .preview-card-body {
@@ -239,7 +254,7 @@
 .preview-value {
   font-weight: 700;
   font-size: 1rem;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
 }
 
 .preview-tabs {
@@ -261,6 +276,9 @@
 .preview-tab.active {
   border-bottom-width: 2px;
   border-bottom-style: solid;
+  background: color-mix(in srgb, var(--preview-accent) 14%, transparent);
+  border-bottom-color: var(--preview-accent);
+  color: var(--preview-accent);
 }
 
 .preview-table-header {
@@ -270,7 +288,8 @@
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--theme-text, #f5ede4);
+  color: var(--theme-text, var(--shell-text-primary));
+  background: color-mix(in srgb, var(--preview-accent) 14%, transparent);
 }
 
 /* ── Per-character overrides ──────────────────────────────── */

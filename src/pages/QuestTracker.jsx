@@ -40,7 +40,7 @@ const QuestTracker = () => {
         <ReputationRadarChart factions={reputation.Factions} />
         <h1>Quests</h1>
         {/* Quest count display for debugging */}
-        <div style={{ marginBottom: '15px', color: '#666' }}>
+        <div className="quest-count-note">
           Showing {sortedQuests.length} quests (Total: {questsArray.length})
         </div>
         

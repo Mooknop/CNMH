@@ -18,7 +18,7 @@ import {
   classifyLootItem,
   coinValueGp,
   extractTreasureCache,
-} from './importAdventureRooms.js';
+} from './importAdventureRooms.mjs';
 
 // Build a loot-actor as the export macro dumps it (embedded items).
 function lootActor(id, name, items) {

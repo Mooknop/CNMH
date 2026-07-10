@@ -155,11 +155,12 @@ const GmLootLedger = () => {
                 aria-valuemin={0}
                 aria-valuemax={Math.round(target * BAR_SCALE)}
               >
-                <div className="gm-ledger-bar-fill" style={{ width: barWidth(wealth.total, target) }} />
+                {/* --fill-w / --flush-left: data-driven bar geometry (custom-property bridges) */}
+                <div className="gm-ledger-bar-fill" style={{ '--fill-w': barWidth(wealth.total, target) }} />
                 <div className="gm-ledger-bar-tick tick-benchmark" title={`Benchmark ${gp(target)}`} />
                 <div
                   className="gm-ledger-bar-tick tick-flush"
-                  style={{ left: `${(FLUSH_RATIO / BAR_SCALE) * 100}%` }}
+                  style={{ '--flush-left': `${(FLUSH_RATIO / BAR_SCALE) * 100}%` }}
                   title={`Flush above ${gp(target * FLUSH_RATIO)}`}
                 />
               </div>
@@ -294,7 +295,7 @@ const GmLootLedger = () => {
                       aria-valuemin={0}
                       aria-valuemax={100}
                     >
-                      <div className="gm-ledger-bar-fill" style={{ width: `${claimedPct}%` }} />
+                      <div className="gm-ledger-bar-fill" style={{ '--fill-w': `${claimedPct}%` }} />
                     </div>
                   )}
                   {budget && (

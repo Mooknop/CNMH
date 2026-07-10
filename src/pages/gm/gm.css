@@ -110,6 +110,36 @@
   flex-wrap: wrap;
 }
 
+/* ── Small form-control helpers (subform spacing/sizing) ─── */
+.gm-ctl-top {
+  margin-top: 4px;
+}
+
+.gm-input-xs {
+  width: 70px;
+}
+
+.gm-input-sm {
+  width: 80px;
+}
+
+.gm-input-full {
+  width: 100%;
+}
+
+.gm-inline-gap {
+  margin-left: 12px;
+}
+
+.gm-inline-gap-sm {
+  margin-left: 8px;
+}
+
+.gm-check-line {
+  display: block;
+  margin-top: 4px;
+}
+
 /* ── Status / messaging ──────────────────────────────────── */
 .gm-banner {
   background: rgba(245, 124, 0, 0.1);
@@ -861,6 +891,15 @@
   color: var(--shell-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+/* Footer buttons on a requested-save card (RequestedSaves). */
+.gm-save-req-btn {
+  margin-top: 0.5rem;
+}
+
+.gm-save-req-btn--roll {
+  margin-right: 0.5rem;
 }
 
 .gm-save-row {
@@ -2476,7 +2515,7 @@ p.gm-live-note {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   background: var(--peril-light);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .gm-room-readaloud {
   margin: var(--space-3) 0;
@@ -2529,7 +2568,7 @@ p.gm-live-note {
   padding: 1px 6px;
   border-radius: var(--radius-full);
   background: var(--peril-light);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 .gm-room-hazards { margin: var(--space-2) 0 0; padding-left: 1.2em; }
 .gm-room-hazards li { color: var(--shell-text-secondary); margin: 2px 0; }
@@ -2967,3 +3006,33 @@ p.gm-live-note {
 }
 .gm-shop-items-kind--none { background: transparent; border-style: dashed; opacity: 0.7; }
 .gm-shop-items-toggle { flex: none; white-space: nowrap; }
+
+/* ── Inline-style-removal helpers (cosmetic sweep) ─────────── */
+.gm-input-xxs {
+  width: 60px;
+}
+
+.gm-actions--end {
+  justify-content: flex-end;
+}
+
+/* Hidden file input triggered by a styled button */
+.gm-file-hidden {
+  display: none;
+}
+
+/* Structured-effects subform row (EffectsSubform): wrapping selects +
+   rounds input. Defined after .gm-rank-row so align-items/gap win. */
+.gm-effects-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* SetLocationModal search box — double class beats .pmc-meta-input's
+   7ch width regardless of stylesheet order. */
+.pmc-meta-input.gm-location-search {
+  width: 100%;
+  margin-bottom: 1rem;
+}

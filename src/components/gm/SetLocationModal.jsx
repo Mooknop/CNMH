@@ -50,12 +50,11 @@ const SetLocationModal = ({ isOpen, onClose }) => {
         <h3 className="ct-section-title">Choose Location</h3>
         <input
           type="search"
-          className="pmc-meta-input"
+          className="pmc-meta-input gm-location-search"
           aria-label="Search locations"
           placeholder="Search locations…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{ marginBottom: '1rem', width: '100%' }}
         />
         <div className="ct-browser-grid">
           {filtered.map((entry) => (
@@ -65,7 +64,6 @@ const SetLocationModal = ({ isOpen, onClose }) => {
               className={`ct-browser-card${selectedId === entry.id ? ' ct-browser-card--active' : ''}`}
               onClick={() => handlePick(entry)}
               title={entry.summary}
-              style={{ textAlign: 'left' }}
             >
               <span className="ct-browser-name">{entry.title}</span>
               <span className="ct-browser-summary">{entry.summary}</span>

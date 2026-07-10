@@ -18,7 +18,7 @@
 }
 
 .reclaim-bucket-label {
-  color: var(--shell-text-primary, #fff);
+  color: var(--shell-text-primary, var(--color-text-on-primary));
 }
 
 .reclaim-bucket-help {

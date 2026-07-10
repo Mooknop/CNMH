@@ -153,7 +153,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.7rem;
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 /* ── Body: optional subrail + content ─────────────────── */
@@ -266,7 +266,7 @@
   gap: 12px;
   text-align: center;
   padding: 48px 16px;
-  background: var(--theme-bg, #12100e);
+  background: var(--theme-bg, var(--shell-bg));
   color: var(--shell-text-primary);
   font-family: var(--font-ui);
 }

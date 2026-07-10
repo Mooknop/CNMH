@@ -46,7 +46,9 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   const [offersHandled, setOffersHandled] = useState({});
 
   // Raise a Shield (Slice 1); the Shield Block bar is its own component now.
-  const { heldShield, raised, broken, raiseShield, lowerShield } =
+  // `usable` folds Broken/Destroyed in — a broken shield stays usable only for
+  // a Rust-Blessed wielder (campaign boon).
+  const { heldShield, raised, broken, destroyed, usable, raiseShield, lowerShield } =
     useShield(charId, inventory);
 
   // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
@@ -123,7 +125,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   if (!encounter || encounter.phase === 'idle') return null;
 
   const handleRaiseShield = () => {
-    if (!heldShield || broken) return;
+    if (!usable) return;
     raiseShield(heldShield.uid);
     spendActions(1, 'Raise a Shield');
     appendLog({ type: 'action', charId, text: `${characterName} raised a shield` });
@@ -213,13 +215,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
             <button
               className="btn-secondary ttp-shield"
               onClick={handleRaiseShield}
-              disabled={broken}
-              title={broken
+              disabled={!usable}
+              title={destroyed
+                ? 'Shield is destroyed — beyond repair'
+                : broken && !usable
                 ? 'Shield is broken — no bonus until repaired'
+                : broken
+                ? `Raise ${heldShield.name || 'shield'} (+${heldShield.shield?.bonus ?? 0} AC) — broken, held together by Rust Blessing`
                 : `Raise ${heldShield.name || 'shield'} (+${heldShield.shield?.bonus ?? 0} AC)`}
               aria-label="Raise a Shield"
             >
-              🛡 Raise{broken ? ' (Broken)' : ''}
+              🛡 Raise{destroyed ? ' (Destroyed)' : broken ? ' (Broken)' : ''}
             </button>
           )}
 
