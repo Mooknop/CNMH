@@ -954,6 +954,36 @@ describe('ItemModal', () => {
     expect(img.style.objectPosition).toBe('25% 80%');
   });
 
+  // --- Thassilonian rune mark ---
+  it('an imageless rune-marked item shows the rune as the hero art', () => {
+    const item = { ...baseItem, thassilonianRune: 'lust' };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const rune = document.querySelector('.loot-rune-art svg.thassilonian-rune');
+    expect(rune).not.toBeNull();
+    expect(rune).toHaveAttribute('data-rune', 'lust');
+    expect(rune).toHaveClass('rune-tint');
+    expect(document.querySelector('.loot-code')).toBeNull();
+    expect(document.querySelector('.loot-rune-badge')).toBeNull();
+  });
+
+  it('a rune-marked item with real art keeps the art and adds the rune badge', () => {
+    const item = { ...baseItem, image: 'img_hammer.jpg', thassilonianRune: 'pride' };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(document.querySelector('.loot-art img')).not.toBeNull();
+    const badge = document.querySelector('.loot-rune-badge');
+    expect(badge).not.toBeNull();
+    expect(badge).toHaveAttribute('data-rune', 'pride');
+    expect(badge).toHaveClass('rune-tint');
+    expect(badge.querySelector('svg.thassilonian-rune')).not.toBeNull();
+  });
+
+  it('an unknown rune name renders neither rune art nor badge', () => {
+    const item = { ...baseItem, thassilonianRune: 'avarice' };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(document.querySelector('.loot-rune-art')).toBeNull();
+    expect(document.querySelector('.loot-code')).not.toBeNull();
+  });
+
   // --- runestone (#800) ---
   it('renders a runestone: held rune + inert reminder, no Use button', () => {
     const runestone = {

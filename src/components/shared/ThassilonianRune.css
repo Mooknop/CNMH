@@ -1,0 +1,14 @@
+/* Sin-rune tint mapping — tokens live in pf2e-tokens.css. Opt-in via the
+   `tint` prop on ThassilonianRune, or by putting .rune-tint + data-rune on a
+   wrapper (medallion coins tint their border/glow off currentColor and let
+   the rune inherit). An untinted rune stays currentColor like every other
+   glyph, and virtue runes (no tokens yet) inherit currentColor even when
+   tinted. */
+.rune-tint[data-rune='lust']      { color: var(--rune-lust); }
+.rune-tint[data-rune='envy']      { color: var(--rune-envy); }
+.rune-tint[data-rune='sloth']     { color: var(--rune-sloth); }
+.rune-tint[data-rune='greed']     { color: var(--rune-greed); }
+.rune-tint[data-rune='gluttony']  { color: var(--rune-gluttony); }
+.rune-tint[data-rune='pride']     { color: var(--rune-pride); }
+.rune-tint[data-rune='wrath']     { color: var(--rune-wrath); }
+.rune-tint[data-rune='vainglory'] { color: var(--rune-vainglory); }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { GAME_GLYPHS } from '../../utils/gameGlyphs';
+import { THASSILONIAN_RUNES } from '../../utils/thassilonianRunes';
 import './Flourish.css';
 
 // Signature-ability flourishes (#1347, epic #1343) — bespoke one-shot SVG
@@ -117,6 +118,35 @@ const RustBloom = () => (
   </svg>
 );
 
+// Thassilonian rune stamp (rune-marked gear, e.g. the Flawless Hammer and the
+// Varisian tattoos) — the item's rune slams down over the card and fades: a
+// blurred glow copy under a crisp core, both in the sin's --rune-* token
+// color (Flourish.css; virtues fall back to currentColor). One component per
+// rune is generated below so the registry stays a flat id → component map.
+const RuneStamp = ({ rune }) => {
+  const d = THASSILONIAN_RUNES[rune]?.d;
+  if (!d) return null;
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" data-rune={rune}>
+      <g transform="translate(50 50)">
+        <g className="flx-ctr flx-rune-glow">
+          <g transform="scale(0.66) translate(-50 -50)"><path fillRule="evenodd" d={d} /></g>
+        </g>
+        <g className="flx-ctr flx-rune-core">
+          <g transform="scale(0.6) translate(-50 -50)"><path fillRule="evenodd" d={d} /></g>
+        </g>
+      </g>
+    </svg>
+  );
+};
+
+const RUNE_FLOURISHES = Object.fromEntries(
+  Object.keys(THASSILONIAN_RUNES).map((rune) => {
+    const Stamp = () => <RuneStamp rune={rune} />;
+    return [`rune-${rune}`, Stamp];
+  })
+);
+
 export const FLOURISHES = {
   'shadow-tendrils': ShadowTendrils,
   'dragon-lightning': DragonLightning,
@@ -124,6 +154,7 @@ export const FLOURISHES = {
   'blood-swirl': BloodSwirl,
   'blood-swirl-loud': BloodSwirlLoud,
   'rust-bloom': RustBloom,
+  ...RUNE_FLOURISHES,
 };
 
 const Flourish = ({ id }) => {

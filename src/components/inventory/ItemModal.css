@@ -88,6 +88,44 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 .loot-art .loot-tile img { width: 100%; height: 100%; object-fit: cover; }
+/* Rune-marked gear (thassilonianRune) — imageless items show the rune AS the
+   hero art, tinted by its sin token (ThassilonianRune.css). */
+.loot-art .loot-rune-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.loot-art .loot-rune-art .thassilonian-rune {
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+/* With real art the rune rides as a coin badge (bottom-right; the gem owns
+   top-left, charges own the bottom band's center) — same medallion recipe as
+   the inventory tile's, bordered/glowing in the sin tint via currentColor. */
+.loot-rune-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
+  border: 1px solid currentColor;
+  box-shadow:
+    0 0 10px color-mix(in srgb, currentColor 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.loot-rune-badge .thassilonian-rune {
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
+}
 /* material tints (mirror IconTile) */
 .loot-art .tint-ember   { --tc: var(--ember-mid); }
 .loot-art .tint-iron    { --tc: var(--iron-light); }

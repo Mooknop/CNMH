@@ -1,5 +1,7 @@
 import React from 'react';
 import GameGlyph from '../shared/GameGlyph';
+import ThassilonianRune from '../shared/ThassilonianRune';
+import { runeForName } from '../../utils/thassilonianRunes';
 import { itemTint, itemCharges, isGlowy, itemRarity, itemCode } from '../../utils/inventoryTile';
 
 /**
@@ -20,6 +22,9 @@ const IconTile = ({ item, size = 52, glow = true }) => {
   const rarity = itemRarity(item);
   const showGlow = glow && isGlowy(item);
   const qty = item?.quantity || 1;
+  // Rune-marked gear: with real art the rune rides as a corner medallion
+  // (bottom-left, the free corner); with none it IS the art.
+  const rune = runeForName(item?.thassilonianRune);
 
   const cls = [
     'icon-tile',
@@ -42,8 +47,20 @@ const IconTile = ({ item, size = 52, glow = true }) => {
           alt=""
           draggable={false}
         />
+      ) : rune ? (
+        <span className="icon-tile-rune-art">
+          <ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${rune.label}`} />
+        </span>
       ) : (
         <span className="icon-tile-code">{itemCode(item?.name)}</span>
+      )}
+      {item?.image && rune && (
+        <span
+          className="icon-tile-rune rune-tint"
+          data-rune={String(item.thassilonianRune).toLowerCase()}
+        >
+          <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${rune.label}`} />
+        </span>
       )}
       {item?.activeEffects?.length > 0 && (
         <span

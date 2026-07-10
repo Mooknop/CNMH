@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
+import ThassilonianRune from '../shared/ThassilonianRune';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
@@ -41,6 +42,7 @@ import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCas
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
+import { runeForName } from '../../utils/thassilonianRunes';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -380,6 +382,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const tint = itemTint(item);                           // ember|iron|verdant|arcane|gold|neutral
   const charges = itemCharges(item);                     // { current, max } | null
   const code = itemCode(item.name);
+  const thassRune = runeForName(item.thassilonianRune);  // rune-marked gear | null
   const category =
     isContainerItem ? 'Container'
     : item.strikes ? 'Weapon'
@@ -553,13 +556,24 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     >
       <button className="loot-close" onClick={onClose} aria-label="Close">&times;</button>
 
-      {/* ── hero art: full-panel tile (real art or itemCode placeholder) ── */}
+      {/* ── hero art: full-panel tile (real art, the item's Thassilonian rune,
+             or the itemCode placeholder) ── */}
       <div className="loot-art">
         <span className={`loot-tile tint-${tint}${isGlowy(item) ? ' is-glow' : ''}`}>
           {item.image
             ? <img src={`/api/images/${item.image}`} alt="" style={item.imagePosition ? { objectPosition: `${item.imagePosition.x}% ${item.imagePosition.y}%` } : undefined} />
-            : <span className="loot-code">{code}</span>}
+            : thassRune
+              ? <span className="loot-rune-art"><ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${thassRune.label}`} /></span>
+              : <span className="loot-code">{code}</span>}
         </span>
+        {item.image && thassRune && (
+          <span
+            className="loot-rune-badge rune-tint"
+            data-rune={String(item.thassilonianRune).toLowerCase()}
+          >
+            <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${thassRune.label}`} />
+          </span>
+        )}
         <span className="loot-gem" title={rarityLabel} />
         {charges && (
           <span className="loot-charges" title={`${charges.current} / ${charges.max} charges`}>
