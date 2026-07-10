@@ -9,6 +9,7 @@ import {
   removeInstance,
   pruneOrphans,
   collectFromResults,
+  applyPersistentFromResults,
   formatReminder,
   formatClearance,
   persistentVsType,
@@ -218,5 +219,36 @@ describe('recovery-DC overrides (#1215 — Toothy Knife)', () => {
     const inst = { dice: '1d6', type: 'bleed', recoveryDc: { base: 19, assisted: 14 } };
     expect(formatReminder('Goblin', inst)).toContain('DC 19 flat check to end');
     expect(formatReminder('Goblin', inst, { easeFlatCheck: true })).toContain('DC 14 flat check to end');
+  });
+});
+
+describe('applyPersistentFromResults (#1317 D1)', () => {
+  const rayGroups = [
+    {
+      rayIndex: null,
+      results: [
+        { entryId: 'e-1', damage: { final: 12, persistent: [{ dice: '2d4', type: 'electricity' }] } },
+      ],
+    },
+  ];
+
+  it('folds collected hits into the map through the setter', () => {
+    const setPersistentMap = vi.fn();
+    applyPersistentFromResults({ rayGroups, chainResults: null, abilityName: 'Zap', setPersistentMap });
+    expect(setPersistentMap).toHaveBeenCalledTimes(1);
+    const next = setPersistentMap.mock.calls[0][0](null);
+    expect(next['e-1']).toHaveLength(1);
+    expect(next['e-1'][0]).toMatchObject({ dice: '2d4', type: 'electricity', sourceName: 'Zap' });
+  });
+
+  it('skips the write entirely when nothing persistent landed', () => {
+    const setPersistentMap = vi.fn();
+    applyPersistentFromResults({
+      rayGroups: [{ rayIndex: null, results: [{ entryId: 'e-1', damage: { final: 4 } }] }],
+      chainResults: null,
+      abilityName: 'Zap',
+      setPersistentMap,
+    });
+    expect(setPersistentMap).not.toHaveBeenCalled();
   });
 });

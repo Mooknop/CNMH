@@ -19,12 +19,13 @@ import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
-import { useFrequency } from '../../hooks/useFrequency';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
-import { useAura } from '../../hooks/useAura';
-import { useOmen } from '../../hooks/useOmen';
-import { useShield } from '../../hooks/useShield';
+import { useFrequencyGate } from '../../hooks/useFrequencyGate';
+import { useAuraGate } from '../../hooks/useAuraGate';
+import { useShieldGate } from '../../hooks/useShieldGate';
+import { useOmenGate } from '../../hooks/useOmenGate';
+import { useImmunityGate } from '../../hooks/useImmunityGate';
 import { useVeracious } from '../../hooks/useVeracious';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
 import { useChambers } from '../../hooks/useChambers';
@@ -32,15 +33,13 @@ import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
+import { applyAbility, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
 import { buildChainSelfEffect } from '../../utils/spellshapeTransform';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { markPlayingOnCast } from '../../utils/playing';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
-import { immunityConfigFor } from '../../utils/immunity';
 import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
-import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { ammoSaveDc } from '../../utils/ammunition';
 import { resolveActionRoll, isBasicDefense } from '../../utils/rollResolution';
@@ -49,22 +48,19 @@ import { preyMatches } from '../../utils/huntPrey';
 import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
-import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
-import { rkKeyFor, revealOneIwr } from '../../utils/recallKnowledge';
+import { PERSISTENT_KEY, applyPersistentFromResults } from '../../utils/persistentDamage';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
-import { collectDamageHits, buildDamageApply } from '../../utils/damageRelay';
+import { buildDamageApply, relayDamageAndRevealIwr } from '../../utils/damageRelay';
+import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from '../../utils/whetstoneOnHit';
+import { logThrownWeaponResolution } from '../../utils/thrownResolution';
 import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
-import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
 import { HARROW_CAST_DC } from '../../utils/harrow';
 import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
 import { applyHealing } from '../../utils/consumables';
-import { getClassDC } from '../../utils/CharacterUtils';
-import { calculateSpellStats } from '../../utils/SpellUtils';
 import { itemUidOf } from '../../utils/affix';
 import { eligibleCatalystsFor, sumCatalystActions, catalystSummary, catalystAddActions } from '../../utils/catalyst';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
-import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
 import './UseAbilityModal.css';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
@@ -118,8 +114,6 @@ const UseAbilityModal = ({
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
     useTurnState(character?.id || 'nobody');
-  const { gateFor, record: recordFreqUse, clear: clearFreqLock } =
-    useFrequency(character?.id || 'nobody');
   const { exploitFor } = useExploitVulnerability();
   const { revealFiredIwr } = useIwrReveal();
   // Whetstone on-hit reveals (#1215 — Analysis Eye) write the creature's RK
@@ -181,30 +175,14 @@ const UseAbilityModal = ({
   const [castOptionIdx, setCastOptionIdx] = useState(null);
   const [castOverride, setCastOverride] = useState(false);
 
-  // Frequency gate (#218) — declarative cooldown override for table rulings.
-  const [freqOverride, setFreqOverride] = useState(false);
-
-  // Kinetic aura gate (#228) — impulses need the aura up; override for rulings.
-  const aura = useAura(character?.id || 'nobody');
-  const [auraOverride, setAuraOverride] = useState(false);
-
-  // Raised-shield gate (#228) — Devoted Guardian requires the shield up.
+  // The character's derived data — feeds the shield gate's inventory and the
+  // catalyst eligibility below.
   const charData = useCharacter(character);
-  const { raised: shieldRaised } = useShield(character?.id || 'nobody', charData?.inventory || []);
-  const [shieldOverride, setShieldOverride] = useState(false);
 
   // Veracious Spell (#967 R7) — the armed power-ring bonus applies to the NEXT
   // spell attack, so a committed cast consumes it (cleared on confirm below).
   const { armed: veraciousArmed, disarm: disarmVeracious } =
     useVeracious(character?.id || 'nobody', charData?.inventory || []);
-
-  // Harrow omen gate (#227) — omen-bound abilities (Avoid Dire Fate, Harrow
-  // Casting) need an active omen; using a clearsOmen ability spends it.
-  const omen = useOmen(character?.id || 'nobody');
-  const [omenOverride, setOmenOverride] = useState(false);
-
-  // Target-immunity gate (#218) — override when all picked targets are immune.
-  const [immunityOverride, setImmunityOverride] = useState(false);
 
   // Rider choice (#225) — which either/or rider option is picked. null =
   // default to the first available option.
@@ -249,6 +227,46 @@ const UseAbilityModal = ({
       includeSelf: true,
       defaultTargetId: offensiveShape ? (focusEnemy?.entryId || null) : null,
     });
+
+  const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character?.id);
+  const casterEntryId  = casterEntry?.entryId || null;
+
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
+
+  const selectedEntries  = order.filter((e) => targets.includes(e.entryId));
+  const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
+  const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
+
+  // Gate hooks (#1317 D1) — each owns its override state, gate derivation,
+  // blocked-section JSX and confirm slice. The orchestrator folds each gateOk
+  // into confirmEnabled, renders each section where its block always sat, and
+  // calls each applyOnConfirm at the same handleConfirm sequence position.
+  const frequencyGate = useFrequencyGate({
+    charId: character?.id || 'nobody',
+    ability,
+    nowSecs,
+    encounter,
+    casterEntryId,
+  });
+  const auraGate = useAuraGate({ charId: character?.id || 'nobody', ability, character });
+  const shieldGate = useShieldGate({
+    charId: character?.id || 'nobody',
+    ability,
+    inventory: charData?.inventory || [],
+  });
+  const omenGate = useOmenGate({ charId: character?.id || 'nobody', ability, character });
+  const immunityGate = useImmunityGate({
+    ability,
+    character,
+    characters,
+    targetCharIds,
+    nowSecs,
+    getState,
+    sendUpdate,
+  });
+  // The live omen, re-exported by the gate hook — read by the omen summary
+  // line and the Harrow-Casting narrative block below.
+  const omen = omenGate.omen;
 
   if (!ability || !character) return null;
 
@@ -377,55 +395,6 @@ const UseAbilityModal = ({
   const costDisplayFinal = (isChamberedFire && typeof effectiveCost === 'number')
     ? String(effectiveCost + fireExtra)
     : costDisplay;
-
-  const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character.id);
-  const casterEntryId  = casterEntry?.entryId || null;
-
-  // Frequency gate — availability derived from the synced ledger vs the game
-  // clock and the live encounter round/turn (#218). Advancing either clock
-  // re-enables locked abilities; nothing is timer-driven.
-  const nowSecs  = toGameSeconds({ ...gameDate, ...time });
-  const freqRule = parseFrequency(ability);
-  const freqCtx  = { nowSecs, encounter, casterEntryId };
-  const freqGate = freqRule
-    ? gateFor(ability, freqCtx)
-    : { available: true };
-  const freqGateOk = freqGate.available || freqOverride;
-
-  const selectedEntries  = order.filter((e) => targets.includes(e.entryId));
-  const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
-  const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
-
-  // Target immunity (#218): for abilities that confer immunity (Guidance,
-  // Battle Medicine, …), flag picked PC targets already immune. The use is
-  // blocked only when every picked target is immune (override available).
-  const immunityConfig = immunityConfigFor(ability);
-  // `immunityKey` lets variants share one immunity pool (#228 — Murmured
-  // Prayer's 1/day +2 Guidance is still "Guidance" for the 1-hour immunity).
-  const immunityAbilityKey = ability.immunityKey || freqKeyFor(ability);
-  const immuneTargets = immunityConfig
-    ? targetCharIds
-        .map((cid) => {
-          const tEffects = getState(cid, APP.EFFECTS) || [];
-          const immune = tEffects.find(
-            (e) => e.effectId === 'ability-immunity'
-              && e.abilityKey === immunityAbilityKey
-              && (immunityConfig.scope !== 'per-caster' || e.appliedBy === character.id)
-              && !(typeof e.expireAtSecs === 'number' && e.expireAtSecs <= nowSecs)
-          );
-          return immune
-            ? {
-                charId: cid,
-                name: characters.find((c) => c.id === cid)?.name || cid,
-                expireAtSecs: immune.expireAtSecs,
-              }
-            : null;
-        })
-        .filter(Boolean)
-    : [];
-  const allTargetsImmune =
-    !!immunityConfig && targetCharIds.length > 0 && immuneTargets.length === targetCharIds.length;
-  const immunityGateOk = !allTargetsImmune || immunityOverride;
 
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
@@ -582,18 +551,6 @@ const UseAbilityModal = ({
   const castGateOk =
     castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
 
-  // Kinetic aura gate (#228): impulses are unusable while the aura is down.
-  // Channel Elements itself activates (no Impulse trait), so it never blocks.
-  const auraGateBlocked = requiresAura(ability) && !aura.active;
-  const auraGateOk = !auraGateBlocked || auraOverride;
-
-  // Raised-shield gate (#228): Devoted Guardian and kin need the shield up.
-  const shieldGateBlocked = ability.requiresShieldRaised === true && !shieldRaised;
-  const shieldGateOk = !shieldGateBlocked || shieldOverride;
-
-  // Harrow omen gate (#227): omen-bound abilities need an active omen.
-  const omenGateBlocked = ability.requiresOmen === true && !omen.suit;
-  const omenGateOk = !omenGateBlocked || omenOverride;
   // Abilities that interact with the omen surface its current suit.
   const showsOmen = ability.requiresOmen === true || ability.clearsOmen === true;
 
@@ -625,7 +582,8 @@ const UseAbilityModal = ({
 
   const confirmEnabled =
     (!needsPicker || targets.length > 0)
-    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk && omenGateOk
+    && castGateOk && frequencyGate.gateOk && immunityGate.gateOk
+    && auraGate.gateOk && shieldGate.gateOk && omenGate.gateOk
     && (flatChecks.length === 0 || allFlatChecksRolled)
     && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
 
@@ -677,13 +635,13 @@ const UseAbilityModal = ({
 
       // Per-enemy immunity (Disrupting Performance's 1-minute lockout) — only
       // when the check succeeded and a triggering enemy was picked.
-      if (succeeded && immunityConfig && res?.enemyEntryId) {
+      if (succeeded && immunityGate.immunityConfig && res?.enemyEntryId) {
         stampImmunity(res.enemyEntryId, {
-          abilityKey:   immunityAbilityKey,
+          abilityKey:   immunityGate.immunityAbilityKey,
           abilityName:  ability.name,
           casterId:     character.id,
           nowSecs,
-          durationSecs: immunityConfig.durationSecs,
+          durationSecs: immunityGate.immunityConfig.durationSecs,
         });
       }
 
@@ -819,61 +777,27 @@ const UseAbilityModal = ({
       }
     };
 
+    // Log-suffix collector (#1317 D1) — the casting-resource spend and each
+    // gate's applyOnConfirm contribute in the same order the old sourceSuffix
+    // string was built, so the joined suffix composes identically.
+    const suffixes = [];
+    const addSuffix = (s) => suffixes.push(s);
     // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
     // override casts without decrementing — the manual pips stay the
     // remediation surface and pools never go negative.
-    let sourceSuffix = '';
     if (selectedCastOption) {
       if (selectedCastOption.enabled) {
         const { label } = resources.spend(selectedCastOption);
-        if (label) sourceSuffix = ` (${label})`;
+        if (label) addSuffix(` (${label})`);
       } else if (castOverride) {
-        sourceSuffix = ' (override — no resource spent)';
+        addSuffix(' (override — no resource spent)');
       }
     }
-    // Frequency: record the use either way — under an override the use still
-    // happened, it just bypassed the lock (and the log says so).
-    if (freqRule) {
-      recordFreqUse(ability, freqCtx);
-      if (!freqGate.available && freqOverride) {
-        sourceSuffix += ' (override — frequency)';
-      }
-    }
-    // Kinetic aura (#228): activating abilities switch it on; overflow
-    // impulses burn it out on use.
-    if (activatesAura(ability) && !aura.active) {
-      aura.activate();
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   `${character.name}'s kinetic aura activates`,
-      });
-    } else if (isOverflow(ability) && aura.active) {
-      aura.deactivate();
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   `${character.name}'s kinetic aura deactivates (overflow)`,
-      });
-    }
-    if (auraGateBlocked && auraOverride) {
-      sourceSuffix += ' (override — aura inactive)';
-    }
-    if (shieldGateBlocked && shieldOverride) {
-      sourceSuffix += ' (override — shield not raised)';
-    }
-    if (omenGateBlocked && omenOverride) {
-      sourceSuffix += ' (override — no active omen)';
-    }
-    // Harrow omen (#227): clearsOmen abilities spend the active omen.
-    if (ability.clearsOmen === true && omen.suit) {
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   `${character.name}'s harrow omen (${omen.suit}) is spent (${ability.name})`,
-      });
-      omen.clear();
-    }
+    frequencyGate.applyOnConfirm({ addSuffix, appendLog });
+    auraGate.applyOnConfirm({ addSuffix, appendLog });
+    shieldGate.applyOnConfirm({ addSuffix, appendLog });
+    omenGate.applyOnConfirm({ addSuffix, appendLog });
+    const sourceSuffix = suffixes.join('');
     // Ally resistance (#228): the GM applies it to the triggering damage.
     if (allyResistance != null) {
       appendLog({
@@ -924,16 +848,7 @@ const UseAbilityModal = ({
 
     // Stamp clock-expiring immunity on picked PC targets (Guidance, Tell
     // Fortune, …). Independent of effects[]; idempotent on already-immune.
-    if (immunityConfig) {
-      applyAbilityImmunity({
-        ability,
-        caster: character,
-        targetCharIds,
-        nowSecs,
-        getState,
-        sendUpdate,
-      });
-    }
+    immunityGate.applyOnConfirm({ addSuffix, appendLog });
 
     // Sustained spells (#220) — register on the caster's ledger so the turn
     // tracker can prompt "Sustain a Spell" each turn. Only in an active
@@ -1127,160 +1042,54 @@ const UseAbilityModal = ({
     // Persistent-damage tracking (#272): record each target's persistent
     // entries (already crit-doubled by computeTargetDamage) so the turn
     // tracker chips them and the watcher reminds at their turn end.
-    const persistentHits = collectFromResults(rayGroups, hasChainStrike ? chainResults : null);
-    if (persistentHits.length) {
-      setPersistentMap((m) => persistentHits.reduce(
-        (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, ability.name)),
-        m || {}
-      ));
-    }
-
-    // Typed damage relay (#1016): push each enemy target's RAW typed total to
-    // the bridge, which applies it through PF2e's actor.applyDamage — Foundry
-    // nets the monster's IWR and stays authoritative for enemy HP. Enemies
-    // only: PC damage flows through cnmh_hp and would double-apply.
-    const enemyEntryIds = new Set(
-      (order || []).filter((e) => e.kind === 'enemy').map((e) => e.entryId)
-    );
-    const damageHits = collectDamageHits(rayGroups, hasChainStrike ? chainResults : null, {
-      typeLabel: damageProfile?.typeLabel ?? null,
-      allowedEntryIds: enemyEntryIds,
+    applyPersistentFromResults({
+      rayGroups,
+      chainResults: hasChainStrike ? chainResults : null,
+      abilityName: ability.name,
+      setPersistentMap,
     });
-    if (damageHits.length) {
-      sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: damageHits, sourceName: ability.name }));
-    }
 
-    // Reveal-on-trigger (#1014): any monster IWR that just modified a target's
-    // applied damage is now table knowledge — stamp it into the RK record and
-    // announce first reveals. Chained strikes are untyped (no IWR) — harmless.
-    revealFiredIwr([
-      ...rayGroups.flatMap((g) => g?.results || []),
-      ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
-    ]);
+    // Typed damage relay (#1016) + reveal-on-trigger (#1014): push each enemy
+    // target's RAW typed total to the bridge (Foundry nets the monster's IWR)
+    // and stamp any IWR that just fired into the RK record.
+    relayDamageAndRevealIwr({
+      rayGroups,
+      chainResults: hasChainStrike ? chainResults : null,
+      order,
+      typeLabel: damageProfile?.typeLabel ?? null,
+      sourceName: ability.name,
+      sendUpdate,
+      revealFiredIwr,
+    });
 
-    // Whetstone on-hit riders (#1215) — the bound whetstone's confirm-time
-    // automations fire off successful results: Analysis Eye learns one
-    // weakness/resistance, Leeching Fangs heals half the damage dealt,
-    // Limning Gem lights the target up (+ a reminder note).
-    const wsOnHit = ability.whetstoneOnHit;
-    if (wsOnHit) {
-      const hitResults = [
-        ...rayGroups.flatMap((g) => g?.results || []),
-        ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
-      ].filter((r) => r?.degree === 'success' || r?.degree === 'criticalSuccess');
-      if (hitResults.length) {
-        if (wsOnHit.healHalf) {
-          const dealt = hitResults.reduce((sum, r) => sum + (r.damage?.final || 0), 0);
-          const heal = Math.floor(dealt / 2);
-          if (heal > 0) {
-            applyHealing({
-              target: { id: character.id, name: character.name, maxHp: character.maxHp },
-              amount: heal,
-              getState,
-              sendUpdate,
-              appendLog,
-              logText: `${wsOnHit.itemName}: ${character.name} heals ${heal} HP (half of ${dealt} dealt — living targets only)`,
-            });
-          }
-        }
-        if (wsOnHit.revealIwr) {
-          hitResults.forEach((r) => {
-            const entry = (order || []).find((e) => e.entryId === r.entryId);
-            if (!entry || entry.kind !== 'enemy') return;
-            const key = rkKeyFor(entry);
-            if (!key) return;
-            const { revealed, fresh } = revealOneIwr(recordFor(key), entry.defenses);
-            if (!revealed) {
-              appendLog({
-                type: 'system',
-                text: `${wsOnHit.itemName}: ${entry.name} has no weakness or resistance to learn.`,
-              });
-              return;
-            }
-            mergeRecord(key, (prev) => revealOneIwr(prev, entry.defenses).record);
-            if (fresh) {
-              appendLog({
-                type: 'system',
-                text: `${wsOnHit.itemName}: ${entry.name}'s ${revealed.kind} to ${revealed.type} is revealed!`,
-              });
-            }
-          });
-        }
-        if (wsOnHit.condition) {
-          hitResults.forEach((r) => {
-            const entry = (order || []).find((e) => e.entryId === r.entryId);
-            if (!entry || entry.kind !== 'enemy') return;
-            applyEnemyCondition(r.entryId, { id: wsOnHit.condition, source: wsOnHit.itemName });
-            appendLog({
-              type: 'system',
-              text: `${wsOnHit.itemName}: ${entry.name} is ${wsOnHit.condition}`,
-            });
-          });
-        }
-        if (wsOnHit.note) {
-          appendLog({ type: 'action', charId: character.id, text: `${wsOnHit.itemName}: ${wsOnHit.note}` });
-        }
-      }
-    }
+    // Whetstone on-hit riders (#1215) — Analysis Eye / Leeching Fangs /
+    // Limning Gem fire off successful results.
+    applyWhetstoneOnHit({
+      ability,
+      character,
+      rayGroups,
+      chainResults: hasChainStrike ? chainResults : null,
+      order,
+      getState,
+      sendUpdate,
+      appendLog,
+      applyEnemyCondition,
+      recordFor,
+      mergeRecord,
+    });
 
-    // Triggered whetstone saves (#1216). Reactive Flash: a Strike made as a
-    // reaction forces every target's save — pushed to the GM rail with a note
-    // to resolve it BEFORE applying the attack (a failure means off-guard, −2
-    // AC vs this Strike). Chroma Kaleidoscope: a critical Strike forces a save
-    // vs the wielder's class/spell DC (higher); per-degree conditions ride the
-    // request for RequestedSaves to apply on resolution.
-    const wsReaction = ability.whetstoneReactionSave;
-    const wsCrit = ability.whetstoneOnCrit;
-    if (wsReaction || wsCrit) {
-      const allStrikeResults = [
-        ...rayGroups.flatMap((g) => g?.results || []),
-        ...(hasChainStrike ? (chainResults?.rolls || []).flat() : []),
-      ];
-      const saveTargetsFor = (rs, save) => rs
-        .map((r) => {
-          const entry = (order || []).find((e) => e.entryId === r.entryId);
-          return entry
-            ? { entryId: entry.entryId, name: entry.name, saveMod: entry.defenses?.saves?.[save] ?? null }
-            : null;
-        })
-        .filter(Boolean);
-      if (wsReaction && castCost === 'reaction' && allStrikeResults.length) {
-        const save = wsReaction.save || 'reflex';
-        addSaveRequest({
-          casterId: character.id,
-          casterName: character.name,
-          abilityName: wsReaction.itemName,
-          save,
-          dc: wsReaction.dc,
-          basic: false,
-          targets: saveTargetsFor(allStrikeResults, save),
-          ...(wsReaction.conditions ? { conditions: wsReaction.conditions } : {}),
-        });
-        appendLog({
-          type: 'system',
-          text: `${wsReaction.itemName}: resolve the target's ${save} save (DC ${wsReaction.dc}) BEFORE applying this reaction Strike — on a failure the target is off-guard against it.`,
-        });
-      }
-      if (wsCrit) {
-        const crits = allStrikeResults.filter((r) => r.degree === 'criticalSuccess');
-        if (crits.length) {
-          const save = wsCrit.save || 'will';
-          const dc = wsCrit.dcFrom === 'classOrSpellDC'
-            ? Math.max(getClassDC(character) || 0, calculateSpellStats(character).spellDC || 0)
-            : wsCrit.dc;
-          addSaveRequest({
-            casterId: character.id,
-            casterName: character.name,
-            abilityName: wsCrit.itemName,
-            save,
-            dc,
-            basic: false,
-            targets: saveTargetsFor(crits, save),
-            ...(wsCrit.conditions ? { conditions: wsCrit.conditions } : {}),
-          });
-        }
-      }
-    }
+    // Triggered whetstone saves (#1216) — Reactive Flash (reaction Strike) and
+    // Chroma Kaleidoscope (critical Strike) push saves to the GM rail.
+    applyWhetstoneReactionAndCrit({
+      ability,
+      character,
+      castCost,
+      rayGroups,
+      chainResults: hasChainStrike ? chainResults : null,
+      order,
+      addSaveRequest,
+      appendLog,
+    });
 
     // Push a save request to the GM for target-save abilities. When a damage
     // profile exists (#270), the caster's entered total and rider snapshot
@@ -1584,23 +1393,7 @@ const UseAbilityModal = ({
     // Thrown Strike (#1230): the weapon lands where it struck (hit or miss) —
     // mark it Dropped in the live loadout, unless a returning-effect rune flies
     // it back to hand. The Blade Byrnie dagger has its own return path above.
-    if (ability?.thrown && ability?.weaponUid && !ability?.bladeByrnie) {
-      const weaponName = ability.source || ability.name;
-      if (ability.returning) {
-        appendLog({
-          type: 'action',
-          charId: character.id,
-          text: `${character.name}'s ${weaponName} flies back to hand after the throw`,
-        });
-      } else {
-        dropThrownWeapon(ability.weaponUid);
-        appendLog({
-          type: 'action',
-          charId: character.id,
-          text: `${character.name}'s ${weaponName} lands after the throw — Dropped`,
-        });
-      }
-    }
+    logThrownWeaponResolution({ ability, character, dropThrownWeapon, appendLog });
 
     onClose();
   };
@@ -1812,121 +1605,19 @@ const UseAbilityModal = ({
       )}
 
       {/* Frequency lock — derived from the synced ledger; GM can override or clear */}
-      {freqRule && !freqGate.available && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Frequency</h3>
-            <div className="uam-cost-empty">{lockMessage(freqGate, freqRule, nowSecs)}</div>
-            <label className="uam-cost-override">
-              <input
-                type="checkbox"
-                checked={freqOverride}
-                onChange={(e) => setFreqOverride(e.target.checked)}
-              />
-              Override (GM ruling) — use anyway
-            </label>
-            <button
-              type="button"
-              className="uam-freq-clear"
-              onClick={() => clearFreqLock(freqKeyFor(ability))}
-            >
-              Clear lock (GM ruling)
-            </button>
-          </section>
-        </>
-      )}
+      {frequencyGate.section}
 
       {/* Kinetic aura gate (#228) — impulses blocked while the aura is down */}
-      {auraGateBlocked && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Kinetic Aura</h3>
-            <div className="uam-cost-empty">
-              Kinetic aura is not active — use Channel Elements first.
-            </div>
-            <label className="uam-cost-override">
-              <input
-                type="checkbox"
-                checked={auraOverride}
-                onChange={(e) => setAuraOverride(e.target.checked)}
-              />
-              Override (GM ruling) — use anyway
-            </label>
-          </section>
-        </>
-      )}
+      {auraGate.section}
 
       {/* Harrow omen gate (#227) — omen-bound abilities need an active omen */}
-      {omenGateBlocked && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Harrow Omen</h3>
-            <div className="uam-cost-empty">
-              No active harrow omen — draw an omen from your deck first.
-            </div>
-            <label className="uam-cost-override">
-              <input
-                type="checkbox"
-                checked={omenOverride}
-                onChange={(e) => setOmenOverride(e.target.checked)}
-              />
-              Override (GM ruling) — use anyway
-            </label>
-          </section>
-        </>
-      )}
+      {omenGate.section}
 
       {/* Raised-shield gate (#228) — Devoted Guardian needs the shield up */}
-      {shieldGateBlocked && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Shield</h3>
-            <div className="uam-cost-empty">
-              Your shield is not raised — Raise a Shield first.
-            </div>
-            <label className="uam-cost-override">
-              <input
-                type="checkbox"
-                checked={shieldOverride}
-                onChange={(e) => setShieldOverride(e.target.checked)}
-              />
-              Override (GM ruling) — use anyway
-            </label>
-          </section>
-        </>
-      )}
+      {shieldGate.section}
 
       {/* Target immunity — picked PC targets already immune to this ability */}
-      {immuneTargets.length > 0 && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Immunity</h3>
-            {immuneTargets.map((t) => (
-              <div key={t.charId} className="uam-cost-empty">
-                {t.name} is immune
-                {typeof t.expireAtSecs === 'number'
-                  ? ` — expires at ${expiryLabelSecs(t.expireAtSecs, nowSecs)}`
-                  : ''}
-              </div>
-            ))}
-            {allTargetsImmune && (
-              <label className="uam-cost-override">
-                <input
-                  type="checkbox"
-                  checked={immunityOverride}
-                  onChange={(e) => setImmunityOverride(e.target.checked)}
-                />
-                Override (GM ruling) — use anyway
-              </label>
-            )}
-          </section>
-        </>
-      )}
+      {immunityGate.section}
 
       {/* Casting cost — source/rank picker, empty-pool block + override */}
       {castOptions.length > 0 && (

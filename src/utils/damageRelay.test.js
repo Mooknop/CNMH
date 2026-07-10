@@ -1,4 +1,11 @@
-import { collectDamageHits, buildDamageApply, DMGAPPLY_KEY, DMGDONE_KEY } from './damageRelay';
+import {
+  collectDamageHits,
+  buildDamageApply,
+  relayDamageAndRevealIwr,
+  DMGAPPLY_KEY,
+  DMGDONE_KEY,
+} from './damageRelay';
+import { RELAY } from '../sync/keys';
 
 const ray = (results, rayIndex = null) => ({ rayIndex, results });
 const hit = (entryId, name, final) => ({ entryId, name, degree: 'success', damage: { final } });
@@ -240,5 +247,67 @@ describe('collectDamageHits — pre-IWR raw values', () => {
     };
     const hits = collectDamageHits([], chain, {});
     expect(hits).toEqual([{ entryId: 'e-1', name: 'Golem', amount: 17, type: '' }]);
+  });
+});
+
+describe('relayDamageAndRevealIwr (#1317 D1)', () => {
+  const order = [
+    { entryId: 'e-gob', kind: 'enemy', name: 'Goblin' },
+    { entryId: 'pc-1', kind: 'pc', name: 'Ashka' },
+  ];
+
+  it('relays enemy hits only and always calls revealFiredIwr with every result', () => {
+    const sendUpdate = vi.fn();
+    const revealFiredIwr = vi.fn();
+    const gobHit = hit('e-gob', 'Goblin', 8);
+    const pcHit  = hit('pc-1', 'Ashka', 5);
+    relayDamageAndRevealIwr({
+      rayGroups: [ray([gobHit, pcHit])],
+      chainResults: null,
+      order,
+      typeLabel: 'fire',
+      sourceName: 'Fireball',
+      sendUpdate,
+      revealFiredIwr,
+    });
+    expect(sendUpdate).toHaveBeenCalledWith('global', RELAY.DMGAPPLY, expect.objectContaining({
+      sourceName: 'Fireball',
+      hits: [{ entryId: 'e-gob', name: 'Goblin', amount: 8, type: 'fire' }],
+    }));
+    expect(revealFiredIwr).toHaveBeenCalledWith([gobHit, pcHit]);
+  });
+
+  it('skips the relay when nothing landed, but still runs the reveal sweep', () => {
+    const sendUpdate = vi.fn();
+    const revealFiredIwr = vi.fn();
+    relayDamageAndRevealIwr({
+      rayGroups: [],
+      chainResults: null,
+      order,
+      typeLabel: null,
+      sourceName: 'Fireball',
+      sendUpdate,
+      revealFiredIwr,
+    });
+    expect(sendUpdate).not.toHaveBeenCalled();
+    expect(revealFiredIwr).toHaveBeenCalledWith([]);
+  });
+
+  it('folds chained-strike rolls into both the relay and the reveal', () => {
+    const sendUpdate = vi.fn();
+    const revealFiredIwr = vi.fn();
+    const chainHit = hit('e-gob', 'Goblin', 4);
+    relayDamageAndRevealIwr({
+      rayGroups: [],
+      chainResults: { mode: 'single', rolls: [[chainHit]] },
+      order,
+      typeLabel: null,
+      sourceName: 'Inner Upheaval',
+      sendUpdate,
+      revealFiredIwr,
+    });
+    expect(sendUpdate.mock.calls[0][2].hits)
+      .toEqual([{ entryId: 'e-gob', name: 'Goblin', amount: 4, type: '' }]);
+    expect(revealFiredIwr).toHaveBeenCalledWith([chainHit]);
   });
 });
