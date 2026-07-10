@@ -12219,16 +12219,17 @@
   {
     "actions": [
       {
-        "name": "Cast Guidance",
+        "name": "Cast Sure Strike",
         "actionCount": 1,
         "traits": [
-          "Concentrate"
+          "Concentrate",
+          "Fortune"
         ],
-        "description": "Frequency once per day; Range 30 feet; Targets 1 creature; Duration until the start of your next turn. The tattoo's foresight guides your ally: the target gains a +1 status bonus to one attack roll, Perception check, saving throw, or skill check it attempts before the duration ends. The target is then temporarily immune to Guidance for 1 hour."
+        "description": "Frequency once per day; Duration until the end of your turn. The tattoo's foresight sharpens your aim: the next time you make an attack roll before the end of your turn, roll it twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden. You are then temporarily immune to Sure Strike for 10 minutes."
       }
     ],
     "name": "Vangloris Tattoo",
-    "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Guidance once per day. (Usage: tattooed on the body.)",
+    "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Sure Strike once per day. (Usage: tattooed on the body.)",
     "thassilonianRune": "vainglory",
     "traits": [
       "Invested",
