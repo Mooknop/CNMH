@@ -68,10 +68,13 @@ export function useFxChannel(onEvent) {
 }
 
 // Receiver helper: a short-lived bloom descriptor when a fresh 'ability'
-// event lands for this character. Returns `{ key }` (key = event id — React-key
-// the animated node so rapid re-uses restart the animation) and self-clears
-// after FX_FLASH_MS. Consume as data-fx="bloom" (fx.css, accent recipe).
-// null/undefined charId never matches (enemy portraits and the like).
+// event lands for this character. Returns `{ key, flourish }` (key = event id —
+// React-key the animated node so rapid re-uses restart the animation) and
+// self-clears after FX_FLASH_MS. Consume as data-fx="bloom" (fx.css, accent
+// recipe); `flourish` is the event's optional signature-flourish hint (#1347) —
+// pass it to <Flourish/> and an unknown/missing id renders nothing, leaving
+// the plain bloom. null/undefined charId never matches (enemy portraits and
+// the like).
 export function useFxBloom(charId) {
   const [bloom, setBloom] = useState(null);
   const timerRef = useRef(null);
@@ -80,7 +83,7 @@ export function useFxBloom(charId) {
     useCallback(
       (evt) => {
         if (!charId || evt.kind !== 'ability' || evt.charId !== charId) return;
-        setBloom({ key: evt.id });
+        setBloom({ key: evt.id, flourish: evt.flourish });
         clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => setBloom(null), FX_FLASH_MS);
       },

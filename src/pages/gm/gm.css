@@ -1796,6 +1796,8 @@
 }
 
 .gm-party-row {
+  /* positioned so the signature-flourish overlay (#1347) can anchor inset:0 */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;

@@ -14,7 +14,13 @@ const Harness = ({ onEvent }) => {
 
 const BloomHarness = ({ charId }) => {
   const bloom = useFxBloom(charId);
-  return <div data-testid="bloom-node" data-fx={bloom ? 'bloom' : undefined} />;
+  return (
+    <div
+      data-testid="bloom-node"
+      data-fx={bloom ? 'bloom' : undefined}
+      data-flourish={bloom?.flourish}
+    />
+  );
 };
 
 const evt = (id, overrides) => ({
@@ -105,6 +111,14 @@ describe('useFxBloom', () => {
     expect(getByTestId('bloom-node')).toHaveAttribute('data-fx', 'bloom');
     act(() => vi.advanceTimersByTime(FX_FLASH_MS));
     expect(getByTestId('bloom-node')).not.toHaveAttribute('data-fx');
+  });
+
+  it("carries the event's optional flourish hint (#1347) through the descriptor", () => {
+    const { session, getByTestId } = renderWithProviders(<BloomHarness charId="izzy" />);
+    act(() => session.push('global', APP.FX, [evt('fx-1', { flourish: 'composition-burst' })]));
+    expect(getByTestId('bloom-node')).toHaveAttribute('data-flourish', 'composition-burst');
+    act(() => session.push('global', APP.FX, [evt('fx-1', { flourish: 'composition-burst' }), evt('fx-2')]));
+    expect(getByTestId('bloom-node')).not.toHaveAttribute('data-flourish');
   });
 
   it('ignores events for other characters and other kinds', () => {
