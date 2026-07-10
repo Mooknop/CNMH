@@ -169,18 +169,25 @@ describe('useShield — Rust Blessing (campaign boon)', () => {
   );
   const pellias = { id: 'Pellias', feats: [{ name: 'Rust Blessing' }] };
 
-  it('a broken shield stays usable and raised for a blessed wielder', () => {
+  it('a blessed wielder can RE-raise a broken shield', () => {
     const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]), {
       wrapper: withCharacters([pellias]),
     });
     act(() => result.current.raiseShield('shield-1'));
     act(() => result.current.applyBlock(15)); // 20 − 10 = 10 = BT → broken
+    // Table rule: the block bar spends the raise on use — simulate it here.
+    act(() => result.current.lowerShield());
     expect(result.current.broken).toBe(true);
     expect(result.current.wieldBroken).toBe(true);
     expect(result.current.usable).toBe(true);
-    // raised survives the break; the Raised Shield AC effect stays live.
+    expect(result.current.raised).toBe(false);
+    // The boon: RAW forbids raising a broken shield; Rust Blessing allows it,
+    // full AC bonus included.
+    act(() => result.current.raiseShield('shield-1'));
     expect(result.current.raised).toBe(true);
-    expect(result.current.shieldEffect).not.toBeNull();
+    expect(result.current.shieldEffect.def.modifiers).toEqual([
+      { stat: 'ac', kind: 'circumstance', amount: 2 },
+    ]);
   });
 
   it('destruction at 0 HP still ends it for a blessed wielder', () => {

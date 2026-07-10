@@ -73,7 +73,7 @@ describe('ShieldBlockBar', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('blocking runs applyBlock, spends the reaction, and logs the split', () => {
+  it('blocking runs applyBlock, spends the reaction, logs the split, and ends the raise', () => {
     mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
     setup();
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
@@ -86,7 +86,9 @@ describe('ShieldBlockBar', () => {
       text: expect.stringContaining('5 prevented, shield → 13 HP'),
     }));
     expect(screen.getByLabelText('Shield Block damage')).toHaveValue(null); // cleared
-    expect(mockLowerShield).not.toHaveBeenCalled();
+    // Table rule: a raised-shield reaction consumes the raise even when the
+    // shield survives intact.
+    expect(mockLowerShield).toHaveBeenCalled();
   });
 
   it('a breaking block lowers the shield and logs the break', () => {
