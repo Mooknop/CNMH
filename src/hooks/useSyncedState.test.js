@@ -2,7 +2,10 @@ import { renderHook, act } from '@testing-library/react';
 
 let mockSession;
 vi.mock('../contexts/SessionContext', () => ({
-  useSession: () => mockSession,
+  // A function mockSession is invoked per useSession() call — lets a test
+  // emulate suites whose vi.mock factory rebuilds the session object literal
+  // every render (fresh subscribe/getState identities).
+  useSession: () => (typeof mockSession === 'function' ? mockSession() : mockSession),
   // Mirror the real allowlist: GM-authored `_global` state and inventory-
   // organization types stay writable in the offline sandbox.
   isSandboxWritable: (t, id) => id === 'global' || t === 'loadout' || t === 'invested',
@@ -67,6 +70,28 @@ describe('useSyncedState', () => {
     const { result } = renderHook(() => useSyncedState('cnmh_encounter_global', { active: false }));
     expect(result.current[0]).toEqual({ active: true });
     expect(JSON.parse(localStorage.getItem('cnmh_encounter_global'))).toEqual({ active: true });
+  });
+
+  it('gap-reads once per key — no adopt loop under a per-render session mock', () => {
+    // Many suites vi.mock useSession with an inline object literal: subscribe's
+    // identity changes every render (the effect re-runs) and getState returns a
+    // FRESH array/object per call. An unguarded gap-read then adopts a "new"
+    // value on every effect run — adopt → re-render → adopt — until the worker
+    // OOMs (PR #1366's first CI run: CastSpellModal / bloodmagic suites).
+    let getStateCalls = 0;
+    mockSession = () => ({
+      connected: false,
+      getState: () => { getStateCalls += 1; return []; },
+      sendUpdate: vi.fn(),
+      subscribe: () => () => {},
+    });
+    const { result, rerender } = renderHook(() => useSyncedState('cnmh_conditions_Pellias', []));
+    rerender();
+    rerender();
+    expect(result.current[0]).toEqual([]);
+    // Render-time reads aside, the effect's gap-read must not grow with
+    // re-renders: one adopt at mount, none after.
+    expect(getStateCalls).toBeLessThanOrEqual(5);
   });
 
   it('applies incoming subscribed updates and caches them locally', () => {
