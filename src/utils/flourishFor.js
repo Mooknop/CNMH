@@ -14,8 +14,26 @@ import { hasTrait } from './map';
 
 const nameOf = (ability) => String(ability?.name || '').trim().toLowerCase();
 
+// Rune-marked gear: any action taken WITH an item carrying a `thassilonianRune`
+// field stamps that item's rune (fx/Flourish's `rune-<name>` entries). Every
+// item-sourced ability already names its item — derived strikes and gear
+// actions/reactions carry `source: <item name>`, staff casts `staffName` — so
+// the one content field drives the juice for all of them. Beats the class
+// rules (the item IS the signature); loses to an authored ability.flourish.
+const runeGearFlourish = (ability, character) => {
+  const src = ability?.source || ability?.staffName;
+  if (!src) return undefined;
+  const item = (character?.inventory || []).find(
+    (it) => it?.name === src && typeof it?.thassilonianRune === 'string' && it.thassilonianRune
+  );
+  return item ? `rune-${item.thassilonianRune.toLowerCase()}` : undefined;
+};
+
 export function flourishFor({ ability, castSource, character, bloodMagicActive = false }) {
   if (typeof ability?.flourish === 'string' && ability.flourish) return ability.flourish;
+
+  const runeGear = runeGearFlourish(ability, character);
+  if (runeGear) return runeGear;
 
   const cls = String(character?.class || '').trim().toLowerCase();
   const name = nameOf(ability);

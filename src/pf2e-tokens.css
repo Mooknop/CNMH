@@ -104,6 +104,19 @@
   --verdant-light: #62c278;
   --verdant-pale:  #e4f7ea;
 
+  /* Thassilonian sin runes (#1343 follow-up) — one tint per sin, consumed by
+     the rune flourish stamps (fx/Flourish.css) and rune-marked item art
+     (shared/ThassilonianRune.css). Virtue runes have no tokens yet and fall
+     back to currentColor. */
+  --rune-lust:      #ec4899;   /* pink */
+  --rune-envy:      #8b5cf6;   /* purple */
+  --rune-sloth:     #3fd158;   /* bright green */
+  --rune-greed:     #2f7d4f;   /* hunter green */
+  --rune-gluttony:  #c05621;   /* orange-brown */
+  --rune-pride:     #14b8a6;   /* peacock / seafoam */
+  --rune-wrath:     #dc2626;   /* red */
+  --rune-vainglory: #d4af37;   /* gold */
+
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;
   --iron-base:    #5a606e;

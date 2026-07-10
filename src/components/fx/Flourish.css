@@ -186,6 +186,38 @@
   100% { opacity: 0; transform: rotate(var(--a)) translateX(36px) rotate(150deg) scale(1.8); }
 }
 
+/* — rune-* (rune-marked gear) — the item's Thassilonian rune stamps down and
+   fades. 560ms. Contrast recipe: crisp core over a blurred glow copy, both in
+   the sin's --rune-* token (pf2e-tokens.css); no token (virtues) inherits
+   currentColor — the receiver card's accent. */
+.flx-rune-glow {
+  fill: var(--flx-rune, currentColor);
+  filter: blur(4px);
+  opacity: 0;
+  animation: flx-runestamp 560ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.flx-rune-core {
+  fill: var(--flx-rune, currentColor);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
+  opacity: 0;
+  animation: flx-runestamp 560ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.fx-flourish [data-rune='lust']      { --flx-rune: var(--rune-lust); }
+.fx-flourish [data-rune='envy']      { --flx-rune: var(--rune-envy); }
+.fx-flourish [data-rune='sloth']     { --flx-rune: var(--rune-sloth); }
+.fx-flourish [data-rune='greed']     { --flx-rune: var(--rune-greed); }
+.fx-flourish [data-rune='gluttony']  { --flx-rune: var(--rune-gluttony); }
+.fx-flourish [data-rune='pride']     { --flx-rune: var(--rune-pride); }
+.fx-flourish [data-rune='wrath']     { --flx-rune: var(--rune-wrath); }
+.fx-flourish [data-rune='vainglory'] { --flx-rune: var(--rune-vainglory); }
+@keyframes flx-runestamp {
+  0%   { opacity: 0; transform: scale(1.9); }
+  28%  { opacity: 1; transform: scale(0.94); }
+  44%  { transform: scale(1.05); }
+  58%  { transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
 /* — House reduced-motion guard (belt; the component also skips rendering) — */
 @media (prefers-reduced-motion: reduce) {
   .fx-flourish { display: none; }

@@ -56,6 +56,10 @@ const COLLECTION_SPECS = {
     // Durability (#540): material drives the GM Core stats table; an authored
     // durability block overrides it (see src/utils/itemDurability.js).
     material: opt('string'), durability: opt('object'),
+    // Thassilonian rune mark: rune name from utils/thassilonianRunes.js.
+    // Drives the item's rune art/medallion and the rune-stamp juice for any
+    // action taken with the item (utils/flourishFor.js).
+    thassilonianRune: opt('string'),
   },
   spell: {
     id: req('string'), name: req('string'), level: req('number'),

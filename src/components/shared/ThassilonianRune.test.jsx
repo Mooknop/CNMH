@@ -22,6 +22,18 @@ describe('ThassilonianRune', () => {
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
+  it('carries a lowercased data-rune hook and opts into tint via class', () => {
+    const { container } = render(<ThassilonianRune name="Pride" tint />);
+    const svg = container.querySelector('svg');
+    expect(svg).toHaveAttribute('data-rune', 'pride');
+    expect(svg).toHaveClass('rune-tint');
+  });
+
+  it('stays untinted by default', () => {
+    const { container } = render(<ThassilonianRune name="pride" />);
+    expect(container.querySelector('svg')).not.toHaveClass('rune-tint');
+  });
+
   it('is a labelled image when given a title', () => {
     const { container, getByTitle } = render(<ThassilonianRune name="love" title="Rune of Love" />);
     const svg = container.querySelector('svg.thassilonian-rune');

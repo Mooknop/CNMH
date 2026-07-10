@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import Flourish, { FLOURISHES } from './Flourish';
+import { THASSILONIAN_RUNES } from '../../utils/thassilonianRunes';
 
 const KNOWN_IDS = Object.keys(FLOURISHES);
 
@@ -10,7 +11,7 @@ afterEach(() => {
 });
 
 describe('Flourish registry', () => {
-  it('ships all six signature flourishes', () => {
+  it('ships the six signature flourishes plus a stamp per Thassilonian rune', () => {
     expect(KNOWN_IDS.sort()).toEqual(
       [
         'blood-swirl',
@@ -19,6 +20,7 @@ describe('Flourish registry', () => {
         'dragon-lightning',
         'rust-bloom',
         'shadow-tendrils',
+        ...Object.keys(THASSILONIAN_RUNES).map((r) => `rune-${r}`),
       ].sort()
     );
   });
@@ -52,5 +54,15 @@ describe('Flourish registry', () => {
     window.matchMedia = () => ({ matches: true });
     const { container } = render(<Flourish id="rust-bloom" />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it('a rune stamp renders glow + core copies of the rune path, keyed for the sin tint', () => {
+    const { container } = render(<Flourish id="rune-pride" />);
+    const svg = container.querySelector('svg[data-rune="pride"]');
+    expect(svg).not.toBeNull();
+    const core = svg.querySelector('.flx-rune-core path');
+    expect(core).toHaveAttribute('fill-rule', 'evenodd');
+    expect(core.getAttribute('d')).toBe(THASSILONIAN_RUNES.pride.d);
+    expect(svg.querySelector('.flx-rune-glow path')).not.toBeNull();
   });
 });

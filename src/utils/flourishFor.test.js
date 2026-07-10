@@ -147,6 +147,73 @@ describe('flourishFor — rust-bloom (Champion w/ Kineticist archetype)', () => 
   });
 });
 
+describe('flourishFor — rune-marked gear (thassilonianRune)', () => {
+  const hammer = { name: "Xanderghul's Flawless Hammer", thassilonianRune: 'pride' };
+  const withHammer = (cls) => ({ ...pc(cls), inventory: [{ name: 'Rope' }, hammer] });
+
+  it('a derived strike sourced from a rune item stamps that rune', () => {
+    expect(
+      flourishFor({
+        ability: { name: 'Flawless Hammer Melee Strike', source: hammer.name },
+        character: withHammer('Fighter'),
+      })
+    ).toBe('rune-pride');
+  });
+
+  it('a staff cast from a rune staff stamps the rune (staffName path)', () => {
+    expect(
+      flourishFor({
+        ability: { name: 'Mirror Image', fromStaff: true, staffName: hammer.name },
+        castSource: 'staff',
+        character: withHammer('Sorcerer'),
+      })
+    ).toBe('rune-pride');
+  });
+
+  it('beats the class rule — the item is the signature', () => {
+    // A Champion Impulse would be rust-bloom; sourced from the hammer it runes.
+    expect(
+      flourishFor({
+        ability: { name: 'Emotional Surge', traits: ['Impulse'], source: hammer.name },
+        character: withHammer('Champion'),
+      })
+    ).toBe('rune-pride');
+  });
+
+  it('loses to an authored ability.flourish', () => {
+    expect(
+      flourishFor({
+        ability: { name: 'Special', source: hammer.name, flourish: 'custom-one-off' },
+        character: withHammer('Fighter'),
+      })
+    ).toBe('custom-one-off');
+  });
+
+  it('a source naming a non-rune item (or a feat) stays plain', () => {
+    expect(
+      flourishFor({
+        ability: { name: 'Rope Trick', source: 'Rope' },
+        character: withHammer('Fighter'),
+      })
+    ).toBeUndefined();
+    expect(
+      flourishFor({
+        ability: { name: 'Power Attack', source: 'Power Attack' },
+        character: withHammer('Fighter'),
+      })
+    ).toBeUndefined();
+  });
+
+  it('an unsourced ability never rune-stamps (repertoire casts stay class-ruled)', () => {
+    expect(
+      flourishFor({
+        ability: { name: 'Daze' }, castSource: 'slot',
+        character: withHammer('Sorcerer'),
+      })
+    ).toBe('blood-swirl');
+  });
+});
+
 describe('flourishFor — class keying', () => {
   it('rules never leak across classes (a Monk composition stays plain)', () => {
     expect(
