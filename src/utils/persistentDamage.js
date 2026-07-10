@@ -87,6 +87,20 @@ export const collectFromResults = (rayGroups, chainResults) => {
   return hits;
 };
 
+// Confirm-time applier (#272): record each target's persistent entries
+// (already crit-doubled by computeTargetDamage) through the caller's synced
+// map setter so the turn tracker chips them and the watcher reminds at their
+// turn end. Callers pass chainResults only for strike chains (null otherwise).
+export const applyPersistentFromResults = ({ rayGroups, chainResults, abilityName, setPersistentMap }) => {
+  const persistentHits = collectFromResults(rayGroups, chainResults);
+  if (persistentHits.length) {
+    setPersistentMap((m) => persistentHits.reduce(
+      (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, abilityName)),
+      m || {}
+    ));
+  }
+};
+
 const describe = (inst) =>
   `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`;
 

@@ -118,3 +118,40 @@ export const buildDamageApply = ({ hits, sourceName }) => ({
   hits: hits || [],
   ts: Date.now(),
 });
+
+/**
+ * Confirm-time applier (#1016 + #1014): push each enemy target's RAW typed
+ * total to the bridge, which applies it through PF2e's actor.applyDamage —
+ * Foundry nets the monster's IWR and stays authoritative for enemy HP.
+ * Enemies only: PC damage flows through cnmh_hp and would double-apply.
+ * Then reveal-on-trigger: any monster IWR that just modified a target's
+ * applied damage is now table knowledge — the caller's revealFiredIwr stamps
+ * it into the RK record and announces first reveals. Chained strikes are
+ * untyped (no IWR) — harmless; callers pass chainResults only for strike
+ * chains (null otherwise).
+ */
+export const relayDamageAndRevealIwr = ({
+  rayGroups,
+  chainResults,
+  order,
+  typeLabel,
+  sourceName,
+  sendUpdate,
+  revealFiredIwr,
+}) => {
+  const enemyEntryIds = new Set(
+    (order || []).filter((e) => e.kind === 'enemy').map((e) => e.entryId)
+  );
+  const damageHits = collectDamageHits(rayGroups, chainResults, {
+    typeLabel,
+    allowedEntryIds: enemyEntryIds,
+  });
+  if (damageHits.length) {
+    sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: damageHits, sourceName }));
+  }
+
+  revealFiredIwr([
+    ...(rayGroups || []).flatMap((g) => g?.results || []),
+    ...((chainResults?.rolls || []).flat()),
+  ]);
+};
