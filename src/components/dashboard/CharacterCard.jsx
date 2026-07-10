@@ -1,18 +1,28 @@
 import React from 'react';
+import { useFxBloom } from '../../hooks/useFxChannel';
 import './CharacterCard.css';
 
 // Sigil card face — the locked card design from the player-dashboard handoff.
 // Renders the inner chrome only; the carousel owns the positioned/animated wrapper.
+// Juice (#1346): the card blooms in its own accent (--c, bridged to the fx
+// vocabulary in CharacterCard.css) when this character uses an ability on any
+// device. Children are stateless, so the bloom-key remount is free.
 const CharacterCard = ({ character, accent }) => {
   const kicker = [character.ancestry, character.class].filter(Boolean).join(' · ');
   const monogram = (character.name || '').trim().charAt(0).toUpperCase();
+  const bloom = useFxBloom(character?.id);
   // Data-driven crop point; the CSS default (50% 0%) applies when unset.
   const objectPosition = character.imagePosition
     ? `${character.imagePosition.x ?? 50}% ${character.imagePosition.y ?? 0}%`
     : undefined;
 
   return (
-    <div className="sigil-card-inner" style={{ '--c': accent }}>
+    <div
+      key={bloom ? bloom.key : 'idle'}
+      className="sigil-card-inner"
+      style={{ '--c': accent }}
+      data-fx={bloom ? 'bloom' : undefined}
+    >
       <div className="sigil-band" aria-hidden="true" />
 
       <div className="sigil-portrait">

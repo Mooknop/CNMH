@@ -24,6 +24,7 @@ const ReactorAvatars = ({ reactors, characters, selfId }) => {
               src={art.src}
               name={name}
               imagePosition={art.imagePosition}
+              charId={r.pcId}
             />
           );
         })}

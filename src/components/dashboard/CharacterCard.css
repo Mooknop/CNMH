@@ -137,3 +137,9 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--c) 65%, var(--color-text-on-primary) 35%);
 }
+
+/* Juice (#1346): ability-use bloom. The fx vocabulary's accent bloom reads
+   --accent-outline; bridge it to this card's own accent for the one-shot. */
+.sigil-card-inner[data-fx='bloom'] {
+  --accent-outline: var(--c);
+}

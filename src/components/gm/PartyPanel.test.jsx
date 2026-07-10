@@ -6,7 +6,12 @@ import PartyPanel from './PartyPanel';
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useCharacterLiveState', () => ({ useCharacterLiveState: vi.fn() }));
 vi.mock('../../contexts/GameDateContext', () => ({ useGameDate: vi.fn() }));
-vi.mock('../../contexts/SessionContext', () => ({ useSession: vi.fn() }));
+// Spread the real module (#1311 convention) — useFxChannel's real
+// useSyncedState needs isSandboxWritable & co. to keep existing.
+vi.mock('../../contexts/SessionContext', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useSession: vi.fn(),
+}));
 vi.mock('../../hooks/useSessionLog', () => ({ useSessionLog: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getCharacterColor: (i) => ['#c03030', '#3060c0', '#30a060'][i % 3],
@@ -63,7 +68,8 @@ beforeEach(() => {
     gameDate: { year: CLOCK.year, month: CLOCK.month, day: CLOCK.day },
     time: { hour: CLOCK.hour, minute: CLOCK.minute, second: CLOCK.second },
   });
-  useSession.mockReturnValue({ getState, sendUpdate });
+  // subscribe: the fx-bloom hook (#1346) runs the real useSyncedState here.
+  useSession.mockReturnValue({ getState, sendUpdate, subscribe: () => () => {} });
   useSessionLog.mockReturnValue({ appendEvent });
   mockLiveState({
     thorn:   { hp: FULL_HP(THORN) },

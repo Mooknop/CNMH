@@ -251,7 +251,9 @@ describe('CastSpellModal', () => {
     it('stores expireAt on the written effect entry', () => {
       render(<CastSpellModal {...defaultProps} spell={spellWithSelfEffect} />);
       fireEvent.click(screen.getByLabelText('confirm-cast'));
-      const [, , effectsArray] = mockSendUpdate.mock.calls[0];
+      // Pick the effects write by key — the fx-channel broadcast (#1346) also
+      // rides sendUpdate on confirm, so positional indexing is unstable.
+      const [, , effectsArray] = mockSendUpdate.mock.calls.find(([, key]) => key === 'effects');
       expect(effectsArray[0].expireAt).toEqual({ round: 1, entryId: 'e-caster', boundary: 'turn-end' });
     });
   });

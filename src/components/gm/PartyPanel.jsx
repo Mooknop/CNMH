@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import HpFx from '../shared/HpFx';
+import { useFxBloom } from '../../hooks/useFxChannel';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -124,6 +125,9 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
   // Derived Speed (#1223) — the same spine the sheet renders, so the GM sees
   // WHY a PC is at 15 ft (armor + encumbered) from the chip's tooltip.
   const derivedSpeed = useCharacter(character)?.speed ?? null;
+  // Juice (#1346): the row blooms in the PC's accent when they use an ability.
+  // No bloom-key remount here — the HpFx child holds live flash state.
+  const bloom = useFxBloom(character.id);
   const hp = liveState.hp;
 
   const current = hp?.current ?? character.maxHp ?? 0;
@@ -174,6 +178,7 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
     <li
       className="gm-party-row"
       data-status={status}
+      data-fx={bloom ? 'bloom' : undefined}
       style={{ '--x-theme': color, '--hp-pct': `${pct}%` }}
       data-testid={`party-row-${character.id}`}
     >
