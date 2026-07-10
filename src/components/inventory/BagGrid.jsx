@@ -8,7 +8,7 @@ import {
   calculateItemsBulk,
   calculateContainerBulk,
 } from '../../utils/InventoryUtils';
-import { ITEM_STATE_LABEL } from '../../utils/itemState';
+import { ITEM_STATE_LABEL, isBodyBound } from '../../utils/itemState';
 import { matchesFilter, matchesQuery, sortItems, nextSort } from '../../utils/inventoryFilter';
 
 const WORN = 'worn';
@@ -102,9 +102,11 @@ const BagGrid = ({
   // Drop an item into a target bag. Worn is a plain re-home; a container either
   // stows (from worn/held/dropped) or moves (already stowed elsewhere). An
   // invested item dropped back into a bag also loses its attunement (the
-  // counterpart of dragging onto the Attuned area).
+  // counterpart of dragging onto the Attuned area). Body-bound gear (tattoos)
+  // never re-homes or un-invests — acceptsBag rejects it; this guard is belt.
   const placeIn = useCallback(
     (key, item) => {
+      if (isBodyBound(item)) return;
       if (isInvested && isInvested(item.uid)) unattune(item.uid);
       if (key === WORN) {
         worn(item.uid);
@@ -117,8 +119,12 @@ const BagGrid = ({
     [worn, stow, moveToContainer, unattune, isInvested]
   );
 
-  // Containers can't nest, so a container item is never a valid drop payload.
-  const acceptsBag = useCallback((key) => (item) => key === WORN || !isContainer(item), []);
+  // Containers can't nest, so a container item is never a valid drop payload;
+  // body-bound gear (tattoos) is inked on and never re-homes at all.
+  const acceptsBag = useCallback(
+    (key) => (item) => !isBodyBound(item) && (key === WORN || !isContainer(item)),
+    []
+  );
 
   const activeCap = activeContainer
     ? calculateContainerBulk(activeContainer.container).capacity

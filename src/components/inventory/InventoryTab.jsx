@@ -9,7 +9,7 @@ import HandsStrip from './HandsStrip';
 import IconTile from './IconTile';
 import { DndProvider } from './dnd';
 import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } from '../../utils/InventoryUtils';
-import { isHeldState } from '../../utils/itemState';
+import { isHeldState, isBodyBound } from '../../utils/itemState';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { absorbedKey, absorbedUidSet } from '../../utils/spellgunHost';
@@ -108,10 +108,14 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Invested items render in the Attuned area and held items in the Hands strip
   // (wherever they physically live), so pull both out of the bags. Invested wins
   // over held so an item never renders in two places. Containers are never
-  // invested/held and always stay.
+  // invested/held and always stay. Body-bound gear (tattoos) is permanently
+  // invested — it lives in the Attuned area regardless of the attunement
+  // overlay, and counts against the 10-slot cap like any invested item.
   const flatGrid = flattenInventory(gridInventory);
-  const investedItems = flatGrid.filter((it) => isInvested(it.uid));
-  const heldItems = flatGrid.filter((it) => isHeldState(it.state) && !isInvested(it.uid));
+  const investedItems = flatGrid.filter((it) => isInvested(it.uid) || isBodyBound(it));
+  const heldItems = flatGrid.filter(
+    (it) => isHeldState(it.state) && !isInvested(it.uid) && !isBodyBound(it)
+  );
   const elsewhere = new Set([...investedItems, ...heldItems].map((it) => it.uid));
   const inBag = (it) => isContainer(it) || !elsewhere.has(it.uid);
   const bagInventory = gridInventory.filter(inBag).map((it) =>

@@ -3,6 +3,7 @@ import {
   STOWED,
   HELD_STATES,
   isHeldState,
+  isBodyBound,
   itemAbilitiesActive,
   normalizeItemState,
 } from './itemState';
@@ -54,6 +55,26 @@ describe('itemState', () => {
     it('is false for a null / undefined item', () => {
       expect(itemAbilitiesActive(null)).toBe(false);
       expect(itemAbilitiesActive(undefined)).toBe(false);
+    });
+  });
+
+  describe('isBodyBound', () => {
+    it('is true for an item carrying the Tattoo trait (case-insensitive)', () => {
+      expect(isBodyBound({ traits: ['Invested', 'Magical', 'Tattoo'] })).toBe(true);
+      expect(isBodyBound({ traits: ['tattoo'] })).toBe(true);
+    });
+
+    it('is false without the trait, for traitless items, and for null', () => {
+      expect(isBodyBound({ traits: ['Invested', 'Magical'] })).toBe(false);
+      expect(isBodyBound({ name: 'Rope' })).toBe(false);
+      expect(isBodyBound(null)).toBe(false);
+    });
+  });
+
+  describe('itemAbilitiesActive — body-bound gear', () => {
+    it('a tattoo is active in any state (always on the body, always invested)', () => {
+      expect(itemAbilitiesActive({ state: 'worn', traits: ['Tattoo'] })).toBe(true);
+      expect(itemAbilitiesActive({ traits: ['Tattoo'] })).toBe(true);
     });
   });
 

@@ -426,6 +426,14 @@
   background: color-mix(in srgb, var(--peril-light) 14%, transparent);
 }
 
+/* body-bound note (tattoos): quiet italic line in place of placement actions */
+.modal-container.modal--loot .item-bound-note {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--iron-light);
+}
+
 /* invested chip (unchanged token values, recentred) */
 .modal-container.modal--loot .item-invested-chip {
   display: inline-block; padding: 0.16rem 0.6rem; border-radius: var(--radius-full);

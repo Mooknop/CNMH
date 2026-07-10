@@ -1497,6 +1497,34 @@ describe('ItemModal — give to another PC (#656)', () => {
     renderGive();
     expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
   });
+
+  it('hides the section for body-bound gear (a tattoo)', () => {
+    renderGive({ ...wornItem, name: 'Carnasia Tattoo', traits: ['Invested', 'Magical', 'Tattoo'] });
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+});
+
+// Body-bound gear (tattoos): permanently invested, no placement actions.
+describe('ItemModal — body-bound tattoo', () => {
+  const tattoo = {
+    name: 'Carnasia Tattoo',
+    uid: 't1',
+    state: 'worn',
+    weight: 0,
+    traits: ['Invested', 'Magical', 'Tattoo'],
+  };
+
+  it('shows the invested chip without an attunement-overlay entry', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={tattoo} character={{ id: 'a', name: 'Ashka' }} />);
+    expect(screen.getByTestId('item-invested-chip')).toBeInTheDocument();
+  });
+
+  it('replaces placement actions with the bound note (no Drop / Stow)', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={tattoo} character={{ id: 'a', name: 'Ashka' }} />);
+    expect(screen.getByTestId('item-bound-note')).toBeInTheDocument();
+    expect(screen.queryByTestId('item-action-drop')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Stow in/)).not.toBeInTheDocument();
+  });
 });
 
 // #657 — consumable stack-splitting.

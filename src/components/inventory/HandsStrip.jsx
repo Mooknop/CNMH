@@ -2,6 +2,7 @@ import React from 'react';
 import IconTile from './IconTile';
 import { useDraggable, DropZone } from './dnd';
 import { isContainer } from '../../utils/InventoryUtils';
+import { isBodyBound } from '../../utils/itemState';
 import { deriveHands } from '../../utils/hands';
 
 /**
@@ -66,7 +67,9 @@ const HandsStrip = ({ items = [], interactive, setHands, onItemClick, glow = tru
         : { hand1: current.hand1, hand2: dropped.uid }
     );
 
-  const accepts = (item) => !isContainer(item);
+  // Containers can't be held; body-bound gear (tattoos) can't leave the body
+  // for a hand either.
+  const accepts = (item) => !isContainer(item) && !isBodyBound(item);
 
   const renderSlot = (n) => {
     const item = n === 1 ? slot1 : slot2;
