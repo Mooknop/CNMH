@@ -122,6 +122,25 @@ describe('PartyPanel', () => {
     expect(screen.queryByLabelText('wounded-thorn')).not.toBeInTheDocument();
   });
 
+  it('an HP drop juices the row head (data-fx + floating −N) (#1345)', () => {
+    const { rerender } = render(<PartyPanel />);
+    mockLiveState({
+      thorn:   { hp: makeHp({ current: 44, max: 50 }) },
+      pellias: { hp: FULL_HP(PELLIAS) },
+    });
+    rerender(<PartyPanel />);
+    const head = screen
+      .getByTestId('party-row-thorn')
+      .querySelector('.gm-party-head');
+    expect(head).toHaveAttribute('data-fx', 'damage');
+    expect(head.querySelector('.hp-fx-float')).toHaveTextContent('−6');
+    // untouched row stays quiet
+    const otherHead = screen
+      .getByTestId('party-row-pellias')
+      .querySelector('.gm-party-head');
+    expect(otherHead).not.toHaveAttribute('data-fx');
+  });
+
   it('marks the row data-status="dead" when current HP is 0', () => {
     mockLiveState({ thorn: { hp: makeHp({ current: 0, max: 50 }) } });
     render(<PartyPanel />);

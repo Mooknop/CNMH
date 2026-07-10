@@ -1,0 +1,43 @@
+/* HP juice wrapper (#1345) — flash/shake come from the fx.css [data-fx]
+ * bindings; this file owns only the floating ±N and the temp-HP shimmer
+ * hookup. Compositor-only (transform/opacity/filter) throughout. */
+
+.hp-fx {
+  position: relative;
+}
+
+/* Floating ±N — absolutely positioned one-shot, never affects layout. The
+ * node is removed when the flash descriptor self-clears (600ms), right as
+ * the rise animation finishes. */
+.hp-fx-float {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  animation: hp-fx-float-rise var(--fx-duration-bloom) var(--fx-ease-out) forwards;
+}
+
+.hp-fx-float--down { color: var(--peril-light); }
+.hp-fx-float--up   { color: var(--theme-verdant); }
+
+@keyframes hp-fx-float-rise {
+  0%   { opacity: 0; transform: translate(-50%, 0.15em); }
+  15%  { opacity: 1; transform: translate(-50%, -0.1em); }
+  100% { opacity: 0; transform: translate(-50%, -1.4em); }
+}
+
+/* Temp-HP shimmer — a site's temp segment opts in with the hp-fx-temp class
+ * (StatsBlock's .hp-temp, PartyPanel's .gm-party-temp-label). */
+.hp-fx[data-fx-temp='shimmer'] .hp-fx-temp {
+  animation: fx-shimmer var(--fx-duration-bloom) var(--fx-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-fx-float { display: none; }
+  .hp-fx[data-fx-temp='shimmer'] .hp-fx-temp { animation: none !important; }
+}

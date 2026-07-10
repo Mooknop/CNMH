@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ConfirmDialog from '../shared/ConfirmDialog';
+import HpFx from '../shared/HpFx';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -176,7 +177,7 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
       style={{ '--x-theme': color, '--hp-pct': `${pct}%` }}
       data-testid={`party-row-${character.id}`}
     >
-      <div className="gm-party-head">
+      <HpFx hp={hp} className="gm-party-head">
         <span className="gm-party-name">{character.name}</span>
         <div className="gm-party-bar" aria-hidden="true">
           <div className="gm-party-fill" />
@@ -184,7 +185,7 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
         <span className="gm-party-hp" aria-label={`hp-${character.id}`}>
           {current}/{max}
           {temp > 0 && (
-            <span className="gm-party-temp-label">+{temp}</span>
+            <span className="gm-party-temp-label hp-fx-temp">+{temp}</span>
           )}
         </span>
         {dying > 0 && (
@@ -203,7 +204,7 @@ const PartyMemberRow = ({ character, color, nowSecs, write }) => {
             Wounded {wounded}
           </span>
         )}
-      </div>
+      </HpFx>
 
       {chips.length > 0 && (
         <ul className="gm-party-chips" aria-label={`resources-${character.id}`}>

@@ -63,6 +63,13 @@
   100% { filter: none; }
 }
 
+/* A ward flickered on (temp HP gained, a shield charge) — brightness shimmer */
+@keyframes fx-shimmer {
+  0%, 100% { filter: none; opacity: 1; }
+  30%      { filter: brightness(1.6) saturate(1.4); opacity: 0.85; }
+  60%      { filter: brightness(1.25); opacity: 1; }
+}
+
 /* — data-fx bindings ——————————————————————————————————————
  * Attribute values name the MOMENT; the keyframe supplies the look.
  * useValueFlash re-triggers cleanly via key-bump (remount restarts
@@ -70,6 +77,12 @@
 
 [data-fx='damage']  { animation: fx-flash-bad   var(--fx-duration-quick) var(--fx-ease-out); }
 [data-fx='shake']   { animation: fx-shake       var(--fx-duration-quick) var(--fx-ease-out); }
+[data-fx='bighit']  {
+  animation:
+    fx-flash-bad var(--fx-duration-quick) var(--fx-ease-out),
+    fx-shake     var(--fx-duration-quick) var(--fx-ease-out);
+}
+[data-fx='shimmer'] { animation: fx-shimmer     var(--fx-duration-bloom) var(--fx-ease-out); }
 [data-fx='heal']    { animation: fx-glow-good   var(--fx-duration-bloom) var(--fx-ease-out); }
 [data-fx='bloom']   { animation: fx-bloom-accent var(--fx-duration-bloom) var(--fx-ease-out); }
 [data-fx='changed'],
