@@ -25,6 +25,7 @@ let mockAffixed = {};
 let mockAttached = {};
 let mockInvested = {};
 let mockItemEffects = [];
+let mockItemHp = {};
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key, initialValue) => {
     if (key.startsWith('cnmh_consumed_')) return [mockConsumed, vi.fn()];
@@ -32,6 +33,7 @@ vi.mock('../../hooks/useSyncedState', () => ({
     if (key.startsWith('cnmh_attached_')) return [mockAttached, vi.fn()];
     if (key.startsWith('cnmh_invested_')) return [mockInvested, vi.fn()];
     if (key.startsWith('cnmh_itemeffects_')) return [mockItemEffects, vi.fn()];
+    if (key.startsWith('cnmh_itemhp_')) return [mockItemHp, vi.fn()];
     return [initialValue, vi.fn()];
   },
 }));
@@ -183,6 +185,7 @@ beforeEach(() => {
   mockAttached = {};
   mockInvested = {};
   mockItemEffects = [];
+  mockItemHp = {};
   mockMode = 'exploration';
 });
 
@@ -211,6 +214,27 @@ describe('InventoryTab — shield attachments (#1165 Track 2)', () => {
     mockAttached = {};
     render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
     expect(screen.queryByLabelText('Has an attachment')).not.toBeInTheDocument();
+  });
+});
+
+describe('InventoryTab — Broken/Destroyed tile badge (#539/#542)', () => {
+  it('flags a shield at or below its Broken Threshold', () => {
+    mockItemHp = { s1: { hp: 6 } }; // Steel Shield: BT 10
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(within(screen.getByTestId('grid-cell-s1')).getByLabelText('Broken')).toBeInTheDocument();
+  });
+
+  it('flags a destroyed item and leaves intact gear unflagged', () => {
+    mockItemHp = { s1: { hp: 0 } };
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(within(screen.getByTestId('grid-cell-s1')).getByLabelText('Destroyed')).toBeInTheDocument();
+    expect(within(screen.getByTestId('grid-cell-spk')).queryByLabelText(/Broken|Destroyed/)).not.toBeInTheDocument();
+  });
+
+  it('shows no badge when nothing is damaged', () => {
+    render(<InventoryTab character={{ id: 'shieldpc' }} characterColor="#7E8C9A" />);
+    expect(screen.queryByLabelText('Broken')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Destroyed')).not.toBeInTheDocument();
   });
 });
 

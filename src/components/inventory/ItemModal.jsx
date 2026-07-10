@@ -8,7 +8,7 @@ import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
-import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
+import { formatBulk, normalizeShield, normalizeArmor, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, isBodyBound, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
@@ -44,7 +44,10 @@ import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
 import { runeForName } from '../../utils/thassilonianRunes';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { hasRustBlessing, brokenArmorAcPenalty } from '../../utils/rustBlessing';
+import { isBrokenHp } from '../../utils/itemDurability';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useItemHp } from '../../hooks/useItemHp';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useInvested } from '../../hooks/useInvested';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -113,6 +116,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Stack-split amount for giving a consumable (#657). Clamped to the remaining
   // quantity at render so it can't exceed what's on hand.
   const [giveCount, setGiveCount] = useState(1);
+  // Live item durability (#539/#542) — HP overlay reads/writes + the two
+  // manual-bookkeeping inputs (apply damage / repair HP) on the panel below.
+  const itemHp = useItemHp(character?.id);
+  const [damageInput, setDamageInput] = useState('');
+  const [repairInput, setRepairInput] = useState('');
 
   if (!isOpen || !item) return null;
 
@@ -413,6 +421,62 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
 
+  // ── Durability panel (#539/#542) ──
+  // Live HP / Hardness / Broken Threshold for tracked gear, with manual
+  // apply-damage + repair bookkeeping. Only for a real inventory entry of an
+  // owning character (the uid keys the cnmh_itemhp_ overlay); untracked items
+  // (consumables, artifacts, plain gear) get no panel. The Broken penalties
+  // themselves are auto-applied elsewhere (strike gating, armor AC synth) —
+  // the hint line here just says what's happening and why.
+  const durability = character && uid != null ? itemHp.statusFor(item) : null;
+  const blessed = hasRustBlessing(charData);
+  const durabilityHint = !durability ? null
+    : durability.destroyed
+      ? 'Destroyed — it can’t be used or Repaired.'
+    : !durability.broken ? null
+    : item.shield
+      ? (blessed
+        ? 'Broken — Rust Blessing: it can still be Raised at its full bonus.'
+        : 'Broken — it can’t be Raised or used to Shield Block.')
+    : isArmor(item)
+      ? (() => {
+        const penalty = brokenArmorAcPenalty(
+          normalizeArmor(item.armor)?.category || 'unarmored', blessed);
+        return penalty
+          ? `Broken — ${penalty} status penalty to AC while worn (applied automatically${blessed ? '; softened by Rust Blessing' : ''}).`
+          : 'Broken — Rust Blessing: no AC penalty for armor this light.';
+      })()
+    : item.strikes
+      ? (blessed
+        ? 'Broken — Rust Blessing: its Strikes stay usable at −2 to attack.'
+        : 'Broken — its Strikes are unavailable until it’s repaired.')
+    : 'Broken — it can’t be used for its normal function.';
+
+  const doApplyItemDamage = () => {
+    const dealt = Math.floor(Number(damageInput));
+    if (!(dealt > 0)) return;
+    const r = itemHp.applyDamage(item, dealt);
+    if (!r) return;
+    setDamageInput('');
+    const state = r.destroyed ? ' — destroyed' : r.broken ? ' — broken' : '';
+    appendEvent({
+      type: 'action',
+      text: `${character?.name || 'Someone'}'s ${item.name} took ${r.taken} damage (${r.prevented} prevented by Hardness) — ${r.hpAfter}/${durability.maxHp} HP${state}`,
+    });
+  };
+  const doRepairItem = () => {
+    const amount = Math.floor(Number(repairInput));
+    if (!(amount > 0)) return;
+    const next = itemHp.repairItem(item, amount);
+    if (next == null) return;
+    setRepairInput('');
+    const still = isBrokenHp(next, durability.brokenThreshold) ? ' — still broken' : '';
+    appendEvent({
+      type: 'action',
+      text: `${character?.name || 'Someone'} repaired ${item.name} — ${next}/${durability.maxHp} HP${still}`,
+    });
+  };
+
   // Attunement is slot-driven (drag into the Attuned area); the modal only
   // reflects the status as a chip. Body-bound gear (tattoos) is permanently
   // invested — the chip shows regardless of the attunement overlay.
@@ -697,6 +761,93 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           </div>
         ) : null}
       </div>
+
+      {/* Durability (#539/#542) — live HP / Hardness / Broken Threshold with
+          apply-damage + repair bookkeeping. Damage is reduced by Hardness on
+          apply; repair is manual HP for now (the Repair action and Rust Scrub
+          land in #543). Destroyed (0 HP) is final — no repair offered. */}
+      {durability && (
+        <div className="item-durability" data-testid="item-durability">
+          <h3>
+            Durability
+            {(durability.broken || durability.destroyed) && (
+              <span
+                className={`durability-tag${durability.destroyed ? ' is-destroyed' : ''}`}
+                data-testid="durability-state"
+              >
+                {durability.destroyed ? 'Destroyed' : 'Broken'}
+              </span>
+            )}
+          </h3>
+          <div className="item-detail-grid is-block">
+            <div className="item-detail">
+              <span className="item-detail-label">Hit Points</span>
+              <span className="item-detail-value" data-testid="durability-hp">
+                {durability.hp}/{durability.maxHp}
+              </span>
+            </div>
+            <div className="item-detail">
+              <span className="item-detail-label">Hardness</span>
+              <span className="item-detail-value">{durability.hardness}</span>
+            </div>
+            <div className="item-detail">
+              <span className="item-detail-label">Broken Threshold</span>
+              <span className="item-detail-value">{durability.brokenThreshold}</span>
+            </div>
+          </div>
+          {durabilityHint && (
+            <p className="item-durability-hint" data-testid="durability-hint">{durabilityHint}</p>
+          )}
+          {durability.destroyed ? (
+            <p className="item-durability-hint">A destroyed item can’t be Repaired.</p>
+          ) : (
+            <div className="item-durability-controls">
+              <div className="item-durability-row">
+                <input
+                  type="number"
+                  min="1"
+                  inputMode="numeric"
+                  aria-label="Damage to apply"
+                  placeholder="Damage"
+                  value={damageInput}
+                  onChange={(e) => setDamageInput(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn-small btn-danger"
+                  data-testid="durability-apply-damage"
+                  disabled={!(Number(damageInput) > 0)}
+                  onClick={doApplyItemDamage}
+                >
+                  Apply damage
+                </button>
+              </div>
+              {durability.hp < durability.maxHp && (
+                <div className="item-durability-row">
+                  <input
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    aria-label="Hit Points to repair"
+                    placeholder="HP"
+                    value={repairInput}
+                    onChange={(e) => setRepairInput(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-small btn-secondary"
+                    data-testid="durability-repair"
+                    disabled={!(Number(repairInput) > 0)}
+                    onClick={doRepairItem}
+                  >
+                    Repair
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Shield properties */}
       {shield && (

@@ -470,6 +470,17 @@
   height: 70%;
   filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
 }
+/* Broken/Destroyed badge (#539/#542) — bottom-left, the free corner; a broken
+   item warns, a destroyed one gets the skull. */
+.inventory-grid .icon-tile-broken {
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  font-size: calc(var(--tile) * 0.24);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--peril-light) 80%, transparent));
+  pointer-events: none;
+}
 /* Rune-marked gear (thassilonianRune) — imageless items show the rune AS the
    art, tinted by its sin token (ThassilonianRune.css). */
 .inventory-grid .icon-tile-rune-art {

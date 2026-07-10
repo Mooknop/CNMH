@@ -479,6 +479,47 @@
   padding: 0.1rem 0.4rem;
 }
 
+/* ── durability panel (#539/#542): live HP + apply-damage / repair rows ── */
+.loot-scroll .item-durability h3 { display: flex; align-items: center; gap: 0.5rem; }
+.loot-scroll .durability-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-danger, var(--d-cf-fg));
+  border: 1px solid var(--color-danger, var(--d-cf-fg));
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+}
+.loot-scroll .durability-tag.is-destroyed {
+  color: var(--color-text-on-primary);
+  background: var(--color-danger, var(--d-cf-fg));
+}
+.loot-scroll .item-durability-hint {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+  margin: 0.5rem 0 0;
+}
+.loot-scroll .item-durability-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.6rem;
+}
+.loot-scroll .item-durability-row { display: flex; align-items: center; gap: 0.5rem; }
+.loot-scroll .item-durability-row input {
+  width: 4.5rem;
+  padding: 0.25rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: inherit;
+  background: color-mix(in srgb, var(--void-base) 60%, transparent);
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.18));
+  border-radius: var(--radius-sm);
+}
+
 @media (max-width: 480px) {
   .modal-container.modal--loot { max-width: 100%; }
 }
