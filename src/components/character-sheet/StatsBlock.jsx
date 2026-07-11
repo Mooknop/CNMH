@@ -19,9 +19,18 @@ import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
 import { speedModifier } from '../../utils/speed';
 import { RELAY, syncKey } from '../../sync/keys';
+import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills';
+
+const ABILITY_KEYS = ABILITIES.map((a) => a.key);
 
 const StatsBlock = ({ character, characterColor }) => {
-  const [activeTab, setActiveTab] = useState('abilities');
+  // Ability Dial: the active node — an ability key ('strength'…'charisma')
+  // or 'core' (character-wide proficiencies/feats). Defaults to the
+  // character's key ability so the panel opens populated.
+  const [selected, setSelected] = useState(
+    ABILITY_KEYS.includes(character?.keyAbility) ? character.keyAbility : 'strength'
+  );
+  const [coreView, setCoreView] = useState('profs');
   const characterKey = character?.id || 'unknown';
   const [activeConditions, setActiveConditions] = useLocalStorage(syncKey(RELAY.CONDITIONS, characterKey), []);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
@@ -197,67 +206,8 @@ const StatsBlock = ({ character, characterColor }) => {
     />
   );
 
-  const renderTabContent = () => {
-    switch(activeTab) {
-      case 'abilities':
-        return (
-          <>
-            <div className="abilities-section">
-              <div className="ability">
-                <div className="ability-name">STR</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.strength)}</div>
-              </div>
-              <div className="ability">
-                <div className="ability-name">DEX</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.dexterity)}</div>
-              </div>
-              <div className="ability">
-                <div className="ability-name">CON</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.constitution)}</div>
-              </div>
-              <div className="ability">
-                <div className="ability-name">INT</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.intelligence)}</div>
-              </div>
-              <div className="ability">
-                <div className="ability-name">WIS</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.wisdom)}</div>
-              </div>
-              <div className="ability">
-                <div className="ability-name">CHA</div>
-                <div className="ability-mod">{formatModifier(abilityModifiers.charisma)}</div>
-              </div>
-            </div>
-
-            <div className="defenses-section">
-              <div className="defense">
-                <div className="defense-name">Fort</div>
-                <div className="defense-value">
-                  <PenaltyDisplay base={saves.fortitude} penalty={mod('fort')} format="modifier" />
-                </div>
-                {renderConditionalHint('fort')}
-              </div>
-              <div className="defense">
-                <div className="defense-name">Ref</div>
-                <div className="defense-value">
-                  <PenaltyDisplay base={saves.reflex} penalty={mod('reflex')} format="modifier" />
-                </div>
-                {renderConditionalHint('reflex')}
-              </div>
-              <div className="defense">
-                <div className="defense-name">Will</div>
-                <div className="defense-value">
-                  <PenaltyDisplay base={saves.will} penalty={mod('will')} format="modifier" />
-                </div>
-                {renderConditionalHint('will')}
-              </div>
-            </div>
-          </>
-        );
-
-      case 'proficiencies':
-        return (
-          <div className="proficiencies-section">
+  const renderProficiencies = () => (
+    <div className="proficiencies-section">
             <div className="proficiency-group">
               <h4 className="proficiency-category">Class DC</h4>
               <div className="proficiency-items">
@@ -425,25 +375,15 @@ const StatsBlock = ({ character, characterColor }) => {
                 </div>
               </div>
             </div>
-          </div>
-        );
-      case 'feats':
-        return (
-          <FeatsList character={character} characterColor={themeColor} />
-        );
-      case 'skills':
-        return (
-          <EnhancedSkillsList
-            character={character}
-            characterColor={themeColor}
-            activeConditions={hydratedConditions}
-            effectBonuses={bonuses}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+    </div>
+  );
+
+  // Ability Dial panel context — the selected node's identity, its governed
+  // save (CON→Fort, DEX→Ref, WIS→Will; the rest have none), and how many
+  // catalog skills its cluster holds.
+  const selectedAbility = ABILITIES.find((a) => a.key === selected);
+  const selectedSave = SAVES_BY_ABILITY[selected];
+  const selectedSkillCount = selectedAbility ? skillsForAbility(selected).length : 0;
 
   return (
     <div className="stats-block" style={{ '--color-theme': themeColor }}>
@@ -584,37 +524,100 @@ const StatsBlock = ({ character, characterColor }) => {
         )}
       </div>
 
-      {/* Tab Navigation */}
-      <div className="stats-tabs">
-        <button
-          className={`tab-button ${activeTab === 'abilities' ? 'active' : ''}`}
-          onClick={() => setActiveTab('abilities')}
-        >
-          Abilities & Saves
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'proficiencies' ? 'active' : ''}`}
-          onClick={() => setActiveTab('proficiencies')}
-        >
-          Proficiencies
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
-          onClick={() => setActiveTab('feats')}
-        >
-          Feats
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
-          onClick={() => setActiveTab('skills')}
-        >
-          Skills
-        </button>
+      {/* Ability Dial — six ability nodes ringing the AC core. Tapping a
+          node loads that ability's save + skills into the panel below;
+          tapping the core steps out of the ring (nodes dim) and opens the
+          character-wide Proficiencies / Feats panel. Replaces the old
+          Abilities / Proficiencies / Feats / Skills segmented control. */}
+      <div className="dialwrap">
+        <div className="dial">
+          <div className="dial-ring" aria-hidden="true" />
+          {ABILITIES.map((a) => (
+            <button
+              key={a.key}
+              type="button"
+              className={`node node--${a.abbr.toLowerCase()}${selected === a.key ? ' sel' : ''}${selected === 'core' ? ' dim' : ''}`}
+              aria-pressed={selected === a.key}
+              aria-label={`${a.name} ${formatModifier(abilityModifiers[a.key])}`}
+              onClick={() => setSelected(a.key)}
+            >
+              <span className="node-abbr">{a.abbr}</span>
+              <span className="node-mod">{formatModifier(abilityModifiers[a.key])}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`dial-center${selected === 'core' ? ' sel' : ''}`}
+            aria-pressed={selected === 'core'}
+            aria-label="Character proficiencies and feats"
+            onClick={() => setSelected('core')}
+          >
+            <span className="core-label">AC</span>
+            <span className="core-value">
+              <PenaltyDisplay base={acBase} penalty={mod('ac')} />
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="tab-content">
-        {renderTabContent()}
+      {/* Dial panel — swaps with the selection. Skill rows reuse
+          EnhancedSkillsList narrowed to the node's ability; the core hosts
+          the Proficiencies / Feats toggle. */}
+      <div className="dial-panel">
+        {selected === 'core' ? (
+          <>
+            <div className="panel-h">
+              <div className="ptoggle" role="group" aria-label="Core view">
+                <button
+                  type="button"
+                  className={`ptoggle-btn${coreView === 'profs' ? ' active' : ''}`}
+                  onClick={() => setCoreView('profs')}
+                >
+                  Proficiencies
+                </button>
+                <button
+                  type="button"
+                  className={`ptoggle-btn${coreView === 'feats' ? ' active' : ''}`}
+                  onClick={() => setCoreView('feats')}
+                >
+                  Feats
+                </button>
+              </div>
+            </div>
+            {coreView === 'profs'
+              ? renderProficiencies()
+              : <FeatsList character={character} characterColor={themeColor} />}
+          </>
+        ) : (
+          <>
+            <div className="panel-h">
+              <span className="panel-title">
+                {selectedAbility.abbr} · {formatModifier(abilityModifiers[selected])}
+              </span>
+              {selectedSave && (
+                <span className="panel-save">
+                  {selectedSave.label}{' '}
+                  <PenaltyDisplay
+                    base={saves[selectedSave.saveKey]}
+                    penalty={mod(selectedSave.stat)}
+                    format="modifier"
+                  />
+                </span>
+              )}
+              <span className="panel-count">
+                {selectedSkillCount} skill{selectedSkillCount === 1 ? '' : 's'}
+              </span>
+            </div>
+            {selectedSave && renderConditionalHint(selectedSave.stat)}
+            <EnhancedSkillsList
+              character={character}
+              characterColor={themeColor}
+              activeConditions={hydratedConditions}
+              effectBonuses={bonuses}
+              filterAbility={selected}
+            />
+          </>
+        )}
       </div>
 
       <ConditionModal

@@ -68,8 +68,8 @@ vi.mock('../../hooks/useCharacter', () => ({
 }));
 
 vi.mock('../character-sheet/EnhancedSkillsList', () => ({
-  default: function DummyEnhancedSkillsList({ character }) {
-    return <div data-testid="enhanced-skills">Skills List</div>;
+  default: function DummyEnhancedSkillsList({ filterAbility }) {
+    return <div data-testid="enhanced-skills">Skills List ({filterAbility})</div>;
   }
 }));
 
@@ -134,12 +134,26 @@ describe('StatsBlock', () => {
     expect(screen.getByText('CHA')).toBeInTheDocument();
   });
 
-  it('should display saves (Fort, Ref, Will)', () => {
+  it('shows each save in its governing ability node panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    
-    expect(screen.getByText('Fort')).toBeInTheDocument();
-    expect(screen.getByText('Ref')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Constitution +0'));
+    expect(screen.getByText('Fortitude')).toBeInTheDocument();
+    expect(screen.getByText('+3')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
+    expect(screen.getByText('Reflex')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Wisdom +1'));
     expect(screen.getByText('Will')).toBeInTheDocument();
+  });
+
+  it('abilities without a save show no save line', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    // STR is the default node (no keyAbility on the mock character)
+    expect(screen.queryByText('Fortitude')).toBeNull();
+    expect(screen.queryByText('Reflex')).toBeNull();
+    expect(screen.queryByText('Will')).toBeNull();
   });
 
   it('should apply theme color via CSS custom property on the stats-block container', () => {
@@ -168,32 +182,46 @@ describe('StatsBlock', () => {
     }
   });
 
-  it('should render abilities section initially', () => {
+  it('renders the dial with six ability nodes and the AC core', () => {
     const { container } = render(
       <StatsBlock character={mockCharacter} characterColor="#7E8C9A" />
     );
-    
-    const abilitiesSection = container.querySelector('.abilities-section');
-    expect(abilitiesSection).toBeInTheDocument();
+
+    expect(container.querySelector('.dial')).toBeInTheDocument();
+    expect(container.querySelectorAll('.node')).toHaveLength(6);
+    expect(container.querySelector('.dial-center')).toBeInTheDocument();
   });
 
-  it('should display defenses section', () => {
-    const { container } = render(
-      <StatsBlock character={mockCharacter} characterColor="#7E8C9A" />
-    );
-    
-    const defensesSection = container.querySelector('.defenses-section');
-    expect(defensesSection).toBeInTheDocument();
-  });
-
-  it('should render EnhancedSkillsList component when skills tab is active', () => {
+  it('the default node panel shows the ability header and its skill cluster', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
 
-    // EnhancedSkillsList renders under the 'skills' tab
-    const skillsTabButton = screen.getByText(/skills/i);
-    fireEvent.click(skillsTabButton);
+    // No keyAbility on the mock character → STR is the default node.
+    expect(screen.getByText((_, el) =>
+      el?.className === 'panel-title' && el?.textContent === 'STR · +2'
+    )).toBeInTheDocument();
+    // The skill cluster is EnhancedSkillsList narrowed to the node's ability.
+    expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('strength');
+  });
 
-    expect(screen.queryByTestId('enhanced-skills')).toBeTruthy();
+  it("defaults the selected node to the character's key ability", () => {
+    const { container } = render(
+      <StatsBlock
+        character={{ ...mockCharacter, keyAbility: 'dexterity' }}
+        characterColor="#7E8C9A"
+      />
+    );
+    expect(container.querySelector('.node--dex')).toHaveClass('sel');
+    expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('dexterity');
+  });
+
+  it('selecting a node swaps the panel to that ability', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
+    expect(screen.getByText((_, el) =>
+      el?.className === 'panel-title' && el?.textContent === 'DEX · +1'
+    )).toBeInTheDocument();
+    expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('dexterity');
   });
 
   it('should format ability modifiers correctly', () => {
@@ -208,7 +236,8 @@ describe('StatsBlock', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     // HP shows as "current / max" — 8 appears in both spans when at full health
     expect(screen.getAllByText('8').length).toBeGreaterThan(0);
-    expect(screen.getByText('16')).toBeInTheDocument(); // ac
+    // AC appears in the legacy ac-box and the dial core
+    expect(screen.getAllByText('16').length).toBeGreaterThan(0);
   });
 
   it('shows the derived armorClass value, not the raw scalar (AC4)', () => {
@@ -219,7 +248,7 @@ describe('StatsBlock', () => {
       armorClass: { value: 18, derived: true, source: 'armor', category: 'heavy', armorName: 'Full Plate' },
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('18')).toBeInTheDocument();
+    expect(screen.getAllByText('18').length).toBeGreaterThan(0);
     expect(screen.queryByText('16')).not.toBeInTheDocument();
   });
 
@@ -228,7 +257,7 @@ describe('StatsBlock', () => {
     delete noArmorClass.armorClass;
     mockUseCharacter.mockReturnValueOnce(noArmorClass);
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('16')).toBeInTheDocument();
+    expect(screen.getAllByText('16').length).toBeGreaterThan(0);
   });
 
   it('renders hero point pips reflecting the current value', () => {
@@ -354,7 +383,7 @@ describe('StatsBlock', () => {
 
   it('should switch to proficiencies tab', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Class DC')).toBeInTheDocument();
     expect(screen.getByText('Weapons')).toBeInTheDocument();
     expect(screen.getByText('Armor')).toBeInTheDocument();
@@ -362,13 +391,13 @@ describe('StatsBlock', () => {
 
   it('should render classDC in proficiencies tab', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('15')).toBeInTheDocument();
   });
 
   it('should render weapon proficiency labels in proficiencies tab', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Unarmed')).toBeInTheDocument();
     expect(screen.getByText('Simple')).toBeInTheDocument();
     expect(screen.getByText('Martial')).toBeInTheDocument();
@@ -377,7 +406,7 @@ describe('StatsBlock', () => {
 
   it('should render armor proficiency categories in proficiencies tab', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Unarmored')).toBeInTheDocument();
     expect(screen.getByText('Light')).toBeInTheDocument();
     // 'Medium' also appears in the size section, use getAllByText
@@ -390,7 +419,7 @@ describe('StatsBlock', () => {
     mockUseCharacter.mockReturnValueOnce(emptyProfData);
     mockUseCharacter.mockReturnValueOnce(emptyProfData); // for re-render after tab click
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     // Default proficiencies should render Untrained for all
     expect(screen.getAllByText('Untrained').length).toBeGreaterThan(0);
   });
@@ -409,7 +438,7 @@ describe('StatsBlock', () => {
     mockUseCharacter.mockReturnValueOnce(dataWithClass);
     mockUseCharacter.mockReturnValueOnce(dataWithClass); // for re-render after tab click
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Class Weapons')).toBeInTheDocument();
   });
 
@@ -427,33 +456,55 @@ describe('StatsBlock', () => {
     mockUseCharacter.mockReturnValueOnce(dataWithFinesse);
     mockUseCharacter.mockReturnValueOnce(dataWithFinesse); // for re-render after tab click
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Finesse')).toBeInTheDocument();
   });
 
   it('should not render class weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.queryByText('Class Weapons')).toBeNull();
   });
 
   it('should not render finesse weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Proficiencies'));
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.queryByText('Finesse')).toBeNull();
   });
 
-  it('tab button is active/highlighted when selected', () => {
+  it('selection classes: node .sel, core .sel + node .dim', () => {
     const { container } = render(
       <StatsBlock character={mockCharacter} characterColor="#ff0000" />
     );
-    // Initially 'abilities' tab is active — class drives the highlight, not inline style
-    const tabButtons = container.querySelectorAll('.tab-button');
-    expect(tabButtons[0]).toHaveClass('active');
-    // After clicking proficiencies
-    fireEvent.click(screen.getByText('Proficiencies'));
-    expect(tabButtons[1]).toHaveClass('active');
-    expect(tabButtons[0]).not.toHaveClass('active');
+    // Default node (STR) carries the selected class; nothing is dimmed.
+    expect(container.querySelector('.node--str')).toHaveClass('sel');
+    expect(container.querySelectorAll('.node.dim')).toHaveLength(0);
+
+    // Activating the core steps the ring back: core .sel, every node .dim.
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    expect(container.querySelector('.dial-center')).toHaveClass('sel');
+    expect(container.querySelector('.node--str')).not.toHaveClass('sel');
+    expect(container.querySelectorAll('.node.dim')).toHaveLength(6);
+  });
+
+  it('the core panel toggles between Proficiencies and Feats', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    // Proficiencies is the default core view
+    expect(screen.getByText('Class DC')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Feats'));
+    expect(screen.getByText('No feats or abilities.')).toBeInTheDocument();
+    expect(screen.queryByText('Class DC')).toBeNull();
+  });
+
+  it('re-selecting a node from the core restores the ability panel', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    fireEvent.click(screen.getByLabelText('Charisma +2'));
+    expect(screen.getByText((_, el) =>
+      el?.className === 'panel-title' && el?.textContent === 'CHA · +2'
+    )).toBeInTheDocument();
+    expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('charisma');
   });
 
   it('renders the CONDITIONS button in the hp-defense row', () => {
@@ -486,8 +537,8 @@ describe('StatsBlock', () => {
     // Open condition modal and add Off-Guard (-2 circumstance to AC)
     fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
-    // AC was 16, Off-Guard applies -2 → AC should show 14
-    expect(screen.getByText('14')).toBeInTheDocument();
+    // AC was 16, Off-Guard applies -2 → AC should show 14 (ac-box + core)
+    expect(screen.getAllByText('14').length).toBeGreaterThan(0);
   });
 
   describe('raised shield', () => {
@@ -503,7 +554,7 @@ describe('StatsBlock', () => {
       mockUseCharacter.mockReturnValue(withShield());
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
       // AC still 16 — identical to a character holding no shield.
-      expect(screen.getByText('16')).toBeInTheDocument();
+      expect(screen.getAllByText('16').length).toBeGreaterThan(0);
       expect(screen.queryByText('18')).toBeNull();
     });
 
@@ -512,7 +563,7 @@ describe('StatsBlock', () => {
       mockUseCharacter.mockReturnValue(withShield());
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
       // 16 + 2 (Raised Shield circumstance) = 18.
-      expect(screen.getByText('18')).toBeInTheDocument();
+      expect(screen.getAllByText('18').length).toBeGreaterThan(0);
     });
 
     it('a broken raised shield grants no bonus', () => {
@@ -521,7 +572,7 @@ describe('StatsBlock', () => {
         inventory: [{ ...heldShield, shield: { bonus: 2, hardness: 5, hp: 10, brokenThreshold: 10 } }],
       }));
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      expect(screen.getByText('16')).toBeInTheDocument();
+      expect(screen.getAllByText('16').length).toBeGreaterThan(0);
       expect(screen.queryByText('18')).toBeNull();
     });
     // Stacking of the raised shield with another circumstance AC bonus
@@ -610,6 +661,8 @@ describe('StatsBlock', () => {
         effects: [{ id: 'antidote', name: 'Antidote', modifiers: [{ stat: 'fort', kind: 'item', amount: 2, vs: 'poison' }] }],
       });
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // Fortitude lives in the CON node panel now.
+      fireEvent.click(screen.getByLabelText('Constitution +0'));
       // Hint text appears…
       expect(screen.getByText(/vs poison/)).toBeInTheDocument();
       expect(screen.getByText(/Antidote/)).toBeInTheDocument();

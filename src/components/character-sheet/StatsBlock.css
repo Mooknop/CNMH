@@ -144,17 +144,195 @@
   color: var(--shell-text-primary);
 }
 
-/* ── Stats tab bar — dark segmented control ─────────────── */
-.stats-tabs {
+/* ── Ability Dial ────────────────────────────────────────
+   Six ability nodes ringing the AC core; replaces the old segmented
+   control. Selected node / active core route through the per-character
+   accent (tint + glow, never a solid accent fill). */
+.stats-block {
+  /* dial geometry */
+  --dial-size: 222px;
+  --dial-node: 48px;
+  --dial-core: 70px;
+}
+
+.dialwrap {
   display: flex;
+  justify-content: center;
+  padding: var(--space-3) 0;
   margin-bottom: var(--space-4);
+}
+
+.dial {
+  position: relative;
+  width: var(--dial-size);
+  height: var(--dial-size);
+}
+
+.dial-ring {
+  position: absolute;
+  inset: calc(var(--dial-node) / 2);
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: 50%;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.node {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--dial-node);
+  height: var(--dial-node);
+  margin: calc(var(--dial-node) / -2) 0 0 calc(var(--dial-node) / -2);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border-strong);
+  cursor: pointer;
+  transform:
+    rotate(var(--node-angle))
+    translateY(calc(var(--dial-size) / -2 + var(--dial-node) / 2))
+    rotate(calc(-1 * var(--node-angle)));
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+}
+
+/* Node positions — STR at 12 o'clock, clockwise in ABILITIES order */
+.node--str { --node-angle: 0deg; }
+.node--dex { --node-angle: 60deg; }
+.node--con { --node-angle: 120deg; }
+.node--int { --node-angle: 180deg; }
+.node--wis { --node-angle: 240deg; }
+.node--cha { --node-angle: 300deg; }
+
+.node-abbr {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--color-theme, var(--ember-base));
+}
+
+.node-mod {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  line-height: 1;
+  color: var(--shell-text-primary);
+}
+
+.node:hover {
+  border-color: var(--accent-outline);
+}
+
+.node.sel {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: var(--accent-glow);
+}
+
+/* Core active → the ring steps back */
+.node.dim {
+  opacity: 0.4;
+}
+
+.dial-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--dial-core);
+  height: var(--dial-core);
+  margin: calc(var(--dial-core) / -2) 0 0 calc(var(--dial-core) / -2);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border-strong);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.dial-center:hover {
+  border-color: var(--accent-outline);
+}
+
+.dial-center.sel {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: var(--accent-glow);
+}
+
+.core-label {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  color: var(--color-theme, var(--ember-base));
+}
+
+.core-value {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--shell-text-primary);
+}
+
+/* ── Dial panel — swaps with the selection ──────────────── */
+.dial-panel {
+  padding: var(--space-2) 0 var(--space-4);
+}
+
+.panel-h {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.panel-save {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.panel-count {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* Proficiencies / Feats toggle inside the core panel */
+.ptoggle {
+  display: flex;
+  flex: 1;
   background: var(--surface-inset);
   border: 1px solid var(--shell-border);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 
-.tab-button {
+.ptoggle-btn {
   flex: 1;
   padding: var(--space-3) var(--space-2);
   background: none;
@@ -170,32 +348,26 @@
   min-height: var(--tap-target-min);
 }
 
-.tab-button:hover {
+.ptoggle-btn:hover {
   background: var(--surface-inset-hover);
   color: var(--shell-text-primary);
 }
 
-.tab-button.active {
+.ptoggle-btn.active {
   background: var(--tab-active-bg);
   color: var(--tab-active-text);
   box-shadow: inset 0 -2px 0 var(--tab-active-border);
 }
 
-/* Tab content area */
-.tab-content {
-  background: transparent;
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) 0;
+@media (prefers-reduced-motion: reduce) {
+  .node,
+  .dial-center,
+  .ptoggle-btn {
+    transition: none;
+  }
 }
 
-/* ── Abilities grid ─────────────────────────────────────── */
-.abilities-section {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
+/* ── Ability slabs — shared with the companion/familiar modals ── */
 .ability {
   text-align: center;
   background: var(--surface-slab);
@@ -231,14 +403,9 @@
   color: var(--shell-text-primary);
 }
 
-/* ── Defense slabs — dark bracketed cards ───────────────── */
-.defenses-section {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
+/* ── Defense slabs — dark bracketed cards ─────────────────
+   Shared with the companion/familiar modals — keep even though the
+   Stats body's save slabs moved into the dial panel. */
 .defense {
   position: relative;
   text-align: center;
@@ -437,24 +604,7 @@
 }
 
 /* ── Responsive ─────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .abilities-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-2);
-  }
-}
-
 @media (max-width: 768px) {
-  .abilities-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-2);
-  }
-
-  .defenses-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-2);
-  }
-
   .proficiency-items {
     grid-template-columns: 1fr;
     gap: var(--space-2);
@@ -466,16 +616,6 @@
 }
 
 @media (max-width: 480px) {
-  .abilities-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-1);
-  }
-
-  .defenses-section {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-
   .bonus-container {
     min-width: 60px;
   }
@@ -502,10 +642,6 @@
 .cs-content .hp-box,
 .cs-content .ac-box {
   display: none;
-}
-
-.cs-content .tab-content {
-  border-radius: var(--radius-md);
 }
 
 .cs-content .ability {
