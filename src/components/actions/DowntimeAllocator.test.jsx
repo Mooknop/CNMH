@@ -14,16 +14,23 @@ const block = { days: 7, active: true, startedAt: PERIOD };
 const character = { id: 'char-1', name: 'Pellias Brightshield' };
 const stamp = (o) => ({ periodStartedAt: PERIOD, ...o });
 
-// Key-aware useSyncedState: downtime (per-PC), craftprojects (per-PC), and the
-// global benchmark map each get their own [value, setter] pair.
-const setupSynced = ({ downtime = null, setDowntime = vi.fn(), craft = null, setCraft = vi.fn(), bench = null } = {}) => {
+// Key-aware useSyncedState: downtime (per-PC), craftprojects/training (per-PC),
+// and the global benchmark/support maps each get their own [value, setter] pair.
+const setupSynced = ({
+  downtime = null, setDowntime = vi.fn(),
+  craft = null, setCraft = vi.fn(),
+  training = null, setTraining = vi.fn(),
+  support = null, bench = null,
+} = {}) => {
   useSyncedState.mockImplementation((key) => {
     if (key === 'cnmh_downtimebench_global') return [bench, vi.fn()];
+    if (key === 'cnmh_support_global') return [support, vi.fn()];
     if (key.startsWith('cnmh_craftprojects_')) return [craft, setCraft];
+    if (key.startsWith('cnmh_training_')) return [training, setTraining];
     if (key.startsWith('cnmh_downtime_')) return [downtime, setDowntime];
     return [null, vi.fn()];
   });
-  return { setDowntime, setCraft };
+  return { setDowntime, setCraft, setTraining };
 };
 
 beforeEach(() => {
@@ -147,6 +154,75 @@ describe('DowntimeAllocator', () => {
       fireEvent.change(screen.getByLabelText('Crafting days'), { target: { value: '0' } });
       const updater = setDowntime.mock.calls[0][0];
       expect(updater(stamp({ plan: { Crafting: 3 }, craftApplied: { p1: 16 } })).plan.Crafting).toBe(2);
+    });
+  });
+
+  describe('training hour banking (#1191 S1)', () => {
+    const trainState = {
+      tracks: [{
+        id: 't1', vendorId: 'sandpoint-garrison', offeringId: 'shield-block',
+        hours: 0, benchmarkHours: 160, status: 'in-progress', startedAt: 0,
+      }],
+    };
+
+    it('hides Training when there is nothing to train', () => {
+      setupSynced({ downtime: stamp({}) });
+      render(<DowntimeAllocator character={character} block={block} />);
+      expect(screen.queryByText('Training')).not.toBeInTheDocument();
+    });
+
+    it('shows Training when a track is in progress', () => {
+      setupSynced({ downtime: stamp({}), training: trainState });
+      render(<DowntimeAllocator character={character} block={block} />);
+      expect(screen.getByText('Training')).toBeInTheDocument();
+    });
+
+    it('shows Training when a supported vendor offers an eligible track', () => {
+      setupSynced({ downtime: stamp({}), support: { 'sandpoint-garrison': { earnedAt: null } } });
+      render(<DowntimeAllocator character={character} block={block} />);
+      expect(screen.getByText('Training')).toBeInTheDocument();
+    });
+
+    it('hides Training when the PC already knows every supported offering', () => {
+      // Shield Block known innately — the Garrison has nothing left to teach.
+      setupSynced({ downtime: stamp({}), support: { 'sandpoint-garrison': { earnedAt: null } } });
+      render(
+        <DowntimeAllocator
+          character={{ ...character, reactions: [{ name: 'Shield Block' }] }}
+          block={block}
+        />,
+      );
+      expect(screen.queryByText('Training')).not.toBeInTheDocument();
+    });
+
+    it('banks the allocated hours into the track and records trainApplied on lock-in', () => {
+      const { setDowntime, setTraining } = setupSynced({
+        downtime: stamp({ plan: { Training: 2 } }),
+        training: trainState,
+      });
+      render(<DowntimeAllocator character={character} block={block} />);
+      expect(screen.getByText('Bank 16h across tracks')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Lock in/ }));
+
+      // Track hours banked +16.
+      const trainUpdater = setTraining.mock.calls[0][0];
+      expect(trainUpdater(trainState).tracks[0].hours).toBe(16);
+
+      // Downtime stamped ready with trainApplied tracking the banked hours.
+      const dtUpdater = setDowntime.mock.calls[0][0];
+      const next = dtUpdater(stamp({ plan: { Training: 2 } }));
+      expect(next).toMatchObject({ status: 'ready', trainApplied: { t1: 16 } });
+    });
+
+    it('does not let Training drop below already-banked days', () => {
+      const { setDowntime } = setupSynced({
+        downtime: stamp({ plan: { Training: 3 }, trainApplied: { t1: 16 } }),
+        training: trainState,
+      });
+      render(<DowntimeAllocator character={character} block={block} />);
+      fireEvent.change(screen.getByLabelText('Training days'), { target: { value: '0' } });
+      const updater = setDowntime.mock.calls[0][0];
+      expect(updater(stamp({ plan: { Training: 3 }, trainApplied: { t1: 16 } })).plan.Training).toBe(2);
     });
   });
 

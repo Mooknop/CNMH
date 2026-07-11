@@ -10,6 +10,7 @@ import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import ShopStorefront from '../shop/ShopStorefront';
 import CraftingProjects from './CraftingProjects';
+import TrainingProjects from './TrainingProjects';
 import RuneWorkPanel from './RuneWorkPanel';
 import MoveRunePanel from './MoveRunePanel';
 import DowntimePartyLedger from './DowntimePartyLedger';
@@ -137,6 +138,10 @@ const DowntimeTab = ({ character, characterColor }) => {
       {hasCrafting && (
         <CraftingProjects character={character} />
       )}
+
+      {/* Self-gating: renders nothing without a track in progress or an
+          eligible offering at a supported Training Vendor (#1191 S1). */}
+      <TrainingProjects character={character} />
 
       {hasCrafting && (
         <div className="dt-crafting-row">

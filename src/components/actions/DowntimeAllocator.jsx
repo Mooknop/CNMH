@@ -7,6 +7,15 @@ import { periodState, stampPeriod, planDays } from '../../utils/downtimeUtils';
 import { downtimeExpertFor } from '../../utils/downtimeExperts';
 import { dailyReductionCp } from '../../utils/craftingOutcome';
 import { cpToGp } from '../../utils/earnIncome';
+import {
+  availableToBankHours,
+  bankedFloorDays,
+  defaultAllocations,
+  allocationsBalanced,
+  recordApplied,
+} from '../../utils/downtimeBanking';
+import { availableTrainingVendors, trackLabel } from '../../data/trainingVendors';
+import { useLocationSupport } from '../../hooks/useLocationSupport';
 import './DowntimeAllocator.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
 
@@ -19,6 +28,64 @@ const isAllocatable = (p) => {
   const s = p.status || 'in-progress';
   return s === 'in-progress' || s === 'reducing';
 };
+
+// One delta-bank of an activity's planned hours across parallel targets
+// (crafting projects / training tracks — downtimeBanking.js has the model).
+// Local allocation state defaults to everything-on-the-furthest-along target
+// whenever the un-banked pool or the target set changes.
+const useHourBank = (days, applied, targets) => {
+  const available = availableToBankHours(days, applied);
+  const [allocations, setAllocations] = useState({});
+  const sig = targets.map((t) => `${t.id}:${t.hours}:${t.status || ''}`).join(',');
+  useEffect(() => {
+    setAllocations(defaultAllocations(targets, available));
+    // sig is the stable signature of `targets` (a fresh array each render)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [available, sig]);
+  const setAllocation = (id, hours) => setAllocations((prev) => ({
+    ...prev,
+    [id]: Math.max(0, Math.min(available, hours)),
+  }));
+  return {
+    available,
+    allocations,
+    setAllocation,
+    floorDays: bankedFloorDays(applied),
+    total: targets.reduce((s, t) => s + (allocations[t.id] ?? 0), 0),
+    balanced: allocationsBalanced(targets, allocations, available),
+  };
+};
+
+// The per-target hour-split editor under an activity's slider (one instance
+// per hour-banked activity; the dta-craft-* styles are shared).
+const BankAllocation = ({ bank, targets, noun, labelFor, progressFor }) => (
+  <div className="dta-craft-alloc">
+    <span className="dta-craft-label">
+      Bank {bank.available}h across {noun}
+    </span>
+    {targets.map((t) => (
+      <div key={t.id} className="dta-craft-row">
+        <div className="dta-craft-info">
+          <span className="dta-craft-name">{labelFor(t)}</span>
+          <span className="dta-craft-progress">{progressFor(t)}</span>
+        </div>
+        <input
+          type="number"
+          className="dta-craft-input"
+          min={0}
+          max={bank.available}
+          step={8}
+          value={bank.allocations[t.id] ?? 0}
+          onChange={(e) => bank.setAllocation(t.id, parseInt(e.target.value, 10) || 0)}
+          aria-label={`Hours for ${labelFor(t)}`}
+        />
+      </div>
+    ))}
+    <span className="dta-craft-total" data-valid={bank.balanced}>
+      {bank.total} / {bank.available}h allocated
+    </span>
+  </div>
+);
 
 // Per-activity day-allocation editor — the Party Ledger's only editable zone.
 // Replaces the legacy multi-select picker (DowntimeList) and the incremental
@@ -36,63 +103,58 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
   const characterModel = useCharacter(character);
   const [downtime, setDowntime] = useSyncedState(syncKey(APP.DOWNTIME, charId), null);
   const [craftProjects, setCraftProjects] = useSyncedState(syncKey(APP.CRAFTPROJECTS, charId), null);
+  const [training, setTraining] = useSyncedState(syncKey(APP.TRAINING, charId), null);
   const [bench] = useSyncedState(globalKey(APP.DOWNTIMEBENCH), null);
+  const { supported } = useLocationSupport();
 
   const startedAt = block?.startedAt;
-  const { plan, status, craftApplied, paired } = periodState(downtime, startedAt);
+  const { plan, status, craftApplied, trainApplied, paired } = periodState(downtime, startedAt);
   const { party } = usePartyDowntime(startedAt, charId);
   const blockDays = block?.days ?? 0;
   const used = planDays(plan);
   const free = Math.max(0, blockDays - used);
   const locked = status === 'ready';
 
-  // GM-set Retrain/Research benchmarks (days); Crafting tracks its own projects.
+  // GM-set Retrain/Research benchmarks (days); Crafting/Training track their
+  // own projects.
   const benchDays = bench?.[charId] || {};
 
-  // Crafting banking math. craftApplied is keyed by project id; its total is the
-  // crafting hours already spent this period (irreversible — a locked day can't
-  // be un-banked), so the Crafting slider can't drop below it.
-  const bankedHours = Object.values(craftApplied || {}).reduce((s, h) => s + (Number(h) || 0), 0);
-  const bankedDays = Math.ceil(bankedHours / 8);
-  const craftingHours = (plan.Crafting || 0) * 8;
-  const availableToBank = Math.max(0, craftingHours - bankedHours);
+  // The two hour-banks: applied maps are keyed by target id and irreversible
+  // within the period (a locked day can't be un-banked), so each activity's
+  // slider can't drop below its banked floor.
   const projects = (craftProjects?.projects || []).filter(isAllocatable);
-
-  // Local split of the not-yet-banked crafting hours across projects. Defaults to
-  // all on the furthest-along project (ported from DowntimeCommitBar).
-  const [projectAllocations, setProjectAllocations] = useState({});
-  const projectSig = projects.map((p) => `${p.id}:${p.hours}:${p.status || ''}`).join(',');
-  useEffect(() => {
-    if (availableToBank === 0 || projects.length === 0) {
-      setProjectAllocations({});
-      return;
-    }
-    const furthest = projects.reduce((a, b) => (a.hours >= b.hours ? a : b));
-    const alloc = Object.fromEntries(projects.map((p) => [p.id, 0]));
-    alloc[furthest.id] = availableToBank;
-    setProjectAllocations(alloc);
-    // projectSig is the stable signature of `projects` (a fresh array each render)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableToBank, projectSig]);
-
-  const totalAllocated = projects.reduce((s, p) => s + (projectAllocations[p.id] ?? 0), 0);
-  const allocationBalanced =
-    availableToBank === 0 || projects.length === 0 || totalAllocated === availableToBank;
+  const craftBank = useHourBank(plan.Crafting || 0, craftApplied, projects);
+  const tracks = (training?.tracks || []).filter(
+    (t) => (t.status || 'in-progress') === 'in-progress',
+  );
+  const trainBank = useHourBank(plan.Training || 0, trainApplied, tracks);
 
   if (!characterModel) return null;
   const { flags, skillProficiencies } = characterModel;
   const isTrained = (skillId) => (skillProficiencies[skillId] || 0) >= 1;
 
+  // Training only surfaces when this PC has something to train: an in-progress
+  // track, an eligible offering at a supported vendor, or days already planned.
+  const trainingAvailable =
+    tracks.length > 0 ||
+    (plan.Training || 0) > 0 ||
+    availableTrainingVendors(character, supported, training?.tracks || []).length > 0;
+
   const activities = DOWNTIME_ACTIVITIES.filter((a) => {
     if (a.requiresFlag && !flags[a.requiresFlag]) return false;
     if (a.requiresAnyFlag && !a.requiresAnyFlag.some((f) => !!flags[f])) return false;
     if (a.requiresTrainedInAny && !a.requiresTrainedInAny.some(isTrained)) return false;
+    if (a.name === 'Training' && !trainingAvailable) return false;
     return true;
   });
 
-  // The lowest a given activity's slider may go: 0 normally, the banked floor for
-  // Crafting (you can't un-bank hours already spent on projects).
-  const minFor = (name) => (name === 'Crafting' ? bankedDays : 0);
+  // The lowest a given activity's slider may go: 0 normally, the banked floor
+  // for Crafting/Training (you can't un-bank hours already spent on targets).
+  const minFor = (name) => {
+    if (name === 'Crafting') return craftBank.floorDays;
+    if (name === 'Training') return trainBank.floorDays;
+    return 0;
+  };
   const maxFor = (name) => (plan[name] || 0) + free;
 
   const setDays = (name, d) => {
@@ -131,12 +193,13 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
       setDowntime((prev) => stampPeriod(prev, startedAt, { status: 'planning' }));
       return;
     }
-    // Lock in: bank the newly-allocated crafting hours into their projects and
-    // record them in craftApplied so a later re-lock only banks further deltas.
-    if (availableToBank > 0 && projects.length > 0) {
+    // Lock in: bank the newly-allocated hours into their targets and record
+    // them in craftApplied/trainApplied so a later re-lock only banks further
+    // deltas.
+    if (craftBank.available > 0 && projects.length > 0) {
       setCraftProjects((prev) => ({
         projects: (prev?.projects || []).map((p) => {
-          const add = projectAllocations[p.id] ?? 0;
+          const add = craftBank.allocations[p.id] ?? 0;
           if (add <= 0) return p;
           if (p.status === 'reducing') {
             const perDay = dailyReductionCp({ itemLevel: p.level, craftingRank: p.craftRank, degree: p.craftDegree });
@@ -147,18 +210,25 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
         }),
       }));
     }
+    if (trainBank.available > 0 && tracks.length > 0) {
+      setTraining((prev) => ({
+        tracks: (prev?.tracks || []).map((t) => {
+          const add = trainBank.allocations[t.id] ?? 0;
+          return add > 0 ? { ...t, hours: (t.hours || 0) + add } : t;
+        }),
+      }));
+    }
     setDowntime((prev) => {
       const cur = periodState(prev, startedAt);
-      const nextApplied = { ...cur.craftApplied };
-      for (const p of projects) {
-        const add = projectAllocations[p.id] ?? 0;
-        if (add > 0) nextApplied[p.id] = (nextApplied[p.id] || 0) + add;
-      }
-      return stampPeriod(prev, startedAt, { status: 'ready', craftApplied: nextApplied });
+      return stampPeriod(prev, startedAt, {
+        status: 'ready',
+        craftApplied: recordApplied(cur.craftApplied, projects, craftBank.allocations),
+        trainApplied: recordApplied(cur.trainApplied, tracks, trainBank.allocations),
+      });
     });
   };
 
-  const lockDisabled = used === 0 || !allocationBalanced;
+  const lockDisabled = used === 0 || !craftBank.balanced || !trainBank.balanced;
   const firstName = (character?.name || 'Your').split(' ')[0];
 
   return (
@@ -279,40 +349,26 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
                 </button>
               )}
 
-              {a.name === 'Crafting' && availableToBank > 0 && projects.length > 0 && (
-                <div className="dta-craft-alloc">
-                  <span className="dta-craft-label">
-                    Bank {availableToBank}h across projects
-                  </span>
-                  {projects.map((p) => (
-                    <div key={p.id} className="dta-craft-row">
-                      <div className="dta-craft-info">
-                        <span className="dta-craft-name">{p.name}</span>
-                        <span className="dta-craft-progress">
-                          {p.status === 'reducing'
-                            ? `${cpToGp(p.remainingCp || 0)} gp left`
-                            : `${p.hours}h / ${p.threshold}h`}
-                        </span>
-                      </div>
-                      <input
-                        type="number"
-                        className="dta-craft-input"
-                        min={0}
-                        max={availableToBank}
-                        step={8}
-                        value={projectAllocations[p.id] ?? 0}
-                        onChange={(e) => setProjectAllocations((prev) => ({
-                          ...prev,
-                          [p.id]: Math.max(0, Math.min(availableToBank, parseInt(e.target.value, 10) || 0)),
-                        }))}
-                        aria-label={`Hours for ${p.name}`}
-                      />
-                    </div>
-                  ))}
-                  <span className="dta-craft-total" data-valid={allocationBalanced}>
-                    {totalAllocated} / {availableToBank}h allocated
-                  </span>
-                </div>
+              {a.name === 'Crafting' && craftBank.available > 0 && projects.length > 0 && (
+                <BankAllocation
+                  bank={craftBank}
+                  targets={projects}
+                  noun="projects"
+                  labelFor={(p) => p.name}
+                  progressFor={(p) => (p.status === 'reducing'
+                    ? `${cpToGp(p.remainingCp || 0)} gp left`
+                    : `${p.hours}h / ${p.threshold}h`)}
+                />
+              )}
+
+              {a.name === 'Training' && trainBank.available > 0 && tracks.length > 0 && (
+                <BankAllocation
+                  bank={trainBank}
+                  targets={tracks}
+                  noun="tracks"
+                  labelFor={trackLabel}
+                  progressFor={(t) => `${t.hours || 0}h / ${t.benchmarkHours}h`}
+                />
               )}
             </div>
           );
@@ -331,13 +387,16 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
         {used === 0 && (
           <div className="dta-note">Allocate at least one day to lock in.</div>
         )}
-        {!locked && !allocationBalanced && (
-          <div className="dta-note">Distribute all {availableToBank}h of crafting before locking in.</div>
+        {!locked && !craftBank.balanced && (
+          <div className="dta-note">Distribute all {craftBank.available}h of crafting before locking in.</div>
+        )}
+        {!locked && !trainBank.balanced && (
+          <div className="dta-note">Distribute all {trainBank.available}h of training before locking in.</div>
         )}
         {locked && (
           <div className="dta-note">Your schedule is sealed. The party can see it on the ledger.</div>
         )}
-        {!locked && used > 0 && free > 0 && allocationBalanced && (
+        {!locked && used > 0 && free > 0 && craftBank.balanced && trainBank.balanced && (
           <div className="dta-note">
             {free} day{free === 1 ? '' : 's'} still unspent — leave them free or fill them in.
           </div>

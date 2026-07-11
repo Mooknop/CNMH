@@ -87,6 +87,7 @@ export const APP = Object.freeze({
   TAKE10: 'take10',
   TAKE10ALLOC: 'take10alloc',
   TELLFORTUNE: 'tellfortune',
+  TRAINING: 'training',
   TURNSTATE: 'turnstate',
   VERACIOUS: 'veracious',
   VPCHALLENGE: 'vpchallenge',

@@ -56,6 +56,18 @@ export const DOWNTIME_ACTIVITIES = [
       'You study a subject, comb a library, or investigate a mystery over time. Each block of study banks hours toward uncovering what you are looking for; the GM sets how much research a given topic requires.',
   },
   {
+    name: 'Training',
+    type: 'accumulate',
+    hue: 'var(--act-train)',
+    benchmarkHours: 8,
+    traits: ['Downtime'],
+    mechanics: {
+      note: 'Bank hours into a training track at a supported vendor; the ability is granted when the track completes.',
+    },
+    description:
+      'You study under a trainer the party has won over — a location that offers training tracks (see Training below). Hours accumulate into each track across downtime periods until its total is met; completing a track teaches you a new ability, confirmed by the GM.',
+  },
+  {
     name: 'Crafting',
     type: 'accumulate',
     hue: 'var(--act-craft)',

@@ -253,6 +253,7 @@
   --act-craft:    oklch(0.67 0.14 46);   /* ember  */
   --act-research: oklch(0.68 0.10 232);  /* azure  */
   --act-retrain:  oklch(0.66 0.13 306);  /* violet */
+  --act-train:    oklch(0.70 0.12 150);  /* verdant */
   --act-free:     rgba(255, 255, 255, 0.045);
 
   /* Specimen Dex — brushed-iron device chrome + spectral wisp accent (#776).
