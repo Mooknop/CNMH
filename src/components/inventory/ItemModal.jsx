@@ -44,7 +44,7 @@ import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
 import { runeForName } from '../../utils/thassilonianRunes';
-import { runeIconsOf, resolveRuneIcon } from '../../utils/runeIcons';
+import { runeIconsOf, resolveRuneIcon, fundamentalRuneId } from '../../utils/runeIcons';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { hasRustBlessing, brokenArmorAcPenalty } from '../../utils/rustBlessing';
 import { isBrokenHp } from '../../utils/itemDurability';
@@ -1325,7 +1325,19 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         <div className="item-runes" data-testid="item-modal-runes">
           <h3>Runes</h3>
           {runeTierSummary(item.runes) && (
-            <p className="item-rune-tier">{runeTierSummary(item.runes)}</p>
+            <p className="item-rune-tier">
+              {fundamentalRuneId('potency', item.runes?.potency) && (
+                <RuneIcon
+                  runeId={fundamentalRuneId('potency', item.runes.potency, isArmor(item) ? 'armor' : 'weapon')}
+                  tint
+                  className="item-rune-glyph"
+                />
+              )}
+              {fundamentalRuneId('striking', item.runes?.striking) && (
+                <RuneIcon runeId={fundamentalRuneId('striking', item.runes.striking)} tint className="item-rune-glyph" />
+              )}
+              {runeTierSummary(item.runes)}
+            </p>
           )}
           {weaponPropertyRunes(item).map((rune) => (
             <div key={rune.id} className="item-rune">

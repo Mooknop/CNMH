@@ -262,6 +262,17 @@ describe('flourishFor — catalog property runes (#1369 R7)', () => {
     ).toBeUndefined();
   });
 
+  it('fundamental runes never stamp — display-only, excluded from the juice layer', () => {
+    // A +2 greater-striking weapon with no property runes shows its
+    // fundamental glyphs in inventory/shop, but a Strike with it plays no
+    // runestamp: flourishFor reads runes.property only.
+    const character = {
+      ...pc('Fighter'),
+      inventory: [{ name: 'Longsword', runes: { potency: 2, striking: 'greater', property: [] } }],
+    };
+    expect(flourishFor({ ability: strike, character })).toBeUndefined();
+  });
+
   it('loses to a sin rune on the same item — the sin is the identity', () => {
     const marked = {
       name: 'Longsword',

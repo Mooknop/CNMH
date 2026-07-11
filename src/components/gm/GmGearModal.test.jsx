@@ -143,7 +143,13 @@ describe('GmGearModal', () => {
     expect(screen.getByRole('heading', { name: 'Runes' })).toBeInTheDocument();
     expect(screen.getByTestId('rune-item-Rune Blade')).toBeInTheDocument();
     // +1 potency shows in the potency socket; the striking socket is empty.
-    expect(within(screen.getByTestId('rune-socket-Rune Blade-potency')).getByText(/\+1/)).toBeInTheDocument();
+    const potencySocket = screen.getByTestId('rune-socket-Rune Blade-potency');
+    expect(within(potencySocket).getByText(/\+1/)).toBeInTheDocument();
+    // The held fundamental wears its glyph (fold-in), like property runes do.
+    expect(potencySocket.querySelector('svg.rune-icon'))
+      .toHaveAttribute('data-runeicon', 'weapon-potency');
+    expect(screen.getByTestId('rune-socket-Rune Blade-striking').querySelector('svg.rune-icon'))
+      .toBeNull();
   });
 
   it('etches a property rune instantly: mints acquired, masks the original, logs', () => {
