@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './EnhancedSkillsList.css';
-import CollapsibleCard from '../shared/CollapsibleCard';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
-import ProficiencyPips from '../shared/ProficiencyPips';
+import RankRing from '../shared/RankRing';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
@@ -12,13 +11,23 @@ import { getLoreSkillModifier, formatModifier } from '../../utils/CharacterUtils
 import { SKILLS, skillsForAbility } from '../../data/skills';
 
 const EMPTY_MOD = { total: 0, sources: [] };
+const RANK_LABELS = ['Untrained', 'Trained', 'Expert', 'Master', 'Legendary'];
 
 // `filterAbility` (optional) narrows the list to one ability's skills — the
 // Ability Dial renders one instance per selected node. Lore skills are
 // Intelligence-based, so they only render unfiltered or under 'intelligence'.
+//
+// Ability Dial S2: skills render as mini rank-rings (RankRing) echoing the
+// dial — modifier inside, rank = ring color, name below. Pressing a ring
+// opens a detail strip under the cluster with the skill's actions; the S3
+// pull-up sheet replaces that strip as the single skill-detail surface.
 const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], effectBonuses = {}, filterAbility }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
+
+  // Which snode's detail strip is open (skill id / lore id, or null).
+  const [detailId, setDetailId] = useState(null);
+  const toggleDetail = (id) => setDetailId((prev) => (prev === id ? null : id));
 
   // Data layer — all character reads go through this hook
   const charModel = useCharacter(character);
@@ -46,32 +55,25 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
 
   const condEffects = computeConditionEffects(activeConditions, character?.keyAbility, level);
 
-  // Skill catalog + ability grouping now live in src/data/skills.js (shared
+  // Skill catalog + ability grouping live in src/data/skills.js (shared
   // with the Ability Dial). Narrow to one ability when the dial asks for it.
   const skills = filterAbility ? skillsForAbility(filterAbility) : SKILLS;
 
-  // Function to get the proficiency color
-  const getProficiencyColor = (proficiency) => {
-    switch(proficiency) {
-      case 1: return 'trained-color';      // Trained
-      case 2: return 'expert-color';       // Expert
-      case 3: return 'master-color';       // Master
-      case 4: return 'legendary-color';    // Legendary
-      default: return 'untrained-color';   // Untrained
-    }
-  };
-  
   // Sort skills alphabetically
   const sortedSkills = [...skills].sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
 
+  // Lore skills ride along under Intelligence (or unfiltered).
+  const showLore = !filterAbility || filterAbility === 'intelligence';
+  const visibleLore = showLore ? loreSkills : [];
+
   // Conditional ('vs X') effect modifiers for a skill/perception, shown as a
-  // small reminder beneath the card header (#510). The `vs` text names the
+  // small reminder under the snode name (#510). The `vs` text names the
   // sub-context the modifier applies to — e.g. "+1 vs Climb (Gecko Potion)",
   // "−1 vs Recall Knowledge (Drakeheart Mutagen)" — so it reads faithfully on
   // the exact roll it affects rather than the whole skill. Perception is one of
-  // the skill cards, so this covers it too. Returns null when none apply.
+  // the skill snodes, so this covers it too. Returns null when none apply.
   const renderConditionalHint = (skillId) => {
     const mods = conditionalModifiersFor(activeEffects, skillId, effectCatalog);
     if (!mods.length) return null;
@@ -87,7 +89,62 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
     );
   };
 
-  
+  // The open snode's detail strip — the old collapsed-card body made
+  // cluster-level: skill meta, item-bonus sources, and the action list.
+  const renderDetail = () => {
+    const skill = sortedSkills.find((s) => s.id === detailId);
+    const lore = visibleLore.find(
+      (l) => `lore-${l.name.toLowerCase().replace(/\s+/g, '-')}` === detailId
+    );
+    if (!skill && !lore) return null;
+
+    if (lore) {
+      return (
+        <div className="snode-detail">
+          <div className="snode-detail-h">
+            <h4>{lore.name} Lore</h4>
+            <span className="snode-detail-meta">
+              Intelligence · {RANK_LABELS[lore.proficiency || 0]}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    const itemBonus = itemBonuses[skill.id] || 0;
+    const abilityMod = abilityModifiers[skill.ability] || 0;
+    return (
+      <div className="snode-detail">
+        <div className="snode-detail-h">
+          <h4>{skill.name}</h4>
+          <span className="snode-detail-meta">
+            {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)}{' '}
+            ({formatModifier(abilityMod)}) · {RANK_LABELS[skillProficiencies[skill.id] || 0]}
+          </span>
+        </div>
+        {itemBonus > 0 && (
+          <div className="skill-item-bonus">
+            <span className="item-bonus-label">Item Bonus:</span>
+            <span className="item-bonus-value">+{itemBonus} from {
+              inventory
+                .filter(item => item.bonus && item.bonus[0] === skill.id)
+                .map(item => item.name)
+                .join(', ')
+            }</span>
+          </div>
+        )}
+        <ul className="actions-list">
+          {skill.actions.map((action, index) => (
+            <li key={index} className="skill-action">
+              <span className="action-name">{action.name}</span>
+              <span className="action-description">{action.description}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="enhanced-skills-list" style={{ '--color-theme': themeColor }}>
 
@@ -101,13 +158,11 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
           } instead of +0.
         </div>
       )}
-      
-      <div className="skills-grid">
+
+      <div className="snode-wrap">
         {sortedSkills.map(skill => {
           const proficiency = skillProficiencies[skill.id] || 0;
           const modifier    = skillModifiers[skill.id] || 0;
-          const abilityMod  = abilityModifiers[skill.ability] || 0;
-          const abilityModStr = abilityMod >= 0 ? `+${abilityMod}` : String(abilityMod);
           const itemBonus   = itemBonuses[skill.id] || 0;
           // Net condition penalties with active-effect skill bonuses (#447), e.g.
           // Upstage's +1 status to skill checks. combineModifiers carries each
@@ -117,102 +172,38 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
             effectBonuses[skill.id] ?? EMPTY_MOD
           );
 
-          const proficiencyColorClass = getProficiencyColor(proficiency);
-
-          const isUntrained = proficiency === 0;
-          const hasImprovisedSkill = isUntrained && hasUntrainedImprovisation;
-
-          const header = (
-            <div className="skill-name-section">
-              <h3>
-                {skill.name}
-                <div className="skill-ability">
-                  {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
-                </div>
-              </h3>
-              <div className="skill-info">
-                <div className="skill-modifier">
-                  <PenaltyDisplay base={modifier} penalty={skillMods} format="modifier" />
-                </div>
-                <div className={`skill-proficiency ${proficiencyColorClass}`}>
-                  <ProficiencyPips rank={proficiency} showLabel={false} />
-                  {itemBonus > 0 && (
-                    <span className="item-bonus-indicator"> (+{itemBonus} item)</span>
-                  )}
-                </div>
-              </div>
-              {renderConditionalHint(skill.id)}
-            </div>
-          );
-          
-          // Create the content for the collapsible part
-          const content = (
-            <div className="skill-actions">
-              {itemBonus > 0 && (
-                <div className="skill-item-bonus">
-                  <span className="item-bonus-label">Item Bonus:</span>
-                  <span className="item-bonus-value">+{itemBonus} from {
-                    inventory
-                      .filter(item => item.bonus && item.bonus[0] === skill.id)
-                      .map(item => item.name)
-                      .join(', ')
-                  }</span>
-                </div>
-              )}
-              <h4>Skill Actions</h4>
-              <ul className="actions-list">
-                {skill.actions.map((action, index) => (
-                  <li key={index} className="skill-action">
-                    <span className="action-name">{action.name}</span>
-                    <span className="action-description">{action.description}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-          
           return (
-            <CollapsibleCard 
+            <RankRing
               key={skill.id}
-              className={`skill-card ${hasImprovisedSkill ? 'improvised-skill' : ''} ${proficiencyColorClass}`}
-              header={header}
-              themeColor={themeColor}
-            >
-              {content}
-            </CollapsibleCard>
+              rank={proficiency}
+              name={skill.name}
+              value={<PenaltyDisplay base={modifier} penalty={skillMods} format="modifier" />}
+              caption={itemBonus > 0 ? `+${itemBonus} item` : undefined}
+              hint={renderConditionalHint(skill.id)}
+              selected={detailId === skill.id}
+              onClick={() => toggleDetail(skill.id)}
+            />
+          );
+        })}
+        {visibleLore.map((loreSkill) => {
+          const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
+          const loreProficiency = loreSkill.proficiency || 0;
+          const loreModifier = getLoreSkillModifier(charModel, loreSkill.name);
+          const lorePenalty = condEffects.skillPenalty('intelligence');
+
+          return (
+            <RankRing
+              key={loreId}
+              rank={loreProficiency}
+              name={`${loreSkill.name} Lore`}
+              value={<PenaltyDisplay base={loreModifier} penalty={lorePenalty} format="modifier" />}
+              selected={detailId === loreId}
+              onClick={() => toggleDetail(loreId)}
+            />
           );
         })}
       </div>
-      {(!filterAbility || filterAbility === 'intelligence') && loreSkills.map((loreSkill) => {
-        const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
-        const loreProficiency = loreSkill.proficiency || 0;
-        const loreModifier = getLoreSkillModifier(charModel, loreSkill.name);
-        const lorePenalty = condEffects.skillPenalty('intelligence');
-
-        return (
-          <CollapsibleCard
-            key={loreId}
-            themeColor={themeColor}
-            className={`skill-card ${getProficiencyColor(loreProficiency)}`}
-            header={
-              <div className="skill-name-section">
-                <h3>
-                  {loreSkill.name} Lore
-                  <div className="skill-ability">(Intelligence)</div>
-                </h3>
-                <div className="skill-info">
-                  <div className="skill-modifier">
-                    <PenaltyDisplay base={loreModifier} penalty={lorePenalty} format="modifier" />
-                  </div>
-                  <div className={`skill-proficiency ${getProficiencyColor(loreProficiency)}`}>
-                    <ProficiencyPips rank={loreProficiency} showLabel={false} />
-                  </div>
-                </div>
-              </div>
-            }
-          />
-        );
-      })}
+      {renderDetail()}
     </div>
   );
 };

@@ -414,6 +414,45 @@ describe('StatsBlock', () => {
     expect(screen.getByText('Heavy')).toBeInTheDocument();
   });
 
+  it('renders the Checks cluster: Perception ring with modifier + rank (S2)', () => {
+    const withPerception = {
+      ...defaultCharData,
+      skillModifiers: { perception: 5 },
+      skillProficiencies: { perception: 2 },
+    };
+    mockUseCharacter.mockReturnValueOnce(withPerception);
+    mockUseCharacter.mockReturnValueOnce(withPerception);
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    expect(screen.getByLabelText('Perception, Expert')).toBeInTheDocument();
+    expect(screen.getByText('+5')).toBeInTheDocument();
+  });
+
+  it('shows a Spell Attack ring for spellcasters only (S2)', () => {
+    const caster = {
+      ...defaultCharData,
+      flags: { hasSpellcasting: true },
+      spellStats: { spellAttackMod: 7, spellDC: 17 },
+    };
+    mockUseCharacter.mockReturnValueOnce(caster);
+    mockUseCharacter.mockReturnValueOnce(caster);
+    render(
+      <StatsBlock
+        character={{ ...mockCharacter, spellcasting: { proficiency: 2, ability: 'charisma' } }}
+        characterColor="#7E8C9A"
+      />
+    );
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    expect(screen.getByLabelText('Spell Attack, Expert')).toBeInTheDocument();
+    expect(screen.getByText('+7')).toBeInTheDocument();
+  });
+
+  it('omits the Spell Attack ring for non-casters (S2)', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    expect(screen.queryByText('Spell Attack')).toBeNull();
+  });
+
   it('should use default proficiencies when rawProficiencies has no weapons key', () => {
     const emptyProfData = { ...defaultCharData, proficiencies: {} };
     mockUseCharacter.mockReturnValueOnce(emptyProfData);

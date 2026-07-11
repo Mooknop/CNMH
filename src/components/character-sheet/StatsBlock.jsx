@@ -4,9 +4,9 @@ import EnhancedSkillsList from '../character-sheet/EnhancedSkillsList';
 import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
-import ProficiencyPips from '../shared/ProficiencyPips';
+import RankRing from '../shared/RankRing';
 import HpFx from '../shared/HpFx';
-import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils';
+import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useResolvedEffects } from '../../hooks/useResolvedEffects';
 import { useAura } from '../../hooks/useAura';
@@ -22,6 +22,7 @@ import { RELAY, syncKey } from '../../sync/keys';
 import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills';
 
 const ABILITY_KEYS = ABILITIES.map((a) => a.key);
+const EMPTY_MOD = { total: 0, sources: [] };
 
 const StatsBlock = ({ character, characterColor }) => {
   // Ability Dial: the active node — an ability key ('strength'…'charisma')
@@ -118,6 +119,10 @@ const StatsBlock = ({ character, characterColor }) => {
     hp,
     heroPoints,
     setHeroPoints,
+    skillModifiers,
+    skillProficiencies,
+    flags,
+    spellStats,
   } = charData;
 
   // Hero points: GM awards them in Foundry, players spend them here. The pip
@@ -206,177 +211,100 @@ const StatsBlock = ({ character, characterColor }) => {
     />
   );
 
-  const renderProficiencies = () => (
-    <div className="proficiencies-section">
-            <div className="proficiency-group">
-              <h4 className="proficiency-category">Class DC</h4>
-              <div className="proficiency-items">
-                <div className="proficiency-item">
-                  <span className="proficiency-name">
-                    <strong>
-                      <PenaltyDisplay base={classDC} penalty={mod('classDC')} />
-                    </strong>
-                  </span>
-                </div>
-              </div>
+  // Core panel proficiencies (Ability Dial S2) — the old attack table
+  // rendered as mini rank-ring clusters: perception / class DC / spell
+  // attack, then weapon and armor category ranks. Ring value is the roll
+  // modifier (weapons: melee, with ranged as the caption; armor: the
+  // proficiency bonus contributed to AC).
+  const renderProficiencies = () => {
+    const rankOf = (group, key) => group?.[key]?.proficiency || 0;
+    // Class DC's rank ships at character.proficiencies.class; default Trained,
+    // matching calculateClassDC's derivation.
+    const classRank = rawProficiencies?.class ?? 1;
+    const spellRank = character?.spellcasting?.proficiency || 0;
+    const perceptionMods = combineModifiers(
+      effects.skillPenalty('wisdom'),
+      bonuses.perception ?? EMPTY_MOD
+    );
 
-              <h4 className="proficiency-category">Weapons</h4>
-              <div className="proficiency-items">
-                {/* Unarmed Attacks */}
-                <div className="proficiency-item weapon-proficiency">
-                  <div className="weapon-category">
-                    <span className="proficiency-name">Unarmed</span>
-                    <ProficiencyPips rank={proficiencies.weapons.unarmed?.proficiency || 0} showLabel={true} />
-                  </div>
-                  <div className="attack-bonuses">
-                    <div className="bonus-container">
-                      <div className="attack-type">Melee (STR)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, mod('meleeAttack'))}
-                      </div>
-                    </div>
-                    <div className="bonus-container">
-                      <div className="attack-type">Ranged (DEX)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, mod('rangedAttack'))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    const weaponCats = [
+      { key: 'unarmed', name: 'Unarmed' },
+      { key: 'simple', name: 'Simple' },
+      { key: 'martial', name: 'Martial' },
+      { key: 'advanced', name: 'Advanced' },
+      ...(proficiencies.weapons.class ? [{ key: 'class', name: 'Class Weapons' }] : []),
+      ...(proficiencies.weapons.finesse ? [{ key: 'finesse', name: 'Finesse', finesse: true }] : []),
+    ];
+    const armorCats = [
+      { key: 'unarmored', name: 'Unarmored' },
+      { key: 'light', name: 'Light' },
+      { key: 'medium', name: 'Medium' },
+      { key: 'heavy', name: 'Heavy' },
+    ];
 
-                {/* Simple Weapons */}
-                <div className="proficiency-item weapon-proficiency">
-                  <div className="weapon-category">
-                    <span className="proficiency-name">Simple</span>
-                    <ProficiencyPips rank={proficiencies.weapons.simple?.proficiency || 0} showLabel={true} />
-                  </div>
-                  <div className="attack-bonuses">
-                    <div className="bonus-container">
-                      <div className="attack-type">Melee (STR)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, mod('meleeAttack'))}
-                      </div>
-                    </div>
-                    <div className="bonus-container">
-                      <div className="attack-type">Ranged (DEX)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, mod('rangedAttack'))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    return (
+      <div className="proficiencies-section">
+        <h4 className="proficiency-category">Checks</h4>
+        <div className="snode-wrap">
+          <RankRing
+            rank={skillProficiencies?.perception || 0}
+            name="Perception"
+            caption={getProficiencyLabel(skillProficiencies?.perception || 0)}
+            value={<PenaltyDisplay base={skillModifiers?.perception || 0} penalty={perceptionMods} format="modifier" />}
+          />
+          <RankRing
+            rank={classRank}
+            name="Class DC"
+            caption={getProficiencyLabel(classRank)}
+            value={<PenaltyDisplay base={classDC} penalty={mod('classDC')} />}
+          />
+          {flags?.hasSpellcasting && (
+            <RankRing
+              rank={spellRank}
+              name="Spell Attack"
+              caption={getProficiencyLabel(spellRank)}
+              value={<PenaltyDisplay base={spellStats?.spellAttackMod ?? 0} penalty={mod('spellAttack')} format="modifier" />}
+            />
+          )}
+        </div>
 
-                {/* Martial Weapons */}
-                <div className="proficiency-item weapon-proficiency">
-                  <div className="weapon-category">
-                    <span className="proficiency-name">Martial</span>
-                    <ProficiencyPips rank={proficiencies.weapons.martial?.proficiency || 0} showLabel={true} />
-                  </div>
-                  <div className="attack-bonuses">
-                    <div className="bonus-container">
-                      <div className="attack-type">Melee (STR)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, mod('meleeAttack'))}
-                      </div>
-                    </div>
-                    <div className="bonus-container">
-                      <div className="attack-type">Ranged (DEX)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, mod('rangedAttack'))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        <h4 className="proficiency-category">Weapons</h4>
+        <div className="snode-wrap">
+          {weaponCats.map((w) => {
+            const rank = rankOf(proficiencies.weapons, w.key);
+            const meleeMod = w.finesse ? Math.max(strMod, dexMod) : strMod;
+            return (
+              <RankRing
+                key={w.key}
+                rank={rank}
+                name={w.name}
+                value={renderAttackBonus(meleeMod, rank, mod('meleeAttack'))}
+                caption={w.finesse
+                  ? 'Melee (STR/DEX)'
+                  : `Ranged ${formatModifier(attackNum(dexMod, rank))}`}
+              />
+            );
+          })}
+        </div>
 
-                {/* Advanced Weapons */}
-                <div className="proficiency-item weapon-proficiency">
-                  <div className="weapon-category">
-                    <span className="proficiency-name">Advanced</span>
-                    <ProficiencyPips rank={proficiencies.weapons.advanced?.proficiency || 0} showLabel={true} />
-                  </div>
-                  <div className="attack-bonuses">
-                    <div className="bonus-container">
-                      <div className="attack-type">Melee (STR)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, mod('meleeAttack'))}
-                      </div>
-                    </div>
-                    <div className="bonus-container">
-                      <div className="attack-type">Ranged (DEX)</div>
-                      <div className="attack-bonus">
-                        {renderAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, mod('rangedAttack'))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Class Weapons (if available) */}
-                {proficiencies.weapons.class && (
-                  <div className="proficiency-item weapon-proficiency">
-                    <div className="weapon-category">
-                      <span className="proficiency-name">Class Weapons</span>
-                      <ProficiencyPips rank={proficiencies.weapons.class?.proficiency || 0} showLabel={true} />
-                    </div>
-                    <div className="attack-bonuses">
-                      <div className="bonus-container">
-                        <div className="attack-type">Melee (STR)</div>
-                        <div className="attack-bonus">
-                          {renderAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, mod('meleeAttack'))}
-                        </div>
-                      </div>
-                      <div className="bonus-container">
-                        <div className="attack-type">Ranged (DEX)</div>
-                        <div className="attack-bonus">
-                          {renderAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, mod('rangedAttack'))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Finesse Weapons (if available) */}
-                {proficiencies.weapons.finesse && (
-                  <div className="proficiency-item weapon-proficiency">
-                    <div className="weapon-category">
-                      <span className="proficiency-name">Finesse</span>
-                      <ProficiencyPips rank={proficiencies.weapons.finesse?.proficiency || 0} showLabel={true} />
-                    </div>
-                    <div className="attack-bonuses">
-                      <div className="bonus-container">
-                        <div className="attack-type">Melee (STR/DEX)</div>
-                        <div className="attack-bonus">
-                          {renderAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, mod('meleeAttack'))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="proficiency-group">
-              <h4 className="proficiency-category">Armor</h4>
-              <div className="proficiency-items">
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Unarmored</span>
-                  <ProficiencyPips rank={proficiencies.armor.unarmored?.proficiency || 0} showLabel={true} />
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Light</span>
-                  <ProficiencyPips rank={proficiencies.armor.light?.proficiency || 0} showLabel={true} />
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Medium</span>
-                  <ProficiencyPips rank={proficiencies.armor.medium?.proficiency || 0} showLabel={true} />
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Heavy</span>
-                  <ProficiencyPips rank={proficiencies.armor.heavy?.proficiency || 0} showLabel={true} />
-                </div>
-              </div>
-            </div>
-    </div>
-  );
+        <h4 className="proficiency-category">Armor</h4>
+        <div className="snode-wrap">
+          {armorCats.map((a) => {
+            const rank = rankOf(proficiencies.armor, a.key);
+            return (
+              <RankRing
+                key={a.key}
+                rank={rank}
+                name={a.name}
+                caption={getProficiencyLabel(rank)}
+                value={formatModifier(getProficiencyBonus(rank, level))}
+              />
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Ability Dial panel context — the selected node's identity, its governed
   // save (CON→Fort, DEX→Ref, WIS→Will; the rest have none), and how many
@@ -610,6 +538,7 @@ const StatsBlock = ({ character, characterColor }) => {
             </div>
             {selectedSave && renderConditionalHint(selectedSave.stat)}
             <EnhancedSkillsList
+              key={selected}
               character={character}
               characterColor={themeColor}
               activeConditions={hydratedConditions}
