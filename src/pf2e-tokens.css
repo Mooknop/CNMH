@@ -205,6 +205,26 @@
   --runeicon-ring-scourging:    #a21caf; /* welt purple */
   --runeicon-ring-warping:      #8b5cf6; /* fold violet */
   --runeicon-ring-wicked:       #365314; /* venom dark */
+  /* Accessory glyph wave (#1375) — clothing-shadow/-slick tint via their
+     armor siblings (family alias). */
+  --runeicon-called:            #06b6d4; /* recall cyan */
+  --runeicon-catching:          #fcd34d; /* mitt gold */
+  --runeicon-clothing-acid-resistant:        #bef264; /* pale acid */
+  --runeicon-clothing-cold-resistant:        #bae6fd; /* pale ice */
+  --runeicon-clothing-electricity-resistant: #fef08a; /* pale storm */
+  --runeicon-clothing-fire-resistant:        #f87171; /* ember red */
+  --runeicon-clothing-stanching: #e11d48; /* staunch crimson */
+  --runeicon-dragons-breath:    #c2410c; /* drake bronze */
+  --runeicon-menacing:          #7f1d1d; /* glower dark */
+  --runeicon-paired:            #5b21b6; /* bond violet */
+  --runeicon-pontoon:           #0369a1; /* river blue */
+  --runeicon-presentable:       #fbcfe8; /* satin pink */
+  --runeicon-preserving:        #e7a33e; /* resin amber */
+  --runeicon-retaliation:       #9a3412; /* returned-blow rust */
+  --runeicon-snagging:          #737373; /* burr gray */
+  --runeicon-soft-landing:      #a7f3d0; /* down mint */
+  --runeicon-trackless:         #94a3b8; /* faded slate */
+  --runeicon-unexceptional:     #a8a29e; /* plain stone */
 
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;

@@ -86,3 +86,22 @@
 .runeicon-tint[data-runeicon='ring-scourging']    { color: var(--runeicon-ring-scourging); }
 .runeicon-tint[data-runeicon='ring-warping']      { color: var(--runeicon-ring-warping); }
 .runeicon-tint[data-runeicon='ring-wicked']       { color: var(--runeicon-ring-wicked); }
+/* Accessory glyph wave (#1375). */
+.runeicon-tint[data-runeicon='called']            { color: var(--runeicon-called); }
+.runeicon-tint[data-runeicon='catching']          { color: var(--runeicon-catching); }
+.runeicon-tint[data-runeicon='clothing-acid-resistant']        { color: var(--runeicon-clothing-acid-resistant); }
+.runeicon-tint[data-runeicon='clothing-cold-resistant']        { color: var(--runeicon-clothing-cold-resistant); }
+.runeicon-tint[data-runeicon='clothing-electricity-resistant'] { color: var(--runeicon-clothing-electricity-resistant); }
+.runeicon-tint[data-runeicon='clothing-fire-resistant']        { color: var(--runeicon-clothing-fire-resistant); }
+.runeicon-tint[data-runeicon='clothing-stanching'] { color: var(--runeicon-clothing-stanching); }
+.runeicon-tint[data-runeicon='dragons-breath']    { color: var(--runeicon-dragons-breath); }
+.runeicon-tint[data-runeicon='menacing']          { color: var(--runeicon-menacing); }
+.runeicon-tint[data-runeicon='paired']            { color: var(--runeicon-paired); }
+.runeicon-tint[data-runeicon='pontoon']           { color: var(--runeicon-pontoon); }
+.runeicon-tint[data-runeicon='presentable']       { color: var(--runeicon-presentable); }
+.runeicon-tint[data-runeicon='preserving']        { color: var(--runeicon-preserving); }
+.runeicon-tint[data-runeicon='retaliation']       { color: var(--runeicon-retaliation); }
+.runeicon-tint[data-runeicon='snagging']          { color: var(--runeicon-snagging); }
+.runeicon-tint[data-runeicon='soft-landing']      { color: var(--runeicon-soft-landing); }
+.runeicon-tint[data-runeicon='trackless']         { color: var(--runeicon-trackless); }
+.runeicon-tint[data-runeicon='unexceptional']     { color: var(--runeicon-unexceptional); }
