@@ -1,0 +1,241 @@
+/* Training tracks panel (#1191 S1) — CraftingProjects' sibling; same shell
+   idiom, verdant training accent on the progress fill. */
+.tp-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--theme-surface, var(--shell-surface));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+}
+
+.tp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tp-title {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.tp-new-btn {
+  background: transparent;
+  border: 1px solid var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-sm);
+  color: var(--theme-accent, var(--accent-bg));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  transition: background 0.15s, color 0.15s;
+}
+
+.tp-new-btn:hover {
+  background: var(--theme-accent, var(--accent-bg));
+  color: var(--theme-bg, var(--color-text-on-primary));
+}
+
+/* Track list */
+.tp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tp-track {
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tp-track--ready {
+  border-color: var(--theme-accent, var(--accent-bg));
+}
+
+.tp-track-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tp-track-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.tp-abandon-btn {
+  background: transparent;
+  border: none;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.tp-abandon-btn:hover {
+  color: var(--color-danger, var(--peril-light));
+}
+
+.tp-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tp-progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--theme-border, var(--shell-border));
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.tp-progress-fill {
+  height: 100%;
+  width: var(--tp-fill, 0%);
+  background: var(--act-train);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.tp-progress-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tp-track-meta {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+/* Ready state — track has met its hour total */
+.tp-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tp-ready-badge {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-success, var(--verdant-mid));
+}
+
+/* Empty state */
+.tp-empty {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+}
+
+/* Add panel */
+.tp-add-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--theme-border, var(--shell-border));
+  padding-top: var(--space-2);
+}
+
+.tp-form-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.tp-form-select {
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+}
+
+.tp-form-select:focus {
+  outline: none;
+  border-color: var(--theme-accent, var(--accent-bg));
+}
+
+.tp-summary {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tp-add-footer {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.tp-confirm-btn {
+  background: var(--theme-accent, var(--accent-bg));
+  border: 1px solid var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-sm);
+  color: var(--theme-bg, var(--color-text-on-primary));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: var(--space-2) var(--space-4);
+  transition: opacity 0.15s;
+}
+
+.tp-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tp-confirm-btn:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+.tp-cancel-btn {
+  background: transparent;
+  border: none;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-1);
+}
+
+.tp-cancel-btn:hover {
+  color: var(--theme-text, var(--shell-text));
+}

@@ -64,6 +64,12 @@ vi.mock('./CraftingProjects', () => ({
   }
 }));
 
+vi.mock('./TrainingProjects', () => ({
+  default: function DummyTrainingProjects({ character: c }) {
+    return <div data-testid="training-projects" data-charid={c?.id} />;
+  }
+}));
+
 const character = { id: 'char-1', name: 'Pellias' };
 
 // DowntimeTab calls useSyncedState twice: first for the block, then for the

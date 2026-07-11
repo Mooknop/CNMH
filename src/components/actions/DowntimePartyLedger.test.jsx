@@ -74,8 +74,8 @@ describe('DowntimePartyLedger', () => {
 
   it('renders a legend entry for each activity plus Free', () => {
     const { container } = render(<DowntimePartyLedger character={character} block={block} />);
-    // 4 activities + Free
-    expect(container.querySelectorAll('.dpl-legend-item')).toHaveLength(5);
+    // 5 activities + Free
+    expect(container.querySelectorAll('.dpl-legend-item')).toHaveLength(6);
     expect(screen.getByText('Free')).toBeInTheDocument();
   });
 });

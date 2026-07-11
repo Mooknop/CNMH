@@ -208,6 +208,7 @@ describe('downtimeUtils', () => {
           status: 'planning',
           paired: {},
           craftApplied: {},
+          trainApplied: {},
           selected: ['Research'],
           ledger: [{ day: 'Research', night: null }],
         });
@@ -215,16 +216,19 @@ describe('downtimeUtils', () => {
 
       it('returns empty for a stale (prior-period) state', () => {
         expect(periodState(dt, 'P2')).toEqual({
-          plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [],
+          plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          trainApplied: {}, selected: [], ledger: [],
         });
       });
 
       it('returns empty for null/unstamped state', () => {
         expect(periodState(null, 'P1')).toEqual({
-          plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [],
+          plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          trainApplied: {}, selected: [], ledger: [],
         });
         expect(periodState({ selected: ['X'], ledger: [{ day: 'X', night: null }] }, 'P1'))
-          .toEqual({ plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [] });
+          .toEqual({ plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          trainApplied: {}, selected: [], ledger: [] });
       });
 
       it('derives selected/ledger from a plan when present', () => {
@@ -239,6 +243,7 @@ describe('downtimeUtils', () => {
           status: 'ready',
           paired: { Research: true },
           craftApplied: {},
+          trainApplied: {},
           selected: ['Research', 'Earn Income'],
           ledger: [
             { day: 'Research', night: null },
@@ -270,6 +275,7 @@ describe('downtimeUtils', () => {
           status: 'planning',
           paired: {},
           craftApplied: {},
+          trainApplied: {},
           selected: ['Research', 'Crafting'],
           ledger: [{ day: 'Research', night: null }],
         });
@@ -283,6 +289,7 @@ describe('downtimeUtils', () => {
           status: 'planning',
           paired: {},
           craftApplied: {},
+          trainApplied: {},
           selected: [],
           ledger: [{ day: 'Crafting', night: null }],
         });
@@ -295,6 +302,7 @@ describe('downtimeUtils', () => {
           status: 'planning',
           paired: {},
           craftApplied: {},
+          trainApplied: {},
           selected: ['X'],
           ledger: [],
         });
@@ -310,6 +318,7 @@ describe('downtimeUtils', () => {
           status: 'ready',
           paired: { Research: true },
           craftApplied: {},
+          trainApplied: {},
           selected: ['Research'],
           ledger: [
             { day: 'Research', night: null },
