@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './EnhancedSkillsList.css';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import RankRing from '../shared/RankRing';
+import SkillSheet from './SkillSheet';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
@@ -11,23 +12,20 @@ import { getLoreSkillModifier, formatModifier } from '../../utils/CharacterUtils
 import { SKILLS, skillsForAbility } from '../../data/skills';
 
 const EMPTY_MOD = { total: 0, sources: [] };
-const RANK_LABELS = ['Untrained', 'Trained', 'Expert', 'Master', 'Legendary'];
 
 // `filterAbility` (optional) narrows the list to one ability's skills — the
 // Ability Dial renders one instance per selected node. Lore skills are
 // Intelligence-based, so they only render unfiltered or under 'intelligence'.
 //
-// Ability Dial S2: skills render as mini rank-rings (RankRing) echoing the
-// dial — modifier inside, rank = ring color, name below. Pressing a ring
-// opens a detail strip under the cluster with the skill's actions; the S3
-// pull-up sheet replaces that strip as the single skill-detail surface.
+// Skills render as mini rank-rings (RankRing) echoing the dial — modifier
+// inside, rank = ring color, name below. Pressing a ring raises the
+// SkillSheet pull-up (S3) — the single skill-detail surface.
 const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], effectBonuses = {}, filterAbility }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
 
-  // Which snode's detail strip is open (skill id / lore id, or null).
-  const [detailId, setDetailId] = useState(null);
-  const toggleDetail = (id) => setDetailId((prev) => (prev === id ? null : id));
+  // The raised pull-up sheet — { skill, stats } or { lore }, null when down.
+  const [sheet, setSheet] = useState(null);
 
   // Data layer — all character reads go through this hook
   const charModel = useCharacter(character);
@@ -89,61 +87,13 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
     );
   };
 
-  // The open snode's detail strip — the old collapsed-card body made
-  // cluster-level: skill meta, item-bonus sources, and the action list.
-  const renderDetail = () => {
-    const skill = sortedSkills.find((s) => s.id === detailId);
-    const lore = visibleLore.find(
-      (l) => `lore-${l.name.toLowerCase().replace(/\s+/g, '-')}` === detailId
-    );
-    if (!skill && !lore) return null;
-
-    if (lore) {
-      return (
-        <div className="snode-detail">
-          <div className="snode-detail-h">
-            <h4>{lore.name} Lore</h4>
-            <span className="snode-detail-meta">
-              Intelligence · {RANK_LABELS[lore.proficiency || 0]}
-            </span>
-          </div>
-        </div>
-      );
-    }
-
-    const itemBonus = itemBonuses[skill.id] || 0;
-    const abilityMod = abilityModifiers[skill.ability] || 0;
-    return (
-      <div className="snode-detail">
-        <div className="snode-detail-h">
-          <h4>{skill.name}</h4>
-          <span className="snode-detail-meta">
-            {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)}{' '}
-            ({formatModifier(abilityMod)}) · {RANK_LABELS[skillProficiencies[skill.id] || 0]}
-          </span>
-        </div>
-        {itemBonus > 0 && (
-          <div className="skill-item-bonus">
-            <span className="item-bonus-label">Item Bonus:</span>
-            <span className="item-bonus-value">+{itemBonus} from {
-              inventory
-                .filter(item => item.bonus && item.bonus[0] === skill.id)
-                .map(item => item.name)
-                .join(', ')
-            }</span>
-          </div>
-        )}
-        <ul className="actions-list">
-          {skill.actions.map((action, index) => (
-            <li key={index} className="skill-action">
-              <span className="action-name">{action.name}</span>
-              <span className="action-description">{action.description}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
+  // Names of the items granting a skill's item bonus — shown on the sheet's
+  // Item breakdown chip.
+  const itemSourcesFor = (skillId) =>
+    inventory
+      .filter((item) => item.bonus && item.bonus[0] === skillId)
+      .map((item) => item.name)
+      .join(', ');
 
   return (
     <div className="enhanced-skills-list" style={{ '--color-theme': themeColor }}>
@@ -180,8 +130,20 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
               value={<PenaltyDisplay base={modifier} penalty={skillMods} format="modifier" />}
               caption={itemBonus > 0 ? `+${itemBonus} item` : undefined}
               hint={renderConditionalHint(skill.id)}
-              selected={detailId === skill.id}
-              onClick={() => toggleDetail(skill.id)}
+              selected={sheet?.skill?.id === skill.id}
+              onClick={() =>
+                setSheet({
+                  skill,
+                  stats: {
+                    modifier,
+                    rank: proficiency,
+                    abilityMod: abilityModifiers[skill.ability] || 0,
+                    itemBonus,
+                    itemSources: itemBonus > 0 ? itemSourcesFor(skill.id) : '',
+                    skillMods,
+                  },
+                })
+              }
             />
           );
         })}
@@ -197,13 +159,34 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
               rank={loreProficiency}
               name={`${loreSkill.name} Lore`}
               value={<PenaltyDisplay base={loreModifier} penalty={lorePenalty} format="modifier" />}
-              selected={detailId === loreId}
-              onClick={() => toggleDetail(loreId)}
+              selected={sheet?.lore?.name === loreSkill.name}
+              onClick={() =>
+                setSheet({
+                  lore: loreSkill,
+                  stats: {
+                    modifier: loreModifier,
+                    rank: loreProficiency,
+                    abilityMod: abilityModifiers.intelligence || 0,
+                    itemBonus: 0,
+                    itemSources: '',
+                    skillMods: lorePenalty,
+                  },
+                })
+              }
             />
           );
         })}
       </div>
-      {renderDetail()}
+      {sheet && (
+        <SkillSheet
+          character={character}
+          themeColor={themeColor}
+          skill={sheet.skill}
+          lore={sheet.lore}
+          stats={sheet.stats}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 };

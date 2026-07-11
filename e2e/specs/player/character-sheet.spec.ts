@@ -50,6 +50,14 @@ test.describe('Player character sheet', () => {
     // A node panel shows the skills its ability governs — Acrobatics is DEX.
     await page.getByRole('button', { name: /^Dexterity/ }).click();
     await expect(page.getByText('Acrobatics')).toBeVisible();
+
+    // Pressing a skill snode raises the pull-up sheet (S3) with its actions.
+    await page.getByRole('button', { name: /^Acrobatics,/ }).click();
+    const sheet = page.getByRole('dialog', { name: 'Acrobatics details' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByText('Tumble Through')).toBeVisible();
+    await page.getByRole('button', { name: 'Close skill sheet' }).click();
+    await expect(sheet).not.toBeVisible();
   });
 
   test('opens the Daily Preparations modal', async ({ page, seed }) => {
