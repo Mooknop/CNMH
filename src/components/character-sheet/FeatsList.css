@@ -66,3 +66,199 @@
   border-radius: var(--radius-lg);
   margin: 1rem 0;
 }
+/* ── Feat ladder (Ability Dial S4) ────────────────────────
+   Rungs grouped by acquisition level along a connector spine; the
+   category chip carries the tint (class = accent, ancestry = verdant,
+   skill = gold, general = arcane — the TraitTag tint idiom). The old
+   .feat-card rules above are kept: Harrowing.jsx shares them (prune in
+   the S5 audit). */
+
+.sortbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.sortchip {
+  min-height: 32px;
+  padding: 2px var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sortchip:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.sortchip.active {
+  background: var(--accent-tint-active);
+  border-color: var(--accent-outline);
+  color: var(--shell-text-primary);
+}
+
+.ftrack {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 44px;
+  position: relative;
+}
+
+/* Connector spine */
+.ftrack::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--shell-border-strong);
+}
+
+.frung {
+  position: relative;
+  margin-bottom: var(--space-4);
+}
+
+.flevel {
+  position: absolute;
+  left: -44px;
+  top: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-theme, var(--ember-base));
+}
+
+.frung-feats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fnode {
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.fnode.open {
+  border-color: var(--accent-outline);
+}
+
+.fnode-h {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-target-min);
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.fname {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--shell-text-primary);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Category tint chip — the TraitTag low-opacity-hue idiom */
+.fcat {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.fcat--class {
+  background: var(--accent-tint);
+  color: var(--accent-text, var(--shell-text-primary));
+  border-color: var(--accent-outline);
+}
+
+.fcat--ancestry {
+  background: rgba(61, 148, 88, 0.18);
+  color: var(--verdant-light);
+  border-color: rgba(61, 148, 88, 0.35);
+}
+
+.fcat--skill {
+  background: rgba(196, 154, 46, 0.18);
+  color: var(--gold-light);
+  border-color: rgba(196, 154, 46, 0.35);
+}
+
+.fcat--general {
+  background: rgba(122, 84, 186, 0.18);
+  color: var(--arcane-light);
+  border-color: rgba(122, 84, 186, 0.35);
+}
+
+.fsource {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.fbody {
+  padding: 0 var(--space-3) var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--shell-text-secondary);
+  white-space: pre-wrap;
+}
+
+/* Open slot at the character's current level — the ladder's CTA */
+.fnode--open {
+  border-style: dashed;
+  border-color: var(--shell-border-strong);
+  background: transparent;
+  padding: var(--space-3);
+}
+
+.fopen-label {
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+.ftrack-none {
+  color: var(--shell-text-tertiary);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sortchip {
+    transition: none;
+  }
+}
