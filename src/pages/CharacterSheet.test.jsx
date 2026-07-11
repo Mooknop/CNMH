@@ -205,6 +205,36 @@ describe('CharacterSheet', () => {
     expect(screen.getByTestId('stats-block')).toBeInTheDocument();
   });
 
+  describe('masthead hero points (the interactive surface)', () => {
+    // The useCharacter mock spreads the character, so heroPoints/setHeroPoints
+    // ride the character prop straight onto characterModel.
+    it('renders pips reflecting the current value', () => {
+      renderWithRouter({ ...mockCharacter, heroPoints: 1, setHeroPoints: vi.fn() });
+      expect(screen.getByLabelText('Spend hero point 1')).toBeInTheDocument();
+      expect(screen.getByLabelText('Add hero point 2')).toBeInTheDocument();
+      expect(screen.getByLabelText('Add hero point 3')).toBeInTheDocument();
+    });
+
+    it('clicking an empty pip adds a point; a filled pip spends one', () => {
+      const setHeroPoints = vi.fn();
+      renderWithRouter({ ...mockCharacter, heroPoints: 1, setHeroPoints });
+
+      fireEvent.click(screen.getByLabelText('Add hero point 2'));
+      expect(setHeroPoints.mock.calls[0][0](1)).toBe(2); // increment
+
+      fireEvent.click(screen.getByLabelText('Spend hero point 1'));
+      expect(setHeroPoints.mock.calls[1][0](1)).toBe(0); // decrement
+    });
+
+    it('hero points are clamped to the 0–3 range', () => {
+      const setHeroPoints = vi.fn();
+      renderWithRouter({ ...mockCharacter, heroPoints: 3, setHeroPoints });
+      // All three filled — clicking the third spends down, never exceeds max.
+      fireEvent.click(screen.getByLabelText('Spend hero point 3'));
+      expect(setHeroPoints.mock.calls[0][0](3)).toBe(2);
+    });
+  });
+
   it('should render tab navigation buttons', () => {
     renderWithRouter(mockCharacter);
     

@@ -5,7 +5,6 @@ import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import RankRing from '../shared/RankRing';
-import HpFx from '../shared/HpFx';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useResolvedEffects } from '../../hooks/useResolvedEffects';
@@ -110,34 +109,16 @@ const StatsBlock = ({ character, characterColor }) => {
     proficiencies: rawProficiencies,
     classDC,
     level,
-    maxHp,
     ac,
     armorClass,
     size,
     speed,
     senses,
-    hp,
-    heroPoints,
-    setHeroPoints,
     skillModifiers,
     skillProficiencies,
     flags,
     spellStats,
   } = charData;
-
-  // Hero points: GM awards them in Foundry, players spend them here. The pip
-  // click mirrors the focus-pool UX — tap a filled pip to spend one, an empty
-  // pip to add one. setHeroPoints broadcasts cnmh_heropoints_<id>, which the
-  // bridge writes back to the Foundry actor.
-  const HERO_POINTS_MAX = 3;
-  const handleHeroPointClick = (i) => {
-    if (!setHeroPoints) return;
-    if (i < (heroPoints ?? 0)) {
-      setHeroPoints((prev) => Math.max((prev ?? 0) - 1, 0));
-    } else {
-      setHeroPoints((prev) => Math.min((prev ?? 0) + 1, HERO_POINTS_MAX));
-    }
-  };
 
   const themeColor = characterColor || 'var(--color-primary)';
   const strMod = abilityModifiers.strength;
@@ -315,65 +296,40 @@ const StatsBlock = ({ character, characterColor }) => {
 
   return (
     <div className="stats-block" style={{ '--color-theme': themeColor }}>
-      <div className="core-stats">
-        <div className="hp-defense">
-          <HpFx hp={hp} className="hp-box">
-            <div className="defense-name">HP</div>
-            <div className="defense-value">
-              <span className="hp-current">{hp?.current ?? maxHp}</span>
-              {' / '}
-              <PenaltyDisplay base={maxHp} penalty={mod('maxHp')} />
-            </div>
-            {hp?.temp > 0 && (
-              <div className="hp-temp hp-fx-temp">+{hp.temp} temp</div>
-            )}
-            {(hp?.dying > 0 || hp?.wounded > 0) && (
-              <div className="hp-status">
-                {hp.dying  > 0 && <span className="hp-dying">Dying {hp.dying}</span>}
-                {hp.wounded > 0 && <span className="hp-wounded">Wounded {hp.wounded}</span>}
-              </div>
-            )}
-          </HpFx>
-          <div className="ac-box" title={acSourceLabel}>
-            <div className="defense-name">AC</div>
-            <div className="defense-value">
-              <PenaltyDisplay base={acBase} penalty={mod('ac')} />
-            </div>
-          </div>
-          <button
-            className={`condition-box${hydratedConditions.length > 0 ? ' condition-box--active' : ''}`}
-            onClick={() => setIsConditionModalOpen(true)}
-          >
-            <div className="defense-name">
-              CONDITIONS
-            </div>
-            <div className="defense-value condition-count">
-              {hydratedConditions.length > 0 ? hydratedConditions.length : '—'}
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Hero Points */}
-      <div className="hero-points-row">
-        <span className="hero-points-label">
-          Hero Points
+      {/* Status strip — conditions + passive traits in the dial's chip
+          idiom. The conditions chip is dashed while dormant (no active
+          conditions) and goes solid gold when any are; HP/AC/hero points
+          live in the pinned masthead. */}
+      <div className="status-strip">
+        <button
+          type="button"
+          className={`cond-chip${hydratedConditions.length > 0 ? ' cond-chip--active' : ''}`}
+          onClick={() => setIsConditionModalOpen(true)}
+        >
+          Conditions
+          <span className="cond-count">
+            {hydratedConditions.length > 0 ? hydratedConditions.length : '—'}
+          </span>
+        </button>
+        <span className="tchip">
+          <span className="tchip-label">Size</span>
+          {size || 'teeny weeny'}
         </span>
-        <div className="hero-points-pips" role="group" aria-label="Hero points">
-          {Array.from({ length: HERO_POINTS_MAX }, (_, i) => {
-            const filled = i < (heroPoints ?? 0);
-            return (
-              <button
-                key={i}
-                type="button"
-                className={`hero-pip${filled ? ' hero-pip--filled' : ''}`}
-                aria-label={filled ? `Spend hero point ${i + 1}` : `Add hero point ${i + 1}`}
-                aria-pressed={filled}
-                onClick={() => handleHeroPointClick(i)}
-              />
-            );
-          })}
-        </div>
+        {/* Speed spine (SP1, #1220): useCharacter derives the total (base +
+            conditions + effect stat:'speed' mods, floored at 5 ft). Do NOT
+            layer mod('speed') here — that channel is already inside the
+            derivation, and re-applying it would double-count mutagens et al.
+            The breakdown rides PenaltyDisplay's tooltip like every other stat. */}
+        <span className="tchip">
+          <span className="tchip-label">Speed</span>
+          <PenaltyDisplay base={speed?.base ?? 0} penalty={speedModifier(speed)} /> ft
+        </span>
+        {senses && (
+          <span className="tchip">
+            <span className="tchip-label">Senses</span>
+            {senses}
+          </span>
+        )}
       </div>
 
       {/* Harrow omen (#227) — read-only row for harrowers (GM visibility);
@@ -427,31 +383,6 @@ const StatsBlock = ({ character, characterColor }) => {
         </div>
       )}
 
-      {/* Size and Speed Section */}
-      <div className="character-attributes">
-        <div className="attribute">
-          <span className="attribute-label">Size</span>
-          <span className="attribute-value">{size || 'teeny weeny'}</span>
-        </div>
-        {/* Speed spine (SP1, #1220): useCharacter derives the total (base +
-            conditions + effect stat:'speed' mods, floored at 5 ft). Do NOT
-            layer mod('speed') here — that channel is already inside the
-            derivation, and re-applying it would double-count mutagens et al.
-            The breakdown rides PenaltyDisplay's tooltip like every other stat. */}
-        <div className="attribute">
-          <span className="attribute-label">Speed</span>
-          <span className="attribute-value">
-            <PenaltyDisplay base={speed?.base ?? 0} penalty={speedModifier(speed)} /> feet
-          </span>
-        </div>
-        {senses && (
-          <div className="attribute">
-            <span className="attribute-label">Senses</span>
-            <span className="attribute-value">{senses}</span>
-          </div>
-        )}
-      </div>
-
       {/* Ability Dial — six ability nodes ringing the AC core. Tapping a
           node loads that ability's save + skills into the panel below;
           tapping the core steps out of the ring (nodes dim) and opens the
@@ -478,6 +409,7 @@ const StatsBlock = ({ character, characterColor }) => {
             className={`dial-center${selected === 'core' ? ' sel' : ''}`}
             aria-pressed={selected === 'core'}
             aria-label="Character proficiencies and feats"
+            title={acSourceLabel}
             onClick={() => setSelected('core')}
           >
             <span className="core-label">AC</span>

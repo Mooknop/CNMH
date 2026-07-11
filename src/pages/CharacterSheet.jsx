@@ -358,14 +358,32 @@ const CharacterSheet = () => {
             </span>
             <span className="cs-vital-lbl">AC</span>
           </div>
+          {/* Hero points — the masthead is the interactive surface (the old
+              Stats-body row is gone): tap a filled pip to spend one, an empty
+              pip to add one. setHeroPoints broadcasts cnmh_heropoints_<id>,
+              which the bridge writes back to the Foundry actor. */}
           <div className="cs-vital">
-            <span className="cs-vital-val cs-vital-val--hero" aria-label="Hero points">
-              {Array.from({ length: 3 }, (_, i) => (
-                <span
-                  key={i}
-                  className={`cs-hero-pip${i < (characterModel.heroPoints ?? 0) ? ' cs-hero-pip--filled' : ''}`}
-                />
-              ))}
+            <span className="cs-vital-val cs-vital-val--hero" role="group" aria-label="Hero points">
+              {Array.from({ length: 3 }, (_, i) => {
+                const filled = i < (characterModel.heroPoints ?? 0);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`cs-hero-pip${filled ? ' cs-hero-pip--filled' : ''}`}
+                    aria-label={filled ? `Spend hero point ${i + 1}` : `Add hero point ${i + 1}`}
+                    aria-pressed={filled}
+                    onClick={() => {
+                      if (!characterModel.setHeroPoints) return;
+                      if (filled) {
+                        characterModel.setHeroPoints((prev) => Math.max((prev ?? 0) - 1, 0));
+                      } else {
+                        characterModel.setHeroPoints((prev) => Math.min((prev ?? 0) + 1, 3));
+                      }
+                    }}
+                  />
+                );
+              })}
             </span>
             <span className="cs-vital-lbl">Hero</span>
           </div>
