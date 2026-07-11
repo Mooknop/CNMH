@@ -396,13 +396,6 @@
   line-height: 1;
 }
 
-.ability-mod {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 700;
-  color: var(--shell-text-primary);
-}
-
 /* ── Defense slabs — dark bracketed cards ─────────────────
    Shared with the companion/familiar modals — keep even though the
    Stats body's save slabs moved into the dial panel. */
@@ -475,43 +468,8 @@
   opacity: 0.7;
 }
 
-/* ── Proficiencies ─────────────────────────────────────── */
-.proficiency-items {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-2);
-}
-
-.proficiency-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) var(--space-3);
-  background: var(--surface-inset);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--shell-border);
-  min-width: 0;
-  min-height: var(--tap-target-min);
-}
-
-/* Attack Bonuses */
-.attack-bonuses {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: var(--space-4);
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.bonus-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  text-align: center;
-  min-width: 80px;
-}
-
+/* Shared beyond this component — ShieldBlockBar renders .attack-type
+   and has no definition of its own; keep the base rule. */
 .attack-type {
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
@@ -519,56 +477,6 @@
   color: var(--shell-text-tertiary);
   font-weight: 600;
   margin-bottom: 0.25rem;
-}
-
-.attack-bonus {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--color-theme, var(--color-primary));
-  font-size: var(--text-lg);
-}
-
-.proficiency-name {
-  font-size: var(--text-base);
-  font-weight: 500;
-  color: var(--shell-text-secondary);
-  flex: 1;
-  text-align: left;
-  word-wrap: break-word;
-}
-
-.proficiency-value {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  padding: 0.2rem var(--space-2);
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-/* Proficiency level colors — load-bearing, do not change */
-.prof-0 {
-  color: var(--color-rank-untrained);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.prof-1 {
-  color: var(--color-rank-trained);
-  background: rgba(94, 156, 41, 0.12);
-}
-
-.prof-2 {
-  color: var(--color-rank-expert);
-  background: rgba(41, 128, 185, 0.12);
-}
-
-.prof-3 {
-  color: var(--color-rank-master);
-  background: rgba(122, 84, 186, 0.12);
-}
-
-.prof-4 {
-  color: var(--color-rank-legendary);
-  background: rgba(196, 154, 46, 0.12);
 }
 
 /* Theme-driven accent colors */
@@ -603,24 +511,6 @@
   border-color: var(--color-theme, var(--color-primary));
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .proficiency-items {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-
-  .attack-bonuses {
-    gap: var(--space-2);
-  }
-}
-
-@media (max-width: 480px) {
-  .bonus-container {
-    min-width: 60px;
-  }
-}
-
 /* Conditions button alert state — gold highlight */
 .condition-box--active {
   border-color: var(--color-condition-highlight) !important;
@@ -644,11 +534,6 @@
   display: none;
 }
 
-.cs-content .ability {
-  background: var(--surface-slab);
-  border-color: var(--shell-border);
-}
-
 .cs-content .condition-box {
   background: var(--surface-slab);
   border-color: var(--shell-border-strong);
@@ -656,10 +541,6 @@
 
 .cs-content .condition-box--active {
   border-color: var(--gold-mid);
-}
-
-.cs-content .proficiency-value {
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .cs-content .character-attributes {

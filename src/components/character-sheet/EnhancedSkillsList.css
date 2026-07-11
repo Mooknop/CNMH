@@ -1,3 +1,8 @@
+/* EnhancedSkillsList — the Ability Dial's skill cluster (RankRing snodes;
+   ring styles live in shared/RankRing.css, the pull-up in SkillSheet.css).
+   The old skill-card presentation was removed in the S5 audit; the rules
+   below either belong to the cluster or are shared by other surfaces. */
+
 .enhanced-skills-list {
   border-radius: var(--radius-lg);
   padding: var(--space-4) 0;
@@ -9,57 +14,6 @@
   margin-bottom: var(--space-4);
   color: var(--color-theme, var(--ember-light));
   font-size: var(--text-md);
-}
-
-.skills-grid {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Skill cards — tap-target rows with proficiency left border */
-.skill-card {
-  background: transparent;
-  border-bottom: 1px solid var(--shell-border);
-  overflow: hidden;
-  transition: background 0.15s;
-}
-
-.skill-card:first-child {
-  border-top: 1px solid var(--shell-border);
-}
-
-.skill-card:hover {
-  background: var(--surface-inset-hover);
-}
-
-/* Proficiency left-border signal — load-bearing, do not change colors */
-.skill-card.untrained-color {
-  border-left: 3px solid var(--color-rank-untrained);
-}
-
-.skill-card.trained-color {
-  border-left: 3px solid var(--color-rank-trained);
-}
-
-.skill-card.expert-color {
-  border-left: 3px solid var(--color-rank-expert);
-}
-
-.skill-card.master-color {
-  border-left: 3px solid var(--color-rank-master);
-}
-
-.skill-card.legendary-color {
-  border-left: 3px solid var(--color-rank-legendary);
-}
-
-/* Improvised / untrained variant */
-.skill-card.improvised-skill.untrained-color {
-  border-left: 3px dashed var(--shell-border-strong);
-}
-
-.improvised-skill .collapsible-header {
-  background: var(--surface-inset);
 }
 
 .feat-notice {
@@ -77,68 +31,8 @@
   color: var(--color-theme, var(--color-primary));
 }
 
-/* Skill header row */
-.skill-name-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  min-height: var(--tap-target-min);
-  padding: 0 var(--space-3);
-}
-
-.skill-name-section h3 {
-  margin: 0;
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--shell-text-primary);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.skill-ability {
-  font-size: var(--text-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--shell-text-tertiary);
-  margin-top: 0.15rem;
-}
-
-.skill-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-/* Proficiency pips — inline next to modifier */
-.skill-pip-row {
-  display: inline-flex;
-  gap: 3px;
-  align-items: center;
-}
-
-.skill-pip {
-  width: var(--pip-size, 8px);
-  height: var(--pip-size, 8px);
-  border-radius: 50%;
-  border: 1.4px solid var(--pip-color-empty, var(--iron-light));
-  display: inline-block;
-  background: transparent;
-}
-
-.skill-pip.filled {
-  background: var(--pip-color-filled, var(--color-theme));
-  border-color: var(--pip-color-filled, var(--color-theme));
-}
-
-.skill-pip.legendary {
-  background: var(--pip-color-legend, var(--gold-mid));
-  border-color: var(--pip-color-legend, var(--gold-mid));
-}
-
-/* Right-aligned modifier value */
+/* Shared beyond this component — PartySummary renders .skill-modifier
+   (with its own overrides in PartySummary.css); keep the base rule. */
 .skill-modifier {
   font-family: var(--font-display);
   font-size: var(--text-md);
@@ -148,80 +42,12 @@
   color: var(--shell-text-primary);
 }
 
-/* Proficiency text — kept for screen-reader accessibility, visually tertiary */
-.skill-proficiency {
-  font-size: var(--text-xs);
-  min-width: 4.5rem;
-  text-align: center;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.skill-proficiency.untrained-color  { color: var(--color-rank-untrained);  }
-.skill-proficiency.trained-color    { color: var(--color-rank-trained);    }
-.skill-proficiency.expert-color     { color: var(--color-rank-expert);     }
-.skill-proficiency.master-color     { color: var(--color-rank-master);     }
-.skill-proficiency.legendary-color  { color: var(--color-rank-legendary);  }
-
-/* Item bonus */
-.item-bonus-indicator {
-  font-size: var(--text-xs);
-  font-style: italic;
-  color: var(--arcane-light);
-  display: block;
-  margin-top: 0.2rem;
-}
-
-.skill-item-bonus {
-  padding: var(--space-2) var(--space-3);
-  background: rgba(70, 130, 200, 0.1);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-  border-left: 3px solid var(--arcane-mid);
-}
-
-.item-bonus-label {
-  font-weight: 600;
-  margin-right: var(--space-2);
-  color: var(--color-theme, var(--shell-text-secondary));
-}
-
-.item-bonus-value {
-  font-style: italic;
-  color: var(--shell-text-secondary);
-}
-
-/* Skill actions sub-panel */
-.skill-actions {
-  padding: var(--space-3) var(--space-4);
-  background: rgba(0, 0, 0, 0.15);
-  border-top: 1px solid var(--shell-border);
-}
-
-.skill-actions h4 {
-  margin-top: 0;
-  margin-bottom: var(--space-2);
-  color: var(--color-theme, var(--ember-light));
-  font-size: var(--text-sm);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
+/* Shared action-row primitives — ActionsList, ItemModal, ItemActivations
+   and ShieldRuneActivations all render these class names. */
 .actions-list {
   list-style-type: none;
   padding: 0;
   margin: 0;
-}
-
-.skill-action {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--shell-border);
-  display: flex;
-  flex-direction: column;
-}
-
-.skill-action:last-child {
-  border-bottom: none;
 }
 
 .action-name {
@@ -236,38 +62,8 @@
   line-height: 1.4;
 }
 
-/* Row tap targets */
-.skill-row,
-.skill-item {
-  min-height: var(--tap-target-min);
-  display: flex;
-  align-items: center;
-}
-
-/* Background tints for expanded skill panels */
-.skill-card.untrained-color .skill-actions { background: var(--surface-inset); }
-.skill-card.trained-color   .skill-actions { background: rgba(94, 156, 41, 0.07);  }
-.skill-card.expert-color    .skill-actions { background: rgba(41, 128, 185, 0.07); }
-.skill-card.master-color    .skill-actions { background: rgba(122, 84, 186, 0.07); }
-.skill-card.legendary-color .skill-actions { background: rgba(196, 154, 46, 0.07); }
-
-.skill-card.improvised-skill .skill-actions {
-  background: var(--surface-inset);
-  border-top: 1px dashed var(--shell-border-strong);
-}
-
-@media (max-width: 768px) {
-  .skill-info {
-    gap: var(--space-2);
-  }
-
-  .skill-proficiency {
-    display: none;
-  }
-}
-
-/* Conditional ('vs X') effect modifiers — reminder beneath the card header (#510),
-   mirroring StatsBlock's .defense-hint for saves. */
+/* Conditional ('vs X') effect modifiers — reminder beneath the snode name
+   (#510), mirroring StatsBlock's .defense-hint for saves. */
 .skill-conditional-hint {
   display: flex;
   flex-direction: column;
