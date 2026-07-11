@@ -53,7 +53,7 @@ describe('Flourish registry', () => {
   });
 
   it('a runestamp for an undrawn family renders nothing (plain bloom fallback)', () => {
-    const { container } = render(<Flourish id="runestamp:fearsome" />);
+    const { container } = render(<Flourish id="runestamp:snagging" />);
     expect(container.firstChild).toBeNull();
   });
 

@@ -88,7 +88,7 @@ describe('IconTile', () => {
   });
 
   it('an undrawn rune family still renders, as the untinted generic mark', () => {
-    const item = { name: 'Longsword', runes: { potency: 1, property: [{ id: 'fearsome', name: 'Fearsome' }] } };
+    const item = { name: 'Longsword', runes: { potency: 1, property: [{ id: 'snagging', name: 'Snagging' }] } };
     const { container } = render(<IconTile item={item} />);
     const coin = container.querySelector('.icon-tile-runeicon');
     expect(coin).toHaveAttribute('data-runeicon', 'generic');

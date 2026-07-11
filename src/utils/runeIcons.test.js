@@ -54,7 +54,8 @@ describe('resolveRuneIcon', () => {
   });
 
   it('an undrawn family falls back to the generic mark', () => {
-    const icon = resolveRuneIcon('fearsome');
+    // snagging is accessory-target — undrawn until the R6 wave.
+    const icon = resolveRuneIcon('snagging');
     expect(icon.generic).toBe(true);
     expect(icon.layers).toEqual([GENERIC_RUNE_ICON]);
   });
@@ -79,14 +80,15 @@ describe('resolveRuneIcon', () => {
   });
 });
 
-describe('shield glyph wave — seed coverage (#1373)', () => {
-  // Every shield rune in the bundled seed must resolve a DRAWN glyph. A
-  // newly-authored shield rune landing on the generic fallback should be a
-  // conscious choice (add its family here or accept the failure), not silent.
-  it('every target:shield rune in the seed resolves a non-generic glyph', () => {
-    const shield = seedRunes.filter((r) => r.target === 'shield');
-    expect(shield.length).toBeGreaterThan(0);
-    const fallbacks = shield.filter((r) => resolveRuneIcon(r.id).generic).map((r) => r.id);
+describe('glyph waves — seed coverage (#1373 shields, #1374 armor/ring/weapon)', () => {
+  // Every non-accessory rune in the bundled seed must resolve a DRAWN glyph
+  // (accessory-target families arrive in R6 #1375). A newly-authored rune
+  // landing on the generic fallback should be a conscious choice (draw its
+  // family or accept the failure here), not silent.
+  it('every non-accessory rune in the seed resolves a non-generic glyph', () => {
+    const covered = seedRunes.filter((r) => r.target !== 'accessory');
+    expect(covered.length).toBeGreaterThan(0);
+    const fallbacks = covered.filter((r) => resolveRuneIcon(r.id).generic).map((r) => r.id);
     expect(fallbacks).toEqual([]);
   });
 
