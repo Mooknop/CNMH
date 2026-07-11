@@ -232,12 +232,11 @@ describe('StatsBlock', () => {
     expect(modifierDivs.length).toBeGreaterThan(0);
   });
 
-  it('should display HP and AC values', () => {
+  it('shows AC in the dial core only (HP and hero points live in the masthead)', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // HP shows as "current / max" — 8 appears in both spans when at full health
-    expect(screen.getAllByText('8').length).toBeGreaterThan(0);
-    // AC appears in the legacy ac-box and the dial core
-    expect(screen.getAllByText('16').length).toBeGreaterThan(0);
+    expect(screen.getByText('16')).toBeInTheDocument(); // core AC, single occurrence
+    expect(screen.queryByLabelText(/hero point/)).toBeNull();
+    expect(screen.queryByText('HP')).toBeNull();
   });
 
   it('shows the derived armorClass value, not the raw scalar (AC4)', () => {
@@ -248,7 +247,7 @@ describe('StatsBlock', () => {
       armorClass: { value: 18, derived: true, source: 'armor', category: 'heavy', armorName: 'Full Plate' },
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getAllByText('18').length).toBeGreaterThan(0);
+    expect(screen.getByText('18')).toBeInTheDocument();
     expect(screen.queryByText('16')).not.toBeInTheDocument();
   });
 
@@ -257,37 +256,7 @@ describe('StatsBlock', () => {
     delete noArmorClass.armorClass;
     mockUseCharacter.mockReturnValueOnce(noArmorClass);
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getAllByText('16').length).toBeGreaterThan(0);
-  });
-
-  it('renders hero point pips reflecting the current value', () => {
-    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 1, setHeroPoints: vi.fn() });
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // heroPoints=1 → pip 1 filled (spend), pips 2 & 3 empty (add)
-    expect(screen.getByLabelText('Spend hero point 1')).toBeInTheDocument();
-    expect(screen.getByLabelText('Add hero point 2')).toBeInTheDocument();
-    expect(screen.getByLabelText('Add hero point 3')).toBeInTheDocument();
-  });
-
-  it('clicking an empty hero pip adds a point; a filled pip spends one', () => {
-    const setHeroPoints = vi.fn();
-    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 1, setHeroPoints });
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-
-    fireEvent.click(screen.getByLabelText('Add hero point 2'));
-    expect(setHeroPoints.mock.calls[0][0](1)).toBe(2); // increment
-
-    fireEvent.click(screen.getByLabelText('Spend hero point 1'));
-    expect(setHeroPoints.mock.calls[1][0](1)).toBe(0); // decrement
-  });
-
-  it('hero points are clamped to the 0–3 range', () => {
-    const setHeroPoints = vi.fn();
-    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 3, setHeroPoints });
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // All three filled — clicking the third spends down, never exceeds max
-    fireEvent.click(screen.getByLabelText('Spend hero point 3'));
-    expect(setHeroPoints.mock.calls[0][0](3)).toBe(2);
+    expect(screen.getByText('16')).toBeInTheDocument();
   });
 
   it('should display size', () => {
@@ -297,9 +266,9 @@ describe('StatsBlock', () => {
 
   it('should display speed', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // Speed renders as PenaltyDisplay (span) + " feet" text node; match the combined parent text
+    // Speed chip: label + PenaltyDisplay + " ft" — match the chip's text.
     expect(screen.getByText((_, el) =>
-      el?.textContent?.replace(/\s+/g, ' ').trim() === '25 feet'
+      el?.className === 'tchip' && /25\s*ft$/.test(el?.textContent || '')
     )).toBeInTheDocument();
   });
 
@@ -314,11 +283,11 @@ describe('StatsBlock', () => {
     expect(screen.getByText('teeny weeny')).toBeInTheDocument();
   });
 
-  it('renders 0 feet when the speed detail is absent (the || 69 placeholder is dead)', () => {
+  it('renders 0 ft when the speed detail is absent (the || 69 placeholder is dead)', () => {
     mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, speed: null });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.getByText((_, el) =>
-      el?.textContent?.replace(/\s+/g, ' ').trim() === '0 feet'
+      el?.className === 'tchip' && /(^|\D)0\s*ft$/.test(el?.textContent || '')
     )).toBeInTheDocument();
   });
 
@@ -546,9 +515,24 @@ describe('StatsBlock', () => {
     expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('charisma');
   });
 
-  it('renders the CONDITIONS button in the hp-defense row', () => {
+  it('renders the Conditions chip in the status strip', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('CONDITIONS')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Conditions/ })).toBeInTheDocument();
+  });
+
+  it('surfaces Dying/Wounded as status chips when present, hides them otherwise', () => {
+    // No hp on the default mock → no chips.
+    const { rerender } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.queryByText(/Dying/)).toBeNull();
+    expect(screen.queryByText(/Wounded/)).toBeNull();
+
+    mockUseCharacter.mockReturnValue({
+      ...defaultCharData,
+      hp: { current: 0, dying: 2, wounded: 1 },
+    });
+    rerender(<StatsBlock character={mockCharacter} characterColor="#FF0000" />);
+    expect(screen.getByText('Dying 2')).toBeInTheDocument();
+    expect(screen.getByText('Wounded 1')).toBeInTheDocument();
   });
 
   it('shows em-dash when no conditions are active', () => {
@@ -558,13 +542,13 @@ describe('StatsBlock', () => {
 
   it('opens ConditionModal when CONDITIONS button is clicked', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
     expect(screen.getByText('Condition Tracker')).toBeInTheDocument();
   });
 
   it('shows condition count after adding a condition', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
     // Click Off-Guard (a toggle condition) in the browser
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
     // Button should now show 1 (the count of active conditions)
@@ -574,10 +558,10 @@ describe('StatsBlock', () => {
   it('applies condition penalty to AC when condition is active', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     // Open condition modal and add Off-Guard (-2 circumstance to AC)
-    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
     // AC was 16, Off-Guard applies -2 → AC should show 14 (ac-box + core)
-    expect(screen.getAllByText('14').length).toBeGreaterThan(0);
+    expect(screen.getByText('14')).toBeInTheDocument();
   });
 
   describe('raised shield', () => {
@@ -671,7 +655,7 @@ describe('StatsBlock', () => {
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
       // Badge counts the two derived conditions.
       expect(screen.getByText('2')).toBeInTheDocument();
-      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
       // Both derived rows carry the auto tag and no remove control.
       expect(screen.getAllByText('auto')).toHaveLength(2);
       expect(screen.queryByTitle('Remove condition')).toBeNull();
@@ -680,7 +664,7 @@ describe('StatsBlock', () => {
     it('the modal exposes the auto-derive toggle wired to setAuto', () => {
       mockUseCharacter.mockReturnValue(encumberedData);
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
       fireEvent.click(screen.getByLabelText('Derive Encumbered from carried Bulk'));
       expect(encumberedData.encumbrance.setAuto).toHaveBeenCalledWith(false);
     });
@@ -688,7 +672,7 @@ describe('StatsBlock', () => {
     it('no derived rows when under the threshold', () => {
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
       expect(screen.getByText('—')).toBeInTheDocument(); // badge em-dash
-      fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
       expect(screen.queryByText('auto')).toBeNull();
     });
   });

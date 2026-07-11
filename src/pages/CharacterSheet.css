@@ -300,13 +300,35 @@
   align-items: center;
 }
 
+/* Interactive since the Stats-body hero row was removed — same 10px pip,
+   with an invisible enlarged hit area for touch. */
 .cs-hero-pip {
+  position: relative;
   width: 10px;
   height: 10px;
+  padding: 0;
   border-radius: 50%;
   border: 1.5px solid rgba(196, 154, 46, 0.4);
   background: transparent;
   display: inline-block;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.cs-hero-pip::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.cs-hero-pip:hover {
+  transform: scale(1.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-hero-pip {
+    transition: none;
+  }
 }
 
 .cs-hero-pip--filled {

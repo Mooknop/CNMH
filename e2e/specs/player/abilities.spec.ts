@@ -116,7 +116,7 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     await page.goto(`/character/${CHAR_ID}`);
     await expectSheet(page);
 
-    await page.getByRole('button', { name: /CONDITIONS/ }).click();
+    await page.getByRole('button', { name: /Conditions/ }).click();
     // The shared Modal isn't role=dialog; the condition browser button is unique.
     await page.getByRole('button', { name: /Frightened/ }).click();
 
