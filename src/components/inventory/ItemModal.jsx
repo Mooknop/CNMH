@@ -4,6 +4,7 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
 import ThassilonianRune from '../shared/ThassilonianRune';
+import RuneIcon from '../shared/RuneIcon';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
@@ -43,6 +44,7 @@ import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
 import { runeForName } from '../../utils/thassilonianRunes';
+import { runeIconsOf, resolveRuneIcon } from '../../utils/runeIcons';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { hasRustBlessing, brokenArmorAcPenalty } from '../../utils/rustBlessing';
 import { isBrokenHp } from '../../utils/itemDurability';
@@ -391,6 +393,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const charges = itemCharges(item);                     // { current, max } | null
   const code = itemCode(item.name);
   const thassRune = runeForName(item.thassilonianRune);  // rune-marked gear | null
+  // Catalog runes (#1369): a runestone's held rune is the hero art when the
+  // item has neither image nor sin rune; everything else rides as medallions
+  // (bottom-left — the sin badge owns bottom-right, the gem top-left).
+  const catalogRunes = runeIconsOf(item);
+  const heldRune = item.runestone?.rune;
+  const runeArt = !item.image && !thassRune && heldRune ? heldRune : null;
+  const runeCoins = catalogRunes.filter((doc) => doc !== runeArt);
   const category =
     isContainerItem ? 'Container'
     : item.strikes ? 'Weapon'
@@ -640,7 +649,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             ? <img src={`/api/images/${item.image}`} alt="" style={item.imagePosition ? { objectPosition: `${item.imagePosition.x}% ${item.imagePosition.y}%` } : undefined} />
             : thassRune
               ? <span className="loot-rune-art"><ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${thassRune.label}`} /></span>
-              : <span className="loot-code">{code}</span>}
+              : runeArt
+                ? <span className="loot-rune-art"><RuneIcon runeId={runeArt.id} tint title={runeArt.name} /></span>
+                : <span className="loot-code">{code}</span>}
         </span>
         {item.image && thassRune && (
           <span
@@ -648,6 +659,30 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             data-rune={String(item.thassilonianRune).toLowerCase()}
           >
             <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${thassRune.label}`} />
+          </span>
+        )}
+        {runeCoins.length > 0 && (
+          <span className="loot-runeicon-row">
+            {runeCoins.slice(0, 2).map((doc) => {
+              const icon = resolveRuneIcon(doc.id);
+              return (
+                <span
+                  key={doc.id}
+                  className="loot-runeicon runeicon-tint"
+                  data-runeicon={icon.generic ? 'generic' : icon.family}
+                >
+                  <RuneIcon runeId={doc.id} title={doc.name} />
+                </span>
+              );
+            })}
+            {runeCoins.length > 2 && (
+              <span
+                className="loot-runeicon loot-runeicon-more"
+                title={runeCoins.slice(2).map((d) => d.name).join(', ')}
+              >
+                +{runeCoins.length - 2}
+              </span>
+            )}
           </span>
         )}
         <span className="loot-gem" title={rarityLabel} />

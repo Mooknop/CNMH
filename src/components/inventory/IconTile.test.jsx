@@ -48,6 +48,82 @@ describe('IconTile', () => {
     expect(container.querySelector('.icon-tile-rune-art')).toBeNull();
   });
 
+  it('a property-runed weapon shows catalog-rune medallions bottom-right (#1369)', () => {
+    const item = {
+      name: 'Longsword',
+      runes: { potency: 2, property: [{ id: 'flaming', name: 'Flaming' }, { id: 'frost', name: 'Frost' }] },
+    };
+    const { container } = render(<IconTile item={item} />);
+    const coins = container.querySelectorAll('.icon-tile-runeicon');
+    expect(coins).toHaveLength(2);
+    expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
+    expect(coins[0]).toHaveClass('runeicon-tint');
+    expect(coins[0].querySelector('svg.rune-icon')).not.toBeNull();
+    expect(container.querySelector('.icon-tile-runeicon-more')).toBeNull();
+  });
+
+  it('folds runes past the two-coin cap into a +n chip', () => {
+    const item = {
+      name: 'Longsword',
+      runes: {
+        potency: 3,
+        property: [
+          { id: 'flaming', name: 'Flaming' },
+          { id: 'frost', name: 'Frost' },
+          { id: 'shock', name: 'Shock' },
+        ],
+      },
+    };
+    const { container } = render(<IconTile item={item} />);
+    expect(container.querySelectorAll('.icon-tile-runeicon')).toHaveLength(3);
+    const more = container.querySelector('.icon-tile-runeicon-more');
+    expect(more).toHaveTextContent('+1');
+    expect(more).toHaveAttribute('title', 'Shock');
+  });
+
+  it('an undrawn rune family still renders, as the untinted generic mark', () => {
+    const item = { name: 'Longsword', runes: { potency: 1, property: [{ id: 'fearsome', name: 'Fearsome' }] } };
+    const { container } = render(<IconTile item={item} />);
+    const coin = container.querySelector('.icon-tile-runeicon');
+    expect(coin).toHaveAttribute('data-runeicon', 'generic');
+  });
+
+  it('an imageless runestone shows its held rune as the art, no medallion', () => {
+    const item = {
+      name: 'Flaming Runestone',
+      runestone: { runeRef: 'flaming', rune: { id: 'flaming', name: 'Flaming' } },
+    };
+    const { container } = render(<IconTile item={item} />);
+    const art = container.querySelector('.icon-tile-rune-art svg.rune-icon');
+    expect(art).not.toBeNull();
+    expect(art).toHaveAttribute('data-runeicon', 'flaming');
+    expect(container.querySelector('.icon-tile-code')).toBeNull();
+    expect(container.querySelector('.icon-tile-runeicon')).toBeNull();
+  });
+
+  it('a runestone with real art keeps the art and wears its rune as a medallion', () => {
+    const item = {
+      name: 'Flaming Runestone',
+      image: 'img_r.jpg',
+      runestone: { runeRef: 'flaming', rune: { id: 'flaming', name: 'Flaming' } },
+    };
+    const { container } = render(<IconTile item={item} />);
+    expect(container.querySelector('.icon-tile-img')).not.toBeNull();
+    expect(container.querySelector('.icon-tile-runeicon')).toHaveAttribute('data-runeicon', 'flaming');
+  });
+
+  it('sin rune keeps its corner when catalog medallions are present', () => {
+    const item = {
+      name: 'Flawless Hammer',
+      image: 'img_h.jpg',
+      thassilonianRune: 'pride',
+      runes: { potency: 1, property: [{ id: 'flaming', name: 'Flaming' }] },
+    };
+    const { container } = render(<IconTile item={item} />);
+    expect(container.querySelector('.icon-tile-rune')).toHaveAttribute('data-rune', 'pride');
+    expect(container.querySelector('.icon-tile-runeicon')).toHaveAttribute('data-runeicon', 'flaming');
+  });
+
   it('flags broken gear with the warning badge (#539/#542)', () => {
     const { container } = render(
       <IconTile item={{ name: 'Longsword', durabilityState: 'broken' }} />
