@@ -137,6 +137,45 @@
   --runeicon-striking:       #8ba6bf; /* deep steel */
   --runeicon-resilient:      #a9c3b8; /* tempered jade-steel */
   --runeicon-reinforcing:    #d6a35c; /* shield bronze */
+  /* Shield glyph wave (#1373) */
+  --runeicon-aggressive:       #ef4444; /* ram red */
+  --runeicon-confounding:      #c084fc; /* addled orchid */
+  --runeicon-darkness:         #6d28d9; /* void violet */
+  --runeicon-energy-resistant: #67e8f9; /* ward cyan */
+  --runeicon-enlarging:        #f59e0b; /* swelling amber */
+  --runeicon-environmental:    #4ade80; /* wilds green */
+  --runeicon-feather:          #c7d2fe; /* down pale */
+  --runeicon-floating:         #7dd3fc; /* buoyant sky */
+  --runeicon-focusing:         #e879f9; /* aperture fuchsia */
+  --runeicon-furious:          #dc2626; /* rage crimson */
+  --runeicon-glamourous:       #f472b6; /* glimmer pink */
+  --runeicon-glyphed:          #d8b4fe; /* inkspell lavender */
+  --runeicon-gusting:          #0ea5e9; /* gale blue */
+  --runeicon-heavy:            #78716c; /* dead stone */
+  --runeicon-holding:          #b45309; /* clamp leather */
+  --runeicon-hungering:        #881337; /* maw dark */
+  --runeicon-jinxed:           #4d7c0f; /* murk bile */
+  --runeicon-knowing:          #fbbf24; /* insight gold */
+  --runeicon-launching:        #fdba74; /* loosed ember */
+  --runeicon-living:           #16a34a; /* sap green */
+  --runeicon-moonlit:          #cbd5e1; /* moon silver */
+  --runeicon-projecting:       #93c5fd; /* echo pale blue */
+  --runeicon-protecting:       #60a5fa; /* aegis blue */
+  --runeicon-resuscitating:    #fb7185; /* pulse rose */
+  --runeicon-retrieving:       #14b8a6; /* fetch teal */
+  --runeicon-reflecting:       #a5f3fc; /* mirror ice */
+  --runeicon-reverberating:    #7c3aed; /* deep sonic */
+  --runeicon-seeing:           #d97706; /* watchful amber */
+  --runeicon-shield-returning: #34d399; /* homing mint */
+  --runeicon-sliding:          #2dd4bf; /* skid teal */
+  --runeicon-spell-saving:     #818cf8; /* caught indigo */
+  --runeicon-spellguarding:    #4f46e5; /* barred indigo */
+  --runeicon-summoning:        #c026d3; /* portal magenta */
+  --runeicon-taunting:         #f43f5e; /* jeer rose */
+  --runeicon-thirsting:        #b91c1c; /* drained blood */
+  --runeicon-throwing:         #0d9488; /* arc-flight teal */
+  --runeicon-undead:           #d6d3d1; /* grave bone */
+  --runeicon-weapon-storing:   #64748b; /* sheath slate */
 
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;
