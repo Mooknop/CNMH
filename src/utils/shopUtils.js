@@ -831,6 +831,9 @@ export function groupWares(resolvedWares) {
       // Rune-marked gear (#1361): the crest renders the item's Thassilonian
       // rune when it has no image, same precedence as the inventory IconTile.
       thassilonianRune: head.thassilonianRune,
+      // A runestone ware (#1372): the crest renders the held rune's glyph
+      // when the stone has no image (rune-as-art, mirroring IconTile).
+      runestone: head.runestone,
       forms,
       from: Number(head.price) || 0,
       formCount: forms.length,

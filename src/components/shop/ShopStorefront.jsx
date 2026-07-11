@@ -29,6 +29,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import ItemActivations from '../shared/ItemActivations';
 import ThassilonianRune from '../shared/ThassilonianRune';
+import RuneIcon from '../shared/RuneIcon';
 import { runeForName } from '../../utils/thassilonianRunes';
 import RuneMechanics from '../shared/RuneMechanics';
 import SpellMechanics from '../spells/SpellMechanics';
@@ -94,6 +95,15 @@ const WareCrest = ({ group, imgClass, caseClass }) => {
     return (
       <span className={`${caseClass} ps-crest-rune`} aria-hidden="true">
         <ThassilonianRune name={group.thassilonianRune} tint />
+      </span>
+    );
+  }
+  // A runestone ware (#1372): the held rune's glyph is the crest, tinted by
+  // its family — the shop face of the IconTile rune-as-art idiom.
+  if (group.runestone?.rune?.id != null) {
+    return (
+      <span className={`${caseClass} ps-crest-rune`} aria-hidden="true">
+        <RuneIcon runeId={group.runestone.rune.id} tint />
       </span>
     );
   }
@@ -311,6 +321,7 @@ const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) =
             {head.runestone && head.runestone.rune && (
               <div className="ps-preview-rune" data-testid="ware-preview-rune">
                 <span className="ps-preview-rune-name">
+                  <RuneIcon runeId={head.runestone.rune.id} tint className="item-rune-glyph" />
                   {head.runestone.rune.name}
                   {head.runestone.rune.level != null && ` · Level ${head.runestone.rune.level}`}
                 </span>
@@ -346,6 +357,7 @@ const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) =
                   {saleRunes.map((r) => (
                     <li key={r.id} className="ps-preview-rune">
                       <span className="ps-preview-rune-name">
+                        <RuneIcon runeId={r.id} tint className="item-rune-glyph" />
                         {r.name}
                         {r.level != null && ` · Level ${r.level}`}
                       </span>
@@ -520,12 +532,24 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
         {sockets.map((s) => {
           const key = socketKey(s);
           const staged = stagedFor[key];
-          const glyph = <span className="ps-socket-glyph" aria-hidden="true">{SOCKET_GLYPH[s.type]}</span>;
+          // A socket holding a catalog rune (filled property/accessory, or a
+          // staged property rune) shows the rune's own glyph (#1372); empty
+          // and fundamental sockets keep their generic socket marks.
+          const filledRef = (s.type === 'property' || s.type === 'accessory') && s.rune
+            ? (typeof s.rune === 'string' ? s.rune : s.rune.id)
+            : null;
+          const stagedRef = staged && staged.type === 'property' ? staged.id : null;
+          const glyphFor = (runeRef) => (
+            <span className="ps-socket-glyph" aria-hidden="true">
+              {runeRef != null ? <RuneIcon runeId={runeRef} tint /> : SOCKET_GLYPH[s.type]}
+            </span>
+          );
+          const glyph = glyphFor(filledRef);
           if (staged) {
             return (
               <button key={key} type="button" className="ps-socket is-staged"
                 aria-label={`un-stage ${staged.name}`} onClick={() => onUnstage(gear.uid, key)}>
-                {glyph}<span className="ps-socket-name">{staged.name}</span><span className="ps-socket-x" aria-hidden="true">✕</span>
+                {glyphFor(stagedRef)}<span className="ps-socket-name">{staged.name}</span><span className="ps-socket-x" aria-hidden="true">✕</span>
               </button>
             );
           }
@@ -588,6 +612,7 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
                           onStage(gear.uid, openKey, staging);
                           setOpenKey(null);
                         }}>
+                        {r.type === 'property' && <RuneIcon runeId={r.id} tint className="item-rune-glyph" />}
                         <span className="ps-runeopt-name">{r.name}</span>
                         <span className="ps-runeopt-price">{r.price} gp</span>
                       </button>

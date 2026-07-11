@@ -112,6 +112,30 @@ describe('IconTile', () => {
     expect(container.querySelector('.icon-tile-runeicon')).toHaveAttribute('data-runeicon', 'flaming');
   });
 
+  it('a reinforced shield wears its reinforcing tier as the lead medallion (#1372)', () => {
+    const item = {
+      name: 'Steel Shield',
+      shield: { bonus: 2 },
+      runes: { reinforcing: 'minor', property: [{ id: 'flaming', name: 'Flaming' }] },
+    };
+    const { container } = render(<IconTile item={item} />);
+    const coins = container.querySelectorAll('.icon-tile-runeicon');
+    expect(coins).toHaveLength(2);
+    // Reinforcing has no drawn family until the R4 art wave — generic mark,
+    // but it still leads the stack; the drawn flaming coin follows.
+    expect(coins[0]).toHaveAttribute('data-runeicon', 'generic');
+    expect(coins[1]).toHaveAttribute('data-runeicon', 'flaming');
+  });
+
+  it('an accessory-runed host wears its rune as a medallion', () => {
+    const item = {
+      name: 'Cloak',
+      runes: { accessory: { id: 'presentable', name: 'Presentable' } },
+    };
+    const { container } = render(<IconTile item={item} />);
+    expect(container.querySelector('.icon-tile-runeicon')).not.toBeNull();
+  });
+
   it('sin rune keeps its corner when catalog medallions are present', () => {
     const item = {
       name: 'Flawless Hammer',

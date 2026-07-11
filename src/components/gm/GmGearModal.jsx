@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
+import RuneIcon from '../shared/RuneIcon';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -81,6 +82,14 @@ const socketContent = (s) => {
 const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
   const [pending, setPending] = useState(null); // a choices-rune awaiting its choice
   const held = socketContent(socket);
+  // The held rune's glyph (#1372): property/accessory sockets carry the rune
+  // ref; reinforcing synthesizes its catalog id from the tier key.
+  const heldRuneId =
+    (socket.type === 'property' || socket.type === 'accessory') && socket.rune
+      ? (typeof socket.rune === 'string' ? socket.rune : socket.rune.id)
+      : socket.type === 'reinforcing' && socket.value
+        ? `${socket.value}-reinforcing`
+        : null;
 
   const pick = (rune) => {
     if (!rune) return;
@@ -92,7 +101,11 @@ const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
     <li className="cs-row" data-testid={`rune-socket-${item.name}-${socketKey(socket)}`}>
       <span className="cs-label">
         {SOCKET_LABEL[socket.type]}
-        <span className="gm-help"> — {held || 'empty'}</span>
+        <span className="gm-help">
+          {' — '}
+          {heldRuneId != null && <RuneIcon runeId={heldRuneId} tint className="gm-rune-glyph" />}
+          {held || 'empty'}
+        </span>
       </span>
       <div className="cs-control cs-clear-row">
         {options.length > 0 && (

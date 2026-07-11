@@ -746,6 +746,16 @@ describe('groupWares', () => {
     expect(group.thassilonianRune).toBe('lust');
   });
 
+  it("carries a runestone's held rune onto the group for the rune crest (#1372)", () => {
+    const runeMap = new Map([
+      ['flaming', { id: 'flaming', name: 'Flaming', price: 500, type: 'property' }],
+    ]);
+    const [group] = groupWares(resolveShopWares('s', { s: { wares: [
+      { ref: 'runestone', runeRef: 'flaming' },
+    ] } }, new Map(), runeMap));
+    expect(group.runestone).toEqual({ runeRef: 'flaming', rune: runeMap.get('flaming') });
+  });
+
   it('ignores idless entries and non-array input', () => {
     expect(groupWares([{ name: 'no id' }, null])).toEqual([]);
     expect(groupWares(null)).toEqual([]);

@@ -2230,6 +2230,11 @@ p.gm-live-note {
   opacity: 0.6;
   margin-left: 0.35em;
 }
+/* Inline rune glyph in GM lists (#1372) — list rows + gear socket labels. */
+.gm-rune-glyph {
+  vertical-align: -0.15em;
+  margin-right: 0.35em;
+}
 
 /* ─────────────────────────────────────────────────────────────
  * Adventure Rooms (#1077): World → Rooms browser, shared RoomDetail,

@@ -166,6 +166,11 @@
   font-family: var(--font-mono);
   color: var(--iron-light);
 }
+/* Inline glyph before a rune's name in the modal rune sections (#1372). */
+.item-rune-glyph {
+  vertical-align: -0.15em;
+  margin-right: 0.35em;
+}
 /* material tints (mirror IconTile) */
 .loot-art .tint-ember   { --tc: var(--ember-mid); }
 .loot-art .tint-iron    { --tc: var(--iron-light); }
