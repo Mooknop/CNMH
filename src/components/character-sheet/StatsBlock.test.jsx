@@ -306,8 +306,13 @@ describe('StatsBlock', () => {
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     // PenaltyDisplay renders the adjusted total (15), the delta (-10), and the
-    // source row in the tooltip.
-    expect(screen.getByText('15')).toBeInTheDocument();
+    // source row in the tooltip. Match inside the speed chip — Class DC in the
+    // default STR panel also reads 15.
+    expect(screen.getByText((_, el) =>
+      el?.className === 'tchip'
+        && (el?.textContent || '').startsWith('Speed')
+        && (el?.textContent || '').includes('15')
+    )).toBeInTheDocument();
     // '-10' appears twice: the inline delta and the tooltip source row.
     expect(screen.getAllByText('-10').length).toBeGreaterThan(0);
     expect(screen.getByText('Encumbered')).toBeInTheDocument();
@@ -350,90 +355,94 @@ describe('StatsBlock', () => {
     expect(screen.queryByText('Senses')).toBeNull();
   });
 
-  it('should switch to proficiencies tab', () => {
+  it('folds weapon proficiencies under STR and armor under DEX', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
-    expect(screen.getByText('Class DC')).toBeInTheDocument();
+    // STR is the default node → the Weapons cluster renders in its panel.
     expect(screen.getByText('Weapons')).toBeInTheDocument();
+    expect(screen.queryByText('Armor')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
     expect(screen.getByText('Armor')).toBeInTheDocument();
+    expect(screen.queryByText('Weapons')).toBeNull();
   });
 
-  it('should render classDC in proficiencies tab', () => {
+  it('renders Class DC under the key ability node', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    // No keyAbility on the mock → it resolves to STR, the default node.
+    expect(screen.getByText('Class DC')).toBeInTheDocument();
     expect(screen.getByText('15')).toBeInTheDocument();
+    // Off the key ability the ring is absent.
+    fireEvent.click(screen.getByLabelText('Charisma +2'));
+    expect(screen.queryByText('Class DC')).toBeNull();
   });
 
-  it('should render weapon proficiency labels in proficiencies tab', () => {
+  it('renders weapon proficiency rings in the STR panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Unarmed')).toBeInTheDocument();
     expect(screen.getByText('Simple')).toBeInTheDocument();
     expect(screen.getByText('Martial')).toBeInTheDocument();
     expect(screen.getByText('Advanced')).toBeInTheDocument();
   });
 
-  it('should render armor proficiency categories in proficiencies tab', () => {
+  it('renders armor proficiency rings in the DEX panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
     expect(screen.getByText('Unarmored')).toBeInTheDocument();
     expect(screen.getByText('Light')).toBeInTheDocument();
-    // 'Medium' also appears in the size section, use getAllByText
+    // 'Medium' also appears in the size chip, use getAllByText
     expect(screen.getAllByText('Medium').length).toBeGreaterThan(0);
     expect(screen.getByText('Heavy')).toBeInTheDocument();
   });
 
-  it('renders the Checks cluster: Perception ring with modifier + rank (S2)', () => {
-    const withPerception = {
+  it('adds no Perception ring under WIS (the skill cluster already shows it)', () => {
+    mockUseCharacter.mockReturnValue({
       ...defaultCharData,
       skillModifiers: { perception: 5 },
       skillProficiencies: { perception: 2 },
-    };
-    mockUseCharacter.mockReturnValueOnce(withPerception);
-    mockUseCharacter.mockReturnValueOnce(withPerception);
+    });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
-    expect(screen.getByLabelText('Perception, Expert')).toBeInTheDocument();
-    expect(screen.getByText('+5')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Wisdom +1'));
+    // Perception lives in EnhancedSkillsList (mocked here); StatsBlock adds
+    // no duplicate proficiency ring — and no Checks heading — under WIS.
+    expect(screen.queryByText('Perception')).toBeNull();
+    expect(screen.queryByText('Checks')).toBeNull();
   });
 
-  it('shows a Spell Attack ring for spellcasters only (S2)', () => {
-    const caster = {
+  it('shows the Spell Attack ring under the spellcasting ability node (S2)', () => {
+    mockUseCharacter.mockReturnValue({
       ...defaultCharData,
       flags: { hasSpellcasting: true },
       spellStats: { spellAttackMod: 7, spellDC: 17 },
-    };
-    mockUseCharacter.mockReturnValueOnce(caster);
-    mockUseCharacter.mockReturnValueOnce(caster);
+    });
     render(
       <StatsBlock
         character={{ ...mockCharacter, spellcasting: { proficiency: 2, ability: 'charisma' } }}
         characterColor="#7E8C9A"
       />
     );
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    fireEvent.click(screen.getByLabelText('Charisma +2'));
     expect(screen.getByLabelText('Spell Attack, Expert')).toBeInTheDocument();
     expect(screen.getByText('+7')).toBeInTheDocument();
+    // No Spell Attack under abilities other than the casting one.
+    fireEvent.click(screen.getByLabelText('Wisdom +1'));
+    expect(screen.queryByText('Spell Attack')).toBeNull();
   });
 
   it('omits the Spell Attack ring for non-casters (S2)', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    // The key-ability (STR) panel would host it; the flag is off.
     expect(screen.queryByText('Spell Attack')).toBeNull();
   });
 
   it('should use default proficiencies when rawProficiencies has no weapons key', () => {
-    const emptyProfData = { ...defaultCharData, proficiencies: {} };
-    mockUseCharacter.mockReturnValueOnce(emptyProfData);
-    mockUseCharacter.mockReturnValueOnce(emptyProfData); // for re-render after tab click
+    mockUseCharacter.mockReturnValue({ ...defaultCharData, proficiencies: {} });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
-    // Default proficiencies should render Untrained for all
+    // Armor rings caption their rank — all default to Untrained.
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
     expect(screen.getAllByText('Untrained').length).toBeGreaterThan(0);
   });
 
   it('should render class weapons section when proficiencies.weapons.class is present', () => {
-    const dataWithClass = {
+    mockUseCharacter.mockReturnValue({
       ...defaultCharData,
       proficiencies: {
         ...defaultCharData.proficiencies,
@@ -442,16 +451,13 @@ describe('StatsBlock', () => {
           class: { proficiency: 1 },
         }
       }
-    };
-    mockUseCharacter.mockReturnValueOnce(dataWithClass);
-    mockUseCharacter.mockReturnValueOnce(dataWithClass); // for re-render after tab click
+    });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Class Weapons')).toBeInTheDocument();
   });
 
   it('should render finesse weapons section when proficiencies.weapons.finesse is present', () => {
-    const dataWithFinesse = {
+    mockUseCharacter.mockReturnValue({
       ...defaultCharData,
       proficiencies: {
         ...defaultCharData.proficiencies,
@@ -460,23 +466,18 @@ describe('StatsBlock', () => {
           finesse: { proficiency: 2 },
         }
       }
-    };
-    mockUseCharacter.mockReturnValueOnce(dataWithFinesse);
-    mockUseCharacter.mockReturnValueOnce(dataWithFinesse); // for re-render after tab click
+    });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.getByText('Finesse')).toBeInTheDocument();
   });
 
   it('should not render class weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.queryByText('Class Weapons')).toBeNull();
   });
 
   it('should not render finesse weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
     expect(screen.queryByText('Finesse')).toBeNull();
   });
 
@@ -489,25 +490,25 @@ describe('StatsBlock', () => {
     expect(container.querySelectorAll('.node.dim')).toHaveLength(0);
 
     // Activating the core steps the ring back: core .sel, every node .dim.
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
     expect(container.querySelector('.dial-center')).toHaveClass('sel');
     expect(container.querySelector('.node--str')).not.toHaveClass('sel');
     expect(container.querySelectorAll('.node.dim')).toHaveLength(6);
   });
 
-  it('the core panel toggles between Proficiencies and Feats', () => {
+  it('the core panel toggles between Feats and Conditions', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
-    // Proficiencies is the default core view
-    expect(screen.getByText('Class DC')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Feats'));
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+    // Feats is the default core view
     expect(screen.getByText('No feats or abilities.')).toBeInTheDocument();
-    expect(screen.queryByText('Class DC')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+    expect(screen.getByText('No active conditions.')).toBeInTheDocument();
+    expect(screen.queryByText('No feats or abilities.')).toBeNull();
   });
 
   it('re-selecting a node from the core restores the ability panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Character proficiencies and feats'));
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
     fireEvent.click(screen.getByLabelText('Charisma +2'));
     expect(screen.getByText((_, el) =>
       el?.className === 'panel-title' && el?.textContent === 'CHA · +2'
@@ -515,9 +516,10 @@ describe('StatsBlock', () => {
     expect(screen.getByTestId('enhanced-skills')).toHaveTextContent('charisma');
   });
 
-  it('renders the Conditions chip in the status strip', () => {
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByRole('button', { name: /Conditions/ })).toBeInTheDocument();
+  it('renders no conditions chip in the status strip (tracker lives in the core)', () => {
+    const { container } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(container.querySelector('.status-strip button')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Conditions/ })).toBeNull();
   });
 
   it('surfaces Dying/Wounded as status chips when present, hides them otherwise', () => {
@@ -535,32 +537,47 @@ describe('StatsBlock', () => {
     expect(screen.getByText('Wounded 1')).toBeInTheDocument();
   });
 
-  it('shows em-dash when no conditions are active', () => {
+  it('opens ConditionModal from the Add Condition chip', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('—')).toBeInTheDocument();
-  });
-
-  it('opens ConditionModal when CONDITIONS button is clicked', () => {
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+    fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+    fireEvent.click(screen.getByText('+ Add Condition'));
     expect(screen.getByText('Condition Tracker')).toBeInTheDocument();
   });
 
-  it('shows condition count after adding a condition', () => {
+  it('shows the toggle count and inline row after adding a condition', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+    fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+    fireEvent.click(screen.getByText('+ Add Condition'));
     // Click Off-Guard (a toggle condition) in the browser
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
-    // Button should now show 1 (the count of active conditions)
-    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+    // The toggle badge counts the active condition…
+    expect(screen.getByRole('button', { name: /Conditions 1/ })).toBeInTheDocument();
+    // …and the inline tracker lists it (browser card + inline row).
+    expect(screen.getAllByText('Off-Guard').length).toBeGreaterThan(1);
+  });
+
+  it('removes a condition from the inline tracker', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+    fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+    fireEvent.click(screen.getByText('+ Add Condition'));
+    fireEvent.click(screen.getByText('Off-Guard').closest('button'));
+    fireEvent.click(screen.getByLabelText('Remove Off-Guard'));
+    // Both the inline tracker and the still-open modal show the empty state.
+    expect(screen.getAllByText('No active conditions.').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: /Conditions 1/ })).toBeNull();
   });
 
   it('applies condition penalty to AC when condition is active', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // Open condition modal and add Off-Guard (-2 circumstance to AC)
-    fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+    // Add Off-Guard (-2 circumstance to AC) via the core Conditions view
+    fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+    fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+    fireEvent.click(screen.getByText('+ Add Condition'));
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
-    // AC was 16, Off-Guard applies -2 → AC should show 14 (ac-box + core)
+    // AC was 16, Off-Guard applies -2 → the dial core shows 14
     expect(screen.getByText('14')).toBeInTheDocument();
   });
 
@@ -650,29 +667,32 @@ describe('StatsBlock', () => {
       },
     };
 
-    it('derived Encumbered + Clumsy raise the badge and render as auto rows', () => {
+    it('derived Encumbered + Clumsy raise the toggle count and render as auto rows', () => {
       mockUseCharacter.mockReturnValue(encumberedData);
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      // Badge counts the two derived conditions.
-      expect(screen.getByText('2')).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+      fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+      // The toggle badge counts the two derived conditions.
+      fireEvent.click(screen.getByRole('button', { name: /Conditions 2/ }));
       // Both derived rows carry the auto tag and no remove control.
       expect(screen.getAllByText('auto')).toHaveLength(2);
-      expect(screen.queryByTitle('Remove condition')).toBeNull();
+      expect(screen.queryByLabelText(/^Remove /)).toBeNull();
     });
 
     it('the modal exposes the auto-derive toggle wired to setAuto', () => {
       mockUseCharacter.mockReturnValue(encumberedData);
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+      fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+      fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+      fireEvent.click(screen.getByText('+ Add Condition'));
       fireEvent.click(screen.getByLabelText('Derive Encumbered from carried Bulk'));
       expect(encumberedData.encumbrance.setAuto).toHaveBeenCalledWith(false);
     });
 
     it('no derived rows when under the threshold', () => {
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      expect(screen.getByText('—')).toBeInTheDocument(); // badge em-dash
-      fireEvent.click(screen.getByRole('button', { name: /Conditions/ }));
+      fireEvent.click(screen.getByLabelText('Character feats and conditions'));
+      fireEvent.click(screen.getByRole('button', { name: /^Conditions/ }));
+      expect(screen.getByText('No active conditions.')).toBeInTheDocument();
       expect(screen.queryByText('auto')).toBeNull();
     });
   });

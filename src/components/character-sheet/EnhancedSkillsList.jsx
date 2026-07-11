@@ -98,14 +98,21 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
   return (
     <div className="enhanced-skills-list" style={{ '--color-theme': themeColor }}>
 
-      {/* Display Untrained Improvisation notice if character has it */}
+      {/* Untrained Improvisation — a dashed chip in the dial idiom, echoing
+          the dashed untrained rings it explains. The modifiers below already
+          include the feat's level-based bonus; the full rule rides the
+          tooltip. */}
       {hasUntrainedImprovisation && (
-        <div className="feat-notice">
-          <strong>Untrained Improvisation:</strong> Your proficiency bonus to untrained skill checks is equal to
-          {level >= 7
-            ? ` your full level (${level})`
-            : ` half your level (${Math.floor(level / 2)})`
-          } instead of +0.
+        <div
+          className="improv-chip"
+          title={`Untrained Improvisation: your proficiency bonus to untrained skill checks is ${
+            level >= 7 ? 'your full level' : 'half your level'
+          } (+${level >= 7 ? level : Math.floor(level / 2)}) instead of +0.`}
+        >
+          <span className="improv-chip-label">Untrained Improvisation</span>
+          <span className="improv-chip-value">
+            +{level >= 7 ? level : Math.floor(level / 2)} untrained
+          </span>
         </div>
       )}
 

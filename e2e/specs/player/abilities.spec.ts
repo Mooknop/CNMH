@@ -116,7 +116,11 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     await page.goto(`/character/${CHAR_ID}`);
     await expectSheet(page);
 
-    await page.getByRole('button', { name: /Conditions/ }).click();
+    // The tracker lives in the dial core's Conditions view; the browser
+    // opens from its Add Condition chip.
+    await page.getByRole('button', { name: 'Character feats and conditions' }).click();
+    await page.getByRole('button', { name: /^Conditions/ }).click();
+    await page.getByRole('button', { name: '+ Add Condition' }).click();
     // The shared Modal isn't role=dialog; the condition browser button is unique.
     await page.getByRole('button', { name: /Frightened/ }).click();
 
@@ -124,6 +128,7 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     await expect(active).toContainText('Frightened');
 
     await active.getByTitle('Remove condition').click();
-    await expect(page.getByText('No active conditions.')).toBeVisible();
+    // Both the inline tracker and the still-open modal show the empty state.
+    await expect(page.getByText('No active conditions.').first()).toBeVisible();
   });
 });

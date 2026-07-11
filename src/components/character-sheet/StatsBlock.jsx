@@ -21,16 +21,15 @@ import { RELAY, syncKey } from '../../sync/keys';
 import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills';
 
 const ABILITY_KEYS = ABILITIES.map((a) => a.key);
-const EMPTY_MOD = { total: 0, sources: [] };
 
 const StatsBlock = ({ character, characterColor }) => {
   // Ability Dial: the active node — an ability key ('strength'…'charisma')
-  // or 'core' (character-wide proficiencies/feats). Defaults to the
+  // or 'core' (character-wide feats/conditions). Defaults to the
   // character's key ability so the panel opens populated.
   const [selected, setSelected] = useState(
     ABILITY_KEYS.includes(character?.keyAbility) ? character.keyAbility : 'strength'
   );
-  const [coreView, setCoreView] = useState('profs');
+  const [coreView, setCoreView] = useState('feats');
   const characterKey = character?.id || 'unknown';
   const [activeConditions, setActiveConditions] = useLocalStorage(syncKey(RELAY.CONDITIONS, characterKey), []);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
@@ -115,8 +114,6 @@ const StatsBlock = ({ character, characterColor }) => {
     speed,
     senses,
     hp,
-    skillModifiers,
-    skillProficiencies,
     flags,
     spellStats,
   } = charData;
@@ -193,100 +190,191 @@ const StatsBlock = ({ character, characterColor }) => {
     />
   );
 
-  // Core panel proficiencies (Ability Dial S2) — the old attack table
-  // rendered as mini rank-ring clusters: perception / class DC / spell
-  // attack, then weapon and armor category ranks. Ring value is the roll
-  // modifier (weapons: melee, with ranged as the caption; armor: the
-  // proficiency bonus contributed to AC).
-  const renderProficiencies = () => {
+  // Proficiency rings folded under their governing ability (was the core
+  // panel's 'Proficiencies' view): Class DC→key ability, Spell Attack→
+  // spellcasting ability, weapon categories→STR (ranged caption stays
+  // DEX), armor categories→DEX (their AC contribution). Perception needs
+  // no ring here — it's a WIS skill snode in the catalog already. Ring
+  // value is the roll modifier (weapons: melee, with ranged as the
+  // caption; armor: the proficiency bonus contributed to AC).
+  const keyAbilityKey = ABILITY_KEYS.includes(character?.keyAbility)
+    ? character.keyAbility
+    : 'strength';
+  const spellAbilityKey = ABILITY_KEYS.includes(character?.spellcasting?.ability)
+    ? character.spellcasting.ability
+    : keyAbilityKey;
+
+  const renderAbilityProficiencies = (abilityKey) => {
     const rankOf = (group, key) => group?.[key]?.proficiency || 0;
-    // Class DC's rank ships at character.proficiencies.class; default Trained,
-    // matching calculateClassDC's derivation.
-    const classRank = rawProficiencies?.class ?? 1;
-    const spellRank = character?.spellcasting?.proficiency || 0;
-    const perceptionMods = combineModifiers(
-      effects.skillPenalty('wisdom'),
-      bonuses.perception ?? EMPTY_MOD
-    );
+    const groups = [];
 
-    const weaponCats = [
-      { key: 'unarmed', name: 'Unarmed' },
-      { key: 'simple', name: 'Simple' },
-      { key: 'martial', name: 'Martial' },
-      { key: 'advanced', name: 'Advanced' },
-      ...(proficiencies.weapons.class ? [{ key: 'class', name: 'Class Weapons' }] : []),
-      ...(proficiencies.weapons.finesse ? [{ key: 'finesse', name: 'Finesse', finesse: true }] : []),
-    ];
-    const armorCats = [
-      { key: 'unarmored', name: 'Unarmored' },
-      { key: 'light', name: 'Light' },
-      { key: 'medium', name: 'Medium' },
-      { key: 'heavy', name: 'Heavy' },
-    ];
+    const checks = [];
+    if (abilityKey === keyAbilityKey) {
+      // Class DC's rank ships at character.proficiencies.class; default Trained,
+      // matching calculateClassDC's derivation.
+      const classRank = rawProficiencies?.class ?? 1;
+      checks.push(
+        <RankRing
+          key="class-dc"
+          rank={classRank}
+          name="Class DC"
+          caption={getProficiencyLabel(classRank)}
+          value={<PenaltyDisplay base={classDC} penalty={mod('classDC')} />}
+        />
+      );
+    }
+    if (flags?.hasSpellcasting && abilityKey === spellAbilityKey) {
+      const spellRank = character?.spellcasting?.proficiency || 0;
+      checks.push(
+        <RankRing
+          key="spell-attack"
+          rank={spellRank}
+          name="Spell Attack"
+          caption={getProficiencyLabel(spellRank)}
+          value={<PenaltyDisplay base={spellStats?.spellAttackMod ?? 0} penalty={mod('spellAttack')} format="modifier" />}
+        />
+      );
+    }
+    if (checks.length) groups.push({ label: 'Checks', rings: checks });
 
+    if (abilityKey === 'strength') {
+      const weaponCats = [
+        { key: 'unarmed', name: 'Unarmed' },
+        { key: 'simple', name: 'Simple' },
+        { key: 'martial', name: 'Martial' },
+        { key: 'advanced', name: 'Advanced' },
+        ...(proficiencies.weapons.class ? [{ key: 'class', name: 'Class Weapons' }] : []),
+        ...(proficiencies.weapons.finesse ? [{ key: 'finesse', name: 'Finesse', finesse: true }] : []),
+      ];
+      groups.push({
+        label: 'Weapons',
+        rings: weaponCats.map((w) => {
+          const rank = rankOf(proficiencies.weapons, w.key);
+          const meleeMod = w.finesse ? Math.max(strMod, dexMod) : strMod;
+          return (
+            <RankRing
+              key={w.key}
+              rank={rank}
+              name={w.name}
+              value={renderAttackBonus(meleeMod, rank, mod('meleeAttack'))}
+              caption={w.finesse
+                ? 'Melee (STR/DEX)'
+                : `Ranged ${formatModifier(attackNum(dexMod, rank))}`}
+            />
+          );
+        }),
+      });
+    }
+
+    if (abilityKey === 'dexterity') {
+      const armorCats = [
+        { key: 'unarmored', name: 'Unarmored' },
+        { key: 'light', name: 'Light' },
+        { key: 'medium', name: 'Medium' },
+        { key: 'heavy', name: 'Heavy' },
+      ];
+      groups.push({
+        label: 'Armor',
+        rings: armorCats.map((a) => {
+          const rank = rankOf(proficiencies.armor, a.key);
+          return (
+            <RankRing
+              key={a.key}
+              rank={rank}
+              name={a.name}
+              caption={getProficiencyLabel(rank)}
+              value={formatModifier(getProficiencyBonus(rank, level))}
+            />
+          );
+        }),
+      });
+    }
+
+    if (!groups.length) return null;
     return (
       <div className="proficiencies-section">
-        <h4 className="proficiency-category">Checks</h4>
-        <div className="snode-wrap">
-          <RankRing
-            rank={skillProficiencies?.perception || 0}
-            name="Perception"
-            caption={getProficiencyLabel(skillProficiencies?.perception || 0)}
-            value={<PenaltyDisplay base={skillModifiers?.perception || 0} penalty={perceptionMods} format="modifier" />}
-          />
-          <RankRing
-            rank={classRank}
-            name="Class DC"
-            caption={getProficiencyLabel(classRank)}
-            value={<PenaltyDisplay base={classDC} penalty={mod('classDC')} />}
-          />
-          {flags?.hasSpellcasting && (
-            <RankRing
-              rank={spellRank}
-              name="Spell Attack"
-              caption={getProficiencyLabel(spellRank)}
-              value={<PenaltyDisplay base={spellStats?.spellAttackMod ?? 0} penalty={mod('spellAttack')} format="modifier" />}
-            />
-          )}
-        </div>
-
-        <h4 className="proficiency-category">Weapons</h4>
-        <div className="snode-wrap">
-          {weaponCats.map((w) => {
-            const rank = rankOf(proficiencies.weapons, w.key);
-            const meleeMod = w.finesse ? Math.max(strMod, dexMod) : strMod;
-            return (
-              <RankRing
-                key={w.key}
-                rank={rank}
-                name={w.name}
-                value={renderAttackBonus(meleeMod, rank, mod('meleeAttack'))}
-                caption={w.finesse
-                  ? 'Melee (STR/DEX)'
-                  : `Ranged ${formatModifier(attackNum(dexMod, rank))}`}
-              />
-            );
-          })}
-        </div>
-
-        <h4 className="proficiency-category">Armor</h4>
-        <div className="snode-wrap">
-          {armorCats.map((a) => {
-            const rank = rankOf(proficiencies.armor, a.key);
-            return (
-              <RankRing
-                key={a.key}
-                rank={rank}
-                name={a.name}
-                caption={getProficiencyLabel(rank)}
-                value={formatModifier(getProficiencyBonus(rank, level))}
-              />
-            );
-          })}
-        </div>
+        {groups.map((g) => (
+          <React.Fragment key={g.label}>
+            <h4 className="proficiency-category">{g.label}</h4>
+            <div className="snode-wrap">{g.rings}</div>
+          </React.Fragment>
+        ))}
       </div>
     );
   };
+
+  // Core panel conditions view — the condition tracker folded into the
+  // dial (the status-strip chip is gone). Active conditions render inline
+  // with their controls; the browse/add surface stays in ConditionModal.
+  const renderConditions = () => (
+    <div className="cond-panel">
+      {hydratedConditions.length === 0 ? (
+        <p className="cond-empty">No active conditions.</p>
+      ) : (
+        <ul className="cond-list">
+          {hydratedConditions.map((cond) => (
+            <li key={cond.id} className="cond-row">
+              <div className="cond-row-head">
+                <span className="cond-name">
+                  {cond.name}
+                  {cond.valued && <span className="cond-value-badge">{cond.value}</span>}
+                </span>
+                {/* Bulk-derived rows (SP3, #1222) are auto-managed — no
+                    adjust/remove controls; suppress them via the modal's
+                    footer toggle instead. */}
+                {cond.derived ? (
+                  <span className="cond-auto" title="Derived from carried Bulk">auto</span>
+                ) : (
+                  <span className="cond-controls">
+                    {cond.valued && (
+                      <>
+                        <button
+                          type="button"
+                          className="cond-ctrl"
+                          onClick={() => handleChangeValue(cond.id, -1)}
+                          aria-label={`Decrease ${cond.name}`}
+                        >
+                          −
+                        </button>
+                        <button
+                          type="button"
+                          className="cond-ctrl"
+                          onClick={() => handleChangeValue(cond.id, 1)}
+                          disabled={cond.value >= cond.maxValue}
+                          aria-label={`Increase ${cond.name}`}
+                        >
+                          +
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="cond-ctrl cond-ctrl--remove"
+                      onClick={() => handleRemoveCondition(cond.id)}
+                      aria-label={`Remove ${cond.name}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+              <p className="cond-effect">{cond.effect(cond.value)}</p>
+              {cond.decrements && (
+                <span className="cond-decrement">Decrements each round</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        type="button"
+        className="cond-add-btn"
+        onClick={() => setIsConditionModalOpen(true)}
+      >
+        + Add Condition
+      </button>
+    </div>
+  );
 
   // Ability Dial panel context — the selected node's identity, its governed
   // save (CON→Fort, DEX→Ref, WIS→Will; the rest have none), and how many
@@ -297,21 +385,10 @@ const StatsBlock = ({ character, characterColor }) => {
 
   return (
     <div className="stats-block" style={{ '--color-theme': themeColor }}>
-      {/* Status strip — conditions + passive traits in the dial's chip
-          idiom. The conditions chip is dashed while dormant (no active
-          conditions) and goes solid gold when any are; HP/AC/hero points
-          live in the pinned masthead. */}
+      {/* Status strip — passive traits in the dial's chip idiom. The
+          condition tracker lives in the dial core's Conditions view;
+          HP/AC/hero points live in the pinned masthead. */}
       <div className="status-strip">
-        <button
-          type="button"
-          className={`cond-chip${hydratedConditions.length > 0 ? ' cond-chip--active' : ''}`}
-          onClick={() => setIsConditionModalOpen(true)}
-        >
-          Conditions
-          <span className="cond-count">
-            {hydratedConditions.length > 0 ? hydratedConditions.length : '—'}
-          </span>
-        </button>
         {/* Dying / Wounded — surfaced here as the player's visible HP-status
             signal (they were previously only in a display:none slab). The
             GM/bridge drives the values via cnmh_hp_<id>; HP itself lives in
@@ -399,10 +476,11 @@ const StatsBlock = ({ character, characterColor }) => {
       )}
 
       {/* Ability Dial — six ability nodes ringing the AC core. Tapping a
-          node loads that ability's save + skills into the panel below;
-          tapping the core steps out of the ring (nodes dim) and opens the
-          character-wide Proficiencies / Feats panel. Replaces the old
-          Abilities / Proficiencies / Feats / Skills segmented control. */}
+          node loads that ability's save + skills + proficiencies into the
+          panel below; tapping the core steps out of the ring (nodes dim)
+          and opens the character-wide Feats / Conditions panel. Replaces
+          the old Abilities / Proficiencies / Feats / Skills segmented
+          control. */}
       <div className="dialwrap">
         <div className="dial">
           <div className="dial-ring" aria-hidden="true" />
@@ -423,7 +501,7 @@ const StatsBlock = ({ character, characterColor }) => {
             type="button"
             className={`dial-center${selected === 'core' ? ' sel' : ''}`}
             aria-pressed={selected === 'core'}
-            aria-label="Character proficiencies and feats"
+            aria-label="Character feats and conditions"
             title={acSourceLabel}
             onClick={() => setSelected('core')}
           >
@@ -436,8 +514,9 @@ const StatsBlock = ({ character, characterColor }) => {
       </div>
 
       {/* Dial panel — swaps with the selection. Skill rows reuse
-          EnhancedSkillsList narrowed to the node's ability; the core hosts
-          the Proficiencies / Feats toggle. */}
+          EnhancedSkillsList narrowed to the node's ability, with the
+          ability's proficiency rings folded in beneath; the core hosts
+          the Feats / Conditions toggle. */}
       <div className="dial-panel">
         {selected === 'core' ? (
           <>
@@ -445,23 +524,26 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="ptoggle" role="group" aria-label="Core view">
                 <button
                   type="button"
-                  className={`ptoggle-btn${coreView === 'profs' ? ' active' : ''}`}
-                  onClick={() => setCoreView('profs')}
-                >
-                  Proficiencies
-                </button>
-                <button
-                  type="button"
                   className={`ptoggle-btn${coreView === 'feats' ? ' active' : ''}`}
                   onClick={() => setCoreView('feats')}
                 >
                   Feats
                 </button>
+                <button
+                  type="button"
+                  className={`ptoggle-btn${coreView === 'conditions' ? ' active' : ''}`}
+                  onClick={() => setCoreView('conditions')}
+                >
+                  Conditions
+                  {hydratedConditions.length > 0 && (
+                    <span className="ptoggle-count">{hydratedConditions.length}</span>
+                  )}
+                </button>
               </div>
             </div>
-            {coreView === 'profs'
-              ? renderProficiencies()
-              : <FeatsList character={character} characterColor={themeColor} />}
+            {coreView === 'feats'
+              ? <FeatsList character={character} characterColor={themeColor} />
+              : renderConditions()}
           </>
         ) : (
           <>
@@ -492,6 +574,7 @@ const StatsBlock = ({ character, characterColor }) => {
               effectBonuses={bonuses}
               filterAbility={selected}
             />
+            {renderAbilityProficiencies(selected)}
           </>
         )}
       </div>

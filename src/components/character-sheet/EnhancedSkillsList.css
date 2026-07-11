@@ -16,19 +16,33 @@
   font-size: var(--text-md);
 }
 
-.feat-notice {
+/* Untrained Improvisation chip — dashed like the untrained rings it
+   annotates (the dial's chip idiom); replaces the old prose notice. */
+.improv-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 12px;
+  margin-bottom: var(--space-3);
+  border-radius: 999px;
+  border: 1px dashed var(--shell-border-strong);
+  background: var(--surface-inset);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
-  line-height: 1.4;
-  color: var(--shell-text-secondary);
-  background-color: #f8f9fa;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border-left: 4px solid var(--color-theme, var(--color-primary));
-  border-radius: 4px;
+  color: var(--shell-text-primary);
 }
 
-.feat-notice strong {
-  color: var(--color-theme, var(--color-primary));
+.improv-chip-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-theme, var(--ember-base));
+}
+
+.improv-chip-value {
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 /* Shared beyond this component — PartySummary renders .skill-modifier

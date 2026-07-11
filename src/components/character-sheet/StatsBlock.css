@@ -5,57 +5,15 @@
   margin-bottom: var(--space-4);
 }
 
-/* ── Status strip — conditions + passive traits ──────────
-   The dial's chip idiom: the conditions chip is a dashed dormant
-   socket while empty, solid gold (the condition-highlight signal)
-   when any are active. Trait chips are display-only. */
+/* ── Status strip — passive traits ───────────────────────
+   The dial's chip idiom; display-only. The condition tracker lives
+   in the dial core's Conditions view. */
 .status-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
-}
-
-.cond-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-target-min);
-  padding: 2px var(--space-3);
-  border-radius: 999px;
-  border: 1px dashed var(--shell-border-strong);
-  background: var(--surface-inset);
-  color: var(--shell-text-secondary);
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.cond-chip:hover {
-  background: var(--surface-inset-hover);
-  border-color: var(--accent-outline);
-}
-
-.cond-chip--active {
-  border-style: solid;
-  border-color: var(--color-condition-highlight);
-  color: var(--shell-text-primary);
-}
-
-.cond-count {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--shell-text-primary);
-}
-
-.cond-chip--active .cond-count {
-  color: var(--color-condition-highlight);
 }
 
 .tchip {
@@ -108,7 +66,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cond-chip {
+  .cond-add-btn {
     transition: none;
   }
 }
@@ -344,7 +302,7 @@
   color: var(--shell-text-tertiary);
 }
 
-/* Proficiencies / Feats toggle inside the core panel */
+/* Feats / Conditions toggle inside the core panel */
 .ptoggle {
   display: flex;
   flex: 1;
@@ -379,6 +337,162 @@
   background: var(--tab-active-bg);
   color: var(--tab-active-text);
   box-shadow: inset 0 -2px 0 var(--tab-active-border);
+}
+
+/* Active-condition count on the Conditions toggle — gold, the same
+   condition-highlight signal the old strip chip carried. */
+.ptoggle-count {
+  margin-left: 6px;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-condition-highlight);
+}
+
+/* ── Core conditions panel — the tracker folded into the dial ── */
+.cond-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.cond-empty {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
+.cond-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cond-row {
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.cond-row-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cond-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--shell-text-primary);
+}
+
+.cond-value-badge {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-condition-highlight);
+}
+
+.cond-controls {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.cond-ctrl {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cond-ctrl:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.cond-ctrl:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cond-ctrl--remove:hover {
+  border-color: rgba(192, 57, 43, 0.55);
+  color: var(--color-danger, #e06055);
+}
+
+.cond-auto {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.cond-effect {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
+.cond-decrement {
+  display: inline-block;
+  margin-top: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--gold-light);
+}
+
+/* Add Condition — a dashed dormant socket (the strip chip's old idiom),
+   launching the ConditionModal browser. */
+.cond-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target-min);
+  padding: 2px var(--space-3);
+  border-radius: 999px;
+  border: 1px dashed var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cond-add-btn:hover {
+  background: var(--surface-inset-hover);
+  border-color: var(--accent-outline);
 }
 
 @media (prefers-reduced-motion: reduce) {
