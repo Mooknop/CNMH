@@ -282,3 +282,40 @@
 .skill-conditional-src {
   opacity: 0.7;
 }
+
+/* ── Snode detail strip (Ability Dial S2) ─────────────────
+   Opens under the rank-ring cluster when a skill snode is pressed —
+   interim surface for the old collapsed-card body; the S3 pull-up
+   sheet replaces it as the single skill-detail surface. */
+.snode-detail {
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.snode-detail-h {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.snode-detail-h h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--shell-text-primary);
+}
+
+.snode-detail-meta {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--shell-text-tertiary);
+}
+
+.snode-detail .actions-list {
+  margin: 0;
+}

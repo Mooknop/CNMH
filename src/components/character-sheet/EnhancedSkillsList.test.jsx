@@ -1,16 +1,9 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import EnhancedSkillsList from './EnhancedSkillsList';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
-
-vi.mock('../shared/CollapsibleCard', () => ({ default: ({ header, children, className }) => (
-  <div data-testid="skill-card" className={className}>
-    <div data-testid="skill-header">{header}</div>
-    <div data-testid="skill-content">{children}</div>
-  </div>
-) }));
 
 vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
 vi.mock('../../hooks/useEffects', () => ({ useEffects: vi.fn(() => ({ effects: [] })) }));
@@ -61,11 +54,19 @@ describe('EnhancedSkillsList', () => {
     expect(() => render(<EnhancedSkillsList character={{ id: '1' }} />)).not.toThrow();
   });
 
-  it('renders skill cards for each skill', () => {
-    render(<EnhancedSkillsList character={{ id: '1' }} />);
-    // Should render 17 standard skills + 1 lore skill
-    const cards = screen.getAllByTestId('skill-card');
-    expect(cards.length).toBeGreaterThan(0);
+  it('renders a rank-ring snode for every skill + lore (17 + 1)', () => {
+    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+    expect(container.querySelectorAll('.snode')).toHaveLength(18);
+  });
+
+  it('narrows to one ability with filterAbility', () => {
+    const { container } = render(
+      <EnhancedSkillsList character={{ id: '1' }} filterAbility="dexterity" />
+    );
+    // DEX governs Acrobatics, Stealth, Thievery — and no lore rides along.
+    expect(container.querySelectorAll('.snode')).toHaveLength(3);
+    expect(screen.getByText('Acrobatics')).toBeInTheDocument();
+    expect(screen.queryByText(/Absalom Lore/)).toBeNull();
   });
 
   it('renders Acrobatics skill', () => {
@@ -94,10 +95,37 @@ describe('EnhancedSkillsList', () => {
     expect(screen.getByText('+5')).toBeInTheDocument();
   });
 
-  it('renders proficiency pips', () => {
+  it('routes proficiency rank into the ring class (rank → ring color)', () => {
     const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
-    // Proficiency is now shown as pip dots; verify the pip structure is present
-    expect(container.querySelectorAll('.prof-pips').length).toBeGreaterThan(0);
+    // Athletics is Expert (rank 2); its snode carries rank-2.
+    const athletics = [...container.querySelectorAll('.snode')]
+      .find((n) => n.textContent.includes('Athletics'));
+    expect(athletics).toHaveClass('rank-2');
+    // Arcana is Untrained (rank 0).
+    const arcana = [...container.querySelectorAll('.snode')]
+      .find((n) => n.textContent.includes('Arcana'));
+    expect(arcana).toHaveClass('rank-0');
+  });
+
+  it('pressing a snode opens the detail strip with the skill actions', () => {
+    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+    expect(container.querySelector('.snode-detail')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('Stealth, Trained'));
+    expect(container.querySelector('.snode-detail')).toBeInTheDocument();
+    expect(screen.getByText('Hide')).toBeInTheDocument();
+    expect(screen.getByText('Sneak')).toBeInTheDocument();
+
+    // Pressing again closes it.
+    fireEvent.click(screen.getByLabelText('Stealth, Trained'));
+    expect(container.querySelector('.snode-detail')).toBeNull();
+  });
+
+  it('a lore snode opens a meta-only detail strip', () => {
+    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+    fireEvent.click(screen.getByLabelText('Absalom Lore, Trained'));
+    expect(container.querySelector('.snode-detail')).toBeInTheDocument();
+    expect(screen.getByText(/Intelligence · Trained/)).toBeInTheDocument();
   });
 
   it('accepts activeConditions prop without crashing', () => {
@@ -184,7 +212,8 @@ describe('EnhancedSkillsList with Untrained Improvisation', () => {
   });
 
   it('renders without crashing with untrained improvisation character', () => {
-    render(<EnhancedSkillsList character={{ id: '2' }} />);
-    expect(screen.getAllByTestId('skill-card').length).toBeGreaterThan(0);
+    const { container } = render(<EnhancedSkillsList character={{ id: '2' }} />);
+    expect(container.querySelectorAll('.snode').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Untrained Improvisation/)).toBeInTheDocument();
   });
 });

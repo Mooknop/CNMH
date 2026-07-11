@@ -1,0 +1,92 @@
+/* Mini rank-ring cluster (Ability Dial S2).
+   Ring border color = proficiency rank — routed through the load-bearing
+   --color-rank-* ramp, never renamed or revalued. Selection routes through
+   the per-character accent (glow, not a solid fill). */
+
+.snode-wrap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: var(--space-2) var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.snode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+}
+
+button.snode {
+  cursor: pointer;
+}
+
+.snode .ring {
+  width: var(--snode-ring, 52px);
+  height: var(--snode-ring, 52px);
+  border-radius: 50%;
+  border: 3px solid var(--rank-color, var(--color-rank-untrained));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-slab);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--shell-text-primary);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+/* Rank → ring color — load-bearing game signal, do not change */
+.snode.rank-0 { --rank-color: var(--color-rank-untrained); }
+.snode.rank-1 { --rank-color: var(--color-rank-trained); }
+.snode.rank-2 { --rank-color: var(--color-rank-expert); }
+.snode.rank-3 { --rank-color: var(--color-rank-master); }
+.snode.rank-4 { --rank-color: var(--color-rank-legendary); }
+
+/* Untrained reads as a dormant socket, not a signal */
+.snode.rank-0 .ring {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+button.snode:hover .ring {
+  box-shadow: 0 0 0 2px var(--accent-tint);
+}
+
+.snode.sel .ring {
+  box-shadow: var(--accent-glow);
+}
+
+.snode-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--shell-text-secondary);
+}
+
+.snode-caption {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--shell-text-tertiary);
+}
+
+/* PenaltyDisplay inside a 52px ring — keep the delta from overflowing */
+.snode .ring .pd-delta {
+  font-size: 0.6em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snode .ring {
+    transition: none;
+  }
+}
