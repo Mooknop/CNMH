@@ -11,14 +11,9 @@
   font-size: 1.2rem;
 }
 
-/* Feats Grid Layout */
-.feats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-/* Adjustments for CollapsibleCard integration */
+/* Shared beyond this component — Harrowing.jsx renders .feat-card /
+   .feat-meta / .feat-level / .feat-description; keep these rules even
+   though the Feats view itself moved to the ladder below. */
 .feat-card .collapsible-header {
   flex-direction: column;
   align-items: flex-start;
@@ -45,10 +40,6 @@
 
 .feat-level {
   color: var(--shell-text-secondary);
-}
-
-.feat-source {
-  color: var(--shell-text-tertiary);
 }
 
 .feat-description {
@@ -81,7 +72,8 @@
 }
 
 .sortchip {
-  min-height: 32px;
+  /* ≥44px touch target (guardrail) — the pill look comes from the radius */
+  min-height: var(--tap-target-min);
   padding: 2px var(--space-3);
   border-radius: 999px;
   border: 1px solid var(--shell-border-strong);

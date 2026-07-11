@@ -11,6 +11,7 @@
   background-color: rgba(6, 4, 2, 0.62);
   display: flex;
   align-items: flex-end;
+  justify-content: center;
 }
 
 .sksheet {
@@ -34,6 +35,15 @@
 @media (prefers-reduced-motion: reduce) {
   .sksheet {
     animation: none;
+  }
+}
+
+/* Wider breakpoints: still a bottom sheet (the handoff's locked decision),
+   just capped and centered so it doesn't span the whole desktop. */
+@media (min-width: 768px) {
+  .sksheet {
+    max-width: 560px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
 }
 
