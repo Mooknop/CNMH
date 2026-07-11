@@ -170,18 +170,35 @@ export const resolveRuneIcon = (runeId) => {
   };
 };
 
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 /**
  * The resolved catalog-rune docs an item visibly carries, for glyph display
- * (R1: weapon property runes + a runestone's held rune; more hosts in R3).
- * Docs only — a still-string ref has nothing renderable. Returns [{id,name}].
- * The property filter mirrors weaponRunes.weaponPropertyRunes; it's inlined
- * so this module stays import-free (the fx layer resolves glyphs through it
- * with no app-graph baggage, and the preview rig loads it as bare ESM).
+ * (#1372 — every rune host): a shield's reinforcing tier (synthesized to its
+ * catalog id, `<tier>-reinforcing`), property runes on any target (weapon /
+ * armor / shield / ring all store docs at `runes.property`), the accessory
+ * rune, and a runestone's held rune. Docs only — a still-string ref has
+ * nothing renderable. Returns [{id,name}]. The property filter mirrors
+ * weaponRunes.weaponPropertyRunes; it's inlined so this module stays
+ * import-free (the fx layer resolves glyphs through it with no app-graph
+ * baggage, and the preview rig loads it as bare ESM).
  */
 export const runeIconsOf = (item) => {
-  const docs = Array.isArray(item?.runes?.property)
-    ? item.runes.property.filter((p) => p && typeof p === 'object')
-    : [];
+  const runes =
+    item?.runes && typeof item.runes === 'object' && !Array.isArray(item.runes) ? item.runes : {};
+  const docs = [];
+  // Reinforcing leads — it is the shield's defining rune. Other fundamentals
+  // (potency / striking / resilient) stay numbers-and-tiers, not marks.
+  if (typeof runes.reinforcing === 'string' && runes.reinforcing) {
+    docs.push({
+      id: `${runes.reinforcing}-reinforcing`,
+      name: `${capitalize(runes.reinforcing)} Reinforcing`,
+    });
+  }
+  if (Array.isArray(runes.property)) {
+    docs.push(...runes.property.filter((p) => p && typeof p === 'object'));
+  }
+  if (runes.accessory && typeof runes.accessory === 'object') docs.push(runes.accessory);
   const held = item?.runestone?.rune;
   if (held && typeof held === 'object' && held.id != null) docs.push(held);
   return docs.filter((d) => d.id != null);

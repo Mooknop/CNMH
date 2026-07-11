@@ -240,12 +240,14 @@
 /* Rune crest (#1361): a rune-marked, imageless ware shows its tinted
    Thassilonian rune in the crest slot — same case/crest container, rune
    instead of the first letter. Sized per context below. */
-.ps-crest-rune .thassilonian-rune {
+.ps-crest-rune .thassilonian-rune,
+.ps-crest-rune .rune-icon {
   width: 42px;
   height: 42px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
-.ps-preview-crest.ps-crest-rune .thassilonian-rune {
+.ps-preview-crest.ps-crest-rune .thassilonian-rune,
+.ps-preview-crest.ps-crest-rune .rune-icon {
   width: 46px;
   height: 46px;
 }
@@ -559,6 +561,8 @@
   padding: var(--space-2); border-radius: var(--radius-lg); text-align: center; font: inherit; color: inherit;
 }
 .ps-socket-glyph { font-family: var(--font-rune, var(--font-display)); font-size: 1.1rem; }
+/* A socket holding a catalog rune shows the rune's own glyph (#1372). */
+.ps-socket-glyph .rune-icon { vertical-align: -0.12em; }
 .ps-socket-name { font-size: 10px; }
 .ps-socket-x { font-size: 9px; color: var(--ps-ink3); }
 .ps-socket.is-filled {

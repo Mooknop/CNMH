@@ -890,6 +890,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           <h3>Shield Properties</h3>
           {hasReinforcing(item) && (
             <p className="shield-rune-tier" data-testid="shield-rune-tier">
+              <RuneIcon runeId={`${item.runes.reinforcing}-reinforcing`} tint className="item-rune-glyph" />
               {shieldRuneTierSummary(item.runes)} rune — Hardness/HP/BT reinforced
             </p>
           )}
@@ -902,6 +903,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               {shieldPropertyRunes(item).map((rune, i) => (
                 <div key={`${rune.id}-${rune.choice ?? i}`} className="item-rune">
                   <span className="item-rune-name">
+                    <RuneIcon runeId={rune.id} tint className="item-rune-glyph" />
                     {rune.name}{rune.choice ? ` (${rune.choice})` : ''}
                   </span>
                   {rune.description && <p className="item-rune-desc">{rune.description}</p>}
@@ -1327,7 +1329,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           )}
           {weaponPropertyRunes(item).map((rune) => (
             <div key={rune.id} className="item-rune">
-              <span className="item-rune-name">{rune.name}</span>
+              <span className="item-rune-name">
+                <RuneIcon runeId={rune.id} tint className="item-rune-glyph" />
+                {rune.name}
+              </span>
               {rune.description && <p className="item-rune-desc">{rune.description}</p>}
             </div>
           ))}
@@ -1341,7 +1346,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         <div className="item-runes" data-testid="item-modal-accessory-rune">
           <h3>Accessory Rune</h3>
           <div className="item-rune">
-            <span className="item-rune-name">{accessory.rune.name}</span>
+            <span className="item-rune-name">
+              <RuneIcon runeId={accessory.rune.id} tint className="item-rune-glyph" />
+              {accessory.rune.name}
+            </span>
             {accessory.rune.level != null && (
               <span className="item-rune-level"> · Level {accessory.rune.level}</span>
             )}
@@ -1387,7 +1395,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           {item.runestone.rune ? (
             <>
               <div className="item-rune">
-                <span className="item-rune-name">{item.runestone.rune.name}</span>
+                <span className="item-rune-name">
+                  <RuneIcon runeId={item.runestone.rune.id} tint className="item-rune-glyph" />
+                  {item.runestone.rune.name}
+                </span>
                 {item.runestone.rune.level != null && (
                   <span className="item-rune-level"> · Level {item.runestone.rune.level}</span>
                 )}

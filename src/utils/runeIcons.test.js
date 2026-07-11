@@ -87,4 +87,28 @@ describe('runeIconsOf', () => {
     expect(runeIconsOf({ runestone: { runeRef: null, rune: null } })).toEqual([]);
     expect(runeIconsOf(null)).toEqual([]);
   });
+
+  it('a shield leads with its reinforcing tier, synthesized to the catalog id (#1372)', () => {
+    const item = {
+      shield: { bonus: 2 },
+      runes: { reinforcing: 'greater', property: [frost] },
+    };
+    expect(runeIconsOf(item)).toEqual([
+      { id: 'greater-reinforcing', name: 'Greater Reinforcing' },
+      frost,
+    ]);
+  });
+
+  it('includes an inscribed accessory rune (doc only — string refs skipped)', () => {
+    const presentable = { id: 'presentable', name: 'Presentable' };
+    expect(runeIconsOf({ runes: { accessory: presentable } })).toEqual([presentable]);
+    expect(runeIconsOf({ runes: { accessory: 'presentable' } })).toEqual([]);
+  });
+
+  it('armor and ring property runes ride the same runes.property path', () => {
+    // Same storage shape for every target (#1372) — no target branching.
+    expect(runeIconsOf({ armor: {}, runes: { resilient: 'greater', property: [flaming] } }))
+      .toEqual([flaming]);
+    expect(runeIconsOf({ powerRing: true, runes: { property: [frost] } })).toEqual([frost]);
+  });
 });

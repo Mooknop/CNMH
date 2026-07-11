@@ -7,6 +7,7 @@ import { DAMAGE_TYPES } from '../../utils/damage';
 import { useGmEntryForm } from '../../hooks/useGmEntryForm';
 import GmEntryDialogs from '../../components/gm/GmEntryDialogs';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import RuneIcon from '../../components/shared/RuneIcon';
 import { ArmorRuneForm, armorToForm, armorBlankRune, MODIFIER_STATS, MODIFIER_KINDS } from './GmArmorRunes';
 import './gm.css';
 
@@ -723,7 +724,12 @@ const GmRunes = () => {
       <PageEditorShell
         entries={sorted}
         nameOf={(r) => (
-          <>{r.name} <span className="gm-rune-badge" aria-hidden="true">{TARGET_LABEL[runeTarget(r)] || runeTarget(r)}</span></>
+          // The resolved glyph doubles as a registry-coverage audit (#1372):
+          // a generic bindrune here means the family has no drawn art yet.
+          <>
+            <RuneIcon runeId={r.id} tint className="gm-rune-glyph" />
+            {r.name} <span className="gm-rune-badge" aria-hidden="true">{TARGET_LABEL[runeTarget(r)] || runeTarget(r)}</span>
+          </>
         )}
         noun="rune"
         addLabel={facet === 'all' ? '+ New rune' : `+ New ${facet} rune`}

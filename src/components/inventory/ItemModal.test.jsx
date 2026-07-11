@@ -1029,6 +1029,18 @@ describe('ItemModal', () => {
     expect(more).toHaveAttribute('title', 'Shock');
   });
 
+  it('the Runes section shows each property rune\'s glyph before its name (#1372)', () => {
+    const item = {
+      ...baseItem,
+      runes: { potency: 1, property: [{ id: 'flaming', name: 'Flaming' }] },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    const section = document.querySelector('[data-testid="item-modal-runes"]');
+    const glyph = section.querySelector('.item-rune-name svg.rune-icon');
+    expect(glyph).not.toBeNull();
+    expect(glyph).toHaveAttribute('data-runeicon', 'flaming');
+  });
+
   // --- runestone (#800) ---
   it('renders a runestone: held rune + inert reminder, no Use button', () => {
     const runestone = {
