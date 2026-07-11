@@ -38,7 +38,7 @@ import {
   attachedKey, isShieldAttachment, validAttachHosts, attachedHostUid,
   attach, unattach, attachmentsByHost,
 } from '../../utils/shieldAttach';
-import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations } from '../../utils/accessoryRunes';
+import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations, accessoryRuneOf } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
@@ -304,8 +304,12 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const runeSpellDoc = actuatedCastsSpell(actuated)
     ? (spells || []).find((s) => s.id === actuated.spellRef) || null
     : null;
+  // When the actuated block belongs to the inscribed accessory rune (the host
+  // has none of its own — mirrors useItemActivation's fallback), tag the cast
+  // with the rune's id so committing it stamps the rune's glyph (#1377).
+  const actuatedRuneId = !item.actuated && actuated ? (accessoryRuneOf(item)?.id ?? null) : null;
   const runeCastSpell = runeSpellDoc
-    ? buildRuneCastSpell(actuated, runeSpellDoc, itemUidOf(item))
+    ? buildRuneCastSpell(actuated, runeSpellDoc, itemUidOf(item), actuatedRuneId)
     : null;
   const doActuate = (rank) => {
     if (runeCastSpell) { setCastingRune(true); return; }
@@ -336,7 +340,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // rune's fixed-rank cast. The frequency was already spent by the card.
   const onShieldRuneActivate = (rune, spellDoc) => {
     const cast = spellDoc
-      ? buildRuneCastSpell(rune.actuated, spellDoc, `${itemUidOf(item)}:${rune.id}`)
+      ? buildRuneCastSpell(rune.actuated, spellDoc, `${itemUidOf(item)}:${rune.id}`, rune.id)
       : null;
     const detail = spellDoc ? ` — casts ${spellDoc.name}` : '';
     appendEvent({ type: 'action', text: `${who} activated ${shieldDisplayName(item)} — ${rune.actuated.name}${detail}` });

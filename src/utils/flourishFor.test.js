@@ -297,6 +297,53 @@ describe('flourishFor — catalog property runes (#1369 R7)', () => {
   });
 });
 
+describe('flourishFor — rune-granted abilities (#1377 R8)', () => {
+  // Abilities the rune itself grants carry `runeSource: <runeId>` (tagged at
+  // fold time in actionUtils, or on a buildRuneCastSpell synthetic cast).
+  const runeAbility = { name: 'Rune Action', source: 'Gloves (Frost)', runeSource: 'frost' };
+
+  it('a rune-granted ability stamps the granting rune', () => {
+    expect(flourishFor({ ability: runeAbility, character: pc('Fighter') }))
+      .toBe('runestamp:frost');
+  });
+
+  it('an undrawn family never stamps — falls through to the class rules', () => {
+    expect(
+      flourishFor({
+        ability: { ...runeAbility, runeSource: 'fearsome', traits: ['Impulse'] },
+        character: pc('Champion'),
+      })
+    ).toBe('rust-bloom');
+  });
+
+  it('beats the host\'s property-rune slot scan — the granting rune is the signature', () => {
+    // The ability's source names a weapon whose FIRST drawn property rune is
+    // flaming, but the ability was granted by the frost rune: frost stamps.
+    const character = {
+      ...pc('Fighter'),
+      inventory: [{
+        name: 'Longsword',
+        runes: { potency: 2, property: [{ id: 'flaming', name: 'Flaming' }] },
+      }],
+    };
+    const granted = { name: 'Rune Action', source: 'Longsword', runeSource: 'frost' };
+    expect(flourishFor({ ability: granted, character })).toBe('runestamp:frost');
+  });
+
+  it('loses to a sin rune on the source item, and to an authored flourish', () => {
+    const character = {
+      ...pc('Fighter'),
+      inventory: [{ name: 'Gloves', thassilonianRune: 'pride' }],
+    };
+    expect(
+      flourishFor({ ability: { ...runeAbility, source: 'Gloves' }, character })
+    ).toBe('rune-pride');
+    expect(
+      flourishFor({ ability: { ...runeAbility, flourish: 'custom-one-off' }, character: pc('Fighter') })
+    ).toBe('custom-one-off');
+  });
+});
+
 describe('flourishFor — class keying', () => {
   it('rules never leak across classes (a Monk composition stays plain)', () => {
     expect(
