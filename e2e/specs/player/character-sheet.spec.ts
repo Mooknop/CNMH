@@ -42,11 +42,13 @@ test.describe('Player character sheet', () => {
     await expect(vitals.getByLabel('Armor class')).toContainText('22');
     await expect(page.getByRole('region', { name: 'Ability scores' })).toBeVisible();
 
-    // StatsBlock sub-tabs.
+    // Ability Dial: the core hosts character-wide proficiencies & feats.
+    await page.getByRole('button', { name: 'Character proficiencies and feats' }).click();
     await page.getByRole('button', { name: 'Feats', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'E2E Power Attack' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Skills', exact: true }).click();
+    // A node panel shows the skills its ability governs — Acrobatics is DEX.
+    await page.getByRole('button', { name: /^Dexterity/ }).click();
     await expect(page.getByText('Acrobatics')).toBeVisible();
   });
 
