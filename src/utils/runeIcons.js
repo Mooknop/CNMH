@@ -728,6 +728,177 @@ export const RUNE_ICON_FAMILIES = {
       'M50 16 C68 18 76 34 66 46 C60 53 50 54 46 62 C43 68 46 74 54 78 L50 84 C38 78 34 68 40 58 C45 50 56 48 60 42 C66 33 60 24 46 22 Z M64 74 L74 70 L70 80 Z',
     ],
   },
+
+  // ── Accessory glyph wave (#1375, R6) — full catalog coverage ────────────
+  // clothing-shadow / clothing-slick reuse their armor siblings via
+  // FAMILY_ALIASES below (same motif, no near-duplicate art).
+  called: {
+    label: 'Called',
+    steps: [
+      // The mote rising home into its waiting bracket.
+      'M30 24 L70 24 L70 40 L63 40 L63 31 L37 31 L37 40 L30 40 Z M50 50 a5 5 0 1 0 0.01 0 Z M48 66 L52 66 L52 76 L48 76 Z M48 82 L52 82 L52 88 L48 88 Z',
+    ],
+  },
+  catching: {
+    label: 'Catching',
+    steps: [
+      // The caught mote settled in its woven cup.
+      'M24 44 A26 26 0 0 0 76 44 L69 40 A19 19 0 0 1 31 40 Z M50 44 a6 6 0 1 0 0.01 0 Z M38 58 L44 64 L41 67 L35 61 Z M62 58 L56 64 L59 67 L65 61 Z',
+    ],
+  },
+  'clothing-acid-resistant': {
+    label: 'Acid-Resistant',
+    steps: [
+      // Base: the ward-arc shedding the drops.
+      'M20 42 A34 34 0 0 1 80 42 L74 46 A28 28 0 0 0 26 46 Z M44 56 C48 60 49 63 49 65 A5 5 0 1 1 39 65 C39 63 40 60 44 56 Z M60 66 C62 70 63 72 63 74 A4 4 0 1 1 55 74 C55 72 56 70 60 66 Z',
+      // Greater: the outer ward.
+      'M12 34 A44 44 0 0 1 88 34 L82 38 A38 38 0 0 0 18 38 Z',
+    ],
+  },
+  'clothing-cold-resistant': {
+    label: 'Cold-Resistant',
+    steps: [
+      // Base: the ward-arc over the frost-star.
+      'M20 42 A34 34 0 0 1 80 42 L74 46 A28 28 0 0 0 26 46 Z M48 52 L52 52 L52 84 L48 84 Z M38 58 L62 78 L59 82 L35 62 Z M62 58 L38 78 L41 82 L65 62 Z',
+      // Greater: the outer ward.
+      'M12 34 A44 44 0 0 1 88 34 L82 38 A38 38 0 0 0 18 38 Z',
+    ],
+  },
+  'clothing-electricity-resistant': {
+    label: 'Electricity-Resistant',
+    steps: [
+      // Base: the ward-arc grounding the bolt.
+      'M20 42 A34 34 0 0 1 80 42 L74 46 A28 28 0 0 0 26 46 Z M52 52 L58 54 L50 68 L56 66 L46 86 L43 82 L49 70 L44 71 Z',
+      // Greater: the outer ward.
+      'M12 34 A44 44 0 0 1 88 34 L82 38 A38 38 0 0 0 18 38 Z',
+    ],
+  },
+  'clothing-fire-resistant': {
+    label: 'Fire-Resistant',
+    steps: [
+      // Base: the ward-arc smothering the tongue.
+      'M20 42 A34 34 0 0 1 80 42 L74 46 A28 28 0 0 0 26 46 Z M50 52 C45 62 45 72 50 82 C55 72 55 62 50 52 Z',
+      // Greater: the outer ward.
+      'M12 34 A44 44 0 0 1 88 34 L82 38 A38 38 0 0 0 18 38 Z',
+    ],
+  },
+  'clothing-stanching': {
+    label: 'Stanching',
+    steps: [
+      // Base: the drop barred from falling.
+      'M50 16 C56 28 60 36 60 42 A10 10 0 1 1 40 42 C40 36 44 28 50 16 Z M28 60 L72 68 L71 74 L27 66 Z',
+      // Greater: the second bar crossing the first.
+      'M70 56 L74 62 L32 80 L28 74 Z',
+    ],
+  },
+  'dragons-breath': {
+    label: "Dragon's Breath",
+    tiers: ['1', '2', '3', '4', '5'],
+    steps: [
+      // 1: the open maw-cone.
+      'M22 50 L68 26 L71 31 L28 52 Z M22 50 L68 74 L71 69 L28 48 Z',
+      // 2: the first embers on the breath.
+      'M48 44 a4 4 0 1 0 0.01 0 Z M48 54 a3 3 0 1 0 0.01 0 Z',
+      // 3: the near wave-front.
+      'M60 34 A26 26 0 0 1 60 66 L57 61 A20 20 0 0 0 57 39 Z',
+      // 4: the far wave-front.
+      'M74 28 A38 38 0 0 1 74 72 L71 67 A32 32 0 0 0 71 33 Z',
+      // 5: the spark where the breath lands.
+      'M88 42 C89 47 90 48 94 49 C90 50 89 51 88 56 C87 51 86 50 82 49 C86 48 87 47 88 42 Z',
+    ],
+  },
+  menacing: {
+    label: 'Menacing',
+    steps: [
+      // Base: the lowered brows and what cowers under them.
+      'M22 34 L46 44 L44 50 L20 40 Z M78 34 L54 44 L56 50 L80 40 Z M50 62 a5 5 0 1 0 0.01 0 Z',
+      // Greater: the bristling, and the weight pressing down.
+      'M26 22 L34 26 L32 31 L24 27 Z M74 22 L66 26 L68 31 L76 27 Z M32 72 C40 68 60 68 68 72 L66 78 C58 75 42 75 34 78 Z',
+    ],
+  },
+  paired: {
+    label: 'Paired',
+    steps: [
+      // Base: the twin staves, apart.
+      'M34 22 L42 22 L42 78 L34 78 Z M58 22 L66 22 L66 78 L58 78 Z',
+      // Greater: the bond between them, and their far motes.
+      'M42 46 L58 46 L58 54 L42 54 Z M26 12 a3 3 0 1 0 0.01 0 Z M74 12 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  pontoon: {
+    label: 'Pontoon',
+    steps: [
+      // A deck on its two floats, riding the water.
+      'M26 40 L74 40 L74 48 L26 48 Z M28 56 A10 10 0 0 0 48 56 L43 53 A5 5 0 0 1 33 53 Z M52 56 A10 10 0 0 0 72 56 L67 53 A5 5 0 0 1 57 53 Z M24 72 C34 68 46 68 56 72 C64 75 70 75 78 72 L78 78 C70 81 62 81 54 78 C46 74 34 74 24 78 Z',
+    ],
+  },
+  presentable: {
+    label: 'Presentable',
+    steps: [
+      // Base: the knotted bow.
+      'M20 40 L46 50 L20 60 Z M80 40 L54 50 L80 60 Z M50 44 a6 6 0 1 0 0.01 0 Z',
+      // Greater: the sparkle and the pressed hem.
+      'M74 22 C75 27 76 28 80 29 C76 30 75 31 74 36 C73 31 72 30 68 29 C72 28 73 27 74 22 Z M36 74 L64 74 L64 80 L36 80 Z',
+    ],
+  },
+  preserving: {
+    label: 'Preserving',
+    steps: [
+      // Base: the kept mote in its hollow casket.
+      'M28 28 L72 28 L72 72 L28 72 Z M35 35 L65 35 L65 65 L35 65 Z M50 44 a6 6 0 1 0 0.01 0 Z',
+      // Greater: the seals above and below.
+      'M44 16 L56 16 L56 22 L44 22 Z M44 78 L56 78 L56 84 L44 84 Z',
+    ],
+  },
+  retaliation: {
+    label: 'Retaliation',
+    tiers: ['lesser', 'moderate'],
+    steps: [
+      // Lesser: the blow taken, and the barbed answer.
+      'M18 24 L44 44 L40 49 L14 29 Z M52 52 L82 30 L85 35 L56 57 Z M80 22 L92 28 L82 38 Z',
+      // Moderate: the shock of the parry.
+      'M36 64 A20 20 0 0 0 64 64 L60 59 A14 14 0 0 1 40 59 Z M50 82 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  snagging: {
+    label: 'Snagging',
+    steps: [
+      // A grasping hook, barbed inward.
+      'M64 16 C44 20 34 34 38 52 C41 65 52 74 66 76 L67 70 C56 68 47 61 44 51 C41 37 49 25 66 22 Z M38 52 L28 46 L32 56 Z M48 66 L40 72 L50 74 Z',
+    ],
+  },
+  'soft-landing': {
+    label: 'Soft-Landing',
+    steps: [
+      // The falling mote eased onto the curled cushion.
+      'M50 20 a5 5 0 1 0 0.01 0 Z M48 34 L52 34 L52 42 L48 42 Z M48 48 L52 48 L52 54 L48 54 Z M24 66 L76 66 L76 74 L24 74 Z M24 66 C18 64 18 58 24 56 C22 60 22 63 24 66 Z M76 66 C82 64 82 58 76 56 C78 60 78 63 76 66 Z',
+    ],
+  },
+  trackless: {
+    label: 'Trackless',
+    steps: [
+      // Base: the fading steps, and the wind that wipes them.
+      'M28 72 a5 5 0 1 0 0.01 0 Z M44 58 a4 4 0 1 0 0.01 0 Z M58 46 a3 3 0 1 0 0.01 0 Z M40 32 C54 24 70 22 84 26 L82 32 C70 29 56 31 44 37 Z',
+      // Greater: the second pass of the wind.
+      'M28 50 C44 42 62 40 78 44 L76 50 C62 47 46 49 32 56 Z',
+    ],
+  },
+  unexceptional: {
+    label: 'Unexceptional',
+    steps: [
+      // Just a bar. Nothing to see here — which is the point.
+      'M22 46 L78 49 L78 55 L22 52 Z',
+    ],
+  },
+};
+
+// A family whose motif is another family's — the clothing-* utility runes
+// share their armor siblings' marks (#1375) rather than near-duplicate art.
+// resolveRuneIcon reports the CANONICAL family so the tint follows the glyph;
+// the clothing ladders simply clamp onto however many steps the sibling has.
+const FAMILY_ALIASES = {
+  'clothing-shadow': 'shadow',
+  'clothing-slick': 'slick',
 };
 
 // Shown when a rune has no drawn family yet: a plain bindrune stave. Rendered
@@ -771,7 +942,8 @@ const stepIndexFor = (entry, affix) => {
  */
 export const resolveRuneIcon = (runeId) => {
   if (runeId == null || runeId === '') return null;
-  const { family, affix } = runeIconTier(runeId);
+  const { family: rawFamily, affix } = runeIconTier(runeId);
+  const family = FAMILY_ALIASES[rawFamily] || rawFamily;
   const entry = RUNE_ICON_FAMILIES[family];
   if (!entry) {
     return { family, label: null, layers: [GENERIC_RUNE_ICON], generic: true };

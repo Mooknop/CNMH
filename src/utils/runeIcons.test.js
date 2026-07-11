@@ -54,8 +54,9 @@ describe('resolveRuneIcon', () => {
   });
 
   it('an undrawn family falls back to the generic mark', () => {
-    // snagging is accessory-target — undrawn until the R6 wave.
-    const icon = resolveRuneIcon('snagging');
+    // The whole seed is drawn (R4-R6), so an undrawn family is necessarily a
+    // rune authored AFTER the art waves — a synthetic id stands in for one.
+    const icon = resolveRuneIcon('unwritten');
     expect(icon.generic).toBe(true);
     expect(icon.layers).toEqual([GENERIC_RUNE_ICON]);
   });
@@ -80,16 +81,30 @@ describe('resolveRuneIcon', () => {
   });
 });
 
-describe('glyph waves — seed coverage (#1373 shields, #1374 armor/ring/weapon)', () => {
-  // Every non-accessory rune in the bundled seed must resolve a DRAWN glyph
-  // (accessory-target families arrive in R6 #1375). A newly-authored rune
-  // landing on the generic fallback should be a conscious choice (draw its
-  // family or accept the failure here), not silent.
-  it('every non-accessory rune in the seed resolves a non-generic glyph', () => {
-    const covered = seedRunes.filter((r) => r.target !== 'accessory');
-    expect(covered.length).toBeGreaterThan(0);
-    const fallbacks = covered.filter((r) => resolveRuneIcon(r.id).generic).map((r) => r.id);
+describe('glyph waves — full seed coverage (#1373/#1374/#1375)', () => {
+  // Every rune in the bundled seed — all targets — must resolve a DRAWN
+  // glyph. A newly-authored rune landing on the generic fallback should be a
+  // conscious choice (draw its family or accept the failure here), not
+  // silent.
+  it('every rune in the seed resolves a non-generic glyph', () => {
+    expect(seedRunes.length).toBeGreaterThan(0);
+    const fallbacks = seedRunes.filter((r) => resolveRuneIcon(r.id).generic).map((r) => r.id);
     expect(fallbacks).toEqual([]);
+  });
+
+  it('clothing-shadow / clothing-slick alias onto their armor siblings', () => {
+    const aliased = resolveRuneIcon('clothing-shadow-greater');
+    expect(aliased.generic).toBe(false);
+    // Canonical family reported, so the sibling's tint follows the glyph.
+    expect(aliased.family).toBe('shadow');
+    expect(resolveRuneIcon('clothing-slick').family).toBe('slick');
+  });
+
+  it("dragons-breath and retaliation ride their own ladders", () => {
+    expect(resolveRuneIcon('dragons-breath-1').layers).toHaveLength(1);
+    expect(resolveRuneIcon('dragons-breath-5').layers).toHaveLength(5);
+    expect(resolveRuneIcon('lesser-retaliation').layers).toHaveLength(1);
+    expect(resolveRuneIcon('moderate-retaliation').layers).toHaveLength(2);
   });
 
   it('tier ladders render progressively where the seed has tiers', () => {

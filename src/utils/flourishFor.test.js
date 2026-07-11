@@ -232,12 +232,12 @@ describe('flourishFor — catalog property runes (#1369 R7)', () => {
   });
 
   it('picks the first rune with a drawn glyph, in slot order', () => {
-    // snagging has no drawn family yet (accessory wave, R6) — skipped.
+    // a synthetic post-wave id with no drawn family (generic fallback) — skipped.
     expect(
       flourishFor({
         ability: strike,
         character: withSword([
-          { id: 'snagging', name: 'Snagging' },
+          { id: 'unwritten', name: 'Unwritten' },
           { id: 'frost-greater', name: 'Greater Frost' },
         ]),
       })
@@ -248,7 +248,7 @@ describe('flourishFor — catalog property runes (#1369 R7)', () => {
     expect(
       flourishFor({
         ability: { ...strike, traits: ['Impulse'] },
-        character: withSword([{ id: 'snagging', name: 'Snagging' }], 'Champion'),
+        character: withSword([{ id: 'unwritten', name: 'Unwritten' }], 'Champion'),
       })
     ).toBe('rust-bloom');
   });
@@ -310,7 +310,7 @@ describe('flourishFor — rune-granted abilities (#1377 R8)', () => {
   it('an undrawn family never stamps — falls through to the class rules', () => {
     expect(
       flourishFor({
-        ability: { ...runeAbility, runeSource: 'snagging', traits: ['Impulse'] },
+        ability: { ...runeAbility, runeSource: 'unwritten', traits: ['Impulse'] },
         character: pc('Champion'),
       })
     ).toBe('rust-bloom');
