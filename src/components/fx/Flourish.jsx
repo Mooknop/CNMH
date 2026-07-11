@@ -1,6 +1,7 @@
 import React from 'react';
 import { GAME_GLYPHS } from '../../utils/gameGlyphs';
 import { THASSILONIAN_RUNES } from '../../utils/thassilonianRunes';
+import { resolveRuneIcon } from '../../utils/runeIcons';
 import './Flourish.css';
 
 // Signature-ability flourishes (#1347, epic #1343) — bespoke one-shot SVG
@@ -147,6 +148,35 @@ const RUNE_FLOURISHES = Object.fromEntries(
   })
 );
 
+// Catalog-rune stamp (#1369 R7) — the same slam-and-fade recipe as the sin
+// stamp above, parameterized instead of registered: `runestamp:<runeId>` ids
+// resolve their glyph through the runeIcons registry AT RECEIVE TIME (the
+// module is bundled and import-free, so every client resolves identically).
+// Tier layers render as sibling paths inside the glow and core copies; the
+// family tint rides --flx-rune via data-runeicon (Flourish.css). A rune whose
+// family has no drawn glyph renders nothing — emitters skip those
+// (flourishFor), and a version-skewed receiver degrades to the plain bloom.
+const RUNESTAMP_PREFIX = 'runestamp:';
+const CatalogRuneStamp = ({ runeId }) => {
+  const icon = resolveRuneIcon(runeId);
+  if (!icon || icon.generic) return null;
+  const layers = (scale) => (
+    <g transform={`scale(${scale}) translate(-50 -50)`}>
+      {icon.layers.map((d, i) => (
+        <path key={i} fillRule="evenodd" d={d} />
+      ))}
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" data-runeicon={icon.family}>
+      <g transform="translate(50 50)">
+        <g className="flx-ctr flx-rune-glow">{layers(0.66)}</g>
+        <g className="flx-ctr flx-rune-core">{layers(0.6)}</g>
+      </g>
+    </svg>
+  );
+};
+
 export const FLOURISHES = {
   'shadow-tendrils': ShadowTendrils,
   'dragon-lightning': DragonLightning,
@@ -158,11 +188,20 @@ export const FLOURISHES = {
 };
 
 const Flourish = ({ id }) => {
-  const Art = id ? FLOURISHES[id] : null;
-  if (!Art || prefersReducedMotion()) return null;
+  if (!id || prefersReducedMotion()) return null;
+  let art = null;
+  if (String(id).startsWith(RUNESTAMP_PREFIX)) {
+    const runeId = String(id).slice(RUNESTAMP_PREFIX.length);
+    const icon = resolveRuneIcon(runeId);
+    if (icon && !icon.generic) art = <CatalogRuneStamp runeId={runeId} />;
+  } else {
+    const Art = FLOURISHES[id];
+    if (Art) art = <Art />;
+  }
+  if (!art) return null;
   return (
     <div className="fx-flourish" aria-hidden="true" data-flourish={id}>
-      <Art />
+      {art}
     </div>
   );
 };

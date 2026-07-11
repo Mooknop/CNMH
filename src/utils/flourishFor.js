@@ -1,4 +1,5 @@
 import { hasTrait } from './map';
+import { resolveRuneIcon } from './runeIcons';
 
 // Signature-ability flourish resolver (#1347, epic #1343). Maps a committed
 // ability use to a bespoke flourish id (rendered by components/fx/Flourish),
@@ -29,11 +30,33 @@ const runeGearFlourish = (ability, character) => {
   return item ? `rune-${item.thassilonianRune.toLowerCase()}` : undefined;
 };
 
+// Catalog property runes (#1369 R7): a Strike or gear action taken WITH a
+// property-runed weapon stamps its rune's glyph — `runestamp:<runeId>`,
+// resolved through the runeIcons registry by fx/Flourish at receive time.
+// First rune with a DRAWN glyph wins (slot order; a family still on the
+// generic fallback never stamps, so the mark is always a real sigil). Sits
+// below the sin-rune rule — a sin mark IS the item's identity — and above
+// the class rules.
+const propertyRuneFlourish = (ability, character) => {
+  const src = ability?.source;
+  if (!src) return undefined;
+  const item = (character?.inventory || []).find(
+    (it) => it?.name === src && Array.isArray(it?.runes?.property)
+  );
+  const doc = (item?.runes?.property || []).find(
+    (p) => p && typeof p === 'object' && p.id != null && !resolveRuneIcon(p.id).generic
+  );
+  return doc ? `runestamp:${doc.id}` : undefined;
+};
+
 export function flourishFor({ ability, castSource, character, bloodMagicActive = false }) {
   if (typeof ability?.flourish === 'string' && ability.flourish) return ability.flourish;
 
   const runeGear = runeGearFlourish(ability, character);
   if (runeGear) return runeGear;
+
+  const propertyRune = propertyRuneFlourish(ability, character);
+  if (propertyRune) return propertyRune;
 
   const cls = String(character?.class || '').trim().toLowerCase();
   const name = nameOf(ability);

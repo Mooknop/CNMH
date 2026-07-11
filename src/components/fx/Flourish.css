@@ -210,6 +210,17 @@
 .fx-flourish [data-rune='pride']     { --flx-rune: var(--rune-pride); }
 .fx-flourish [data-rune='wrath']     { --flx-rune: var(--rune-wrath); }
 .fx-flourish [data-rune='vainglory'] { --flx-rune: var(--rune-vainglory); }
+/* Catalog-rune stamps (#1369 R7) reuse the same glow/core animation; the
+   family token rides in via data-runeicon. Undrawn families never stamp. */
+.fx-flourish [data-runeicon='flaming']     { --flx-rune: var(--runeicon-flaming); }
+.fx-flourish [data-runeicon='frost']       { --flx-rune: var(--runeicon-frost); }
+.fx-flourish [data-runeicon='shock']       { --flx-rune: var(--runeicon-shock); }
+.fx-flourish [data-runeicon='corrosive']   { --flx-rune: var(--runeicon-corrosive); }
+.fx-flourish [data-runeicon='thundering']  { --flx-rune: var(--runeicon-thundering); }
+.fx-flourish [data-runeicon='vitalizing']  { --flx-rune: var(--runeicon-vitalizing); }
+.fx-flourish [data-runeicon='wounding']    { --flx-rune: var(--runeicon-wounding); }
+.fx-flourish [data-runeicon='ghost-touch'] { --flx-rune: var(--runeicon-ghost-touch); }
+.fx-flourish [data-runeicon='returning']   { --flx-rune: var(--runeicon-returning); }
 @keyframes flx-runestamp {
   0%   { opacity: 0; transform: scale(1.9); }
   28%  { opacity: 1; transform: scale(0.94); }

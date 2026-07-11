@@ -38,6 +38,30 @@ describe('Flourish registry', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('a runestamp: id stamps the catalog rune glyph, keyed for the family tint (#1369 R7)', () => {
+    const { container } = render(<Flourish id="runestamp:flaming-greater" />);
+    const overlay = container.querySelector('[data-flourish="runestamp:flaming-greater"]');
+    expect(overlay).not.toBeNull();
+    expect(overlay).toHaveAttribute('aria-hidden', 'true');
+    const svg = overlay.querySelector('svg[data-runeicon="flaming"]');
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector('.flx-rune-glow')).not.toBeNull();
+    expect(svg.querySelector('.flx-rune-core')).not.toBeNull();
+    // Greater tier = both cumulative layers, in the glow AND the core copy.
+    expect(svg.querySelectorAll('.flx-rune-glow path')).toHaveLength(2);
+    expect(svg.querySelectorAll('.flx-rune-core path')).toHaveLength(2);
+  });
+
+  it('a runestamp for an undrawn family renders nothing (plain bloom fallback)', () => {
+    const { container } = render(<Flourish id="runestamp:fearsome" />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('a runestamp with a dangling id renders nothing', () => {
+    const { container } = render(<Flourish id="runestamp:" />);
+    expect(container.firstChild).toBeNull();
+  });
+
   it('a missing id renders nothing', () => {
     const { container } = render(<Flourish />);
     expect(container.firstChild).toBeNull();
