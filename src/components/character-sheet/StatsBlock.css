@@ -235,18 +235,32 @@
   gap: 1px;
   padding: 0;
   background: var(--surface-slab);
-  border: 1px solid var(--shell-border-strong);
+  border: 3px solid var(--rank-color, var(--shell-border-strong));
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
+/* Core rim = worn armor category's proficiency rank — the same load-bearing
+   --color-rank-* ramp as the snode rings (rim consistency across the tab).
+   Selection signals through tint + glow so the rank rim stays readable. */
+.dial-center.rank-0 { --rank-color: var(--color-rank-untrained); }
+.dial-center.rank-1 { --rank-color: var(--color-rank-trained); }
+.dial-center.rank-2 { --rank-color: var(--color-rank-expert); }
+.dial-center.rank-3 { --rank-color: var(--color-rank-master); }
+.dial-center.rank-4 { --rank-color: var(--color-rank-legendary); }
+
+/* Untrained reads as a dormant socket, matching the snode idiom */
+.dial-center.rank-0 {
+  border-style: dashed;
+  border-width: 2px;
+}
+
 .dial-center:hover {
-  border-color: var(--accent-outline);
+  box-shadow: 0 0 0 2px var(--accent-tint);
 }
 
 .dial-center.sel {
   background: var(--accent-tint);
-  border-color: var(--accent-outline);
   box-shadow: var(--accent-glow);
 }
 
@@ -286,11 +300,10 @@
   color: var(--shell-text-primary);
 }
 
-.panel-save {
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--shell-text-secondary);
+/* The governed save's ring row — sits between the panel header and the
+   skill cluster; the ring itself is a shared RankRing snode. */
+.save-wrap {
+  margin-bottom: 0;
 }
 
 .panel-count {

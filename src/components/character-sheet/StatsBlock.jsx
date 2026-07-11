@@ -22,6 +22,17 @@ import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills
 
 const ABILITY_KEYS = ABILITIES.map((a) => a.key);
 
+// Saves ship as precomputed modifiers (no rank field), so the ring rank is
+// derived by inverting getProficiencyBonus: modifier = ability + level + 2×rank
+// for trained+. Any positive proficiency contribution reads at least Trained;
+// odd hand-authored data rounds to the nearest rank. Display-only (the ring's
+// rim color) — never fed back into roll math.
+const deriveSaveRank = (saveMod, abilityMod, level) => {
+  const profBonus = saveMod - abilityMod;
+  if (profBonus <= 0) return 0;
+  return Math.min(4, Math.max(1, Math.round((profBonus - level) / 2)));
+};
+
 const StatsBlock = ({ character, characterColor }) => {
   // Ability Dial: the active node — an ability key ('strength'…'charisma')
   // or 'core' (character-wide feats/conditions). Defaults to the
@@ -110,6 +121,7 @@ const StatsBlock = ({ character, characterColor }) => {
     level,
     ac,
     armorClass,
+    armorProficiencies,
     size,
     speed,
     senses,
@@ -382,6 +394,13 @@ const StatsBlock = ({ character, characterColor }) => {
   const selectedAbility = ABILITIES.find((a) => a.key === selected);
   const selectedSave = SAVES_BY_ABILITY[selected];
   const selectedSkillCount = selectedAbility ? skillsForAbility(selected).length : 0;
+  const selectedSaveRank = selectedSave
+    ? deriveSaveRank(saves[selectedSave.saveKey], abilityModifiers[selected], level)
+    : 0;
+
+  // AC core rim = the worn armor category's proficiency rank, riding the same
+  // --color-rank-* ramp as every other ring in the tab (rank rim consistency).
+  const acRank = armorProficiencies?.[armorClass?.category || 'unarmored']?.rank ?? 0;
 
   return (
     <div className="stats-block" style={{ '--color-theme': themeColor }}>
@@ -499,7 +518,7 @@ const StatsBlock = ({ character, characterColor }) => {
           ))}
           <button
             type="button"
-            className={`dial-center${selected === 'core' ? ' sel' : ''}`}
+            className={`dial-center rank-${acRank}${selected === 'core' ? ' sel' : ''}`}
             aria-pressed={selected === 'core'}
             aria-label="Character feats and conditions"
             title={acSourceLabel}
@@ -551,21 +570,29 @@ const StatsBlock = ({ character, characterColor }) => {
               <span className="panel-title">
                 {selectedAbility.abbr} · {formatModifier(abilityModifiers[selected])}
               </span>
-              {selectedSave && (
-                <span className="panel-save">
-                  {selectedSave.label}{' '}
-                  <PenaltyDisplay
-                    base={saves[selectedSave.saveKey]}
-                    penalty={mod(selectedSave.stat)}
-                    format="modifier"
-                  />
-                </span>
-              )}
               <span className="panel-count">
                 {selectedSkillCount} skill{selectedSkillCount === 1 ? '' : 's'}
               </span>
             </div>
-            {selectedSave && renderConditionalHint(selectedSave.stat)}
+            {/* The governed save as its own ring — rank rim like every other
+                circle in the tab; conditional 'vs X' hints ride the ring. */}
+            {selectedSave && (
+              <div className="snode-wrap save-wrap">
+                <RankRing
+                  rank={selectedSaveRank}
+                  name={selectedSave.label}
+                  caption={getProficiencyLabel(selectedSaveRank)}
+                  value={
+                    <PenaltyDisplay
+                      base={saves[selectedSave.saveKey]}
+                      penalty={mod(selectedSave.stat)}
+                      format="modifier"
+                    />
+                  }
+                  hint={renderConditionalHint(selectedSave.stat)}
+                />
+              </div>
+            )}
             <EnhancedSkillsList
               key={selected}
               character={character}

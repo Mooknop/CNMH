@@ -148,6 +148,46 @@ describe('StatsBlock', () => {
     expect(screen.getByText('Will')).toBeInTheDocument();
   });
 
+  it('renders the save as a rank ring with a derived proficiency rim', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Constitution +0'));
+    // fort 3, CON +0, level 1 → proficiency part 3 → round((3−1)/2) = 1 → Trained.
+    expect(screen.getByLabelText('Fortitude, Trained')).toHaveClass('rank-1');
+    expect(screen.getByText('Trained')).toBeInTheDocument();
+  });
+
+  it('derives higher save ranks from bigger modifiers', () => {
+    mockUseCharacter.mockReturnValue({
+      ...defaultCharData,
+      level: 4,
+      // will 9, WIS +1 → proficiency part 8 → round((8−4)/2) = 2 → Expert.
+      saves: { ...defaultCharData.saves, will: 9 },
+    });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByLabelText('Wisdom +1'));
+    expect(screen.getByLabelText('Will, Expert')).toHaveClass('rank-2');
+  });
+
+  it('rims the AC core with the worn armor category rank', () => {
+    mockUseCharacter.mockReturnValue({
+      ...defaultCharData,
+      // armorClass.category is 'light' on the default mock.
+      armorProficiencies: {
+        unarmored: { rank: 1, bonus: 3 },
+        light: { rank: 2, bonus: 5 },
+        medium: { rank: 0, bonus: 0 },
+        heavy: { rank: 0, bonus: 0 },
+      },
+    });
+    const { container } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(container.querySelector('.dial-center')).toHaveClass('rank-2');
+  });
+
+  it('AC core rim falls back to rank-0 without armor proficiency data', () => {
+    const { container } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(container.querySelector('.dial-center')).toHaveClass('rank-0');
+  });
+
   it('abilities without a save show no save line', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     // STR is the default node (no keyAbility on the mock character)
