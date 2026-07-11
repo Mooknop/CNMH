@@ -114,6 +114,77 @@ export const RUNE_ICON_FAMILIES = {
       'M50 78 C40 82 30 76 26 66 L32 64 C36 72 43 74 50 71 Z M50 44 a5 5 0 1 0 0.01 0 Z',
     ],
   },
+
+  // ── Fundamental runes (scope fold-in, 2026-07-10) ──────────────────────
+  // Potency / striking / resilient / reinforcing get marks too, so runed
+  // gear and rune wares read as RUNED everywhere runes display. They stay
+  // out of the juice layer (flourishFor stamps runes.property only):
+  // fundamentals are scaling, not signature. Tinted forge-metal neutrals
+  // (RuneIcon.css) so the property runes keep the color wheel.
+  'weapon-potency': {
+    label: 'Weapon Potency',
+    tiers: ['1', '2', '3'],
+    steps: [
+      // +1: a single keen-stroke rising to a hooked whet-flick.
+      'M26 86 C38 62 52 42 66 24 L71 28 C58 46 46 66 34 88 Z M66 24 C70 16 76 12 84 12 C78 16 74 21 72 27 Z',
+      // +2: a second, shorter keen-stroke to its left.
+      'M14 74 C24 56 34 42 46 30 L50 34 C39 46 29 60 21 77 Z',
+      // +3: the third stroke fanning right, and a struck spark.
+      'M48 90 C58 74 68 60 80 48 L84 52 C73 63 63 77 55 92 Z M86 30 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  'armor-potency': {
+    label: 'Armor Potency',
+    tiers: ['1', '2', '3'],
+    steps: [
+      // +1: a grounded stave under its first ward-arch.
+      'M47 50 L53 50 L52 88 L48 88 Z M26 64 A24 24 0 0 1 74 64 L67 64 A17 17 0 0 0 33 64 Z',
+      // +2: the second, wider arch.
+      'M14 64 A36 36 0 0 1 86 64 L79 64 A29 29 0 0 0 21 64 Z',
+      // +3: the apex mote and the arches' footing serifs.
+      'M50 12 a4.5 4.5 0 1 0 0.01 0 Z M14 70 L30 70 L30 75 L14 75 Z M70 70 L86 70 L86 75 L70 75 Z',
+    ],
+  },
+  striking: {
+    label: 'Striking',
+    steps: [
+      // Base: a heavy falling stroke bursting into a splash at the point.
+      'M40 10 L56 12 L51 68 L45 66 Z M46 72 L34 86 L30 82 L43 69 Z M52 72 L66 86 L70 82 L55 69 Z',
+      // Greater: the side ejecta thrown off the impact.
+      'M41 66 L22 72 L20 67 L40 62 Z M57 66 L76 72 L78 67 L58 62 Z',
+      // Major: the shock-ring around the strike, and a flung mote.
+      'M49 52 a17 17 0 1 0 0.01 0 Z M49 57 a12 12 0 1 1 -0.01 0 Z M78 20 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  resilient: {
+    label: 'Resilient',
+    steps: [
+      // Base: the unbroken ring.
+      'M50 28 a24 24 0 1 0 0.01 0 Z M50 35 a17 17 0 1 1 -0.01 0 Z',
+      // Greater: three studs set into it — one per saving throw.
+      'M50 21 a5 5 0 1 0 0.01 0 Z M29 59 a5 5 0 1 0 0.01 0 Z M71 59 a5 5 0 1 0 0.01 0 Z',
+      // Major: outer guard arcs bridging the gaps between the studs.
+      'M82 49 A32 32 0 0 0 68 26 L65 30 A27 27 0 0 1 77 50 Z M18 49 A32 32 0 0 1 32 26 L35 30 A27 27 0 0 0 23 50 Z M36 81 A32 32 0 0 0 64 81 L61 77 A27 27 0 0 1 39 77 Z',
+    ],
+  },
+  reinforcing: {
+    label: 'Reinforcing',
+    tiers: ['minor', 'lesser', 'moderate', 'greater', 'major', 'supreme'],
+    steps: [
+      // Minor: the shield boss — a studded center in its ring.
+      'M50 46 a6 6 0 1 0 0.01 0 Z M50 38 a14 14 0 1 0 0.01 0 Z M50 42 a10 10 0 1 1 -0.01 0 Z',
+      // Lesser: the first pair of rivets, east and west.
+      'M26 48 a4 4 0 1 0 0.01 0 Z M74 48 a4 4 0 1 0 0.01 0 Z',
+      // Moderate: the second pair, north and south.
+      'M50 20 a4 4 0 1 0 0.01 0 Z M50 76 a4 4 0 1 0 0.01 0 Z',
+      // Greater: the upper rim band.
+      'M21 35 A34 34 0 0 1 79 35 L75 38 A29 29 0 0 0 25 38 Z',
+      // Major: the lower rim band closing the rim.
+      'M79 69 A34 34 0 0 1 21 69 L25 66 A29 29 0 0 0 75 66 Z',
+      // Supreme: four diagonal rivets studding the quarters.
+      'M71 28 a3.5 3.5 0 1 0 0.01 0 Z M29 28 a3.5 3.5 0 1 0 0.01 0 Z M29 70 a3.5 3.5 0 1 0 0.01 0 Z M71 70 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
 };
 
 // Shown when a rune has no drawn family yet: a plain bindrune stave. Rendered
@@ -173,12 +244,33 @@ export const resolveRuneIcon = (runeId) => {
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
+ * Catalog id for a fundamental rune stored in an item's structured `runes`
+ * block (which keeps tiers, not docs): potency holds a number (target decides
+ * `weapon-potency-N` vs `armor-potency-N`); striking / resilient hold their
+ * base tier as the family word itself ('striking' → `striking`, 'greater' →
+ * `greater-striking`); reinforcing always holds a tier word (minor…supreme).
+ * Returns null when the value doesn't name a tier.
+ */
+export const fundamentalRuneId = (kind, value, target) => {
+  if (kind === 'potency') {
+    const tier = Number(value);
+    if (!(tier >= 1)) return null;
+    return `${target === 'armor' ? 'armor' : 'weapon'}-potency-${Math.min(tier, 3)}`;
+  }
+  if (typeof value !== 'string' || !value) return null;
+  return value === kind ? kind : `${value}-${kind}`;
+};
+
+/**
  * The resolved catalog-rune docs an item visibly carries, for glyph display
- * (#1372 — every rune host): a shield's reinforcing tier (synthesized to its
- * catalog id, `<tier>-reinforcing`), property runes on any target (weapon /
- * armor / shield / ring all store docs at `runes.property`), the accessory
- * rune, and a runestone's held rune. Docs only — a still-string ref has
- * nothing renderable. Returns [{id,name}]. The property filter mirrors
+ * (#1372 — every rune host): fundamental runes (synthesized to their catalog
+ * ids from the tiers the structured runes block stores), property runes on
+ * any target (weapon / armor / shield / ring all store docs at
+ * `runes.property`), the accessory rune, and a runestone's held rune. Docs
+ * only — a still-string ref has nothing renderable. Returns [{id,name}].
+ * NOTE: the juice layer deliberately does NOT use this (flourishFor stamps
+ * runes.property only) — fundamentals display but never stamp.
+ * The property filter mirrors
  * weaponRunes.weaponPropertyRunes; it's inlined so this module stays
  * import-free (the fx layer resolves glyphs through it with no app-graph
  * baggage, and the preview rig loads it as bare ESM).
@@ -187,11 +279,10 @@ export const runeIconsOf = (item) => {
   const runes =
     item?.runes && typeof item.runes === 'object' && !Array.isArray(item.runes) ? item.runes : {};
   const docs = [];
-  // Reinforcing leads — it is the shield's defining rune. Other fundamentals
-  // (potency / striking / resilient) stay numbers-and-tiers, not marks.
+  // Reinforcing leads — it is the shield's defining rune.
   if (typeof runes.reinforcing === 'string' && runes.reinforcing) {
     docs.push({
-      id: `${runes.reinforcing}-reinforcing`,
+      id: fundamentalRuneId('reinforcing', runes.reinforcing),
       name: `${capitalize(runes.reinforcing)} Reinforcing`,
     });
   }
@@ -199,6 +290,30 @@ export const runeIconsOf = (item) => {
     docs.push(...runes.property.filter((p) => p && typeof p === 'object'));
   }
   if (runes.accessory && typeof runes.accessory === 'object') docs.push(runes.accessory);
+  // The other fundamentals (potency / striking / resilient) show as marks too
+  // (fold-in 2026-07-10) — but AFTER the property runes, so a tile's capped
+  // medallions keep the item's distinctive marks and the near-universal
+  // fundamentals fold into the +n chip. Synthesized like reinforcing: the
+  // structured runes block stores tiers, not docs.
+  const potencyId = fundamentalRuneId('potency', runes.potency, item?.armor ? 'armor' : 'weapon');
+  if (potencyId) {
+    docs.push({
+      id: potencyId,
+      name: `+${Math.min(Number(runes.potency), 3)} ${item?.armor ? 'Armor' : 'Weapon'} Potency`,
+    });
+  }
+  if (typeof runes.striking === 'string' && runes.striking) {
+    docs.push({
+      id: fundamentalRuneId('striking', runes.striking),
+      name: runes.striking === 'striking' ? 'Striking' : `${capitalize(runes.striking)} Striking`,
+    });
+  }
+  if (typeof runes.resilient === 'string' && runes.resilient) {
+    docs.push({
+      id: fundamentalRuneId('resilient', runes.resilient),
+      name: runes.resilient === 'resilient' ? 'Resilient' : `${capitalize(runes.resilient)} Resilient`,
+    });
+  }
   const held = item?.runestone?.rune;
   if (held && typeof held === 'object' && held.id != null) docs.push(held);
   return docs.filter((d) => d.id != null);

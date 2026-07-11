@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
 import RuneIcon from '../shared/RuneIcon';
+import { fundamentalRuneId } from '../../utils/runeIcons';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -83,12 +84,12 @@ const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
   const [pending, setPending] = useState(null); // a choices-rune awaiting its choice
   const held = socketContent(socket);
   // The held rune's glyph (#1372): property/accessory sockets carry the rune
-  // ref; reinforcing synthesizes its catalog id from the tier key.
+  // ref; fundamental sockets synthesize their catalog id from the stored tier.
   const heldRuneId =
     (socket.type === 'property' || socket.type === 'accessory') && socket.rune
       ? (typeof socket.rune === 'string' ? socket.rune : socket.rune.id)
-      : socket.type === 'reinforcing' && socket.value
-        ? `${socket.value}-reinforcing`
+      : socket.value != null
+        ? fundamentalRuneId(socket.type, socket.value, socket.target)
         : null;
 
   const pick = (rune) => {

@@ -13,3 +13,9 @@
 .runeicon-tint[data-runeicon='wounding']    { color: var(--runeicon-wounding); }
 .runeicon-tint[data-runeicon='ghost-touch'] { color: var(--runeicon-ghost-touch); }
 .runeicon-tint[data-runeicon='returning']   { color: var(--runeicon-returning); }
+/* Fundamental runes — forge-metal neutrals (see pf2e-tokens.css). */
+.runeicon-tint[data-runeicon='weapon-potency'] { color: var(--runeicon-weapon-potency); }
+.runeicon-tint[data-runeicon='armor-potency']  { color: var(--runeicon-armor-potency); }
+.runeicon-tint[data-runeicon='striking']       { color: var(--runeicon-striking); }
+.runeicon-tint[data-runeicon='resilient']      { color: var(--runeicon-resilient); }
+.runeicon-tint[data-runeicon='reinforcing']    { color: var(--runeicon-reinforcing); }

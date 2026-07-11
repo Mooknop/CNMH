@@ -465,8 +465,21 @@ describe('ShopStorefront', () => {
       const gear = screen.getByTestId('gear-w1');
       expect(gear).toHaveTextContent('Longsword');
       expect(gear).toHaveTextContent('+1'); // filled potency socket
+      // The filled potency socket wears its fundamental glyph (fold-in): the
+      // catalog id is synthesized from the tier the socket stores.
+      expect(gear.querySelector('.ps-socket-glyph svg.rune-icon'))
+        .toHaveAttribute('data-runeicon', 'weapon-potency');
       // open striking + property sockets are tappable
       expect(within(gear).getAllByRole('button', { name: /^fill .* slot/i }).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('the etch picker shows a glyph on fundamental options too', () => {
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
+      const picker = screen.getByTestId('picker-w1');
+      const option = within(picker).getByRole('button', { name: /^etch Striking/ });
+      expect(option.querySelector('svg.rune-icon')).toHaveAttribute('data-runeicon', 'striking');
     });
 
     // #879: a filled fundamental re-opens for an upgrade when a higher tier is

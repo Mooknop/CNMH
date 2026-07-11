@@ -54,12 +54,16 @@ describe('IconTile', () => {
       runes: { potency: 2, property: [{ id: 'flaming', name: 'Flaming' }, { id: 'frost', name: 'Frost' }] },
     };
     const { container } = render(<IconTile item={item} />);
+    // Two property coins + the +2 potency fundamental folded into the chip.
     const coins = container.querySelectorAll('.icon-tile-runeicon');
-    expect(coins).toHaveLength(2);
+    expect(coins).toHaveLength(3);
     expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
     expect(coins[0]).toHaveClass('runeicon-tint');
     expect(coins[0].querySelector('svg.rune-icon')).not.toBeNull();
-    expect(container.querySelector('.icon-tile-runeicon-more')).toBeNull();
+    expect(container.querySelector('.icon-tile-runeicon-more')).toHaveAttribute(
+      'title',
+      '+2 Weapon Potency'
+    );
   });
 
   it('folds runes past the two-coin cap into a +n chip', () => {
@@ -77,8 +81,10 @@ describe('IconTile', () => {
     const { container } = render(<IconTile item={item} />);
     expect(container.querySelectorAll('.icon-tile-runeicon')).toHaveLength(3);
     const more = container.querySelector('.icon-tile-runeicon-more');
-    expect(more).toHaveTextContent('+1');
-    expect(more).toHaveAttribute('title', 'Shock');
+    // Shock + the +3 potency fundamental fold into the chip — property runes
+    // outrank fundamentals for the two visible coins.
+    expect(more).toHaveTextContent('+2');
+    expect(more).toHaveAttribute('title', 'Shock, +3 Weapon Potency');
   });
 
   it('an undrawn rune family still renders, as the untinted generic mark', () => {
@@ -121,9 +127,9 @@ describe('IconTile', () => {
     const { container } = render(<IconTile item={item} />);
     const coins = container.querySelectorAll('.icon-tile-runeicon');
     expect(coins).toHaveLength(2);
-    // Reinforcing has no drawn family until the R4 art wave — generic mark,
-    // but it still leads the stack; the drawn flaming coin follows.
-    expect(coins[0]).toHaveAttribute('data-runeicon', 'generic');
+    // Reinforcing leads the stack with its own drawn mark (fundamental glyph
+    // wave); the flaming coin follows.
+    expect(coins[0]).toHaveAttribute('data-runeicon', 'reinforcing');
     expect(coins[1]).toHaveAttribute('data-runeicon', 'flaming');
   });
 

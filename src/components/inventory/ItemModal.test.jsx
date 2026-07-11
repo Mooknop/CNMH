@@ -1025,8 +1025,23 @@ describe('ItemModal', () => {
     expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
     expect(coins[0]).toHaveClass('runeicon-tint');
     const more = document.querySelector('.loot-runeicon-more');
-    expect(more).toHaveTextContent('+1');
-    expect(more).toHaveAttribute('title', 'Shock');
+    // Shock + the +3 potency fundamental fold into the chip — property runes
+    // outrank fundamentals for the two visible coins.
+    expect(more).toHaveTextContent('+2');
+    expect(more).toHaveAttribute('title', 'Shock, +3 Weapon Potency');
+  });
+
+  it('the weapon tier line leads with the fundamental glyphs (potency + striking)', () => {
+    const item = {
+      ...baseItem,
+      runes: { potency: 2, striking: 'greater', property: [] },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    const tier = document.querySelector('.item-rune-tier');
+    const glyphs = tier.querySelectorAll('svg.rune-icon');
+    expect(glyphs).toHaveLength(2);
+    expect(glyphs[0]).toHaveAttribute('data-runeicon', 'weapon-potency');
+    expect(glyphs[1]).toHaveAttribute('data-runeicon', 'striking');
   });
 
   it('the Runes section shows each property rune\'s glyph before its name (#1372)', () => {

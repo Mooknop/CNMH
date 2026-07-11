@@ -130,6 +130,13 @@
   --runeicon-wounding:    #be123c;   /* arterial crimson */
   --runeicon-ghost-touch: #a5b4fc;   /* ectoplasm periwinkle */
   --runeicon-returning:   #22c55e;   /* cycle green */
+  /* Fundamentals wear forge-metal neutrals — the property runes keep the
+     color wheel, so a tile's medallion row still reads at a glance. */
+  --runeicon-weapon-potency: #a9bfd6; /* whetted steel */
+  --runeicon-armor-potency:  #9cb8b2; /* steel verdigris */
+  --runeicon-striking:       #8ba6bf; /* deep steel */
+  --runeicon-resilient:      #a9c3b8; /* tempered jade-steel */
+  --runeicon-reinforcing:    #d6a35c; /* shield bronze */
 
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;

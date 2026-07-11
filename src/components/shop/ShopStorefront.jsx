@@ -30,6 +30,7 @@ import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import ItemActivations from '../shared/ItemActivations';
 import ThassilonianRune from '../shared/ThassilonianRune';
 import RuneIcon from '../shared/RuneIcon';
+import { fundamentalRuneId } from '../../utils/runeIcons';
 import { runeForName } from '../../utils/thassilonianRunes';
 import RuneMechanics from '../shared/RuneMechanics';
 import SpellMechanics from '../spells/SpellMechanics';
@@ -532,13 +533,16 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
         {sockets.map((s) => {
           const key = socketKey(s);
           const staged = stagedFor[key];
-          // A socket holding a catalog rune (filled property/accessory, or a
-          // staged property rune) shows the rune's own glyph (#1372); empty
-          // and fundamental sockets keep their generic socket marks.
+          // A filled or staged socket shows the held rune's own glyph (#1372;
+          // fundamentals too since the fold-in — their catalog id is
+          // synthesized from the tier the socket stores). Empty sockets keep
+          // their generic socket marks.
           const filledRef = (s.type === 'property' || s.type === 'accessory') && s.rune
             ? (typeof s.rune === 'string' ? s.rune : s.rune.id)
-            : null;
-          const stagedRef = staged && staged.type === 'property' ? staged.id : null;
+            : s.filled && s.value != null
+              ? fundamentalRuneId(s.type, s.value, s.target)
+              : null;
+          const stagedRef = staged ? staged.id : null;
           const glyphFor = (runeRef) => (
             <span className="ps-socket-glyph" aria-hidden="true">
               {runeRef != null ? <RuneIcon runeId={runeRef} tint /> : SOCKET_GLYPH[s.type]}
@@ -612,7 +616,7 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
                           onStage(gear.uid, openKey, staging);
                           setOpenKey(null);
                         }}>
-                        {r.type === 'property' && <RuneIcon runeId={r.id} tint className="item-rune-glyph" />}
+                        <RuneIcon runeId={r.id} tint className="item-rune-glyph" />
                         <span className="ps-runeopt-name">{r.name}</span>
                         <span className="ps-runeopt-price">{r.price} gp</span>
                       </button>

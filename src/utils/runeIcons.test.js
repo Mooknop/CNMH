@@ -5,6 +5,7 @@ import {
   runeIconTier,
   resolveRuneIcon,
   runeIconsOf,
+  fundamentalRuneId,
 } from './runeIcons';
 
 describe('runeIconTier', () => {
@@ -61,20 +62,82 @@ describe('resolveRuneIcon', () => {
     expect(resolveRuneIcon(null)).toBeNull();
     expect(resolveRuneIcon('')).toBeNull();
   });
+
+  it('fundamental families are drawn across their full ladders', () => {
+    // Numeric potency tiers are 1-based positions into the steps series.
+    expect(resolveRuneIcon('weapon-potency-1').layers).toHaveLength(1);
+    expect(resolveRuneIcon('weapon-potency-3').layers).toHaveLength(3);
+    expect(resolveRuneIcon('armor-potency-2').layers).toHaveLength(2);
+    expect(resolveRuneIcon('major-striking').layers).toHaveLength(3);
+    expect(resolveRuneIcon('resilient').layers).toHaveLength(1);
+    // Reinforcing rides its own six-step ladder, minor → supreme.
+    expect(resolveRuneIcon('minor-reinforcing').layers).toHaveLength(1);
+    expect(resolveRuneIcon('moderate-reinforcing').layers).toHaveLength(3);
+    expect(resolveRuneIcon('supreme-reinforcing').layers).toHaveLength(6);
+    expect(resolveRuneIcon('supreme-reinforcing').generic).toBe(false);
+  });
+});
+
+describe('fundamentalRuneId', () => {
+  it('potency maps a numeric tier onto the target family', () => {
+    expect(fundamentalRuneId('potency', 1, 'weapon')).toBe('weapon-potency-1');
+    expect(fundamentalRuneId('potency', 3, 'armor')).toBe('armor-potency-3');
+    expect(fundamentalRuneId('potency', 2)).toBe('weapon-potency-2');
+    expect(fundamentalRuneId('potency', 0)).toBeNull();
+    expect(fundamentalRuneId('potency', undefined)).toBeNull();
+  });
+
+  it('striking / resilient store their base tier as the family word', () => {
+    expect(fundamentalRuneId('striking', 'striking')).toBe('striking');
+    expect(fundamentalRuneId('striking', 'greater')).toBe('greater-striking');
+    expect(fundamentalRuneId('resilient', 'major')).toBe('major-resilient');
+    expect(fundamentalRuneId('striking', '')).toBeNull();
+  });
+
+  it('reinforcing always carries a tier word', () => {
+    expect(fundamentalRuneId('reinforcing', 'minor')).toBe('minor-reinforcing');
+    expect(fundamentalRuneId('reinforcing', 'supreme')).toBe('supreme-reinforcing');
+  });
 });
 
 describe('runeIconsOf', () => {
   const flaming = { id: 'flaming', name: 'Flaming' };
   const frost = { id: 'frost', name: 'Frost' };
 
-  it('collects a weapon\'s resolved property-rune docs in slot order', () => {
+  it('collects a weapon\'s resolved property-rune docs in slot order, fundamentals after', () => {
     const item = { runes: { potency: 2, property: [flaming, frost] } };
-    expect(runeIconsOf(item)).toEqual([flaming, frost]);
+    expect(runeIconsOf(item)).toEqual([
+      flaming,
+      frost,
+      { id: 'weapon-potency-2', name: '+2 Weapon Potency' },
+    ]);
   });
 
   it('skips unresolved string refs and empty slots', () => {
     const item = { runes: { potency: 2, property: ['flaming', null, frost] } };
-    expect(runeIconsOf(item)).toEqual([frost]);
+    expect(runeIconsOf(item)).toEqual([
+      frost,
+      { id: 'weapon-potency-2', name: '+2 Weapon Potency' },
+    ]);
+  });
+
+  it('weapon fundamentals (potency + striking) trail the property runes', () => {
+    // Property runes are an item's distinctive marks; the near-universal
+    // fundamentals fold into the tile's +n chip rather than displacing them.
+    const item = { strikes: {}, runes: { potency: 1, striking: 'greater', property: [flaming] } };
+    expect(runeIconsOf(item)).toEqual([
+      flaming,
+      { id: 'weapon-potency-1', name: '+1 Weapon Potency' },
+      { id: 'greater-striking', name: 'Greater Striking' },
+    ]);
+  });
+
+  it('an armor block flips potency to the armor family and adds resilient', () => {
+    const item = { armor: true, runes: { potency: 2, resilient: 'resilient' } };
+    expect(runeIconsOf(item)).toEqual([
+      { id: 'armor-potency-2', name: '+2 Armor Potency' },
+      { id: 'resilient', name: 'Resilient' },
+    ]);
   });
 
   it('includes a runestone\'s held rune', () => {
@@ -108,7 +171,7 @@ describe('runeIconsOf', () => {
   it('armor and ring property runes ride the same runes.property path', () => {
     // Same storage shape for every target (#1372) — no target branching.
     expect(runeIconsOf({ armor: {}, runes: { resilient: 'greater', property: [flaming] } }))
-      .toEqual([flaming]);
+      .toEqual([flaming, { id: 'greater-resilient', name: 'Greater Resilient' }]);
     expect(runeIconsOf({ powerRing: true, runes: { property: [frost] } })).toEqual([frost]);
   });
 });
