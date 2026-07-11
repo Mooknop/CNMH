@@ -9,6 +9,16 @@ vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
 vi.mock('../../hooks/useEffects', () => ({ useEffects: vi.fn(() => ({ effects: [] })) }));
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn(() => ({ effects: [] })) }));
 
+// SkillSheet fans out to the existing resolvers — stub the heavy modals and
+// the encounter read so the sheet's own behavior is what's under test.
+vi.mock('../../hooks/useEncounter', () => ({ useEncounter: () => ({ encounter: null }) }));
+vi.mock('../encounter/SkillActionModal', () => ({
+  default: ({ action }) => <div data-testid="skill-action-modal">{action?.name}</div>,
+}));
+vi.mock('../actions/SkillCheckModal', () => ({
+  default: ({ action }) => <div data-testid="skill-check-modal">{action?.name}</div>,
+}));
+
 const fullCharModel = {
   skillModifiers: {
     acrobatics: 3, arcana: 1, athletics: 5, crafting: 1, deception: 2,
@@ -41,6 +51,8 @@ vi.mock('../../utils/CharacterUtils', () => ({
     return labels[prof] || 'Untrained';
   },
   getLoreSkillModifier: () => 7,
+  // augmentSkillAction (via SkillSheet) reads hasFeat at launch time.
+  hasFeat: () => false,
 }));
 
 describe('EnhancedSkillsList', () => {
@@ -107,25 +119,51 @@ describe('EnhancedSkillsList', () => {
     expect(arcana).toHaveClass('rank-0');
   });
 
-  it('pressing a snode opens the detail strip with the skill actions', () => {
-    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
-    expect(container.querySelector('.snode-detail')).toBeNull();
+  it('pressing a snode raises the pull-up sheet with the skill actions', () => {
+    render(<EnhancedSkillsList character={{ id: '1' }} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
 
     fireEvent.click(screen.getByLabelText('Stealth, Trained'));
-    expect(container.querySelector('.snode-detail')).toBeInTheDocument();
+    const sheet = screen.getByRole('dialog', { name: 'Stealth details' });
+    expect(sheet).toBeInTheDocument();
     expect(screen.getByText('Hide')).toBeInTheDocument();
     expect(screen.getByText('Sneak')).toBeInTheDocument();
+    // Breakdown chips: DEX +2 ability part and the Trained proficiency part.
+    expect(screen.getByText('DEX +2')).toBeInTheDocument();
+    expect(screen.getByText('Trained +1')).toBeInTheDocument();
 
-    // Pressing again closes it.
-    fireEvent.click(screen.getByLabelText('Stealth, Trained'));
-    expect(container.querySelector('.snode-detail')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Close skill sheet'));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('a lore snode opens a meta-only detail strip', () => {
-    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+  it('the sheet Roll button launches a plain check via SkillCheckModal', () => {
+    render(<EnhancedSkillsList character={{ id: '1' }} />);
+    fireEvent.click(screen.getByLabelText('Stealth, Trained'));
+    fireEvent.click(screen.getByRole('button', { name: 'Roll Stealth' }));
+    expect(screen.getByTestId('skill-check-modal')).toHaveTextContent('Stealth Check');
+  });
+
+  it('an automated skill action row offers Use and routes to the resolver', () => {
+    render(<EnhancedSkillsList character={{ id: '1' }} />);
+    // Acrobatics hosts Tumble Through — automated, but encounter-only, so out
+    // of combat it stays informational (no Use button).
+    fireEvent.click(screen.getByLabelText('Acrobatics, Trained'));
+    expect(screen.getByText('Tumble Through')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Use Tumble Through')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Close skill sheet'));
+
+    // Athletics hosts Climb — surfaced in exploration, so it's launchable.
+    fireEvent.click(screen.getByLabelText('Athletics, Expert'));
+    fireEvent.click(screen.getByLabelText('Use Climb'));
+    expect(screen.getByTestId('skill-check-modal')).toHaveTextContent('Climb');
+  });
+
+  it('a lore snode opens a meta-only sheet (no actions, no Roll)', () => {
+    render(<EnhancedSkillsList character={{ id: '1' }} />);
     fireEvent.click(screen.getByLabelText('Absalom Lore, Trained'));
-    expect(container.querySelector('.snode-detail')).toBeInTheDocument();
-    expect(screen.getByText(/Intelligence · Trained/)).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Absalom Lore details' })).toBeInTheDocument();
+    expect(screen.getByText(/INT · Trained/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Roll/ })).toBeNull();
   });
 
   it('accepts activeConditions prop without crashing', () => {
