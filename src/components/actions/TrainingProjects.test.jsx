@@ -45,9 +45,10 @@ const VENDORS = [
   },
 ];
 
-const setup = ({ training = null, setTraining = vi.fn(), supported = {} } = {}) => {
+const setup = ({ training = null, setTraining = vi.fn(), setResults = vi.fn(), supported = {} } = {}) => {
   useSyncedState.mockImplementation((key) => {
     if (key.startsWith('cnmh_training_')) return [training, setTraining];
+    if (key === 'cnmh_downtimeresults_global') return [null, setResults];
     return [null, vi.fn()];
   });
   useLocationSupport.mockReturnValue({
@@ -55,7 +56,7 @@ const setup = ({ training = null, setTraining = vi.fn(), supported = {} } = {}) 
     isSupported: (id) => Boolean(supported[id]),
     setSupport: vi.fn(),
   });
-  return { setTraining };
+  return { setTraining, setResults };
 };
 
 beforeEach(() => vi.clearAllMocks());
@@ -147,7 +148,7 @@ describe('TrainingProjects', () => {
     expect(screen.getByText('Sandpoint Garrison')).toBeInTheDocument();
   });
 
-  it('shows the ready state once the hour total is met (submission is S2)', () => {
+  it('shows the ready state once the hour total is met (until the submit lands)', () => {
     setup({
       training: {
         tracks: [{
@@ -161,6 +162,73 @@ describe('TrainingProjects', () => {
     expect(screen.getByText('✓ Training complete')).toBeInTheDocument();
     expect(screen.getByText(/awaiting GM confirmation/)).toBeInTheDocument();
     expect(screen.getByText('Specialized Shield Training (Medium): Aiding Shield')).toBeInTheDocument();
+  });
+
+  describe('completion auto-submit (S2)', () => {
+    const doneTrack = {
+      id: 't1', vendorId: 'sandpoint-garrison', offeringId: 'shield-block',
+      hours: 160, benchmarkHours: 160, status: 'in-progress', startedAt: 0,
+    };
+
+    it('queues a training result carrying the grant and drops the track', () => {
+      const training = { tracks: [doneTrack] };
+      const { setTraining, setResults } = setup({ training });
+      render(<TrainingProjects character={character} vendors={VENDORS} />);
+
+      const queued = setResults.mock.calls[0][0](null).entries;
+      expect(queued).toHaveLength(1);
+      expect(queued[0]).toMatchObject({
+        kind: 'training',
+        charId: 'char-1',
+        charName: 'Pellias',
+        vendorId: 'sandpoint-garrison',
+        vendorName: 'Sandpoint Garrison',
+        offeringId: 'shield-block',
+        offeringName: 'Shield Block',
+        choiceId: null,
+        status: 'pending',
+        grant: {
+          kind: 'reaction',
+          reaction: { name: 'Shield Block', description: expect.stringContaining('ward off a blow') },
+        },
+      });
+
+      const next = setTraining.mock.calls[0][0](training);
+      expect(next.tracks).toHaveLength(0);
+    });
+
+    it('carries the picked choice and its grant on the submitted entry', () => {
+      const training = {
+        tracks: [{
+          ...doneTrack, id: 't2', offeringId: 'specialized-medium', choiceId: 'covering-shield',
+        }],
+      };
+      const { setResults } = setup({ training });
+      render(<TrainingProjects character={character} vendors={VENDORS} />);
+
+      const queued = setResults.mock.calls[0][0](null).entries;
+      expect(queued[0]).toMatchObject({
+        offeringName: 'Specialized Shield Training (Medium)',
+        choiceId: 'covering-shield',
+        choiceName: 'Covering Shield',
+        grant: { kind: 'reaction', reaction: { name: 'Covering Shield' } },
+      });
+    });
+
+    it('leaves unfinished tracks alone', () => {
+      const training = {
+        tracks: [
+          doneTrack,
+          { ...doneTrack, id: 't3', hours: 8 },
+        ],
+      };
+      const { setTraining, setResults } = setup({ training });
+      render(<TrainingProjects character={character} vendors={VENDORS} />);
+
+      expect(setResults.mock.calls[0][0](null).entries).toHaveLength(1);
+      const next = setTraining.mock.calls[0][0](training);
+      expect(next.tracks.map((t) => t.id)).toEqual(['t3']);
+    });
   });
 
   it('abandons a track', () => {

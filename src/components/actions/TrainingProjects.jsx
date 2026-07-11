@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useLocationSupport } from '../../hooks/useLocationSupport';
 import {
@@ -6,9 +6,12 @@ import {
   availableTrainingVendors,
   eligibleChoices,
   trackLabel,
+  trackOffering,
+  buildGrant,
 } from '../../data/trainingVendors';
+import { buildTrainingResult } from '../../utils/earnIncomeResults';
 import './TrainingProjects.css';
-import { APP, syncKey } from '../../sync/keys';
+import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -25,7 +28,9 @@ const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).sl
 const TrainingProjects = ({ character, vendors = TRAINING_VENDORS }) => {
   const charId = character?.id || 'unknown';
   const [training, setTraining] = useSyncedState(syncKey(APP.TRAINING, charId), null);
+  const [, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
   const { supported } = useLocationSupport();
+  const submittedRef = useRef(new Set());
 
   const [adding, setAdding] = useState(false);
   const [offeringKey, setOfferingKey] = useState(''); // `${vendorId}::${offeringId}`
@@ -33,6 +38,50 @@ const TrainingProjects = ({ character, vendors = TRAINING_VENDORS }) => {
 
   const tracks = training?.tracks || [];
   const offerable = availableTrainingVendors(character, supported, tracks, vendors);
+
+  // A track that reaches its hour total is submitted to the GM review queue as
+  // a pending training result — carrying the full grant payload — and dropped
+  // from the player's list (S2; same submittedRef double-fire guard as
+  // CraftingProjects completed → queue).
+  const isComplete = (t) =>
+    (t.status || 'in-progress') === 'in-progress' && (t.hours || 0) >= t.benchmarkHours;
+  const completedSig = tracks.filter(isComplete).map((t) => t.id).join(',');
+  useEffect(() => {
+    const completed = (training?.tracks || []).filter(
+      (t) => isComplete(t) && !submittedRef.current.has(t.id),
+    );
+    if (completed.length === 0) return;
+    completed.forEach((t) => submittedRef.current.add(t.id));
+    const doneIds = new Set(completed.map((t) => t.id));
+    setResults((prev) => ({
+      entries: [
+        ...(prev?.entries || []),
+        ...completed.map((t) => {
+          const offering = trackOffering(t, vendors);
+          const choice = t.choiceId
+            ? (offering?.choices || []).find((c) => c.id === t.choiceId)
+            : null;
+          return buildTrainingResult({
+            charId,
+            charName: character?.name,
+            vendorId: t.vendorId,
+            vendorName: vendors.find((v) => v.id === t.vendorId)?.name || t.vendorId,
+            offeringId: t.offeringId,
+            offeringName: offering?.name || t.offeringId,
+            choiceId: choice?.id,
+            choiceName: choice?.name,
+            grant: buildGrant(offering, choice),
+          });
+        }),
+      ],
+    }));
+    setTraining((prev) => ({
+      tracks: (prev?.tracks || []).filter((t) => !doneIds.has(t.id)),
+    }));
+  // completedSig is the stable signature of the completed set; training is
+  // re-read fresh inside and the synced setters are stable.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedSig]);
 
   // Nothing to show and nothing to start — the panel stays out of the tab.
   if (tracks.length === 0 && offerable.length === 0) return null;
@@ -178,6 +227,9 @@ const TrainingProjects = ({ character, vendors = TRAINING_VENDORS }) => {
             </label>
           )}
 
+          {selected?.offering.trigger && (
+            <p className="tp-summary"><strong>Trigger</strong> {selected.offering.trigger}</p>
+          )}
           {selected?.offering.summary && (
             <p className="tp-summary">{selected.offering.summary}</p>
           )}

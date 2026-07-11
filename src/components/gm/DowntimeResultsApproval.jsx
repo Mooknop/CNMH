@@ -6,6 +6,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { cpToGp } from '../../utils/earnIncome';
 import { creditEarnIncome } from '../../utils/applyEarnIncome';
 import { grantCraftedItem } from '../../utils/applyCrafting';
+import { grantTrainedAbility } from '../../utils/applyTraining';
 import { saveDocument } from '../../utils/gmApi';
 import { pendingResults, markConfirmed, removeResult } from '../../utils/earnIncomeResults';
 import './DowntimeResultsApproval.css';
@@ -18,11 +19,12 @@ const DEGREE_LABEL = {
   criticalFailure: 'Crit Failure',
 };
 
-// GM review queue for player-submitted downtime results — both Earn Income rolls
-// and Crafting completions (distinguished by `kind`). Confirm commits the
-// outcome and keeps the entry as a record (so it isn't applied twice); Reject
-// drops it. Earn Income credits gold; Crafting grants the item to the character
-// doc (durable via saveDocument). Nothing commits until the GM confirms.
+// GM review queue for player-submitted downtime results — Earn Income rolls,
+// Crafting completions, and Training completions (distinguished by `kind`).
+// Confirm commits the outcome and keeps the entry as a record (so it isn't
+// applied twice); Reject drops it. Earn Income credits gold; Crafting grants
+// the item, and Training the ability, to the character doc (durable via
+// saveDocument). Nothing commits until the GM confirms.
 const DowntimeResultsApproval = () => {
   const [results, setResults] = useSyncedState(globalKey(APP.DOWNTIMERESULTS), null);
   const { getState, sendUpdate } = useSession();
@@ -37,10 +39,11 @@ const DowntimeResultsApproval = () => {
     setResults((prev) => ({ entries: markConfirmed(prev?.entries, id) }));
 
   const confirm = async (entry) => {
-    if (entry.kind === 'crafting') {
+    if (entry.kind === 'crafting' || entry.kind === 'training') {
+      const grant = entry.kind === 'crafting' ? grantCraftedItem : grantTrainedAbility;
       setBusy(entry.id);
       try {
-        await grantCraftedItem({ entry, rawCharacters, saveDocument, refresh, appendLog });
+        await grant({ entry, rawCharacters, saveDocument, refresh, appendLog });
         markDone(entry.id);
       } finally {
         setBusy(null);
@@ -70,6 +73,9 @@ const DowntimeResultsApproval = () => {
     }
     if (entry.kind === 'retrain') return `Retrain: ${retrainSwap(entry)}`;
     if (entry.kind === 'research') return `Research: ${entry.topic} — resolve via #206`;
+    if (entry.kind === 'training') {
+      return `Training: ${entry.offeringName}${entry.choiceName ? ` — ${entry.choiceName}` : ''} at ${entry.vendorName}`;
+    }
     const where = entry.locationName ? ` at ${entry.locationName}` : ' (freelance)';
     return `${entry.skillLabel}${where} · Lvl ${entry.taskLevel} DC ${entry.dc} · rolled ${entry.total} (${DEGREE_LABEL[entry.degree] || entry.degree})`;
   };
@@ -81,11 +87,12 @@ const DowntimeResultsApproval = () => {
 
   const payout = (entry) => {
     if (entry.kind === 'crafting') return 'item';
+    if (entry.kind === 'training') return 'ability';
     if (entry.kind === 'retrain' || entry.kind === 'research') return '—';
     return entry.payoutCp > 0 ? `${cpToGp(entry.payoutCp)} gp` : '—';
   };
 
-  const KIND_LABEL = { crafting: 'craft', retrain: 'retrain', research: 'research' };
+  const KIND_LABEL = { crafting: 'craft', retrain: 'retrain', research: 'research', training: 'training' };
   const kindLabel = (entry) => KIND_LABEL[entry.kind] || 'Earn Income';
 
   return (

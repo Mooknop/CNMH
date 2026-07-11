@@ -8,6 +8,7 @@ import {
   buildCraftingResult,
   buildRetrainResult,
   buildResearchResult,
+  buildTrainingResult,
   hasAccumulateResult,
 } from './earnIncomeResults';
 
@@ -129,6 +130,36 @@ describe('buildCraftingResult', () => {
 
   it('defaults a missing level to null', () => {
     expect(buildCraftingResult({ charId: 'c2', ref: 'torch' }).level).toBeNull();
+  });
+});
+
+describe('buildTrainingResult', () => {
+  it('builds a pending training entry carrying the grant payload', () => {
+    const grant = { kind: 'reaction', reaction: { name: 'Shield Block' } };
+    const entry = buildTrainingResult({
+      charId: 'c1', charName: 'Ashka',
+      vendorId: 'sandpoint-garrison', vendorName: 'Sandpoint Garrison',
+      offeringId: 'shield-block', offeringName: 'Shield Block',
+      grant,
+    });
+    expect(entry).toMatchObject({
+      kind: 'training', charId: 'c1', charName: 'Ashka',
+      vendorId: 'sandpoint-garrison', vendorName: 'Sandpoint Garrison',
+      offeringId: 'shield-block', offeringName: 'Shield Block',
+      choiceId: null, choiceName: null,
+      grant, status: 'pending', periodStartedAt: null,
+    });
+    expect(typeof entry.id).toBe('string');
+  });
+
+  it('records the picked choice', () => {
+    const entry = buildTrainingResult({
+      charId: 'c1', vendorId: 'v', offeringId: 'o',
+      choiceId: 'aiding-shield', choiceName: 'Aiding Shield',
+      grant: { kind: 'reaction', reaction: { name: 'Aiding Shield' } },
+    });
+    expect(entry.choiceId).toBe('aiding-shield');
+    expect(entry.choiceName).toBe('Aiding Shield');
   });
 });
 

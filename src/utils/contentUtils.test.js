@@ -639,6 +639,53 @@ describe('contentUtils', () => {
       const resolved = resolveCharacterItems({ inventory: refInventory }, items).inventory;
       expect(calculateItemsBulk(resolved)).toBe(calculateItemsBulk(inlineInventory));
     });
+
+    describe('trained[] fold (#1191 S2)', () => {
+      const stanceFeat = {
+        name: 'Tiger Stance',
+        level: 1,
+        actions: [{ name: 'Tiger Stance', actionCount: 1, traits: ['Monk', 'Stance'] }],
+        strikes: [{ name: 'Tiger Claw', damage: '1d8' }],
+      };
+      const blockReaction = { name: 'Shield Block', trigger: 'While raised…', description: '…' };
+
+      it('folds feat-kind grants into feats and reaction-kind into reactions', () => {
+        const doc = {
+          id: 'c1',
+          feats: [{ name: 'Authored Feat' }],
+          reactions: [{ name: 'Authored Reaction' }],
+          trained: [
+            { kind: 'feat', feat: stanceFeat, vendorId: 'v', offeringId: 'o', grantedAt: 1 },
+            { kind: 'reaction', reaction: blockReaction, vendorId: 'v', offeringId: 'o2', grantedAt: 2 },
+          ],
+        };
+        const out = resolveCharacterItems(doc, items);
+        expect(out.feats.map((f) => f.name)).toEqual(['Authored Feat', 'Tiger Stance']);
+        expect(out.feats[1].strikes).toEqual(stanceFeat.strikes);
+        expect(out.reactions.map((r) => r.name)).toEqual(['Authored Reaction', 'Shield Block']);
+        // raw grants stay on the doc (GM editor reads rawCharacters anyway)
+        expect(out.trained).toHaveLength(2);
+      });
+
+      it('creates the target arrays when the doc has none', () => {
+        const out = resolveCharacterItems(
+          { id: 'c1', trained: [{ kind: 'reaction', reaction: blockReaction }] },
+          items,
+        );
+        expect(out.reactions).toEqual([blockReaction]);
+        expect(out.feats).toBeUndefined();
+      });
+
+      it('ignores malformed entries and leaves a doc without trained untouched', () => {
+        const out = resolveCharacterItems(
+          { id: 'c1', reactions: [], trained: [{ kind: 'reaction' }, { kind: 'nope', reaction: blockReaction }] },
+          items,
+        );
+        expect(out.reactions).toEqual([]);
+        const plain = { id: 'c2', abilities: {} };
+        expect(resolveCharacterItems(plain, items)).toBe(plain);
+      });
+    });
   });
 
   describe('applyVariant — variant overrides (#907 S1)', () => {

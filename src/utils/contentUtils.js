@@ -627,6 +627,24 @@ export const resolveCharacterItems = (character, items, spells, runes) => {
   if (Array.isArray(out.ancestry_spells)) {
     out = { ...out, ancestry_spells: resolveInnateSpells(out.ancestry_spells, spMap) };
   }
+  // Training grants (#1191 S2): `trained[]` is a LIVE char-doc field —
+  // abilities granted via applyTraining survive content applies, unlike
+  // feats/reactions, which are authored and field-merged from the bundle.
+  // Fold each entry into the resolved character here so the sheet and
+  // automation see them like authored abilities: feat-kind (stances — nested
+  // actions/strikes flow like any feat) into feats[], reaction-kind into
+  // reactions[]. The GM editor reads rawCharacters, so the raw grants are
+  // never clobbered.
+  if (Array.isArray(out.trained) && out.trained.length > 0) {
+    const grantedFeats = out.trained.filter((t) => t?.kind === 'feat' && t.feat).map((t) => t.feat);
+    const grantedReactions = out.trained.filter((t) => t?.kind === 'reaction' && t.reaction).map((t) => t.reaction);
+    if (grantedFeats.length > 0) {
+      out = { ...out, feats: [...(Array.isArray(out.feats) ? out.feats : []), ...grantedFeats] };
+    }
+    if (grantedReactions.length > 0) {
+      out = { ...out, reactions: [...(Array.isArray(out.reactions) ? out.reactions : []), ...grantedReactions] };
+    }
+  }
   return out;
 };
 

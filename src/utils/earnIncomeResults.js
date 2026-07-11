@@ -136,6 +136,36 @@ export function buildResearchResult({ charId, charName, topic, startedAt }) {
   };
 }
 
+// Builds a pending Training completion entry (#1191 S2). Carries the full
+// grant payload (data/trainingVendors.buildGrant) plus display provenance, so
+// the GM confirm needs no vendor-catalog re-lookup — approval hands the entry
+// straight to applyTraining.grantTrainedAbility.
+export function buildTrainingResult({
+  charId, charName,
+  vendorId, vendorName,
+  offeringId, offeringName,
+  choiceId, choiceName,
+  grant,
+  startedAt,
+}) {
+  return {
+    id: newEntryUid(),
+    kind: 'training',
+    charId,
+    charName,
+    vendorId,
+    vendorName,
+    offeringId,
+    offeringName,
+    choiceId: choiceId ?? null,
+    choiceName: choiceName ?? null,
+    grant,
+    status: 'pending',
+    periodStartedAt: startedAt ?? null,
+    ts: Date.now(),
+  };
+}
+
 // True if this PC already submitted a result of `kind` for the active period —
 // used to keep an accumulate-completion prompt from re-firing once submitted.
 export function hasAccumulateResult(results, charId, startedAt, kind) {
