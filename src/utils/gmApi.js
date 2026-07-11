@@ -167,11 +167,13 @@ export const applyContentDiff = async () => {
 // Live (player-mutated) character-doc fields. These are preserved from the live
 // doc and NEVER overwritten by a content apply. Derived from the only app paths
 // that write a character doc from player state — the reconciliation engine
-// (consumed/gold/acquired/removed, utils/reconcile.js) and Quick Craft
-// (utils/applyCrafting.js): both touch only `inventory` and `gold`. Everything
-// else on a character doc is authored content and flows from the bundle.
-// (loadout #559 manifests as inventory-entry changes, already covered.)
-export const LIVE_CHARACTER_FIELDS = ['inventory', 'gold'];
+// (consumed/gold/acquired/removed, utils/reconcile.js), Quick Craft
+// (utils/applyCrafting.js), and training grants (utils/applyTraining.js,
+// #1191 S2: abilities granted into `trained`, folded into feats/reactions at
+// content-resolve time). Everything else on a character doc is authored
+// content and flows from the bundle. (loadout #559 manifests as
+// inventory-entry changes, already covered.)
+export const LIVE_CHARACTER_FIELDS = ['inventory', 'gold', 'trained'];
 
 // Top-level field names where two character docs differ (deep), unioning keys
 // present in only one. Used to report which authored fields a merge changed.

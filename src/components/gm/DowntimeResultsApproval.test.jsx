@@ -38,6 +38,15 @@ const researchEntry = {
   topic: 'The Sealed Vault', status: 'pending',
 };
 
+const trainingEntry = {
+  id: 'r5', kind: 'training', charId: 'c1', charName: 'Ashka',
+  vendorId: 'sandpoint-garrison', vendorName: 'Sandpoint Garrison',
+  offeringId: 'shield-block', offeringName: 'Shield Block',
+  choiceId: null, choiceName: null,
+  grant: { kind: 'reaction', reaction: { name: 'Shield Block', trigger: 'While raised…' } },
+  status: 'pending',
+};
+
 const setup = (entries) => {
   useSyncedState.mockReturnValue([{ entries }, mockSetResults]);
 };
@@ -131,6 +140,56 @@ describe('DowntimeResultsApproval', () => {
     fireEvent.click(screen.getByRole('button', { name: /reject blu craft/i }));
     expect(saveDocument).not.toHaveBeenCalled();
     const next = mockSetResults.mock.calls[0][0]({ entries: [craftEntry] });
+    expect(next.entries).toEqual([]);
+  });
+
+  it('lists a Training result as an ability grant, naming the choice when picked', () => {
+    setup([{ ...trainingEntry, choiceName: 'Aiding Shield', offeringName: 'Specialized Shield Training (Medium)' }]);
+    render(<DowntimeResultsApproval />);
+    expect(screen.getByText('Training: Specialized Shield Training (Medium) — Aiding Shield at Sandpoint Garrison')).toBeInTheDocument();
+    expect(screen.getByText('ability')).toBeInTheDocument();
+  });
+
+  it('Confirm on a Training result appends the grant to trained[], persists, and confirms', async () => {
+    const refresh = vi.fn();
+    useContent.mockReturnValue({
+      rawCharacters: [{ id: 'c1', name: 'Ashka' }],
+      refresh,
+    });
+    setup([trainingEntry]);
+    render(<DowntimeResultsApproval />);
+    fireEvent.click(screen.getByRole('button', { name: /confirm ashka training/i }));
+
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [collection, id, doc] = saveDocument.mock.calls[0];
+    expect(collection).toBe('character');
+    expect(id).toBe('c1');
+    expect(doc.trained).toHaveLength(1);
+    expect(doc.trained[0]).toMatchObject({
+      kind: 'reaction',
+      reaction: { name: 'Shield Block' },
+      vendorId: 'sandpoint-garrison',
+      offeringId: 'shield-block',
+    });
+    expect(refresh).toHaveBeenCalled();
+    expect(mockAppendLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        charId: 'c1',
+        text: expect.stringContaining('completed training at Sandpoint Garrison: Shield Block learned'),
+      }),
+    );
+
+    await waitFor(() => expect(mockSetResults).toHaveBeenCalled());
+    const next = mockSetResults.mock.calls.at(-1)[0]({ entries: [trainingEntry] });
+    expect(next.entries[0].status).toBe('confirmed');
+  });
+
+  it('Reject on a Training result discards without granting', () => {
+    setup([trainingEntry]);
+    render(<DowntimeResultsApproval />);
+    fireEvent.click(screen.getByRole('button', { name: /reject ashka training/i }));
+    expect(saveDocument).not.toHaveBeenCalled();
+    const next = mockSetResults.mock.calls[0][0]({ entries: [trainingEntry] });
     expect(next.entries).toEqual([]);
   });
 

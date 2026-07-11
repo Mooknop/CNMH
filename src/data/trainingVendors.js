@@ -25,13 +25,22 @@
 //                     (innate or previously trained).
 //   requiresAbility — null | ability name the PC must already have (innate OR
 //                     trained), e.g. Shield Block for the Specialized tracks.
-//   choices         — null | [{ id, name, note }] — the track teaches ONE of
-//                     these, picked at track start (stored on the track so the
-//                     GM approval shows exactly what lands). Choices the PC
-//                     already knows are filtered out; a track can be taken
-//                     again later for a different choice.
+//   choices         — null | [{ id, name, note, trigger?, summary?, grant? }]
+//                     — the track teaches ONE of these, picked at track start
+//                     (stored on the track so the GM approval shows exactly
+//                     what lands). Choices the PC already knows are filtered
+//                     out; a track can be taken again later for a different
+//                     choice.
+//   trigger         — reaction trigger text, kept separate from summary so the
+//                     granted reaction doc carries it as its own field.
 //   summary         — rules text shown when browsing (verbatim OK — openly
 //                     licensed rules text, see #1212).
+//   grant           — optional explicit grant payload ({ kind:'feat', feat }
+//                     or { kind:'reaction', reaction }) when the ability needs
+//                     more than name/trigger/summary (stances author full feat
+//                     entries with nested actions/strikes — S3). Without it,
+//                     reaction-kind offerings derive the reaction from those
+//                     fields (see buildGrant).
 //
 // S1 ships the Garrison's Shield Block track so the whole start→bank→ready
 // flow is exercised end-to-end; the full launch catalog (House of Blue Stones
@@ -53,8 +62,8 @@ export const TRAINING_VENDORS = [
         skipIfKnown: true,
         requiresAbility: null,
         choices: null,
+        trigger: 'While you have your shield raised, you would take physical damage from an attack.',
         summary:
-          'Trigger: While you have your shield raised, you would take physical damage from an attack. ' +
           'You snap your shield in place to ward off a blow. Your shield prevents you from taking an ' +
           'amount of damage up to the shield’s Hardness. You and the shield each take any remaining ' +
           'damage, possibly breaking or destroying the shield.',
@@ -133,6 +142,27 @@ export function eligibleOfferings(vendor, character, tracks = []) {
     )) return false;
     return true;
   });
+}
+
+// The grant payload a completed track submits for GM approval (#1191 S2):
+// { kind:'feat', feat:{...} } or { kind:'reaction', reaction:{...} }, carried
+// on the queue entry so approval needs no re-lookup. An explicit `grant` on
+// the picked choice (then the offering) wins — stances need full feat entries
+// with nested actions/strikes. Otherwise a reaction-kind offering derives its
+// reaction doc from name/trigger/summary (the choice's own fields first).
+// Returns null when a feat-kind offering authors no grant (a data bug the
+// shape test guards against).
+export function buildGrant(offering, choice = null) {
+  if (!offering) return null;
+  const explicit = choice?.grant || offering.grant;
+  if (explicit) return explicit;
+  if (offering.kind !== 'reaction') return null;
+  const reaction = { name: choice?.name || offering.name };
+  const trigger = choice?.trigger || (choice ? null : offering.trigger);
+  const description = choice?.summary || (choice ? choice.note : offering.summary);
+  if (trigger) reaction.trigger = trigger;
+  if (description) reaction.description = description;
+  return { kind: 'reaction', reaction };
 }
 
 // Every { vendor, offerings } pair the character can start a track at, given

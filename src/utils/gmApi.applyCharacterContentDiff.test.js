@@ -105,7 +105,27 @@ describe('applyCharacterContentDiff', () => {
     expect(report.changed).toEqual([]);
   });
 
-  it('exposes the live-field denylist (inventory + gold)', () => {
-    expect(LIVE_CHARACTER_FIELDS).toEqual(['inventory', 'gold']);
+  it('exposes the live-field denylist (inventory + gold + trained)', () => {
+    expect(LIVE_CHARACTER_FIELDS).toEqual(['inventory', 'gold', 'trained']);
+  });
+
+  it('preserves live trained[] grants through a bundle apply (#1191 S2)', async () => {
+    const fn = installFetch();
+    // Live Pellias earned an ability through training; the bundle (stale seed)
+    // has no `trained` field. The apply must keep the grant.
+    const grant = {
+      kind: 'reaction',
+      reaction: { name: 'Shield Block' },
+      vendorId: 'sandpoint-garrison',
+      offeringId: 'shield-block',
+      grantedAt: 1,
+    };
+    const live = [{ ...LIVE[0], trained: [grant] }];
+    await applyCharacterContentDiff(live);
+
+    const pellias = puts(fn).find((p) => p.url === '/api/gm/character/Pellias');
+    expect(pellias.doc.trained).toEqual([grant]);
+    // authored change still applied alongside
+    expect(pellias.doc.feats).toEqual([{ id: 'f1', name: 'Patched Feat' }]);
   });
 });

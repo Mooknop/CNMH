@@ -8,6 +8,7 @@ import {
   availableTrainingVendors,
   trackOffering,
   trackLabel,
+  buildGrant,
 } from './trainingVendors';
 
 // ── Data shape (mirrors earnIncomeEmployers.test.js) ─────────────────────────
@@ -48,6 +49,11 @@ describe('trainingVendors data', () => {
         expect(typeof o.skipIfKnown).toBe('boolean');
         expect(typeof o.summary).toBe('string');
         expect(o.summary.length).toBeGreaterThan(0);
+        // Every offering must produce a grant payload for every possible pick
+        // — a feat-kind offering with no explicit grant would submit null and
+        // dead-end at GM approval (buildGrant only derives reactions).
+        const picks = o.choices || [null];
+        picks.forEach((c) => expect(buildGrant(o, c)).toBeTruthy());
         if (o.choices !== null) {
           expect(Array.isArray(o.choices)).toBe(true);
           expect(o.choices.length).toBeGreaterThan(0);
@@ -174,6 +180,50 @@ describe('availableTrainingVendors', () => {
     const supported = { v2: { earnedAt: null } };
     expect(availableTrainingVendors({ class: 'Bard' }, supported, [], vendors)).toHaveLength(0);
     expect(availableTrainingVendors({ class: 'Monk' }, supported, [], vendors)).toHaveLength(1);
+  });
+});
+
+describe('buildGrant', () => {
+  const offering = {
+    id: 'o1', name: 'Shield Block', hours: 160, kind: 'reaction',
+    requiresClass: null, skipIfKnown: true, requiresAbility: null, choices: null,
+    trigger: 'While raised…', summary: 'Snap your shield in place.',
+  };
+
+  it('derives a reaction doc from a choice-less reaction offering', () => {
+    expect(buildGrant(offering)).toEqual({
+      kind: 'reaction',
+      reaction: { name: 'Shield Block', trigger: 'While raised…', description: 'Snap your shield in place.' },
+    });
+  });
+
+  it("uses the picked choice's own fields, not the offering's", () => {
+    const choice = { id: 'a', name: 'Aiding Shield', trigger: 'An ally is hit…', summary: 'Extend your shield.' };
+    expect(buildGrant({ ...offering, choices: [choice] }, choice)).toEqual({
+      kind: 'reaction',
+      reaction: { name: 'Aiding Shield', trigger: 'An ally is hit…', description: 'Extend your shield.' },
+    });
+  });
+
+  it('falls back to the choice note and omits absent fields', () => {
+    const choice = { id: 'a', name: 'Aiding Shield', note: 'medium tier' };
+    expect(buildGrant({ ...offering, choices: [choice] }, choice)).toEqual({
+      kind: 'reaction',
+      reaction: { name: 'Aiding Shield', description: 'medium tier' },
+    });
+  });
+
+  it('lets an explicit grant win (choice over offering)', () => {
+    const featGrant = { kind: 'feat', feat: { name: 'Tiger Stance', actions: [] } };
+    expect(buildGrant({ ...offering, kind: 'feat', grant: featGrant })).toBe(featGrant);
+    const choiceGrant = { kind: 'feat', feat: { name: 'Crane Stance' } };
+    expect(buildGrant({ ...offering, kind: 'feat', grant: featGrant }, { id: 'c', name: 'Crane', grant: choiceGrant }))
+      .toBe(choiceGrant);
+  });
+
+  it('returns null for a feat-kind offering with no explicit grant', () => {
+    expect(buildGrant({ ...offering, kind: 'feat' })).toBeNull();
+    expect(buildGrant(null)).toBeNull();
   });
 });
 
