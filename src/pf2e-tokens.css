@@ -176,6 +176,35 @@
   --runeicon-throwing:         #0d9488; /* arc-flight teal */
   --runeicon-undead:           #d6d3d1; /* grave bone */
   --runeicon-weapon-storing:   #64748b; /* sheath slate */
+  /* Armor + weapon property backfill (#1374) */
+  --runeicon-aim-aiding:    #a3e635; /* tracer lime */
+  --runeicon-authorized:    #e6b422; /* seal gold */
+  --runeicon-crushing:      #57534e; /* grinding stone */
+  --runeicon-cunning:       #fb923c; /* fox orange */
+  --runeicon-dread:         #581c87; /* dread violet */
+  --runeicon-earthbinding:  #92400e; /* earth umber */
+  --runeicon-fearsome:      #9f1239; /* maw crimson */
+  --runeicon-fortification: #a16207; /* rampart ochre */
+  --runeicon-glamered:      #d946ef; /* illusive fuchsia */
+  --runeicon-pacifying:     #86efac; /* calm mint */
+  --runeicon-quenching:     #0284c7; /* deep water */
+  --runeicon-raiment:       #f9a8d4; /* silk pink */
+  --runeicon-ready:         #65a30d; /* poised olive */
+  --runeicon-shadow:        #475569; /* umbral slate */
+  --runeicon-slick:         #22d3ee; /* sheen cyan */
+  --runeicon-swallow-spike: #eab308; /* spike brass */
+  /* Ring imbue runes (#1374) */
+  --runeicon-ring-calling:      #5eead4; /* beckon aqua */
+  --runeicon-ring-embodiment:   #fca5a5; /* vessel rose */
+  --runeicon-ring-energy:       #fde047; /* charged yellow */
+  --runeicon-ring-immobilizing: #6b7280; /* iron gray */
+  --runeicon-ring-overwhelming: #1d4ed8; /* surge blue */
+  --runeicon-ring-precision:    #e2e8f0; /* hairline silver */
+  --runeicon-ring-ramming:      #ea580c; /* impact orange */
+  --runeicon-ring-righteous:    #fde68a; /* halo gold */
+  --runeicon-ring-scourging:    #a21caf; /* welt purple */
+  --runeicon-ring-warping:      #8b5cf6; /* fold violet */
+  --runeicon-ring-wicked:       #365314; /* venom dark */
 
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;

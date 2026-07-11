@@ -518,6 +518,216 @@ export const RUNE_ICON_FAMILIES = {
       'M36 18 L64 18 L64 86 L36 86 Z M42 24 L58 24 L58 80 L42 80 Z M45 70 L54 30 L58 34 L49 72 Z',
     ],
   },
+
+  // ── Armor + weapon property backfill (#1374, R5) ────────────────────────
+  // The untargeted property families the R1 starter set left on the
+  // generic fallback.
+  'aim-aiding': {
+    label: 'Aim-Aiding',
+    steps: [
+      // Two sighting posts, the bead floating true between them.
+      'M26 40 L34 40 L34 72 L26 72 Z M66 40 L74 40 L74 72 L66 72 Z M50 24 a5 5 0 1 0 0.01 0 Z M48 42 L52 42 L52 62 L48 62 Z',
+    ],
+  },
+  authorized: {
+    label: 'Authorized',
+    steps: [
+      // The seal-ring, its warrant marked within.
+      'M50 20 a30 30 0 1 0 0.01 0 Z M50 27 a23 23 0 1 1 -0.01 0 Z M38 50 L47 60 L62 38 L67 42 L47 70 L33 54 Z',
+    ],
+  },
+  crushing: {
+    label: 'Crushing',
+    steps: [
+      // The weight come down, and the cracks it leaves.
+      'M34 20 L66 20 L62 56 L38 56 Z M36 64 L26 76 L30 79 L40 68 Z M48 64 L48 80 L54 80 L54 64 Z M64 64 L74 76 L70 79 L60 68 Z',
+    ],
+  },
+  cunning: {
+    label: 'Cunning',
+    steps: [
+      // Two arcs that pass without meeting, the trick between them.
+      'M30 40 C36 26 56 24 64 34 L59 38 C53 31 39 33 36 42 Z M70 60 C64 74 44 76 36 66 L41 62 C47 69 61 67 64 58 Z M50 47 a4 4 0 1 0 0.01 0 Z',
+    ],
+  },
+  dread: {
+    label: 'Dread',
+    steps: [
+      // A veil-bar, its three shrouds hanging unevenly.
+      'M26 26 L74 26 L74 33 L26 33 Z M32 33 C33 47 33 59 30 70 L36 70 C39 58 38 46 38 33 Z M47 33 C48 51 48 67 45 82 L51 82 C54 66 53 50 53 33 Z M62 33 C63 45 63 55 60 64 L66 64 C69 54 68 44 68 33 Z',
+    ],
+  },
+  earthbinding: {
+    label: 'Earthbinding',
+    steps: [
+      // A ring chained down to the ground-bar.
+      'M22 70 L78 70 L78 77 L22 77 Z M50 22 a11 11 0 1 0 0.01 0 Z M50 27 a6 6 0 1 1 -0.01 0 Z M47 44 L53 44 L53 70 L47 70 Z',
+    ],
+  },
+  fearsome: {
+    label: 'Fearsome',
+    steps: [
+      // A maw-arc, fangs hanging from it.
+      'M20 40 A34 34 0 0 1 80 40 L74 44 A28 28 0 0 0 26 44 Z M32 44 L36 58 L40 44 Z M47 44 L50 62 L53 44 Z M60 44 L64 58 L68 44 Z',
+    ],
+  },
+  fortification: {
+    label: 'Fortification',
+    steps: [
+      // The bastion: crenellated, hollow, unbroken.
+      'M26 40 L34 40 L34 32 L44 32 L44 40 L56 40 L56 32 L66 32 L66 40 L74 40 L74 76 L26 76 Z M34 50 L66 50 L66 68 L34 68 Z',
+    ],
+  },
+  glamered: {
+    label: 'Glamered',
+    steps: [
+      // Two hollow forms sharing an edge — the thing, and what it seems.
+      'M42 26 a20 20 0 1 0 0.01 0 Z M42 32 a14 14 0 1 1 -0.01 0 Z M62 34 L86 58 L62 82 L38 58 Z M62 43 L77 58 L62 73 L47 58 Z',
+    ],
+  },
+  pacifying: {
+    label: 'Pacifying',
+    steps: [
+      // A blade-stave gone soft, drooping into an arc, at rest.
+      'M46 18 L54 20 L52 42 L44 40 Z M44 46 C46 62 56 72 72 76 L70 82 C52 78 40 66 38 48 Z M78 64 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  quenching: {
+    label: 'Quenching',
+    steps: [
+      // The flame-tongue going out under two courses of water.
+      'M52 12 C44 26 44 40 52 52 C58 42 58 26 52 12 Z M26 62 C36 58 46 58 56 62 C66 66 74 66 82 62 L82 69 C74 72 64 72 54 68 C44 64 36 64 26 69 Z M32 78 C42 74 58 74 68 78 L68 84 C58 81 42 81 32 84 Z',
+    ],
+  },
+  raiment: {
+    label: 'Raiment',
+    steps: [
+      // Shoulders, a center fold, and the hem.
+      'M50 12 a5 5 0 1 0 0.01 0 Z M28 36 A26 26 0 0 1 72 36 L66 40 A20 20 0 0 0 34 40 Z M47 44 L53 44 L53 72 L47 72 Z M28 72 L72 72 L72 79 L28 79 Z',
+    ],
+  },
+  ready: {
+    label: 'Ready',
+    steps: [
+      // The drawn bow: arc, string, and the bolt already nocked.
+      'M34 20 C56 34 56 66 34 80 L30 75 C48 63 48 37 30 25 Z M30 22 L34 22 L34 78 L30 78 Z M40 47 L66 47 L66 53 L40 53 Z M66 42 L80 50 L66 58 Z',
+    ],
+  },
+  shadow: {
+    label: 'Shadow',
+    steps: [
+      // A stave and the skewed dark it throws.
+      'M40 22 L48 24 L46 74 L38 72 Z M50 74 L78 60 L84 64 L56 78 Z M66 42 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  slick: {
+    label: 'Slick',
+    steps: [
+      // Three glossy slip-strokes, and the drop they shed.
+      'M28 30 C44 26 60 28 72 36 L69 42 C58 35 44 33 30 36 Z M24 50 C40 46 56 48 68 56 L65 62 C54 55 40 53 26 56 Z M32 70 C44 67 56 68 66 74 L63 80 C54 75 43 74 34 76 Z M78 68 a4 4 0 1 0 0.01 0 Z',
+    ],
+  },
+  'swallow-spike': {
+    label: 'Swallow-Spike',
+    steps: [
+      // Spikes erupting from the plate-band.
+      'M24 60 L76 60 L76 68 L24 68 Z M32 60 L36 38 L42 60 Z M47 60 L52 32 L57 60 Z M62 60 L67 42 L71 60 Z',
+    ],
+  },
+
+  // ── Ring glyph wave (#1374, R5) ─────────────────────────────────────────
+  // Power-ring imbue runes (#967).
+  'ring-calling': {
+    label: 'Calling',
+    steps: [
+      // The called thing streaking home to the waiting cup.
+      'M22 20 a5 5 0 1 0 0.01 0 Z M32 32 L46 44 L42 49 L28 37 Z M40 62 A18 18 0 0 0 76 62 L70 58 A12 12 0 0 1 46 58 Z',
+    ],
+  },
+  'ring-embodiment': {
+    label: 'Embodiment',
+    steps: [
+      // A figure-stave standing within the ring.
+      'M50 22 a28 28 0 1 0 0.01 0 Z M50 29 a21 21 0 1 1 -0.01 0 Z M47 36 L53 36 L53 64 L47 64 Z M39 44 L61 44 L61 49 L39 49 Z',
+    ],
+  },
+  'ring-energy': {
+    label: 'Energy',
+    steps: [
+      // Base: the raw bolt.
+      'M54 26 L60 28 L50 50 L58 48 L44 74 L40 70 L48 54 L42 56 Z',
+      // Greater: the left containment arc.
+      'M30 30 A32 32 0 0 0 30 70 L34 65 A26 26 0 0 1 34 35 Z',
+      // Major: the right arc closing the channel.
+      'M70 30 A32 32 0 0 1 70 70 L66 65 A26 26 0 0 0 66 35 Z',
+    ],
+  },
+  'ring-immobilizing': {
+    label: 'Immobilizing',
+    steps: [
+      // Base: the mote pinned under its stake.
+      'M50 52 a7 7 0 1 0 0.01 0 Z M46 14 L54 14 L52 48 L48 48 Z M42 24 L58 24 L58 30 L42 30 Z',
+      // Greater: the side-binds drawn tight.
+      'M28 60 L44 62 L43 68 L27 66 Z M72 60 L56 62 L57 68 L73 66 Z',
+    ],
+  },
+  'ring-overwhelming': {
+    label: 'Overwhelming',
+    steps: [
+      // A dome of force bearing down on a single mote.
+      'M16 56 A38 38 0 0 1 84 56 L77 60 A31 31 0 0 0 23 60 Z M50 74 a5 5 0 1 0 0.01 0 Z M30 66 L38 70 L35 75 L27 71 Z M70 66 L62 70 L65 75 L73 71 Z',
+    ],
+  },
+  'ring-precision': {
+    label: 'Precision',
+    steps: [
+      // The struck point and its four sighting ticks.
+      'M50 42 a8 8 0 1 0 0.01 0 Z M48 20 L52 20 L52 36 L48 36 Z M48 64 L52 64 L52 80 L48 80 Z M20 48 L36 48 L36 52 L20 52 Z M64 48 L80 48 L80 52 L64 52 Z',
+    ],
+  },
+  'ring-ramming': {
+    label: 'Ramming',
+    steps: [
+      // Base: the ram-block driving into its point.
+      'M22 38 L54 38 L54 62 L22 62 Z M54 38 L74 50 L54 62 Z M12 44 L18 46 L18 54 L12 56 Z',
+      // Greater: the shock-arc where it lands.
+      'M80 32 A26 26 0 0 1 80 68 L75 64 A20 20 0 0 0 75 36 Z',
+    ],
+  },
+  'ring-righteous': {
+    label: 'Righteous',
+    steps: [
+      // The crossed stave under its halo.
+      'M46 30 L54 30 L54 82 L46 82 Z M36 42 L64 42 L64 49 L36 49 Z M34 24 A18 18 0 0 1 66 24 L61 28 A13 13 0 0 0 39 28 Z',
+    ],
+  },
+  'ring-scourging': {
+    label: 'Scourging',
+    steps: [
+      // Base: the lash uncoiled, barbed at its tip.
+      'M26 78 C30 56 44 40 66 32 C74 29 80 30 84 34 L80 39 C77 36 72 35 68 37 C48 45 36 59 32 79 Z M82 28 a4 4 0 1 0 0.01 0 Z',
+      // Greater: the second lash inside the first.
+      'M36 80 C42 64 52 52 68 46 L70 51 C56 57 46 68 42 82 Z',
+    ],
+  },
+  'ring-warping': {
+    label: 'Warping',
+    steps: [
+      // Base: a ring sheared in half, the lower arc displaced.
+      'M28 40 A26 26 0 0 1 72 40 L67 44 A20 20 0 0 0 33 44 Z M80 62 A26 26 0 0 1 36 62 L41 58 A20 20 0 0 0 75 58 Z',
+      // Greater: motes slipping through the seam.
+      'M22 50 a4 4 0 1 0 0.01 0 Z M84 46 a4 4 0 1 0 0.01 0 Z',
+      // Major: the shear-dashes marking the fold.
+      'M20 26 L36 28 L35 34 L19 32 Z M64 68 L80 70 L79 76 L63 74 Z',
+    ],
+  },
+  'ring-wicked': {
+    label: 'Wicked',
+    steps: [
+      // A serpentine stroke, barbed where it ends.
+      'M50 16 C68 18 76 34 66 46 C60 53 50 54 46 62 C43 68 46 74 54 78 L50 84 C38 78 34 68 40 58 C45 50 56 48 60 42 C66 33 60 24 46 22 Z M64 74 L74 70 L70 80 Z',
+    ],
+  },
 };
 
 // Shown when a rune has no drawn family yet: a plain bindrune stave. Rendered
