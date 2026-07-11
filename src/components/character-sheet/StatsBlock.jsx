@@ -114,6 +114,7 @@ const StatsBlock = ({ character, characterColor }) => {
     size,
     speed,
     senses,
+    hp,
     skillModifiers,
     skillProficiencies,
     flags,
@@ -311,6 +312,20 @@ const StatsBlock = ({ character, characterColor }) => {
             {hydratedConditions.length > 0 ? hydratedConditions.length : '—'}
           </span>
         </button>
+        {/* Dying / Wounded — surfaced here as the player's visible HP-status
+            signal (they were previously only in a display:none slab). The
+            GM/bridge drives the values via cnmh_hp_<id>; HP itself lives in
+            the masthead. */}
+        {hp?.dying > 0 && (
+          <span className="hp-status-chip hp-status-chip--dying hp-dying">
+            Dying {hp.dying}
+          </span>
+        )}
+        {hp?.wounded > 0 && (
+          <span className="hp-status-chip hp-status-chip--wounded hp-wounded">
+            Wounded {hp.wounded}
+          </span>
+        )}
         <span className="tchip">
           <span className="tchip-label">Size</span>
           {size || 'teeny weeny'}

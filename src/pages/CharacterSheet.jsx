@@ -347,7 +347,7 @@ const CharacterSheet = () => {
         <div className="cs-vitals" role="region" aria-label="Character vitals">
           <HpFx hp={characterModel.hp} className="cs-vital">
             <span className="cs-vital-val cs-vital-val--hp" aria-label="Hit points">
-              {characterModel.hp?.current ?? '—'}
+              <span className="cs-hp-current">{characterModel.hp?.current ?? '—'}</span>
               <span className="cs-vital-max">/{characterModel.maxHp}</span>
             </span>
             <span className="cs-vital-lbl">HP</span>

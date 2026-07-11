@@ -40,14 +40,15 @@ test.describe('Damage result surface', () => {
     await page.goto(`/character/${CHAR_ID}`);
     await expectSheet(page);
 
-    // Stats tab is the default; HP is read-only here (applied by the GM/bridge).
-    await expect(page.locator('.hp-current')).toHaveText('50');
+    // HP is read-only here (applied by the GM/bridge) — the masthead vitals
+    // strip is the visible surface; Dying/Wounded chip in the Stats status strip.
+    await expect(page.locator('.cs-hp-current')).toHaveText('50');
 
     await session.push('cnmh_hp_e2e-fighter', { current: 8, max: 50, temp: 0, dying: 0, wounded: 0, doomed: 0 });
-    await expect(page.locator('.hp-current')).toHaveText('8');
+    await expect(page.locator('.cs-hp-current')).toHaveText('8');
 
     await session.push('cnmh_hp_e2e-fighter', { current: 0, max: 50, temp: 0, dying: 1, wounded: 0, doomed: 0 });
-    await expect(page.locator('.hp-current')).toHaveText('0');
+    await expect(page.locator('.cs-hp-current')).toHaveText('0');
     await expect(page.locator('.hp-dying')).toContainText('Dying 1');
   });
 

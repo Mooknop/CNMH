@@ -520,6 +520,21 @@ describe('StatsBlock', () => {
     expect(screen.getByRole('button', { name: /Conditions/ })).toBeInTheDocument();
   });
 
+  it('surfaces Dying/Wounded as status chips when present, hides them otherwise', () => {
+    // No hp on the default mock → no chips.
+    const { rerender } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.queryByText(/Dying/)).toBeNull();
+    expect(screen.queryByText(/Wounded/)).toBeNull();
+
+    mockUseCharacter.mockReturnValue({
+      ...defaultCharData,
+      hp: { current: 0, dying: 2, wounded: 1 },
+    });
+    rerender(<StatsBlock character={mockCharacter} characterColor="#FF0000" />);
+    expect(screen.getByText('Dying 2')).toBeInTheDocument();
+    expect(screen.getByText('Wounded 1')).toBeInTheDocument();
+  });
+
   it('shows em-dash when no conditions are active', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.getByText('—')).toBeInTheDocument();

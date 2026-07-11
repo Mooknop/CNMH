@@ -72,6 +72,33 @@
   min-width: 0;
 }
 
+/* HP-status chips (Dying / Wounded) — the degree ramp is the signal;
+   keep the hues as-is. Dying reads urgent (red), Wounded a caution amber. */
+.hp-status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.hp-status-chip--dying {
+  background: rgba(192, 57, 43, 0.18);
+  border-color: rgba(192, 57, 43, 0.55);
+  color: var(--color-danger, #e06055);
+}
+
+.hp-status-chip--wounded {
+  background: rgba(196, 154, 46, 0.18);
+  border-color: rgba(196, 154, 46, 0.5);
+  color: var(--gold-light);
+}
+
 .tchip-label {
   font-size: var(--text-xs);
   font-weight: 700;
