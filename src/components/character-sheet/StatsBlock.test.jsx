@@ -134,26 +134,15 @@ describe('StatsBlock', () => {
     expect(screen.getByText('CHA')).toBeInTheDocument();
   });
 
-  it('shows each save in its governing ability node panel', () => {
+  it('shows all three saves as rank rings in the Defense panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
 
-    fireEvent.click(screen.getByLabelText('Constitution +0'));
-    expect(screen.getByText('Fortitude')).toBeInTheDocument();
-    expect(screen.getByText('+3')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByLabelText('Dexterity +1'));
-    expect(screen.getByText('Reflex')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByLabelText('Wisdom +1'));
-    expect(screen.getByText('Will')).toBeInTheDocument();
-  });
-
-  it('renders the save as a rank ring with a derived proficiency rim', () => {
-    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Constitution +0'));
+    fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
     // fort 3, CON +0, level 1 → proficiency part 3 → round((3−1)/2) = 1 → Trained.
     expect(screen.getByLabelText('Fortitude, Trained')).toHaveClass('rank-1');
-    expect(screen.getByText('Trained')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reflex, Trained')).toBeInTheDocument();
+    expect(screen.getByLabelText('Will, Trained')).toBeInTheDocument();
+    expect(screen.getByText('+3')).toBeInTheDocument();
   });
 
   it('derives higher save ranks from bigger modifiers', () => {
@@ -164,7 +153,7 @@ describe('StatsBlock', () => {
       saves: { ...defaultCharData.saves, will: 9 },
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Wisdom +1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
     expect(screen.getByLabelText('Will, Expert')).toHaveClass('rank-2');
   });
 
@@ -188,12 +177,16 @@ describe('StatsBlock', () => {
     expect(container.querySelector('.dial-center')).toHaveClass('rank-0');
   });
 
-  it('abilities without a save show no save line', () => {
+  it('ability panels are skills-only (no saves or proficiency rings)', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // STR is the default node (no keyAbility on the mock character)
+    // STR default panel: no weapon rings, no saves.
+    expect(screen.queryByText('Unarmed')).toBeNull();
     expect(screen.queryByText('Fortitude')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Constitution +0'));
+    expect(screen.queryByText('Fortitude')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Dexterity +1'));
+    expect(screen.queryByText('Unarmored')).toBeNull();
     expect(screen.queryByText('Reflex')).toBeNull();
-    expect(screen.queryByText('Will')).toBeNull();
   });
 
   it('should apply theme color via CSS custom property on the stats-block container', () => {
@@ -395,37 +388,35 @@ describe('StatsBlock', () => {
     expect(screen.queryByText('Senses')).toBeNull();
   });
 
-  it('folds weapon proficiencies under STR and armor under DEX', () => {
+  it('the Offense and Armor bubbles swap the panel between their groups', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // STR is the default node → the Weapons cluster renders in its panel.
-    expect(screen.getByText('Weapons')).toBeInTheDocument();
-    expect(screen.queryByText('Armor')).toBeNull();
-    fireEvent.click(screen.getByLabelText('Dexterity +1'));
-    expect(screen.getByText('Armor')).toBeInTheDocument();
-    expect(screen.queryByText('Weapons')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
+    expect(screen.getByText('Unarmed')).toBeInTheDocument();
+    expect(screen.queryByText('Unarmored')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
+    expect(screen.getByText('Unarmored')).toBeInTheDocument();
+    expect(screen.queryByText('Unarmed')).toBeNull();
   });
 
-  it('renders Class DC under the key ability node', () => {
+  it('renders Class DC in the Defense panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // No keyAbility on the mock → it resolves to STR, the default node.
+    fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
     expect(screen.getByText('Class DC')).toBeInTheDocument();
     expect(screen.getByText('15')).toBeInTheDocument();
-    // Off the key ability the ring is absent.
-    fireEvent.click(screen.getByLabelText('Charisma +2'));
-    expect(screen.queryByText('Class DC')).toBeNull();
   });
 
-  it('renders weapon proficiency rings in the STR panel', () => {
+  it('renders weapon proficiency rings in the Offense panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.getByText('Unarmed')).toBeInTheDocument();
     expect(screen.getByText('Simple')).toBeInTheDocument();
     expect(screen.getByText('Martial')).toBeInTheDocument();
     expect(screen.getByText('Advanced')).toBeInTheDocument();
   });
 
-  it('renders armor proficiency rings in the DEX panel', () => {
+  it('renders armor proficiency rings in the Armor panel', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByLabelText('Dexterity +1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
     expect(screen.getByText('Unarmored')).toBeInTheDocument();
     expect(screen.getByText('Light')).toBeInTheDocument();
     // 'Medium' also appears in the size chip, use getAllByText
@@ -447,7 +438,7 @@ describe('StatsBlock', () => {
     expect(screen.queryByText('Checks')).toBeNull();
   });
 
-  it('shows the Spell Attack ring under the spellcasting ability node (S2)', () => {
+  it('shows the Spell Attack ring in the Offense panel for casters (S2)', () => {
     mockUseCharacter.mockReturnValue({
       ...defaultCharData,
       flags: { hasSpellcasting: true },
@@ -455,21 +446,18 @@ describe('StatsBlock', () => {
     });
     render(
       <StatsBlock
-        character={{ ...mockCharacter, spellcasting: { proficiency: 2, ability: 'charisma' } }}
+        character={{ ...mockCharacter, spellcasting: { proficiency: 2 } }}
         characterColor="#7E8C9A"
       />
     );
-    fireEvent.click(screen.getByLabelText('Charisma +2'));
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.getByLabelText('Spell Attack, Expert')).toBeInTheDocument();
     expect(screen.getByText('+7')).toBeInTheDocument();
-    // No Spell Attack under abilities other than the casting one.
-    fireEvent.click(screen.getByLabelText('Wisdom +1'));
-    expect(screen.queryByText('Spell Attack')).toBeNull();
   });
 
   it('omits the Spell Attack ring for non-casters (S2)', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    // The key-ability (STR) panel would host it; the flag is off.
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.queryByText('Spell Attack')).toBeNull();
   });
 
@@ -477,7 +465,7 @@ describe('StatsBlock', () => {
     mockUseCharacter.mockReturnValue({ ...defaultCharData, proficiencies: {} });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     // Armor rings caption their rank — all default to Untrained.
-    fireEvent.click(screen.getByLabelText('Dexterity +1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
     expect(screen.getAllByText('Untrained').length).toBeGreaterThan(0);
   });
 
@@ -493,6 +481,7 @@ describe('StatsBlock', () => {
       }
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.getByText('Class Weapons')).toBeInTheDocument();
   });
 
@@ -508,16 +497,19 @@ describe('StatsBlock', () => {
       }
     });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.getByText('Finesse')).toBeInTheDocument();
   });
 
   it('should not render class weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.queryByText('Class Weapons')).toBeNull();
   });
 
   it('should not render finesse weapons when absent', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Offense' }));
     expect(screen.queryByText('Finesse')).toBeNull();
   });
 
@@ -534,6 +526,17 @@ describe('StatsBlock', () => {
     expect(container.querySelector('.dial-center')).toHaveClass('sel');
     expect(container.querySelector('.node--str')).not.toHaveClass('sel');
     expect(container.querySelectorAll('.node.dim')).toHaveLength(6);
+
+    // A proficiency bubble also steps out of the ring…
+    fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
+    expect(screen.getByRole('button', { name: 'Defense' })).toHaveClass('sel');
+    expect(container.querySelector('.dial-center')).not.toHaveClass('sel');
+    expect(container.querySelectorAll('.node.dim')).toHaveLength(6);
+
+    // …and re-selecting a node restores it.
+    fireEvent.click(screen.getByLabelText('Strength +2'));
+    expect(container.querySelectorAll('.node.dim')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Defense' })).not.toHaveClass('sel');
   });
 
   it('the core panel toggles between Feats and Conditions', () => {
@@ -744,8 +747,8 @@ describe('StatsBlock', () => {
         effects: [{ id: 'antidote', name: 'Antidote', modifiers: [{ stat: 'fort', kind: 'item', amount: 2, vs: 'poison' }] }],
       });
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-      // Fortitude lives in the CON node panel now.
-      fireEvent.click(screen.getByLabelText('Constitution +0'));
+      // Fortitude lives in the Defense panel now; the hint rides its ring.
+      fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
       // Hint text appears…
       expect(screen.getByText(/vs poison/)).toBeInTheDocument();
       expect(screen.getByText(/Antidote/)).toBeInTheDocument();

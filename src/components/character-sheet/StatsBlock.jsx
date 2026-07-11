@@ -22,6 +22,14 @@ import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills
 
 const ABILITY_KEYS = ABILITIES.map((a) => a.key);
 
+// Proficiency-group bubbles below the dial — split by roll type: Defense
+// (saves + Class DC), Offense (weapon categories + Spell Attack), Armor.
+const PROF_GROUPS = [
+  { key: 'defense', label: 'Defense' },
+  { key: 'offense', label: 'Offense' },
+  { key: 'armor', label: 'Armor' },
+];
+
 // Saves ship as precomputed modifiers (no rank field), so the ring rank is
 // derived by inverting getProficiencyBonus: modifier = ability + level + 2×rank
 // for trained+. Any positive proficiency contribution reads at least Trained;
@@ -34,9 +42,10 @@ const deriveSaveRank = (saveMod, abilityMod, level) => {
 };
 
 const StatsBlock = ({ character, characterColor }) => {
-  // Ability Dial: the active node — an ability key ('strength'…'charisma')
-  // or 'core' (character-wide feats/conditions). Defaults to the
-  // character's key ability so the panel opens populated.
+  // Ability Dial: the active node — an ability key ('strength'…'charisma'),
+  // 'core' (character-wide feats/conditions), or a proficiency-group bubble
+  // ('defense' | 'offense' | 'armor'). Defaults to the character's key
+  // ability so the panel opens populated.
   const [selected, setSelected] = useState(
     ABILITY_KEYS.includes(character?.keyAbility) ? character.keyAbility : 'strength'
   );
@@ -202,54 +211,51 @@ const StatsBlock = ({ character, characterColor }) => {
     />
   );
 
-  // Proficiency rings folded under their governing ability (was the core
-  // panel's 'Proficiencies' view): Class DC→key ability, Spell Attack→
-  // spellcasting ability, weapon categories→STR (ranged caption stays
-  // DEX), armor categories→DEX (their AC contribution). Perception needs
-  // no ring here — it's a WIS skill snode in the catalog already. Ring
-  // value is the roll modifier (weapons: melee, with ranged as the
-  // caption; armor: the proficiency bonus contributed to AC).
-  const keyAbilityKey = ABILITY_KEYS.includes(character?.keyAbility)
-    ? character.keyAbility
-    : 'strength';
-  const spellAbilityKey = ABILITY_KEYS.includes(character?.spellcasting?.ability)
-    ? character.spellcasting.ability
-    : keyAbilityKey;
-
-  const renderAbilityProficiencies = (abilityKey) => {
+  // Proficiency-group panels behind the Defense / Offense / Armor bubbles
+  // (attribute panels are skills-only): Defense = the three saves (rank
+  // derived from the modifier, vs-X hints ride the rings) + Class DC;
+  // Offense = weapon categories (melee value, ranged caption) + Spell
+  // Attack for casters; Armor = the four categories (ring value is the
+  // proficiency bonus contributed to AC).
+  const renderGroupPanel = (groupKey) => {
     const rankOf = (group, key) => group?.[key]?.proficiency || 0;
-    const groups = [];
 
-    const checks = [];
-    if (abilityKey === keyAbilityKey) {
+    if (groupKey === 'defense') {
       // Class DC's rank ships at character.proficiencies.class; default Trained,
       // matching calculateClassDC's derivation.
       const classRank = rawProficiencies?.class ?? 1;
-      checks.push(
-        <RankRing
-          key="class-dc"
-          rank={classRank}
-          name="Class DC"
-          caption={getProficiencyLabel(classRank)}
-          value={<PenaltyDisplay base={classDC} penalty={mod('classDC')} />}
-        />
+      return (
+        <div className="snode-wrap">
+          {Object.entries(SAVES_BY_ABILITY).map(([abilityKey, save]) => {
+            const rank = deriveSaveRank(saves[save.saveKey], abilityModifiers[abilityKey], level);
+            return (
+              <RankRing
+                key={save.saveKey}
+                rank={rank}
+                name={save.label}
+                caption={getProficiencyLabel(rank)}
+                value={
+                  <PenaltyDisplay
+                    base={saves[save.saveKey]}
+                    penalty={mod(save.stat)}
+                    format="modifier"
+                  />
+                }
+                hint={renderConditionalHint(save.stat)}
+              />
+            );
+          })}
+          <RankRing
+            rank={classRank}
+            name="Class DC"
+            caption={getProficiencyLabel(classRank)}
+            value={<PenaltyDisplay base={classDC} penalty={mod('classDC')} />}
+          />
+        </div>
       );
     }
-    if (flags?.hasSpellcasting && abilityKey === spellAbilityKey) {
-      const spellRank = character?.spellcasting?.proficiency || 0;
-      checks.push(
-        <RankRing
-          key="spell-attack"
-          rank={spellRank}
-          name="Spell Attack"
-          caption={getProficiencyLabel(spellRank)}
-          value={<PenaltyDisplay base={spellStats?.spellAttackMod ?? 0} penalty={mod('spellAttack')} format="modifier" />}
-        />
-      );
-    }
-    if (checks.length) groups.push({ label: 'Checks', rings: checks });
 
-    if (abilityKey === 'strength') {
+    if (groupKey === 'offense') {
       const weaponCats = [
         { key: 'unarmed', name: 'Unarmed' },
         { key: 'simple', name: 'Simple' },
@@ -258,36 +264,46 @@ const StatsBlock = ({ character, characterColor }) => {
         ...(proficiencies.weapons.class ? [{ key: 'class', name: 'Class Weapons' }] : []),
         ...(proficiencies.weapons.finesse ? [{ key: 'finesse', name: 'Finesse', finesse: true }] : []),
       ];
-      groups.push({
-        label: 'Weapons',
-        rings: weaponCats.map((w) => {
-          const rank = rankOf(proficiencies.weapons, w.key);
-          const meleeMod = w.finesse ? Math.max(strMod, dexMod) : strMod;
-          return (
+      const spellRank = character?.spellcasting?.proficiency || 0;
+      return (
+        <div className="snode-wrap">
+          {weaponCats.map((w) => {
+            const rank = rankOf(proficiencies.weapons, w.key);
+            const meleeMod = w.finesse ? Math.max(strMod, dexMod) : strMod;
+            return (
+              <RankRing
+                key={w.key}
+                rank={rank}
+                name={w.name}
+                value={renderAttackBonus(meleeMod, rank, mod('meleeAttack'))}
+                caption={w.finesse
+                  ? 'Melee (STR/DEX)'
+                  : `Ranged ${formatModifier(attackNum(dexMod, rank))}`}
+              />
+            );
+          })}
+          {flags?.hasSpellcasting && (
             <RankRing
-              key={w.key}
-              rank={rank}
-              name={w.name}
-              value={renderAttackBonus(meleeMod, rank, mod('meleeAttack'))}
-              caption={w.finesse
-                ? 'Melee (STR/DEX)'
-                : `Ranged ${formatModifier(attackNum(dexMod, rank))}`}
+              rank={spellRank}
+              name="Spell Attack"
+              caption={getProficiencyLabel(spellRank)}
+              value={<PenaltyDisplay base={spellStats?.spellAttackMod ?? 0} penalty={mod('spellAttack')} format="modifier" />}
             />
-          );
-        }),
-      });
+          )}
+        </div>
+      );
     }
 
-    if (abilityKey === 'dexterity') {
-      const armorCats = [
-        { key: 'unarmored', name: 'Unarmored' },
-        { key: 'light', name: 'Light' },
-        { key: 'medium', name: 'Medium' },
-        { key: 'heavy', name: 'Heavy' },
-      ];
-      groups.push({
-        label: 'Armor',
-        rings: armorCats.map((a) => {
+    // armor
+    const armorCats = [
+      { key: 'unarmored', name: 'Unarmored' },
+      { key: 'light', name: 'Light' },
+      { key: 'medium', name: 'Medium' },
+      { key: 'heavy', name: 'Heavy' },
+    ];
+    return (
+      <div className="snode-wrap">
+        {armorCats.map((a) => {
           const rank = rankOf(proficiencies.armor, a.key);
           return (
             <RankRing
@@ -298,19 +314,7 @@ const StatsBlock = ({ character, characterColor }) => {
               value={formatModifier(getProficiencyBonus(rank, level))}
             />
           );
-        }),
-      });
-    }
-
-    if (!groups.length) return null;
-    return (
-      <div className="proficiencies-section">
-        {groups.map((g) => (
-          <React.Fragment key={g.label}>
-            <h4 className="proficiency-category">{g.label}</h4>
-            <div className="snode-wrap">{g.rings}</div>
-          </React.Fragment>
-        ))}
+        })}
       </div>
     );
   };
@@ -388,15 +392,14 @@ const StatsBlock = ({ character, characterColor }) => {
     </div>
   );
 
-  // Ability Dial panel context — the selected node's identity, its governed
-  // save (CON→Fort, DEX→Ref, WIS→Will; the rest have none), and how many
-  // catalog skills its cluster holds.
+  // Ability Dial panel context — the selected node's identity and how many
+  // catalog skills its cluster holds, or the selected proficiency-group
+  // bubble. `offRing` = the selection stepped out of the six-node ring
+  // (core or a bubble), which dims the nodes.
   const selectedAbility = ABILITIES.find((a) => a.key === selected);
-  const selectedSave = SAVES_BY_ABILITY[selected];
+  const selectedGroup = PROF_GROUPS.find((g) => g.key === selected);
   const selectedSkillCount = selectedAbility ? skillsForAbility(selected).length : 0;
-  const selectedSaveRank = selectedSave
-    ? deriveSaveRank(saves[selectedSave.saveKey], abilityModifiers[selected], level)
-    : 0;
+  const offRing = selected === 'core' || !!selectedGroup;
 
   // AC core rim = the worn armor category's proficiency rank, riding the same
   // --color-rank-* ramp as every other ring in the tab (rank rim consistency).
@@ -494,12 +497,12 @@ const StatsBlock = ({ character, characterColor }) => {
         </div>
       )}
 
-      {/* Ability Dial — six ability nodes ringing the AC core. Tapping a
-          node loads that ability's save + skills + proficiencies into the
-          panel below; tapping the core steps out of the ring (nodes dim)
-          and opens the character-wide Feats / Conditions panel. Replaces
-          the old Abilities / Proficiencies / Feats / Skills segmented
-          control. */}
+      {/* Ability Dial — six ability nodes ringing the AC core, with the
+          Defense / Offense / Armor proficiency bubbles rowed beneath.
+          Tapping a node loads that ability's skills into the panel below;
+          tapping the core or a bubble steps out of the ring (nodes dim)
+          and opens the character-wide panel. Replaces the old Abilities /
+          Proficiencies / Feats / Skills segmented control. */}
       <div className="dialwrap">
         <div className="dial">
           <div className="dial-ring" aria-hidden="true" />
@@ -507,7 +510,7 @@ const StatsBlock = ({ character, characterColor }) => {
             <button
               key={a.key}
               type="button"
-              className={`node node--${a.abbr.toLowerCase()}${selected === a.key ? ' sel' : ''}${selected === 'core' ? ' dim' : ''}`}
+              className={`node node--${a.abbr.toLowerCase()}${selected === a.key ? ' sel' : ''}${offRing ? ' dim' : ''}`}
               aria-pressed={selected === a.key}
               aria-label={`${a.name} ${formatModifier(abilityModifiers[a.key])}`}
               onClick={() => setSelected(a.key)}
@@ -532,10 +535,26 @@ const StatsBlock = ({ character, characterColor }) => {
         </div>
       </div>
 
-      {/* Dial panel — swaps with the selection. Skill rows reuse
-          EnhancedSkillsList narrowed to the node's ability, with the
-          ability's proficiency rings folded in beneath; the core hosts
-          the Feats / Conditions toggle. */}
+      {/* Proficiency-group bubbles — everything that isn't a skill lives
+          behind these instead of on the attribute panels. */}
+      <div className="prof-row" role="group" aria-label="Proficiency groups">
+        {PROF_GROUPS.map((g) => (
+          <button
+            key={g.key}
+            type="button"
+            className={`prof-bubble${selected === g.key ? ' sel' : ''}`}
+            aria-pressed={selected === g.key}
+            onClick={() => setSelected(g.key)}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dial panel — swaps with the selection. Ability nodes show their
+          skill cluster (EnhancedSkillsList narrowed to the ability); the
+          bubbles show their proficiency-ring group; the core hosts the
+          Feats / Conditions toggle. */}
       <div className="dial-panel">
         {selected === 'core' ? (
           <>
@@ -564,6 +583,13 @@ const StatsBlock = ({ character, characterColor }) => {
               ? <FeatsList character={character} characterColor={themeColor} />
               : renderConditions()}
           </>
+        ) : selectedGroup ? (
+          <>
+            <div className="panel-h">
+              <span className="panel-title">{selectedGroup.label}</span>
+            </div>
+            {renderGroupPanel(selectedGroup.key)}
+          </>
         ) : (
           <>
             <div className="panel-h">
@@ -574,25 +600,6 @@ const StatsBlock = ({ character, characterColor }) => {
                 {selectedSkillCount} skill{selectedSkillCount === 1 ? '' : 's'}
               </span>
             </div>
-            {/* The governed save as its own ring — rank rim like every other
-                circle in the tab; conditional 'vs X' hints ride the ring. */}
-            {selectedSave && (
-              <div className="snode-wrap save-wrap">
-                <RankRing
-                  rank={selectedSaveRank}
-                  name={selectedSave.label}
-                  caption={getProficiencyLabel(selectedSaveRank)}
-                  value={
-                    <PenaltyDisplay
-                      base={saves[selectedSave.saveKey]}
-                      penalty={mod(selectedSave.stat)}
-                      format="modifier"
-                    />
-                  }
-                  hint={renderConditionalHint(selectedSave.stat)}
-                />
-              </div>
-            )}
             <EnhancedSkillsList
               key={selected}
               character={character}
@@ -601,7 +608,6 @@ const StatsBlock = ({ character, characterColor }) => {
               effectBonuses={bonuses}
               filterAbility={selected}
             />
-            {renderAbilityProficiencies(selected)}
           </>
         )}
       </div>
