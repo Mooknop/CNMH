@@ -7,6 +7,7 @@ import {
   runeIconsOf,
   fundamentalRuneId,
 } from './runeIcons';
+import seedRunes from '../data/snapshot/rune.json';
 
 describe('runeIconTier', () => {
   it('a bare family id is its own base tier', () => {
@@ -75,6 +76,30 @@ describe('resolveRuneIcon', () => {
     expect(resolveRuneIcon('moderate-reinforcing').layers).toHaveLength(3);
     expect(resolveRuneIcon('supreme-reinforcing').layers).toHaveLength(6);
     expect(resolveRuneIcon('supreme-reinforcing').generic).toBe(false);
+  });
+});
+
+describe('shield glyph wave — seed coverage (#1373)', () => {
+  // Every shield rune in the bundled seed must resolve a DRAWN glyph. A
+  // newly-authored shield rune landing on the generic fallback should be a
+  // conscious choice (add its family here or accept the failure), not silent.
+  it('every target:shield rune in the seed resolves a non-generic glyph', () => {
+    const shield = seedRunes.filter((r) => r.target === 'shield');
+    expect(shield.length).toBeGreaterThan(0);
+    const fallbacks = shield.filter((r) => resolveRuneIcon(r.id).generic).map((r) => r.id);
+    expect(fallbacks).toEqual([]);
+  });
+
+  it('tier ladders render progressively where the seed has tiers', () => {
+    // Glyphed's below-base lesser is the odd ladder — pin it explicitly.
+    expect(resolveRuneIcon('lesser-glyphed').layers).toHaveLength(1);
+    expect(resolveRuneIcon('glyphed').layers).toHaveLength(2);
+    expect(resolveRuneIcon('true-glyphed').layers).toHaveLength(5);
+    // A base<greater<true family clamps true onto its last drawn step.
+    expect(resolveRuneIcon('undead').layers).toHaveLength(1);
+    expect(resolveRuneIcon('true-undead').layers).toHaveLength(3);
+    // And a common base<greater<major ladder.
+    expect(resolveRuneIcon('major-reverberating').layers).toHaveLength(3);
   });
 });
 

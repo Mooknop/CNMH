@@ -185,6 +185,339 @@ export const RUNE_ICON_FAMILIES = {
       'M71 28 a3.5 3.5 0 1 0 0.01 0 Z M29 28 a3.5 3.5 0 1 0 0.01 0 Z M29 70 a3.5 3.5 0 1 0 0.01 0 Z M71 70 a3.5 3.5 0 1 0 0.01 0 Z',
     ],
   },
+
+  // ── Shield glyph wave (#1373, R4) ───────────────────────────────────────
+  // Every target:'shield' catalog family (the seed-coverage test in
+  // runeIcons.test.js keeps this exhaustive). Reinforcing lives with the
+  // fundamentals above.
+  aggressive: {
+    label: 'Aggressive',
+    steps: [
+      // A ram-prow wedge driving right, a speed-stroke trailing it.
+      'M28 30 L74 46 C78 48 78 52 74 54 L28 70 L34 58 L58 50 L34 42 Z M14 44 L24 46 L24 54 L14 56 Z',
+    ],
+  },
+  confounding: {
+    label: 'Confounding',
+    steps: [
+      // Two opposed hooks that never meet, a lost mote between them.
+      'M50 14 C66 16 72 30 62 40 L57 36 C64 29 60 20 48 19 Z M50 86 C34 84 28 70 38 60 L43 64 C36 71 40 80 52 81 Z M50 46 a4 4 0 1 0 0.01 0 Z',
+    ],
+  },
+  darkness: {
+    label: 'Darkness',
+    steps: [
+      // The eclipse: a heavy occluding disc, the last of the light pinched
+      // into a thick closing rim — no stars in THIS dark (cf. moonlit).
+      'M50 22 a28 28 0 1 0 0.01 0 Z M58 32 a17 17 0 1 1 -0.01 0 Z',
+    ],
+  },
+  enlarging: {
+    label: 'Enlarging',
+    steps: [
+      // Arcs swelling outward from a corner, each wider than the last.
+      'M40 70 A12 12 0 0 0 30 60 L29 64 A8 8 0 0 1 36 71 Z M50 68 A22 22 0 0 0 32 50 L31 55 A17 17 0 0 1 45 69 Z M62 66 A34 34 0 0 0 34 38 L33 44 A28 28 0 0 1 56 67 Z M70 26 a4 4 0 1 0 0.01 0 Z',
+    ],
+  },
+  'energy-resistant': {
+    label: 'Energy-Resistant',
+    steps: [
+      // Base: a ward chevron shrugging off the incoming bolt.
+      'M20 62 L50 30 L80 62 L72 62 L50 40 L28 62 Z M46 12 L54 14 L50 26 L44 24 Z',
+      // Greater: the split flows shed to either side.
+      'M16 70 C26 66 36 66 44 69 L43 75 C35 72 26 72 17 76 Z M84 70 C74 66 64 66 56 69 L57 75 C65 72 74 72 83 76 Z',
+      // Major: embers dying beside the peak.
+      'M28 30 a3 3 0 1 0 0.01 0 Z M72 30 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  environmental: {
+    label: 'Environmental',
+    steps: [
+      // Base: the ridge-line, two peaks.
+      'M14 68 L34 36 L48 56 L44 62 L34 46 L22 68 Z M40 68 L58 28 L86 68 L78 68 L58 40 L48 68 Z',
+      // Greater: the sun over it and the water under it.
+      'M74 22 a5 5 0 1 0 0.01 0 Z M18 78 C28 74 38 74 48 78 C58 82 68 82 82 78 L82 84 C68 88 58 88 48 84 C38 80 28 80 18 84 Z',
+    ],
+  },
+  feather: {
+    label: 'Feather',
+    steps: [
+      // A quill shaft with three barb-flicks off its spine.
+      'M30 86 C42 66 58 40 76 18 L80 22 C62 44 48 68 36 88 Z M60 38 C66 30 74 26 82 26 C74 30 68 35 64 41 Z M52 50 C58 42 66 38 74 38 C66 42 60 47 56 53 Z M44 62 C50 54 58 50 66 50 C58 54 52 59 48 65 Z',
+    ],
+  },
+  floating: {
+    label: 'Floating',
+    steps: [
+      // A hull-arc adrift over rising bubbles.
+      'M22 42 A34 34 0 0 1 78 42 L73 46 A28 28 0 0 0 27 46 Z M40 58 a3 3 0 1 0 0.01 0 Z M56 64 a4 4 0 1 0 0.01 0 Z M46 76 a2.5 2.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  focusing: {
+    label: 'Focusing',
+    steps: [
+      // Base: two flanking arcs, the aperture.
+      'M35 24 A30 30 0 0 0 35 76 L38 71 A24 24 0 0 1 38 29 Z M65 24 A30 30 0 0 1 65 76 L62 71 A24 24 0 0 0 62 29 Z',
+      // Greater: the iris ring inside.
+      'M50 36 a14 14 0 1 0 0.01 0 Z M50 40 a10 10 0 1 1 -0.01 0 Z',
+      // Major: the point of focus.
+      'M50 46 a4 4 0 1 0 0.01 0 Z',
+      // True: the cross-hair ticks beyond the arcs.
+      'M48 8 L52 8 L52 16 L48 16 Z M48 84 L52 84 L52 92 L48 92 Z M8 48 L16 48 L16 52 L8 52 Z M84 48 L92 48 L92 52 L84 52 Z',
+    ],
+  },
+  furious: {
+    label: 'Furious',
+    steps: [
+      // Three jagged rage-slashes fanning up and out.
+      'M26 84 L38 52 L32 56 L46 20 L52 24 L40 54 L46 50 L32 86 Z M52 78 L62 50 L56 53 L68 24 L74 28 L64 52 L70 49 L58 82 Z M14 60 L24 36 L29 40 L19 62 Z',
+    ],
+  },
+  glamourous: {
+    label: 'Glamourous',
+    steps: [
+      // A four-point glimmer inside its ring, one stray sparkle out.
+      'M50 26 a24 24 0 1 0 0.01 0 Z M50 32 a18 18 0 1 1 -0.01 0 Z M50 36 C52 46 54 48 64 50 C54 52 52 54 50 64 C48 54 46 52 36 50 C46 48 48 46 50 36 Z M78 20 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  glyphed: {
+    label: 'Glyphed',
+    tiers: ['lesser', '', 'greater', 'major', 'true'],
+    steps: [
+      // Lesser: the bare written stave, footed.
+      'M46 16 L54 16 L54 78 L60 78 L60 84 L40 84 L40 78 L46 78 Z',
+      // Base: the first branch stroke.
+      'M54 28 L76 40 L73 46 L54 36 Z',
+      // Greater: the answering branch.
+      'M46 56 L26 66 L29 72 L46 64 Z',
+      // Major: the binding ring through the stave.
+      'M50 34 a12 12 0 1 0 0.01 0 Z M50 39 a7 7 0 1 1 -0.01 0 Z',
+      // True: the twin witness motes.
+      'M28 24 a3.5 3.5 0 1 0 0.01 0 Z M74 68 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  gusting: {
+    label: 'Gusting',
+    steps: [
+      // Three wind-strokes, the longest curling back on itself.
+      'M18 34 L64 34 C74 34 76 24 68 22 C64 21 60 23 59 27 L54 26 C56 18 64 15 71 18 C82 22 79 40 64 40 L18 40 Z M14 50 L74 52 L74 58 L14 56 Z M22 68 L58 68 L58 74 L22 74 Z',
+    ],
+  },
+  heavy: {
+    label: 'Heavy',
+    steps: [
+      // The anvil-beam: wide cap, thick waist, grounded foot.
+      'M26 24 L74 24 L74 34 L58 34 L58 66 L70 66 L70 76 L30 76 L30 66 L42 66 L42 34 L26 34 Z',
+    ],
+  },
+  holding: {
+    label: 'Holding',
+    steps: [
+      // Base: the facing clamp-brackets.
+      'M30 26 L46 26 L46 33 L37 33 L37 67 L46 67 L46 74 L30 74 Z M70 26 L54 26 L54 33 L63 33 L63 67 L54 67 L54 74 L70 74 Z',
+      // Greater: the held mote, latched from above.
+      'M50 44 a6 6 0 1 0 0.01 0 Z M47 14 L53 14 L53 22 L47 22 Z',
+    ],
+  },
+  hungering: {
+    label: 'Hungering',
+    steps: [
+      // Two toothed jaws about to close.
+      'M26 32 L74 32 L66 44 L58 36 L50 46 L42 36 L34 44 Z M26 68 L74 68 L66 56 L58 64 L50 54 L42 64 L34 56 Z',
+    ],
+  },
+  jinxed: {
+    label: 'Jinxed',
+    steps: [
+      // Base: an inverted hook shedding a drop of bad luck.
+      'M50 18 C34 20 28 34 38 44 L43 40 C36 33 40 24 52 23 Z M56 50 C60 58 62 63 62 67 A6 6 0 1 1 50 67 C50 63 52 58 56 50 Z',
+      // Greater: the crack across it, and a second drop.
+      'M68 26 L74 30 L36 84 L30 80 Z M76 56 C78 60 79 63 79 65 A4 4 0 1 1 71 65 C71 63 72 60 76 56 Z',
+    ],
+  },
+  knowing: {
+    label: 'Knowing',
+    steps: [
+      // A heavy lowered lid, lashed, over the kept truth.
+      'M20 46 A34 34 0 0 1 80 46 L74 50 A28 28 0 0 0 26 50 Z M20 46 L14 40 L18 37 L23 43 Z M80 46 L86 40 L82 37 L77 43 Z M50 56 a6 6 0 1 0 0.01 0 Z M50 59 a3 3 0 1 1 -0.01 0 Z',
+    ],
+  },
+  launching: {
+    label: 'Launching',
+    steps: [
+      // A jagged ascender loosed upward, motes falling away.
+      'M44 88 L50 50 L40 56 L58 14 L64 18 L52 50 L60 46 L50 90 Z M28 40 a3 3 0 1 0 0.01 0 Z M72 52 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  living: {
+    label: 'Living',
+    steps: [
+      // Base: a mound and the first frond off it.
+      'M30 78 C40 72 60 72 70 78 L70 84 C60 80 40 80 30 84 Z M50 76 C48 58 52 40 64 26 C58 42 56 58 56 76 Z',
+      // Greater: the answering frond.
+      'M46 76 C44 62 40 50 30 40 C40 48 46 60 50 74 Z',
+      // True: pollen motes on the air.
+      'M68 20 a3.5 3.5 0 1 0 0.01 0 Z M26 34 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  moonlit: {
+    label: 'Moonlit',
+    steps: [
+      // A thin waxing crescent and two far stars.
+      'M50 24 a24 24 0 1 0 0.01 0 Z M45 27 a21 21 0 1 1 -0.01 0 Z M26 28 a3 3 0 1 0 0.01 0 Z M22 58 a2.5 2.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  projecting: {
+    label: 'Projecting',
+    steps: [
+      // A solid stave and the hollow echo it casts forward.
+      'M30 20 L38 22 L36 80 L28 78 Z M56 26 L66 28 L64 78 L54 76 Z M59 32 L63 33 L62 72 L58 71 Z M42 48 L50 49 L50 54 L42 53 Z',
+    ],
+  },
+  protecting: {
+    label: 'Protecting',
+    steps: [
+      // The warding outline itself, hollow.
+      'M50 16 C62 22 72 24 80 24 C80 48 70 72 50 86 C30 72 20 48 20 24 C28 24 38 22 50 16 Z M50 24 C59 28 66 30 73 30 C72 49 64 66 50 77 C36 66 28 49 27 30 C34 30 41 28 50 24 Z',
+    ],
+  },
+  retrieving: {
+    label: 'Retrieving',
+    steps: [
+      // Base: the reaching hook-arc closing on its prize.
+      'M76 28 C56 24 40 34 38 52 C37 64 44 74 56 78 L58 72 C48 68 43 61 44 52 C46 38 58 30 76 34 Z M62 74 a5 5 0 1 0 0.01 0 Z',
+      // Greater: the pull, drawn in dashes.
+      'M22 34 L32 40 L29 45 L19 39 Z M16 54 L26 56 L25 61 L15 59 Z',
+    ],
+  },
+  resuscitating: {
+    label: 'Resuscitating',
+    steps: [
+      // The pulse-line, and the breath returning above it.
+      'M12 58 L32 58 L40 40 L52 76 L60 52 L66 58 L88 58 L88 64 L63 64 L59 58 L52 88 L39 54 L35 64 L12 64 Z M50 20 a4 4 0 1 0 0.01 0 Z',
+    ],
+  },
+  reflecting: {
+    label: 'Reflecting',
+    steps: [
+      // Base: a stroke and its mirror image.
+      'M40 26 C30 40 26 56 30 72 L36 70 C33 56 36 42 44 30 Z M60 26 C70 40 74 56 70 72 L64 70 C67 56 64 42 56 30 Z',
+      // Greater: the mirror line between them.
+      'M48 18 L52 18 L52 84 L48 84 Z',
+      // Major: the paired motes, each the other's image.
+      'M34 82 a3.5 3.5 0 1 0 0.01 0 Z M66 82 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  reverberating: {
+    label: 'Reverberating',
+    steps: [
+      // Base: the struck bar and its first echo.
+      'M26 24 L74 24 L74 32 L26 32 Z M32 44 A22 22 0 0 0 68 44 L63 40 A17 17 0 0 1 37 40 Z',
+      // Greater: the second echo, wider.
+      'M26 56 A30 30 0 0 0 74 56 L69 52 A25 25 0 0 1 31 52 Z',
+      // Major: the farthest echo and the last dying tone.
+      'M20 68 A38 38 0 0 0 80 68 L75 64 A33 33 0 0 1 25 64 Z M50 86 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  seeing: {
+    label: 'Seeing',
+    steps: [
+      // Base: the open almond eye, pupil fixed.
+      'M14 50 C26 34 74 34 86 50 C74 66 26 66 14 50 Z M22 50 C32 40 68 40 78 50 C68 60 32 60 22 50 Z M50 42 a8 8 0 1 0 0.01 0 Z',
+      // Greater: the iris ring waking.
+      'M50 36 a14 14 0 1 0 0.01 0 Z M50 40 a10 10 0 1 1 -0.01 0 Z',
+      // Major: the gaze radiating past the lids.
+      'M24 34 L18 26 L22 23 L28 30 Z M50 28 L50 18 L55 18 L55 28 Z M76 34 L82 26 L78 23 L72 30 Z',
+    ],
+  },
+  'shield-returning': {
+    label: 'Shield-Returning',
+    steps: [
+      // A thrown arc curving home to its stave, hooked at the catch.
+      'M26 30 L34 30 L34 74 L26 74 Z M40 30 C62 30 76 42 76 58 C76 68 70 76 60 80 L58 74 C66 71 70 65 70 58 C70 46 58 36 40 36 Z M60 80 L48 78 L58 68 Z',
+    ],
+  },
+  sliding: {
+    label: 'Sliding',
+    steps: [
+      // Base: the long low skid and its wake-dash.
+      'M14 70 C34 62 62 58 86 60 L86 66 C62 64 36 68 16 76 Z M30 48 L58 44 L59 50 L31 54 Z',
+      // Greater: the higher dash and the kicked-up curl.
+      'M44 32 L66 28 L67 34 L45 38 Z M86 60 C90 54 88 46 82 42 C86 48 86 54 82 58 Z',
+    ],
+  },
+  'spell-saving': {
+    label: 'Spell-Saving',
+    steps: [
+      // A diamond ward holding the caught spark.
+      'M50 18 L82 50 L50 82 L18 50 Z M50 27 L73 50 L50 73 L27 50 Z M50 44 a6 6 0 1 0 0.01 0 Z',
+    ],
+  },
+  spellguarding: {
+    label: 'Spellguarding',
+    steps: [
+      // The spark barred behind its crossed staves.
+      'M50 42 a8 8 0 1 0 0.01 0 Z M24 22 L78 74 L72 80 L20 28 Z M76 22 L80 28 L28 80 L22 74 Z',
+    ],
+  },
+  summoning: {
+    label: 'Summoning',
+    steps: [
+      // Base: the standing arch.
+      'M26 84 L26 48 A24 24 0 0 1 74 48 L74 84 L67 84 L67 48 A17 17 0 0 0 33 48 L33 84 Z',
+      // Greater: the inner threshold.
+      'M40 84 L40 52 A10 10 0 0 1 60 52 L60 84 L54 84 L54 52 A4 4 0 0 0 46 52 L46 84 Z',
+      // Major: what rises through it.
+      'M50 36 a3 3 0 1 0 0.01 0 Z M42 26 a2.5 2.5 0 1 0 0.01 0 Z M58 24 a3 3 0 1 0 0.01 0 Z',
+      // True: the crown-spark above the arch.
+      'M50 4 C51.5 10 53 11.5 58 13 C53 14.5 51.5 16 50 22 C48.5 16 47 14.5 42 13 C47 11.5 48.5 10 50 4 Z',
+    ],
+  },
+  taunting: {
+    label: 'Taunting',
+    steps: [
+      // Base: the jeering wedge and its first peal.
+      'M22 38 L48 50 L22 62 L28 50 Z M56 34 A22 22 0 0 1 56 66 A16 16 0 0 0 56 34 Z',
+      // Greater: the farther peal and the spark that lands.
+      'M66 24 A34 34 0 0 1 66 76 A27 27 0 0 0 66 24 Z M84 46 a3.5 3.5 0 1 0 0.01 0 Z',
+    ],
+  },
+  thirsting: {
+    label: 'Thirsting',
+    steps: [
+      // Base: the fang-stroke and the first drop.
+      'M44 16 C48 34 52 50 60 66 L54 70 C46 54 42 36 38 18 Z M66 74 C68 78 69 81 69 83 A5 5 0 1 1 59 83 C59 81 60 78 64 74 Z',
+      // Greater: two more drops falling.
+      'M76 56 C78 60 79 62 79 64 A4 4 0 1 1 71 64 C71 62 72 60 76 56 Z M48 78 C50 82 51 84 51 86 A4 4 0 1 1 43 86 C43 84 44 82 48 78 Z',
+      // Major: the pool gathering beneath.
+      'M28 92 C38 88 58 88 72 92 L72 96 C58 93 38 93 28 96 Z',
+    ],
+  },
+  throwing: {
+    label: 'Throwing',
+    steps: [
+      // A tilted disc mid-flight, motion-dashes behind it.
+      'M28 60 C36 42 62 32 76 40 C70 58 44 68 28 60 Z M36 57 C43 45 60 39 69 43 C63 55 46 62 36 57 Z M18 36 L34 30 L36 35 L20 41 Z M14 50 L28 46 L30 51 L16 55 Z',
+    ],
+  },
+  undead: {
+    label: 'Undead',
+    steps: [
+      // Base: the hollowed visage — a void ring, eyes and mouth cut out.
+      'M50 20 a30 30 0 1 0 0.01 0 Z M40 40 a6 6 0 1 1 -0.01 0 Z M60 40 a6 6 0 1 1 -0.01 0 Z M50 60 a5 5 0 1 1 -0.01 0 Z',
+      // Greater: the cracks spreading.
+      'M50 82 L46 94 L52 94 L54 82 Z M27 68 L17 78 L21 82 L30 72 Z',
+      // True: the grave-lights above.
+      'M30 10 a3 3 0 1 0 0.01 0 Z M50 6 a3.5 3.5 0 1 0 0.01 0 Z M70 10 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  'weapon-storing': {
+    label: 'Weapon-Storing',
+    steps: [
+      // The sheath, and the blade tucked away inside it.
+      'M36 18 L64 18 L64 86 L36 86 Z M42 24 L58 24 L58 80 L42 80 Z M45 70 L54 30 L58 34 L49 72 Z',
+    ],
+  },
 };
 
 // Shown when a rune has no drawn family yet: a plain bindrune stave. Rendered
