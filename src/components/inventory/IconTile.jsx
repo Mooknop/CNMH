@@ -1,8 +1,14 @@
 import React from 'react';
 import GameGlyph from '../shared/GameGlyph';
 import ThassilonianRune from '../shared/ThassilonianRune';
+import RuneIcon from '../shared/RuneIcon';
 import { runeForName } from '../../utils/thassilonianRunes';
+import { runeIconsOf, resolveRuneIcon } from '../../utils/runeIcons';
 import { itemTint, itemCharges, isGlowy, itemRarity, itemCode } from '../../utils/inventoryTile';
+
+// Catalog-rune medallions cap out at two coins; further runes fold into a
+// +n chip so a fully-slotted weapon never buries its art.
+const RUNE_COIN_CAP = 2;
 
 /**
  * Square placeholder tile for an inventory item: a dark bevelled face with a
@@ -25,6 +31,13 @@ const IconTile = ({ item, size = 52, glow = true }) => {
   // Rune-marked gear: with real art the rune rides as a corner medallion
   // (bottom-left, the free corner); with none it IS the art.
   const rune = runeForName(item?.thassilonianRune);
+  // Catalog runes (#1369): a runestone's held rune becomes the art when the
+  // tile has neither image nor sin rune; everything else (weapon property
+  // runes, an imaged runestone's rune) rides as bottom-right medallions.
+  const catalogRunes = runeIconsOf(item);
+  const heldRune = item?.runestone?.rune;
+  const runeArt = !item?.image && !rune && heldRune ? heldRune : null;
+  const runeCoins = catalogRunes.filter((doc) => doc !== runeArt);
 
   const cls = [
     'icon-tile',
@@ -51,6 +64,10 @@ const IconTile = ({ item, size = 52, glow = true }) => {
         <span className="icon-tile-rune-art">
           <ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${rune.label}`} />
         </span>
+      ) : runeArt ? (
+        <span className="icon-tile-rune-art">
+          <RuneIcon runeId={runeArt.id} tint title={runeArt.name} />
+        </span>
       ) : (
         <span className="icon-tile-code">{itemCode(item?.name)}</span>
       )}
@@ -60,6 +77,30 @@ const IconTile = ({ item, size = 52, glow = true }) => {
           data-rune={String(item.thassilonianRune).toLowerCase()}
         >
           <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${rune.label}`} />
+        </span>
+      )}
+      {runeCoins.length > 0 && (
+        <span className="icon-tile-runeicons">
+          {runeCoins.slice(0, RUNE_COIN_CAP).map((doc) => {
+            const icon = resolveRuneIcon(doc.id);
+            return (
+              <span
+                key={doc.id}
+                className="icon-tile-runeicon runeicon-tint"
+                data-runeicon={icon.generic ? 'generic' : icon.family}
+              >
+                <RuneIcon runeId={doc.id} title={doc.name} />
+              </span>
+            );
+          })}
+          {runeCoins.length > RUNE_COIN_CAP && (
+            <span
+              className="icon-tile-runeicon icon-tile-runeicon-more"
+              title={runeCoins.slice(RUNE_COIN_CAP).map((d) => d.name).join(', ')}
+            >
+              +{runeCoins.length - RUNE_COIN_CAP}
+            </span>
+          )}
         </span>
       )}
       {item?.activeEffects?.length > 0 && (

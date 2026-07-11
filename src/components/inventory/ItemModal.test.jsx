@@ -993,6 +993,42 @@ describe('ItemModal', () => {
     expect(document.querySelector('.loot-code')).not.toBeNull();
   });
 
+  // --- catalog-rune glyphs (#1369) ---
+  it('an imageless runestone shows its held rune as the hero art', () => {
+    const runestone = {
+      name: 'Flaming Runestone',
+      runestone: { runeRef: 'flaming', rune: { id: 'flaming', name: 'Flaming' } },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={runestone} />);
+    const art = document.querySelector('.loot-rune-art svg.rune-icon');
+    expect(art).not.toBeNull();
+    expect(art).toHaveAttribute('data-runeicon', 'flaming');
+    expect(document.querySelector('.loot-code')).toBeNull();
+    expect(document.querySelector('.loot-runeicon-row')).toBeNull();
+  });
+
+  it('a property-runed weapon wears catalog-rune medallions, capped at two plus a +n chip', () => {
+    const item = {
+      ...baseItem,
+      runes: {
+        potency: 3,
+        property: [
+          { id: 'flaming', name: 'Flaming' },
+          { id: 'frost', name: 'Frost' },
+          { id: 'shock', name: 'Shock' },
+        ],
+      },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    const coins = document.querySelectorAll('.loot-runeicon');
+    expect(coins).toHaveLength(3);
+    expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
+    expect(coins[0]).toHaveClass('runeicon-tint');
+    const more = document.querySelector('.loot-runeicon-more');
+    expect(more).toHaveTextContent('+1');
+    expect(more).toHaveAttribute('title', 'Shock');
+  });
+
   // --- runestone (#800) ---
   it('renders a runestone: held rune + inert reminder, no Use button', () => {
     const runestone = {

@@ -1,0 +1,15 @@
+/* Catalog-rune family tint mapping — tokens live in pf2e-tokens.css. Opt-in
+   via the `tint` prop on RuneIcon, or by putting .runeicon-tint +
+   data-runeicon on a wrapper (medallion coins tint their border/glow off
+   currentColor and let the glyph inherit — the .rune-tint idiom from the sin
+   runes). Families without a token, and the generic fallback mark, inherit
+   currentColor like every other glyph. */
+.runeicon-tint[data-runeicon='flaming']     { color: var(--runeicon-flaming); }
+.runeicon-tint[data-runeicon='frost']       { color: var(--runeicon-frost); }
+.runeicon-tint[data-runeicon='shock']       { color: var(--runeicon-shock); }
+.runeicon-tint[data-runeicon='corrosive']   { color: var(--runeicon-corrosive); }
+.runeicon-tint[data-runeicon='thundering']  { color: var(--runeicon-thundering); }
+.runeicon-tint[data-runeicon='vitalizing']  { color: var(--runeicon-vitalizing); }
+.runeicon-tint[data-runeicon='wounding']    { color: var(--runeicon-wounding); }
+.runeicon-tint[data-runeicon='ghost-touch'] { color: var(--runeicon-ghost-touch); }
+.runeicon-tint[data-runeicon='returning']   { color: var(--runeicon-returning); }

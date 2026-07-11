@@ -117,6 +117,20 @@
   --rune-wrath:     #dc2626;   /* red */
   --rune-vainglory: #d4af37;   /* gold */
 
+  /* Catalog-rune glyph families (#1369) — one tint per drawn family, consumed
+     by rune medallions / rune-as-art (shared/RuneIcon.css). Elemental families
+     follow their damage type; undrawn families and the generic fallback mark
+     stay currentColor. */
+  --runeicon-flaming:     #f97316;   /* fire orange */
+  --runeicon-frost:       #38bdf8;   /* ice blue */
+  --runeicon-shock:       #facc15;   /* electric yellow */
+  --runeicon-corrosive:   #84cc16;   /* acid green */
+  --runeicon-thundering:  #a78bfa;   /* sonic violet */
+  --runeicon-vitalizing:  #ca8a04;   /* radiant amber-gold */
+  --runeicon-wounding:    #be123c;   /* arterial crimson */
+  --runeicon-ghost-touch: #a5b4fc;   /* ectoplasm periwinkle */
+  --runeicon-returning:   #22c55e;   /* cycle green */
+
   /* Iron — AC, armor, inactive, neutral UI */
   --iron-dark:    #3a3f4a;
   --iron-base:    #5a606e;

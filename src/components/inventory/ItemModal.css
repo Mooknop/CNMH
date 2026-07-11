@@ -126,6 +126,46 @@
   height: 74%;
   filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
 }
+/* Catalog-rune glyph as the hero art (imageless runestone, #1369) — same
+   treatment as the sin rune-as-art above. */
+.loot-art .loot-rune-art .rune-icon {
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+}
+/* Catalog-rune medallions (#1369) — same coin recipe as the sin badge, but
+   stacked from the bottom-LEFT (the sin badge owns bottom-right, the gem
+   top-left, charges the bottom center). */
+.loot-runeicon-row {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+.loot-runeicon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
+  border: 1px solid currentColor;
+  box-shadow:
+    0 0 10px color-mix(in srgb, currentColor 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+}
+.loot-runeicon .rune-icon {
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
+}
+.loot-runeicon-more {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--iron-light);
+}
 /* material tints (mirror IconTile) */
 .loot-art .tint-ember   { --tc: var(--ember-mid); }
 .loot-art .tint-iron    { --tc: var(--iron-light); }
