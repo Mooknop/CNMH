@@ -139,7 +139,47 @@
   display: flex;
   justify-content: center;
   padding: var(--space-3) 0;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Proficiency-group bubbles (Defense / Offense / Armor) ──
+   Rowed beneath the dial in the node idiom: slab surface, strong
+   border, accent tint + glow when selected. Everything that isn't a
+   skill lives behind these instead of on the attribute panels. */
+.prof-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-bottom: var(--space-4);
+}
+
+.prof-bubble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-target-min);
+  padding: 2px var(--space-4);
+  border-radius: 999px;
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.prof-bubble:hover {
+  border-color: var(--accent-outline);
+}
+
+.prof-bubble.sel {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: var(--accent-glow);
 }
 
 .dial {
@@ -298,12 +338,6 @@
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--shell-text-primary);
-}
-
-/* The governed save's ring row — sits between the panel header and the
-   skill cluster; the ring itself is a shared RankRing snode. */
-.save-wrap {
-  margin-bottom: 0;
 }
 
 .panel-count {
@@ -511,6 +545,7 @@
 @media (prefers-reduced-motion: reduce) {
   .node,
   .dial-center,
+  .prof-bubble,
   .ptoggle-btn {
     transition: none;
   }
@@ -630,10 +665,6 @@
 
 /* Theme-driven accent colors */
 .defense-name {
-  color: var(--color-theme, var(--color-primary));
-}
-
-.proficiency-category {
   color: var(--color-theme, var(--color-primary));
 }
 
