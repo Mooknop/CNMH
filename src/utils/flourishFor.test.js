@@ -214,6 +214,78 @@ describe('flourishFor — rune-marked gear (thassilonianRune)', () => {
   });
 });
 
+describe('flourishFor — catalog property runes (#1369 R7)', () => {
+  const sword = (property) => ({ name: 'Longsword', runes: { potency: 2, property } });
+  const withSword = (property, cls = 'Fighter') => ({
+    ...pc(cls),
+    inventory: [{ name: 'Rope' }, sword(property)],
+  });
+  const strike = { name: 'Longsword Melee Strike', source: 'Longsword' };
+
+  it('a strike with a property-runed weapon stamps the rune glyph', () => {
+    expect(
+      flourishFor({
+        ability: strike,
+        character: withSword([{ id: 'flaming', name: 'Flaming' }]),
+      })
+    ).toBe('runestamp:flaming');
+  });
+
+  it('picks the first rune with a drawn glyph, in slot order', () => {
+    // fearsome has no drawn family yet (generic fallback) — skipped.
+    expect(
+      flourishFor({
+        ability: strike,
+        character: withSword([
+          { id: 'fearsome', name: 'Fearsome' },
+          { id: 'frost-greater', name: 'Greater Frost' },
+        ]),
+      })
+    ).toBe('runestamp:frost-greater');
+  });
+
+  it('all-generic runes never stamp — the class rule still applies', () => {
+    expect(
+      flourishFor({
+        ability: { ...strike, traits: ['Impulse'] },
+        character: withSword([{ id: 'fearsome', name: 'Fearsome' }], 'Champion'),
+      })
+    ).toBe('rust-bloom');
+  });
+
+  it('unresolved string refs are skipped', () => {
+    expect(
+      flourishFor({
+        ability: strike,
+        character: withSword(['flaming']),
+      })
+    ).toBeUndefined();
+  });
+
+  it('loses to a sin rune on the same item — the sin is the identity', () => {
+    const marked = {
+      name: 'Longsword',
+      thassilonianRune: 'pride',
+      runes: { potency: 1, property: [{ id: 'flaming', name: 'Flaming' }] },
+    };
+    expect(
+      flourishFor({
+        ability: strike,
+        character: { ...pc('Fighter'), inventory: [marked] },
+      })
+    ).toBe('rune-pride');
+  });
+
+  it('loses to an authored ability.flourish', () => {
+    expect(
+      flourishFor({
+        ability: { ...strike, flourish: 'custom-one-off' },
+        character: withSword([{ id: 'flaming', name: 'Flaming' }]),
+      })
+    ).toBe('custom-one-off');
+  });
+});
+
 describe('flourishFor — class keying', () => {
   it('rules never leak across classes (a Monk composition stays plain)', () => {
     expect(
