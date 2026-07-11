@@ -24,12 +24,16 @@ export const actuatedCastsSpell = (actuated) =>
  * @param {object|null} actuated - the rune's `actuated` block
  * @param {object|null} spellDoc - the catalog spell resolved from `spellRef`
  * @param {string|null} hostUid  - the wearing item's uid (frequency key)
+ * @param {string|null} [runeId] - the granting rune's catalog id (#1377) —
+ *   rides the synthetic spell as `runeSource` so committing the cast stamps
+ *   the rune's glyph (flourishFor). Omit for a host item's own actuation.
  */
-export const buildRuneCastSpell = (actuated, spellDoc, hostUid) => {
+export const buildRuneCastSpell = (actuated, spellDoc, hostUid, runeId = null) => {
   if (!actuatedCastsSpell(actuated) || !spellDoc || typeof spellDoc !== 'object') return null;
   const rank = typeof actuated.castRank === 'number' ? actuated.castRank : spellDoc.level;
   return {
     ...spellDoc,
+    ...(runeId ? { runeSource: runeId } : {}),
     // Cast at the rune's fixed rank so heighten and target-count are correct
     // (fear at rank 3 hits up to five creatures).
     ...(typeof rank === 'number' ? { level: rank } : {}),

@@ -73,12 +73,13 @@ describe('getActions', () => {
   });
 
   it('surfaces etched property-rune actions sourced "Item (Rune)", active while the host is equipped', () => {
-    const rune = { name: 'Swallow-Spike', actions: [{ name: 'Grow Spikes', actions: 'One Action' }] };
+    const rune = { id: 'swallow-spike', name: 'Swallow-Spike', actions: [{ name: 'Grow Spikes', actions: 'One Action' }] };
     const [equipped] = getActions({
       inventory: [{ name: 'Full Plate', runes: { property: [rune] } }], // no state → worn default
     });
     expect(equipped).toMatchObject({
       name: 'Grow Spikes', actionCount: 1, source: 'Full Plate (Swallow-Spike)', active: true,
+      runeSource: 'swallow-spike', // #1377 — the granting rune, for the runestamp flourish
     });
 
     const [dropped] = getActions({
@@ -97,12 +98,13 @@ describe('getActions', () => {
   });
 
   it('surfaces accessory-rune actions sourced "Item (Rune)", normalized and gated on the host being equipped', () => {
-    const accessory = { name: 'Test Rune', actions: [{ name: 'Rune Action', actions: 'Two Actions' }] };
+    const accessory = { id: 'test-rune', name: 'Test Rune', actions: [{ name: 'Rune Action', actions: 'Two Actions' }] };
     const [worn] = getActions({
       inventory: [{ name: 'Gloves', runes: { accessory } }], // no state → worn default
     });
     expect(worn).toMatchObject({
       name: 'Rune Action', actionCount: 2, source: 'Gloves (Test Rune)', active: true,
+      runeSource: 'test-rune', // #1377 — the granting rune, for the runestamp flourish
     });
 
     const [dropped] = getActions({

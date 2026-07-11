@@ -43,4 +43,11 @@ describe('buildRuneCastSpell (#1055 S3)', () => {
     expect(buildRuneCastSpell(menacingActuated, null, 'u')).toBeNull();
     expect(buildRuneCastSpell(null, fearDoc, 'u')).toBeNull();
   });
+
+  it('tags the cast with the granting rune for the runestamp flourish (#1377)', () => {
+    const out = buildRuneCastSpell(menacingActuated, fearDoc, 'cloak-uid', 'greater-menacing');
+    expect(out.runeSource).toBe('greater-menacing');
+    // A host item's own actuation carries no tag.
+    expect(buildRuneCastSpell(menacingActuated, fearDoc, 'cloak-uid').runeSource).toBeUndefined();
+  });
 });

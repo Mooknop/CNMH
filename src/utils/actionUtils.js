@@ -12,6 +12,10 @@ import { itemAbilitiesActive, isHeldState, DEFAULT_ITEM_STATE } from './itemStat
 const isEquipped = (item) =>
   item?.state == null || item.state === DEFAULT_ITEM_STATE || isHeldState(item.state);
 
+// `runeSource` tags a rune-granted ability with the granting rune's catalog id
+// (#1377): `source` names the HOST item, so flourishFor needs this to stamp the
+// granting rune's own glyph on use — and to tell a rune-granted activation from
+// the host's native abilities, which carry no tag.
 const runeAbilities = (item, key) => {
   const runes = item && item.runes && item.runes.property;
   if (!Array.isArray(runes)) return [];
@@ -19,7 +23,12 @@ const runeAbilities = (item, key) => {
   return runes
     .filter((r) => r && typeof r === 'object' && Array.isArray(r[key]) && r[key].length)
     .flatMap((r) =>
-      r[key].map((a) => ({ ...a, source: `${item.name} (${r.name})`, active: equipped }))
+      r[key].map((a) => ({
+        ...a,
+        source: `${item.name} (${r.name})`,
+        runeSource: r.id,
+        active: equipped,
+      }))
     );
 };
 
@@ -36,7 +45,12 @@ const accessoryRuneAbilities = (item, key) => {
   const dragonType = item.runes.accessoryConfig?.dragonType || null;
   return rune[key].map((a) => {
     const withChain = a.chain && dragonType ? { ...a, chain: { ...a.chain, dragonType } } : a;
-    return { ...withChain, source: `${item.name} (${rune.name})`, active: equipped };
+    return {
+      ...withChain,
+      source: `${item.name} (${rune.name})`,
+      runeSource: rune.id,
+      active: equipped,
+    };
   });
 };
 

@@ -30,6 +30,19 @@ const runeGearFlourish = (ability, character) => {
   return item ? `rune-${item.thassilonianRune.toLowerCase()}` : undefined;
 };
 
+// Rune-granted abilities (#1377, R8): an ability the rune itself grants —
+// accessory/property-rune actions, reactions, free actions (tagged
+// `runeSource: <runeId>` at fold time in actionUtils) and a rune's actuated
+// spell cast (tagged in buildRuneCastSpell) — stamps THAT rune's glyph.
+// Beats the property-rune slot-order scan below: the granting rune is the
+// signature, not whichever rune happens to sit in the host's first slot.
+// Same drawn-glyph gate as R7 — a generic-fallback family never stamps.
+const runeSourceFlourish = (ability) => {
+  const id = ability?.runeSource;
+  if (typeof id !== 'string' || !id) return undefined;
+  return resolveRuneIcon(id).generic ? undefined : `runestamp:${id}`;
+};
+
 // Catalog property runes (#1369 R7): a Strike or gear action taken WITH a
 // property-runed weapon stamps its rune's glyph — `runestamp:<runeId>`,
 // resolved through the runeIcons registry by fx/Flourish at receive time.
@@ -54,6 +67,9 @@ export function flourishFor({ ability, castSource, character, bloodMagicActive =
 
   const runeGear = runeGearFlourish(ability, character);
   if (runeGear) return runeGear;
+
+  const runeGranted = runeSourceFlourish(ability);
+  if (runeGranted) return runeGranted;
 
   const propertyRune = propertyRuneFlourish(ability, character);
   if (propertyRune) return propertyRune;
