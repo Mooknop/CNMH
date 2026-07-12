@@ -308,6 +308,21 @@ describe('buildRuneSaleItem', () => {
     expect(ware.runes.property).toBeUndefined();
   });
 
+  it('bakes a striking rune with no potency (#unruned-items — homebrew allows it)', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+    const ware = buildRuneSaleItem(offering, 'W', { ref: 'longsword', runes: { striking: 'striking' } }, items, runes);
+    expect(ware.runes).toEqual({ striking: 'striking' });
+    expect(ware.runes.potency).toBeUndefined();
+    expect(ware.fullPrice).toBe(weaponPrice(ware));
+  });
+
+  it('bakes a fully unruned base weapon (empty rune block) at the base price', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+    const ware = buildRuneSaleItem(offering, 'W', { ref: 'longsword', runes: {} }, items, runes);
+    expect(ware.runes).toEqual({});
+    expect(ware.fullPrice).toBe(weaponPrice(ware));
+  });
+
   it('bakes a ring at a chosen grade + property, priced grade + rune', () => {
     const offering = { runeService: true, targets: ['ring'], maxLevel: 15 };
     const ware = buildRuneSaleItem(offering, 'R', { ref: 'power-ring', level: 5, runes: { property: ['spellstoring'] } }, items, runes);
