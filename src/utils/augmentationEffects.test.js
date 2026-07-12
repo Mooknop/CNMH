@@ -59,6 +59,15 @@ describe('augmentationEffects', () => {
     expect(generic[0].def.modifiers[0].vs).toBe('the chosen creature type');
   });
 
+  it('emits a conditional Stealth hint for a worn armor augmentation (Subtle Armor)', () => {
+    const out = augmentationEffects([armor({ id: 'subtle-armor', name: 'Subtle Armor' })]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'stealth', kind: 'item', amount: 1, vs: 'hiding the nature of your armor' },
+    ]);
+    // Only while worn.
+    expect(augmentationEffects([armor({ id: 'subtle-armor', name: 'Subtle Armor' }, 'dropped')])).toEqual([]);
+  });
+
   it('emits two conditional skill mods for a two-skill armor augmentation (Parade Armor)', () => {
     const out = augmentationEffects([armor({ id: 'parade-armor', name: 'Parade Armor' })]);
     expect(out[0].def.modifiers).toEqual([

@@ -68,6 +68,12 @@ export const SKILL_HINT_AUGMENTS = {
     { stat: 'diplomacy', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
     { stat: 'intimidation', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
   ],
+  // Subtle Armor: +1 item to the Stealth check to disguise the nature of your
+  // armor. (Its armor penalties — check penalty +1, Str +2, Bulk +1 — ride the
+  // armor-stat path, a follow-up alongside Reinforced Surcoat.)
+  'subtle-armor': [
+    { stat: 'stealth', kind: 'item', amount: 1, vs: 'hiding the nature of your armor' },
+  ],
 };
 
 // Augmentations whose benefit applies while the shield is WORN (stowed on your
