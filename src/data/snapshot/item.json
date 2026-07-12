@@ -734,6 +734,19 @@
     }
   },
   {
+    "id": "alchemists-lab-expanded",
+    "name": "Alchemist's Lab (Expanded)",
+    "level": 3,
+    "price": 55,
+    "weight": 6,
+    "traits": [],
+    "bonus": [
+      "crafting",
+      1
+    ],
+    "description": "An expanded alchemist's lab holds a wider array of reagents and apparatus. It grants a +1 item bonus to Crafting checks to create alchemical items (the bonus applies only to alchemical crafting)."
+  },
+  {
     "actions": [
       {
         "name": "Shining Charge",
@@ -1082,6 +1095,14 @@
     ]
   },
   {
+    "id": "arrows",
+    "name": "Arrows",
+    "price": 0.1,
+    "weight": 0.1,
+    "traits": [],
+    "description": "A bundle of arrows for a bow. Ammunition is tracked by hand until per-shot ammunition tracking arrives (#1098)."
+  },
+  {
     "actions": [
       {
         "name": "Cast Tailwind",
@@ -1390,6 +1411,55 @@
     }
   },
   {
+    "id": "bands-of-force",
+    "name": "Bands of Force",
+    "level": 8,
+    "price": 500,
+    "weight": 0.1,
+    "traits": [
+      "Force",
+      "Invested",
+      "Magical"
+    ],
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "item",
+        "amount": 1,
+        "label": "Bands of Force"
+      },
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 1,
+        "label": "Bands of Force"
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 1,
+        "label": "Bands of Force"
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 1,
+        "label": "Bands of Force"
+      }
+    ],
+    "reactions": [
+      {
+        "name": "Return Force",
+        "traits": [
+          "Force"
+        ],
+        "trigger": "A creature critically misses you with a melee Strike.",
+        "description": "The bands snap outward and you Shove the triggering creature, using the bands’ Athletics modifier of +14 for the Shove."
+      }
+    ],
+    "description": "These translucent armbands sheathe you in force. While invested they grant a +1 item bonus to AC and saving throws, and impose a maximum Dexterity modifier cap of +5 (as armor). You can attach talismans to the bands as if they were light armor."
+  },
+  {
     "type": "augmentation",
     "augTarget": [
       "shield"
@@ -1402,6 +1472,27 @@
     "rarity": "common",
     "usage": "applied to a shield",
     "description": "You have added barbs around the edge of your shield's face that are particularly effective when used against creatures in very tight quarters. When you use the Escape action against a creature to remove the grabbed, immobilized, or restrained condition and you do not roll a critical failure on the check, you also deal 2d6 slashing damage to the creature."
+  },
+  {
+    "id": "basilisk-eye",
+    "name": "Basilisk Eye",
+    "level": 9,
+    "price": 150,
+    "weight": 0,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman",
+      "Visual"
+    ],
+    "talisman": {
+      "affixTo": "shield",
+      "activation": {
+        "cost": "reaction",
+        "trigger": "You Shield Block a melee attack with the affixed shield."
+      }
+    },
+    "description": "This preserved basilisk eye is affixed to a shield. When you Shield Block a melee attack with that shield, you can activate the eye: the attacker must succeed at a DC 25 Fortitude save or be slowed 1 for 1 minute as partial petrification sets in (the GM rolls the save)."
   },
   {
     "id": "battle-axe",
@@ -2436,6 +2527,22 @@
     }
   },
   {
+    "id": "charm-of-fire-resistance-greater",
+    "name": "Charm of Fire Resistance (Greater)",
+    "level": 10,
+    "price": 975,
+    "weight": 0,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "resistance": {
+      "amount": 10,
+      "type": "fire"
+    },
+    "description": "This charm wards you against flame. While invested, you gain resistance 10 to fire."
+  },
+  {
     "name": "Chivalric Emblem",
     "description": "Activate (one-action, manipulate). Originally created by Taldan cavaliers acting as knights errant, chivalric emblems have since spread across the Inner Sea region and beyond. A chivalric emblem is crafted in the form of a small iron shield, embossed with heraldic insignia. These whetstones call protective spirits into a weapon; the effects last for 1 hour. While wielding a weapon under the effect of a chivalric emblem, if you witness an ally being reduced to 0 Hit Points or taking damage from a critical Strike, you gain a +1 circumstance bonus to attack rolls and damage with that weapon against the creature that damaged that ally for the remainder of the chivalric emblem's duration.",
     "traits": [
@@ -2458,6 +2565,22 @@
       "reminder": "If you witness an ally downed or crit: +1 circumstance to attack and damage with this weapon vs that enemy for the remaining duration (arm it on the effect card)."
     },
     "id": "chivalric-emblem"
+  },
+  {
+    "id": "choker-of-elocution",
+    "name": "Choker of Elocution",
+    "level": 6,
+    "price": 200,
+    "weight": 0.1,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "bonus": [
+      "society",
+      1
+    ],
+    "description": "This velvet collar sharpens your diction. You gain a +1 item bonus to Society checks, and you can understand, speak, and write one language chosen when the choker is created (Necril, for the Devil’s Disciples). Your practiced elocution reduces the DC of the flat check to perform an auditory action while deafened from 5 to 3."
   },
   {
     "name": "Chroma Kaleidoscope",
@@ -2868,6 +2991,37 @@
     "id": "cognitive-mutagen"
   },
   {
+    "id": "composite-shortbow",
+    "name": "Composite Shortbow",
+    "price": 14,
+    "weight": 1,
+    "traits": [
+      "Deadly d10",
+      "Propulsive"
+    ],
+    "category": "martial",
+    "group": "bow",
+    "strikes": [
+      {
+        "name": "Composite Shortbow",
+        "proficiency": "martial",
+        "type": "ranged",
+        "damage": "1d6",
+        "range": "60ft",
+        "ammoType": "arrow",
+        "traits": [
+          "Attack",
+          "Deadly d10",
+          "Propulsive",
+          "Ranged"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "description": "This bow is made from horn, wood, and sinew laminated together for extra power. It deals 1d6 piercing damage, has a range increment of 60 feet, and has the deadly d10 and propulsive traits."
+  },
+  {
     "name": "Corpseward Pendant",
     "description": "This worn amulet is usually shaped like a humanoid skull or small animal skull, warding its wearer from the notice of the restless dead.",
     "traits": [
@@ -3140,6 +3294,45 @@
     "id": "deadlock-mint-greater"
   },
   {
+    "id": "decanter-of-endless-water",
+    "name": "Decanter of Endless Water",
+    "level": 7,
+    "price": 320,
+    "weight": 0.1,
+    "traits": [
+      "Conjuration",
+      "Magical",
+      "Water"
+    ],
+    "actions": [
+      {
+        "name": "Command: \"Stream\"",
+        "actionCount": 1,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Water pours from the decanter at a rate of 1 gallon per round until you re-stopper it."
+      },
+      {
+        "name": "Command: \"Fountain\"",
+        "actionCount": 1,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "A 5-foot-long stream of water pours out at 5 gallons per round until you re-stopper it."
+      },
+      {
+        "name": "Command: \"Geyser\"",
+        "actionCount": 1,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "A powerful deluge pours out at 15 gallons per round. On activation, and once per round thereafter as an Interact action, it targets a creature with a hydraulic push effect using a spell attack roll of +15 (the GM resolves the attack)."
+      }
+    ],
+    "description": "This magic flask endlessly produces fresh water on command. Speak one of its three command words to produce a stream, fountain, or geyser."
+  },
+  {
     "name": "Demon Bone Tiles (Brimorak)",
     "description": "These bones from different types of demons can be used to form temporary barriers. When you crush the bone fragments and blow the resulting dust around yourself as you cast Shield, the shield appears as a bone bulwark shaped like the demon's face. When you use Shield Block with the spell, the barrier explodes into many bone fragments. The shards cause 1d6 bleed damage to each creature adjacent to you that fails a DC 20 Reflex save. This persistent bleed damage is unholy and can be stopped with an Interact action to remove the shards.",
     "traits": [
@@ -3218,8 +3411,20 @@
         "defense": "fortitude",
         "dc": 23,
         "conditions": {
-          "failure": [{ "id": "sickened", "value": 1, "note": "then temporarily immune for 1 hour" }],
-          "criticalFailure": [{ "id": "sickened", "value": 2, "note": "then temporarily immune for 1 hour" }]
+          "failure": [
+            {
+              "id": "sickened",
+              "value": 1,
+              "note": "then temporarily immune for 1 hour"
+            }
+          ],
+          "criticalFailure": [
+            {
+              "id": "sickened",
+              "value": 2,
+              "note": "then temporarily immune for 1 hour"
+            }
+          ]
         },
         "note": "Each creature within 10 feet when the incense is burned attempts the save."
       }
@@ -5550,6 +5755,19 @@
     "id": "healers-toolkit"
   },
   {
+    "id": "healers-toolkit-expanded",
+    "name": "Healer's Toolkit (Expanded)",
+    "level": 3,
+    "price": 50,
+    "weight": 1,
+    "traits": [],
+    "bonus": [
+      "medicine",
+      1
+    ],
+    "description": "An expanded healer's toolkit contains higher-quality supplies. It grants a +1 item bonus to Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds."
+  },
+  {
     "name": "Healing Potion",
     "variants": [
       {
@@ -6403,6 +6621,63 @@
     }
   },
   {
+    "id": "machete",
+    "name": "Machete",
+    "price": 0.7,
+    "weight": 0.1,
+    "traits": [
+      "Deadly d8",
+      "Sweep"
+    ],
+    "category": "martial",
+    "group": "sword",
+    "strikes": [
+      {
+        "name": "Machete",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Deadly d8",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "This broad, machete-style blade is a martial melee weapon in the sword group. It deals 1d6 slashing damage and has the deadly d8 and sweep traits."
+  },
+  {
+    "id": "maestros-instrument-lesser",
+    "name": "Maestro's Instrument (Lesser)",
+    "level": 3,
+    "price": 60,
+    "weight": 1,
+    "traits": [
+      "Magical"
+    ],
+    "bonus": [
+      "performance",
+      1
+    ],
+    "actuated": {
+      "name": "Charming Performance",
+      "cost": "none",
+      "frequency": "once per day",
+      "spellRef": "charm",
+      "castRank": 1,
+      "dc": 17,
+      "actionCount": 2,
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "Activate (two actions, manipulate); Frequency once per day; Effect The instrument casts charm (DC 17)."
+    },
+    "description": "This silver flute resonates with beguiling magic. You gain a +1 item bonus to Performance checks while playing music with it, and once per day its Charming Performance casts charm (DC 17)."
+  },
+  {
     "usage": "held in 1 hand",
     "source": "GM Core pg. 262",
     "name": "Magic Scroll",
@@ -6542,6 +6817,22 @@
     "price": 30,
     "weight": 0.1,
     "id": "midnight-milk"
+  },
+  {
+    "id": "midnight-milk-experimental",
+    "name": "Midnight Milk (Experimental)",
+    "level": 4,
+    "price": 30,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Drug",
+      "Ingested",
+      "Poison",
+      "Rare"
+    ],
+    "description": "An unstable, experimental batch of midnight milk brewed by the Devil’s Disciples. Like ordinary midnight milk it lulls the drinker toward drowsy euphoria and sleep, but its afflictions are stronger and erratic — the GM adjudicates its drug and addiction effects."
   },
   {
     "name": "Mighty Counterweight",
@@ -7722,6 +8013,27 @@
     "id": "phasing-trine"
   },
   {
+    "id": "philter-of-empty-dreams",
+    "name": "Philter of Empty Dreams",
+    "level": 6,
+    "price": 90,
+    "weight": 0.1,
+    "traits": [
+      "Rare",
+      "Consumable",
+      "Magical",
+      "Necromancy",
+      "Poison"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "philter-of-empty-dreams",
+      "durationMinutes": 480,
+      "note": "+1 item bonus to saves vs dream/nightmare effects; no dreams for 8 hours."
+    },
+    "description": "Drinking this cloudy philter grants you dreamless sleep for 8 hours and a +1 item bonus to saving throws against dream- or nightmare-themed effects (including midnight milk). If you are addicted to midnight milk, it attempts to counteract the addiction (counteract level 4, +15 modifier). An intellect devourer controlling a stolen body that drinks this must succeed at a DC 24 Fortitude save or be forced to Exit the Body."
+  },
+  {
     "name": "Phoenix Tail Feather",
     "description": "This large feather shimmers between orange and blue and is noticeably warm to the touch. Adding this catalyst to a casting of blazing dive prevents allies from having to save against the damage caused by your landing, instead being granted 2 temporary Hit Points per rank that last until the end of your next turn.",
     "traits": [
@@ -8690,6 +9002,14 @@
     ]
   },
   {
+    "id": "religious-symbol-wooden",
+    "name": "Wooden Religious Symbol",
+    "price": 1,
+    "weight": 0.1,
+    "traits": [],
+    "description": "A carved wooden symbol of a deity, used as a divine focus for casting divine spells."
+  },
+  {
     "id": "resilient",
     "name": "Resilient",
     "level": 8,
@@ -8897,6 +9217,28 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "rod-of-wonder",
+    "name": "Rod of Wonder",
+    "level": 8,
+    "price": 500,
+    "weight": 0.1,
+    "traits": [
+      "Magical"
+    ],
+    "actions": [
+      {
+        "name": "Activate Rod of Wonder",
+        "actionCount": 2,
+        "traits": [
+          "Concentrate",
+          "Manipulate"
+        ],
+        "description": "Choose a creature within 60 feet and roll on the rod’s wonder table to determine a random effect (spell DC 27, spell attack +17). The rod can’t be activated again for 1d4 hours. Roll the table at the table."
+      }
+    ],
+    "description": "This whimsical rod produces a random magical effect each time it’s activated. Its unpredictable results are rolled on the wonder table when used."
   },
   {
     "name": "Rope (50ft)",
@@ -9512,6 +9854,13 @@
     }
   },
   {
+    "id": "scroll-of-banishment-5",
+    "scroll": {
+      "spellRef": "banishment",
+      "rank": 5
+    }
+  },
+  {
     "id": "scroll-of-clairaudience",
     "scroll": {
       "spellRef": "clairaudience"
@@ -9688,6 +10037,64 @@
       }
     ],
     "id": "serene-mutagen"
+  },
+  {
+    "id": "serpent-dagger",
+    "name": "Serpent Dagger",
+    "level": 5,
+    "price": 150,
+    "weight": 0.1,
+    "traits": [
+      "Magical",
+      "Poison"
+    ],
+    "strikes": [
+      {
+        "name": "Serpent Dagger",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d4",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Versatile S",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      },
+      {
+        "name": "Serpent Dagger (Thrown)",
+        "proficiency": "martial",
+        "type": "ranged",
+        "damage": "1d4",
+        "range": "10ft",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Thrown",
+          "Versatile S"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {
+      "potency": 1,
+      "striking": "striking"
+    },
+    "actuated": {
+      "name": "Drip Poison",
+      "cost": "none",
+      "frequency": "once per day",
+      "actionCount": "free",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "Activate (free action, manipulate); Frequency once per day; Trigger You damage a creature with the serpent dagger; Effect You coat the blade in dagger venom. Dagger Venom (poison): Saving Throw DC 21 Fortitude; Maximum Duration 4 rounds; Stage 1 1d8 poison damage and enfeebled 1 (1 round)."
+    },
+    "description": "This serpentine +1 striking dagger drips venom on command. On a critical hit, the target becomes sickened 1 unless it succeeds at a DC 19 Fortitude save (the GM rolls the save). Once per day, Drip Poison coats the blade with dagger venom when you damage a creature."
   },
   {
     "name": "Seventh Prism (Pentagonal)",
@@ -11993,6 +12400,34 @@
     "id": "targe"
   },
   {
+    "id": "the-hollow-star",
+    "name": "The Hollow Star",
+    "level": 9,
+    "price": 700,
+    "weight": 1,
+    "traits": [
+      "Unique",
+      "Chaotic",
+      "Conjuration",
+      "Magical"
+    ],
+    "bonus": [
+      "occultism",
+      1
+    ],
+    "reactions": [
+      {
+        "name": "Aklo Utterance",
+        "traits": [
+          "Linguistic"
+        ],
+        "trigger": "You cast a spell or use an effect that has the linguistic trait.",
+        "description": "You speak in Aklo even if you don’t know it. If the effect requires a spell attack roll, you gain a +1 item bonus to that roll; if it allows a saving throw, all saves against it take a −1 item penalty."
+      }
+    ],
+    "description": "This unique black-crystal star hums with alien whispers. It sheds bright light in a 60-foot radius, and any creature within that bright light gains a +1 item bonus to Occultism checks. A lawful carrier is enfeebled 2 while carrying it. The first time you touch it, the next time you sleep you suffer disturbing dreams and must succeed at a DC 25 Will save on waking or be stupefied 1. Deros within its bright light are stupefied 1."
+  },
+  {
     "name": "Theatrical Mutagen",
     "description": "An alchemical mutagen that turns you into a consummate performer, demanding constant motion.",
     "traits": [
@@ -12623,6 +13058,21 @@
     }
   },
   {
+    "id": "truth-potion",
+    "name": "Truth Potion",
+    "level": 6,
+    "price": 46,
+    "weight": 0.1,
+    "traits": [
+      "Uncommon",
+      "Consumable",
+      "Magical",
+      "Mental",
+      "Potion"
+    ],
+    "description": "On drinking this bitter draught, attempt a DC 19 Will save (you can voluntarily fail); the effect lasts 10 minutes. Failure: you must tell the truth when you speak. Critical Failure: as failure, and when questioned you must attempt another DC 19 Will save or answer truthfully if able. Success: no effect. (Social effect — the GM adjudicates.)"
+  },
+  {
     "id": "twining-chains",
     "type": "augmentation",
     "augTarget": [
@@ -12654,6 +13104,30 @@
       "umbrella"
     ],
     "description": "A collapsible canvas umbrella on a wooden frame."
+  },
+  {
+    "id": "undertakers-manifest",
+    "name": "Undertaker's Manifest",
+    "level": 6,
+    "price": 220,
+    "weight": 0.1,
+    "traits": [
+      "Darkness",
+      "Grimoire",
+      "Magical",
+      "Shadow"
+    ],
+    "actuated": {
+      "name": "Shroud of Shadow",
+      "cost": "none",
+      "frequency": "once per day",
+      "actionCount": "free",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Activate (free action, concentrate); Frequency once per day; Effect When your next action casts a shadow or void spell prepared from this grimoire, a roiling cloud of shadow spills out, creating dim light in a 30-foot emanation centered on you for 3 rounds (it does not apply where light is already darker than dim)."
+    },
+    "description": "This grimoire of funerary rites is bound in grave-cloth. Once per day it shrouds you in shadow as you cast a shadow or void spell."
   },
   {
     "name": "Valorous Coin",
@@ -13028,9 +13502,23 @@
     }
   },
   {
+    "id": "wand-of-phantasmal-killer-4",
+    "wand": {
+      "spellRef": "phantasmal-killer",
+      "rank": 4
+    }
+  },
+  {
     "id": "wand-of-stinking-cloud",
     "wand": {
       "spellRef": "stinking-cloud"
+    }
+  },
+  {
+    "id": "wand-of-telepathy-4",
+    "wand": {
+      "spellRef": "telepathy",
+      "rank": 4
     }
   },
   {

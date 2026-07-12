@@ -2739,6 +2739,51 @@
     ]
   },
   {
+    "id": "phantasmal-killer",
+    "name": "Phantasmal Killer",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Death",
+      "Emotion",
+      "Fear",
+      "Illusion",
+      "Mental"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "targets": "1 living creature",
+    "defense": "Will",
+    "description": "You conjure an illusion of the target’s deepest fears, visible only to it. The illusory monster attacks the target’s mind, and terror can stop the target’s heart.",
+    "damageData": {
+      "base": "8d6",
+      "type": "mental",
+      "degrees": {
+        "criticalSuccess": 0,
+        "success": 0.5,
+        "criticalFailure": 1.5
+      },
+      "heightened": {
+        "+1": {
+          "base": "2d6"
+        }
+      }
+    },
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target takes 4d6 mental damage and is frightened 1.",
+      "Failure": "The target takes 8d6 mental damage and is frightened 2.",
+      "Critical Failure": "The target must attempt a Fortitude save. On a failure it dies (this is an incapacitation effect); on a success it instead takes 12d6 mental damage, is frightened 4, and flees until the end of its next turn."
+    },
+    "heightened": {
+      "+1": "The mental damage increases by 2d6 on a failure and by 3d6 on a critical failure."
+    },
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "phantasmal-treasure",
     "name": "Phantasmal Treasure",
     "level": 2,

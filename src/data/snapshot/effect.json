@@ -1156,6 +1156,12 @@
     ]
   },
   {
+    "id": "philter-of-empty-dreams",
+    "name": "Empty Dreams",
+    "description": "+1 item bonus to saving throws against dream- and nightmare-themed effects (including midnight milk); you have no dreams. Lasts 8 hours.",
+    "modifiers": []
+  },
+  {
     "id": "potion-of-flying",
     "name": "Potion of Flying (Standard)",
     "description": "You have a fly Speed of 40 feet. Lasts 1 minute.",
