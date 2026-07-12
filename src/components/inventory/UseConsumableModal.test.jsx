@@ -336,6 +336,34 @@ describe('item-target consumable (oil)', () => {
       text: 'Blu applied Rust Scrub to Full Plate — Restore 2d4 HP to rust damage (GM adjudicates)',
     }));
   });
+
+  it('Rust Scrub on a durable item prompts for the rolled HP and restores it (#543)', () => {
+    const rustScrub = {
+      id: 'rust-scrub',
+      name: 'Rust Scrub',
+      quantity: 1,
+      traits: ['Consumable'],
+      consumable: { kind: 'effect', target: 'item', transient: true, note: 'Restore 2d4 HP to rust damage (GM adjudicates)' },
+    };
+    const plate = { id: 'plate-1', name: 'Full Plate', uid: 'plate-1', durability: { hp: 36, hardness: 9 } };
+    mockCharData = { inventory: [plate, rustScrub] };
+    mockGetState.mockImplementation((_id, key) => (key === 'itemhp' ? { 'plate-1': { hp: 20 } } : undefined));
+
+    renderModal({ item: rustScrub });
+    fireEvent.click(screen.getByRole('button', { name: 'Full Plate' }));
+
+    // The HP input only appears once a durable target is picked; confirm gates on it.
+    const hpInput = screen.getByLabelText('hp restored');
+    expect(screen.getByRole('button', { name: 'Use' })).toBeDisabled();
+    fireEvent.change(hpInput, { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Use' }));
+
+    expect(consumedState).toEqual({ 'Rust Scrub': 1 });
+    expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'itemhp', { 'plate-1': { hp: 26 } });
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Blu applied Rust Scrub to Full Plate — restored 6 HP (26/36)',
+    }));
+  });
 });
 
 // ── Race guard ───────────────────────────────────────────────────────────────

@@ -55,6 +55,9 @@ import { runeIconsOf, resolveRuneIcon, fundamentalRuneId } from '../../utils/run
 import { formatModifier } from '../../utils/CharacterUtils';
 import { hasRustBlessing, brokenArmorAcPenalty } from '../../utils/rustBlessing';
 import { isBrokenHp } from '../../utils/itemDurability';
+import { repairHp, repairDc, repairTimeLabel } from '../../utils/repair';
+import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useItemHp } from '../../hooks/useItemHp';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -129,11 +132,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Stack-split amount for giving a consumable (#657). Clamped to the remaining
   // quantity at render so it can't exceed what's on hand.
   const [giveCount, setGiveCount] = useState(1);
-  // Live item durability (#539/#542) — HP overlay reads/writes + the two
-  // manual-bookkeeping inputs (apply damage / repair HP) on the panel below.
+  // Live item durability (#539/#542) — HP overlay reads/writes + the manual
+  // apply-damage input and the Repair action (#543) inputs on the panel below.
   const itemHp = useItemHp(character?.id);
   const [damageInput, setDamageInput] = useState('');
-  const [repairInput, setRepairInput] = useState('');
+  const [repairD20, setRepairD20] = useState('');
+  const [repairTotal, setRepairTotal] = useState('');
+  const [repairResult, setRepairResult] = useState(null);
 
   if (!isOpen || !item) return null;
 
@@ -505,16 +510,36 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       text: `${character?.name || 'Someone'}'s ${item.name} took ${r.taken} damage (${r.prevented} prevented by Hardness) — ${r.hpAfter}/${durability.maxHp} HP${state}`,
     });
   };
-  const doRepairItem = () => {
-    const amount = Math.floor(Number(repairInput));
-    if (!(amount > 0)) return;
-    const next = itemHp.repairItem(item, amount);
-    if (next == null) return;
-    setRepairInput('');
-    const still = isBrokenHp(next, durability.brokenThreshold) ? ' — still broken' : '';
+  // Repair action (#543) — a 10-minute Crafting check vs the item's level DC
+  // that restores HP by degree + Crafting rank (repairHp), mirroring the shield
+  // Repair panel (#579). The player enters their raw d20 and check total; the
+  // degree resolves the HP and repairItem clamps it to max (crossing the broken
+  // threshold un-breaks the item automatically, since state derives from HP).
+  const craftRank = charData?.skillProficiencies?.crafting || 0;
+  const hasQuickRepair = (charData?.feats || []).some((f) => f.name === 'Quick Repair');
+  const repairCost = repairTimeLabel({ rank: craftRank, quick: hasQuickRepair });
+  const repairItemDc = durability ? repairDc(item.level) : null;
+  const repairD20Num = parseInt(repairD20, 10);
+  const repairTotalNum = parseInt(repairTotal, 10);
+  const repairCheckValid =
+    repairD20Num >= 1 && repairD20Num <= 20 && Number.isFinite(repairTotalNum);
+
+  const doRepairDurability = () => {
+    if (!durability || craftRank < 1 || !repairCheckValid) return;
+    const degree = computeSaveDegree({ d20: repairD20Num, total: repairTotalNum, dc: repairItemDc });
+    const restored = repairHp({ rank: craftRank, degree });
+    const before = durability.hp;
+    const next = restored > 0 ? itemHp.repairItem(item, restored) : before;
+    const newHp = next == null ? before : next;
+    setRepairResult({ degree, restored, newHp });
+    setRepairD20('');
+    setRepairTotal('');
+    const still = isBrokenHp(newHp, durability.brokenThreshold) ? ' — still broken' : '';
     appendEvent({
       type: 'action',
-      text: `${character?.name || 'Someone'} repaired ${item.name} — ${next}/${durability.maxHp} HP${still}`,
+      text: restored > 0
+        ? `${character?.name || 'Someone'} repaired ${item.name} (${DEGREE_LABELS[degree]}) — restored ${restored} HP → ${newHp}/${durability.maxHp}${still}`
+        : `${character?.name || 'Someone'} tried to repair ${item.name} (${DEGREE_LABELS[degree]}) — no HP restored`,
     });
   };
 
@@ -821,10 +846,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         ) : null}
       </div>
 
-      {/* Durability (#539/#542) — live HP / Hardness / Broken Threshold with
-          apply-damage + repair bookkeeping. Damage is reduced by Hardness on
-          apply; repair is manual HP for now (the Repair action and Rust Scrub
-          land in #543). Destroyed (0 HP) is final — no repair offered. */}
+      {/* Durability (#539/#542/#543) — live HP / Hardness / Broken Threshold.
+          Apply-damage is manual bookkeeping (reduced by Hardness); Repair is the
+          real Crafting Repair action — a check vs the item's level DC that
+          restores HP by degree + Crafting rank. Destroyed (0 HP) is final. */}
       {durability && (
         <div className="item-durability" data-testid="item-durability">
           <h3>
@@ -882,25 +907,62 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                 </button>
               </div>
               {durability.hp < durability.maxHp && (
-                <div className="item-durability-row">
-                  <input
-                    type="number"
-                    min="1"
-                    inputMode="numeric"
-                    aria-label="Hit Points to repair"
-                    placeholder="HP"
-                    value={repairInput}
-                    onChange={(e) => setRepairInput(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="btn-small btn-secondary"
-                    data-testid="durability-repair"
-                    disabled={!(Number(repairInput) > 0)}
-                    onClick={doRepairItem}
-                  >
-                    Repair
-                  </button>
+                <div className="item-durability-repair" data-testid="durability-repair">
+                  <div className="item-durability-repair-head">
+                    <span className="item-durability-repair-title">Repair (Crafting)</span>
+                    <span className="item-durability-repair-cost">
+                      {hasQuickRepair ? `Quick Repair · ${repairCost}` : repairCost}
+                    </span>
+                  </div>
+                  {craftRank < 1 ? (
+                    <p className="item-durability-hint">Repair requires trained Crafting.</p>
+                  ) : (
+                    <>
+                      <p className="item-durability-hint">
+                        Crafting vs <strong>DC {repairItemDc}</strong>.
+                      </p>
+                      <div className="item-durability-row">
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          inputMode="numeric"
+                          aria-label="Raw d20 die"
+                          placeholder="d20"
+                          value={repairD20}
+                          onChange={(e) => setRepairD20(e.target.value)}
+                        />
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          aria-label="Check total"
+                          placeholder="Total"
+                          value={repairTotal}
+                          onChange={(e) => setRepairTotal(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="btn-small btn-secondary"
+                          data-testid="durability-repair-btn"
+                          disabled={!repairCheckValid}
+                          onClick={doRepairDurability}
+                        >
+                          Repair
+                        </button>
+                      </div>
+                      {repairResult && (
+                        <p
+                          className="item-durability-hint"
+                          data-testid="durability-repair-result"
+                        >
+                          {DEGREE_LABELS[repairResult.degree]} —{' '}
+                          {repairResult.restored > 0
+                            ? `restored ${repairResult.restored} HP (now ${repairResult.newHp}/${durability.maxHp}).`
+                            : 'no HP restored.'}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
