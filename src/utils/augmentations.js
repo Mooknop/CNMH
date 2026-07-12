@@ -124,3 +124,25 @@ export const clearAugmentation = (host) => {
   const { state, hand, augmentation, ...rest } = host;
   return { ...rest, uid: newEntryUid() };
 };
+
+// Augmentations whose OUTCOME the app can't resolve on its own (#1411 C/E), so the
+// sheet marks them "GM-adjudicated" instead of implying an auto-applied effect:
+//   • enemy-side reactions — the effect targets the attacker (Twining Chains'
+//     Thorns), forces an enemy roll (Burnished Plating's Sunshine!), or redirects
+//     an effect (Improved Mirror); the card still fires + logs, the GM resolves it.
+//   • consumable riders — you load a bomb / poison and it modifies later attacks
+//     (Weapon Siphon, Injection Reservoir); tracking the load + rider is off-engine.
+// Code-owned, keyed by augmentation id.
+export const GM_ADJUDICATED_AUGMENTS = new Set([
+  'twining-chains',
+  'burnished-plating',
+  'improved-mirror',
+  'weapon-siphon',
+  'injection-reservoir',
+]);
+
+/** Whether an augmentation (doc, `{ ref }` binding, or id string) is GM-adjudicated. */
+export const isGmAdjudicatedAugmentation = (aug) => {
+  const id = typeof aug === 'string' ? aug : (aug && (aug.id ?? aug.ref));
+  return id != null && GM_ADJUDICATED_AUGMENTS.has(String(id));
+};
