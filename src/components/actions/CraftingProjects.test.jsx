@@ -287,6 +287,47 @@ describe('CraftingProjects', () => {
     });
   });
 
+  describe('craft-time augmentation (#1202 U2)', () => {
+    const targe = { id: 'targe', name: 'Targe', price: 1, shield: { hardness: 3 }, weight: 0.1 };
+    const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 };
+    const coat = { id: 'coat-of-arms', type: 'augmentation', augTarget: ['shield'], name: 'Coat of Arms', price: 20 };
+
+    const openCatalog = (itemId) => {
+      useContent.mockReturnValue({ items: [...catalogItems, targe, mirror, coat] });
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+      fireEvent.click(screen.getByText('From Catalog'));
+      fireEvent.change(screen.getByLabelText('Catalog item'), { target: { value: itemId } });
+    };
+
+    it('offers the augmentation picker for an augmentable host, not for a plain item', () => {
+      openCatalog('targe');
+      expect(screen.getByLabelText('Craft augmentation')).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('Catalog item'), { target: { value: 'torch' } });
+      expect(screen.queryByLabelText('Craft augmentation')).not.toBeInTheDocument();
+    });
+
+    it('excludes augmentation docs from the craftable catalog list', () => {
+      openCatalog('targe');
+      const catalog = screen.getByLabelText('Catalog item');
+      expect(catalog.querySelector('option[value="mirror"]')).toBeNull();
+      expect(catalog.querySelector('option[value="targe"]')).not.toBeNull();
+    });
+
+    it('bakes the chosen augmentation into the project and folds its price into the cost', () => {
+      goldValue = 100;
+      openCatalog('targe');
+      fireEvent.change(screen.getByLabelText('Craft augmentation'), { target: { value: 'coat-of-arms' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
+      const proj = mockSetProjects.mock.calls[0][0](null).projects[0];
+      expect(proj.augmentation).toEqual({ ref: 'coat-of-arms' });
+      expect(proj.name).toBe('Targe + Coat of Arms');
+      // Targe 1 gp + Coat 20 gp = 21 gp materials (2100 cp); half paid up front.
+      expect(proj.costCp).toBe(2100);
+      expect(proj.paidCp).toBe(1050);
+    });
+  });
+
   it('shows empty recipe message when character has no recipes', () => {
     render(<CraftingProjects character={{ id: 'char-1', crafting: [] }} />);
     fireEvent.click(screen.getByRole('button', { name: '+ New' }));

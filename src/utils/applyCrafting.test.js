@@ -10,6 +10,15 @@ describe('buildInventoryEntry', () => {
   it('omits level when absent', () => {
     expect(buildInventoryEntry({ ref: 'torch' })).not.toHaveProperty('level');
   });
+
+  it('carries a craft-time augmentation binding onto the entry (#1202 U2)', () => {
+    const e = buildInventoryEntry({ ref: 'targe', augmentation: { ref: 'mirror', choice: 'Dragon' } });
+    expect(e.augmentation).toEqual({ ref: 'mirror', choice: 'Dragon' });
+  });
+
+  it('ignores a malformed augmentation (no ref)', () => {
+    expect(buildInventoryEntry({ ref: 'targe', augmentation: {} })).not.toHaveProperty('augmentation');
+  });
 });
 
 describe('grantCraftedItem', () => {

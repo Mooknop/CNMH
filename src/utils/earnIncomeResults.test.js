@@ -131,6 +131,21 @@ describe('buildCraftingResult', () => {
   it('defaults a missing level to null', () => {
     expect(buildCraftingResult({ charId: 'c2', ref: 'torch' }).level).toBeNull();
   });
+
+  it('carries a craft-time augmentation (binding + name) when included (#1202 U2)', () => {
+    const entry = buildCraftingResult({
+      charId: 'c2', ref: 'targe', itemName: 'Targe + Mirror',
+      augmentation: { ref: 'mirror' }, augmentationName: 'Mirror',
+    });
+    expect(entry.augmentation).toEqual({ ref: 'mirror' });
+    expect(entry.augmentationName).toBe('Mirror');
+  });
+
+  it('omits augmentation fields for a plain crafted item', () => {
+    const entry = buildCraftingResult({ charId: 'c2', ref: 'torch' });
+    expect(entry).not.toHaveProperty('augmentation');
+    expect(entry).not.toHaveProperty('augmentationName');
+  });
 });
 
 describe('buildTrainingResult', () => {
