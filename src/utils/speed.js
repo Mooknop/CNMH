@@ -14,6 +14,7 @@
 
 import { normalizeArmor, normalizeShield } from './InventoryUtils';
 import { isHeldState } from './itemState';
+import { augmentationArmorDeltas } from './augmentations';
 
 // PF2e: penalties can never reduce a Speed below 5 feet.
 export const SPEED_FLOOR = 5;
@@ -87,10 +88,14 @@ export function deriveSpeed({ base, modifiers, gearPenalties } = {}) {
  */
 export function armorSpeedPenalty(entry, strengthScore) {
   const a = entry ? normalizeArmor(entry.armor) : null;
-  const penalty = a && Number.isFinite(a.speedPenalty) ? a.speedPenalty : 0;
+  // An armor augmentation can add to the Speed penalty (Reinforced Surcoat +5) and
+  // raise the Strength threshold that waives it (#1411). Folded at derivation time.
+  const delta = augmentationArmorDeltas(entry);
+  const penalty = (a && Number.isFinite(a.speedPenalty) ? a.speedPenalty : 0) + (delta.speedPenalty || 0);
   if (penalty <= 0) return null;
+  const strReq = a && a.strength !== undefined ? a.strength + (delta.strength || 0) : undefined;
   const waived =
-    Number.isFinite(strengthScore) && a.strength !== undefined && strengthScore >= a.strength
+    Number.isFinite(strengthScore) && strReq !== undefined && strengthScore >= strReq
       ? STRENGTH_WAIVER_FT
       : 0;
   const amount = Math.max(penalty - waived, 0);

@@ -146,3 +146,27 @@ export const isGmAdjudicatedAugmentation = (aug) => {
   const id = typeof aug === 'string' ? aug : (aug && (aug.id ?? aug.ref));
   return id != null && GM_ADJUDICATED_AUGMENTS.has(String(id));
 };
+
+// Armor-stat deltas an armor augmentation imposes (#1411 armor penalties), read at
+// derivation time — NOT baked onto the item (an acquired snapshot would double-count
+// on a swap). Keyed by augmentation id:
+//   • speedPenalty — feet added to the worn armor's Speed penalty (Reinforced Surcoat)
+//   • strength     — the armor's Strength threshold (a score), raised (harder to waive
+//                    the Speed penalty)
+//   • bulk         — Bulk added to the item (always, while carried)
+// The check-penalty increases these also impose are NOT modeled by the app (armor
+// has no check-penalty stat), and Burnished Plating's Stealth penalty is a separate
+// follow-up — both stay descriptive.
+export const AUGMENTATION_ARMOR_DELTAS = {
+  'subtle-armor': { strength: 2, bulk: 1 },
+  'burnished-plating': { strength: 2 },
+  'twining-chains': { strength: 2, bulk: 1 },
+  'parade-armor': { bulk: 1 },
+  'reinforced-surcoat': { speedPenalty: 5 },
+};
+
+/** The armor-stat deltas a host item's augmentation imposes ({} when none). */
+export const augmentationArmorDeltas = (host) => {
+  const id = augmentationId(host);
+  return (id != null && AUGMENTATION_ARMOR_DELTAS[id]) || {};
+};
