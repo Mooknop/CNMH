@@ -1030,6 +1030,23 @@
     "id": "archaic-wayfinder"
   },
   {
+    "id": "armor-latches",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Armor Latches",
+    "level": 1,
+    "price": 4,
+    "rarity": "common",
+    "usage": "applied to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "This armor is easily doffed. A set of armor with armor latches gains the noisy trait; you can't add latches to armor that already possesses the noisy trait. You can remove a set of armor with armor latches with a 3-action activity, which has the manipulate trait. This doesn't affect the time it takes to don the armor."
+  },
+  {
     "id": "armor-potency",
     "name": "Armor Potency",
     "level": 5,
@@ -2174,6 +2191,29 @@
     "price": 1,
     "weight": 0.1,
     "id": "buckler"
+  },
+  {
+    "id": "burnished-plating",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Burnished Plating",
+    "level": 1,
+    "price": 5,
+    "rarity": "uncommon",
+    "usage": "applied to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "These highly polished metal plates can be added to any armor. While wearing armor with burnished plating, you gain the Sunshine! reaction. However, you take a -4 circumstance penalty to stealth checks except in darkness, and your armor's Strength entry increases its value by 2, requiring you to have a higher Strength score to overcome the armor's penalties. Even if you meet your armor's new Strength entry, you still take the penalty to Stealth checks. When you are critically hit by an attack that deals bludgeoning damage, burnished plating stops working until someone spends 10 minutes repairing and polishing it; this doesn't require a Crafting check.",
+    "actuated": {
+      "cost": "none",
+      "name": "Sunshine!",
+      "actionCount": "reaction",
+      "description": "Trigger A creature you can see targets you with an attack Requirements You are in an area of bright light Effect You twist to reflect light in your foe's eyes. The attacking creature must succeed at a flat DC 3 check or the attack fails. The attacker doesn't need to roll this flat check if it has a precise sense other than vision or if it would already need to roll a flat check with a higher DC to target you, such as if you are concealed or hidden."
+    }
   },
   {
     "accessoryTags": [
@@ -3432,6 +3472,23 @@
     "id": "dragon-turtle-plate"
   },
   {
+    "id": "dragons-crest",
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "name": "Dragon's Crest",
+    "level": 1,
+    "price": 10,
+    "rarity": "uncommon",
+    "usage": "applied to a shield",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "This variant on the shield boss is usually shaped like a dragon's head, its jaws open wide enough to wedge a small vessel of liquid within. A dragon's crest can be etched with weapon runes, much like a shield boss or shield spikes, but doesn't otherwise alter your shield's statistics. A shield bearing a dragon's crest can't be combined with an attached weapon, like shield spikes. You can use an Interact action to wedge an alchemical bomb into the crest's jaws. While a bomb is wedged in the shield, you take a -1 penalty to attack rolls with the shield. When you successfully Strike a creature with the shield, the vessel shatters, exposing the creature you hit-and yourself-to the substance within. This counts as a successful hit with the bomb against the creature if it's adjacent to you or a successful hit against the appropriate adjacent square if it's not. The bomb deals splash damage as normal to surrounding creatures, including you. In addition, the bomb deals full damage to the attached shield."
+  },
+  {
     "id": "dread",
     "name": "Dread (Lesser)",
     "price": 225,
@@ -4266,6 +4323,23 @@
     "price": 50,
     "weight": 0,
     "id": "eye-garnets"
+  },
+  {
+    "id": "eyecatcher",
+    "type": "augmentation",
+    "augTarget": [
+      "weapon"
+    ],
+    "name": "Eyecatcher",
+    "level": 1,
+    "price": 2,
+    "rarity": "uncommon",
+    "usage": "applied to a weapon",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "An eyecatcher is a simple tassel, reflective basket hilt, or other accessory attached to a weapon to serve as a distraction. You gain a +1 item bonus to Deception checks to while using a weapon with an eyecatcher attached. An eyecatcher affects the balancing of a weapon, making it slightly more unwieldy. This increases the weapon's Bulk by 1 and grants a –1 penalty to damage rolls with the weapon."
   },
   {
     "usage": "held in one hand",
@@ -5818,6 +5892,24 @@
     }
   },
   {
+    "id": "injection-reservoir",
+    "type": "augmentation",
+    "augTarget": [
+      "weapon"
+    ],
+    "name": "Injection Reservoir",
+    "level": 1,
+    "price": 10,
+    "rarity": "common",
+    "usage": "applied to a non-injection melee weapon that deals piercing damage",
+    "noShop": true,
+    "traits": [
+      "Adjustment",
+      "Alchemical"
+    ],
+    "description": "This reservoir and spring-loaded needle can be attached to a weapon to let it inject deadly poisons. Additionally, the reservoir can be filled with an injury poison. Immediately after a successful attack with the adjusted weapon, you can inject the target with the loaded poison by activating the reservoir with an Interact action. Refilling the reservoir with a new poison requires 3 Interact actions and uses both hands. Adding an injection reservoir to a weapon throws off its balance, causing the multiple attack penalty with the weapon to be one greater than usual (usually –6 on a second attack and –11 on a third; or –5 and –10 with an agile weapon)."
+  },
+  {
     "type": "augmentation",
     "augTarget": [
       "shield"
@@ -7227,6 +7319,23 @@
     "material": "Cloth"
   },
   {
+    "id": "parade-armor",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Parade Armor",
+    "level": 2,
+    "price": 10,
+    "rarity": "uncommon",
+    "usage": "affixed to medium or heavy armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "Parade armor is an armor adjustment that creates a set of pseudo-decorative armor to wear during noncombat functions. Any medium or heavy armor can be fashioned into parade armor, which features custom designs based on the wearer's affiliation, military branch, or rank. A particular faction typically has one uniform appearance for its set of parade armor. While wearing this armor, you gain a +1 item bonus to Diplomacy and Intimidation checks against creatures of the same affiliation as your parade armor, though the bonus to Intimidation doesn't apply when interacting with creatures of higher rank than you. The armor is slightly bulkier, increasing the Bulk by 1."
+  },
+  {
     "name": "Pavise",
     "description": "This enormous rectangular metal shield can be used to protect the wielder's entire body, and is often used as a source of cover for allied archers, wielded both for the defense of the user and for nearby allies. It is incredibly heavy and unwieldy.",
     "traits": [
@@ -8450,6 +8559,23 @@
     "id": "redpitch-bomb"
   },
   {
+    "id": "reinforced-surcoat",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Reinforced Surcoat",
+    "level": 0,
+    "price": 2,
+    "rarity": "uncommon",
+    "usage": "applied to medium or heavy armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "This surcoat is made of thick fabric and light chain, designed to protect vital areas. When you are critically hit by an attack, you gain physical resistance equal to 2 + the value of the armor's potency rune against the attack's damage. If the armor is in the chain armor group and you have its armor specialization effect, you instead increase the physical resistance from the chain armor specialization by 2. This can't reduce the damage to less than the damage rolled for the hit before doubling for a critical hit. However, the reinforced surcoat increases the Speed penalty of your armor by 5 feet."
+  },
+  {
     "shield": {
       "health": 64,
       "breakThreshold": 32,
@@ -9594,6 +9720,23 @@
     "price": 23,
     "weight": 0,
     "id": "shark-tooth-charm"
+  },
+  {
+    "id": "shield-augmentation",
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "name": "Shield Augmentation",
+    "level": 0,
+    "price": 0.8,
+    "rarity": "uncommon",
+    "usage": "applied to a shield",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "There are numerous methods to modify shields-snarling rods to catch weapons, bladed edges, padding for nonlethal strikes, and so on-but all share basic functionality. A shield augmentation can be etched with weapon runes, much like a shield boss or shield spikes, but doesn't otherwise alter your shield's statistics. A shield bearing an augmentation can't be combined with an attached weapon, like shield spikes. A shield augmentation grants your shield one or more weapon traits, chosen when the augmentation is created. You can either choose to add the backswing or forceful trait, or you can choose two of the following weapon traits: disarm, nonlethal, shove, thrown 10 feet, trip, or versatile S."
   },
   {
     "id": "shield-boss",
@@ -11301,6 +11444,23 @@
     "id": "stone-body-mutagen-lesser"
   },
   {
+    "id": "storage",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Storage",
+    "level": 0,
+    "price": 1,
+    "rarity": "common",
+    "usage": "applied to armor or unarmored defense clothing",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "The storage adjustment fits the armor or clothing with belts, buckles, pouches, and loops for holding and storing tools. Countless fasteners make the armor as jangly as chain mail. While wearing armor with this adjustment, you can wear up to 3 Bulk of toolkits instead of the usual 2. However, the armor acquires the noisy trait. If it already has the noisy trait, increase its penalty to Stealth checks by 1."
+  },
+  {
     "id": "storm-arrow",
     "name": "Storm Arrow",
     "level": 9,
@@ -11444,6 +11604,23 @@
       "y": 50
     },
     "material": "Leather"
+  },
+  {
+    "id": "subtle-armor",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Subtle Armor",
+    "level": 1,
+    "price": 5,
+    "rarity": "uncommon",
+    "usage": "applied to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "Using fabrics and fashion accessories, you disguise your armor to look like everyday clothing. After applying this adjustment, you can attempt a Stealth check to to hide the nature of your armor. You gain a +1 item bonus to this check. The added weight and care make it more difficult to move around in the armor, increasing the armor's check penalty by 1, its Strength entry value by 2, and its Bulk by 1."
   },
   {
     "name": "Sulfur Bomb",
@@ -11857,6 +12034,23 @@
     "id": "thieves-toolkit"
   },
   {
+    "id": "throwing-shield",
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "name": "Throwing Shield",
+    "level": 1,
+    "price": 5,
+    "rarity": "uncommon",
+    "usage": "applied to a buckler or shield",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "These special straps and weightings fit over a shield or buckler, but not a tower shield. They are designed to let you doff and throw the shield in one swift movement. You can quickly remove the shield by spending a free action as part of the Strike to throw the shield. When thrown in this way, the shield is a martial thrown weapon that deals 1d6 bludgeoning damage and has the thrown 20 feet trait. A shield with the throwing shield attachment can't have any attached weapons, such as shield spikes or a shield boss, and the adjustments to make it more aerodynamic make it slightly less sturdy, reducing its Hardness by 1."
+  },
+  {
     "name": "Thunderbird Tuft (Greater)",
     "description": "This carved chunk of amber contains a single tuft of gray feathers, which spark with electricity to create an odd jittery sensation in anyone holding the amber for long. When used as part of a Shocking Grasp spell, thunderbird tuft funnels electricity back into the spellcaster in a defensive nimbus. For 1 minute, any creature that touches you or that hits you with a melee unarmed attack or non-reach melee weapon attack takes 2d4 electricity damage, or 2d6 electricity damage if the creature is using a metal weapon.",
     "traits": [
@@ -12196,6 +12390,34 @@
     ]
   },
   {
+    "id": "tremorsensors",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Tremorsensors",
+    "level": 4,
+    "price": 100,
+    "rarity": "uncommon",
+    "usage": "affixed to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment",
+      "Mechanical"
+    ],
+    "description": "These small, metallic devices resemble squashed spheres. They each contain a tiny gyroscope that's incredibly sensitive to vibrations in the earth. While typically worn on one's footwear, the device can be affixed to any part of your armor.",
+    "actuated": {
+      "cost": "none",
+      "name": "Tremorsensors",
+      "actionCount": "free",
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "Effect You stomp a foot, clap your hands, or create some other source of sound, gaining tremorsense as an imprecise sense with a range of 20 feet for the next 10 minutes."
+    }
+  },
+  {
     "name": "Trickster's Mandolin",
     "description": "This ever-changing mandolin is as slippery and protean as the trickster who carries it. While playing the mandolin, you gain a +1 item bonus to Deception and Performance checks. You can Activate the mandolin to Cast a Spell from its staff spell list.",
     "traits": [
@@ -12359,6 +12581,29 @@
     "imagePosition": {
       "x": 50,
       "y": 50
+    }
+  },
+  {
+    "id": "twining-chains",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Twining Chains",
+    "level": 1,
+    "price": 5,
+    "rarity": "uncommon",
+    "usage": "applied to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "This set of chains is completely covered with spikes and sharp blades. Not balanced for weapon use, twining chains are instead wrapped around a user's body as a deterrent to attackers-and, for some, a fashion statement. While wearing twining chains, you gain the Thorns reaction. In addition to their dangers, twining chains' weight also increases your armor's Bulk by 1, Strength entry value by 2, and check penalty by 2.",
+    "actuated": {
+      "cost": "none",
+      "name": "Thorns",
+      "actionCount": "reaction",
+      "description": "Trigger You are hit by an unarmed attack Effect You twist to harm your attacker with your chains' spikes and blades. Make an attack roll against the triggering attacker using your unarmed attack modifier. On a hit, the attacking creature takes 1d6 piercing damage. This damage increases to 2d6 piercing damage if the armor has a +1 potency rune, 3d6 piercing damage if the armor has a +2 potency rune, or 4d6 piercing damage if the armor has a +3 potency rune. However, whether you hit or miss, you take piercing damage equal to the number of d6s of piercing damage you would deal your attacker."
     }
   },
   {
@@ -13042,6 +13287,23 @@
     }
   },
   {
+    "id": "weapon-harness",
+    "type": "augmentation",
+    "augTarget": [
+      "armor"
+    ],
+    "name": "Weapon Harness",
+    "level": 1,
+    "price": 6,
+    "rarity": "uncommon",
+    "usage": "applied to armor",
+    "noShop": true,
+    "traits": [
+      "Adjustment"
+    ],
+    "description": "A suit of armor with this adjustment incorporates short, flexible harnesses meant to connect weapons to each of its vambraces. These harnesses can each be connected to a melee weapon of light Bulk or less. Attaching or removing a weapon takes an Interact action. Someone else can attach or remove a weapon if you're willing to let them or you're unable to act. You must remove a weapon from its mount before you can completely Release or otherwise stow it. You gain a +1 circumstance bonus to your Reflex DC against attempts to you of a weapon connected to the armor. If the weapon would be knocked from your grasp or you would drop it, the weapon dangles from the bracer by its harness rather than falling to the ground. You can regain control of the weapon in the normal time it takes you to draw it. Attaching a weapon to a weapon harness prevents you from throwing it or using other abilities that would require it to leave your person."
+  },
+  {
     "id": "weapon-potency",
     "name": "Weapon Potency",
     "level": 2,
@@ -13074,6 +13336,24 @@
         "description": "Increase the weapon's item bonus to attack rolls by 3, and the weapon can be etched with three property runes."
       }
     ]
+  },
+  {
+    "id": "weapon-siphon",
+    "type": "augmentation",
+    "augTarget": [
+      "weapon"
+    ],
+    "name": "Weapon Siphon",
+    "level": 1,
+    "price": 10,
+    "rarity": "common",
+    "usage": "attached to a melee weapon",
+    "noShop": true,
+    "traits": [
+      "Adjustment",
+      "Alchemical"
+    ],
+    "description": "Activate 1 (manipulate) This set of tubing snakes down the striking surface of a weapon to deliver alchemical explosives. A single lesser alchemical bomb can be fitted to the weapon siphon as an Interact action. The bomb must be one that deals energy damage, such as an Acid Flask, Alchemist's Fire, Blasting Stone, Bottled Lightning, or Frost Vial. The next three attacks made with the weapon deal 1d4 damage of the bomb's damage type in addition to the weapon's normal damage. If the second and third attacks aren't all made within 1 minute of the first attack, the bomb's energy is wasted. These attacks never deal splash damage or other special effects of the bomb and aren't modified by any abilities that add to or modify a bomb's effect. Adding a weapon siphon to a weapon throws off its balance, causing the multiple attack penalty with the weapon to be one greater than usual (usually –6 on a second attack and –11 on a third; or –5 and –10 with an agile weapon)."
   },
   {
     "name": "Wig of Holding",

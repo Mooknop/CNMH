@@ -25,9 +25,9 @@ const CATALOG = [
 ];
 
 describe('seeded shield augmentations (U3 — Everything Shields)', () => {
-  it('seeds exactly the 9 Everything Shields augmentations', () => {
-    const ids = items.filter(isAugmentation).map((d) => d.id).sort();
-    expect(ids).toEqual(CATALOG.map(([id]) => id).sort());
+  it('seeds all 9 Everything Shields augmentations', () => {
+    const ids = new Set(items.filter(isAugmentation).map((d) => d.id));
+    for (const [id] of CATALOG) expect(ids.has(id), `missing ${id}`).toBe(true);
   });
 
   it.each(CATALOG)('%s: shield augmentation, kept out of shops, level/price/rarity match the PDF', (id, level, price, rarity, actuated) => {
@@ -70,5 +70,67 @@ describe('seeded shield augmentations (U3 — Everything Shields)', () => {
     expect(doc.choices).toContain('dragon');
     expect(doc.choices).toContain('undead');
     expect(doc.traits).toContain('Visual');
+  });
+});
+
+// The official PF2e adjustments (Grand Bazaar / Treasure Vault / Mwangi / Knights of
+// Lastwall / Firebrands) generalized to weapon/armor/shield augmentations (#1205
+// follow-up). [id, target, level, price, actuated?] — verbatim from the Foundry pf2e
+// module; a shield augTarget here means an OFFICIAL shield adjustment (distinct from
+// the 3rd-party Everything Shields set above).
+const OFFICIAL = [
+  ['armor-latches', 'armor', 1, 4, false],
+  ['burnished-plating', 'armor', 1, 5, true],
+  ['reinforced-surcoat', 'armor', 0, 2, false],
+  ['twining-chains', 'armor', 1, 5, true],
+  ['parade-armor', 'armor', 2, 10, false],
+  ['storage', 'armor', 0, 1, false],
+  ['weapon-harness', 'armor', 1, 6, false],
+  ['tremorsensors', 'armor', 4, 100, true],
+  ['subtle-armor', 'armor', 1, 5, false],
+  ['injection-reservoir', 'weapon', 1, 10, false],
+  ['weapon-siphon', 'weapon', 1, 10, false],
+  ['eyecatcher', 'weapon', 1, 2, false],
+  ['dragons-crest', 'shield', 1, 10, false],
+  ['shield-augmentation', 'shield', 0, 0.8, false],
+  ['throwing-shield', 'shield', 1, 5, false],
+];
+
+const HOSTS = {
+  armor: { id: 'breastplate', name: 'Breastplate', armor: { acBonus: 4 }, weight: 2 },
+  weapon: { id: 'longsword', name: 'Longsword', strikes: [{ damage: '1d8' }], weight: 1 },
+  shield: { id: 'buckler', name: 'Buckler', shield: { bonus: 1 }, weight: 0.1 },
+};
+
+describe('seeded official adjustments (armor / weapon / shield)', () => {
+  it.each(OFFICIAL)('%s: a %s augmentation, noShop, fits its host, level/price match AoN', (id, target, level, price, actuated) => {
+    const doc = byId(id);
+    expect(doc, `missing ${id}`).toBeTruthy();
+    expect(isAugmentation(doc)).toBe(true);
+    expect(augTargets(doc)).toEqual([target]);
+    expect(doc.noShop).toBe(true);
+    expect(doc.level).toBe(level);
+    expect(doc.price).toBe(price);
+    expect(doc.traits).toContain('Adjustment');
+    expect(doc.description.length).toBeGreaterThan(0);
+    // Fits a host of its declared type, not the other two.
+    expect(augmentationFits(HOSTS[target], doc)).toBe(true);
+    for (const other of Object.keys(HOSTS)) {
+      if (other !== target) expect(augmentationFits(HOSTS[other], doc)).toBe(false);
+    }
+    if (actuated) {
+      expect(doc.actuated.cost).toBe('none');
+      expect(['reaction', 'free', 1, 2, 3]).toContain(doc.actuated.actionCount);
+      expect(doc.actuated.description).toMatch(/Trigger|Effect/);
+    } else {
+      expect(doc.actuated).toBeUndefined();
+    }
+  });
+
+  it('seeds 24 augmentations total: 12 shield, 9 armor, 3 weapon', () => {
+    const augs = items.filter(isAugmentation);
+    expect(augs).toHaveLength(24);
+    const by = (t) => augs.filter((d) => augTargets(d).includes(t)).length;
+    expect([by('shield'), by('armor'), by('weapon')]).toEqual([12, 9, 3]);
   });
 });
