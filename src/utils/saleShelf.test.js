@@ -417,3 +417,58 @@ describe('saleScrollPackOptions', () => {
     expect(saleScrollPackOptions({ spellItem: 'wand', maxLevel: 19 }, spells)).toEqual([]);
   });
 });
+
+describe('augmentations on sale items (#1404)', () => {
+  const weaponAug = { id: 'grip', type: 'augmentation', augTarget: ['weapon'], name: 'Weapon Grip', level: 2, price: 4, noShop: true };
+  const augItems = [longsword, weaponAug];
+  const augCatalog = new Map([...catalogMap, ['grip', weaponAug]]);
+
+  describe('rollRuneSaleItem', () => {
+    it('folds a rolled augmentation onto the item and into the price when the chance fires', () => {
+      const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+      // rng 0 → below the default 0.25 chance, so the augmentation always rolls.
+      const sale = rollRuneSaleItem(offering, augItems, runes, constRng(0));
+      expect(sale.augmentation).toEqual({ ref: 'grip' });
+      expect(sale.fullPrice).toBe(weaponPrice(sale) + 4);
+      expect(sale.price).toBe(sale.fullPrice); // no discount
+    });
+
+    it('adds no augmentation when the roll chance does not fire', () => {
+      const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+      // rng 0.99 ≥ the default 0.25 chance → no augmentation.
+      const sale = rollRuneSaleItem(offering, augItems, runes, constRng(0.99));
+      expect(sale.augmentation).toBeUndefined();
+    });
+
+    it('never rolls one at saleAugmentChance 0 and consumes no RNG (rune block unchanged)', () => {
+      const off0 = { runeService: true, targets: ['weapon'], maxLevel: 20, saleAugmentChance: 0 };
+      const gated = rollRuneSaleItem(off0, augItems, runes, constRng(0));
+      const plain = rollRuneSaleItem({ runeService: true, targets: ['weapon'], maxLevel: 20 }, [longsword], runes, constRng(0));
+      expect(gated.augmentation).toBeUndefined();
+      expect(gated.runes).toEqual(plain.runes); // no RNG perturbation from the aug gate
+    });
+  });
+
+  describe('buildRuneSaleItem', () => {
+    const offering = { runeService: true, targets: ['weapon'], maxLevel: 20 };
+    it('attaches a GM-selected augmentation and folds its price', () => {
+      const ware = buildRuneSaleItem(offering, 'W', { ref: 'longsword', runes: { potency: 1 }, augmentation: { ref: 'grip' } }, augItems, runes);
+      expect(ware.augmentation).toEqual({ ref: 'grip' });
+      expect(ware.fullPrice).toBe(weaponPrice(ware) + 4);
+    });
+
+    it('drops an augmentation selection the offering does not admit', () => {
+      const ware = buildRuneSaleItem(offering, 'W', { ref: 'longsword', runes: { potency: 1 }, augmentation: { ref: 'nope' } }, augItems, runes);
+      expect(ware.augmentation).toBeUndefined();
+    });
+  });
+
+  describe('resolveSaleWares', () => {
+    it('inlines a stored augmentation for display and notes it in the name', () => {
+      const shops = { s: { saleShelf: [{ sale: 'rune', saleId: 'x', ref: 'longsword', runes: { potency: 1 }, augmentation: { ref: 'grip' }, fullPrice: 100, price: 100 }] } };
+      const out = resolveSaleWares('s', shops, augCatalog, runeMap, spells);
+      expect(out[0].augmentation).toMatchObject({ id: 'grip', name: 'Weapon Grip' });
+      expect(out[0].name).toContain('Weapon Grip');
+    });
+  });
+});

@@ -876,6 +876,26 @@ describe('GmShops', () => {
         expect(next[0].price).toBe(Math.round(next[0].fullPrice * 0.5));
       });
 
+      it('sets a GM-chosen augmentation on a sale item, persisting the binding (#1404)', () => {
+        const weaponAug = { id: 'grip', type: 'augmentation', augTarget: ['weapon'], name: 'Weapon Grip', level: 2, price: 4, noShop: true };
+        open(
+          { 'town-hall': { wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 1 }], saleShelf: [w1] } },
+          { allLoreEntries, items: [longsword, weaponAug], runes: [flaming], spells },
+        );
+        fireEvent.click(screen.getByLabelText('sale-edit-w1'));
+        const picker = screen.getByLabelText('sale-augmentation');
+        expect(within(picker).getByRole('option', { name: 'Weapon Grip' })).toBeInTheDocument();
+        fireEvent.change(picker, { target: { value: 'grip' } });
+        fireEvent.click(screen.getByLabelText('sale-apply-w1'));
+        expect(lastShelf()[0].augmentation).toEqual({ ref: 'grip' });
+      });
+
+      it('shows no augmentation picker when the offering admits none', () => {
+        open({ 'town-hall': { wares: runeWares, saleShelf: [w1] } }); // default content: no augmentation docs
+        fireEvent.click(screen.getByLabelText('sale-edit-w1'));
+        expect(screen.queryByLabelText('sale-augmentation')).not.toBeInTheDocument();
+      });
+
       it('edits a scroll pack to a chosen rank + spells and rebuilds it', () => {
         open({
           'town-hall': {

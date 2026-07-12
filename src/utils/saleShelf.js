@@ -28,12 +28,14 @@ import {
   offeringTargets,
   maxLevelForTarget,
   eligibleRunes,
+  eligibleAugmentations,
   eligibleSpellItems,
   isRuneServiceWare,
   isSpellItemWare,
   shopHostKind,
   isShopExcluded,
 } from './shopUtils';
+import { augmentationFits } from './augmentations';
 
 // Fundamental tiers, derived from the single-source rune docs (#857 S6a). Each
 // tier carries the numeric potency `tier` (weapon/armor) or `tierKey`
@@ -70,6 +72,71 @@ const clampDiscount = (v) => {
   return Number.isFinite(d) ? Math.min(Math.max(d, 0), 0.99) : 0;
 };
 const discounted = (fullPrice, discount) => Math.round(fullPrice * (1 - discount));
+
+// ── Augmentations on sale items (#1404) ──────────────────────────────────────
+// An augmentation rides ORTHOGONALLY on a rune sale item, exactly as it does on an
+// inventory entry (#1202): `saleItem.augmentation = { ref, choice? }` beside the
+// `runes` block, its price folded into fullPrice. Both the random roll and the GM
+// editor produce that same shape; expandWare/resolveInventoryItem then carry it
+// into inventory unchanged.
+
+// Default chance a rolled item that CAN take an admitted augmentation gets one; a
+// per-offering `saleAugmentChance` (0..1) overrides. Gated on the offering actually
+// admitting a fitting augmentation, so a shop with no augmentation service (and every
+// existing roll, whose item pool has no augmentation docs) is untouched — no augment,
+// no extra RNG draw, identical sequence.
+const AUGMENT_ROLL_CHANCE = 0.25;
+const augmentRollChance = (offering) => {
+  const v = Number(offering && offering.saleAugmentChance);
+  return Number.isFinite(v) && v >= 0 && v <= 1 ? v : AUGMENT_ROLL_CHANCE;
+};
+
+// The augmentations an offering admits that fit `hostItem` (target + shield size
+// gate). Empty until U3 seeds augmentations / the shop offers the service.
+const fittingSaleAugmentations = (offering, hostItem, items) =>
+  eligibleAugmentations(offering, items).filter((a) => augmentationFits(hostItem, a));
+
+// Roll an augmentation onto a host, or null. Returns `{ ref, choice?, price }`
+// (price for folding into the sale total). No RNG is consumed when nothing is
+// admissible or the chance is 0, so it can't perturb an aug-free roll's sequence.
+const rollSaleAugmentation = (offering, hostItem, items, rng) => {
+  const chance = augmentRollChance(offering);
+  if (chance <= 0) return null;
+  const pool = fittingSaleAugmentations(offering, hostItem, items);
+  if (!pool.length) return null;
+  if (rng() >= chance) return null;
+  const aug = pick(pool, rng);
+  const out = { ref: String(aug.id), price: Number(aug.price) || 0 };
+  if (Array.isArray(aug.choices) && aug.choices.length) out.choice = pick(aug.choices, rng);
+  return out;
+};
+
+// Fold a rolled/selected augmentation into a built sale item: attach the `{ ref,
+// choice? }` binding and add its price to fullPrice/price. Identity when `aug` is
+// null. `aug` carries `price`; the stored binding drops it.
+const withSaleAugmentation = (saleItem, aug, discount) => {
+  if (!saleItem || !aug) return saleItem;
+  const binding = { ref: String(aug.ref) };
+  if (aug.choice != null) binding.choice = aug.choice;
+  const fullPrice = (Number(saleItem.fullPrice) || 0) + (Number(aug.price) || 0);
+  return { ...saleItem, augmentation: binding, fullPrice, price: discounted(fullPrice, discount) };
+};
+
+// Resolve a GM-selected `sel.augmentation` ({ ref, choice? }) against the offering's
+// admitted set and the chosen host, returning the `{ ref, choice?, price }` shape
+// withSaleAugmentation folds — or null when it isn't offered / doesn't fit.
+const selectedSaleAugmentation = (offering, sel, hostItem, items) => {
+  const pick_ = sel && sel.augmentation;
+  if (!pick_ || pick_.ref == null || !hostItem) return null;
+  const form = fittingSaleAugmentations(offering, hostItem, items)
+    .find((a) => String(a.id) === String(pick_.ref));
+  if (!form) return null;
+  const out = { ref: String(form.id), price: Number(form.price) || 0 };
+  if (pick_.choice != null && Array.isArray(form.choices) && form.choices.map(String).includes(String(pick_.choice))) {
+    out.choice = pick_.choice;
+  }
+  return out;
+};
 
 // The window-admitted PROPERTY runes (ring + accessory runes are `type:'property'`
 // too), grouped by lowercased target — reusing eligibleRunes so the level/rarity/
@@ -188,7 +255,8 @@ export function rollRuneSaleItem(offering, items, runes, rng = Math.random) {
 
     const base = { name: host.name, price: host.price, material: host.material, traits: host.traits };
     const fullPrice = priceRuneWare(target, base, runeBlock, props);
-    return { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    const item = { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    return withSaleAugmentation(item, rollSaleAugmentation(offering, host, items, rng), discount);
   }
 
   if (target === 'ring') {
@@ -216,7 +284,8 @@ export function rollRuneSaleItem(offering, items, runes, rng = Math.random) {
   const host = pick(hosts, rng);
   const rune = pick(targetRunes.filter((r) => accessoryEligible(host, r)), rng);
   const fullPrice = priceRuneWare('accessory', host, {}, [rune]);
-  return { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
+  const item = { sale: 'rune', saleId: newEntryUid(), ref: String(host.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
+  return withSaleAugmentation(item, rollSaleAugmentation(offering, host, items, rng), discount);
 }
 
 // ── Roll: scroll pack ────────────────────────────────────────────────────────
@@ -355,6 +424,18 @@ const resolveRuneSaleWare = (w, catalogMap, runeMap) => {
     if (rn) name = `${rn} ${base.name}`;
   }
 
+  // Inline the augmentation doc (#1404) so the sale-card preview shows its detail
+  // (the U1 ItemModal section reads `augmentation.name`), and note it in the name.
+  // The stored binding is `{ ref, choice? }`; expandWare reconstructs it on purchase.
+  let augmentation;
+  if (w.augmentation && w.augmentation.ref != null) {
+    const augDoc = catalogMap.get(String(w.augmentation.ref));
+    if (augDoc) {
+      augmentation = w.augmentation.choice != null ? { ...augDoc, choice: w.augmentation.choice } : { ...augDoc };
+      name = `${name} + ${augDoc.name}`;
+    }
+  }
+
   return {
     ...base,
     id: `sale-${w.saleId}`,
@@ -364,6 +445,7 @@ const resolveRuneSaleWare = (w, catalogMap, runeMap) => {
     price: Number.isFinite(w.price) ? w.price : 0,
     saleFullPrice: w.fullPrice,
     runes,
+    ...(augmentation ? { augmentation } : {}),
     sale: 'rune',
     stock: 1,
     wareKey: `sale:${w.saleId}`,
@@ -452,7 +534,8 @@ export function buildRuneSaleItem(offering, saleId, sel, items, runeDocs) {
     if (propDocs.length) runeBlock.property = propDocs.map((p) => String(p.id));
     const base = { name: item.name, price: item.price, material: item.material, traits: item.traits };
     const fullPrice = priceRuneWare(kind, base, runeBlock, propDocs);
-    return { sale: 'rune', saleId, ref: String(item.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    const saleItem = { sale: 'rune', saleId, ref: String(item.id), runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    return withSaleAugmentation(saleItem, selectedSaleAugmentation(offering, sel, item, items), discount);
   }
 
   if (kind === 'ring') {
@@ -461,14 +544,16 @@ export function buildRuneSaleItem(offering, saleId, sel, items, runeDocs) {
     if (!grade) return null;
     if (propDocs.length) runeBlock.property = propDocs.map((p) => String(p.id));
     const fullPrice = priceRuneWare('ring', grade, runeBlock, propDocs);
-    return { sale: 'rune', saleId, ref: String(item.id), level: grade.level, runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    const saleItem = { sale: 'rune', saleId, ref: String(item.id), level: grade.level, runes: runeBlock, fullPrice, price: discounted(fullPrice, discount) };
+    return withSaleAugmentation(saleItem, selectedSaleAugmentation(offering, sel, item, items), discount);
   }
 
   // accessory: exactly one accessory rune the host accepts.
   const rune = byId.get(String(runes.accessory));
   if (!rune || !accessoryEligible(item, rune)) return null;
   const fullPrice = priceRuneWare('accessory', item, {}, [rune]);
-  return { sale: 'rune', saleId, ref: String(item.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
+  const saleItem = { sale: 'rune', saleId, ref: String(item.id), runes: { accessory: String(rune.id) }, fullPrice, price: discounted(fullPrice, discount) };
+  return withSaleAugmentation(saleItem, selectedSaleAugmentation(offering, sel, item, items), discount);
 }
 
 /**

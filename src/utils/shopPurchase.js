@@ -54,6 +54,15 @@ export const expandWare = (item) => {
   if (item.sale === 'rune' && item.ref != null) {
     const entry = { ref: String(item.ref), runes: item.runes || {}, uid: newEntryUid() };
     if (item.level != null) entry.level = item.level;
+    // A sale item may carry an augmentation (#1404). The cart holds the RESOLVED
+    // ware (augmentation inlined as a doc with `id`), while a stored ware keeps the
+    // `{ ref }` binding — normalize either to the `{ ref, choice? }` inventory shape
+    // so resolveInventoryItem (U1) overlays + inlines it like a shop-fitted one.
+    const aug = item.augmentation;
+    if (aug && (aug.ref != null || aug.id != null)) {
+      entry.augmentation = { ref: String(aug.ref ?? aug.id) };
+      if (aug.choice != null) entry.augmentation.choice = aug.choice;
+    }
     return [entry];
   }
   // A dragonbreath weapon ware (#1210 M4g): lands as a lean ref entry carrying
