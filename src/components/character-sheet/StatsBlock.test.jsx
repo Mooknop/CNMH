@@ -402,10 +402,12 @@ describe('StatsBlock', () => {
     const { container } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     const left = container.querySelector('.prof-flank--left');
     const right = container.querySelector('.prof-flank--right');
-    // Each sigil pairs a decorative glyph SVG with its label.
+    // Each sigil is a label-less glyph button named via aria-label.
     expect(within(left).getByRole('button', { name: 'Defense' }).querySelector('svg.game-glyph')).toBeTruthy();
     expect(within(left).getByRole('button', { name: 'Offense' })).toBeInTheDocument();
     expect(within(right).getByRole('button', { name: 'Armor' })).toBeInTheDocument();
+    // Labels are not rendered as visible text.
+    expect(within(left).queryByText('Defense')).toBeNull();
     // Armor is not on the left flank; Defense/Offense are not on the right.
     expect(within(left).queryByRole('button', { name: 'Armor' })).toBeNull();
     expect(within(right).queryByRole('button', { name: 'Defense' })).toBeNull();

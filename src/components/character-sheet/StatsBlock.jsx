@@ -513,10 +513,10 @@ const StatsBlock = ({ character, characterColor }) => {
               type="button"
               className={`prof-sigil${selected === g.key ? ' sel' : ''}`}
               aria-pressed={selected === g.key}
+              aria-label={g.label}
               onClick={() => setSelected(g.key)}
             >
               <GameGlyph name={g.glyph} className="prof-sigil-icon" />
-              <span className="prof-sigil-label">{g.label}</span>
             </button>
           ))}
         </div>
@@ -558,10 +558,10 @@ const StatsBlock = ({ character, characterColor }) => {
               type="button"
               className={`prof-sigil${selected === g.key ? ' sel' : ''}`}
               aria-pressed={selected === g.key}
+              aria-label={g.label}
               onClick={() => setSelected(g.key)}
             >
               <GameGlyph name={g.glyph} className="prof-sigil-icon" />
-              <span className="prof-sigil-label">{g.label}</span>
             </button>
           ))}
         </div>

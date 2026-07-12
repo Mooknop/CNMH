@@ -166,11 +166,9 @@
 
 .prof-sigil {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  width: 60px;
+  width: 56px;
   padding: 0;
   background: none;
   border: none;
@@ -180,18 +178,11 @@
   transition: opacity 0.15s, filter 0.15s;
 }
 
+/* GameGlyph sizes itself as 1em (see GameGlyph.css), so drive the size via
+   font-size rather than width/height, which its equal-specificity rule wins. */
 .prof-sigil-icon {
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-theme, var(--ember-base)) 45%, transparent));
-}
-
-.prof-sigil-label {
-  font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: var(--text-2xs, 0.625rem);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 52px;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-theme, var(--ember-base)) 45%, transparent));
 }
 
 .prof-sigil:hover {
