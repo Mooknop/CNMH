@@ -12,7 +12,9 @@ vi.mock('../../hooks/usePlayMode', () => ({
 }));
 
 vi.mock('../../contexts/SessionContext', () => ({
-  useSession: vi.fn(() => ({ getState: vi.fn(() => null), sendUpdate: vi.fn() })),
+  // subscribe is used by PartyTrainingBoard's usePartyActivity (returns an
+  // unsubscribe fn); getState → null means nobody is mid-training here.
+  useSession: vi.fn(() => ({ getState: vi.fn(() => null), sendUpdate: vi.fn(), subscribe: vi.fn(() => vi.fn()) })),
 }));
 
 // DowntimeControl renders DowntimeResultsApproval (uses the encounter log for

@@ -10,12 +10,45 @@
 .eia-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-2);
   background: var(--theme-surface-inset, var(--shell-surface-inset));
   border: 1px solid var(--theme-border, var(--shell-border));
   border-left-width: 3px;
   border-radius: var(--radius-sm);
+}
+
+/* Training grant preview — expandable ability panel (#1191 S4). Spans the full
+   row width below the info/actions line. */
+.eia-preview {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-top: 1px solid var(--theme-border, var(--shell-border));
+}
+
+.eia-preview-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.eia-preview-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.eia-preview-line {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
 .eia-row--success,

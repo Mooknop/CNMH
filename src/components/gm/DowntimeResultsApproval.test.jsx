@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import DowntimeResultsApproval from './DowntimeResultsApproval';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSession } from '../../contexts/SessionContext';
@@ -43,7 +43,23 @@ const trainingEntry = {
   vendorId: 'sandpoint-garrison', vendorName: 'Sandpoint Garrison',
   offeringId: 'shield-block', offeringName: 'Shield Block',
   choiceId: null, choiceName: null,
-  grant: { kind: 'reaction', reaction: { name: 'Shield Block', trigger: 'While raised…' } },
+  grant: { kind: 'reaction', reaction: { name: 'Shield Block', trigger: 'While raised…', description: 'Ward off a blow.' } },
+  status: 'pending',
+};
+
+const stanceEntry = {
+  id: 'r6', kind: 'training', charId: 'c2', charName: 'Blu',
+  vendorId: 'house-of-blue-stones', vendorName: 'House of Blue Stones',
+  offeringId: 'tiger-stance', offeringName: 'Tiger Stance',
+  choiceId: null, choiceName: null,
+  grant: {
+    kind: 'feat',
+    feat: {
+      name: 'Tiger Stance', level: 1, description: 'You enter the stance of a tiger.',
+      actions: [{ name: 'Tiger Stance', actionCount: 1, traits: ['Monk', 'Stance'] }],
+      strikes: [{ name: 'Tiger Claw', damage: '1d8', damageType: 'slashing' }],
+    },
+  },
   status: 'pending',
 };
 
@@ -191,6 +207,48 @@ describe('DowntimeResultsApproval', () => {
     expect(saveDocument).not.toHaveBeenCalled();
     const next = mockSetResults.mock.calls[0][0]({ entries: [trainingEntry] });
     expect(next.entries).toEqual([]);
+  });
+
+  describe('training grant preview (#1191 S4)', () => {
+    it('previews a reaction grant with its trigger and effect on demand', () => {
+      setup([trainingEntry]);
+      render(<DowntimeResultsApproval />);
+      // Collapsed by default.
+      expect(screen.queryByTestId('preview-r5')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /preview shield block for ashka/i }));
+      const panel = screen.getByTestId('preview-r5');
+      expect(within(panel).getByText('Shield Block')).toBeInTheDocument();
+      expect(within(panel).getByText(/While raised/)).toBeInTheDocument();
+      expect(within(panel).getByText('Ward off a blow.')).toBeInTheDocument();
+      // The reaction glyph renders via ActionSymbol.
+      expect(within(panel).getByLabelText('reaction')).toBeInTheDocument();
+    });
+
+    it('toggles the preview closed again', () => {
+      setup([trainingEntry]);
+      render(<DowntimeResultsApproval />);
+      const btn = screen.getByRole('button', { name: /preview shield block for ashka/i });
+      fireEvent.click(btn);
+      expect(screen.getByTestId('preview-r5')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /hide shield block for ashka/i }));
+      expect(screen.queryByTestId('preview-r5')).not.toBeInTheDocument();
+    });
+
+    it('previews a stance (feat) grant with its action glyph and description', () => {
+      setup([stanceEntry]);
+      render(<DowntimeResultsApproval />);
+      fireEvent.click(screen.getByRole('button', { name: /preview tiger stance for blu/i }));
+      const panel = screen.getByTestId('preview-r6');
+      expect(within(panel).getByText('Tiger Stance')).toBeInTheDocument();
+      expect(within(panel).getByText('You enter the stance of a tiger.')).toBeInTheDocument();
+      expect(within(panel).getByLabelText('1 action')).toBeInTheDocument();
+    });
+
+    it('offers no preview button for non-training rows', () => {
+      setup([craftEntry]);
+      render(<DowntimeResultsApproval />);
+      expect(screen.queryByRole('button', { name: /preview/i })).not.toBeInTheDocument();
+    });
   });
 
   it('lists a Retrain result with its structured swap and Confirm logs it', () => {

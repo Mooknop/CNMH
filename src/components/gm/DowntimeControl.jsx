@@ -9,6 +9,7 @@ import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 import { periodState } from '../../utils/downtimeUtils';
 import { taskDc } from '../../utils/earnIncome';
 import DowntimeResultsApproval from './DowntimeResultsApproval';
+import PartyTrainingBoard from './PartyTrainingBoard';
 import { APP, globalKey } from '../../sync/keys';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
@@ -217,6 +218,8 @@ const DowntimeControl = () => {
               );
             })}
           </div>
+
+          <PartyTrainingBoard />
 
           <DowntimeResultsApproval />
         </>

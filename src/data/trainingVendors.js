@@ -59,6 +59,7 @@ export const DEFAULT_TRAINING_HOURS = 160;
 const stanceOffering = ({ id, name, level = 1, actionTraits = ['Monk', 'Stance'], strike, description }) => ({
   id,
   name,
+  family: 'Monk stances',
   hours: DEFAULT_TRAINING_HOURS,
   kind: 'feat',
   requiresClass: 'Monk',
@@ -250,6 +251,7 @@ export const TRAINING_VENDORS = [
       {
         id: 'shield-block',
         name: 'Shield Block',
+        family: 'Shield Block',
         hours: DEFAULT_TRAINING_HOURS,
         kind: 'reaction',
         requiresClass: null,
@@ -265,6 +267,7 @@ export const TRAINING_VENDORS = [
       {
         id: 'specialized-light',
         name: 'Specialized Shield Training (Light)',
+        family: 'Specialized Shield Training',
         hours: DEFAULT_TRAINING_HOURS,
         kind: 'reaction',
         requiresClass: null,
@@ -328,6 +331,7 @@ export const TRAINING_VENDORS = [
       {
         id: 'specialized-medium',
         name: 'Specialized Shield Training (Medium)',
+        family: 'Specialized Shield Training',
         hours: DEFAULT_TRAINING_HOURS,
         kind: 'reaction',
         requiresClass: null,
@@ -367,6 +371,7 @@ export const TRAINING_VENDORS = [
       {
         id: 'specialized-heavy',
         name: 'Specialized Shield Training (Heavy)',
+        family: 'Specialized Shield Training',
         hours: DEFAULT_TRAINING_HOURS,
         kind: 'reaction',
         requiresClass: null,
@@ -412,6 +417,35 @@ export const TRAINING_VENDORS = [
 // Look up a single vendor by id.
 export function trainingVendorById(id) {
   return TRAINING_VENDORS.find((v) => v.id === id) || null;
+}
+
+// The distinct offering families a vendor teaches, in offering order — several
+// stance offerings collapse to "Monk stances", the three tiers to "Specialized
+// Shield Training". Each offering's `family` label falls back to its own name.
+export function trainingFamilies(vendor) {
+  const seen = new Set();
+  const out = [];
+  for (const o of vendor?.offerings || []) {
+    const fam = o.family || o.name;
+    if (!seen.has(fam)) { seen.add(fam); out.push(fam); }
+  }
+  return out;
+}
+
+// Human-readable summary of what a vendor trains, e.g. "Monk stances" or
+// "Shield Block, Specialized Shield Training". The trainer counterpart of
+// employerSkillSummary — shared by the GM Town Support panel and the player
+// lore-page trainer badge (#1191 S4).
+export function trainingSummary(vendor) {
+  return trainingFamilies(vendor).join(', ');
+}
+
+// Compact hours descriptor for a vendor's tracks: "160h" when uniform, else a
+// range like "80–160h".
+export function trainingHoursLabel(vendor) {
+  const hrs = [...new Set((vendor?.offerings || []).map((o) => o.hours))].sort((a, b) => a - b);
+  if (hrs.length === 0) return '';
+  return hrs.length === 1 ? `${hrs[0]}h` : `${hrs[0]}–${hrs[hrs.length - 1]}h`;
 }
 
 // Look up a track's offering definition from its provenance ids.
