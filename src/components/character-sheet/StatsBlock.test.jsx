@@ -775,5 +775,22 @@ describe('StatsBlock', () => {
       render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
       expect(screen.queryByText(/ vs /)).toBeNull();
     });
+
+    it('surfaces a conditional AC hint in the Armor panel (#1411)', () => {
+      // AC lives in the compact dial core; its conditional bonuses (e.g. Shield
+      // Harness) surface as a hint in the Armor panel.
+      mockUseEffects.mockReturnValue({ effects: [{ id: 'e2', effectId: 'shield-harness' }], removeEffect: vi.fn() });
+      mockUseContent.mockReturnValue({
+        effects: [{ id: 'shield-harness', name: 'Shield Harness', modifiers: [{ stat: 'ac', kind: 'circumstance', amount: 1, vs: 'attacks while flanked' }] }],
+      });
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // Not on the Defense panel…
+      fireEvent.click(screen.getByRole('button', { name: 'Defense' }));
+      expect(screen.queryByText(/vs attacks while flanked/)).toBeNull();
+      // …it rides the Armor panel.
+      fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
+      expect(screen.getByText(/vs attacks while flanked/)).toBeInTheDocument();
+      expect(screen.getByText(/Shield Harness/)).toBeInTheDocument();
+    });
   });
 });
