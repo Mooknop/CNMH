@@ -20,7 +20,14 @@ const EMPTY_MOD = { total: 0, sources: [] };
 // Skills render as mini rank-rings (RankRing) echoing the dial — modifier
 // inside, rank = ring color, name below. Pressing a ring raises the
 // SkillSheet pull-up (S3) — the single skill-detail surface.
-const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], effectBonuses = {}, filterAbility }) => {
+const EnhancedSkillsList = ({
+  character, characterColor, activeConditions = [], effectBonuses = {}, filterAbility,
+  // The RESOLVED effect universe (#1411): conditional skill hints must read the
+  // synthetic effects too (augmentation bonuses, worn/held gear), not just raw
+  // app/Foundry effects. StatsBlock passes its useResolvedEffects output; other
+  // callers fall back to the raw useEffects/useContent sources below.
+  conditionalEffects = null, conditionalCatalog = null,
+}) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
 
@@ -72,8 +79,12 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
   // "−1 vs Recall Knowledge (Drakeheart Mutagen)" — so it reads faithfully on
   // the exact roll it affects rather than the whole skill. Perception is one of
   // the skill snodes, so this covers it too. Returns null when none apply.
+  // Prefer the resolved universe (StatsBlock) so synthetic conditional bonuses
+  // (augmentations, worn/held gear) surface as hints; fall back to raw effects.
+  const hintEffects = conditionalEffects || activeEffects;
+  const hintCatalog = conditionalCatalog || effectCatalog;
   const renderConditionalHint = (skillId) => {
-    const mods = conditionalModifiersFor(activeEffects, skillId, effectCatalog);
+    const mods = conditionalModifiersFor(hintEffects, skillId, hintCatalog);
     if (!mods.length) return null;
     return (
       <div className="skill-conditional-hint" role="note">

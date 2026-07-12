@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { augmentationEffects, SKILL_WIRE_AUGMENTS, SAVE_HINT_AUGMENTS, AC_HINT_AUGMENTS } from './augmentationEffects';
+import { augmentationEffects, SKILL_WIRE_AUGMENTS, SAVE_HINT_AUGMENTS, AC_HINT_AUGMENTS, SKILL_HINT_AUGMENTS } from './augmentationEffects';
 
 // Effective-inventory entries carry the resolved augmentation doc on `augmentation`.
 const weapon = (aug, state = 'held1') => ({ uid: 'w1', name: 'Longsword', strikes: [{}], state, augmentation: aug });
@@ -9,7 +9,8 @@ const shield = (aug, state = 'held1') => ({ uid: 's1', name: 'Buckler', shield: 
 const eyecatcher = { id: 'eyecatcher', name: 'Eyecatcher' };
 const weaponHarness = { id: 'weapon-harness', name: 'Weapon Harness' };
 const shieldHarness = { id: 'shield-harness', name: 'Shield Harness' };
-const coat = { id: 'coat-of-arms', name: 'Coat of Arms' }; // not wired this slice
+const coat = { id: 'coat-of-arms', name: 'Coat of Arms' };
+const unwired = { id: 'shield-sheath', name: 'Shield Sheath' }; // structural note — no effect wiring
 
 describe('augmentationEffects', () => {
   it('nets an always-on skill item bonus while the augmented weapon is held', () => {
@@ -41,15 +42,40 @@ describe('augmentationEffects', () => {
     expect(augmentationEffects([armor(weaponHarness, 'dropped')])).toEqual([]);
   });
 
+  it('emits a conditional skill hint for a held shield augmentation (Coat of Arms)', () => {
+    const out = augmentationEffects([shield({ id: 'coat-of-arms', name: 'Coat of Arms' })]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'diplomacy', kind: 'circumstance', amount: 1, vs: 'a faction feared or respected (GM discretion)' },
+    ]);
+  });
+
+  it('fills the vs from the chosen creature type (Ancestral Predator)', () => {
+    const out = augmentationEffects([shield({ id: 'ancestral-predator', name: 'Ancestral Predator', choice: 'dragon' })]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'intimidation', kind: 'circumstance', amount: 1, vs: 'dragon creatures' },
+    ]);
+    // No choice yet → a generic reminder.
+    const generic = augmentationEffects([shield({ id: 'ancestral-predator', name: 'Ancestral Predator' })]);
+    expect(generic[0].def.modifiers[0].vs).toBe('the chosen creature type');
+  });
+
+  it('emits two conditional skill mods for a two-skill armor augmentation (Parade Armor)', () => {
+    const out = augmentationEffects([armor({ id: 'parade-armor', name: 'Parade Armor' })]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'diplomacy', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
+      { stat: 'intimidation', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
+    ]);
+  });
+
   it('ignores an unwired augmentation and a host with none', () => {
-    expect(augmentationEffects([weapon(coat)])).toEqual([]); // coat-of-arms not wired this slice
+    expect(augmentationEffects([weapon(unwired)])).toEqual([]); // no effect wiring
     expect(augmentationEffects([weapon(null)])).toEqual([]); // no augmentation bound
     expect(augmentationEffects([{ uid: 'x', name: 'Rope', weight: 1 }])).toEqual([]);
   });
 
   it('gathers across multiple equipped hosts', () => {
     const out = augmentationEffects([weapon(eyecatcher), armor(weaponHarness), shield(coat)]);
-    expect(out.map((o) => o.def.name).sort()).toEqual(['Eyecatcher', 'Weapon Harness']);
+    expect(out.map((o) => o.def.name).sort()).toEqual(['Coat of Arms', 'Eyecatcher', 'Weapon Harness']);
   });
 
   it('every wired id resolves to a supported modifier shape', () => {
@@ -64,6 +90,14 @@ describe('augmentationEffects', () => {
     for (const [, def] of Object.entries(AC_HINT_AUGMENTS)) {
       expect(def.stat).toBe('ac');
       expect(typeof def.vs).toBe('string');
+    }
+    for (const [, mods] of Object.entries(SKILL_HINT_AUGMENTS)) {
+      expect(Array.isArray(mods)).toBe(true);
+      for (const m of mods) {
+        expect(typeof m.stat).toBe('string');
+        expect(typeof m.amount).toBe('number');
+        expect(typeof m.vs === 'string' || m.choiceVs === true).toBe(true);
+      }
     }
   });
 });

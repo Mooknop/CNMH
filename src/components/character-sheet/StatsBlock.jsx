@@ -629,6 +629,8 @@ const StatsBlock = ({ character, characterColor }) => {
               characterColor={themeColor}
               activeConditions={hydratedConditions}
               effectBonuses={bonuses}
+              conditionalEffects={effectsList}
+              conditionalCatalog={catalogList}
               filterAbility={selected}
             />
           </>
