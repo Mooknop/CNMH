@@ -2680,6 +2680,20 @@
     "runes": {}
   },
   {
+    "id": "coat-of-arms",
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "name": "Coat of Arms",
+    "level": 0,
+    "price": 20,
+    "rarity": "common",
+    "usage": "applied to a shield",
+    "noShop": true,
+    "description": "Stitched onto a leather face, painted, or lacquered on, a coat of arms can mean a great deal depending on whom you're addressing. It can lend weight to your words, the deals you make, and even the insults you throw. You gain a +1 circumstance bonus to Diplomacy checks while you are wielding the shield, as long as the coat of arms represents a faction that would be feared or respected by the target of the check, at the GM's discretion."
+  },
+  {
     "id": "codex-of-unimpeded-sight",
     "name": "Codex of Unimpeded Sight",
     "description": "A female figure peers through her blindfold from the cover of this stately tome. It can be used as a grimoire for prepared arcane spellcasting.",
@@ -6347,6 +6361,30 @@
       "reminder": "+1 bludgeoning damage per weapon damage die."
     },
     "id": "mighty-counterweight"
+  },
+  {
+    "id": "mirror",
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "name": "Mirror",
+    "level": 0,
+    "price": 1,
+    "rarity": "common",
+    "usage": "applied to a shield",
+    "noShop": true,
+    "description": "A simple hand mirror that can be tied to a shield. You gain access to the following reaction, which causes the mirror to fall off of the shield when used. You may reattach the mirror to the shield as part of a Repair action, or by adding it to the shield again as normal. If you use the Shield Block reaction, or gain the benefits of the Shield Block reaction with this shield in response to a critical hit from an attack, this adjustment is destroyed and cannot be repaired.",
+    "actuated": {
+      "cost": "none",
+      "name": "Mirror",
+      "actionCount": "reaction",
+      "frequency": "see description",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You would be required to make a saving throw against an effect with the visual trait, but have not rolled yet. Effect You gain a +2 circumstance bonus to your saving throw against the triggering effect, and the mirror adjustment falls off of the shield."
+    }
   },
   {
     "name": "Mirror Robe",

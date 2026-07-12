@@ -5,6 +5,7 @@ import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
 import ThassilonianRune from '../shared/ThassilonianRune';
 import RuneIcon from '../shared/RuneIcon';
+import GameGlyph from '../shared/GameGlyph';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
@@ -1427,6 +1428,57 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             </>
           ) : (
             <p className="item-runestone-note">An empty etching stone — it holds no rune yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Augmentation (#1202 U1) — the one single-slot modifier fitted to this
+          host: name, price/level, choice, description, and any actuated block
+          (rendered like an accessory-rune activation). The binding rides the
+          inventory entry; the resolver inlined the doc here. */}
+      {item.augmentation?.name && (
+        <div className="item-runes item-augmentation" data-testid="item-modal-augmentation">
+          <h3>
+            <GameGlyph name="augmentation" className="item-rune-glyph" title="Augmentation" />
+            Augmentation
+          </h3>
+          <div className="item-rune">
+            <span className="item-rune-name">{item.augmentation.name}</span>
+            {item.augmentation.choice && (
+              <span className="item-rune-level"> · {item.augmentation.choice}</span>
+            )}
+            {item.augmentation.level != null && (
+              <span className="item-rune-level"> · Level {item.augmentation.level}</span>
+            )}
+            {item.augmentation.price != null && (
+              <span className="item-rune-level"> · {item.augmentation.price} gp</span>
+            )}
+            {item.augmentation.description && (
+              <p className="item-rune-desc">{item.augmentation.description}</p>
+            )}
+          </div>
+          {item.augmentation.actuated && (
+            <div className="item-action actuated-card" data-testid="augmentation-actuated">
+              <div className="action-header">
+                <span className="action-name">{item.augmentation.actuated.name}</span>
+                <div className="action-count">
+                  {item.augmentation.actuated.actionCount && (
+                    <ActionSymbol cost={item.augmentation.actuated.actionCount} />
+                  )}
+                </div>
+              </div>
+              {item.augmentation.actuated.traits?.length > 0 && (
+                <div className="action-traits">
+                  {item.augmentation.actuated.traits.map((t, i) => <TraitTag key={i} trait={t} />)}
+                </div>
+              )}
+              {item.augmentation.actuated.frequency && (
+                <p className="item-rune-desc">Frequency {item.augmentation.actuated.frequency}</p>
+              )}
+              {item.augmentation.actuated.description && (
+                <p className="item-rune-desc">{item.augmentation.actuated.description}</p>
+              )}
+            </div>
           )}
         </div>
       )}
