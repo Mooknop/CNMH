@@ -3,6 +3,7 @@ import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { runeTarget } from './runeClassify';
 import { accessoryEligible } from './accessoryRunes';
 import { isTalisman, affixTargetType } from './affix';
+import { isAugmentation, augTargets } from './augmentations';
 import { isWhetstone } from './whetstone';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
@@ -750,6 +751,52 @@ export function eligibleTalismans(ware, items) {
     for (const g of grades) {
       if (Number(g.level) > cap) continue;
       const key = `talisman:${item.id}@${g.level}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ ...base, ...g, baseName: item.name, wareKey: key });
+    }
+  }
+  return out;
+}
+
+// The augmentation-application SERVICE a specific-target rune offering carries
+// (#1202 U2): a shield-rune smith also fits shield augmentations, a weapon smith
+// weapon augmentations — the etch bench does adjustments too, so it rides the same
+// offering (no separate authoring), mirroring eligibleTalismans (#1211). Gate is
+// the level CAP per matching augTarget; a multi-target augmentation qualifies at
+// the best matching cap. Like talismans, the general / all-target runesmith is
+// exempt (a service, not a counter). CRUCIAL: augmentations are `noShop` by design
+// (never loose stock / Sale Shelf) — so this must NOT honor isShopExcluded, the
+// service IS their only shop surface. Each in-cap GRADE is its own resolved form
+// (variant merged, `variants` stripped, distinct wareKey), so a choice/grade
+// ladder prices independently; fed into the socket picker, never the ware grid.
+const AUGMENTATION_TARGETS = new Set(['weapon', 'armor', 'shield']);
+
+export function eligibleAugmentations(ware, items) {
+  if (!isRuneServiceWare(ware)) return [];
+  const explicit = Array.isArray(ware.targets)
+    ? ware.targets.filter(Boolean).map((t) => String(t).toLowerCase())
+    : [];
+  if (explicit.length === 0 || explicit.length >= RUNE_TARGETS.length) return [];
+
+  const out = [];
+  const seen = new Set();
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!item || item.id == null || !isAugmentation(item)) continue;
+    // Best cap among the offering's targets this augmentation applies to (0 = the
+    // offering doesn't cover any of its targets → not offered here).
+    const cap = augTargets(item)
+      .filter((t) => AUGMENTATION_TARGETS.has(t) && explicit.includes(t))
+      .reduce((mx, t) => Math.max(mx, maxLevelForTarget(ware, t)), 0);
+    if (cap < 1) continue;
+
+    const grades = Array.isArray(item.variants) && item.variants.length
+      ? item.variants
+      : [{ level: item.level, name: item.name, price: item.price }];
+    const { variants, ...base } = item;
+    for (const g of grades) {
+      if (Number(g.level) > cap) continue;
+      const key = `augmentation:${item.id}@${g.level}`;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({ ...base, ...g, baseName: item.name, wareKey: key });

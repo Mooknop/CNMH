@@ -23,6 +23,9 @@ import { runeTarget } from './runeClassify';
 import { REINFORCING, shieldPropertySlotCapacity } from './shieldRunes';
 import { shieldCategory, shieldCategoriesFromUsage } from './shieldCategory';
 import { isDragonbreath, dragonbreathRunes, dragonbreathUpgradeOption, applyDragonbreathUpgrade } from './dragonbreath';
+import {
+  isAugmentation, augmentationFits, hasAugmentation, augmentationOf, augmentationId, applyAugmentation,
+} from './augmentations';
 
 // runeTarget is the canonical rune classifier (#885); re-exported here so the
 // socket helpers + their callers keep importing it from one place.
@@ -142,6 +145,14 @@ export const gearSockets = (item) => {
       sockets.push({ type: 'property', target, index: i, filled: property[i] != null, rune: property[i] != null ? property[i] : null });
     }
   }
+  // The one augmentation slot (#1202 U2) rides after the target sockets, like the
+  // accessory slot — a single modifier on any weapon / armor / shield (rings and
+  // accessory-only hosts don't take one). It carries the augmentation BINDING as
+  // its `rune`, so the shared socket UI (glyph/name, staging, work-order) drives it
+  // unchanged; the augmentation catalog stock (not the rune stock) fills it.
+  if (target === 'weapon' || target === 'armor' || target === 'shield') {
+    sockets.push({ type: 'augmentation', target: 'augmentation', filled: hasAugmentation(item), rune: augmentationOf(item) || null });
+  }
   // The one accessory slot rides AFTER the target sockets — orthogonal to
   // gearTarget, so a dual-host (armor-runed Explorer's Clothing) shows both.
   if (isAccessoryHost(item)) {
@@ -181,6 +192,16 @@ export const projectStagedGear = (gear, stagedRunes) => {
 export const compatibleRunes = (item, socketType, stock) => {
   if (socketType === 'accessory') {
     return (Array.isArray(stock) ? stock : []).filter((r) => accessoryEligible(item, r));
+  }
+  // The augmentation socket (#1202 U2) is filled from the AUGMENTATION catalog
+  // (type 'augmentation'), not the rune stock: any that fits by target + shield
+  // size gate, excluding the one already applied (so a filled slot offers only the
+  // OTHER augmentations — a swap, which replaces + destroys the old on apply).
+  if (socketType === 'augmentation') {
+    const cur = hasAugmentation(item) ? augmentationId(item) : null;
+    return (Array.isArray(stock) ? stock : []).filter(
+      (r) => isAugmentation(r) && augmentationFits(item, r) && r.id !== cur,
+    );
   }
   const target = gearTarget(item);
   if (!target) return [];
@@ -228,6 +249,15 @@ export const compatibleRunes = (item, socketType, stock) => {
  */
 export const applyRune = (gear, rune, opts = {}) => {
   if (!gear || !rune) return null;
+
+  // Augmentations (#1202 U2) ride the same work-order rail as runes: a staged
+  // augmentation doc flows through applyRunesToGear → applyRune, which delegates
+  // to the augmentation model (writing entry.augmentation, not entry.runes). The
+  // etch-time choice rides the #1059 etchConfig carrier — applyAugmentation reads
+  // it, so a shop-staged pick survives fulfillment (applyRunesToGear passes no opts).
+  if (isAugmentation(rune)) {
+    return applyAugmentation(gear, rune, opts.choice != null ? { choice: opts.choice } : {});
+  }
 
   // Accessory runes (#1033 S1) bypass the single-target model entirely: the
   // host is classified by usage tags (accessoryEligible), not gearTarget, so a

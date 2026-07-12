@@ -20,6 +20,7 @@ import {
   runeOfferingSummary,
   eligibleHostItems,
   eligibleTalismans,
+  eligibleAugmentations,
   eligibleWhetstones,
   isShopExcluded,
   isDragonbreathWare,
@@ -1097,6 +1098,57 @@ describe('eligibleTalismans (#1211)', () => {
     expect(keys({ runeService: true, targets: ['shield'], maxLevel: 20 }))
       .not.toContain('talisman:shield-cover@1');
     expect(eligibleTalismans({ ref: 'runestone' }, talItems)).toEqual([]);
+  });
+});
+
+describe('eligibleAugmentations (#1202 U2)', () => {
+  const augItems = [
+    { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', level: 0, price: 1, noShop: true },
+    { id: 'coat-of-arms', type: 'augmentation', augTarget: ['shield'], name: 'Coat of Arms', level: 0, price: 20, noShop: true },
+    { id: 'shield-harness', type: 'augmentation', augTarget: ['shield'], name: 'Shield Harness', level: 5, price: 105, noShop: true },
+    { id: 'weapon-grip', type: 'augmentation', augTarget: ['weapon'], name: 'Weapon Grip', level: 2, price: 4, noShop: true },
+    // A graded augmentation (base + greater), to exercise the ladder.
+    { id: 'polish', type: 'augmentation', augTarget: ['shield'], name: 'Polish', level: 1, price: 2, noShop: true,
+      variants: [{ level: 1, name: 'Polish', price: 2 }, { level: 6, name: 'Greater Polish', price: 40 }] },
+    { id: 'longsword', name: 'Longsword', price: 1, strikes: [{}], runes: {} }, // not an augmentation
+  ];
+  const keys = (ware) => eligibleAugmentations(ware, augItems).map((w) => w.wareKey);
+
+  it('a shield-target service offers shield augmentations up to the shield cap, one form per in-cap grade', () => {
+    // Cap 6: mirror/coat/harness(5), polish grades 1 & 6. weapon-grip is weapon-only.
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 6 })).toEqual([
+      'augmentation:mirror@0', 'augmentation:coat-of-arms@0', 'augmentation:shield-harness@5',
+      'augmentation:polish@1', 'augmentation:polish@6',
+    ]);
+  });
+
+  it('ignores the noShop flag — the service is the ONLY shop surface for augmentations', () => {
+    // Every augmentation here is noShop; a shield service must still offer them.
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 1 }))
+      .toEqual(['augmentation:mirror@0', 'augmentation:coat-of-arms@0', 'augmentation:polish@1']);
+  });
+
+  it('the general / all-target runesmith is exempt', () => {
+    expect(keys({ runeService: true, maxLevel: 20 })).toEqual([]);
+    expect(keys({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 20 })).toEqual([]);
+  });
+
+  it('the level cap gates individual grades', () => {
+    expect(keys({ runeService: true, targets: ['shield'], maxLevel: 5 })).toEqual([
+      'augmentation:mirror@0', 'augmentation:coat-of-arms@0', 'augmentation:shield-harness@5', 'augmentation:polish@1',
+    ]);
+  });
+
+  it('only offers augmentations whose augTarget is an offered target', () => {
+    expect(keys({ runeService: true, targets: ['weapon'], maxLevel: 10 })).toEqual(['augmentation:weapon-grip@2']);
+  });
+
+  it('the resolved form carries the merged grade + baseName and strips the ladder; non-service wares yield nothing', () => {
+    const greater = eligibleAugmentations({ runeService: true, targets: ['shield'], maxLevel: 6 }, augItems)
+      .find((w) => w.wareKey === 'augmentation:polish@6');
+    expect(greater).toMatchObject({ id: 'polish', name: 'Greater Polish', level: 6, price: 40, baseName: 'Polish', type: 'augmentation' });
+    expect(greater.variants).toBeUndefined();
+    expect(eligibleAugmentations({ ref: 'runestone' }, augItems)).toEqual([]);
   });
 });
 
