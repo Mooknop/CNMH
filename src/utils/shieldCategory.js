@@ -43,4 +43,22 @@ export const shieldCategory = (bulk) => {
   return 'heavy';
 };
 
+/**
+ * The shield size categories a usage-gated doc admits, as a lowercase array
+ * (a subset of ['light','medium','heavy']), or null when unrestricted. Read from
+ * an explicit `shieldCategories` array first, else the category words present in
+ * the `usage` string. Shared by shield property runes (runeSockets) and shield
+ * augmentations (augmentations) so the two gates never drift.
+ * @param {{usage?: string, shieldCategories?: string[]}|null|undefined} doc
+ * @returns {Array<'light'|'medium'|'heavy'>|null}
+ */
+export const shieldCategoriesFromUsage = (doc) => {
+  if (Array.isArray(doc?.shieldCategories) && doc.shieldCategories.length) {
+    return doc.shieldCategories.map((c) => String(c).toLowerCase());
+  }
+  const usage = doc && typeof doc.usage === 'string' ? doc.usage.toLowerCase() : '';
+  const cats = ['light', 'medium', 'heavy'].filter((c) => usage.includes(c));
+  return cats.length ? cats : null;
+};
+
 export default shieldCategory;
