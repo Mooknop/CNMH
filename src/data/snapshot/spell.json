@@ -2400,6 +2400,42 @@
     ]
   },
   {
+    "id": "lightning-bolt",
+    "name": "Lightning Bolt",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "area": "120-foot line",
+    "defense": "basic Reflex",
+    "description": "A bolt of lightning strikes outward from you, dealing electricity damage to each creature in the line.",
+    "damageData": {
+      "base": "4d12",
+      "type": "electricity",
+      "heightened": {
+        "+1": {
+          "base": "1d12"
+        }
+      }
+    },
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double damage."
+    },
+    "heightened": {
+      "+1": "The damage increases by 1d12."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "lingering-composition",
     "name": "Lingering Composition",
     "level": 0,
@@ -4302,6 +4338,29 @@
     },
     "traditions": [
       "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "web-of-eyes",
+    "name": "Web of Eyes",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Divination",
+      "Scrying"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "up to 5 willing creatures",
+    "duration": "10 minutes",
+    "description": "You conjure an invisible scrying sensor above each target’s eyes. A target can use a concentrate action to share its vision with the others until the start of its next turn; a creature that is observed by any target becomes observed by all of them.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
       "primal"
     ]
   },

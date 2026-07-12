@@ -118,6 +118,12 @@
     "modifiers": []
   },
   {
+    "id": "blast-boots",
+    "name": "Blast Boots",
+    "description": "For 1 minute, each time you Leap you can move 30 feet in any direction (or your normal Leap distance, whichever is greater).",
+    "modifiers": []
+  },
+  {
     "id": "bless",
     "name": "Bless",
     "description": "+1 status bonus to attack rolls while within the emanation.",
@@ -177,6 +183,12 @@
         "flatCheckEase": true
       }
     ]
+  },
+  {
+    "id": "clockwork-goggles",
+    "name": "Clockwork Goggles",
+    "description": "You have low-light vision, darkvision, and the effects of see invisibility for 10 minutes.",
+    "modifiers": []
   },
   {
     "id": "coda-bagpipes-playing",

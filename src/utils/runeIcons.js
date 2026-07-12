@@ -890,6 +890,26 @@ export const RUNE_ICON_FAMILIES = {
       'M22 46 L78 49 L78 55 L22 52 Z',
     ],
   },
+
+  // ── Treasure batch T2c (#1095) ──────────────────────────────────────────
+  // A weapon bane rune keyed to a creature type, and the greater invisibility
+  // armor rune.
+  'bane-dragon': {
+    label: 'Dragon Bane',
+    steps: [
+      // A downward fang crossed by the bane-bar, a struck mote beside it.
+      'M46 12 C50 32 50 52 46 72 L54 72 C58 52 58 32 54 12 Z M50 76 L58 74 L50 92 L42 74 Z M26 40 L74 48 L74 54 L26 46 Z M74 26 a3 3 0 1 0 0.01 0 Z',
+    ],
+  },
+  invisibility: {
+    label: 'Invisibility',
+    steps: [
+      // Base: a ring half-erased — the form fading in and out of sight.
+      'M50 24 A26 26 0 0 1 74 46 L68 48 A20 20 0 0 0 50 30 Z M50 76 A26 26 0 0 1 26 54 L32 52 A20 20 0 0 0 50 70 Z M30 30 a3 3 0 1 0 0.01 0 Z M72 70 a3 3 0 1 0 0.01 0 Z',
+      // Greater: the last of the outline dissolving into motes.
+      'M28 44 a2.5 2.5 0 1 0 0.01 0 Z M74 58 a2.5 2.5 0 1 0 0.01 0 Z',
+    ],
+  },
 };
 
 // A family whose motif is another family's — the clothing-* utility runes

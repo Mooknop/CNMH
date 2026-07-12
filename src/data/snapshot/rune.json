@@ -76,6 +76,19 @@
     "description": "Sharp needles impale anyone who attempts to wield this weapon other than its rightful owner. If any other creature wields the weapon, needles erupt from the hilt or shaft, dealing 1d8 piercing damage plus 1d4 persistent bleed damage to that wielder (increasing to 1d8 piercing and 1d4 persistent bleed per damage die if the weapon has a striking rune). When the rune is crafted, the crafter can broaden who may safely wield it (e.g. a particular bloodline, patron deity, or sanctification)."
   },
   {
+    "id": "bane-dragon",
+    "type": "property",
+    "name": "Dragon Bane",
+    "level": 4,
+    "price": 100,
+    "description": "This weapon is keyed against dragons. When you hit a creature that has the dragon trait, you deal an extra 1d6 damage of the weapon’s type. You also gain a +1 circumstance bonus to attack rolls against dragons.",
+    "rider": {
+      "dice": "1d6",
+      "damageType": "",
+      "vsTrait": "dragon"
+    }
+  },
+  {
     "id": "called",
     "type": "property",
     "target": "accessory",
@@ -1635,6 +1648,16 @@
     "level": 7,
     "price": 350,
     "description": "This vicious rune seems to hunger for slaughter, becoming stronger when you kill creatures. When you reduce a creature to 0 Hit Points with an attack from this shield or an attachment or adjustment on this shield, the shield gains a status bonus to Hardness equal to the creature's level and a +1 status bonus to attack rolls for 1 minute. Both effects end early after using any Shield Reaction that would reduce damage you would take by the shield's Hardness, such as Shield Block."
+  },
+  {
+    "id": "invisibility-greater",
+    "type": "property",
+    "armorRune": true,
+    "name": "Invisibility (Greater)",
+    "level": 10,
+    "price": 1000,
+    "description": "This armor bends light around its wearer. Activate—Go Invisible (one action, concentrate); Frequency three times per day; Effect You gain the effects of a 2nd-rank invisibility spell for 1 minute.",
+    "riders": []
   },
   {
     "id": "jinxed",
