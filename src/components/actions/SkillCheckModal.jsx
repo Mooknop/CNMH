@@ -11,7 +11,7 @@ import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/Characte
 import { getCondition } from '../../data/pf2eConditions';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
-import { checkBonusTalisman } from '../../utils/talismanActivation';
+import { checkBonusTalisman, hasOutcomeShift, shiftCheckOutcome } from '../../utils/talismanActivation';
 import './SkillCheckModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
 
@@ -108,6 +108,13 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   const talisman = activeSkill !== 'unarmed' ? checkBonusTalisman(affixedTalismans, activeSkill) : null;
   const talismanEffect = talisman?.talisman?.activation?.effect || null;
   const talismanBonus = talismanOn && talismanEffect ? talismanEffect.bonus || 0 : 0;
+  // Label the opt-in by what it grants: a numeric bonus, or (Mesmerizing Opal
+  // #1085) a degree-of-success shift with no flat bonus.
+  const talismanEffectLabel = talismanEffect
+    ? (talismanEffect.bonus
+        ? `+${talismanEffect.bonus} ${talismanEffect.value || 'bonus'}`
+        : hasOutcomeShift(talismanEffect) ? 'outcome shift' : 'bonus')
+    : 'bonus';
 
   // Circumstance: feat-declared toggles (Hunt Prey vs prey, conditional effects)
   // plus a free-form "+N" for table rulings (Aid, GM-granted bonuses).
@@ -122,9 +129,14 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
   const dcVal = dcInput !== '' ? parseInt(dcInput, 10) : null;
   const d20Val = parseInt(d20, 10);
   const total = !isNaN(d20Val) && netMod != null ? d20Val + netMod : null;
-  const degree = total != null && dcVal != null && !isNaN(dcVal)
+  const rawDegree = total != null && dcVal != null && !isNaN(dcVal)
     ? computeSaveDegree({ d20: d20Val, total, dc: dcVal })
     : null;
+  // Mesmerizing Opal (#1085) — an outcome-shift talisman bumps the check's
+  // degree one step in the wielder's favour when opted in.
+  const degree = talismanOn && rawDegree
+    ? shiftCheckOutcome(rawDegree, talismanEffect)
+    : rawDegree;
   const outcome = degree ? action?.outcomes?.[degree] || null : null;
 
   const handleD20 = (e) => {
@@ -220,7 +232,7 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
             </div>
           </div>
         )}
-        {/* Check-bonus talisman opt-in (Sneaky Key, #1093) */}
+        {/* Check-bonus / outcome-shift talisman opt-in (Sneaky Key #1093, Mesmerizing Opal #1085) */}
         {talisman && (
           <div className="scm-field">
             <label className="scm-talisman">
@@ -228,9 +240,9 @@ const SkillCheckModal = ({ isOpen, onClose, action, character, themeColor }) => 
                 type="checkbox"
                 checked={talismanOn}
                 onChange={(e) => setTalismanOn(e.target.checked)}
-                aria-label={`${talisman.name} (+${talismanEffect?.bonus || 0} ${talismanEffect?.value || ''})`}
+                aria-label={`${talisman.name} (${talismanEffectLabel})`}
               />
-              {talisman.name} (+{talismanEffect?.bonus || 0} {talismanEffect?.value || 'bonus'}
+              {talisman.name} ({talismanEffectLabel}
               {talismanEffect?.note ? ` — ${talismanEffect.note}` : ''})
             </label>
           </div>

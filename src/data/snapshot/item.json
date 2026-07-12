@@ -6499,7 +6499,14 @@
       "affixTo": "armor",
       "activation": {
         "cost": 1,
-        "trigger": "You activate the opal and attempt a Deception check to Feint"
+        "trigger": "You activate the opal and attempt a Deception check to Feint",
+        "effect": {
+          "kind": "check-bonus",
+          "skill": "deception",
+          "successToCrit": true,
+          "critFailToFail": true,
+          "note": "to Feint — a success becomes a critical success and a critical failure becomes a failure"
+        }
       }
     },
     "description": "This silver-bound opal pendant is afire with iridescence. When you activate it, attempt a Deception check to Feint. If the outcome is a success, you get a critical success instead; if it is a critical failure, you get a failure instead."
@@ -6667,7 +6674,7 @@
   {
     "id": "monarch",
     "name": "Monarch",
-    "description": "Monarch functions as a +1 striking returning starknife that can't have additional property runes, as it's a specific item. Monarch deals an additional 1d6 untyped damage to creatures with the aberration trait, provided the creature isn't disguised as another creature (this rider is descriptive — apply it by hand vs. aberrations). Monarch is a relic and has no market price.",
+    "description": "Monarch functions as a +1 striking returning starknife that can't have additional property runes, as it's a specific item. Monarch deals an additional 1d6 untyped damage to creatures with the aberration trait — automatically added on a hit against an aberration. The rider does not apply while such a creature is disguised as another creature; untoggle it on the damage panel in that case. Monarch is a relic and has no market price.",
     "traits": [
       "Agile",
       "Air",
@@ -6695,7 +6702,16 @@
           "Melee"
         ],
         "actionCount": 1,
-        "damageType": "piercing"
+        "damageType": "piercing",
+        "riders": [
+          {
+            "id": "monarch-aberration",
+            "label": "Aberration Bane (vs aberration)",
+            "dice": "1d6",
+            "type": "",
+            "appliesVsTrait": "aberration"
+          }
+        ]
       },
       {
         "name": "Monarch (Thrown)",
@@ -6711,7 +6727,16 @@
           "Versatile S"
         ],
         "actionCount": 1,
-        "damageType": "piercing"
+        "damageType": "piercing",
+        "riders": [
+          {
+            "id": "monarch-aberration",
+            "label": "Aberration Bane (vs aberration)",
+            "dice": "1d6",
+            "type": "",
+            "appliesVsTrait": "aberration"
+          }
+        ]
       }
     ],
     "runes": {
