@@ -68,6 +68,13 @@ describe('augmentationEffects', () => {
     expect(augmentationEffects([armor({ id: 'subtle-armor', name: 'Subtle Armor' }, 'dropped')])).toEqual([]);
   });
 
+  it('emits a negative conditional Stealth hint (Burnished Plating, except in darkness)', () => {
+    const out = augmentationEffects([armor({ id: 'burnished-plating', name: 'Burnished Plating' })]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'stealth', kind: 'circumstance', amount: -4, vs: 'checks made outside darkness' },
+    ]);
+  });
+
   it('emits two conditional skill mods for a two-skill armor augmentation (Parade Armor)', () => {
     const out = augmentationEffects([armor({ id: 'parade-armor', name: 'Parade Armor' })]);
     expect(out[0].def.modifiers).toEqual([

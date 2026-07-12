@@ -74,6 +74,13 @@ export const SKILL_HINT_AUGMENTS = {
   'subtle-armor': [
     { stat: 'stealth', kind: 'item', amount: 1, vs: 'hiding the nature of your armor' },
   ],
+  // Burnished Plating: −4 circumstance to Stealth EXCEPT in darkness. It applies
+  // almost everywhere, so it's a conditional hint (the app can't know a check is in
+  // darkness), not a netted penalty. (The Str-threshold raise is the armor-stat
+  // path; the Sunshine! reaction is GM-adjudicated.)
+  'burnished-plating': [
+    { stat: 'stealth', kind: 'circumstance', amount: -4, vs: 'checks made outside darkness' },
+  ],
 };
 
 // Augmentations whose benefit applies while the shield is WORN (stowed on your
