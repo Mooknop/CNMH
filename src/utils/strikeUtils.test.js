@@ -392,6 +392,33 @@ describe('getStrikes weapon runes (#548)', () => {
       },
     ]);
   });
+
+  test('a Ghost Touch property rune surfaces its counts-as tag on the strike (#1436)', () => {
+    const char = {
+      ...martialChar,
+      inventory: [{
+        id: 'i-gt', name: 'Dagger',
+        runes: { potency: 1, property: [{ id: 'ghost-touch', name: 'Ghost Touch', iwrTags: ['ghost touch'] }] },
+        strikes: { name: 'Dagger Strike', proficiency: 'martial', type: 'melee', damage: '1d4' },
+      }],
+    };
+    const strike = getStrikes(char).find((s) => s.name === 'Dagger Strike');
+    expect(strike.iwrTags).toEqual(['ghost touch']);
+  });
+
+  test('a rune counts-as tag and a whetstone tag union on the strike (#1436)', () => {
+    const sword = {
+      id: 'gt-sword', uid: 'u-gt', name: 'Longsword', state: 'held1',
+      strikes: [{ name: 'Longsword Strike', proficiency: 'martial', type: 'melee', damage: '1d8' }],
+      runes: { potency: 1, property: [{ id: 'ghost-touch', name: 'Ghost Touch', iwrTags: ['ghost touch'] }] },
+    };
+    const silverOil = {
+      id: 'fxs',
+      whetstone: { itemName: 'Silver Oil', weaponUid: 'u-gt', duration: 'minute', effect: { iwrTags: ['silver'] } },
+    };
+    const [strike] = resolveItemStrikes(sword, minimalCharacter, null, silverOil);
+    expect(strike.iwrTags).toEqual(['ghost touch', 'silver']);
+  });
 });
 
 describe('chambered weapon gate (#672, S2)', () => {

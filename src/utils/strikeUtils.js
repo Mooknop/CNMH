@@ -204,6 +204,10 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
       // Damage riders (#222 + #548 property runes) — carried through so the damage step sees them.
       ...(riders.length ? { riders } : {}),
+      // Counts-as IWR tags from property runes (#1436 — Ghost Touch). Surfaced
+      // on the strike so buildDamageProfile forwards them into weakness matching
+      // and the typed relay; the whetstone step below unions any it also adds.
+      ...(resolved?.iwrTags?.length ? { iwrTags: resolved.iwrTags } : {}),
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded

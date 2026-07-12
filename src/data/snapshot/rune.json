@@ -1208,6 +1208,9 @@
     "name": "Ghost Touch",
     "level": 4,
     "price": 75,
+    "iwrTags": [
+      "ghost touch"
+    ],
     "description": "This rune enables a weapon to damage non-physical beings, and it's exceptionally potent against incorporeal creatures, which typically have a specific weakness to ghost touch weapons. Incorporeal creatures can also touch, hold, and wield a ghost touch weapon, unlike most physical objects."
   },
   {
