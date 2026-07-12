@@ -676,7 +676,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         )}
         {runeCoins.length > 0 && (
           <span className="loot-runeicon-row">
-            {runeCoins.slice(0, 2).map((doc) => {
+            {runeCoins.map((doc) => {
               const icon = resolveRuneIcon(doc.id);
               return (
                 <span
@@ -688,14 +688,6 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                 </span>
               );
             })}
-            {runeCoins.length > 2 && (
-              <span
-                className="loot-runeicon loot-runeicon-more"
-                title={runeCoins.slice(2).map((d) => d.name).join(', ')}
-              >
-                +{runeCoins.length - 2}
-              </span>
-            )}
           </span>
         )}
         <span className="loot-gem" title={rarityLabel} />
