@@ -14,8 +14,10 @@ import {
   eligibleHostItems,
   maxLevelForTarget,
   shopHostKind,
+  eligibleAugmentations,
   RUNE_TARGETS,
 } from '../../utils/shopUtils';
+import { augmentationFits } from '../../utils/augmentations';
 import {
   DRAGON_KINDS,
   DRAGONBREATH_TIER_ORDER,
@@ -1018,7 +1020,7 @@ const saleHostKindOf = (item) =>
 // constrained to `options` (saleRuneEditOptions). Emits a selection to onApply;
 // Workspace bakes + prices it via buildRuneSaleItem. `items` supplies the ring
 // grade / socket structure the options list doesn't carry.
-const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
+const RuneItemEditor = ({ ware, options, items, augmentations, onApply, onCancel }) => {
   const targets = Object.keys(options);
   const itemById = useMemo(
     () => new Map((Array.isArray(items) ? items : []).map((it) => [String(it.id), it])),
@@ -1033,9 +1035,23 @@ const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
   const [second, setSecond] = useState(r0.striking ?? r0.resilient ?? '');
   const [property, setProperty] = useState(Array.isArray(r0.property) ? r0.property.map(String) : []);
   const [accessory, setAccessory] = useState(r0.accessory != null ? String(r0.accessory) : '');
+  // Augmentation (#1404) — orthogonal to the rune target, keyed to the host item.
+  const [augRef, setAugRef] = useState(ware.augmentation?.ref != null ? String(ware.augmentation.ref) : '');
+  const [augChoice, setAugChoice] = useState(ware.augmentation?.choice != null ? String(ware.augmentation.choice) : '');
 
   const opt = options[target] || { hosts: [] };
   const host = itemById.get(String(ref));
+  // The augmentations that fit the currently-selected host (deduped by id).
+  const augOptions = useMemo(() => {
+    const seen = new Set();
+    return (Array.isArray(augmentations) ? augmentations : []).filter((a) => {
+      if (!host || seen.has(String(a.id)) || !augmentationFits(host, a)) return false;
+      seen.add(String(a.id));
+      return true;
+    });
+  }, [augmentations, host]);
+  const selectedAug = augOptions.find((a) => String(a.id) === augRef) || null;
+  const augChoices = selectedAug && Array.isArray(selectedAug.choices) ? selectedAug.choices : [];
   const ringGrade =
     target === 'ring' && host && Array.isArray(host.variants)
       ? host.variants.find((v) => v.level === level)
@@ -1055,11 +1071,13 @@ const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
     setSecond('');
     setProperty([]);
     setAccessory(t === 'accessory' ? String(first?.runes?.[0]?.id ?? '') : '');
+    setAugRef(''); setAugChoice('');
   };
 
   const chooseRef = (id) => {
     setRef(id);
     setProperty([]);
+    setAugRef(''); setAugChoice('');
     const it = itemById.get(String(id));
     if (target === 'ring') setLevel(it?.variants?.length ? it.variants[0].level : null);
     if (target === 'accessory') {
@@ -1084,6 +1102,10 @@ const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
     }
     const sel = { ref, runes };
     if (target === 'ring') sel.level = level;
+    if (augRef && selectedAug) {
+      sel.augmentation = { ref: augRef };
+      if (augChoices.length && augChoice) sel.augmentation.choice = augChoice;
+    }
     onApply(ware.saleId, sel);
   };
 
@@ -1169,6 +1191,27 @@ const RuneItemEditor = ({ ware, options, items, onApply, onCancel }) => {
         </div>
       )}
 
+      {augOptions.length > 0 && (
+        <div className="form-group gm-shop-offer-field">
+          <label htmlFor={`sale-aug-${ware.saleId}`}>augmentation</label>
+          <select
+            id={`sale-aug-${ware.saleId}`}
+            aria-label="sale-augmentation"
+            value={augRef}
+            onChange={(e) => { setAugRef(e.target.value); setAugChoice(''); }}
+          >
+            <option value="">none</option>
+            {augOptions.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+          {augChoices.length > 0 && (
+            <select aria-label="sale-augmentation-choice" value={augChoice} onChange={(e) => setAugChoice(e.target.value)}>
+              <option value="">— choice —</option>
+              {augChoices.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+        </div>
+      )}
+
       <div className="gm-actions gm-shop-sale-edit-actions">
         <button type="button" className="btn-small btn-secondary" aria-label="sale-cancel" onClick={onCancel}>Cancel</button>
         <button type="button" className="btn-small btn-primary" aria-label={`sale-apply-${ware.saleId}`} onClick={apply}>Apply</button>
@@ -1235,7 +1278,7 @@ const ScrollPackEditor = ({ ware, options, onApply, onCancel }) => {
 // the storefront will render it (discounted price + struck-through full price).
 const SaleShelfSection = ({
   runeConfig, spellConfig, editRuneConfig, editSpellConfig, preview, canRoll, hasShelf, onRoll, onClear,
-  shelf, items, runeOptions, scrollOptions, onReroll, onRemove, onApplyRune, onApplyScroll,
+  shelf, items, runeOptions, augmentations, scrollOptions, onReroll, onRemove, onApplyRune, onApplyScroll,
 }) => {
   const hasRuneOffering = RUNE_TARGETS.some((t) => runeConfig[t]);
   const hasScrollOffering = !!spellConfig.scroll;
@@ -1359,6 +1402,7 @@ const SaleShelfSection = ({
                         ware={rawWare}
                         options={runeOptions}
                         items={items}
+                        augmentations={augmentations}
                         onApply={(id, sel) => { onApplyRune(id, sel); setEditingId(null); }}
                         onCancel={() => setEditingId(null)}
                       />
@@ -1550,6 +1594,12 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
     () => (runeOffering ? saleRuneEditOptions(runeOffering, items, runes) : {}),
     [runeOffering, items, runes]
   );
+  // Augmentations this offering can fit onto a sale item (#1404) — the editor
+  // filters them per selected host; empty until the shop admits an augmentation.
+  const saleAugmentations = useMemo(
+    () => (runeOffering ? eligibleAugmentations(runeOffering, items) : []),
+    [runeOffering, items]
+  );
   const scrollEditOptions = useMemo(
     () => (scrollOffering ? saleScrollPackOptions(scrollOffering, spells) : []),
     [scrollOffering, spells]
@@ -1707,6 +1757,7 @@ const Workspace = ({ location, shops, spells, runes, items, catalog, chips, cata
             shelf={entry?.saleShelf}
             items={items}
             runeOptions={runeEditOptions}
+            augmentations={saleAugmentations}
             scrollOptions={scrollEditOptions}
             onReroll={rerollShelfItem}
             onRemove={removeShelfItem}

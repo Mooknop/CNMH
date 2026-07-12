@@ -57,6 +57,17 @@ describe('expandWare', () => {
     );
   });
 
+  it('carries an augmentation from a RESOLVED sale ware (doc shape) into the entry (#1404)', () => {
+    // The cart holds the resolved ware — its augmentation is the inlined doc (has `id`).
+    const runeItem = { sale: 'rune', ref: 'targe', runes: {}, augmentation: { id: 'ancestral-predator', name: 'Ancestral Predator', choice: 'Dragon' } };
+    expect(expandWare(runeItem)[0]).toEqual({ ref: 'targe', runes: {}, uid: 'u-1', augmentation: { ref: 'ancestral-predator', choice: 'Dragon' } });
+  });
+
+  it('carries a STORED {ref} augmentation binding too (#1404)', () => {
+    const runeItem = { sale: 'rune', ref: 'targe', runes: { property: ['x'] }, augmentation: { ref: 'mirror' } };
+    expect(expandWare(runeItem)[0]).toEqual({ ref: 'targe', runes: { property: ['x'] }, uid: 'u-1', augmentation: { ref: 'mirror' } });
+  });
+
   it('omits level for a runed weapon (no grade variant)', () => {
     const weapon = { sale: 'rune', saleId: 'w1', ref: 'longsword', runes: { potency: 1, property: ['flaming'] } };
     expect(expandWare(weapon)).toEqual([
