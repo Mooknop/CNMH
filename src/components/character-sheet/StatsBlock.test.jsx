@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import StatsBlock from './StatsBlock';
 
 // Mock dependencies
@@ -396,6 +396,21 @@ describe('StatsBlock', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
     expect(screen.getByText('Unarmored')).toBeInTheDocument();
     expect(screen.queryByText('Unarmed')).toBeNull();
+  });
+
+  it('renders the three proficiency sigils flanking the dial (Defense/Offense left, Armor right)', () => {
+    const { container } = render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    const left = container.querySelector('.prof-flank--left');
+    const right = container.querySelector('.prof-flank--right');
+    // Each sigil is a label-less glyph button named via aria-label.
+    expect(within(left).getByRole('button', { name: 'Defense' }).querySelector('svg.game-glyph')).toBeTruthy();
+    expect(within(left).getByRole('button', { name: 'Offense' })).toBeInTheDocument();
+    expect(within(right).getByRole('button', { name: 'Armor' })).toBeInTheDocument();
+    // Labels are not rendered as visible text.
+    expect(within(left).queryByText('Defense')).toBeNull();
+    // Armor is not on the left flank; Defense/Offense are not on the right.
+    expect(within(left).queryByRole('button', { name: 'Armor' })).toBeNull();
+    expect(within(right).queryByRole('button', { name: 'Defense' })).toBeNull();
   });
 
   it('renders Class DC in the Defense panel', () => {
