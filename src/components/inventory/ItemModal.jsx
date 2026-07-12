@@ -10,6 +10,7 @@ import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
+import AugmentationActivations from './AugmentationActivations';
 import { formatBulk, normalizeShield, normalizeArmor, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, isBodyBound, STOWED } from '../../utils/itemState';
@@ -339,6 +340,12 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // A shield property rune's activation fired (#1196 G3/G4): log it, and for a
   // spell-casting rune (Gusting → Gust of Wind) open the cast modal with the
   // rune's fixed-rank cast. The frequency was already spent by the card.
+  // A bound augmentation's activation fired (#1411 Bucket B): the card already
+  // spent the frequency gate — log it. Enemy-side effects (Thorns, Sunshine!)
+  // resolve on the GM's side; the log is the shared record either way.
+  const onAugmentationActivate = (aug) => {
+    appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${aug.actuated.name}` });
+  };
   const onShieldRuneActivate = (rune, spellDoc) => {
     const cast = spellDoc
       ? buildRuneCastSpell(rune.actuated, spellDoc, `${itemUidOf(item)}:${rune.id}`, rune.id)
@@ -1457,29 +1464,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               <p className="item-rune-desc">{item.augmentation.description}</p>
             )}
           </div>
-          {item.augmentation.actuated && (
-            <div className="item-action actuated-card" data-testid="augmentation-actuated">
-              <div className="action-header">
-                <span className="action-name">{item.augmentation.actuated.name}</span>
-                <div className="action-count">
-                  {item.augmentation.actuated.actionCount && (
-                    <ActionSymbol cost={item.augmentation.actuated.actionCount} />
-                  )}
-                </div>
-              </div>
-              {item.augmentation.actuated.traits?.length > 0 && (
-                <div className="action-traits">
-                  {item.augmentation.actuated.traits.map((t, i) => <TraitTag key={i} trait={t} />)}
-                </div>
-              )}
-              {item.augmentation.actuated.frequency && (
-                <p className="item-rune-desc">Frequency {item.augmentation.actuated.frequency}</p>
-              )}
-              {item.augmentation.actuated.description && (
-                <p className="item-rune-desc">{item.augmentation.actuated.description}</p>
-              )}
-            </div>
-          )}
+          {/* The augmentation's actuated block as an INTERACTIVE, frequency-gated
+              activation card (#1411 Bucket B) — fires + logs, replacing the U1
+              static card. */}
+          <AugmentationActivations
+            character={character}
+            item={item}
+            nowSecs={nowSecs}
+            onActivate={onAugmentationActivate}
+          />
         </div>
       )}
 

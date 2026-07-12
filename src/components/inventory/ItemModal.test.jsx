@@ -233,7 +233,32 @@ describe('ItemModal', () => {
     const actuated = screen.getByTestId('augmentation-actuated');
     expect(within(actuated).getByLabelText('reaction')).toBeInTheDocument();
     expect(within(actuated).getByText('Envision')).toBeInTheDocument();
-    expect(within(actuated).getByText(/Frequency see description/)).toBeInTheDocument();
+    expect(within(actuated).getByText(/Frequency: see description/)).toBeInTheDocument();
+  });
+
+  it('fires the augmentation activation and logs it when available (#1411)', () => {
+    mockItemAct = makeItemAct({ activation: { canActivate: true, activate: vi.fn(() => ({ ok: true })) } });
+    const item = {
+      ...baseItem, name: 'War Shield', shield: { bonus: 2 },
+      augmentation: { name: 'Mirror', actuated: { name: 'Mirror', actionCount: 'reaction', description: 'X' } },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={{ id: 'c1', name: 'Pel' }} />);
+    fireEvent.click(screen.getByTestId('augmentation-activate'));
+    expect(mockItemAct.activation.activate).toHaveBeenCalled();
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('activated War Shield — Mirror') }),
+    );
+  });
+
+  it('shows the augmentation activation as unavailable when the gate is spent (#1411)', () => {
+    // Default mockItemAct.activation.canActivate is false.
+    const item = {
+      ...baseItem, name: 'War Shield', shield: { bonus: 2 },
+      augmentation: { name: 'Mirror', actuated: { name: 'Mirror', actionCount: 'reaction' } },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    expect(screen.getByTestId('augmentation-unavailable')).toBeInTheDocument();
+    expect(screen.queryByTestId('augmentation-activate')).not.toBeInTheDocument();
   });
 
   it('renders no augmentation section when the item has none (#1202)', () => {
