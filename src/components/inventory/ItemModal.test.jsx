@@ -2263,20 +2263,52 @@ describe('ItemModal — durability panel (#539/#542)', () => {
     }));
   });
 
-  it('repairs HP toward max and logs it', () => {
+  // Repair action (#543): trained-Crafting check vs the item's level DC.
+  const trained = { ...character, skillProficiencies: { crafting: 1 } };
+
+  it('gates the Repair action behind trained Crafting', () => {
     mockItemHp = { w1: { hp: 8 } };
-    open(sword);
-    fireEvent.change(screen.getByLabelText('Hit Points to repair'), { target: { value: '4' } });
-    fireEvent.click(screen.getByTestId('durability-repair'));
-    expect(mockItemHp).toEqual({ w1: { hp: 12 } });
+    open(sword); // untracked crafting rank → untrained
+    const panel = screen.getByTestId('durability-repair');
+    expect(within(panel).getByText(/requires trained Crafting/)).toBeInTheDocument();
+    expect(screen.queryByTestId('durability-repair-btn')).not.toBeInTheDocument();
+  });
+
+  it('repairs HP on a successful Crafting check and logs the degree', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword, trained);
+    fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '20' } }); // DC 15 → success
+    fireEvent.click(screen.getByTestId('durability-repair-btn'));
+    expect(mockItemHp).toEqual({ w1: { hp: 13 } }); // success @ trained = +5
+    expect(screen.getByTestId('durability-repair-result')).toHaveTextContent('Success — restored 5 HP (now 13/20)');
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
-      text: expect.stringContaining('Ashka repaired Longsword — 12/20 HP'),
+      text: expect.stringContaining('repaired Longsword (Success) — restored 5 HP → 13/20'),
     }));
+  });
+
+  it('a critical success restores the larger amount, clamped to max', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword, trained);
+    fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '18' } });
+    fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '26' } }); // ≥ DC+10 → crit
+    fireEvent.click(screen.getByTestId('durability-repair-btn'));
+    expect(mockItemHp).toEqual({ w1: { hp: 18 } }); // 8 + 10, clamped under 20
+  });
+
+  it('a failed Crafting check restores no HP', () => {
+    mockItemHp = { w1: { hp: 8 } };
+    open(sword, trained);
+    fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '9' } }); // < DC 15 → failure
+    fireEvent.click(screen.getByTestId('durability-repair-btn'));
+    expect(mockItemHp).toEqual({ w1: { hp: 8 } }); // unchanged
+    expect(screen.getByTestId('durability-repair-result')).toHaveTextContent('no HP restored');
   });
 
   it('a destroyed item offers neither damage nor repair', () => {
     mockItemHp = { w1: { hp: 0 } };
-    open(sword);
+    open(sword, trained);
     expect(screen.getByTestId('durability-state')).toHaveTextContent('Destroyed');
     expect(screen.queryByTestId('durability-apply-damage')).not.toBeInTheDocument();
     expect(screen.queryByTestId('durability-repair')).not.toBeInTheDocument();

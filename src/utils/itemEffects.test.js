@@ -8,6 +8,7 @@ import {
   applyItemEffect,
   removeItemEffect,
   pruneExpiredItemEffects,
+  restoreItemHpOverlay,
 } from './itemEffects';
 
 beforeEach(() => {
@@ -102,6 +103,55 @@ describe('itemEffects (#339)', () => {
       expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
         text: 'Izzy applied Rust Scrub to Full Plate — Restore 2d4 HP to rust damage',
       }));
+    });
+
+    it('a transient consumable with a rolled amount restores item HP (#543)', () => {
+      const durableTarget = { id: 'plate-1', name: 'Full Plate', uid: 'plate-1', durability: { hardness: 9, hp: 36 } };
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+      const getState = vi.fn((_id, key) =>
+        key === 'itemhp' ? { 'plate-1': { hp: 10 } } : [{ id: 'existing', itemId: 'x' }]);
+      const meta = { kind: 'effect', target: 'item', transient: true, note: 'Restore 2d4 HP to rust damage' };
+
+      applyItemEffect({
+        user, targetItem: durableTarget, itemName: 'Rust Scrub', meta, amount: 6,
+        nowSecs: 1000, getState, sendUpdate, appendLog,
+      });
+
+      // HP restored on the itemhp overlay (10 + 6 = 16, still ≤ BT 18 → broken).
+      expect(sendUpdate).toHaveBeenCalledWith('izzy', 'itemhp', { 'plate-1': { hp: 16 } });
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: 'Izzy applied Rust Scrub to Full Plate — restored 6 HP (16/36, still broken)',
+      }));
+    });
+  });
+
+  describe('restoreItemHpOverlay (#543)', () => {
+    const durableTarget = { id: 'plate-1', name: 'Full Plate', uid: 'plate-1', durability: { hardness: 9, hp: 36 } };
+
+    it('restores HP toward max and reports the resulting status', () => {
+      const sendUpdate = vi.fn();
+      const getState = vi.fn(() => ({ 'plate-1': { hp: 30 } }));
+      const result = restoreItemHpOverlay({
+        ownerId: 'izzy', targetItem: durableTarget, amount: 8, getState, sendUpdate,
+      });
+      expect(result).toEqual({ hp: 36, maxHp: 36, broken: false }); // 30 + 8 clamped to 36
+      expect(sendUpdate).toHaveBeenCalledWith('izzy', 'itemhp', { 'plate-1': { hp: 36 } });
+    });
+
+    it('seeds from the authored max when no overlay record exists', () => {
+      const result = restoreItemHpOverlay({
+        ownerId: 'izzy', targetItem: durableTarget, amount: 5, getState: () => ({}), sendUpdate: vi.fn(),
+      });
+      expect(result.hp).toBe(36); // already at max — clamp is a no-op
+    });
+
+    it('is a no-op for a non-durable target, a missing uid, or a non-positive amount', () => {
+      const sendUpdate = vi.fn();
+      expect(restoreItemHpOverlay({ ownerId: 'izzy', targetItem: { uid: 'x', name: 'Rope' }, amount: 5, getState: () => ({}), sendUpdate })).toBeNull();
+      expect(restoreItemHpOverlay({ ownerId: 'izzy', targetItem: { name: 'No uid', durability: { hp: 10 } }, amount: 5, getState: () => ({}), sendUpdate })).toBeNull();
+      expect(restoreItemHpOverlay({ ownerId: 'izzy', targetItem: durableTarget, amount: 0, getState: () => ({}), sendUpdate })).toBeNull();
+      expect(sendUpdate).not.toHaveBeenCalled();
     });
   });
 

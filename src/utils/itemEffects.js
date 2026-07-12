@@ -16,11 +16,42 @@
 // reads, mirroring how creature effect-consumables surface as status reminders.
 // React-free: accepts hooks' return values as plain args (like consumables.js).
 import { newEntryUid } from './uid';
+import { durabilityFor, restoreItemHp, isBrokenHp } from './itemDurability';
 import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
 };
+
+/**
+ * Restore HP to a specific inventory item's durability overlay (cnmh_itemhp_,
+ * keyed by entry uid) — the write side for Rust Scrub (#543). Clamped to the
+ * item's authored max via restoreItemHp. Returns { hp, maxHp, broken } for the
+ * caller's log line, or null when the item isn't durable / has no uid / the
+ * amount is non-positive (a no-op).
+ *
+ * @param {string}   ownerId    - charId owning the item (keys the overlay)
+ * @param {Object}   targetItem - the inventory entry being restored (needs uid)
+ * @param {number}   amount     - HP to restore (player-rolled, e.g. Rust Scrub's 2d4)
+ * @param {Function} getState   - (charId, key) => value
+ * @param {Function} sendUpdate - (charId, key, value) => void
+ * @returns {{ hp:number, maxHp:number, broken:boolean }|null}
+ */
+export function restoreItemHpOverlay({ ownerId, targetItem, amount, getState, sendUpdate }) {
+  const dur = durabilityFor(targetItem);
+  const uid = targetItem?.uid;
+  if (!dur || uid == null || !(amount > 0)) return null;
+
+  const overlay = (getState ? getState(ownerId, APP.ITEMHP) : null) || {};
+  const curHp = overlay?.[uid]?.hp ?? dur.hp;
+  const nextHp = restoreItemHp({ hp: curHp, maxHp: dur.hp, amount });
+  const nextOverlay = { ...overlay, [uid]: { hp: nextHp } };
+
+  writeLocal(syncKey(APP.ITEMHP, ownerId), nextOverlay);
+  if (sendUpdate) sendUpdate(ownerId, APP.ITEMHP, nextOverlay);
+
+  return { hp: nextHp, maxHp: dur.hp, broken: isBrokenHp(nextHp, dur.brokenThreshold) };
+}
 
 /** Synced-state key for a character's item-effect overlay. */
 export const itemEffectsKey = (charId) => syncKey(APP.ITEMEFFECTS, charId);
@@ -62,23 +93,32 @@ export const stampItemEffects = (items, overlay) =>
  * @param {Object}   targetItem - the inventory item being treated
  * @param {string}   itemName   - the consumable's name (the oil)
  * @param {Object}   meta       - consumableMeta(item); label/note/durationMinutes
+ * @param {number}   [amount]   - HP to restore for a transient HP consumable
+ *                                (Rust Scrub's rolled 2d4); ignored otherwise
  * @param {number}   [nowSecs]  - current absolute game seconds (stamps expiry)
  * @param {Function} getState   - (charId, key) => value  (current overlay read)
  * @param {Function} sendUpdate - (charId, key, value) => void
  * @param {Function} appendLog  - ({ type, charId, text }) => void
  * @returns {Array} the next overlay
  */
-export function applyItemEffect({ user, targetItem, itemName, meta, nowSecs, getState, sendUpdate, appendLog }) {
+export function applyItemEffect({ user, targetItem, itemName, meta, amount, nowSecs, getState, sendUpdate, appendLog }) {
   // Transient (instantaneous) item consumables — e.g. Rust Scrub, which restores
-  // item HP rather than leaving an ongoing state. Until item HP is modeled
-  // (epic #539 / #543) the apply is log-only: it records which item was treated
-  // and the note (e.g. "Restore 2d4 HP"), but writes no tracked effect/badge.
+  // item HP (#543) rather than leaving an ongoing state. When the player passes a
+  // rolled amount and the target is durable, restore that HP to the item's
+  // cnmh_itemhp_ overlay; otherwise it stays a log-only note (untracked target,
+  // or a transient consumable that isn't HP-restoring).
   if (meta?.transient) {
+    const restored = amount > 0
+      ? restoreItemHpOverlay({ ownerId: user.id, targetItem, amount, getState, sendUpdate })
+      : null;
     if (appendLog) {
+      const tail = restored
+        ? ` — restored ${amount} HP (${restored.hp}/${restored.maxHp}${restored.broken ? ', still broken' : ''})`
+        : (meta.note ? ` — ${meta.note}` : '');
       appendLog({
         type:   'action',
         charId: user.id,
-        text:   `${user.name} applied ${itemName} to ${targetItem?.name || 'item'}${meta.note ? ` — ${meta.note}` : ''}`,
+        text:   `${user.name} applied ${itemName} to ${targetItem?.name || 'item'}${tail}`,
       });
     }
     return getState ? (getState(user.id, APP.ITEMEFFECTS) || []) : [];
