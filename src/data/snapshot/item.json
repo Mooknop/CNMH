@@ -8628,6 +8628,12 @@
       "occultism",
       1
     ],
+    "grantedSpells": [
+      {
+        "ref": "guidance",
+        "tradition": "occult"
+      }
+    ],
     "image": "img_789af94e-bf05-48f5-a95e-10b5b5b27324.jpg",
     "imagePosition": {
       "x": 50,

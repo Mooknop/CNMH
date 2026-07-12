@@ -346,6 +346,10 @@
 .loot-scroll .item-runestone-note { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; color: var(--shell-text-tertiary); font-style: italic; margin: 0.5rem 0 0; }
 /* Quiet italic GM-adjudicated marker on an augmentation card (#1411 C/E). */
 .loot-scroll .item-rune-note { font-family: var(--font-body); font-size: 0.82rem; line-height: 1.4; color: var(--shell-text-tertiary); font-style: italic; margin: 0.4rem 0 0; }
+/* Item-granted innate spells (#914) — a Cast button per granted catalog spell. */
+.loot-scroll .item-granted-spells { margin: 0.75rem 0 0; }
+.loot-scroll .item-granted-spells h3 { margin: 0 0 0.4rem; }
+.loot-scroll .granted-spell-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 /* Full rune effect in the runestone block (#1055 S1) — shared RuneMechanics. */
 .loot-scroll .rune-mech { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
 .loot-scroll .rune-mech-desc,
