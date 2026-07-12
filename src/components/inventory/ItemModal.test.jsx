@@ -1071,7 +1071,7 @@ describe('ItemModal', () => {
     expect(document.querySelector('.loot-runeicon-row')).toBeNull();
   });
 
-  it('a property-runed weapon wears catalog-rune medallions, capped at two plus a +n chip', () => {
+  it('a property-runed weapon wears a catalog-rune coin for every rune, uncapped', () => {
     const item = {
       ...baseItem,
       runes: {
@@ -1085,14 +1085,16 @@ describe('ItemModal', () => {
     };
     render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
     const coins = document.querySelectorAll('.loot-runeicon');
-    expect(coins).toHaveLength(3);
-    expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
+    // Three property coins + the potency fundamental, all shown, no chip.
+    expect(coins).toHaveLength(4);
+    expect([...coins].map((c) => c.getAttribute('data-runeicon'))).toEqual([
+      'flaming',
+      'frost',
+      'shock',
+      'weapon-potency',
+    ]);
     expect(coins[0]).toHaveClass('runeicon-tint');
-    const more = document.querySelector('.loot-runeicon-more');
-    // Shock + the +3 potency fundamental fold into the chip — property runes
-    // outrank fundamentals for the two visible coins.
-    expect(more).toHaveTextContent('+2');
-    expect(more).toHaveAttribute('title', 'Shock, +3 Weapon Potency');
+    expect(document.querySelector('.loot-runeicon-more')).toBeNull();
   });
 
   it('the weapon tier line leads with the fundamental glyphs (potency + striking)', () => {

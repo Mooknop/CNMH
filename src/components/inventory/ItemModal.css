@@ -161,11 +161,6 @@
   height: 74%;
   filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
 }
-.loot-runeicon-more {
-  font-size: 0.8rem;
-  font-family: var(--font-mono);
-  color: var(--iron-light);
-}
 /* Inline glyph before a rune's name in the modal rune sections (#1372). */
 .item-rune-glyph {
   vertical-align: -0.15em;
