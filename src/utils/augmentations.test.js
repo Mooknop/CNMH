@@ -4,6 +4,7 @@ import {
   augmentationOf, hasAugmentation, augmentationFits, canAugment,
   applyAugmentation, clearAugmentation,
   isGmAdjudicatedAugmentation, GM_ADJUDICATED_AUGMENTS,
+  augmentationArmorDeltas,
 } from './augmentations';
 
 const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 };
@@ -138,5 +139,19 @@ describe('isGmAdjudicatedAugmentation (#1411 C/E)', () => {
     expect(isGmAdjudicatedAugmentation('shield-sheath')).toBe(false); // structural note
     expect(isGmAdjudicatedAugmentation(null)).toBe(false);
     expect(isGmAdjudicatedAugmentation({})).toBe(false);
+  });
+});
+
+describe('augmentationArmorDeltas (#1411 armor penalties)', () => {
+  it('returns the armor-stat deltas for an augmented host', () => {
+    expect(augmentationArmorDeltas({ armor: {}, augmentation: { id: 'subtle-armor' } })).toEqual({ strength: 2, bulk: 1 });
+    expect(augmentationArmorDeltas({ augmentation: { ref: 'reinforced-surcoat' } })).toEqual({ speedPenalty: 5 });
+    expect(augmentationArmorDeltas({ augmentation: { id: 'parade-armor' } })).toEqual({ bulk: 1 });
+  });
+
+  it('returns {} for a host with no armor augmentation', () => {
+    expect(augmentationArmorDeltas({ augmentation: { id: 'eyecatcher' } })).toEqual({}); // weapon aug, no armor delta
+    expect(augmentationArmorDeltas({ name: 'Rope' })).toEqual({});
+    expect(augmentationArmorDeltas(null)).toEqual({});
   });
 });

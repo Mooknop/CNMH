@@ -81,6 +81,15 @@ describe('InventoryUtils', () => {
       expect(calculateItemsBulk(items)).toBe(1);
     });
 
+    it('adds an armor augmentation Bulk delta (#1411)', () => {
+      // Subtle Armor / Twining Chains / Parade Armor add +1 Bulk to their host.
+      const items = [
+        { weight: 1, quantity: 1, armor: {}, augmentation: { id: 'subtle-armor' } }, // 1 + 1 = 2
+        { weight: 2, quantity: 1, armor: {}, augmentation: { id: 'reinforced-surcoat' } }, // no bulk delta → 2
+      ];
+      expect(calculateItemsBulk(items)).toBe(4);
+    });
+
     it('should calculate bulk for containers with contents', () => {
       const items = [
         {
