@@ -279,6 +279,20 @@
     ]
   },
   {
+    "id": "addiction-suppressant-moderate",
+    "name": "Addiction Suppressant (Moderate)",
+    "level": 6,
+    "price": 30,
+    "weight": 0.1,
+    "traits": [
+      "Rare",
+      "Alchemical",
+      "Consumable",
+      "Elixir"
+    ],
+    "description": "Crafted for one specific drug (and higher level than it), this elixir suppresses that drug’s addiction effects for 1 day as if you were dosed — but without the drug’s effects and without raising the addiction DC — and grants a +2 item bonus to your ongoing save against that addiction."
+  },
+  {
     "name": "Aeon Stone (Agate Ellipsoid)",
     "description": "This banded agate orbits your head. You can cast augury as a 2nd-rank divine innate spell once per day. Resonant Power The augury spell from this aeon stone always succeeds at its DC 6 flat check.",
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
@@ -610,6 +624,17 @@
     ],
     "armorRune": true,
     "description": "Armor etched with this rune aids in routing ranged attacks aimed at an enemy around you. You don't provide enemies cover against your allies' ranged attacks."
+  },
+  {
+    "id": "alchemical-chart-moderate",
+    "name": "Alchemical Chart (Moderate)",
+    "level": 12,
+    "price": 1750,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical"
+    ],
+    "description": "While you hold this reference chart when using Quick Alchemy, the items you create of 12th level or lower remain potent for 1 additional round."
   },
   {
     "name": "Alchemist's Fire",
@@ -1654,6 +1679,27 @@
     "id": "belt"
   },
   {
+    "id": "bestial-mutagen-greater",
+    "name": "Bestial Mutagen (Greater)",
+    "level": 11,
+    "price": 300,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir",
+      "Mutagen",
+      "Polymorph"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "bestial-mutagen-greater",
+      "durationMinutes": 60,
+      "note": "+3 item to Athletics + unarmed attacks (claw 3d8 S agile, jaws 3d10 P); −2 to Reflex, Acrobatics, Stealth. 1 hour."
+    },
+    "description": "Drinking this mutagen twists you into a hulking beast. Benefit: +3 item bonus to Athletics checks and unarmed attack rolls; you gain a claw (3d8 slashing, agile) and jaws (3d10 piercing) unarmed attack. Drawback: −2 penalty to Reflex saves, Acrobatics, and Stealth. Lasts 1 hour."
+  },
+  {
     "actions": [
       {
         "name": "Draw a Blade",
@@ -1866,6 +1912,20 @@
     "price": 40,
     "weight": 0.1,
     "id": "blindpepper-bomb"
+  },
+  {
+    "id": "blisterwort",
+    "name": "Blisterwort",
+    "level": 11,
+    "price": 280,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Injury",
+      "Poison"
+    ],
+    "description": "Injury poison. Saving Throw DC 30 Fortitude; Maximum Duration 6 rounds. Stage 1 4d6 poison and weakness 2 to physical and force damage; Stage 2 5d6 poison and weakness 4; Stage 3 7d6 poison and weakness 6. The GM runs the affliction on a hit."
   },
   {
     "name": "Blood Booster",
@@ -2696,6 +2756,25 @@
     "description": "This charm wards you against flame. While invested, you gain resistance 10 to fire."
   },
   {
+    "id": "cheetahs-elixir-greater",
+    "name": "Cheetah's Elixir (Greater)",
+    "level": 9,
+    "price": 110,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "cheetahs-elixir-greater",
+      "durationMinutes": 60,
+      "note": "+10-foot status bonus to your Speed for 1 hour."
+    },
+    "description": "This invigorating elixir grants you a +10-foot status bonus to your Speed for 1 hour."
+  },
+  {
     "name": "Chivalric Emblem",
     "description": "Activate (one-action, manipulate). Originally created by Taldan cavaliers acting as knights errant, chivalric emblems have since spread across the Inner Sea region and beyond. A chivalric emblem is crafted in the form of a small iron shield, embossed with heraldic insignia. These whetstones call protective spirits into a weapon; the effects last for 1 hour. While wielding a weapon under the effect of a chivalric emblem, if you witness an ally being reduced to 0 Hit Points or taking damage from a critical Strike, you gain a +1 circumstance bonus to attack rolls and damage with that weapon against the creature that damaged that ally for the remainder of the chivalric emblem's duration.",
     "traits": [
@@ -3377,6 +3456,20 @@
     "description": "The fabric of a cultist cowl is either raspy burlap, durable cotton, or fine silk, depending on the item's power. When a character who worships a single deity dons a cultist cowl, the cowl's colors change to match those sacred to that deity, and the deity's symbol appears on the front. While worn, you gain a +1 item bonus to Religion checks. You also gain a +1 item bonus to all skill checks attempted to aid a ritual by being a secondary caster."
   },
   {
+    "id": "cytillesh-oil",
+    "name": "Cytillesh Oil",
+    "level": 3,
+    "price": 10,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Injury",
+      "Poison"
+    ],
+    "description": "Injury poison (applied to a piercing or slashing weapon). Saving Throw DC 19 Fortitude; Maximum Duration 4 rounds. Stage 1 1d8 poison (1 round); Stage 2 1d10 poison (1 round); Stage 3 2d8 poison (1 round). The GM runs the affliction on a hit."
+  },
+  {
     "id": "dagger",
     "name": "Dagger",
     "description": "This small, bladed weapon is held in one hand and used to stab a creature in close combat. It can also be thrown.",
@@ -3442,6 +3535,25 @@
       2
     ],
     "description": "These sleek boots grant a +2 item bonus to Acrobatics checks and a +1 circumstance bonus to Tumble Through. You can Grab an Edge even without a free hand, and you treat falls as 10 feet shorter (or, if you have Cat Fall, as though your Acrobatics proficiency were one rank higher for that feat)."
+  },
+  {
+    "id": "darkvision-elixir-greater",
+    "name": "Darkvision Elixir (Greater)",
+    "level": 8,
+    "price": 90,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "darkvision-elixir-greater",
+      "durationMinutes": 1440,
+      "note": "You gain darkvision for 24 hours."
+    },
+    "description": "This elixir grants you darkvision for 24 hours."
   },
   {
     "name": "Deadlock Mint",
@@ -3582,6 +3694,21 @@
       "addActions": 1
     },
     "id": "demon-bone-tiles-seraptis"
+  },
+  {
+    "id": "demortification-oil",
+    "name": "Demortification Oil",
+    "level": 5,
+    "price": 30,
+    "weight": 0.1,
+    "traits": [
+      "Rare",
+      "Consumable",
+      "Magical",
+      "Necromancy",
+      "Oil"
+    ],
+    "description": "Activate (Interact): Applied to an intact corpse dead no longer than a week, this oil restores it to the condition it was in just after death (it does not reverse post-mortem damage). Applied to a non-incorporeal undead creature, it instead grants that undead a +1 item bonus to Armor Class for 1 hour."
   },
   {
     "id": "devils-breath-incense",
@@ -4364,6 +4491,12 @@
         "label": "Lesser",
         "price": 30,
         "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1."
+      },
+      {
+        "level": 9,
+        "label": "Moderate",
+        "price": 150,
+        "effect": "The elixir restores 5d6+12 Hit Points, and the bonus is +2."
       }
     ],
     "description": "Elixirs of life accelerate a living creature natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
@@ -5603,6 +5736,25 @@
         }
       ]
     }
+  },
+  {
+    "id": "glow-rod",
+    "name": "Glow Rod",
+    "level": 1,
+    "price": 3,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Light"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "glow-rod",
+      "durationMinutes": 360,
+      "note": "Bright light in a 20-ft radius (dim to 40 ft) for 6 hours."
+    },
+    "description": "When activated, this rod sheds bright light in a 20-foot radius (and dim light to the next 40 feet) for 6 hours. A glow rod can be loaded into a sun dazzler."
   },
   {
     "name": "Glue Bomb",
@@ -7490,6 +7642,22 @@
     "description": "An unstable, experimental batch of midnight milk brewed by the Devil’s Disciples. Like ordinary midnight milk it lulls the drinker toward drowsy euphoria and sleep, but its afflictions are stronger and erratic — the GM adjudicates its drug and addiction effects."
   },
   {
+    "id": "midnight-milk-refined",
+    "name": "Midnight Milk (Refined)",
+    "level": 12,
+    "price": 400,
+    "weight": 0.1,
+    "traits": [
+      "Rare",
+      "Alchemical",
+      "Consumable",
+      "Drug",
+      "Ingested",
+      "Poison"
+    ],
+    "description": "A refined, more potent batch of midnight milk brewed by the Devil’s Disciples. Saving Throw DC 29 Fortitude; Onset 1 minute; Maximum Duration 8 hours. Stage 1 +3 item bonus to Perception (1 hour); Stage 2 unconscious (1 hour); Stage 3 unconscious, plagued by nightmares (1 hour) and left fatigued on waking. The GM runs the drug and its addiction."
+  },
+  {
     "name": "Mighty Counterweight",
     "description": "Activate (one-action, manipulate). This thick lead disk is etched with geometric patterns, and a weapon it's applied to grows unusually heavy. When you attack with a weapon under the effects of a mighty counterweight, you deal an amount of additional bludgeoning damage equal to the number of weapon damage dice.",
     "traits": [
@@ -8396,6 +8564,21 @@
     "material": "Cloth"
   },
   {
+    "id": "panacea",
+    "name": "Panacea",
+    "level": 13,
+    "price": 450,
+    "weight": 0.1,
+    "traits": [
+      "Uncommon",
+      "Consumable",
+      "Healing",
+      "Magical",
+      "Potion"
+    ],
+    "description": "When you drink this shimmering potion, it attempts to counteract all curses and diseases affecting you, as well as the blinded and deafened conditions from spells affecting you (counteract rank 7, +20 modifier)."
+  },
+  {
     "id": "parade-armor",
     "type": "augmentation",
     "augTarget": [
@@ -8993,6 +9176,17 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "poison-concentrator-moderate",
+    "name": "Poison Concentrator (Moderate)",
+    "level": 10,
+    "price": 960,
+    "weight": 1,
+    "traits": [
+      "Alchemical"
+    ],
+    "description": "Over a 10-minute activity, combine two doses of the same infused alchemical poison (level 9 or lower) into one concentrated dose that gains a +1 item bonus to its DC and increases in level by 1."
   },
   {
     "id": "potion-of-flying-standard",
@@ -10805,6 +10999,44 @@
     "description": "A long farming blade repurposed for war. It deals 1d10 slashing damage and has the deadly d10 and trip traits."
   },
   {
+    "id": "sea-touch-elixir-moderate",
+    "name": "Sea Touch Elixir (Moderate)",
+    "level": 12,
+    "price": 300,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir",
+      "Polymorph"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "sea-touch-elixir-moderate",
+      "durationMinutes": 60,
+      "note": "Swim Speed 20 ft and breathe underwater for 1 hour."
+    },
+    "description": "Your fingers and toes become webbed, granting you a swim Speed of 20 feet and the ability to breathe underwater for 1 hour."
+  },
+  {
+    "id": "sense-dulling-hood-lesser",
+    "name": "Sense-Dulling Hood (Lesser)",
+    "level": 6,
+    "price": 40,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "sense-dulling-hood-lesser",
+      "durationMinutes": 10,
+      "note": "+2 item to saves vs auditory/olfactory/visual effects; −1 Perception. 10 minutes."
+    },
+    "description": "Pulling on this muffling hood grants a +2 item bonus to saving throws against auditory, olfactory, and visual effects, but imposes a −1 penalty to Perception, for 10 minutes."
+  },
+  {
     "name": "Serene Mutagen",
     "description": "An alchemical mutagen that calms the mind, sharpening senses and will at the cost of aggression.",
     "traits": [
@@ -10976,6 +11208,21 @@
     ],
     "armorRune": true,
     "description": "Shadow runes make armor lighter and softer. While wearing the etched armor, you gain a +1 item bonus to Stealth checks."
+  },
+  {
+    "id": "shadow-essence",
+    "name": "Shadow Essence",
+    "level": 10,
+    "price": 160,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Injury",
+      "Negative",
+      "Poison"
+    ],
+    "description": "Injury poison. Saving Throw DC 29 Fortitude; Maximum Duration 6 rounds. Stage 1 3d6 void and 2d6 poison (1 round); Stage 2 as Stage 1 plus enfeebled 1; Stage 3 as Stage 1 plus enfeebled 2. Enfeebled from this poison lasts 24 hours. The GM runs the affliction on a hit."
   },
   {
     "talisman": {
