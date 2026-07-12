@@ -1508,6 +1508,33 @@
     "description": "This preserved basilisk eye is affixed to a shield. When you Shield Block a melee attack with that shield, you can activate the eye: the attacker must succeed at a DC 25 Fortitude save or be slowed 1 for 1 minute as partial petrification sets in (the GM rolls the save)."
   },
   {
+    "id": "bastard-sword",
+    "name": "Bastard Sword",
+    "price": 4,
+    "weight": 1,
+    "traits": [
+      "Two-Hand d12"
+    ],
+    "category": "martial",
+    "group": "sword",
+    "strikes": [
+      {
+        "name": "Bastard Sword",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Two-Hand d12",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A hand-and-a-half sword. It deals 1d8 slashing damage and has the two-hand d12 trait (1d12 when wielded in two hands)."
+  },
+  {
     "id": "battle-axe",
     "name": "Battle Axe",
     "description": "These axes are designed explicitly as weapons, rather than tools. They typically weigh less than tree-felling axes, with a shaft reinforced with metal bands and a sharper blade, making them ideal for chopping limbs rather than wood.",
@@ -1893,6 +1920,51 @@
       }
     ],
     "id": "blood-booster"
+  },
+  {
+    "id": "bloodletting-kukri",
+    "name": "Bloodletting Kukri",
+    "level": 6,
+    "price": 240,
+    "weight": 0.1,
+    "traits": [
+      "Magical"
+    ],
+    "strikes": [
+      {
+        "name": "Bloodletting Kukri",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Trip",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing",
+        "riders": [
+          {
+            "id": "bloodletting-crit",
+            "label": "Bloodletting (crit)",
+            "persistent": {
+              "dice": "1d8",
+              "type": "bleed"
+            },
+            "on": [
+              "criticalSuccess"
+            ]
+          }
+        ]
+      }
+    ],
+    "runes": {
+      "potency": 1,
+      "striking": "striking"
+    },
+    "description": "This wickedly curved +1 striking kukri hungers for blood. On a critical hit it deals 1d8 persistent bleed damage; if the target did not already have persistent bleed damage, you also gain 1d8 temporary Hit Points for 1 minute (apply the temp HP by hand)."
   },
   {
     "name": "Bloodseeker Beak",
@@ -3356,6 +3428,22 @@
     }
   },
   {
+    "id": "daredevil-boots",
+    "name": "Daredevil Boots",
+    "level": 10,
+    "price": 900,
+    "weight": 0.1,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "bonus": [
+      "acrobatics",
+      2
+    ],
+    "description": "These sleek boots grant a +2 item bonus to Acrobatics checks and a +1 circumstance bonus to Tumble Through. You can Grab an Edge even without a free hand, and you treat falls as 10 feet shorter (or, if you have Cat Fall, as though your Acrobatics proficiency were one rank higher for that feat)."
+  },
+  {
     "name": "Deadlock Mint",
     "description": "Deadlock mint is a species of mint with small, green flowers, said to grow on battlefields where the opposing sides were equally matched. Sprigs of the flowers blow gently in a breeze of their own creation. If you cast Mystic Armor using deadlock mint, you release a small blast of concussive air in an emanation of a size that depends on the catalyst's type. Unattended objects up to a certain Bulk limit are pushed away from you. Large or smaller creatures must succeed at a Fortitude save equal to your spell save DC or be pushed the same distance away from you. Objects of 1 Bulk or less and creatures that fail the save are pushed 5 feet.",
     "traits": [
@@ -4182,6 +4270,63 @@
     "id": "eagle-eye-elixir"
   },
   {
+    "id": "electric-eelskin",
+    "name": "Electric Eelskin",
+    "level": 10,
+    "price": 950,
+    "weight": 1,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "armor": {
+      "category": "light",
+      "acBonus": 1,
+      "dexCap": 4,
+      "strength": 0,
+      "group": "leather"
+    },
+    "runes": {
+      "potency": 1,
+      "resilient": "greater",
+      "property": [
+        "slick-greater"
+      ]
+    },
+    "actions": [
+      {
+        "name": "Unleash Charge",
+        "actionCount": 2,
+        "frequency": "once per hour",
+        "traits": [
+          "Concentrate",
+          "Manipulate",
+          "Electricity"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 29
+        },
+        "defense": "basic Reflex",
+        "damageData": {
+          "base": "2d12",
+          "type": "electricity",
+          "riders": [
+            {
+              "id": "eelskin-sonic",
+              "label": "Thunderstrike (sonic)",
+              "dice": "2d4",
+              "type": "sonic",
+              "defaultOn": true
+            }
+          ]
+        },
+        "description": "Activate (two actions, command, Interact); Frequency once per hour; Effect The armor casts 2nd-rank thunderstrike (DC 29): 2d12 electricity and 2d4 sonic, basic Reflex. A target in metal armor or made of metal takes a –1 penalty to the save and is clumsy 1 for 1 round if damaged."
+      }
+    ],
+    "description": "This supple eelskin leather is a +1 resilient greater slick leather armor. While invested you can breathe water and gain a +2 item bonus to Athletics checks to Swim and to Stealth checks made in water."
+  },
+  {
     "id": "elemental-gem-fire",
     "name": "Elemental Gem (Fire)",
     "level": 10,
@@ -4896,6 +5041,53 @@
     "price": 0.05,
     "weight": 0,
     "id": "flint-steel"
+  },
+  {
+    "id": "fluid-form-staff-greater",
+    "name": "Fluid Form Staff (Greater)",
+    "level": 10,
+    "price": 900,
+    "weight": 1,
+    "traits": [
+      "Magical"
+    ],
+    "staff": {
+      "name": "Fluid Form Staff (Greater)",
+      "type": "Standard",
+      "itemLevel": 10,
+      "bulkValue": 1,
+      "charges": {
+        "max": 4,
+        "current": 4
+      },
+      "spells": [
+        {
+          "ref": "pest-form"
+        },
+        {
+          "ref": "animal-form"
+        },
+        {
+          "ref": "enlarge"
+        },
+        {
+          "ref": "shrink"
+        },
+        {
+          "ref": "feet-to-fins"
+        },
+        {
+          "ref": "insect-form"
+        },
+        {
+          "ref": "aerial-form"
+        },
+        {
+          "ref": "dinosaur-form"
+        }
+      ]
+    },
+    "description": "This flexible staff channels transmutation magic. It holds pest form (1st); animal form, enlarge, shrink (2nd); feet to fins, insect form (3rd); and aerial form, animal form, dinosaur form (4th)."
   },
   {
     "name": "Foe-Sensing Rod",
@@ -6239,6 +6431,50 @@
     "id": "horn-of-rust"
   },
   {
+    "id": "horrid-figurine",
+    "name": "Horrid Figurine",
+    "level": 8,
+    "price": 450,
+    "weight": 1,
+    "traits": [
+      "Illusion",
+      "Magical"
+    ],
+    "actions": [
+      {
+        "name": "Nauseating Visage",
+        "actionCount": 2,
+        "frequency": "twice per day",
+        "traits": [
+          "Concentrate",
+          "Manipulate"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 24
+        },
+        "defense": "Fortitude",
+        "description": "Activate (two actions); Frequency twice per day; Effect Each creature in a 20-foot emanation attempts a DC 24 Fortitude save or is sickened 2 (you are immune). A third activation in a day dissolves the figurine into inert glue and leaves you sickened 3."
+      },
+      {
+        "name": "Frightful Visage",
+        "actionCount": 2,
+        "frequency": "twice per day",
+        "traits": [
+          "Concentrate",
+          "Manipulate"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 24
+        },
+        "defense": "Will",
+        "description": "Activate (two actions); Frequency twice per day; Effect Each creature in a 20-foot emanation attempts a DC 24 Will save or is frightened 3 (you are immune). A third activation in a day dissolves the figurine into inert glue and leaves you sickened 3."
+      }
+    ],
+    "description": "This grotesque statuette projects waves of nausea or terror. Each of its two visages can be invoked up to twice per day; a third invocation destroys it."
+  },
+  {
     "name": "Howl of Winter",
     "description": "This spellgun somehow appears to be a naturally-formed pistol shaped icicle. You Activate the spellgun by aiming it at one creature and making your choice of a spell attack roll or a firearm attack roll against the target's AC. This spellgun has a range increment of 30 feet. The spellgun blasts bone-chilling arctic wind that deals cold damage based on the spellgun's type, then melts.",
     "traits": [
@@ -6810,6 +7046,37 @@
       "reminder": "Dealing HP damage to a living creature heals you half that amount (not above max HP)."
     },
     "id": "leeching-fangs"
+  },
+  {
+    "id": "light-mace",
+    "name": "Light Mace",
+    "price": 0.4,
+    "weight": 0.1,
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Shove"
+    ],
+    "category": "simple",
+    "group": "club",
+    "strikes": [
+      {
+        "name": "Light Mace",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d4",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Shove",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "bludgeoning"
+      }
+    ],
+    "description": "A short flanged mace. It deals 1d4 bludgeoning damage and has the agile, finesse, and shove traits."
   },
   {
     "name": "Limning Gem",
@@ -8021,6 +8288,28 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "octopus-bottle",
+    "name": "Octopus Bottle",
+    "level": 8,
+    "price": 100,
+    "weight": 0.1,
+    "traits": [
+      "Conjuration",
+      "Consumable",
+      "Magical",
+      "Water"
+    ],
+    "consumable": {
+      "kind": "save",
+      "save": {
+        "defense": "fortitude",
+        "dc": 24,
+        "note": "A creature within reach 15 ft is repositioned unless it succeeds; in water the octopus then fills a 30-foot emanation with an ink cloud for 1 minute."
+      }
+    },
+    "description": "Uncork this bottle to loose a Huge octopus that grasps and repositions a creature within reach 15 feet unless it succeeds at a DC 24 Fortitude save. If it is in water, it then releases an ink cloud in a 30-foot emanation (creatures inside are concealed and can’t use scent) for 1 minute."
   },
   {
     "name": "Oil of Weightlessness",
@@ -9503,6 +9792,28 @@
     ]
   },
   {
+    "id": "ring-of-counterspells",
+    "name": "Ring of Counterspells",
+    "level": 10,
+    "price": 925,
+    "weight": 0,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "reactions": [
+      {
+        "name": "Counterspell",
+        "traits": [
+          "Magical"
+        ],
+        "trigger": "You are targeted by or within the area of the spell stored in the ring.",
+        "description": "You attempt to counteract the triggering spell, using the stored spell’s rank and a +19 counteract modifier. The ring must have a spell stored in it (a spellcaster can spend an action to store one spell of their choice; only one at a time)."
+      }
+    ],
+    "description": "A spellcaster can store a single spell in this ring. When you are targeted by or caught in the area of that same spell, the ring can attempt to counteract it (rank as stored, +19 counteract modifier)."
+  },
+  {
     "name": "Ring of Observation",
     "description": "This gold ring is engraved with eyes and inlaid with a single amber-colored cat-eye gemstone. While the gemstone itself isn't magical, it gives off the eerie impression that it's watching you. A Firebrand uses this ring to determine whether they've drawn the attention of locals and guards without giving away that they know they're being watched.",
     "traits": [
@@ -10360,6 +10671,13 @@
     }
   },
   {
+    "id": "scroll-of-disintegrate",
+    "scroll": {
+      "spellRef": "disintegrate",
+      "rank": 6
+    }
+  },
+  {
     "id": "scroll-of-dispel-magic",
     "scroll": {
       "spellRef": "dispel-magic"
@@ -10907,6 +11225,37 @@
     "weight": 0,
     "id": "shuriken",
     "material": "Steel"
+  },
+  {
+    "id": "sickle",
+    "name": "Sickle",
+    "price": 0.2,
+    "weight": 0.1,
+    "traits": [
+      "Agile",
+      "Finesse",
+      "Trip"
+    ],
+    "category": "simple",
+    "group": "knife",
+    "strikes": [
+      {
+        "name": "Sickle",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d4",
+        "traits": [
+          "Attack",
+          "Agile",
+          "Finesse",
+          "Trip",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A curved farming blade. It deals 1d4 slashing damage and has the agile, finesse, and trip traits."
   },
   {
     "name": "Silver Orb",
@@ -11713,6 +12062,51 @@
       ],
       "damageType": "piercing"
     }
+  },
+  {
+    "id": "spined-shield",
+    "name": "Spined Shield",
+    "level": 7,
+    "price": 360,
+    "weight": 1,
+    "traits": [
+      "Magical"
+    ],
+    "shield": {
+      "hardness": 6,
+      "health": 24,
+      "breakThreshold": 12,
+      "bonus": 2
+    },
+    "strikes": [
+      {
+        "name": "Shield Spikes",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "runes": {
+      "potency": 1,
+      "striking": "striking"
+    },
+    "actions": [
+      {
+        "name": "Loose Spine",
+        "actionCount": 1,
+        "traits": [
+          "Manipulate"
+        ],
+        "description": "Activate (one action, Interact); Effect You shoot one of the shield’s spines at a target as a martial ranged weapon with a 120-foot range increment, using the spikes’ statistics. Each spine can only be fired once until the shield regenerates them the next day."
+      }
+    ],
+    "description": "A steel shield (Hardness 6, HP 24, BT 12) bristling with five jagged +1 striking spikes you can Strike with. When the shield would take damage after its Hardness, one spine snaps off per 6 damage, reducing the damage taken by 6; with no spines left it takes damage normally and can’t Strike until the spines regenerate the next day."
   },
   {
     "id": "splint-mail",
@@ -12704,6 +13098,33 @@
     "id": "sulfur-bomb"
   },
   {
+    "id": "sun-dazzler",
+    "name": "Sun Dazzler",
+    "level": 8,
+    "price": 450,
+    "weight": 0.1,
+    "traits": [
+      "Alchemical",
+      "Magical"
+    ],
+    "actions": [
+      {
+        "name": "Flash",
+        "actionCount": 1,
+        "traits": [
+          "Manipulate"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 24
+        },
+        "defense": "Fortitude",
+        "description": "Activate (one action, manipulate); Requirements A glow rod is loaded (3 Interact actions to load); Effect The loaded glow rod flares in a 30-foot cone. Each creature attempts a DC 24 Fortitude save — dazzled 1 round on a success, or blinded for 1 round on a failure (until it Interacts to rub its eyes)."
+      }
+    ],
+    "description": "This lantern-like device flashes a loaded glow rod into a blinding cone of light."
+  },
+  {
     "actions": [
       {
         "name": "Cast Ventriloquism",
@@ -13574,6 +13995,70 @@
     }
   },
   {
+    "id": "trident",
+    "name": "Trident",
+    "price": 1,
+    "weight": 1,
+    "traits": [
+      "Thrown 20 ft."
+    ],
+    "category": "martial",
+    "group": "spear",
+    "strikes": [
+      {
+        "name": "Trident",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Thrown",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      },
+      {
+        "name": "Trident (Thrown)",
+        "proficiency": "martial",
+        "type": "ranged",
+        "damage": "1d8",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "description": "A three-pronged spear. It deals 1d8 piercing damage and has the thrown 20 feet trait."
+  },
+  {
+    "id": "tritons-conch",
+    "name": "Triton's Conch",
+    "level": 9,
+    "price": 640,
+    "weight": 0.1,
+    "traits": [
+      "Conjuration",
+      "Magical",
+      "Water"
+    ],
+    "actions": [
+      {
+        "name": "Sound the Conch",
+        "actionCount": 1,
+        "traits": [
+          "Auditory",
+          "Manipulate"
+        ],
+        "description": "Activate (one action, auditory, Interact); Effect For 1 minute, you and all allies within 30 feet gain a +2 item bonus to Athletics checks to Swim and can breathe underwater. Allies apply the effect to themselves."
+      }
+    ],
+    "description": "Blowing this great spiral shell calls up the sea’s blessing, letting a group swim and breathe water."
+  },
+  {
     "id": "truth-potion",
     "name": "Truth Potion",
     "level": 6,
@@ -13695,6 +14180,26 @@
     "price": 60,
     "weight": 0,
     "id": "vangloris-tattoo"
+  },
+  {
+    "id": "vanishing-coin",
+    "name": "Vanishing Coin",
+    "level": 10,
+    "price": 160,
+    "weight": 0,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Talisman"
+    ],
+    "talisman": {
+      "affixTo": "armor",
+      "activation": {
+        "cost": "free",
+        "trigger": "You attempt a Stealth check for initiative but haven’t rolled yet."
+      }
+    },
+    "description": "This dull coin is affixed to armor. When you roll Stealth for initiative, you can activate it to cast 2nd-rank invisibility on yourself, lasting until the end of your next turn."
   },
   {
     "id": "venom-pouch",
@@ -14505,6 +15010,28 @@
       "reminder": "Quick Draw with this weapon: also Step immediately before or after the Strike."
     },
     "id": "windstep-sheath"
+  },
+  {
+    "id": "winged-sandals",
+    "name": "Winged Sandals",
+    "level": 10,
+    "price": 850,
+    "weight": 0.1,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "actuated": {
+      "name": "Awaken Wings",
+      "cost": "none",
+      "frequency": "once per day",
+      "actionCount": 2,
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Activate (two actions, air, concentrate); Frequency once per day; Effect Wings of force sprout from the sandals, granting you a fly Speed of 30 feet for 10 minutes."
+    },
+    "description": "These winged sandals slow your falls — whenever you fall, they automatically cast gentle landing on you (they can’t do so again for 10 minutes). Once per day you can Awaken Wings to gain a fly Speed of 30 feet for 10 minutes."
   },
   {
     "id": "wisp-chain",

@@ -1,5 +1,23 @@
 [
   {
+    "id": "aerial-form",
+    "name": "Aerial Form",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "1 minute",
+    "description": "You transform into a Medium flying animal battle form (bat, bird, pterosaur, or wasp) with a fly Speed.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "agonizing-relocation",
     "name": "Agonizing Relocation",
     "level": 2,
@@ -84,6 +102,23 @@
       "5th": "The bonus increases to +2 or the penalty increases to –2.",
       "8th": "The bonus increases to +3 or the penalty increases to –3."
     }
+  },
+  {
+    "id": "animal-form",
+    "name": "Animal Form",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "1 minute",
+    "description": "You transform into a Medium animal battle form (ape, bear, bull, canine, cat, deer, frog, shark, or snake), gaining temporary Hit Points and the form’s attacks and senses.",
+    "traditions": [
+      "primal"
+    ]
   },
   {
     "id": "autumns-howl",
@@ -1096,6 +1131,60 @@
     ]
   },
   {
+    "id": "dinosaur-form",
+    "name": "Dinosaur Form",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "1 minute",
+    "description": "You transform into a Large dinosaur battle form (ankylosaurus, brontosaurus, deinonychus, stegosaurus, triceratops, or tyrannosaurus).",
+    "traditions": [
+      "primal"
+    ]
+  },
+  {
+    "id": "disintegrate",
+    "name": "Disintegrate",
+    "level": 6,
+    "baseLevel": 6,
+    "traits": [
+      "Attack",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "targets": "1 creature, unattended object, or force construct",
+    "defense": "AC",
+    "description": "You shoot a green ray that dissolves the target. Make a spell attack roll; on a hit the target takes damage, and a creature reduced to 0 Hit Points is reduced to fine powder (its equipment remains). An unattended object or force construct of up to a 10-foot cube is destroyed outright unless it’s an artifact.",
+    "damageData": {
+      "base": "12d10",
+      "type": "",
+      "heightened": {
+        "+1": {
+          "base": "2d10"
+        }
+      }
+    },
+    "degrees": {
+      "Critical Success": "The target takes double damage (24d10); a creature reduced to 0 HP is disintegrated.",
+      "Success": "The target takes 12d10 damage; a creature reduced to 0 HP is disintegrated.",
+      "Failure": "No effect.",
+      "Critical Failure": "No effect."
+    },
+    "heightened": {
+      "+1": "The damage increases by 2d10."
+    },
+    "traditions": [
+      "arcane"
+    ]
+  },
+  {
     "id": "dispel-magic",
     "name": "Dispel Magic",
     "level": 2,
@@ -1279,6 +1368,24 @@
     ]
   },
   {
+    "id": "enlarge",
+    "name": "Enlarge",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "5 minutes",
+    "description": "A willing creature grows to Large size, gaining reach, a +2 status bonus to melee damage, and clumsy 1.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "enthrall",
     "name": "Enthrall",
     "level": 3,
@@ -1424,6 +1531,24 @@
       "arcane",
       "divine",
       "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "feet-to-fins",
+    "name": "Feet to Fins",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "10 minutes",
+    "description": "A willing creature’s feet become fins: its swim Speed equals its land Speed, but its land Speed drops to 5 feet.",
+    "traditions": [
+      "arcane",
       "primal"
     ]
   },
@@ -2092,6 +2217,24 @@
       "attackBonus": 1,
       "damageBonus": "1d6"
     }
+  },
+  {
+    "id": "insect-form",
+    "name": "Insect Form",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "1 minute",
+    "description": "You transform into a Medium insect battle form (ant, beetle, centipede, mantis, scorpion, spider, or wasp), gaining temporary Hit Points and the form’s attacks.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
   },
   {
     "id": "inspire-courage",
@@ -2772,6 +2915,24 @@
     "traditions": [
       "arcane",
       "occult"
+    ]
+  },
+  {
+    "id": "pest-form",
+    "name": "Pest Form",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "10 minutes",
+    "description": "You transform into a Tiny animal battle form (such as a cat, insect, or rat), gaining a stealthy shape with weak unarmed attacks.",
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {
@@ -3530,6 +3691,24 @@
         }
       ]
     },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "shrink",
+    "name": "Shrink",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph"
+    ],
+    "actions": "Two Actions",
+    "duration": "5 minutes",
+    "description": "A willing creature shrinks to Tiny size.",
     "traditions": [
       "arcane",
       "primal"

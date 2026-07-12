@@ -2854,6 +2854,28 @@
     ]
   },
   {
+    "id": "slick-greater",
+    "type": "property",
+    "armorRune": true,
+    "name": "Slick (Greater)",
+    "level": 8,
+    "price": 450,
+    "description": "The greater slick rune makes armor slippery. While wearing the etched armor, you gain a +2 item bonus to Acrobatics checks to Escape and to Squeeze.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 2
+      }
+    ],
+    "riders": [
+      {
+        "id": "slick-greater-reminder",
+        "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
+      }
+    ]
+  },
+  {
     "id": "sliding",
     "type": "property",
     "target": "shield",
