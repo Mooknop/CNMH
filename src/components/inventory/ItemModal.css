@@ -441,10 +441,13 @@
   border-top: 1px solid var(--shell-border);
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.3), transparent);
 }
-.modal-container.modal--loot .item-modal-actions .btn-small {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 11px 12px;
+/* Button appearance across the WHOLE loot card — the pinned footer AND the
+   in-body action rows (give-to recipients, talisman/whetstone actions). The
+   global .btn-* rules use light-mode tokens (--color-text: #1a1612,
+   --color-border-medium: rgba(0,0,0,0.18)) that render near-black on this dark
+   card, so re-theme every variant for the dark surface. Layout stays scoped to
+   the footer below. */
+.modal-container.modal--loot .btn-small {
   border-radius: 8px;
   font-family: var(--font-ui); font-weight: 600; font-size: 0.82rem;
   border: 1px solid var(--shell-border);
@@ -453,22 +456,31 @@
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 }
-.modal-container.modal--loot .item-modal-actions .btn-primary {
+.modal-container.modal--loot .btn-primary {
   background: var(--accent-tint); border-color: var(--accent-outline); color: var(--accent-text);
 }
-.modal-container.modal--loot .item-modal-actions .btn-primary:hover {
+.modal-container.modal--loot .btn-primary:hover {
   background: color-mix(in srgb, var(--color-theme) 22%, transparent);
 }
-.modal-container.modal--loot .item-modal-actions .btn-secondary:hover {
+.modal-container.modal--loot .btn-secondary:hover {
   background: var(--accent-tint); border-color: var(--accent-outline);
 }
-.modal-container.modal--loot .item-modal-actions .btn-danger {
-  flex: 0 0 auto;
+.modal-container.modal--loot .btn-danger {
   color: var(--peril-light);
   border-color: color-mix(in srgb, var(--peril-light) 40%, transparent);
 }
-.modal-container.modal--loot .item-modal-actions .btn-danger:hover {
+.modal-container.modal--loot .btn-danger:hover {
   background: color-mix(in srgb, var(--peril-light) 14%, transparent);
+}
+
+/* Footer-only layout: stretch the loadout actions across the pinned bar. */
+.modal-container.modal--loot .item-modal-actions .btn-small {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 11px 12px;
+}
+.modal-container.modal--loot .item-modal-actions .btn-danger {
+  flex: 0 0 auto;
 }
 
 /* body-bound note (tattoos): quiet italic line in place of placement actions */
