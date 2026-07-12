@@ -1,4 +1,5 @@
 // src/utils/shieldRunes.js
+import { augmentationShieldHardnessDelta } from './augmentations';
 // Shield-rune resolver spine (#1165, S1) — the shield mirror of weaponRunes.js /
 // armorRunes.js, but deliberately SIMPLER. PF2e Remaster confirms a shield can be
 // etched with EXACTLY ONE fundamental rune — the Reinforcing rune — and no
@@ -149,18 +150,22 @@ export const resolveShieldItem = (item) =>
  */
 export const resolveShieldBlock = (item) => {
   if (!item || !item.shield) return item?.shield ?? null;
-  // No reinforcing rune → pass the authored block through untouched (identity),
+  // An augmentation may adjust Hardness (Throwing Shield −1, #1411), folded at read
+  // time — even on an un-reinforced shield, so it applies here too.
+  const hDelta = augmentationShieldHardnessDelta(item);
+  const withHardness = (block) => (hDelta ? { ...block, hardness: Math.max(0, num(block.hardness) + hDelta) } : block);
+  // No reinforcing rune → pass the authored block through (plus any Hardness delta),
   // preserving the exact pre-#1165 durability behavior for plain shields.
-  if (!hasReinforcing(item)) return item.shield;
+  if (!hasReinforcing(item)) return withHardness(item.shield);
   const r = resolveShieldItem(item);
-  return {
+  return withHardness({
     ...item.shield,
     hardness: r.hardness,
     hp: r.hp,
     health: r.hp,
     brokenThreshold: r.brokenThreshold,
     breakThreshold: r.brokenThreshold,
-  };
+  });
 };
 
 /**

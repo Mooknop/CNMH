@@ -11,7 +11,11 @@ import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
 import AugmentationActivations from './AugmentationActivations';
-import { isGmAdjudicatedAugmentation } from '../../utils/augmentations';
+import {
+  isGmAdjudicatedAugmentation, augmentationManualNote,
+  isConsumedOnActivate, clearAugmentation,
+} from '../../utils/augmentations';
+import { applyGearEntry } from '../../utils/gmRunes';
 import { formatBulk, normalizeShield, normalizeArmor, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, isBodyBound, STOWED } from '../../utils/itemState';
@@ -84,6 +88,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Spellgun-absorption overlay (#1208) — spellgunUid → host glove uid.
   const [absorbed, setAbsorbed] = useSyncedState(absorbedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
+  // Durable loadout overlays (#1411 tail): a consume-on-use augmentation (Mirror)
+  // falls off on activation — cleared via the runed-copy write GM Manage Gear uses.
+  const [acquired, setAcquired] = useSyncedState(syncKey(APP.ACQUIRED, character?.id), []);
+  const [removed, setRemoved] = useSyncedState(syncKey(APP.REMOVED, character?.id), []);
   // Etch-time accessory-rune config (#1055 S4) — the depicted dragon type for a
   // Dragon's Breath rune, chosen on the inscribed item and read by useCharacter
   // when it derives the rune's Widen Spellshape free action.
@@ -346,6 +354,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // resolve on the GM's side; the log is the shared record either way.
   const onAugmentationActivate = (aug) => {
     appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${aug.actuated.name}` });
+    // Mirror falls off when its reaction fires (#1411 tail): clear the binding via
+    // the same acquired/removed runed-copy write GM Manage Gear / crafting use.
+    if (isConsumedOnActivate(aug)) {
+      const cleared = clearAugmentation(item);
+      if (cleared) {
+        const next = applyGearEntry(acquired, removed, itemUidOf(item), cleared);
+        setAcquired(next.acquired);
+        setRemoved(next.removed);
+        appendEvent({ type: 'action', text: `${aug.name} falls off ${item.name}` });
+      }
+    }
   };
   const onShieldRuneActivate = (rune, spellDoc) => {
     const cast = spellDoc
@@ -1462,6 +1481,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             {isGmAdjudicatedAugmentation(item.augmentation) && (
               <p className="item-rune-note" data-testid="augmentation-gm-note">
                 ⚖ GM-adjudicated — the GM resolves this effect (enemy automation pending).
+              </p>
+            )}
+            {/* A part the sheet can't auto-apply (e.g. Reinforced Surcoat's on-crit
+                resistance) — flagged so the player applies it manually (#1411). */}
+            {augmentationManualNote(item.augmentation) && (
+              <p className="item-rune-note" data-testid="augmentation-manual-note">
+                ⚖ {augmentationManualNote(item.augmentation)}
               </p>
             )}
           </div>

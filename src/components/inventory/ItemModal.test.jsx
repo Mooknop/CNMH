@@ -274,6 +274,22 @@ describe('ItemModal', () => {
     expect(screen.queryByTestId('augmentation-gm-note')).not.toBeInTheDocument();
   });
 
+  it('shows a manual-application note for Reinforced Surcoat (#1411)', () => {
+    const item = { ...baseItem, name: 'Chain Shirt', armor: {}, augmentation: { id: 'reinforced-surcoat', name: 'Reinforced Surcoat', description: 'A surcoat.' } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    expect(screen.getByTestId('augmentation-manual-note')).toHaveTextContent(/critically hit/i);
+  });
+
+  it('a consume-on-use augmentation (Mirror) falls off when its activation fires (#1411)', () => {
+    mockItemAct = makeItemAct({ activation: { canActivate: true, activate: vi.fn(() => ({ ok: true })) } });
+    const item = { ...baseItem, uid: 's1', name: 'War Shield', shield: { bonus: 2 }, augmentation: { id: 'mirror', name: 'Mirror', actuated: { name: 'Mirror', actionCount: 'reaction' } } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={{ id: 'c1', name: 'Pel' }} />);
+    fireEvent.click(screen.getByTestId('augmentation-activate'));
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('Mirror falls off War Shield') }),
+    );
+  });
+
   it('renders no augmentation section when the item has none (#1202)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={baseItem} />);
     expect(screen.queryByTestId('item-modal-augmentation')).not.toBeInTheDocument();

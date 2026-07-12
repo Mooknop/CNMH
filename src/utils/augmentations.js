@@ -170,3 +170,42 @@ export const augmentationArmorDeltas = (host) => {
   const id = augmentationId(host);
   return (id != null && AUGMENTATION_ARMOR_DELTAS[id]) || {};
 };
+
+// Shield Hardness deltas an augmentation imposes (#1411 tail), folded at the
+// shield-stat reader (resolveShieldBlock) — like the armor deltas, read at
+// derivation time so a swap can't accumulate it. Throwing Shield trades sturdiness
+// for aerodynamics: Hardness −1.
+export const AUGMENTATION_SHIELD_HARDNESS_DELTA = {
+  'throwing-shield': -1,
+};
+
+/** The Hardness delta a host shield's augmentation imposes (0 when none). */
+export const augmentationShieldHardnessDelta = (host) => {
+  const id = augmentationId(host);
+  return (id != null && AUGMENTATION_SHIELD_HARDNESS_DELTA[id]) || 0;
+};
+
+// Augmentations that FALL OFF (are removed) when their activation fires (#1411
+// tail): Mirror's reaction "causes the mirror to fall off of the shield when used"
+// (re-attachable later). Improved Mirror does NOT — it breaks only on a crit-
+// blocked Shield Block, a different trigger. Code-owned.
+export const CONSUME_ON_ACTIVATE_AUGMENTS = new Set(['mirror']);
+
+/** Whether an augmentation is removed from its host when its activation fires. */
+export const isConsumedOnActivate = (aug) => {
+  const id = typeof aug === 'string' ? aug : (aug && (aug.id ?? aug.ref));
+  return id != null && CONSUME_ON_ACTIVATE_AUGMENTS.has(String(id));
+};
+
+// A short note for the sheet about a part of an augmentation the app can't apply,
+// so the player knows to handle it manually (#1411 tail). Distinct from the
+// GM-adjudicated (enemy/consumable) marker. Code-owned, keyed by augmentation id.
+export const AUGMENTATION_MANUAL_NOTES = {
+  'reinforced-surcoat': 'The physical resistance you gain when critically hit is applied by the GM — an on-crit trigger the sheet can’t automate.',
+};
+
+/** The manual-application note for a host's augmentation, or null. */
+export const augmentationManualNote = (aug) => {
+  const id = typeof aug === 'string' ? aug : (aug && (aug.id ?? aug.ref));
+  return (id != null && AUGMENTATION_MANUAL_NOTES[id]) || null;
+};

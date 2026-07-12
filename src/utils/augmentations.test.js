@@ -5,6 +5,7 @@ import {
   applyAugmentation, clearAugmentation,
   isGmAdjudicatedAugmentation, GM_ADJUDICATED_AUGMENTS,
   augmentationArmorDeltas,
+  augmentationShieldHardnessDelta, isConsumedOnActivate, augmentationManualNote,
 } from './augmentations';
 
 const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 };
@@ -153,5 +154,27 @@ describe('augmentationArmorDeltas (#1411 armor penalties)', () => {
     expect(augmentationArmorDeltas({ augmentation: { id: 'eyecatcher' } })).toEqual({}); // weapon aug, no armor delta
     expect(augmentationArmorDeltas({ name: 'Rope' })).toEqual({});
     expect(augmentationArmorDeltas(null)).toEqual({});
+  });
+});
+
+describe('augmentation tail helpers (#1411)', () => {
+  it('augmentationShieldHardnessDelta: −1 for Throwing Shield, 0 otherwise', () => {
+    expect(augmentationShieldHardnessDelta({ augmentation: { id: 'throwing-shield' } })).toBe(-1);
+    expect(augmentationShieldHardnessDelta({ augmentation: { ref: 'throwing-shield' } })).toBe(-1);
+    expect(augmentationShieldHardnessDelta({ augmentation: { id: 'mirror' } })).toBe(0);
+    expect(augmentationShieldHardnessDelta(null)).toBe(0);
+  });
+
+  it('isConsumedOnActivate: only Mirror falls off on activation', () => {
+    expect(isConsumedOnActivate('mirror')).toBe(true);
+    expect(isConsumedOnActivate({ id: 'mirror' })).toBe(true);
+    expect(isConsumedOnActivate('improved-mirror')).toBe(false); // breaks on Shield Block crit, not on fire
+    expect(isConsumedOnActivate('interior-polish')).toBe(false);
+  });
+
+  it('augmentationManualNote: Reinforced Surcoat flags its on-crit resistance', () => {
+    expect(augmentationManualNote({ id: 'reinforced-surcoat' })).toMatch(/critically hit/i);
+    expect(augmentationManualNote('mirror')).toBeNull();
+    expect(augmentationManualNote(null)).toBeNull();
   });
 });

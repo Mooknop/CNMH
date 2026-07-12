@@ -109,6 +109,14 @@ describe('item-level helpers', () => {
     expect(resolveShieldBlock({ name: 'x' })).toBeNull();
   });
 
+  it('resolveShieldBlock folds a Throwing Shield Hardness −1 (reinforced or not) (#1411)', () => {
+    // Un-reinforced: base Hardness 5 → 4 (a fresh block, not the identity passthrough).
+    expect(resolveShieldBlock({ ...plain, augmentation: { id: 'throwing-shield' } }).hardness).toBe(4);
+    // Reinforced (minor → Hardness 8) → 7; HP/BT intact.
+    expect(resolveShieldBlock({ ...runed, augmentation: { id: 'throwing-shield' } }))
+      .toMatchObject({ hardness: 7, hp: 64, brokenThreshold: 32 });
+  });
+
   it('shieldDisplayName derives only when reinforced', () => {
     expect(shieldDisplayName(runed)).toBe('Minor Reinforcing Steel Shield');
     expect(shieldDisplayName(plain)).toBe('Steel Shield');
