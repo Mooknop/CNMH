@@ -75,4 +75,13 @@ describe('useResolvedEffects (#922 S2)', () => {
     const { catalog } = run();
     expect(catalog).toEqual([WORN.def]);
   });
+
+  it('folds an equipped augmentation effect into the merge (#1411)', () => {
+    // augmentationEffects is the real util here — a held weapon with Eyecatcher
+    // contributes its +1 Deception item bonus through the same merge as worn gear.
+    const inv = [{ uid: 'w9', name: 'Longsword', strikes: [{}], state: 'held1', augmentation: { id: 'eyecatcher', name: 'Eyecatcher' } }];
+    const { effects, catalog } = renderHook(() => useResolvedEffects('hero', inv)).result.current;
+    expect(effects).toContainEqual({ id: 'aug-w9', effectId: 'aug-w9' });
+    expect(catalog).toContainEqual({ id: 'aug-w9', name: 'Eyecatcher', modifiers: [{ stat: 'deception', kind: 'item', amount: 1 }] });
+  });
 });
