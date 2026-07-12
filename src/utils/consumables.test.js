@@ -1,5 +1,6 @@
 import {
   consumableMeta,
+  consumableSave,
   consumableVerb,
   hasGodlessHealing,
   applyHealing,
@@ -21,6 +22,23 @@ describe('consumableMeta', () => {
     expect(consumableMeta(null)).toBeNull();
     expect(consumableMeta({ consumable: { kind: 'banana' } })).toBeNull();
     expect(consumableMeta({ scroll: { name: 'Heal' } })).toBeNull(); // scrolls cast via spell flow
+  });
+
+  it('recognizes the save kind (#1085)', () => {
+    const save = { defense: 'fortitude', dc: 23 };
+    expect(consumableMeta({ consumable: { kind: 'save', save } })).not.toBeNull();
+  });
+});
+
+// ── consumableSave ───────────────────────────────────────────────────────────
+
+describe('consumableSave', () => {
+  it('returns the save block only for a save-kind consumable', () => {
+    const save = { defense: 'fortitude', dc: 23 };
+    expect(consumableSave({ consumable: { kind: 'save', save } })).toBe(save);
+    expect(consumableSave({ consumable: { kind: 'healing' } })).toBeNull();
+    expect(consumableSave({ consumable: { kind: 'effect', effectId: 'x' } })).toBeNull();
+    expect(consumableSave(null)).toBeNull();
   });
 });
 
