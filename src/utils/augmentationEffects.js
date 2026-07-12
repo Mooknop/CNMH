@@ -52,10 +52,33 @@ export const AC_HINT_AUGMENTS = {
   'shield-harness': { stat: 'ac', kind: 'circumstance', amount: 1, vs: 'attacks while flanked (worn on your back)' },
 };
 
+// Augmentations granting a CONDITIONAL ('vs X') SKILL bonus while equipped — a
+// per-skill reminder hint (the #510 path). An entry is an array of modifiers
+// because one augmentation can touch two skills (Parade Armor → Diplomacy +
+// Intimidation). `choiceVs` fills the `vs` from the augmentation's stored choice
+// (Ancestral Predator's chosen creature type). Code-owned.
+export const SKILL_HINT_AUGMENTS = {
+  'coat-of-arms': [
+    { stat: 'diplomacy', kind: 'circumstance', amount: 1, vs: 'a faction feared or respected (GM discretion)' },
+  ],
+  'ancestral-predator': [
+    { stat: 'intimidation', kind: 'circumstance', amount: 1, choiceVs: true },
+  ],
+  'parade-armor': [
+    { stat: 'diplomacy', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
+    { stat: 'intimidation', kind: 'item', amount: 1, vs: 'creatures of the same affiliation' },
+  ],
+};
+
 // Augmentations whose benefit applies while the shield is WORN (stowed on your
 // back), the exception to the held-shield default (Shield Harness is a worn-shield
 // bonus; every other shield augmentation is a wielded one).
 const WORN_SHIELD_AUGS = new Set(['shield-harness']);
+
+// The `vs` text for a conditional skill modifier, filling a choice-bearing one
+// (Ancestral Predator) from the augmentation's chosen creature type.
+const hintVs = (m, aug) =>
+  (m.choiceVs ? (aug?.choice ? `${aug.choice} creatures` : 'the chosen creature type') : m.vs);
 
 // Whether an entry's augmentation is currently in effect: the host must be equipped
 // for its kind — armor while worn, weapon / shield while held (wielded), except a
@@ -89,6 +112,21 @@ export const augmentationEffects = (inventory = []) => {
       out.push({
         entry: { id, effectId: id },
         def: { id, name, modifiers: [{ stat: skill.stat, kind: 'item', amount: skill.amount }] },
+      });
+      return;
+    }
+    // Conditional SKILL hints ride one-or-more `vs`-tagged modifiers on the def
+    // (Parade Armor touches two skills). Rendered as a per-skill reminder — never
+    // netted — via the resolved-effects conditional path (#510).
+    const skillHints = SKILL_HINT_AUGMENTS[augId];
+    if (skillHints) {
+      const aug = augmentationOf(e);
+      out.push({
+        entry: { id, effectId: id },
+        def: {
+          id, name,
+          modifiers: skillHints.map((m) => ({ stat: m.stat, kind: m.kind || 'item', amount: m.amount, vs: hintVs(m, aug) })),
+        },
       });
       return;
     }
