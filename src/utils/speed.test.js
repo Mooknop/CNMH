@@ -125,6 +125,19 @@ describe('armorSpeedPenalty (SP2 #1221)', () => {
     expect(armorSpeedPenalty(noStr, 20)).toEqual({ label: 'Odd Plate', amount: -10 });
   });
 
+  it('folds an armor augmentation Speed penalty + Strength-threshold delta (#1411)', () => {
+    // Reinforced Surcoat adds a 5-ft Speed penalty to otherwise penalty-free armor.
+    const surcoat = { name: 'Chain Shirt', armor: { category: 'light', acBonus: 2, strength: 12 }, augmentation: { id: 'reinforced-surcoat' } };
+    expect(armorSpeedPenalty(surcoat, 8)).toEqual({ label: 'Chain Shirt', amount: -5 });
+    // Meeting the (base) Strength threshold waives it.
+    expect(armorSpeedPenalty(surcoat, 12)).toBeNull();
+    // An augmentation that raises the Strength threshold makes the waiver harder:
+    // Full Plate str 18 + Twining Chains (+2) → a Str-18 wearer no longer waives.
+    const twined = { name: 'Full Plate', armor: { category: 'heavy', strength: 18, speedPenalty: 10 }, augmentation: { id: 'twining-chains' } };
+    expect(armorSpeedPenalty(twined, 18)).toEqual({ label: 'Full Plate', amount: -10 });
+    expect(armorSpeedPenalty(twined, 20)).toEqual({ label: 'Full Plate', amount: -5 });
+  });
+
   it('is null for no armor, penalty-free armor, or a non-numeric penalty', () => {
     expect(armorSpeedPenalty(null, 10)).toBeNull();
     expect(armorSpeedPenalty({ name: 'Leather', armor: { category: 'light', acBonus: 1 } }, 10)).toBeNull();

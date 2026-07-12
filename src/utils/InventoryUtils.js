@@ -1,5 +1,6 @@
 // src/utils/InventoryUtils.js
 // Utility functions for inventory and container calculations
+import { augmentationArmorDeltas } from './augmentations';
 
 /**
  * Format Bulk for display
@@ -50,8 +51,10 @@ return items.reduce((total, item) => {
     // this is backward-compatible.
     if (item && item.state === 'dropped') return total;
 
-    // Item weight is already in Bulk units
-    const itemBulk = (item.weight || 0) * (item.quantity || 1);
+    // Item weight is already in Bulk units; an armor augmentation can add Bulk
+    // (Subtle Armor / Twining Chains / Parade Armor, #1411), folded at read time.
+    const augBulk = augmentationArmorDeltas(item).bulk || 0;
+    const itemBulk = ((item.weight || 0) + augBulk) * (item.quantity || 1);
     
     // If item has contents, recursively calculate their bulk too
     let contentsBulk = 0;
