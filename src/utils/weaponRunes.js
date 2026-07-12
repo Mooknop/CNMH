@@ -160,6 +160,7 @@ export const translatePropertyRider = (rune) => {
  *   extraDice: number,      // striking dice to add to each strike's native die
  *   damage: string|undefined, // scaled native die when base.damage is provided
  *   riders: Array,          // property-rune riders forwarded to the #222 damage step
+ *   iwrTags: Array,         // property-rune counts-as tags (Ghost Touch) for weakness matching
  *   properties: Array       // raw property-rune objects, in order
  * }}
  */
@@ -187,6 +188,14 @@ export const resolveWeapon = (base = {}, runes = {}) => {
 
   const riders = properties.flatMap(translatePropertyRider);
 
+  // Counts-as IWR tags (#1436) — a property rune may grant a "counts-as" tag
+  // (Ghost Touch → 'ghost touch') rather than a damage rider. It rides the
+  // strike into monster-weakness matching and the typed Foundry relay, using
+  // the same vocabulary as a whetstone's effect.iwrTags.
+  const iwrTags = [...new Set(
+    properties.flatMap((p) => (Array.isArray(p?.iwrTags) ? p.iwrTags : [])),
+  )];
+
   return {
     name,
     price,
@@ -194,6 +203,7 @@ export const resolveWeapon = (base = {}, runes = {}) => {
     extraDice,
     damage: base.damage != null ? scaleDamageDice(base.damage, extraDice) : undefined,
     riders,
+    iwrTags,
     properties,
   };
 };

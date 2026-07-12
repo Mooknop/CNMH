@@ -118,6 +118,23 @@ describe('resolveWeapon', () => {
     expect(r.price).toBeCloseTo(0.1);
     expect(r.name).toBe('Pick');
     expect(r.riders).toEqual([]);
+    expect(r.iwrTags).toEqual([]);
+  });
+
+  test('collects a property rune\'s counts-as iwrTags without emitting a rider (#1436 — Ghost Touch)', () => {
+    const ghostTouch = { id: 'ghost-touch', name: 'Ghost Touch', price: 75, iwrTags: ['ghost touch'] };
+    const r = resolveWeapon(base, { potency: 1, property: [ghostTouch] });
+    expect(r.iwrTags).toEqual(['ghost touch']);
+    expect(r.riders).toEqual([]); // a counts-as tag is not a damage rider
+    expect(r.name).toBe('+1 Ghost Touch Pick');
+  });
+
+  test('de-dupes counts-as tags across multiple runes and ignores tag-less ones', () => {
+    const ghostTouch = { id: 'ghost-touch', name: 'Ghost Touch', iwrTags: ['ghost touch'] };
+    const alsoGhost = { id: 'other', name: 'Other', iwrTags: ['ghost touch', 'silver'] };
+    const plainRider = { id: 'vitalizing', name: 'Vitalizing', rider: { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' } };
+    const r = resolveWeapon(base, { property: [ghostTouch, alsoGhost, plainRider] });
+    expect(r.iwrTags).toEqual(['ghost touch', 'silver']);
   });
 
   test('omits damage when the base has none (per-strike scaling handled elsewhere)', () => {
