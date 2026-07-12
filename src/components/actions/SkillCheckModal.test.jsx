@@ -168,3 +168,49 @@ describe('SkillCheckModal — check-bonus talisman (Sneaky Key, #1093)', () => {
     expect(screen.queryByText(/Sneaky Key/)).not.toBeInTheDocument();
   });
 });
+
+describe('SkillCheckModal — outcome-shift talisman (Mesmerizing Opal, #1085)', () => {
+  const opal = {
+    uid: 'opal-1',
+    name: 'Mesmerizing Opal',
+    traits: ['Consumable', 'Magical', 'Talisman'],
+    talisman: {
+      affixTo: 'armor',
+      activation: {
+        cost: 1,
+        trigger: 'You attempt to Feint',
+        effect: { kind: 'check-bonus', skill: 'deception', successToCrit: true, critFailToFail: true, note: 'to Feint' },
+      },
+    },
+  };
+  const feint = {
+    id: 'feint', name: 'Feint', skill: 'deception', traits: [],
+    outcomes: { criticalSuccess: { note: 'Target is off-guard until your next turn.' }, success: { note: 'Target is off-guard against your next attack.' } },
+  };
+
+  let affixed;
+  const setAffixed = vi.fn((next) => { affixed = typeof next === 'function' ? next(affixed) : next; });
+
+  beforeEach(() => {
+    affixed = { 'opal-1': 'armor-1' };
+    setAffixed.mockClear();
+    useCharacter.mockReturnValue({ flags: {}, inventory: [opal, { uid: 'armor-1', name: 'Leather Armor' }] });
+    useSyncedState.mockImplementation((key) => {
+      if (String(key).startsWith('cnmh_affixed_')) return [affixed, setAffixed];
+      if (String(key).startsWith('cnmh_consumed_')) return [{}, vi.fn()];
+      return [[], vi.fn()];
+    });
+  });
+
+  it('upgrades a success to a critical success when opted in (no flat bonus)', () => {
+    render(<SkillCheckModal isOpen onClose={() => {}} action={feint} character={character} />);
+    // d20 15 + 6 = 21 vs DC 20 → success
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText('DC'), { target: { value: '20' } });
+    expect(screen.getByText(/^Success —/)).toBeInTheDocument();
+    // net modifier unchanged — the opal grants no numeric bonus
+    fireEvent.click(screen.getByLabelText('Mesmerizing Opal (outcome shift)'));
+    expect(screen.getByText('21')).toBeInTheDocument();
+    expect(screen.getByText(/Critical Success —/)).toBeInTheDocument();
+  });
+});

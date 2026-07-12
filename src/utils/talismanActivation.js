@@ -12,6 +12,11 @@
 //     | { kind: 'check-bonus', skill: 'thievery', bonus: 1, value: 'status', note: '<rider text>' }
 //   }
 //
+// A `check-bonus` effect may also (or instead) shift the check's degree of
+// success one step in the wielder's favour via `successToCrit` and/or
+// `critFailToFail` (Mesmerizing Opal, #1085 — a Feint success becomes a
+// critical success). `bonus` is optional when an outcome shift is present.
+//
 // React-free; the consume/unaffix writes live in affix.js (deactivateTalisman).
 import { getAbilityModifier } from './CharacterUtils';
 
@@ -48,11 +53,34 @@ export const activationSummary = (item, character) => {
     const skill = effect.skill
       ? effect.skill.charAt(0).toUpperCase() + effect.skill.slice(1)
       : '';
-    const sign = effect.bonus >= 0 ? `+${effect.bonus}` : `${effect.bonus}`;
-    return `${sign} ${effect.value || ''} to ${skill} checks`.replace(/\s+/g, ' ').trim()
-      + (effect.note ? ` — ${effect.note}` : '');
+    const parts = [];
+    if (typeof effect.bonus === 'number' && effect.bonus !== 0) {
+      const sign = effect.bonus >= 0 ? `+${effect.bonus}` : `${effect.bonus}`;
+      parts.push(`${sign} ${effect.value || ''} to ${skill} checks`.replace(/\s+/g, ' ').trim());
+    } else if (hasOutcomeShift(effect)) {
+      parts.push(`shift the ${skill} check outcome one step in your favour`.replace(/\s+/g, ' ').trim());
+    }
+    if (effect.note) parts.push(effect.note);
+    return parts.join(' — ') || (act?.trigger || 'Activate');
   }
   return act?.trigger || 'Activate';
+};
+
+/** Whether a check-bonus effect carries a degree-of-success shift (#1085). */
+export const hasOutcomeShift = (effect) =>
+  !!(effect && (effect.successToCrit || effect.critFailToFail));
+
+/**
+ * Apply a check-bonus talisman's degree-of-success shift (Mesmerizing Opal,
+ * #1085). A `successToCrit` effect upgrades a plain success to a critical
+ * success; a `critFailToFail` effect softens a critical failure to a failure.
+ * Returns the (possibly unchanged) degree string.
+ */
+export const shiftCheckOutcome = (degree, effect) => {
+  if (!hasOutcomeShift(effect)) return degree;
+  if (effect.successToCrit && degree === 'success') return 'criticalSuccess';
+  if (effect.critFailToFail && degree === 'criticalFailure') return 'failure';
+  return degree;
 };
 
 /** First affixed talisman whose effect adds a bonus to the given save. */

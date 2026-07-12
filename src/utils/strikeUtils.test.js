@@ -332,6 +332,19 @@ describe('getStrikes weapon runes (#548)', () => {
     expect('runeBreakdown' in club).toBe(false);
   });
 
+  test('a specific weapon carries an intrinsic vsTrait rider through to the strike (#1085 — Monarch)', () => {
+    // Monarch's "1d6 untyped vs aberration" rider lives on the strike itself,
+    // not a property rune (the item can't take additional property runes).
+    const aberrationRider = { id: 'monarch-aberration', label: 'Aberration Bane (vs aberration)', dice: '1d6', type: '', appliesVsTrait: 'aberration' };
+    const monarch = {
+      id: 'monarch', name: 'Monarch',
+      runes: { potency: 1, striking: 'striking', property: ['returning'] },
+      strikes: { name: 'Monarch', proficiency: 'martial', type: 'melee', damage: '1d4', damageType: 'piercing', riders: [aberrationRider] },
+    };
+    const strike = getStrikes({ ...martialChar, inventory: [monarch] }).find((s) => s.name === 'Monarch');
+    expect(strike.riders).toContainEqual(aberrationRider);
+  });
+
   test('rune riders and a talisman effect coexist on one weapon, both feeding the damage step (#609)', () => {
     const vitalizingRider = { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' };
     const axe = {

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   activationOf, computeAmount, activationSummary,
   saveBonusTalisman, maneuverDamageTalisman, checkBonusTalisman,
+  hasOutcomeShift, shiftCheckOutcome,
 } from './talismanActivation';
 
 const wolfFang = {
@@ -16,6 +17,10 @@ const plainTalisman = { name: 'Plain', talisman: { affixTo: 'weapon', activation
 const sneakyKey = {
   name: 'Sneaky Key',
   talisman: { affixTo: 'armor', activation: { cost: 1, trigger: 'You attempt to Pick a Lock', effect: { kind: 'check-bonus', skill: 'thievery', bonus: 1, value: 'status', note: 'to Pick a Lock for 1 minute' } } },
+};
+const mesmerizingOpal = {
+  name: 'Mesmerizing Opal',
+  talisman: { affixTo: 'armor', activation: { cost: 1, trigger: 'You attempt to Feint', effect: { kind: 'check-bonus', skill: 'deception', successToCrit: true, critFailToFail: true, note: 'to Feint' } } },
 };
 const str18 = { abilities: { strength: 18 } }; // +4
 
@@ -47,6 +52,32 @@ describe('talismanActivation (#254/#339)', () => {
     });
     it('summarizes a check-bonus effect with its rider note (#1093)', () => {
       expect(activationSummary(sneakyKey, str18)).toBe('+1 status to Thievery checks — to Pick a Lock for 1 minute');
+    });
+    it('summarizes a bonus-less outcome-shift check effect (#1085)', () => {
+      expect(activationSummary(mesmerizingOpal, str18))
+        .toBe('shift the Deception check outcome one step in your favour — to Feint');
+    });
+  });
+
+  describe('check outcome shift (#1085)', () => {
+    const eff = mesmerizingOpal.talisman.activation.effect;
+    it('hasOutcomeShift detects the shift flags', () => {
+      expect(hasOutcomeShift(eff)).toBe(true);
+      expect(hasOutcomeShift(sneakyKey.talisman.activation.effect)).toBe(false);
+      expect(hasOutcomeShift(null)).toBe(false);
+    });
+    it('upgrades a success to a critical success', () => {
+      expect(shiftCheckOutcome('success', eff)).toBe('criticalSuccess');
+    });
+    it('softens a critical failure to a failure', () => {
+      expect(shiftCheckOutcome('criticalFailure', eff)).toBe('failure');
+    });
+    it('leaves an already-critical success and a plain failure untouched', () => {
+      expect(shiftCheckOutcome('criticalSuccess', eff)).toBe('criticalSuccess');
+      expect(shiftCheckOutcome('failure', eff)).toBe('failure');
+    });
+    it('is a no-op without shift flags', () => {
+      expect(shiftCheckOutcome('success', sneakyKey.talisman.activation.effect)).toBe('success');
     });
   });
 
