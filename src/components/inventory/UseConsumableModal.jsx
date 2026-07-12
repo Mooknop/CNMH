@@ -19,6 +19,7 @@ import {
   applyEffectConsumable,
 } from '../../utils/consumables';
 import { applyItemEffect, itemKeyOf } from '../../utils/itemEffects';
+import { durabilityFor } from '../../utils/itemDurability';
 import './UseConsumableModal.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -67,6 +68,13 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
     : [];
   const targetItem = targetItems.find((it) => itemKeyOf(it) === targetItemId) || null;
 
+  // Transient item-target consumables that restore HP (Rust Scrub, #543): once a
+  // *durable* target is picked, the player rolls the item HP (2d4) and enters the
+  // total, mirroring the healing input. A non-durable target has no HP model, so
+  // the apply stays a log-only note.
+  const isTransientHp = isItemTarget && !!meta.transient;
+  const targetDurable = isTransientHp && !!durabilityFor(targetItem);
+
   const verb = consumableVerb(item);
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
   const remaining = item.quantity ?? 1;
@@ -93,7 +101,8 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
   const hasAmount = !isNaN(amount) && amount > 0;
   const confirmEnabled = remaining > 0
     && (meta.kind !== 'healing' || hasAmount)
-    && (!isItemTarget || !!targetItem);
+    && (!isItemTarget || !!targetItem)
+    && (!targetDurable || hasAmount);
 
   // In-encounter log lines go to the combat log; otherwise to the session log.
   const log = encounter?.active
@@ -115,6 +124,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
         targetItem,
         itemName: item.name,
         meta,
+        amount: targetDurable && hasAmount ? amount : undefined,
         nowSecs: toGameSeconds({ ...gameDate, ...time }),
         getState,
         sendUpdate,
@@ -205,6 +215,28 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
                 })}
               </div>
             )}
+          </section>
+        </>
+      )}
+
+      {targetDurable && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">HP Restored</h3>
+            <div className="trr-entry-row">
+              <input
+                type="number"
+                className="trr-roll-input"
+                placeholder="total"
+                aria-label="hp restored"
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
+              />
+              <span className="ucm-roll-hint">
+                {meta.note || 'roll the item HP, enter the total'}
+              </span>
+            </div>
           </section>
         </>
       )}
