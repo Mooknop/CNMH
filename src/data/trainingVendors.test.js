@@ -9,6 +9,9 @@ import {
   trackOffering,
   trackLabel,
   buildGrant,
+  trainingFamilies,
+  trainingSummary,
+  trainingHoursLabel,
 } from './trainingVendors';
 import { buildTrainedEntry } from '../utils/applyTraining';
 import { resolveCharacterItems } from '../utils/contentUtils';
@@ -327,6 +330,25 @@ describe('launch catalog', () => {
     expect(g.reaction.name).toBe('Aiding Shield');
     expect(g.reaction.trigger).toContain('attempts a skill check');
     expect(g.reaction.description).toContain('use your shield to create space');
+  });
+
+  describe('summary helpers (#1191 S4)', () => {
+    it('collapses offerings to distinct family labels in order', () => {
+      expect(trainingFamilies(monastery)).toEqual(['Monk stances']);
+      expect(trainingFamilies(garrison)).toEqual(['Shield Block', 'Specialized Shield Training']);
+    });
+
+    it('joins the families into a trains-summary', () => {
+      expect(trainingSummary(monastery)).toBe('Monk stances');
+      expect(trainingSummary(garrison)).toBe('Shield Block, Specialized Shield Training');
+    });
+
+    it('reports uniform track hours', () => {
+      expect(trainingHoursLabel(monastery)).toBe('160h');
+      expect(trainingHoursLabel(garrison)).toBe('160h');
+      expect(trainingHoursLabel({ offerings: [{ hours: 80 }, { hours: 160 }] })).toBe('80–160h');
+      expect(trainingHoursLabel({ offerings: [] })).toBe('');
+    });
   });
 
   // End-to-end through the S2 grant path: buildGrant → trained[] entry →

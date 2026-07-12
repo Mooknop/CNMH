@@ -33,6 +33,7 @@ const LORE = [
   { id: 'sandpoint', title: 'Sandpoint', category: 'Locations', content: 'A town.' },
   { id: 'general-store', title: 'General Store', category: 'Locations', content: 'Wares.', parent: 'sandpoint' },
   { id: 'red-dog-smithy', title: 'Red Dog Smithy', category: 'Location', content: 'A hot-tempered smith.' },
+  { id: 'house-of-blue-stones', title: 'House of Blue Stones', category: 'Location', content: 'A quiet monastery.' },
 ];
 
 vi.mock('../../contexts/LoreContext', () => ({
@@ -128,6 +129,21 @@ describe('LoreDrawer', () => {
     useLore.mockReturnValue({ isOpen: true, currentEntryId: 'absalom', closeLore, navigateTo, goBack, canGoBack: false });
     renderDrawer();
     expect(screen.queryByTestId('lore-support-badge')).not.toBeInTheDocument();
+  });
+
+  it('shows a trainer badge with what it trains for a supported training vendor (#1191 S4)', () => {
+    mockSupport = { 'house-of-blue-stones': { earnedAt: '7 Sarenith' } };
+    useLore.mockReturnValue({ isOpen: true, currentEntryId: 'house-of-blue-stones', closeLore, navigateTo, goBack, canGoBack: false });
+    renderDrawer();
+    expect(screen.getByTestId('lore-trainer-badge')).toBeInTheDocument();
+    expect(screen.getByText('Trains: Monk stances')).toBeInTheDocument();
+  });
+
+  it('hides the trainer badge when the vendor is not yet supported', () => {
+    mockSupport = {};
+    useLore.mockReturnValue({ isOpen: true, currentEntryId: 'house-of-blue-stones', closeLore, navigateTo, goBack, canGoBack: false });
+    renderDrawer();
+    expect(screen.queryByTestId('lore-trainer-badge')).not.toBeInTheDocument();
   });
 
   it('renders outgoing connections grouped under Connections', () => {

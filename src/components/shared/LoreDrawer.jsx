@@ -9,6 +9,7 @@ import { useShops } from '../../hooks/useShops';
 import { useLocationSupport } from '../../hooks/useLocationSupport';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { employerById, employerSkillSummary } from '../../data/earnIncomeEmployers';
+import { trainingVendorById, trainingSummary } from '../../data/trainingVendors';
 import { buildBacklinkMap, getConnectionData, buildChildrenMap, getAncestors, getChildren } from '../../utils/loreUtils';
 import { getShopsForLocation } from '../../utils/shopUtils';
 import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
@@ -70,6 +71,12 @@ const LoreDrawer = () => {
   // null for non-employer entries, so most lore pages show nothing.
   const employer = useMemo(() => (entry ? employerById(entry.id) : null), [entry]);
   const supportsHere = !!employer && !!supported?.[entry.id];
+
+  // Trainer badge (#1191 S4): a supported Training Vendor location surfaces what
+  // it trains, mirroring the employer badge. A location can be both (the
+  // Garrison is an Earn Income employer AND a shield trainer) → both badges show.
+  const trainer = useMemo(() => (entry ? trainingVendorById(entry.id) : null), [entry]);
+  const trainsHere = !!trainer && !!supported?.[entry.id];
 
   // Creatures the party has fought at this location (#334) — derived from the
   // captured monster docs' `locations` map, gated to the party's learned state.
@@ -134,6 +141,15 @@ const LoreDrawer = () => {
                 <span className="lore-drawer-support-badge">Supports the party</span>
                 <span className="lore-drawer-support-skills">
                   Earn Income here (up to level {employer.level}): {employerSkillSummary(employer)}
+                </span>
+              </div>
+            )}
+
+            {trainsHere && (
+              <div className="lore-drawer-support" data-testid="lore-trainer-badge">
+                <span className="lore-drawer-support-badge">Trains the party</span>
+                <span className="lore-drawer-support-skills">
+                  Trains: {trainingSummary(trainer)}
                 </span>
               </div>
             )}

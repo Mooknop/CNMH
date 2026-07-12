@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useLocationSupport } from '../../hooks/useLocationSupport';
 import { employersByFaction, employerSkillSummary as unlockLabel } from '../../data/earnIncomeEmployers';
+import { TRAINING_VENDORS, trainingSummary, trainingHoursLabel } from '../../data/trainingVendors';
 import './GmTownSupport.css';
 
 // World → Town Support (#1152 S1). The GM marks which Sandpoint locations
@@ -40,6 +41,17 @@ const GmTownSupport = () => {
     const on = !supported[e.id];
     setSupport(e.id, on, on ? formatGameDate() : null);
   };
+
+  // Training Vendors (#1191 S4) — same support toggle as employers, but sourced
+  // from the trainingVendors catalog (a vendor may not be an Earn Income
+  // employer, e.g. House of Blue Stones, so it needs its own switch here).
+  const visibleVendors = useMemo(
+    () =>
+      TRAINING_VENDORS.filter(
+        (v) => !q || v.name.toLowerCase().includes(q) || trainingSummary(v).toLowerCase().includes(q),
+      ),
+    [q],
+  );
 
   return (
     <div className="gm-support">
@@ -113,7 +125,48 @@ const GmTownSupport = () => {
         </section>
       ))}
 
-      {!visibleGroups.length && (
+      {visibleVendors.length > 0 && (
+        <section className="gm-support-faction gm-support-trainers">
+          <h2 className="gm-support-faction-name">Training Vendors</h2>
+          <p className="gm-help">
+            Supported trainers offer their training tracks in the player Downtime tab.
+            A PC banks downtime hours into a track; completing one grants the ability
+            (you confirm it in the downtime results).
+          </p>
+          <ul className="gm-support-list">
+            {visibleVendors.map((v) => {
+              const on = Boolean(supported[v.id]);
+              const stamp = supported[v.id]?.earnedAt;
+              return (
+                <li key={v.id} className={`gm-support-row${on ? ' is-on' : ''}`}>
+                  <label className="gm-support-toggle">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={() => toggle(v)}
+                      aria-label={`${v.name} trains the party`}
+                    />
+                    <span className="gm-support-name">{v.name}</span>
+                  </label>
+                  <div className="gm-support-meta">
+                    <span className="gm-support-skills">
+                      Trains: {trainingSummary(v)}
+                    </span>
+                    <span className="gm-support-tag">
+                      {v.offerings.length} track{v.offerings.length === 1 ? '' : 's'} · {trainingHoursLabel(v)} each
+                    </span>
+                    {on && stamp && (
+                      <span className="gm-support-since">since {stamp}</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {!visibleGroups.length && !visibleVendors.length && (
         <p className="gm-help">No locations match “{search}”.</p>
       )}
     </div>

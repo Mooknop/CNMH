@@ -97,4 +97,40 @@ describe('GmTownSupport', () => {
     const link = screen.getByRole('link', { name: 'Reputation' });
     expect(link).toHaveAttribute('href', '/gm/world/reputation');
   });
+
+  describe('Training Vendors section (#1191 S4)', () => {
+    it('lists the training vendors with what they train', () => {
+      renderPage();
+      expect(screen.getByRole('heading', { name: 'Training Vendors' })).toBeInTheDocument();
+      const row = screen.getByLabelText('House of Blue Stones trains the party').closest('li');
+      expect(within(row).getByText('Trains: Monk stances')).toBeInTheDocument();
+      expect(within(row).getByText(/8 tracks · 160h each/)).toBeInTheDocument();
+    });
+
+    it('toggling a trainer on stamps the game date', () => {
+      renderPage();
+      fireEvent.click(screen.getByLabelText('House of Blue Stones trains the party'));
+      expect(setSupport).toHaveBeenCalledWith('house-of-blue-stones', true, '7 Sarenith, 4725 AR');
+    });
+
+    it('toggling a supported trainer off passes on=false', () => {
+      support = { 'house-of-blue-stones': { earnedAt: '7 Sarenith, 4725 AR' } };
+      renderPage();
+      fireEvent.click(screen.getByLabelText('House of Blue Stones trains the party'));
+      expect(setSupport).toHaveBeenCalledWith('house-of-blue-stones', false, null);
+    });
+
+    it('search filters the trainer list too', () => {
+      renderPage();
+      fireEvent.change(screen.getByLabelText('Search town support locations'), {
+        target: { value: 'monk stances' },
+      });
+      expect(screen.getByLabelText('House of Blue Stones trains the party')).toBeInTheDocument();
+      // A skill-only match hides trainers that don't match.
+      fireEvent.change(screen.getByLabelText('Search town support locations'), {
+        target: { value: 'nonexistent-xyz' },
+      });
+      expect(screen.queryByRole('heading', { name: 'Training Vendors' })).not.toBeInTheDocument();
+    });
+  });
 });

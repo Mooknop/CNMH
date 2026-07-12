@@ -9,8 +9,27 @@ import { grantCraftedItem } from '../../utils/applyCrafting';
 import { grantTrainedAbility } from '../../utils/applyTraining';
 import { saveDocument } from '../../utils/gmApi';
 import { pendingResults, markConfirmed, removeResult } from '../../utils/earnIncomeResults';
+import ActionSymbol from '../shared/ActionSymbol';
 import './DowntimeResultsApproval.css';
 import { APP, globalKey } from '../../sync/keys';
+
+// The ability a training entry would grant, flattened for the GM preview:
+// { cost, name, trigger, description }. Reaction grants show the reaction glyph
+// + trigger; feat (stance) grants show the stance action's cost.
+const grantPreview = (entry) => {
+  const g = entry?.grant;
+  if (!g) return null;
+  if (g.kind === 'reaction') {
+    const r = g.reaction || {};
+    return { cost: 'reaction', name: r.name, trigger: r.trigger, description: r.description };
+  }
+  if (g.kind === 'feat') {
+    const f = g.feat || {};
+    const stanceAction = (f.actions || []).find((a) => a.traits?.includes('Stance')) || f.actions?.[0];
+    return { cost: stanceAction?.actionCount ?? 1, name: f.name, trigger: null, description: f.description };
+  }
+  return null;
+};
 
 const DEGREE_LABEL = {
   criticalSuccess: 'Crit Success',
@@ -31,6 +50,7 @@ const DowntimeResultsApproval = () => {
   const { rawCharacters, refresh } = useContent();
   const { appendLog } = useEncounter();
   const [busy, setBusy] = useState(null); // id being granted (async)
+  const [expanded, setExpanded] = useState(null); // training entry id previewing
 
   const pending = pendingResults(results?.entries);
   if (pending.length === 0) return null;
@@ -99,33 +119,64 @@ const DowntimeResultsApproval = () => {
     <>
       <span className="pmc-label">Downtime Results — Review ({pending.length})</span>
       <ul className="eia-list" aria-label="Downtime results awaiting review">
-        {pending.map((entry) => (
-          <li key={entry.id} className={`eia-row eia-row--${entry.degree}`}>
-            <div className="eia-info">
-              <span className="eia-name">{entry.charName}</span>
-              <span className="eia-detail">{detail(entry)}</span>
-            </div>
-            <span className="eia-payout">{payout(entry)}</span>
-            <div className="eia-actions">
-              <button
-                className="pmc-btn pmc-btn--primary pmc-btn--sm"
-                disabled={busy === entry.id}
-                onClick={() => confirm(entry)}
-                aria-label={`Confirm ${entry.charName} ${kindLabel(entry)}`}
-              >
-                {busy === entry.id ? 'Granting…' : 'Confirm'}
-              </button>
-              <button
-                className="pmc-btn pmc-btn--danger pmc-btn--sm"
-                disabled={busy === entry.id}
-                onClick={() => reject(entry)}
-                aria-label={`Reject ${entry.charName} ${kindLabel(entry)}`}
-              >
-                Reject
-              </button>
-            </div>
-          </li>
-        ))}
+        {pending.map((entry) => {
+          const preview = entry.kind === 'training' ? grantPreview(entry) : null;
+          const isOpen = expanded === entry.id;
+          return (
+            <li key={entry.id} className={`eia-row eia-row--${entry.degree}`}>
+              <div className="eia-info">
+                <span className="eia-name">{entry.charName}</span>
+                <span className="eia-detail">{detail(entry)}</span>
+              </div>
+              <span className="eia-payout">{payout(entry)}</span>
+              <div className="eia-actions">
+                {preview && (
+                  <button
+                    className="pmc-btn pmc-btn--sm"
+                    onClick={() => setExpanded(isOpen ? null : entry.id)}
+                    aria-expanded={isOpen}
+                    aria-label={`${isOpen ? 'Hide' : 'Preview'} ${preview.name} for ${entry.charName}`}
+                  >
+                    {isOpen ? 'Hide' : 'Preview'}
+                  </button>
+                )}
+                <button
+                  className="pmc-btn pmc-btn--primary pmc-btn--sm"
+                  disabled={busy === entry.id}
+                  onClick={() => confirm(entry)}
+                  aria-label={`Confirm ${entry.charName} ${kindLabel(entry)}`}
+                >
+                  {busy === entry.id ? 'Granting…' : 'Confirm'}
+                </button>
+                <button
+                  className="pmc-btn pmc-btn--danger pmc-btn--sm"
+                  disabled={busy === entry.id}
+                  onClick={() => reject(entry)}
+                  aria-label={`Reject ${entry.charName} ${kindLabel(entry)}`}
+                >
+                  Reject
+                </button>
+              </div>
+
+              {preview && isOpen && (
+                <div className="eia-preview" data-testid={`preview-${entry.id}`}>
+                  <div className="eia-preview-head">
+                    <ActionSymbol cost={preview.cost} />
+                    <span className="eia-preview-name">{preview.name}</span>
+                  </div>
+                  {preview.trigger && (
+                    <p className="eia-preview-line">
+                      <strong>Trigger</strong> {preview.trigger}
+                    </p>
+                  )}
+                  {preview.description && (
+                    <p className="eia-preview-line">{preview.description}</p>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </>
   );

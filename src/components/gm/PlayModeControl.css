@@ -546,6 +546,83 @@
   font-weight: 700;
 }
 
+/* GM "In Training" readout — each PC's active tracks with banked progress. */
+.pmc-training-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pmc-training-pc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pmc-training-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.pmc-training-tracks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pmc-training-track {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.pmc-training-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pmc-training-hours {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pmc-training-track.is-ready .pmc-training-hours {
+  color: var(--verdant-mid, var(--theme-verdant));
+  font-weight: 700;
+}
+
+.pmc-training-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--theme-border, var(--shell-border));
+  position: relative;
+  overflow: hidden;
+}
+
+.pmc-training-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  background: var(--act-train);
+  border-radius: 99px;
+}
+
+.pmc-training-track.is-ready .pmc-training-bar::before {
+  background: var(--verdant-mid, var(--theme-verdant));
+}
+
 /* Per-PC Earn Income task-level assignment (GM sets the level → DC). */
 .pmc-downtime-tasks {
   display: flex;
