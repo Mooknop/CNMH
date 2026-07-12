@@ -10,6 +10,7 @@ import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import ShopStorefront from '../shop/ShopStorefront';
 import CraftingProjects from './CraftingProjects';
+import AugmentGearProjects from './AugmentGearProjects';
 import TrainingProjects from './TrainingProjects';
 import RuneWorkPanel from './RuneWorkPanel';
 import MoveRunePanel from './MoveRunePanel';
@@ -137,6 +138,12 @@ const DowntimeTab = ({ character, characterColor }) => {
 
       {hasCrafting && (
         <CraftingProjects character={character} />
+      )}
+
+      {/* Self-gating: renders nothing without an augment project in progress or a
+          host something can be fitted to (#1202 U2). Requires trained in Crafting. */}
+      {hasCrafting && (
+        <AugmentGearProjects character={character} />
       )}
 
       {/* Self-gating: renders nothing without a track in progress or an

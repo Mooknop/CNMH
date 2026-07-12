@@ -143,6 +143,18 @@ describe('DowntimeAllocator', () => {
       expect(next).toMatchObject({ status: 'ready', craftApplied: { p1: 16 } });
     });
 
+    it('banks Crafting hours into an augment project the same way (#1202 U2)', () => {
+      trained();
+      const augState = { projects: [{ id: 'ag1', kind: 'augment', name: 'Augment: Targe — Mirror', hours: 0, threshold: 8, status: 'in-progress' }] };
+      const { setCraft } = setupSynced({ downtime: stamp({ plan: { Crafting: 1 } }), craft: augState });
+      render(<DowntimeAllocator character={character} block={block} />);
+      // A one-day (8h) plan fully banks the flat augment day.
+      expect(screen.getByText('Bank 8h across projects')).toBeInTheDocument();
+      expect(screen.getByText('Augment: Targe — Mirror')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Lock in/ }));
+      expect(setCraft.mock.calls[0][0](augState).projects[0].hours).toBe(8);
+    });
+
     it('does not let Crafting drop below already-banked days', () => {
       trained();
       // 16h (2 days) already banked this period; Crafting slider min is 2.

@@ -37,7 +37,10 @@ const CraftingProjects = ({ character }) => {
   const [catalogLevel, setCatalogLevel] = useState('');
   const [checkInputs, setCheckInputs] = useState({}); // { [projectId]: { d20, total } }
 
-  const projects = craftProjects?.projects || [];
+  // `kind:'augment'` projects share this synced key (so the allocator's Crafting
+  // bank accrues their hours) but are a lightweight no-check flow owned by the
+  // AugmentGearProjects sibling — exclude them from this panel entirely (#1202 U2).
+  const projects = (craftProjects?.projects || []).filter((p) => p.kind !== 'augment');
 
   // When a project reaches 'completed' (via Complete-now or working the cost to
   // zero), submit it to the GM review queue as a pending crafting result and
@@ -46,7 +49,7 @@ const CraftingProjects = ({ character }) => {
   const completedSig = projects.filter(p => p.status === 'completed').map(p => p.id).join(',');
   useEffect(() => {
     const completed = (craftProjects?.projects || []).filter(
-      p => p.status === 'completed' && !submittedRef.current.has(p.id),
+      p => p.status === 'completed' && p.kind !== 'augment' && !submittedRef.current.has(p.id),
     );
     if (completed.length === 0) return;
     completed.forEach(p => submittedRef.current.add(p.id));
