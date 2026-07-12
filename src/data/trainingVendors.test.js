@@ -10,6 +10,8 @@ import {
   trackLabel,
   buildGrant,
 } from './trainingVendors';
+import { buildTrainedEntry } from '../utils/applyTraining';
+import { resolveCharacterItems } from '../utils/contentUtils';
 
 // ── Data shape (mirrors earnIncomeEmployers.test.js) ─────────────────────────
 
@@ -251,5 +253,111 @@ describe('trackOffering / trackLabel', () => {
 
   it('falls back to the raw offering id when the definition is gone', () => {
     expect(trackLabel({ vendorId: 'gone', offeringId: 'mystery' }, vendors)).toBe('mystery');
+  });
+});
+
+// ── Launch catalog (#1191 S3) ────────────────────────────────────────────────
+
+describe('launch catalog', () => {
+  const garrison = trainingVendorById('sandpoint-garrison');
+  const monastery = trainingVendorById('house-of-blue-stones');
+
+  it('ships both launch vendors', () => {
+    expect(garrison).toBeTruthy();
+    expect(monastery?.name).toBe('House of Blue Stones');
+  });
+
+  it('every requiresAbility names an ability actually taught by some offering', () => {
+    // The Specialized tracks gate on Shield Block — which the Garrison itself
+    // teaches. A requiresAbility that no offering grants would be unreachable.
+    const taught = new Set();
+    TRAINING_VENDORS.forEach((v) => v.offerings.forEach((o) => {
+      (o.choices || [o]).forEach((pick) => {
+        const g = buildGrant(o, o.choices ? pick : null);
+        const name = g?.feat?.name || g?.reaction?.name;
+        if (name) taught.add(name.toLowerCase());
+      });
+    }));
+    TRAINING_VENDORS.forEach((v) => v.offerings.forEach((o) => {
+      if (o.requiresAbility) expect(taught.has(o.requiresAbility.toLowerCase())).toBe(true);
+    }));
+  });
+
+  it('House of Blue Stones offers Monk-gated stances (not Dragon, which Blu has)', () => {
+    monastery.offerings.forEach((o) => {
+      expect(o.requiresClass).toBe('Monk');
+      expect(o.kind).toBe('feat');
+      expect(o.skipIfKnown).toBe(true);
+    });
+    const names = monastery.offerings.map((o) => o.name);
+    expect(names).toContain('Tiger Stance');
+    expect(names).not.toContain('Dragon Stance');
+  });
+
+  it('a stance grant mirrors the Dragon Stance shape (Stance action + co-located strike)', () => {
+    const tiger = monastery.offerings.find((o) => o.name === 'Tiger Stance');
+    const g = buildGrant(tiger);
+    expect(g.kind).toBe('feat');
+    const stanceAction = g.feat.actions.find((a) => a.traits.includes('Stance'));
+    expect(stanceAction).toBeTruthy();
+    expect(g.feat.strikes[0]).toMatchObject({
+      name: 'Tiger Claw', proficiency: 'unarmed', type: 'melee', damage: '1d8', damageType: 'slashing',
+    });
+  });
+
+  it('the three Specialized tiers require Shield Block and offer their tier reactions', () => {
+    const tiers = {
+      'specialized-light': ['Disrupting Shield', 'Intercepting Shield', 'Catch and Twist'],
+      'specialized-medium': ['Aiding Shield', 'Covering Shield'],
+      'specialized-heavy': ['Bulwark Shield', 'Shoving Shield'],
+    };
+    Object.entries(tiers).forEach(([id, expected]) => {
+      const o = garrison.offerings.find((x) => x.id === id);
+      expect(o.requiresAbility).toBe('Shield Block');
+      expect(o.skipIfKnown).toBe(false); // retrainable for a second reaction
+      expect(o.choices.map((c) => c.name)).toEqual(expected);
+    });
+  });
+
+  it('a Specialized choice grant is a reaction carrying the verbatim trigger + effect', () => {
+    const medium = garrison.offerings.find((o) => o.id === 'specialized-medium');
+    const aiding = medium.choices.find((c) => c.id === 'aiding-shield');
+    const g = buildGrant(medium, aiding);
+    expect(g.kind).toBe('reaction');
+    expect(g.reaction.name).toBe('Aiding Shield');
+    expect(g.reaction.trigger).toContain('attempts a skill check');
+    expect(g.reaction.description).toContain('use your shield to create space');
+  });
+
+  // End-to-end through the S2 grant path: buildGrant → trained[] entry →
+  // resolveCharacterItems fold, one per kind, over real catalog data.
+  describe('resolved-grant smoke (through the S2 merge path)', () => {
+    const grantEntry = (vendorId, offeringId, choiceId) => {
+      const o = trackOffering({ vendorId, offeringId });
+      const choice = choiceId ? o.choices.find((c) => c.id === choiceId) : null;
+      return buildTrainedEntry({
+        grant: buildGrant(o, choice), vendorId, offeringId, choiceId: choiceId || null,
+      });
+    };
+
+    it('folds a granted stance into feats as a usable Stance action + strike', () => {
+      const entry = grantEntry('house-of-blue-stones', 'wolf-stance');
+      const out = resolveCharacterItems({ id: 'blu', feats: [], trained: [entry] }, []);
+      const wolf = out.feats.find((f) => f.name === 'Wolf Stance');
+      expect(wolf.actions[0].traits).toContain('Stance');
+      expect(wolf.strikes[0].name).toBe('Wolf Jaw');
+    });
+
+    it('folds a granted Garrison reaction into reactions', () => {
+      const entry = grantEntry('sandpoint-garrison', 'shield-block');
+      const out = resolveCharacterItems({ id: 'pel', reactions: [], trained: [entry] }, []);
+      expect(out.reactions.map((r) => r.name)).toContain('Shield Block');
+    });
+
+    it('folds a picked Specialized reaction into reactions', () => {
+      const entry = grantEntry('sandpoint-garrison', 'specialized-heavy', 'bulwark-shield');
+      const out = resolveCharacterItems({ id: 'pel', reactions: [], trained: [entry] }, []);
+      expect(out.reactions.map((r) => r.name)).toContain('Bulwark Shield');
+    });
   });
 });

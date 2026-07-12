@@ -183,15 +183,12 @@ describe('DowntimeAllocator', () => {
       expect(screen.getByText('Training')).toBeInTheDocument();
     });
 
-    it('hides Training when the PC already knows every supported offering', () => {
-      // Shield Block known innately — the Garrison has nothing left to teach.
-      setupSynced({ downtime: stamp({}), support: { 'sandpoint-garrison': { earnedAt: null } } });
-      render(
-        <DowntimeAllocator
-          character={{ ...character, reactions: [{ name: 'Shield Block' }] }}
-          block={block}
-        />,
-      );
+    it('hides Training when the supported vendor has no eligible offering', () => {
+      // The classless test PC can't learn any Monk stance, so a supported House
+      // of Blue Stones offers them nothing (the Garrison always offers Shield
+      // Block or, once known, the Specialized tiers — it can't dead-end).
+      setupSynced({ downtime: stamp({}), support: { 'house-of-blue-stones': { earnedAt: null } } });
+      render(<DowntimeAllocator character={character} block={block} />);
       expect(screen.queryByText('Training')).not.toBeInTheDocument();
     });
 
