@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { augmentationEffects, SKILL_WIRE_AUGMENTS, SAVE_HINT_AUGMENTS } from './augmentationEffects';
+import { augmentationEffects, SKILL_WIRE_AUGMENTS, SAVE_HINT_AUGMENTS, AC_HINT_AUGMENTS } from './augmentationEffects';
 
 // Effective-inventory entries carry the resolved augmentation doc on `augmentation`.
 const weapon = (aug, state = 'held1') => ({ uid: 'w1', name: 'Longsword', strikes: [{}], state, augmentation: aug });
@@ -8,6 +8,7 @@ const shield = (aug, state = 'held1') => ({ uid: 's1', name: 'Buckler', shield: 
 
 const eyecatcher = { id: 'eyecatcher', name: 'Eyecatcher' };
 const weaponHarness = { id: 'weapon-harness', name: 'Weapon Harness' };
+const shieldHarness = { id: 'shield-harness', name: 'Shield Harness' };
 const coat = { id: 'coat-of-arms', name: 'Coat of Arms' }; // not wired this slice
 
 describe('augmentationEffects', () => {
@@ -22,6 +23,14 @@ describe('augmentationEffects', () => {
   it('emits a conditional save hint for a worn armor augmentation', () => {
     const out = augmentationEffects([armor(weaponHarness)]);
     expect(out[0].def.modifiers).toEqual([{ stat: 'reflex', kind: 'circumstance', amount: 1, vs: 'Disarm' }]);
+  });
+
+  it('emits a conditional AC hint for Shield Harness while the shield is WORN (not held)', () => {
+    // Shield Harness benefits you while the shield is stowed on your back.
+    const worn = augmentationEffects([shield(shieldHarness, 'worn')]);
+    expect(worn[0].def.modifiers).toEqual([{ stat: 'ac', kind: 'circumstance', amount: 1, vs: 'attacks while flanked (worn on your back)' }]);
+    // Wielded (held) → the harness bonus does not apply.
+    expect(augmentationEffects([shield(shieldHarness, 'held1')])).toEqual([]);
   });
 
   it('applies only while the host is equipped (held weapon / worn armor)', () => {
@@ -50,6 +59,10 @@ describe('augmentationEffects', () => {
     }
     for (const [, def] of Object.entries(SAVE_HINT_AUGMENTS)) {
       expect(['fort', 'reflex', 'will']).toContain(def.stat);
+      expect(typeof def.vs).toBe('string');
+    }
+    for (const [, def] of Object.entries(AC_HINT_AUGMENTS)) {
+      expect(def.stat).toBe('ac');
       expect(typeof def.vs).toBe('string');
     }
   });

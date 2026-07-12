@@ -44,12 +44,27 @@ export const SAVE_HINT_AUGMENTS = {
   'weapon-harness': { stat: 'reflex', kind: 'circumstance', amount: 1, vs: 'Disarm' },
 };
 
+// Augmentations granting a CONDITIONAL AC bonus while equipped — surfaced as an AC
+// hint (the #338 path, extended to AC in StatsBlock). Shield Harness: +1
+// circumstance AC against attacks that catch you flat-footed from being flanked,
+// WHILE THE SHIELD IS WORN ON YOUR BACK (not wielded — see WORN_SHIELD_AUGS).
+export const AC_HINT_AUGMENTS = {
+  'shield-harness': { stat: 'ac', kind: 'circumstance', amount: 1, vs: 'attacks while flanked (worn on your back)' },
+};
+
+// Augmentations whose benefit applies while the shield is WORN (stowed on your
+// back), the exception to the held-shield default (Shield Harness is a worn-shield
+// bonus; every other shield augmentation is a wielded one).
+const WORN_SHIELD_AUGS = new Set(['shield-harness']);
+
 // Whether an entry's augmentation is currently in effect: the host must be equipped
-// for its kind — armor while worn, weapon / shield while held (wielded).
+// for its kind — armor while worn, weapon / shield while held (wielded), except a
+// worn-shield augmentation (Shield Harness), which needs the shield WORN.
 const hostActive = (e) => {
   if (!e || !augmentationOf(e)) return false;
   if (e.armor) return isWornDefault(e);
-  if (e.shield || e.strikes) return isHeldState(e.state);
+  if (e.shield) return WORN_SHIELD_AUGS.has(augmentationId(e)) ? isWornDefault(e) : isHeldState(e.state);
+  if (e.strikes) return isHeldState(e.state);
   return false;
 };
 
@@ -77,7 +92,10 @@ export const augmentationEffects = (inventory = []) => {
       });
       return;
     }
-    const hint = SAVE_HINT_AUGMENTS[augId];
+    // Conditional save/AC hints ride a `vs`-tagged modifier on the def, which
+    // computeEffectBonuses buckets as conditional (never netted) → renders as a
+    // hint on the matching save ring / the Armor panel.
+    const hint = SAVE_HINT_AUGMENTS[augId] || AC_HINT_AUGMENTS[augId];
     if (hint) {
       out.push({
         entry: { id, effectId: id },

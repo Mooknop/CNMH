@@ -304,20 +304,27 @@ const StatsBlock = ({ character, characterColor }) => {
       { key: 'heavy', name: 'Heavy' },
     ];
     return (
-      <div className="snode-wrap">
-        {armorCats.map((a) => {
-          const rank = rankOf(proficiencies.armor, a.key);
-          return (
-            <RankRing
-              key={a.key}
-              rank={rank}
-              name={a.name}
-              caption={getProficiencyLabel(rank)}
-              value={formatModifier(getProficiencyBonus(rank, level))}
-            />
-          );
-        })}
-      </div>
+      <>
+        <div className="snode-wrap">
+          {armorCats.map((a) => {
+            const rank = rankOf(proficiencies.armor, a.key);
+            return (
+              <RankRing
+                key={a.key}
+                rank={rank}
+                name={a.name}
+                caption={getProficiencyLabel(rank)}
+                value={formatModifier(getProficiencyBonus(rank, level))}
+              />
+            );
+          })}
+        </div>
+        {/* Conditional AC bonuses (#1411) — e.g. Shield Harness's "+1 vs attacks
+            while flanked (worn on your back)". AC lives in the compact dial core
+            with no room for a hint, so its conditional modifiers surface here in
+            the Armor panel, the same #338 path the save rings use. */}
+        {renderConditionalHint('ac')}
+      </>
     );
   };
 
