@@ -5,6 +5,7 @@ import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import RankRing from '../shared/RankRing';
+import GameGlyph from '../shared/GameGlyph';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useResolvedEffects } from '../../hooks/useResolvedEffects';
@@ -22,12 +23,13 @@ import { ABILITIES, SAVES_BY_ABILITY, skillsForAbility } from '../../data/skills
 
 const ABILITY_KEYS = ABILITIES.map((a) => a.key);
 
-// Proficiency-group bubbles below the dial — split by roll type: Defense
-// (saves + Class DC), Offense (weapon categories + Spell Attack), Armor.
+// Proficiency-group sigils flanking the dial — split by roll type: Defense
+// (saves + Class DC) and Offense (weapon categories + Spell Attack) sit to the
+// left; Armor sits alone to the right. Each carries a game-glyph sigil.
 const PROF_GROUPS = [
-  { key: 'defense', label: 'Defense' },
-  { key: 'offense', label: 'Offense' },
-  { key: 'armor', label: 'Armor' },
+  { key: 'defense', label: 'Defense', glyph: 'profDefense', side: 'left' },
+  { key: 'offense', label: 'Offense', glyph: 'profOffense', side: 'left' },
+  { key: 'armor', label: 'Armor', glyph: 'profArmor', side: 'right' },
 ];
 
 // Saves ship as precomputed modifiers (no rank field), so the ring rank is
@@ -497,13 +499,28 @@ const StatsBlock = ({ character, characterColor }) => {
         </div>
       )}
 
-      {/* Ability Dial — six ability nodes ringing the AC core, with the
-          Defense / Offense / Armor proficiency bubbles rowed beneath.
-          Tapping a node loads that ability's skills into the panel below;
-          tapping the core or a bubble steps out of the ring (nodes dim)
-          and opens the character-wide panel. Replaces the old Abilities /
+      {/* Ability Dial — six ability nodes ringing the AC core, flanked by the
+          proficiency-group sigils: Defense + Offense to the left, Armor alone
+          to the right. Tapping a node loads that ability's skills into the
+          panel below; tapping the core or a sigil steps out of the ring (nodes
+          dim) and opens the character-wide panel. Replaces the old Abilities /
           Proficiencies / Feats / Skills segmented control. */}
       <div className="dialwrap">
+        <div className="prof-flank prof-flank--left" role="group" aria-label="Defense and Offense proficiencies">
+          {PROF_GROUPS.filter((g) => g.side === 'left').map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              className={`prof-sigil${selected === g.key ? ' sel' : ''}`}
+              aria-pressed={selected === g.key}
+              onClick={() => setSelected(g.key)}
+            >
+              <GameGlyph name={g.glyph} className="prof-sigil-icon" />
+              <span className="prof-sigil-label">{g.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="dial">
           <div className="dial-ring" aria-hidden="true" />
           {ABILITIES.map((a) => (
@@ -533,22 +550,21 @@ const StatsBlock = ({ character, characterColor }) => {
             </span>
           </button>
         </div>
-      </div>
 
-      {/* Proficiency-group bubbles — everything that isn't a skill lives
-          behind these instead of on the attribute panels. */}
-      <div className="prof-row" role="group" aria-label="Proficiency groups">
-        {PROF_GROUPS.map((g) => (
-          <button
-            key={g.key}
-            type="button"
-            className={`prof-bubble${selected === g.key ? ' sel' : ''}`}
-            aria-pressed={selected === g.key}
-            onClick={() => setSelected(g.key)}
-          >
-            {g.label}
-          </button>
-        ))}
+        <div className="prof-flank prof-flank--right" role="group" aria-label="Armor proficiencies">
+          {PROF_GROUPS.filter((g) => g.side === 'right').map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              className={`prof-sigil${selected === g.key ? ' sel' : ''}`}
+              aria-pressed={selected === g.key}
+              onClick={() => setSelected(g.key)}
+            >
+              <GameGlyph name={g.glyph} className="prof-sigil-icon" />
+              <span className="prof-sigil-label">{g.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Dial panel — swaps with the selection. Ability nodes show their

@@ -137,49 +137,75 @@
 
 .dialwrap {
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-3) 0;
-  margin-bottom: var(--space-2);
-}
-
-/* ── Proficiency-group bubbles (Defense / Offense / Armor) ──
-   Rowed beneath the dial in the node idiom: slab surface, strong
-   border, accent tint + glow when selected. Everything that isn't a
-   skill lives behind these instead of on the attribute panels. */
-.prof-row {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
   gap: var(--space-2);
+  padding: var(--space-3) 0;
   margin-bottom: var(--space-4);
 }
 
-.prof-bubble {
-  display: inline-flex;
+/* ── Proficiency-group sigils (Defense / Offense / Armor) ──
+   Flanking the dial in the node idiom: Defense + Offense stacked to the
+   left, Armor alone to the right. Chrome-less — floating glyphs colored by
+   the character theme, glowing brighter when selected. Everything that isn't
+   a skill lives behind these instead of on the attribute panels. */
+.prof-flank {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.prof-flank--left {
+  align-items: flex-end;
+}
+
+.prof-flank--right {
+  align-items: flex-start;
+}
+
+.prof-sigil {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: var(--tap-target-min);
-  padding: 2px var(--space-4);
-  border-radius: 999px;
-  background: var(--surface-slab);
-  border: 1px solid var(--shell-border-strong);
-  color: var(--shell-text-primary);
+  gap: 3px;
+  width: 60px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-theme, var(--ember-base));
+  opacity: 0.65;
+  cursor: pointer;
+  transition: opacity 0.15s, filter 0.15s;
+}
+
+.prof-sigil-icon {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--color-theme, var(--ember-base)) 45%, transparent));
+}
+
+.prof-sigil-label {
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: var(--text-sm);
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  font-size: var(--text-2xs, 0.625rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.prof-bubble:hover {
-  border-color: var(--accent-outline);
+.prof-sigil:hover {
+  opacity: 0.9;
 }
 
-.prof-bubble.sel {
-  background: var(--accent-tint);
-  border-color: var(--accent-outline);
-  box-shadow: var(--accent-glow);
+.prof-sigil.sel {
+  opacity: 1;
+}
+
+.prof-sigil.sel .prof-sigil-icon {
+  filter:
+    drop-shadow(0 0 6px color-mix(in srgb, var(--color-theme, var(--ember-base)) 80%, transparent))
+    drop-shadow(0 0 13px color-mix(in srgb, var(--color-theme, var(--ember-base)) 45%, transparent));
 }
 
 .dial {
@@ -545,7 +571,7 @@
 @media (prefers-reduced-motion: reduce) {
   .node,
   .dial-center,
-  .prof-bubble,
+  .prof-sigil,
   .ptoggle-btn {
     transition: none;
   }
