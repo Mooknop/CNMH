@@ -48,29 +48,30 @@ describe('IconTile', () => {
     expect(container.querySelector('.icon-tile-rune-art')).toBeNull();
   });
 
-  it('a property-runed weapon shows catalog-rune medallions bottom-right (#1369)', () => {
+  it('a property-runed weapon shows every catalog-rune coin in the rail (#1369)', () => {
     const item = {
       name: 'Longsword',
       runes: { potency: 2, property: [{ id: 'flaming', name: 'Flaming' }, { id: 'frost', name: 'Frost' }] },
     };
     const { container } = render(<IconTile item={item} />);
-    // Two property coins + the +2 potency fundamental folded into the chip.
+    // Property coins lead, the potency fundamental follows — all uncapped.
     const coins = container.querySelectorAll('.icon-tile-runeicon');
     expect(coins).toHaveLength(3);
     expect(coins[0]).toHaveAttribute('data-runeicon', 'flaming');
     expect(coins[0]).toHaveClass('runeicon-tint');
     expect(coins[0].querySelector('svg.rune-icon')).not.toBeNull();
-    expect(container.querySelector('.icon-tile-runeicon-more')).toHaveAttribute(
-      'title',
-      '+2 Weapon Potency'
-    );
+    expect(coins[1]).toHaveAttribute('data-runeicon', 'frost');
+    expect(coins[2]).toHaveAttribute('data-runeicon', 'weapon-potency');
+    // No overflow chip — the rail never caps.
+    expect(container.querySelector('.icon-tile-runeicon-more')).toBeNull();
   });
 
-  it('folds runes past the two-coin cap into a +n chip', () => {
+  it('shows a coin for every rune with no cap, however many are slotted', () => {
     const item = {
       name: 'Longsword',
       runes: {
         potency: 3,
+        striking: 'greater',
         property: [
           { id: 'flaming', name: 'Flaming' },
           { id: 'frost', name: 'Frost' },
@@ -79,12 +80,17 @@ describe('IconTile', () => {
       },
     };
     const { container } = render(<IconTile item={item} />);
-    expect(container.querySelectorAll('.icon-tile-runeicon')).toHaveLength(3);
-    const more = container.querySelector('.icon-tile-runeicon-more');
-    // Shock + the +3 potency fundamental fold into the chip — property runes
-    // outrank fundamentals for the two visible coins.
-    expect(more).toHaveTextContent('+2');
-    expect(more).toHaveAttribute('title', 'Shock, +3 Weapon Potency');
+    // Three property coins + potency + striking, all visible, no chip.
+    const coins = container.querySelectorAll('.icon-tile-runeicon');
+    expect(coins).toHaveLength(5);
+    expect([...coins].map((c) => c.getAttribute('data-runeicon'))).toEqual([
+      'flaming',
+      'frost',
+      'shock',
+      'weapon-potency',
+      'striking',
+    ]);
+    expect(container.querySelector('.icon-tile-runeicon-more')).toBeNull();
   });
 
   it('an undrawn rune family still renders, as the untinted generic mark', () => {

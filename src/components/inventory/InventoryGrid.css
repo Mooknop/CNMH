@@ -390,17 +390,31 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     inset 0 -8px 16px rgba(0, 0, 0, 0.4),
     0 2px 6px rgba(0, 0, 0, 0.35);
-  overflow: hidden;
+  /* No overflow clip here — the rune rail deliberately escapes the tile's right
+     edge (see .icon-tile-runeicons). The art is clipped by .icon-tile-face. */
 }
 .inventory-grid .icon-tile::before {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: radial-gradient(
     80% 60% at 50% 0%,
     color-mix(in srgb, var(--tile-c) 30%, transparent),
     transparent 70%
   );
+}
+/* Art clip layer — fills the tile's inner (padding) box and rounds the corners,
+   the job the tile's own overflow:hidden used to do. Transparent, so the tile's
+   bevel/glow show through around imageless art. Painted AFTER the rune rail so
+   the art covers the inner half of each peeking coin. */
+.inventory-grid .icon-tile-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
 }
 .inventory-grid .icon-tile-code {
   font-family: var(--font-mono);
@@ -527,22 +541,26 @@
   height: 72%;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
 }
-/* Catalog-rune medallions (#1369) — same coin recipe as the sin medallion,
-   stacked from the bottom-RIGHT (the sin rune owns bottom-left); at most two
-   coins plus a +n chip, overlapping slightly so a pair still clears the art. */
+/* Catalog-rune rail (#1369) — every rune the item carries, uncapped, as a
+   vertical stack of coins down the tile's RIGHT edge (the sin rune owns
+   bottom-left). The stack is nudged outward so each coin peeks out from behind
+   the tile's right edge; the art layer (.icon-tile-face) paints over the inner
+   half of each coin, so they read as tucked BEHIND the icon. */
 .inventory-grid .icon-tile-runeicons {
   position: absolute;
-  bottom: -5px;
-  right: -5px;
+  top: 50%;
+  right: 0;
+  transform: translate(58%, -50%);
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: column;
+  align-items: center;
   pointer-events: none;
 }
 .inventory-grid .icon-tile-runeicon {
-  width: calc(var(--tile) * 0.42);
-  height: calc(var(--tile) * 0.42);
-  min-width: 20px;
-  min-height: 20px;
+  width: calc(var(--tile) * 0.38);
+  height: calc(var(--tile) * 0.38);
+  min-width: 18px;
+  min-height: 18px;
   border-radius: 50%;
   background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
   border: 1px solid currentColor;
@@ -553,17 +571,12 @@
   place-items: center;
 }
 .inventory-grid .icon-tile-runeicon + .icon-tile-runeicon {
-  margin-right: calc(var(--tile) * -0.12);
+  margin-top: calc(var(--tile) * -0.05);
 }
 .inventory-grid .icon-tile-runeicon .rune-icon {
   width: 74%;
   height: 74%;
   filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
-}
-.inventory-grid .icon-tile-runeicon-more {
-  font-size: calc(var(--tile) * 0.18);
-  font-family: var(--font-mono);
-  color: var(--iron-light);
 }
 
 .inventory-grid .icon-tile-charges {

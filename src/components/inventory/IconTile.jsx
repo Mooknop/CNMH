@@ -6,10 +6,6 @@ import { runeForName } from '../../utils/thassilonianRunes';
 import { runeIconsOf, resolveRuneIcon } from '../../utils/runeIcons';
 import { itemTint, itemCharges, isGlowy, itemRarity, itemCode } from '../../utils/inventoryTile';
 
-// Catalog-rune medallions cap out at two coins; further runes fold into a
-// +n chip so a fully-slotted weapon never buries its art.
-const RUNE_COIN_CAP = 2;
-
 /**
  * Square placeholder tile for an inventory item: a dark bevelled face with a
  * monospace item code (or the real `item.image` when present), tinted by
@@ -53,35 +49,13 @@ const IconTile = ({ item, size = 52, glow = true }) => {
   // property rather than hard-coding sizes in CSS.
   return (
     <span className={cls} style={{ '--tile': `${size}px` }}>
-      {item?.image ? (
-        <img
-          className="icon-tile-img"
-          src={`/api/images/${item.image}`}
-          alt=""
-          draggable={false}
-        />
-      ) : rune ? (
-        <span className="icon-tile-rune-art">
-          <ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${rune.label}`} />
-        </span>
-      ) : runeArt ? (
-        <span className="icon-tile-rune-art">
-          <RuneIcon runeId={runeArt.id} tint title={runeArt.name} />
-        </span>
-      ) : (
-        <span className="icon-tile-code">{itemCode(item?.name)}</span>
-      )}
-      {item?.image && rune && (
-        <span
-          className="icon-tile-rune rune-tint"
-          data-rune={String(item.thassilonianRune).toLowerCase()}
-        >
-          <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${rune.label}`} />
-        </span>
-      )}
+      {/* Rune rail (#1369) — every catalog rune the item carries, uncapped,
+          stacked down the right edge and tucked BEHIND the art so each coin
+          peeks out from behind the tile. Rendered before the face layer so the
+          art paints over the inner half of each coin. */}
       {runeCoins.length > 0 && (
         <span className="icon-tile-runeicons">
-          {runeCoins.slice(0, RUNE_COIN_CAP).map((doc) => {
+          {runeCoins.map((doc) => {
             const icon = resolveRuneIcon(doc.id);
             return (
               <span
@@ -93,14 +67,36 @@ const IconTile = ({ item, size = 52, glow = true }) => {
               </span>
             );
           })}
-          {runeCoins.length > RUNE_COIN_CAP && (
-            <span
-              className="icon-tile-runeicon icon-tile-runeicon-more"
-              title={runeCoins.slice(RUNE_COIN_CAP).map((d) => d.name).join(', ')}
-            >
-              +{runeCoins.length - RUNE_COIN_CAP}
-            </span>
-          )}
+        </span>
+      )}
+      {/* The art, clipped to the rounded tile so it never overhangs the corners
+          now that the tile itself no longer clips (the rail must escape it). */}
+      <span className="icon-tile-face">
+        {item?.image ? (
+          <img
+            className="icon-tile-img"
+            src={`/api/images/${item.image}`}
+            alt=""
+            draggable={false}
+          />
+        ) : rune ? (
+          <span className="icon-tile-rune-art">
+            <ThassilonianRune name={item.thassilonianRune} tint title={`Rune of ${rune.label}`} />
+          </span>
+        ) : runeArt ? (
+          <span className="icon-tile-rune-art">
+            <RuneIcon runeId={runeArt.id} tint title={runeArt.name} />
+          </span>
+        ) : (
+          <span className="icon-tile-code">{itemCode(item?.name)}</span>
+        )}
+      </span>
+      {item?.image && rune && (
+        <span
+          className="icon-tile-rune rune-tint"
+          data-rune={String(item.thassilonianRune).toLowerCase()}
+        >
+          <ThassilonianRune name={item.thassilonianRune} title={`Rune of ${rune.label}`} />
         </span>
       )}
       {item?.activeEffects?.length > 0 && (
