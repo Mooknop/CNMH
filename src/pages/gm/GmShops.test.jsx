@@ -876,6 +876,35 @@ describe('GmShops', () => {
         expect(next[0].price).toBe(Math.round(next[0].fullPrice * 0.5));
       });
 
+      it('edits a rune item to a striking rune with no potency (unruned-items)', () => {
+        open({
+          'town-hall': {
+            wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 1 }],
+            saleShelf: [w1],
+          },
+        });
+        fireEvent.click(screen.getByLabelText('sale-edit-w1'));
+        fireEvent.change(screen.getByLabelText('sale-potency'), { target: { value: '' } });
+        fireEvent.change(screen.getByLabelText('sale-second'), { target: { value: 'striking' } });
+        fireEvent.click(screen.getByLabelText('sale-apply-w1'));
+        const next = lastShelf();
+        expect(next[0].saleId).toBe('w1');
+        expect(next[0].runes).toEqual({ striking: 'striking' });
+      });
+
+      it('edits a rune item down to a fully unruned base (potency none, no striking)', () => {
+        open({
+          'town-hall': {
+            wares: [{ runeService: true, targets: ['weapon'], maxLevel: 20, saleCount: 1 }],
+            saleShelf: [w1],
+          },
+        });
+        fireEvent.click(screen.getByLabelText('sale-edit-w1'));
+        fireEvent.change(screen.getByLabelText('sale-potency'), { target: { value: '' } });
+        fireEvent.click(screen.getByLabelText('sale-apply-w1'));
+        expect(lastShelf()[0].runes).toEqual({});
+      });
+
       it('sets a GM-chosen augmentation on a sale item, persisting the binding (#1404)', () => {
         const weaponAug = { id: 'grip', type: 'augmentation', augTarget: ['weapon'], name: 'Weapon Grip', level: 2, price: 4, noShop: true };
         open(

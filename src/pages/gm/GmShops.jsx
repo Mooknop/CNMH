@@ -1143,6 +1143,7 @@ const RuneItemEditor = ({ ware, options, items, augmentations, onApply, onCancel
           <div className="form-group gm-shop-offer-field">
             <label htmlFor={`sale-potency-${ware.saleId}`}>potency</label>
             <select id={`sale-potency-${ware.saleId}`} aria-label="sale-potency" value={potency} onChange={(e) => { setPotency(e.target.value); setProperty([]); }}>
+              <option value="">none</option>
               {(opt.potency || []).map((t) => <option key={t.tier} value={t.tier}>{t.name}</option>)}
             </select>
           </div>
