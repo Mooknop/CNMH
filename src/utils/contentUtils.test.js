@@ -460,6 +460,30 @@ describe('contentUtils', () => {
       expect(out.runes.accessory).toBe('nope');
     });
 
+    it('inlines an entry augmentation ref against the item catalog (#1202)', () => {
+      const catalog = itemCatalogMap([
+        { id: 'targe', name: 'Targe', shield: { bonus: 1 }, weight: 0.1 },
+        { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1, description: 'A simple hand mirror.' },
+      ]);
+      const out = resolveInventoryItem({ ref: 'targe', augmentation: { ref: 'mirror' }, uid: 'u1' }, catalog);
+      expect(out.augmentation.name).toBe('Mirror');
+      expect(out.augmentation.price).toBe(1);
+      expect(out.name).toBe('Targe'); // host name unchanged
+    });
+
+    it('carries an augmentation choice through, and leaves a dangling ref intact (#1202)', () => {
+      const catalog = itemCatalogMap([
+        { id: 'targe', name: 'Targe', shield: { bonus: 1 }, weight: 0.1 },
+        { id: 'ancestral-predator', type: 'augmentation', augTarget: ['shield'], name: 'Ancestral Predator' },
+      ]);
+      const chosen = resolveInventoryItem(
+        { ref: 'targe', augmentation: { ref: 'ancestral-predator', choice: 'Dragon' } }, catalog);
+      expect(chosen.augmentation.name).toBe('Ancestral Predator');
+      expect(chosen.augmentation.choice).toBe('Dragon');
+      const dangling = resolveInventoryItem({ ref: 'targe', augmentation: { ref: 'nope' } }, catalog);
+      expect(dangling.augmentation).toEqual({ ref: 'nope' }); // unresolved ref stays as-is
+    });
+
     it('routes a runestone ref through the rune catalog, inert (#800)', () => {
       const runeMap = runeCatalogMap([{ id: 'flaming', name: 'Flaming', price: 500 }]);
       const out = resolveInventoryItem(

@@ -14,6 +14,10 @@ import {
   isShieldAttachment, validAttachHosts, attachedHostUid, attach, unattach,
 } from '../../utils/shieldAttach';
 import { gearSockets, compatibleRunes, applyRune } from '../../utils/runeSockets';
+import {
+  isAugmentation, augmentationFits, augmentationOf, hasAugmentation,
+  applyAugmentation, clearAugmentation,
+} from '../../utils/augmentations';
 import { reinforcingRuneDocs, clearedGearEntry, applyGearEntry } from '../../utils/gmRunes';
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
@@ -152,6 +156,52 @@ const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
   );
 };
 
+// One augmentable host and its single augmentation slot: the current binding, a
+// picker of the augmentations that fit (used to set OR swap), and — when filled —
+// a remove button. Swapping or removing DESTROYS the current augmentation, so an
+// occupied slot shows a warning. Every edit is instant (writes straight through).
+const AugmentationRow = ({ item, options, onApply, onClear }) => {
+  const current = augmentationOf(item);
+  return (
+    <li className="cs-row" data-testid={`aug-row-${item.name}`}>
+      <span className="cs-label">
+        {item.name}
+        <span className="gm-help"> — {current?.name || 'none'}</span>
+        {current && (
+          <span className="gm-help"> · swapping or removing destroys it</span>
+        )}
+      </span>
+      <div className="cs-control cs-clear-row">
+        {options.length > 0 && (
+          <select
+            aria-label={`augmentation for ${item.name}`}
+            value=""
+            onChange={(e) => {
+              const doc = options.find((o) => String(o.id) === e.target.value);
+              if (doc) onApply(item, doc);
+            }}
+          >
+            <option value="">{current ? '— swap —' : '— set —'}</option>
+            {options.map((o) => (
+              <option key={o.id} value={o.id}>{o.name}</option>
+            ))}
+          </select>
+        )}
+        {current && (
+          <button
+            type="button"
+            className="cs-item-remove"
+            aria-label={`remove augmentation from ${item.name}`}
+            onClick={() => onClear(item)}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </li>
+  );
+};
+
 // One rune-target item and its sockets. All edits are instant (onFill / onClear
 // write straight through).
 const RuneItemCard = ({ item, stock, onFill, onClear }) => (
@@ -173,7 +223,7 @@ const RuneItemCard = ({ item, stock, onFill, onClear }) => (
 );
 
 const GmGearModal = ({ isOpen, onClose }) => {
-  const { characters, runes: catalogRunes } = useContent();
+  const { characters, runes: catalogRunes, items } = useContent();
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
   const [selectedId, setSelectedId] = useState('');
@@ -282,7 +332,32 @@ const GmGearModal = ({ isOpen, onClose }) => {
     editRune(item, clearedGearEntry(item, socket),
       `cleared the ${(SOCKET_LABEL[socket.type] || socket.type).toLowerCase()} rune from ${item.name}`);
 
-  const hasGear = talismans.length > 0 || attachments.length > 0 || runeItems.length > 0;
+  // Augmentations (#1202 U1): the augmentation docs (item.json type 'augmentation')
+  // and every inventory host at least one of them fits — an augmentation write
+  // reuses the same acquired/removed spine as runes (a fresh-uid snapshot carrying
+  // entry.augmentation). Setting onto an occupied slot swaps (destroys the old).
+  const augDocs = useMemo(() => (items || []).filter(isAugmentation), [items]);
+  const augHosts = useMemo(
+    () => flatInventory.filter((it) => augDocs.some((d) => augmentationFits(it, d))),
+    [flatInventory, augDocs],
+  );
+  const applyAug = (item, augDoc) =>
+    editRune(item, applyAugmentation(item, augDoc),
+      hasAugmentation(item)
+        ? `replaced the augmentation on ${item.name} with ${augDoc.name} — the old one was destroyed`
+        : `augmented ${item.name} with ${augDoc.name}`);
+  const clearAug = (item) =>
+    editRune(item, clearAugmentation(item),
+      `removed the ${augmentationOf(item)?.name || 'augmentation'} from ${item.name} — it was destroyed`);
+  // Fitting options for a host's picker, excluding the one already applied (a swap
+  // to a different augmentation; re-applying the same is a no-op we hide).
+  const augOptionsFor = (item) => {
+    const cur = augmentationOf(item);
+    return augDocs.filter((d) => augmentationFits(item, d) && (!cur || d.id !== cur.id));
+  };
+
+  const hasGear = talismans.length > 0 || attachments.length > 0
+    || runeItems.length > 0 || augHosts.length > 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Manage Gear" maxWidth="560px">
@@ -309,7 +384,7 @@ const GmGearModal = ({ isOpen, onClose }) => {
         )}
 
         {selectedId && !hasGear && (
-          <p className="cs-empty gm-help">This character has no talismans, shield attachments, or runable gear.</p>
+          <p className="cs-empty gm-help">This character has no talismans, shield attachments, runable gear, or augmentable gear.</p>
         )}
 
         {selectedId && talismans.length > 0 && (
@@ -361,6 +436,23 @@ const GmGearModal = ({ isOpen, onClose }) => {
                   stock={runeStock}
                   onFill={fillSocket}
                   onClear={clearSocket}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {selectedId && augHosts.length > 0 && (
+          <section className="cs-group" aria-label="Augmentations">
+            <h3 className="cs-group-title">Augmentations</h3>
+            <ul className="cs-list">
+              {augHosts.map((it) => (
+                <AugmentationRow
+                  key={itemUidOf(it)}
+                  item={it}
+                  options={augOptionsFor(it)}
+                  onApply={applyAug}
+                  onClear={clearAug}
                 />
               ))}
             </ul>

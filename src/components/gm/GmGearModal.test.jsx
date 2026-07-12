@@ -40,8 +40,20 @@ const INV = {
   shieldbearer: [
     { uid: 'sh', name: 'Kite Shield', weight: 1, shield: { hardness: 4 }, runes: { reinforcing: 'minor' } },
   ],
+  // A shield already carrying an augmentation (the resolved doc shape), for the
+  // swap / remove paths (#1202).
+  augbearer: [
+    { uid: 'sa', name: 'War Shield', weight: 1, shield: { hardness: 5 }, augmentation: { id: 'coat-of-arms', name: 'Coat of Arms', price: 20 } },
+  ],
   jade: [],
 };
+
+// Augmentation catalog (item.json type 'augmentation') — both shield-targeted,
+// unrestricted (#1202 U1).
+const AUGS = [
+  { id: 'coat-of-arms', type: 'augmentation', augTarget: ['shield'], name: 'Coat of Arms', price: 20 },
+  { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 },
+];
 
 // Minimal rune catalog: a weapon property rune, a +2 weapon potency fundamental,
 // and a choice-bearing shield property rune (Energy-Resistant, #1196 G3).
@@ -61,6 +73,7 @@ const CHARACTERS = [
   { id: 'pellias', name: 'Pellias' },
   { id: 'runed', name: 'Runed' },
   { id: 'shieldbearer', name: 'Shieldbearer' },
+  { id: 'augbearer', name: 'Augbearer' },
   { id: 'jade', name: 'Jade' },
 ];
 const select = (id) => fireEvent.change(screen.getByLabelText('select character'), { target: { value: id } });
@@ -72,7 +85,7 @@ beforeEach(() => {
   Object.keys(h.sessionStore).forEach((k) => delete h.sessionStore[k]);
   h.updates.length = 0;
   h.appendEvent.mockClear();
-  useContent.mockReturnValue({ characters: CHARACTERS, runes: RUNES });
+  useContent.mockReturnValue({ characters: CHARACTERS, runes: RUNES, items: AUGS });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -134,7 +147,47 @@ describe('GmGearModal', () => {
   it('shows an empty note when the character has no gear', () => {
     open();
     select('jade');
-    expect(screen.getByText(/no talismans, shield attachments, or runable gear/i)).toBeInTheDocument();
+    expect(screen.getByText(/no talismans, shield attachments, runable gear, or augmentable gear/i)).toBeInTheDocument();
+  });
+
+  it('augments a shield instantly, writing the binding onto the acquired overlay, and logs it', () => {
+    open();
+    select('pellias');
+    // Only the shield hosts a shield-targeted augmentation — the Longsword doesn't.
+    expect(screen.getByRole('heading', { name: 'Augmentations' })).toBeInTheDocument();
+    expect(screen.getByTestId('aug-row-Steel Shield')).toBeInTheDocument();
+    expect(screen.queryByTestId('aug-row-Longsword')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('augmentation for Steel Shield'), { target: { value: 'mirror' } });
+    const entry = lastUpdate('acquired').value.at(-1);
+    expect(entry.augmentation).toEqual({ ref: 'mirror' });
+    expect(lastUpdate('acquired').options).toEqual({ force: true });
+    expect(lastUpdate('removed').value).toContain('s1'); // authored original masked
+    expect(logText()).toContain('GM: Pellias — augmented Steel Shield with Mirror');
+  });
+
+  it('swaps an augmentation — warns it is destroyed, offers only other augmentations, and logs the destroy', () => {
+    open();
+    select('augbearer');
+    const row = screen.getByTestId('aug-row-War Shield');
+    expect(within(row).getByText(/Coat of Arms/)).toBeInTheDocument();
+    expect(within(row).getByText(/swapping or removing destroys it/i)).toBeInTheDocument();
+    const sel = within(row).getByLabelText('augmentation for War Shield');
+    // The currently-applied Coat of Arms is not offered again; Mirror is.
+    expect(within(sel).getByRole('option', { name: 'Mirror' })).toBeInTheDocument();
+    expect(within(sel).queryByRole('option', { name: 'Coat of Arms' })).not.toBeInTheDocument();
+
+    fireEvent.change(sel, { target: { value: 'mirror' } });
+    expect(lastUpdate('acquired').value.at(-1).augmentation).toEqual({ ref: 'mirror' });
+    expect(logText()).toContain('replaced the augmentation on War Shield with Mirror — the old one was destroyed');
+  });
+
+  it('removes an augmentation, clearing the binding and logging the destroy', () => {
+    open();
+    select('augbearer');
+    fireEvent.click(screen.getByLabelText('remove augmentation from War Shield'));
+    expect(lastUpdate('acquired').value.at(-1)).not.toHaveProperty('augmentation');
+    expect(logText()).toContain('removed the Coat of Arms from War Shield — it was destroyed');
   });
 
   it('lists runable inventory with a sockets board', () => {

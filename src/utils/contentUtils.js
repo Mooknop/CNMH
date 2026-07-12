@@ -436,6 +436,24 @@ const finishItem = (item, spellMap, ownerLevel, runeMap, catalogMap) => {
     const doc = runeMap.get(out.runes.accessory);
     if (doc) out = { ...out, runes: { ...out.runes, accessory: doc } };
   }
+  // Inline an augmentation reference (#1202 U1): the host entry stores its single
+  // augmentation as `augmentation: { ref, choice? }` where `ref` is an item-catalog
+  // id (a `type:'augmentation'` doc). Resolve it to the full doc so the item card
+  // reads name/price/description/actuated directly, carrying any choice through. An
+  // already-inlined doc (has its own name, no `ref`) or a dangling id passes through
+  // untouched — keeping re-resolution of an acquired snapshot idempotent.
+  if (catalogMap && out.augmentation && typeof out.augmentation === 'object'
+      && typeof out.augmentation.ref === 'string') {
+    const doc = catalogMap.get(out.augmentation.ref);
+    if (doc) {
+      out = {
+        ...out,
+        augmentation: out.augmentation.choice != null
+          ? { ...doc, choice: out.augmentation.choice }
+          : { ...doc },
+      };
+    }
+  }
   return out;
 };
 
@@ -532,6 +550,10 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
   // mirroring the etch flow's inline entry. (Ordinary catalog refs never carry a
   // rune block, so this is inert for them.)
   if (entry.runes && typeof entry.runes === 'object') resolved.runes = entry.runes;
+  // An augmentation binding (#1202 U1) rides the inventory entry the same way —
+  // overlay `entry.augmentation` onto the resolved base so finishItem inlines its
+  // ref. Inert for ordinary entries that carry no augmentation.
+  if (entry.augmentation && typeof entry.augmentation === 'object') resolved.augmentation = entry.augmentation;
   // A dragonbreath weapon (#1210 M4): the template block rides the ref entry — GM
   // loot (M4f) or a bought shop ware (M4g) — carrying only `{ tier, dragonType }`.
   // Overlay it onto the resolved base weapon so isDragonbreath fires and the

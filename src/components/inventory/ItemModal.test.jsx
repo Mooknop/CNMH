@@ -215,6 +215,32 @@ describe('ItemModal', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('renders an augmentation badge, detail, and its actuated block (#1202)', () => {
+    const item = {
+      ...baseItem, name: 'War Shield', shield: { bonus: 2 },
+      augmentation: {
+        name: 'Mirror', price: 1, level: 0, description: 'A simple hand mirror.',
+        actuated: {
+          name: 'Mirror', actionCount: 'reaction', frequency: 'see description',
+          traits: ['Envision'], description: 'You gain a +2 circumstance bonus.',
+        },
+      },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} />);
+    const section = screen.getByTestId('item-modal-augmentation');
+    expect(within(section).getByRole('heading', { name: /Augmentation/ })).toBeInTheDocument();
+    expect(within(section).getByText('A simple hand mirror.')).toBeInTheDocument();
+    const actuated = screen.getByTestId('augmentation-actuated');
+    expect(within(actuated).getByLabelText('reaction')).toBeInTheDocument();
+    expect(within(actuated).getByText('Envision')).toBeInTheDocument();
+    expect(within(actuated).getByText(/Frequency see description/)).toBeInTheDocument();
+  });
+
+  it('renders no augmentation section when the item has none (#1202)', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={baseItem} />);
+    expect(screen.queryByTestId('item-modal-augmentation')).not.toBeInTheDocument();
+  });
+
   it('renders item name when open with a basic item', () => {
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} />);
     expect(screen.getByText('Iron Sword')).toBeInTheDocument();
