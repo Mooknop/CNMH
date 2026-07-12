@@ -12,6 +12,7 @@ import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import FamiliarModal from '../character-sheet/FamiliarModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
+import ConsumableSaveModal from '../inventory/ConsumableSaveModal';
 import SpellgunAttackModal from '../encounter/SpellgunAttackModal';
 import ReloadSheet from '../inventory/ReloadSheet';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
@@ -39,6 +40,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [familiarOpen, setFamiliarOpen] = useState(false); // Command → familiar command surface (#391)
   const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
   const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
+  const [saveConsumable, setSaveConsumable] = useState(null); // { item, actionCost } while a save-forcing consumable modal is open (#1085), else null
   const [reload, setReload] = useState(null); // { reload, actionCost } while the Reload ammo sheet is open (#675), else null
   const [exploitOpen, setExploitOpen] = useState(false); // Exploit Vulnerability slide-up (#454)
   const [spellgunFire, setSpellgunFire] = useState(null); // resolved spellgun while its attack modal is open (#1207 M1b), else null
@@ -186,8 +188,12 @@ const ActionsList = ({ character, characterColor }) => {
       // Consumables (#428) — potions/elixirs route to their own resolve flow.
       // `cost` is the tile's effective cost (drink + draw/retrieve); pass it as the
       // action cost so a stowed Elixir spends 3, a held one 1. Self-use this slice.
-      if (consumableMeta(item)) {
-        setConsumable({ item, actionCost: encounterMode ? cost : 0 });
+      // A save-forcing consumable (#1085 — Devil's Breath Incense) routes to the
+      // save modal instead: it targets nearby creatures via the save-request rail.
+      const cmeta = consumableMeta(item);
+      if (cmeta) {
+        if (cmeta.kind === 'save') setSaveConsumable({ item, actionCost: encounterMode ? cost : 0 });
+        else setConsumable({ item, actionCost: encounterMode ? cost : 0 });
         return;
       }
 
@@ -445,6 +451,17 @@ const ActionsList = ({ character, characterColor }) => {
           themeColor={themeColor}
           actionCost={consumable.actionCost}
           defaultTargetId={focusAlly?.charId}
+        />
+      )}
+
+      {saveConsumable && (
+        <ConsumableSaveModal
+          isOpen
+          onClose={() => setSaveConsumable(null)}
+          item={saveConsumable.item}
+          character={character}
+          themeColor={themeColor}
+          actionCost={saveConsumable.actionCost}
         />
       )}
 

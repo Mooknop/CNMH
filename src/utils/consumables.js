@@ -14,12 +14,26 @@ const writeLocal = (key, value) => {
  * The item's `consumable` metadata block, or null when the item isn't a
  * metadata-tagged consumable (scrolls are consumables too, but cast through
  * the spell flow — they carry no `consumable` block).
- * Shape: { kind: 'healing'|'effect', effectId?, durationMinutes?, note? }
+ * Shapes:
+ *   { kind: 'healing', ... }
+ *   { kind: 'effect', effectId?, durationMinutes?, note?, target? }
+ *   { kind: 'save',   save: { defense, dc, basic?, conditions?, damage?, note? } }
+ * A `save` consumable (Devil's Breath Incense, #1085) forces a target save on
+ * nearby creatures and resolves through the shared save-request rail
+ * (ConsumableSaveModal → addSaveRequest → RequestedSaves), not the self-use sheet.
  */
+const CONSUMABLE_KINDS = new Set(['healing', 'effect', 'save']);
+
 export const consumableMeta = (item) => {
   const meta = item?.consumable;
-  if (!meta || (meta.kind !== 'healing' && meta.kind !== 'effect')) return null;
+  if (!meta || !CONSUMABLE_KINDS.has(meta.kind)) return null;
   return meta;
+};
+
+/** The save block of a `save`-kind consumable, or null. */
+export const consumableSave = (item) => {
+  const meta = consumableMeta(item);
+  return meta?.kind === 'save' ? (meta.save || null) : null;
 };
 
 const VERB_BY_TRAIT = {

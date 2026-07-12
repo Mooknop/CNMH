@@ -3212,6 +3212,18 @@
     ],
     "price": 70,
     "weight": 0.1,
+    "consumable": {
+      "kind": "save",
+      "save": {
+        "defense": "fortitude",
+        "dc": 23,
+        "conditions": {
+          "failure": [{ "id": "sickened", "value": 1, "note": "then temporarily immune for 1 hour" }],
+          "criticalFailure": [{ "id": "sickened", "value": 2, "note": "then temporarily immune for 1 hour" }]
+        },
+        "note": "Each creature within 10 feet when the incense is burned attempts the save."
+      }
+    },
     "description": "This 6-inch stick of gray-green incense has an unsettling, oily look. Activate (Interact): When burned, it emits a brimstone-like stink and burns for 10 minutes. A creature within 10 feet must succeed at a Fortitude save or become sickened 1 (sickened 2 on a critical failure), after which it is temporarily immune for 1 hour. While the stick burns, an adjacent creature can inhale forcefully (Interact), consuming the entire stick and becoming sickened 3; on its next turn it can exhale a 15-foot cone of foul-smelling smoke that sickens creatures in the area."
   },
   {
@@ -6746,16 +6758,18 @@
         "returning"
       ]
     },
-    "actions": [
-      {
-        "name": "Dream Message",
-        "traits": [
-          "Concentrate",
-          "Manipulate"
-        ],
-        "description": "Activate (10 minutes, envision, Interact); Frequency once per day; Requirements Monarch possesses a major gift; Effect Monarch casts dream message (heightened to 4th rank) to your specifications."
-      }
-    ],
+    "actuated": {
+      "name": "Dream Message",
+      "cost": "none",
+      "frequency": "once per day",
+      "spellRef": "dream-message",
+      "castRank": 4,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "Activate (10 minutes, envision, Interact); Frequency once per day; Requirements Monarch possesses a major gift; Effect Monarch casts dream message (heightened to 4th rank) to your specifications."
+    },
     "image": "img_42c793ed-b41b-4f45-94bf-ef681c448e68.jpg",
     "imagePosition": {
       "x": 50,
