@@ -349,6 +349,8 @@
 .loot-scroll .item-rune-tier { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--accent-text); margin: 0 0 0.5rem; }
 .loot-scroll .item-rune-level { font-family: var(--font-mono); font-size: 0.78rem; color: var(--shell-text-tertiary); }
 .loot-scroll .item-runestone-note { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; color: var(--shell-text-tertiary); font-style: italic; margin: 0.5rem 0 0; }
+/* Quiet italic GM-adjudicated marker on an augmentation card (#1411 C/E). */
+.loot-scroll .item-rune-note { font-family: var(--font-body); font-size: 0.82rem; line-height: 1.4; color: var(--shell-text-tertiary); font-style: italic; margin: 0.4rem 0 0; }
 /* Full rune effect in the runestone block (#1055 S1) — shared RuneMechanics. */
 .loot-scroll .rune-mech { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
 .loot-scroll .rune-mech-desc,

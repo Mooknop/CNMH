@@ -3,6 +3,7 @@ import {
   isAugmentation, augTargets, hostMatchesAugTarget, augmentationUsageAllows,
   augmentationOf, hasAugmentation, augmentationFits, canAugment,
   applyAugmentation, clearAugmentation,
+  isGmAdjudicatedAugmentation, GM_ADJUDICATED_AUGMENTS,
 } from './augmentations';
 
 const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 };
@@ -115,5 +116,27 @@ describe('apply / clear entry shapes', () => {
 
   it('clearAugmentation returns null when there is nothing to remove', () => {
     expect(clearAugmentation(lightShield)).toBeNull();
+  });
+});
+
+describe('isGmAdjudicatedAugmentation (#1411 C/E)', () => {
+  it('flags the enemy-side and consumable augmentations', () => {
+    for (const id of ['twining-chains', 'burnished-plating', 'improved-mirror', 'weapon-siphon', 'injection-reservoir']) {
+      expect(GM_ADJUDICATED_AUGMENTS.has(id)).toBe(true);
+      expect(isGmAdjudicatedAugmentation(id)).toBe(true);
+    }
+  });
+
+  it('accepts an id string, a resolved doc, or a { ref } binding', () => {
+    expect(isGmAdjudicatedAugmentation({ id: 'twining-chains', name: 'Twining Chains' })).toBe(true);
+    expect(isGmAdjudicatedAugmentation({ ref: 'weapon-siphon' })).toBe(true);
+  });
+
+  it('does not flag a wired or structural augmentation', () => {
+    expect(isGmAdjudicatedAugmentation('eyecatcher')).toBe(false); // wired (skill bonus)
+    expect(isGmAdjudicatedAugmentation('throwing-shield')).toBe(false); // wired (derived strike)
+    expect(isGmAdjudicatedAugmentation('shield-sheath')).toBe(false); // structural note
+    expect(isGmAdjudicatedAugmentation(null)).toBe(false);
+    expect(isGmAdjudicatedAugmentation({})).toBe(false);
   });
 });

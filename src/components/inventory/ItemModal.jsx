@@ -11,6 +11,7 @@ import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
 import AugmentationActivations from './AugmentationActivations';
+import { isGmAdjudicatedAugmentation } from '../../utils/augmentations';
 import { formatBulk, normalizeShield, normalizeArmor, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, isBodyBound, STOWED } from '../../utils/itemState';
@@ -1462,6 +1463,14 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             )}
             {item.augmentation.description && (
               <p className="item-rune-desc">{item.augmentation.description}</p>
+            )}
+            {/* Enemy-side / consumable augmentations (#1411 C/E): the app can't
+                resolve the outcome, so mark it GM-adjudicated rather than implying
+                an auto-applied effect. */}
+            {isGmAdjudicatedAugmentation(item.augmentation) && (
+              <p className="item-rune-note" data-testid="augmentation-gm-note">
+                ⚖ GM-adjudicated — the GM resolves this effect (enemy automation pending).
+              </p>
             )}
           </div>
           {/* The augmentation's actuated block as an INTERACTIVE, frequency-gated

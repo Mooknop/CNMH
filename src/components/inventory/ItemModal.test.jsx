@@ -261,6 +261,19 @@ describe('ItemModal', () => {
     expect(screen.queryByTestId('augmentation-activate')).not.toBeInTheDocument();
   });
 
+  it('marks an enemy-side / consumable augmentation as GM-adjudicated (#1411 C/E)', () => {
+    const gmItem = { ...baseItem, name: 'Chain Mail', armor: {}, augmentation: { id: 'twining-chains', name: 'Twining Chains', description: 'Thorns.' } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={gmItem} />);
+    expect(screen.getByTestId('augmentation-gm-note')).toHaveTextContent(/GM-adjudicated/);
+  });
+
+  it('shows no GM-adjudicated note for a wired augmentation (#1411 C/E)', () => {
+    const wiredItem = { ...baseItem, name: 'Longsword', augmentation: { id: 'eyecatcher', name: 'Eyecatcher', description: 'A tassel.' } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={wiredItem} />);
+    expect(screen.getByTestId('item-modal-augmentation')).toBeInTheDocument();
+    expect(screen.queryByTestId('augmentation-gm-note')).not.toBeInTheDocument();
+  });
+
   it('renders no augmentation section when the item has none (#1202)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={baseItem} />);
     expect(screen.queryByTestId('item-modal-augmentation')).not.toBeInTheDocument();
