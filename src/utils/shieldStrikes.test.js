@@ -87,6 +87,16 @@ describe('shieldStrikes — Shield Throw (Throwing rune)', () => {
     expect(toss.damage).toBe('1d4+2'); // thrown adds Str to damage
   });
 
+  it('the Throwing Shield augmentation adds a ranged Shield Throw (#1411 D)', () => {
+    const augShield = shield('s1', 'held1', { augmentation: { id: 'throwing-shield', name: 'Throwing Shield' } });
+    const strikes = shieldBashStrikes({ ...character, inventory: [augShield] }, {});
+    expect(strikes).toHaveLength(2);
+    const toss = strikes.find((s) => s.type === 'ranged');
+    expect(toss).toMatchObject({ name: 'Shield Throw', thrown: true, returning: false, hostUid: 's1' });
+    // A worn (not wielded) shield derives no strikes at all.
+    expect(shieldBashStrikes({ ...character, inventory: [shield('s2', 'worn', { augmentation: { id: 'throwing-shield' } })] }, {})).toEqual([]);
+  });
+
   it('range increment follows the shield size category (Bulk)', () => {
     const at = (weight) => {
       const char = { ...character, inventory: [throwingShield('s1', 'held1', weight)] };

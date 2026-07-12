@@ -220,10 +220,20 @@ export const RUNE_GRANTED_TRAITS = {
   throwing: ['Thrown'],
 };
 
+// Traits a shield AUGMENTATION grants (#1411 Bucket D). Throwing Shield makes the
+// shield a martial thrown weapon — the Thrown trait, so deriveShieldBash derives a
+// real Shield Throw Strike, the same way the Throwing rune does. (The Hardness −1
+// the augmentation also imposes is a stat tweak, not a trait — a follow-up.) The
+// binding rides `item.augmentation`, resolved to the doc (id) or a bare { ref }.
+export const AUGMENTATION_GRANTED_TRAITS = {
+  'throwing-shield': ['Thrown'],
+};
+
 /**
  * A shield's effective traits: its authored base traits plus any granted by its
- * property runes (Feather → Finesse, Throwing → Thrown). Case-insensitive de-dupe,
- * base traits first, granted appended in slot order. Never mutates the item.
+ * property runes (Feather → Finesse, Throwing → Thrown) or its augmentation
+ * (Throwing Shield → Thrown). Case-insensitive de-dupe, base traits first, granted
+ * appended in slot order. Never mutates the item.
  * @param {Object} item
  * @returns {string[]}
  */
@@ -231,12 +241,14 @@ export const shieldEffectiveTraits = (item) => {
   const base = Array.isArray(item?.traits) ? item.traits : [];
   const seen = new Set(base.map((t) => String(t).toLowerCase()));
   const granted = [];
-  shieldPropertyRunes(item).forEach((rune) => {
-    (RUNE_GRANTED_TRAITS[rune.id] || []).forEach((t) => {
-      const k = String(t).toLowerCase();
-      if (!seen.has(k)) { seen.add(k); granted.push(t); }
-    });
+  const grant = (traits) => (traits || []).forEach((t) => {
+    const k = String(t).toLowerCase();
+    if (!seen.has(k)) { seen.add(k); granted.push(t); }
   });
+  shieldPropertyRunes(item).forEach((rune) => grant(RUNE_GRANTED_TRAITS[rune.id]));
+  const aug = item?.augmentation;
+  const augId = aug && (aug.ref ?? aug.id);
+  if (augId) grant(AUGMENTATION_GRANTED_TRAITS[augId]);
   return [...base, ...granted];
 };
 

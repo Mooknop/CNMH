@@ -191,6 +191,17 @@ describe('shieldEffectiveTraits + shieldHasFinesse', () => {
     expect(shieldEffectiveTraits(item)).toEqual(['Cumbersome', 'Finesse', 'Thrown']);
   });
 
+  it('appends Throwing Shield augmentation → Thrown (#1411 D), from a resolved doc or a bare ref', () => {
+    // The augmentation binds on `item.augmentation` (resolved doc has `id`).
+    expect(shieldEffectiveTraits({ traits: ['Deflecting'], shield: {}, augmentation: { id: 'throwing-shield', name: 'Throwing Shield' } }))
+      .toEqual(['Deflecting', 'Thrown']);
+    // A bare { ref } binding resolves the same.
+    expect(shieldEffectiveTraits({ shield: {}, augmentation: { ref: 'throwing-shield' } }))
+      .toEqual(['Thrown']);
+    // A non-trait augmentation grants nothing.
+    expect(shieldEffectiveTraits({ shield: {}, augmentation: { id: 'mirror' } })).toEqual([]);
+  });
+
   it('de-dupes a granted trait already present on the base (case-insensitive)', () => {
     // A Targe (base Finesse) with a Feather rune keeps a single Finesse.
     const item = { traits: ['Finesse'], shield: {}, runes: { reinforcing: 'minor', property: [feather] } };
