@@ -118,6 +118,33 @@
     "modifiers": []
   },
   {
+    "id": "bestial-mutagen-greater",
+    "name": "Bestial Mutagen (Greater)",
+    "description": "+3 item bonus to Athletics and unarmed attack rolls (claw 3d8 slashing agile, jaws 3d10 piercing); −2 penalty to Reflex saves, Acrobatics, and Stealth. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
     "id": "blast-boots",
     "name": "Blast Boots",
     "description": "For 1 minute, each time you Leap you can move 30 feet in any direction (or your normal Leap distance, whichever is greater).",
@@ -183,6 +210,12 @@
         "flatCheckEase": true
       }
     ]
+  },
+  {
+    "id": "cheetahs-elixir-greater",
+    "name": "Cheetah's Elixir (Greater)",
+    "description": "+10-foot status bonus to your Speed for 1 hour.",
+    "modifiers": []
   },
   {
     "id": "clockwork-goggles",
@@ -549,6 +582,12 @@
     ]
   },
   {
+    "id": "darkvision-elixir-greater",
+    "name": "Darkvision (Greater)",
+    "description": "You have darkvision for 24 hours.",
+    "modifiers": []
+  },
+  {
     "id": "defend",
     "name": "Defend",
     "description": "Moving at half Speed with your shield raised: +2 circumstance bonus to Perception checks to detect hazards. You cannot be surprised, and can use Shield Block while traveling.",
@@ -762,6 +801,12 @@
         "vs": "Palm an Object"
       }
     ]
+  },
+  {
+    "id": "glow-rod",
+    "name": "Glow Rod",
+    "description": "Sheds bright light in a 20-foot radius (dim light to 40 feet) for 6 hours.",
+    "modifiers": []
   },
   {
     "id": "harrow-key-ward",
@@ -1424,6 +1469,24 @@
         "stat": "reflex",
         "kind": "item",
         "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "sea-touch-elixir-moderate",
+    "name": "Sea Touch (Moderate)",
+    "description": "You have a swim Speed of 20 feet and can breathe underwater for 1 hour.",
+    "modifiers": []
+  },
+  {
+    "id": "sense-dulling-hood-lesser",
+    "name": "Sense-Dulling Hood (Lesser)",
+    "description": "+2 item bonus to saving throws against auditory, olfactory, and visual effects; −1 penalty to Perception. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -1
       }
     ]
   },
