@@ -1940,6 +1940,35 @@ describe('ItemModal — attunement (#invest)', () => {
   });
 });
 
+// ── Item-granted innate spell (#914) — Pendant of the Occult casts guidance ──
+describe('ItemModal — item-granted innate spell (#914)', () => {
+  const guidanceDoc = { id: 'guidance', name: 'Guidance', level: 0, traits: ['Cantrip'], traditions: ['divine', 'occult', 'primal'] };
+  const pendant = { uid: 'pend1', name: 'Pendant of the Occult', weight: 0, grantedSpells: [{ ref: 'guidance', tradition: 'occult' }] };
+
+  it('renders a Cast button for a granted catalog spell', () => {
+    mockSpells = [guidanceDoc];
+    render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('granted-cast-spell')).toHaveTextContent('Cast Guidance');
+  });
+
+  it('opens the shared cast flow with an innate, item-tradition, host-namespaced spell', () => {
+    mockSpells = [guidanceDoc];
+    render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.queryByTestId('cast-spell-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('granted-cast-spell'));
+    const modal = screen.getByTestId('cast-spell-modal');
+    expect(modal).toHaveAttribute('data-source', 'innate');
+    expect(modal).toHaveTextContent('casting Guidance');
+    expect(modal).toHaveTextContent('id pend1:granted:guidance');
+  });
+
+  it('shows nothing when the granted spell is not in the catalog', () => {
+    mockSpells = []; // guidance absent → unresolved ref, no button
+    render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.queryByTestId('granted-cast-spell')).not.toBeInTheDocument();
+  });
+});
+
 // ── Dragon's Breath etch-time dragon picker (#1055 S4) ──
 describe('ItemModal — accessory-rune dragon-type picker', () => {
   const dragonChoice = {

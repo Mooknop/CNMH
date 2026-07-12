@@ -47,6 +47,7 @@ import {
 } from '../../utils/shieldAttach';
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations, accessoryRuneOf } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
+import { itemGrantedSpells, buildItemGrantedSpell } from '../../utils/itemGrantedSpells';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
@@ -124,6 +125,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // A shield property rune's spell cast (#1196 G3 wiring) — the built cast to hand
   // to CastSpellModal, or null. Set when a spell-casting rune activation fires.
   const [shieldRuneCast, setShieldRuneCast] = useState(null);
+  // An item-granted innate spell cast (#914) — the built cast to hand to
+  // CastSpellModal, or null. Set when the Innate Spells card's Cast button fires.
+  const [grantedCast, setGrantedCast] = useState(null);
   // Actuated-item activation state machine (#957 S4) — once/day + Overload +
   // broken/repair, driven by an item's optional `actuated` block.
   const { gameDate, time } = useGameDate();
@@ -327,6 +331,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const runeCastSpell = runeSpellDoc
     ? buildRuneCastSpell(actuated, runeSpellDoc, itemUidOf(item), actuatedRuneId)
     : null;
+  // Item-granted innate spells (#914) — a worn/held item that lets the wearer
+  // cast a catalog spell as an innate power (Pendant of the Occult → guidance).
+  // Each resolves to a cast-ready synthetic spell for the shared cast flow.
+  const grantedSpellCasts = itemGrantedSpells(item)
+    .map((grant) => {
+      const doc = (spells || []).find((s) => s.id === grant.ref);
+      return doc ? { grant, doc, spell: buildItemGrantedSpell(grant, doc, itemUidOf(item)) } : null;
+    })
+    .filter((g) => g && g.spell);
   const doActuate = (rank) => {
     if (runeCastSpell) { setCastingRune(true); return; }
     const r = itemAct.activation.activate(rank);
@@ -1577,6 +1590,27 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           an inscribed rune's display activations merge in (#1033 S2) */}
       <ItemActivations item={withAccessoryActivations(item)} />
 
+      {/* Item-granted innate spells (#914) — cast a catalog spell the item grants
+          (Pendant of the Occult → guidance) through the shared cast flow. */}
+      {grantedSpellCasts.length > 0 && (
+        <div className="item-granted-spells">
+          <h3>Innate Spells</h3>
+          <div className="granted-spell-controls">
+            {grantedSpellCasts.map(({ grant, doc, spell }) => (
+              <button
+                key={grant.ref}
+                type="button"
+                className="btn-small btn-primary"
+                data-testid="granted-cast-spell"
+                onClick={() => setGrantedCast(spell)}
+              >
+                Cast {doc.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Shield property-rune activations (#1196 G3/G4) — each rune's actuated
           block gets its own frequency-gated card; spell-casters open the cast. */}
       {item.shield && (
@@ -1727,6 +1761,19 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           isOpen={!!shieldRuneCast}
           onClose={() => setShieldRuneCast(null)}
           spell={shieldRuneCast}
+          castSource="innate"
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
+
+      {/* Item-granted innate spell cast (#914) — the item's granted catalog
+          spell, cast through the shared innate flow. */}
+      {grantedCast && (
+        <CastSpellModal
+          isOpen={!!grantedCast}
+          onClose={() => setGrantedCast(null)}
+          spell={grantedCast}
           castSource="innate"
           character={character}
           themeColor={themeColor}
