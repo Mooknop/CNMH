@@ -14,6 +14,10 @@ import { newEntryUid } from './uid';
 export function buildInventoryEntry(entry) {
   const e = { ref: entry.ref, quantity: 1, uid: newEntryUid() };
   if (entry.level != null) e.level = entry.level;
+  // A craft-time augmentation (#1202 U2) rides onto the granted entry so the
+  // crafted item resolves with it (resolveInventoryItem overlays + inlines it,
+  // like a shop-fitted one). Inert for ordinary crafted items.
+  if (entry.augmentation && entry.augmentation.ref != null) e.augmentation = entry.augmentation;
   return e;
 }
 

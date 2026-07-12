@@ -81,6 +81,7 @@ export function buildCraftingResult({
   charId, charName,
   ref, level, itemName,
   degree, paidCp,
+  augmentation, augmentationName,
   startedAt,
 }) {
   return {
@@ -93,6 +94,9 @@ export function buildCraftingResult({
     itemName,
     degree,
     paidCp,
+    // A craft-time augmentation (#1202 U2): the binding rides to the GM grant so
+    // buildInventoryEntry sets it on the crafted entry; the name is for display.
+    ...(augmentation ? { augmentation, augmentationName: augmentationName ?? null } : {}),
     status: 'pending',
     periodStartedAt: startedAt ?? null,
     ts: Date.now(),

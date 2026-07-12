@@ -8,11 +8,55 @@ import { buildCraftingResult } from '../../utils/earnIncomeResults';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { periodState } from '../../utils/downtimeUtils';
 import { catalogItemName } from '../../utils/spellItems';
+import { isAugmentation, augmentationFits } from '../../utils/augmentations';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './CraftingProjects.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+// Craft-time augmentation inclusion (#1202 U2): when the item being crafted is an
+// augmentable host (weapon/armor/shield), the crafter can bake in an augmentation
+// from the start — its price folds into the project cost and the granted item
+// arrives with the binding. Renders nothing for a non-host item / no augmentations.
+const CraftAugmentField = ({ hostItem, augDocs, augRef, onAug, augChoice, onChoice }) => {
+  const options = hostItem ? (augDocs || []).filter((a) => augmentationFits(hostItem, a)) : [];
+  if (!options.length) return null;
+  const sel = options.find((a) => String(a.id) === augRef) || null;
+  const choices = sel && Array.isArray(sel.choices) ? sel.choices : [];
+  return (
+    <>
+      <label className="cp-form-label">
+        Augmentation
+        <select
+          className="cp-form-select"
+          value={augRef}
+          onChange={(e) => { onAug(e.target.value); onChoice(''); }}
+          aria-label="Craft augmentation"
+        >
+          <option value="">— none —</option>
+          {options.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}{a.price != null ? ` (+${a.price} gp)` : ''}</option>
+          ))}
+        </select>
+      </label>
+      {choices.length > 0 && (
+        <label className="cp-form-label">
+          Choice
+          <select
+            className="cp-form-select"
+            value={augChoice}
+            onChange={(e) => onChoice(e.target.value)}
+            aria-label="Craft augmentation choice"
+          >
+            <option value="">— pick one —</option>
+            {choices.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
+      )}
+    </>
+  );
+};
 
 const CraftingProjects = ({ character }) => {
   const charId = character?.id || 'unknown';
@@ -35,6 +79,8 @@ const CraftingProjects = ({ character }) => {
   const [recipeLevel, setRecipeLevel] = useState('');
   const [catalogRef, setCatalogRef] = useState('');
   const [catalogLevel, setCatalogLevel] = useState('');
+  const [augRef, setAugRef] = useState(''); // craft-time augmentation to bake in (#1202 U2)
+  const [augChoice, setAugChoice] = useState('');
   const [checkInputs, setCheckInputs] = useState({}); // { [projectId]: { d20, total } }
 
   // `kind:'augment'` projects share this synced key (so the allocator's Crafting
@@ -64,6 +110,8 @@ const CraftingProjects = ({ character }) => {
           itemName: p.name,
           degree: p.craftDegree,
           paidCp: p.costCp,
+          augmentation: p.augmentation || null,
+          augmentationName: p.augmentationName || null,
         })),
       ],
     }));
@@ -79,7 +127,10 @@ const CraftingProjects = ({ character }) => {
   // Scroll/wand catalog entries author no `name` (#812 — it's derived from the
   // spell), so resolve a display name for each before sorting/listing or they'd
   // render as blank rows (and the sort would throw on undefined).
+  // Augmentations are never standalone-craftable (#1202 U2) — they're offered only
+  // as a bake-in on an eligible host below, so keep them out of the craftable list.
   const catalogItems = (items || [])
+    .filter((it) => !isAugmentation(it))
     .map((it) => ({ ...it, displayName: catalogItemName(it, spells) }))
     .sort((a, b) => String(a.displayName || '').localeCompare(String(b.displayName || '')));
   const selectedCatalogItem = catalogItems.find(i => i.id === catalogRef);
@@ -91,13 +142,21 @@ const CraftingProjects = ({ character }) => {
     setRecipeLevel('');
     setCatalogRef('');
     setCatalogLevel('');
+    setAugRef('');
+    setAugChoice('');
   };
+
+  const augDocs = (items || []).filter(isAugmentation);
 
   const craftRank = character?.skills?.crafting?.proficiency || 0;
 
-  const startProject = (ref, level, name, source, price) => {
-    const costCp = craftCostCp(price);
-    const paidCp = halfCostCp(price);
+  const startProject = (ref, level, name, source, price, augmentation = null) => {
+    // A baked-in augmentation folds its Price into the project's material cost
+    // (#1202 U2) — craftCostCp is linear in Price, so the effective price carries it.
+    const augPrice = augmentation ? (Number(augmentation.price) || 0) : 0;
+    const effPrice = (Number(price) || 0) + augPrice;
+    const costCp = craftCostCp(effPrice);
+    const paidCp = halfCostCp(effPrice);
     const remainingCp = costCp - paidCp;
     // Half the materials cost is paid up front from the crafter's personal gold.
     if (paidCp > 0) setGold(g => (Number(g) || 0) - cpToGp(paidCp));
@@ -116,6 +175,10 @@ const CraftingProjects = ({ character }) => {
         remainingCp,
         craftRank,
         status: 'in-progress',
+        ...(augmentation ? {
+          augmentation: { ref: augmentation.ref, ...(augmentation.choice ? { choice: augmentation.choice } : {}) },
+          augmentationName: augmentation.name,
+        } : {}),
       }],
     }));
     cancelAdding();
@@ -190,6 +253,27 @@ const CraftingProjects = ({ character }) => {
   };
   const recipePrice = selectedRecipe ? priceFor(selectedRecipe, recipeVariants, recipeLevel) : null;
   const catalogPrice = selectedCatalogItem ? priceFor(selectedCatalogItem, variants, catalogLevel) : null;
+
+  // Craft-time augmentation (#1202 U2): the catalog item being crafted is the
+  // augmentation host (a recipe resolves to the same catalog item by ref/id).
+  const recipeHost = selectedRecipe
+    ? catalogItems.find(i => String(i.id) === String(selectedRecipe.ref || selectedRecipe.id)) || null
+    : null;
+  const activeHost = adding === 'recipe' ? recipeHost : adding === 'catalog' ? selectedCatalogItem : null;
+  // Only count the augmentation when it actually FITS the active host — a stale
+  // pick left over from another host/tab folds nothing and grants nothing.
+  const selectedAug = augRef && activeHost
+    ? augDocs.find(a => String(a.id) === augRef && augmentationFits(activeHost, a)) || null
+    : null;
+  const augPrice = selectedAug ? (Number(selectedAug.price) || 0) : 0;
+  // Fold the augmentation Price into the up-front preview / affordability; a
+  // choice-bearing augmentation isn't ready until its choice is picked.
+  const augReady = !selectedAug || !Array.isArray(selectedAug.choices) || !selectedAug.choices.length || !!augChoice;
+  const withAug = (base) => (selectedAug ? (Number(base) || 0) + augPrice : base);
+  const augArg = () => (selectedAug && augReady
+    ? { ref: selectedAug.id, choice: augChoice || undefined, name: selectedAug.name, price: augPrice }
+    : null);
+  const augName = () => (selectedAug && augReady ? ` + ${selectedAug.name}` : '');
 
   const goldGp = Number(gold) || 0;
   // The crafter must have the up-front half-cost on hand to start (#593).
@@ -394,13 +478,13 @@ const CraftingProjects = ({ character }) => {
           <div className="cp-add-tabs">
             <button
               className={`cp-add-tab${adding === 'recipe' ? ' cp-add-tab--active' : ''}`}
-              onClick={() => { setAdding('recipe'); setRecipeIdx(null); }}
+              onClick={() => { setAdding('recipe'); setRecipeIdx(null); setAugRef(''); setAugChoice(''); }}
             >
               From Recipe ({knownRecipes.length})
             </button>
             <button
               className={`cp-add-tab${adding === 'catalog' ? ' cp-add-tab--active' : ''}`}
-              onClick={() => { setAdding('catalog'); setCatalogRef(''); setCatalogLevel(''); }}
+              onClick={() => { setAdding('catalog'); setCatalogRef(''); setCatalogLevel(''); setAugRef(''); setAugChoice(''); }}
             >
               From Catalog
             </button>
@@ -416,7 +500,7 @@ const CraftingProjects = ({ character }) => {
                     <li key={i}>
                       <button
                         className={`cp-recipe-btn${recipeIdx === i ? ' cp-recipe-btn--selected' : ''}`}
-                        onClick={() => { setRecipeIdx(recipeIdx === i ? null : i); setRecipeLevel(''); }}
+                        onClick={() => { setRecipeIdx(recipeIdx === i ? null : i); setRecipeLevel(''); setAugRef(''); setAugChoice(''); }}
                         data-testid={`cp-recipe-${i}`}
                       >
                         <span className="cp-recipe-name">{r.name}</span>
@@ -443,17 +527,23 @@ const CraftingProjects = ({ character }) => {
                   </select>
                 </label>
               )}
-              {canStartFromRecipe && upfrontNote(recipePrice)}
+              {recipeIdx !== null && (
+                <CraftAugmentField
+                  hostItem={recipeHost} augDocs={augDocs}
+                  augRef={augRef} onAug={setAugRef} augChoice={augChoice} onChoice={setAugChoice}
+                />
+              )}
+              {canStartFromRecipe && upfrontNote(withAug(recipePrice))}
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
-                  disabled={!canStartFromRecipe || !canAffordUpfront(recipePrice)}
+                  disabled={!canStartFromRecipe || !augReady || !canAffordUpfront(withAug(recipePrice))}
                   onClick={() => {
                     const r = knownRecipes[recipeIdx];
                     const lvl = recipeLevel ? parseInt(recipeLevel, 10) : null;
                     const v = lvl != null ? recipeVariants.find(x => x.level === lvl) : null;
-                    const name = v ? `${r.name} (${v.label})` : r.name;
-                    startProject(r.ref || r.id, lvl, name, 'recipe', recipePrice);
+                    const name = `${v ? `${r.name} (${v.label})` : r.name}${augName()}`;
+                    startProject(r.ref || r.id, lvl, name, 'recipe', recipePrice, augArg());
                   }}
                 >
                   Start project
@@ -471,7 +561,7 @@ const CraftingProjects = ({ character }) => {
                   <select
                     className="cp-form-select"
                     value={catalogRef}
-                    onChange={e => { setCatalogRef(e.target.value); setCatalogLevel(''); }}
+                    onChange={e => { setCatalogRef(e.target.value); setCatalogLevel(''); setAugRef(''); setAugChoice(''); }}
                     aria-label="Catalog item"
                   >
                     <option value="">— select item —</option>
@@ -499,16 +589,22 @@ const CraftingProjects = ({ character }) => {
                   </label>
                 )}
               </div>
-              {canStartFromCatalog && upfrontNote(catalogPrice)}
+              {selectedCatalogItem && (
+                <CraftAugmentField
+                  hostItem={selectedCatalogItem} augDocs={augDocs}
+                  augRef={augRef} onAug={setAugRef} augChoice={augChoice} onChoice={setAugChoice}
+                />
+              )}
+              {canStartFromCatalog && upfrontNote(withAug(catalogPrice))}
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
-                  disabled={!canStartFromCatalog || !canAffordUpfront(catalogPrice)}
+                  disabled={!canStartFromCatalog || !augReady || !canAffordUpfront(withAug(catalogPrice))}
                   onClick={() => {
                     const lvl = catalogLevel ? parseInt(catalogLevel, 10) : null;
                     const v = lvl != null ? variants.find(x => x.level === lvl) : null;
-                    const name = v ? `${selectedCatalogItem.displayName} (${v.label})` : selectedCatalogItem.displayName;
-                    startProject(selectedCatalogItem.id, lvl, name, 'catalog-item', catalogPrice);
+                    const baseName = v ? `${selectedCatalogItem.displayName} (${v.label})` : selectedCatalogItem.displayName;
+                    startProject(selectedCatalogItem.id, lvl, `${baseName}${augName()}`, 'catalog-item', catalogPrice, augArg());
                   }}
                 >
                   Start project
