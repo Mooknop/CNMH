@@ -1103,6 +1103,19 @@
     "description": "A bundle of arrows for a bow. Ammunition is tracked by hand until per-shot ammunition tracking arrives (#1098)."
   },
   {
+    "id": "artisans-toolkit-sterling-clockworks",
+    "name": "Sterling Artisan's Toolkit (Clockworks)",
+    "level": 3,
+    "price": 50,
+    "weight": 2,
+    "traits": [],
+    "bonus": [
+      "crafting",
+      1
+    ],
+    "description": "A precision set of sterling clockwork-tinkering tools. It grants a +1 item bonus to Crafting checks."
+  },
+  {
     "actions": [
       {
         "name": "Cast Tailwind",
@@ -1554,6 +1567,39 @@
     "id": "beacon-shot"
   },
   {
+    "id": "bec-de-corbin",
+    "name": "Bec de Corbin",
+    "price": 4,
+    "weight": 2,
+    "traits": [
+      "Razing",
+      "Reach",
+      "Shove",
+      "Versatile B"
+    ],
+    "category": "martial",
+    "group": "polearm",
+    "strikes": [
+      {
+        "name": "Bec de Corbin",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Razing",
+          "Reach",
+          "Shove",
+          "Versatile B",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "description": "A long polearm topped with a spike and a hammer-beak, built to punch through armor. It deals 1d8 piercing damage and has the razing, reach, shove, and versatile B traits."
+  },
+  {
     "name": "Bedroll",
     "description": "A compact mat, not too comfy but suitable for long journeys.",
     "image": "img_1c322d27-2d95-427a-adaf-8404c6151029.jpg",
@@ -1633,6 +1679,25 @@
       "reminder": "Treat your proficiency with this weapon as your highest weapon proficiency."
     },
     "id": "blade-phantoms-guide"
+  },
+  {
+    "id": "blast-boots-greater",
+    "name": "Blast Boots (Greater)",
+    "level": 9,
+    "price": 140,
+    "weight": 0.1,
+    "traits": [
+      "Consumable",
+      "Gadget",
+      "Magical"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "blast-boots",
+      "durationMinutes": 1,
+      "note": "On activation, boost a High Jump by up to 50 ft or a Long Jump by up to 75 ft; for 1 minute afterward, each Leap moves 30 ft in any direction."
+    },
+    "description": "Activate (one action, Interact): these clockwork boots hurl you skyward. Immediately increase the distance of a High Jump by up to 50 feet or a Long Jump by up to 75 feet. For 1 minute afterward, each time you Leap you can move 30 feet in any direction (or your normal Leap, whichever is greater)."
   },
   {
     "name": "Blight Bomb",
@@ -2527,6 +2592,22 @@
     }
   },
   {
+    "id": "charm-of-acid-resistance-greater",
+    "name": "Charm of Acid Resistance (Greater)",
+    "level": 10,
+    "price": 975,
+    "weight": 0,
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "resistance": {
+      "amount": 10,
+      "type": "acid"
+    },
+    "description": "This charm wards you against acid. While invested, you gain resistance 10 to acid."
+  },
+  {
     "id": "charm-of-fire-resistance-greater",
     "name": "Charm of Fire Resistance (Greater)",
     "level": 10,
@@ -2848,6 +2929,25 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "id": "clockwork-goggles-major",
+    "name": "Clockwork Goggles (Major)",
+    "level": 8,
+    "price": 80,
+    "weight": 0.1,
+    "traits": [
+      "Consumable",
+      "Gadget",
+      "Magical"
+    ],
+    "consumable": {
+      "kind": "effect",
+      "effectId": "clockwork-goggles",
+      "durationMinutes": 10,
+      "note": "Low-light vision, darkvision, and see invisibility for 10 minutes."
+    },
+    "description": "Activate (two actions, Interact): whirring lenses sharpen your sight. For 10 minutes you gain low-light vision, darkvision, and the effects of see invisibility."
   },
   {
     "id": "club",
@@ -3706,6 +3806,24 @@
     "description": "This variant on the shield boss is usually shaped like a dragon's head, its jaws open wide enough to wedge a small vessel of liquid within. A dragon's crest can be etched with weapon runes, much like a shield boss or shield spikes, but doesn't otherwise alter your shield's statistics. A shield bearing a dragon's crest can't be combined with an attached weapon, like shield spikes. You can use an Interact action to wedge an alchemical bomb into the crest's jaws. While a bomb is wedged in the shield, you take a -1 penalty to attack rolls with the shield. When you successfully Strike a creature with the shield, the vessel shatters, exposing the creature you hit-and yourself-to the substance within. This counts as a successful hit with the bomb against the creature if it's adjacent to you or a successful hit against the appropriate adjacent square if it's not. The bomb deals splash damage as normal to surrounding creatures, including you. In addition, the bomb deals full damage to the attached shield."
   },
   {
+    "id": "dragonslayers-shield",
+    "name": "Dragonslayer's Shield",
+    "level": 9,
+    "price": 670,
+    "weight": 1,
+    "traits": [
+      "Uncommon",
+      "Magical"
+    ],
+    "shield": {
+      "hardness": 8,
+      "health": 32,
+      "breakThreshold": 16,
+      "bonus": 2
+    },
+    "description": "A steel shield faced with black dragonhide (Hardness 8, HP 32, BT 16). While raised, it also grants its +2 circumstance bonus to Reflex saves against area effects, and a +2 circumstance bonus to Will saves against a dragon’s frightful presence. It has resistance 10 to acid (its dragon’s breath type), applied after its Hardness, and you can use Shield Block against acid effects."
+  },
+  {
     "id": "dread",
     "name": "Dread (Lesser)",
     "price": 225,
@@ -4062,6 +4180,30 @@
       "note": "+1 item Perception (1 hr)"
     },
     "id": "eagle-eye-elixir"
+  },
+  {
+    "id": "elemental-gem-fire",
+    "name": "Elemental Gem (Fire)",
+    "level": 10,
+    "price": 200,
+    "weight": 0,
+    "traits": [
+      "Conjuration",
+      "Consumable",
+      "Magical"
+    ],
+    "actions": [
+      {
+        "name": "Activate Elemental Gem",
+        "actionCount": 2,
+        "traits": [
+          "Concentrate",
+          "Manipulate"
+        ],
+        "description": "Activate (two actions, command, Interact); Effect The gem shatters and casts a 5th-rank summon elemental to conjure a fire elemental, which you control while you Sustain the Activation each round."
+      }
+    ],
+    "description": "This ruddy gem holds a bound fire elemental. Crushing it summons the elemental to fight at your side."
   },
   {
     "name": "Elixir of Life",
@@ -4557,6 +4699,35 @@
       "Adjustment"
     ],
     "description": "An eyecatcher is a simple tassel, reflective basket hilt, or other accessory attached to a weapon to serve as a distraction. You gain a +1 item bonus to Deception checks to while using a weapon with an eyecatcher attached. An eyecatcher affects the balancing of a weapon, making it slightly more unwieldy. This increases the weapon's Bulk by 1 and grants a –1 penalty to damage rolls with the weapon."
+  },
+  {
+    "id": "falchion",
+    "name": "Falchion",
+    "price": 3,
+    "weight": 2,
+    "traits": [
+      "Forceful",
+      "Sweep"
+    ],
+    "category": "martial",
+    "group": "sword",
+    "strikes": [
+      {
+        "name": "Falchion",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d10",
+        "traits": [
+          "Attack",
+          "Forceful",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "This heavy, curved two-handed sword deals 1d10 slashing damage and has the forceful and sweep traits."
   },
   {
     "usage": "held in one hand",
@@ -5125,6 +5296,37 @@
     "id": "ghostcracker"
   },
   {
+    "id": "glaive",
+    "name": "Glaive",
+    "price": 1,
+    "weight": 2,
+    "traits": [
+      "Deadly d8",
+      "Forceful",
+      "Reach"
+    ],
+    "category": "martial",
+    "group": "polearm",
+    "strikes": [
+      {
+        "name": "Glaive",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Deadly d8",
+          "Forceful",
+          "Reach",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A single-edged blade on a long pole. It deals 1d8 slashing damage and has the deadly d8, forceful, and reach traits."
+  },
+  {
     "actions": [
       {
         "name": "Recall Name",
@@ -5542,6 +5744,35 @@
     }
   },
   {
+    "id": "guisarme",
+    "name": "Guisarme",
+    "price": 2,
+    "weight": 2,
+    "traits": [
+      "Reach",
+      "Trip"
+    ],
+    "category": "martial",
+    "group": "polearm",
+    "strikes": [
+      {
+        "name": "Guisarme",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d10",
+        "traits": [
+          "Attack",
+          "Reach",
+          "Trip",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A hooked blade on a long shaft. It deals 1d10 slashing damage and has the reach and trip traits."
+  },
+  {
     "id": "halberd",
     "name": "Halberd",
     "description": "This polearm has a relatively short, 5-foot shaft. The business end is a long spike with an axe blade attached. Its reach lets you Strike enemies up to 10 feet away.",
@@ -5920,6 +6151,65 @@
     "id": "hoplon"
   },
   {
+    "id": "horn-of-blasting",
+    "name": "Horn of Blasting",
+    "level": 9,
+    "price": 700,
+    "weight": 0.1,
+    "traits": [
+      "Evocation",
+      "Magical",
+      "Sonic"
+    ],
+    "bonus": [
+      "performance",
+      2
+    ],
+    "actions": [
+      {
+        "name": "Sonic Blast",
+        "actionCount": 1,
+        "frequency": "once per round",
+        "traits": [
+          "Concentrate",
+          "Manipulate",
+          "Sonic"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 28
+        },
+        "defense": "basic Fortitude",
+        "damageData": {
+          "base": "3d6",
+          "type": "sonic"
+        },
+        "description": "Activate (one action, Interact); Frequency once per round; Effect One creature within 30 feet takes 3d6 sonic damage (basic Fortitude DC 28)."
+      },
+      {
+        "name": "Devastating Blast",
+        "actionCount": 2,
+        "frequency": "once per day",
+        "traits": [
+          "Concentrate",
+          "Manipulate",
+          "Sonic"
+        ],
+        "roll": {
+          "type": "spell-dc",
+          "bonus": 28
+        },
+        "defense": "basic Fortitude",
+        "damageData": {
+          "base": "8d6",
+          "type": "sonic"
+        },
+        "description": "Activate (two actions, Interact); Frequency once per day; Effect A 30-foot cone deals 8d6 sonic damage (basic Fortitude DC 28). On a failure, a creature is also deafened for 2d6 rounds (apply the deafened condition by hand)."
+      }
+    ],
+    "description": "This ornate brass horn grants a +2 item bonus to Performance checks when played, and can loose devastating blasts of sound on command."
+  },
+  {
     "actions": [
       {
         "name": "Blow the Horn",
@@ -6178,6 +6468,27 @@
     ],
     "weight": 3,
     "id": "inventors-chair"
+  },
+  {
+    "id": "jade-bauble",
+    "name": "Jade Bauble",
+    "level": 8,
+    "price": 100,
+    "weight": 0,
+    "traits": [
+      "Consumable",
+      "Magical",
+      "Mental",
+      "Talisman"
+    ],
+    "talisman": {
+      "affixTo": "weapon",
+      "activation": {
+        "cost": 1,
+        "trigger": "You activate the bauble on the affixed weapon."
+      }
+    },
+    "description": "This carved jade charm is affixed to a melee weapon. When activated, until the start of your next turn all enemies within the reach of that weapon are off-guard."
   },
   {
     "name": "Jade Cat",
@@ -6525,6 +6836,28 @@
     "id": "limning-gem"
   },
   {
+    "id": "linguists-dictionary",
+    "name": "Linguist's Dictionary",
+    "level": 9,
+    "price": 650,
+    "weight": 0.1,
+    "traits": [
+      "Grimoire",
+      "Magical"
+    ],
+    "actuated": {
+      "name": "Absorb Language",
+      "cost": "none",
+      "frequency": "once per day",
+      "actionCount": "free",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Activate (free action, concentrate); Frequency once per day; Trigger Your last action cast a language-comprehension spell such as translate or truespeech; Effect The book absorbs one language, letting you communicate rudimentarily in it after the spell ends. It holds one language at a time."
+    },
+    "description": "This ever-updating polyglot grimoire drinks in languages. Once per day it can absorb one language from a comprehension spell you cast."
+  },
+  {
     "name": "Longbow",
     "strikes": [
       {
@@ -6557,6 +6890,33 @@
     "weight": 2,
     "id": "longbow",
     "material": "Wood"
+  },
+  {
+    "id": "longspear",
+    "name": "Longspear",
+    "price": 0.5,
+    "weight": 2,
+    "traits": [
+      "Reach"
+    ],
+    "category": "simple",
+    "group": "spear",
+    "strikes": [
+      {
+        "name": "Longspear",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Reach",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "piercing"
+      }
+    ],
+    "description": "This very long spear deals 1d8 piercing damage and has the reach trait."
   },
   {
     "id": "longsword",
@@ -6676,6 +7036,34 @@
       "description": "Activate (two actions, manipulate); Frequency once per day; Effect The instrument casts charm (DC 17)."
     },
     "description": "This silver flute resonates with beguiling magic. You gain a +1 item bonus to Performance checks while playing music with it, and once per day its Charming Performance casts charm (DC 17)."
+  },
+  {
+    "id": "maestros-instrument-moderate",
+    "name": "Maestro's Instrument (Moderate)",
+    "level": 10,
+    "price": 900,
+    "weight": 1,
+    "traits": [
+      "Magical"
+    ],
+    "bonus": [
+      "performance",
+      2
+    ],
+    "actuated": {
+      "name": "Charming Performance",
+      "cost": "none",
+      "frequency": "once per day",
+      "spellRef": "charm",
+      "castRank": 4,
+      "dc": 27,
+      "actionCount": 2,
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "Activate (two actions, manipulate); Frequency once per day; Effect The instrument casts charm (4th rank, DC 27)."
+    },
+    "description": "This masterwork instrument grants a +2 item bonus to Performance checks while you play it, and once per day its Charming Performance casts charm (4th rank, DC 27)."
   },
   {
     "usage": "held in 1 hand",
@@ -7370,6 +7758,76 @@
     ],
     "weight": 1,
     "id": "mysterious-blue-orb"
+  },
+  {
+    "id": "naginata",
+    "name": "Naginata",
+    "price": 3,
+    "weight": 2,
+    "traits": [
+      "Uncommon",
+      "Deadly d8",
+      "Reach",
+      "Versatile P"
+    ],
+    "category": "martial",
+    "group": "polearm",
+    "strikes": [
+      {
+        "name": "Naginata",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Deadly d8",
+          "Reach",
+          "Versatile P",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A curved single-edged blade mounted on a long shaft. It deals 1d8 slashing damage and has the deadly d8, reach, and versatile P traits."
+  },
+  {
+    "id": "naginata-dragon-bane",
+    "name": "+1 Dragon Bane Naginata",
+    "level": 4,
+    "price": 138,
+    "weight": 2,
+    "traits": [
+      "Uncommon",
+      "Magical",
+      "Deadly d8",
+      "Reach",
+      "Versatile P"
+    ],
+    "strikes": [
+      {
+        "name": "Naginata",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Deadly d8",
+          "Reach",
+          "Versatile P",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "runes": {
+      "potency": 1,
+      "property": [
+        "bane-dragon"
+      ]
+    },
+    "description": "This +1 naginata is etched with a dragon bane rune. It deals an extra 1d6 damage to creatures with the dragon trait. (The rune also grants a +1 circumstance bonus to attack rolls against dragons — apply it by hand.)"
   },
   {
     "name": "Necrotic Bomb",
@@ -9817,6 +10275,35 @@
     }
   },
   {
+    "id": "scimitar",
+    "name": "Scimitar",
+    "price": 1,
+    "weight": 1,
+    "traits": [
+      "Forceful",
+      "Sweep"
+    ],
+    "category": "martial",
+    "group": "sword",
+    "strikes": [
+      {
+        "name": "Scimitar",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "traits": [
+          "Attack",
+          "Forceful",
+          "Sweep",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "This curved single-handed sword deals 1d6 slashing damage and has the forceful and sweep traits."
+  },
+  {
     "id": "scorpion-whip",
     "name": "Scorpion Whip",
     "description": "A whip with a series of razor-sharp blades set along its tip. Unlike a normal whip it lacks the nonlethal trait, making it deadlier but less suited to taking foes alive.",
@@ -9854,7 +10341,7 @@
     }
   },
   {
-    "id": "scroll-of-banishment-5",
+    "id": "scroll-of-banishment",
     "scroll": {
       "spellRef": "banishment",
       "rank": 5
@@ -9969,6 +10456,35 @@
       "speedPenalty": 5
     },
     "id": "scutum"
+  },
+  {
+    "id": "scythe",
+    "name": "Scythe",
+    "price": 2,
+    "weight": 2,
+    "traits": [
+      "Deadly d10",
+      "Trip"
+    ],
+    "category": "martial",
+    "group": "polearm",
+    "strikes": [
+      {
+        "name": "Scythe",
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d10",
+        "traits": [
+          "Attack",
+          "Deadly d10",
+          "Trip",
+          "Melee"
+        ],
+        "actionCount": 1,
+        "damageType": "slashing"
+      }
+    ],
+    "description": "A long farming blade repurposed for war. It deals 1d10 slashing damage and has the deadly d10 and trip traits."
   },
   {
     "name": "Serene Mutagen",
@@ -13398,6 +13914,41 @@
     "id": "vexing-vapor"
   },
   {
+    "id": "vigilant-eye",
+    "name": "Vigilant Eye",
+    "level": 9,
+    "price": 650,
+    "weight": 0,
+    "traits": [
+      "Magical"
+    ],
+    "actuated": {
+      "name": "Cast Web of Eyes",
+      "cost": "none",
+      "frequency": "once per day",
+      "spellRef": "web-of-eyes",
+      "castRank": 3,
+      "actionCount": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "Activate (Cast a Spell); Frequency once per day; Effect The spellheart casts web of eyes."
+    },
+    "actions": [
+      {
+        "name": "Cast Detect Magic",
+        "actionCount": 2,
+        "traits": [
+          "Concentrate",
+          "Manipulate"
+        ],
+        "description": "Activate (Cast a Spell), at will; Effect The spellheart casts detect magic."
+      }
+    ],
+    "description": "This lidless crystal eye is a spellheart affixed to armor or a weapon. Affixed to armor, you aren’t off-guard to hidden or undetected creatures of 9th level or lower (you can still be flanked). Affixed to a weapon, your flat check to Strike a target is DC 4 if it’s concealed or DC 10 if it’s hidden or undetected. It can Cast detect magic at will and web of eyes once per day."
+  },
+  {
     "name": "Viking Shield",
     "description": "A round shield usually made of layered wood. Generally between 2-3 feet in diameter, the viking shield is light and extremely mobile for the protection that it affords, but sacrifices some durability for those qualities.",
     "traits": [
@@ -13502,7 +14053,21 @@
     }
   },
   {
-    "id": "wand-of-phantasmal-killer-4",
+    "id": "wand-of-lightning-bolt",
+    "wand": {
+      "spellRef": "lightning-bolt",
+      "rank": 3
+    }
+  },
+  {
+    "id": "wand-of-mind-reading",
+    "wand": {
+      "spellRef": "mind-reading",
+      "rank": 3
+    }
+  },
+  {
+    "id": "wand-of-phantasmal-killer",
     "wand": {
       "spellRef": "phantasmal-killer",
       "rank": 4
@@ -13515,7 +14080,7 @@
     }
   },
   {
-    "id": "wand-of-telepathy-4",
+    "id": "wand-of-telepathy",
     "wand": {
       "spellRef": "telepathy",
       "rank": 4
