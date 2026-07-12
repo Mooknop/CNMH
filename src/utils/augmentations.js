@@ -15,7 +15,7 @@
 // credits back, transient loadout fields dropped so placement re-derives.
 
 import { hostMatchesType } from './affix';
-import { shieldCategory } from './shieldCategory';
+import { shieldCategory, shieldCategoriesFromUsage } from './shieldCategory';
 import { newEntryUid } from './uid';
 
 /** Whether a catalog doc is an augmentation. */
@@ -50,11 +50,8 @@ export const hostMatchesAugTarget = (host, augDoc) =>
  */
 export const augmentationUsageAllows = (host, augDoc) => {
   if (!host?.shield) return true; // only shields carry a size gate
-  const usage = typeof augDoc?.usage === 'string' ? augDoc.usage.toLowerCase() : '';
-  const cats = Array.isArray(augDoc?.shieldCategories) && augDoc.shieldCategories.length
-    ? augDoc.shieldCategories.map((c) => String(c).toLowerCase())
-    : ['light', 'medium', 'heavy'].filter((c) => usage.includes(c));
-  if (!cats.length) return true; // unrestricted
+  const cats = shieldCategoriesFromUsage(augDoc);
+  if (!cats) return true; // unrestricted
   const cat = shieldCategory(host.weight);
   return cat ? cats.includes(cat) : true; // unknown Bulk → don't block
 };

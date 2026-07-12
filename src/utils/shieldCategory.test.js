@@ -1,4 +1,4 @@
-import { shieldCategory } from './shieldCategory';
+import { shieldCategory, shieldCategoriesFromUsage } from './shieldCategory';
 
 describe('shieldCategory', () => {
   describe('numeric Bulk', () => {
@@ -43,5 +43,26 @@ describe('shieldCategory', () => {
       expect(shieldCategory('heavy')).toBeNull();
       expect(shieldCategory({})).toBeNull();
     });
+  });
+});
+
+describe('shieldCategoriesFromUsage', () => {
+  it('explicit shieldCategories array wins (lowercased) over usage', () => {
+    expect(
+      shieldCategoriesFromUsage({ shieldCategories: ['Light', 'MEDIUM'], usage: 'etched onto a heavy shield' }),
+    ).toEqual(['light', 'medium']);
+  });
+
+  it('parses the category words present in the usage string', () => {
+    expect(shieldCategoriesFromUsage({ usage: 'etched onto a light shield' })).toEqual(['light']);
+    expect(shieldCategoriesFromUsage({ usage: 'a light or medium shield' })).toEqual(['light', 'medium']);
+  });
+
+  it('returns null when unrestricted (no array, no category word, or nullish)', () => {
+    expect(shieldCategoriesFromUsage({ usage: 'held in one hand' })).toBeNull();
+    expect(shieldCategoriesFromUsage({ shieldCategories: [] })).toBeNull();
+    expect(shieldCategoriesFromUsage({})).toBeNull();
+    expect(shieldCategoriesFromUsage(null)).toBeNull();
+    expect(shieldCategoriesFromUsage(undefined)).toBeNull();
   });
 });

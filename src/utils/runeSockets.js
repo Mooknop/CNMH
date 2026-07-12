@@ -21,7 +21,7 @@ import { armorPropertySlotCapacity } from './armorRunes';
 import { accessoryEligible, isAccessoryHost } from './accessoryRunes';
 import { runeTarget } from './runeClassify';
 import { REINFORCING, shieldPropertySlotCapacity } from './shieldRunes';
-import { shieldCategory } from './shieldCategory';
+import { shieldCategory, shieldCategoriesFromUsage } from './shieldCategory';
 import { isDragonbreath, dragonbreathRunes, dragonbreathUpgradeOption, applyDragonbreathUpgrade } from './dragonbreath';
 import {
   isAugmentation, augmentationFits, hasAugmentation, augmentationOf, augmentationId, applyAugmentation,
@@ -77,14 +77,7 @@ const propRuneChoice = (p) => (p && typeof p === 'object' ? p.choice : undefined
  * Returns null when unrestricted (no usage string, or none of the category words
  * present). Shield-only — weapon/armor property runes have no category gate.
  */
-export const runeShieldCategories = (rune) => {
-  const usage = rune && typeof rune.usage === 'string' ? rune.usage.toLowerCase() : '';
-  if (Array.isArray(rune?.shieldCategories) && rune.shieldCategories.length) {
-    return rune.shieldCategories.map((c) => String(c).toLowerCase());
-  }
-  const cats = ['light', 'medium', 'heavy'].filter((c) => usage.includes(c));
-  return cats.length ? cats : null;
-};
+export const runeShieldCategories = (rune) => shieldCategoriesFromUsage(rune);
 
 /** Whether `rune`'s category usage restriction admits shield `item` (via its Bulk). */
 export const shieldRuneUsageAllows = (item, rune) => {
