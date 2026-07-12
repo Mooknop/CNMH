@@ -13,6 +13,7 @@ import {
   eligibleRunes,
   eligibleHostItems,
   eligibleTalismans,
+  eligibleAugmentations,
   eligibleCatalysts,
   eligibleWhetstones,
 } from '../../utils/shopUtils';
@@ -468,8 +469,8 @@ const CartTray = ({ cart, handoffs, gold, onSetQty, onRemove, onClear, onUnstage
 };
 
 // ── Runesmithing (#857 S6b) ──────────────────────────────────────────────────
-const SOCKET_GLYPH = { potency: 'ᚠ', striking: 'ᛋ', resilient: 'ᛞ', property: '◇', accessory: '◈' };
-const SOCKET_LABEL = { potency: 'Potency', striking: 'Striking', resilient: 'Resilient', property: 'Property', accessory: 'Accessory' };
+const SOCKET_GLYPH = { potency: 'ᚠ', striking: 'ᛋ', resilient: 'ᛞ', property: '◇', accessory: '◈', augmentation: '❖' };
+const SOCKET_LABEL = { potency: 'Potency', striking: 'Striking', resilient: 'Resilient', property: 'Property', accessory: 'Accessory', augmentation: 'Augmentation' };
 // A socket's stable key within a gear card (fundamentals are singletons; a
 // property socket is keyed by its index).
 const socketKey = (s) => (s.type === 'property' ? `property:${s.index}` : s.type);
@@ -479,6 +480,9 @@ const filledLabel = (s, runeMap) => {
   if (s.type === 'potency') return `+${s.value}`;
   if (s.type === 'striking') return STRIKING[s.value]?.label || 'Striking';
   if (s.type === 'resilient') return RESILIENT[s.value]?.label || 'Resilient';
+  // The augmentation socket carries the resolved augmentation doc (not a rune ref),
+  // so its name reads straight off the binding — no rune-catalog lookup.
+  if (s.type === 'augmentation') return (s.rune && (s.rune.name || s.rune.baseName)) || 'Augmentation';
   const ref = typeof s.rune === 'string' ? s.rune : s.rune && s.rune.id;
   return runeMap.get(String(ref))?.name || 'Rune';
 };
@@ -498,14 +502,19 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
   // are applied first, so staging +1 potency reveals the property slot it unlocks
   // in the same visit.
   const projected = projectStagedGear(gear, stagedFor);
-  const sockets = gearSockets(projected);
   const stagedEntries = Object.entries(stagedFor);
   const stagedIds = new Set(stagedEntries.map(([, r]) => r.id));
   const stagedCost = stagedEntries.reduce((sum, [, r]) => sum + (Number(r.price) || 0), 0);
-  const openCount = sockets.filter((s) => !s.filled && !stagedFor[socketKey(s)]).length;
   // Runes (excluding what's already staged) that could fill/upgrade a socket.
   const optionsFor = (socketType) =>
     compatibleRunes(projected, socketType, shopRunes).filter((r) => !stagedIds.has(r.id));
+  // The augmentation socket (#1202 U2) only shows where this keeper can actually
+  // apply one — an empty slot with nothing offered would be noise on every weapon.
+  // A filled or staged slot always shows (to display / swap it).
+  const sockets = gearSockets(projected).filter(
+    (s) => s.type !== 'augmentation' || s.filled || stagedFor[socketKey(s)] || optionsFor('augmentation').length > 0,
+  );
+  const openCount = sockets.filter((s) => !s.filled && !stagedFor[socketKey(s)]).length;
   // A filled fundamental socket (potency/striking/resilient) can re-open for an
   // upgrade when a higher tier is in stock (#879) — potency +1→+2→+3 et al.
   const isUpgradable = (s) =>
@@ -591,7 +600,11 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
 
       {openSocket && !readOnly && (
         <div className="ps-runepicker" data-testid={`picker-${gear.uid}`}>
-          <div className="ps-runepicker-head">{SOCKET_LABEL[openSocket.type]} runes {keeperName ? `${keeperName} can etch` : 'available'}</div>
+          <div className="ps-runepicker-head">
+            {openSocket.type === 'augmentation'
+              ? `Augmentations ${keeperName ? `${keeperName} can fit` : 'available'}`
+              : `${SOCKET_LABEL[openSocket.type]} runes ${keeperName ? `${keeperName} can etch` : 'available'}`}
+          </div>
           {options.length === 0 ? (
             <p className="ps-empty">None in stock here for this slot.</p>
           ) : (
@@ -914,6 +927,28 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       .map((w) => ({ ...w.runestone.rune, price: w.price, wareKey: w.wareKey })),
     [runeWares]
   );
+  // Augmentation docs the keeper can APPLY (#1202 U2) — auto-derived from the same
+  // specific-target rune offerings that stock host gear / talismans (#1044/#1211),
+  // one form per grade. They're never sold loose (noShop); they feed ONLY the
+  // augmentation socket picker, so they're folded into the socket stock, not the
+  // "Runes for sale" grid.
+  const augStock = useMemo(() => {
+    if (!selected) return [];
+    const seen = new Set();
+    const out = [];
+    runeOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleAugmentations(o, items).forEach((aug) => {
+        if (seen.has(aug.wareKey)) return;
+        seen.add(aug.wareKey);
+        out.push(aug);
+      })
+    );
+    return out;
+  }, [selected, waresStore, items]);
+  // Combined socket stock: rune docs + augmentation docs. compatibleRunes routes
+  // each socket to the right subset (rune sockets ignore augmentation docs and
+  // vice-versa), so one list feeds every socket picker.
+  const socketStock = useMemo(() => [...shopRunes, ...augStock], [shopRunes, augStock]);
   // The active character's runesmithable gear (weapons, armor, and power rings —
   // gearTarget → 'ring', #967 R4/R5), for the sockets. Ring imbue reuses this
   // shop flow: the socket board, staging, checkout, work order, and collect are
@@ -1060,7 +1095,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       {activeTab === 'runes' && (
         <RunesmithingTab
           gearList={gearList}
-          shopRunes={shopRunes}
+          shopRunes={socketStock}
           runeMap={runeMap}
           runeGroups={runeGroups}
           stagedFor={stagedFor}

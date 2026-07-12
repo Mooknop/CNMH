@@ -208,7 +208,10 @@ const RuneItemCard = ({ item, stock, onFill, onClear }) => (
   <li className="cs-item gm-rune-item" data-testid={`rune-item-${item.name}`}>
     <span className="cs-item-label gm-rune-item-name">{item.name}</span>
     <ul className="cs-list gm-rune-sockets">
-      {gearSockets(item).map((s) => (
+      {/* The augmentation socket (#1202 U2) is handled by the dedicated
+          Augmentations section below (set/swap/remove with a destroy warning),
+          so it's dropped from the rune board to avoid a double surface. */}
+      {gearSockets(item).filter((s) => s.type !== 'augmentation').map((s) => (
         <RuneSocketRow
           key={socketKey(s)}
           item={item}

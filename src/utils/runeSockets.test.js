@@ -43,7 +43,7 @@ describe('shield reinforcing socket (#1165 S2)', () => {
   it('gearSockets: one reinforcing socket (+ the orthogonal accessory socket), no potency/property', () => {
     // A shield is a dual host: reinforcing (its only fundamental) + the accessory
     // socket every shield carries (#1033). No potency or property sockets.
-    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
+    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'augmentation', 'accessory']);
     const filled = gearSockets(shield({ reinforcing: 'lesser' }))[0];
     expect(filled).toMatchObject({ type: 'reinforcing', target: 'shield', filled: true, value: 'lesser' });
   });
@@ -79,7 +79,7 @@ describe('shield reinforcing socket (#1165 S2)', () => {
 describe('gearSockets', () => {
   it('weapon: potency + striking + property sockets numbering the potency tier', () => {
     const sockets = gearSockets(weapon({ potency: 2, striking: 'striking', property: ['vitalizing'] }));
-    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'property']);
+    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'property', 'augmentation']);
     expect(sockets[0]).toMatchObject({ filled: true, value: 2 });
     expect(sockets[1]).toMatchObject({ filled: true, value: 'striking' });
     expect(sockets[2]).toMatchObject({ filled: true, rune: 'vitalizing', index: 0 });
@@ -88,13 +88,13 @@ describe('gearSockets', () => {
 
   it('armor: potency + resilient + property sockets', () => {
     const sockets = gearSockets(armor({ potency: 1, resilient: 'resilient' }));
-    expect(sockets.map((s) => s.type)).toEqual(['potency', 'resilient', 'property']);
+    expect(sockets.map((s) => s.type)).toEqual(['potency', 'resilient', 'property', 'augmentation']);
     expect(sockets[2]).toMatchObject({ type: 'property', filled: false, index: 0 });
   });
 
   it('no potency ⇒ no property sockets (an empty potency socket only)', () => {
     const sockets = gearSockets(weapon({}));
-    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking']);
+    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'augmentation']);
     expect(sockets[0].filled).toBe(false);
   });
 
@@ -131,7 +131,7 @@ describe('dragonbreath weapon fundamentals (#1210 M4c)', () => {
 
   it('shows the tier fundamentals as filled + locked, with property slots per tier', () => {
     const sockets = gearSockets(dbWeapon('greater'));
-    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'property']);
+    expect(sockets.map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'property', 'augmentation']);
     expect(sockets[0]).toMatchObject({ type: 'potency', filled: true, value: 2, locked: true });
     expect(sockets[1]).toMatchObject({ type: 'striking', filled: true, value: 'greater', locked: true });
     expect(sockets[2]).toMatchObject({ type: 'property', filled: false, index: 0 });
@@ -205,8 +205,8 @@ describe('projectStagedGear (#879)', () => {
     const projected = projectStagedGear(weapon({}), { potency: wPot1 });
     expect(projected.runes.potency).toBe(1);
     // +0 → no property sockets; +1 projection → one open property socket.
-    expect(gearSockets(weapon({})).map((s) => s.type)).toEqual(['potency', 'striking']);
-    expect(gearSockets(projected).map((s) => s.type)).toEqual(['potency', 'striking', 'property']);
+    expect(gearSockets(weapon({})).map((s) => s.type)).toEqual(['potency', 'striking', 'augmentation']);
+    expect(gearSockets(projected).map((s) => s.type)).toEqual(['potency', 'striking', 'property', 'augmentation']);
   });
 
   it('applies staged striking (weapon) / resilient (armor) fundamentals', () => {
@@ -379,13 +379,13 @@ describe('accessory socket + etch list (#1033 S5)', () => {
       uid: 'e1', name: "Explorer's Clothing", armor: { category: 'unarmored', acBonus: 0 },
       accessoryTags: ['clothing'], runes: { potency: 1 },
     };
-    expect(gearSockets(explorers).map((s) => s.type)).toEqual(['potency', 'resilient', 'property', 'accessory']);
+    expect(gearSockets(explorers).map((s) => s.type)).toEqual(['potency', 'resilient', 'property', 'augmentation', 'accessory']);
   });
 
   it('a shield is a dual host: reinforcing socket + the accessory socket; invested/untagged gear gets none', () => {
     // Shield now classifies as gearTarget 'shield' (#1165), so a buckler carries
     // its reinforcing socket AND — as a derived accessory host — the accessory socket.
-    expect(gearSockets({ uid: 'b1', name: 'Buckler', shield: { hardness: 3 } }).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
+    expect(gearSockets({ uid: 'b1', name: 'Buckler', shield: { hardness: 3 } }).map((s) => s.type)).toEqual(['reinforcing', 'augmentation', 'accessory']);
     expect(gearSockets({ uid: 'x1', name: 'Cloak of Repute', accessoryTags: ['cloak'], traits: ['Invested'] })).toEqual([]);
     expect(gearSockets({ name: 'Rope', weight: 1 })).toEqual([]);
   });
@@ -421,10 +421,10 @@ describe('shield property sockets (#1196 G2)', () => {
 
   it('gearSockets: reinforcing + N property sockets by grade + the orthogonal accessory socket', () => {
     // No reinforcing → no property sockets (just reinforcing + accessory).
-    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'accessory']);
+    expect(gearSockets(shield({})).map((s) => s.type)).toEqual(['reinforcing', 'augmentation', 'accessory']);
     // Moderate (2 slots): reinforcing + 2 property + accessory.
     const mod = gearSockets(shield({ reinforcing: 'moderate', property: [winglet] }));
-    expect(mod.map((s) => s.type)).toEqual(['reinforcing', 'property', 'property', 'accessory']);
+    expect(mod.map((s) => s.type)).toEqual(['reinforcing', 'property', 'property', 'augmentation', 'accessory']);
     expect(mod[1]).toMatchObject({ type: 'property', target: 'shield', index: 0, filled: true, rune: winglet });
     expect(mod[2]).toMatchObject({ type: 'property', index: 1, filled: false, rune: null });
   });
@@ -498,7 +498,56 @@ describe('shield property sockets (#1196 G2)', () => {
     const withProp = applyRune(shield({ reinforcing: 'minor' }), winglet);
     const sockets = gearSockets(withProp);
     // reinforcing + 1 property (filled) + accessory (empty) — property capacity untouched.
-    expect(sockets.map((s) => s.type)).toEqual(['reinforcing', 'property', 'accessory']);
+    expect(sockets.map((s) => s.type)).toEqual(['reinforcing', 'property', 'augmentation', 'accessory']);
     expect(sockets.find((s) => s.type === 'accessory')).toMatchObject({ filled: false });
+  });
+});
+
+describe('augmentation socket (#1202 U2)', () => {
+  const shield = (extra) => ({ uid: 's1', name: 'Targe', shield: { hardness: 3 }, weight: 0.1, ...extra });
+  const ring = (extra) => ({ uid: 'r1', name: 'Power Ring', powerRing: true, ringSockets: 1, ...extra });
+  const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 };
+  const coat = { id: 'coat-of-arms', type: 'augmentation', augTarget: ['shield'], name: 'Coat of Arms', price: 20 };
+  const grip = { id: 'weapon-grip', type: 'augmentation', augTarget: ['weapon'], name: 'Weapon Grip', price: 4 };
+  const augStock = [mirror, coat, grip];
+
+  it('gearSockets adds one augmentation slot to weapon/armor/shield, but not rings', () => {
+    expect(gearSockets(weapon({})).map((s) => s.type)).toContain('augmentation');
+    expect(gearSockets(armor({})).map((s) => s.type)).toContain('augmentation');
+    expect(gearSockets(shield()).map((s) => s.type)).toContain('augmentation');
+    expect(gearSockets(ring({})).map((s) => s.type)).not.toContain('augmentation');
+  });
+
+  it('the augmentation socket reflects the bound augmentation', () => {
+    const empty = gearSockets(shield()).find((s) => s.type === 'augmentation');
+    expect(empty).toMatchObject({ type: 'augmentation', target: 'augmentation', filled: false, rune: null });
+    const filled = gearSockets(shield({ augmentation: { id: 'mirror', name: 'Mirror' } })).find((s) => s.type === 'augmentation');
+    expect(filled).toMatchObject({ filled: true, rune: { id: 'mirror', name: 'Mirror' } });
+  });
+
+  it('compatibleRunes fills the slot from the augmentation catalog, gated by fit', () => {
+    expect(compatibleRunes(shield(), 'augmentation', augStock).map((r) => r.id)).toEqual(['mirror', 'coat-of-arms']);
+    // A filled slot offers only the OTHER augmentations (swap), never the current one.
+    expect(compatibleRunes(shield({ augmentation: { id: 'mirror' } }), 'augmentation', augStock).map((r) => r.id)).toEqual(['coat-of-arms']);
+    // A weapon host sees only weapon augmentations.
+    expect(compatibleRunes(weapon({}), 'augmentation', augStock).map((r) => r.id)).toEqual(['weapon-grip']);
+  });
+
+  it('applyRune delegates an augmentation doc to the augmentation binding, with a fresh uid', () => {
+    const out = applyRune(shield(), mirror);
+    expect(out.augmentation).toEqual({ ref: 'mirror' });
+    expect(out.uid).not.toBe('s1');
+    // Swap: applying onto an occupied slot overwrites (destroys the old).
+    expect(applyRune(shield({ augmentation: { id: 'coat-of-arms' } }), mirror).augmentation).toEqual({ ref: 'mirror' });
+    // A non-fitting augmentation (wrong host) rejects like any incompatible rune.
+    expect(applyRune(weapon({}), mirror)).toBeNull();
+  });
+
+  it('carries an etch-time choice through applyRune via opts or the baked etchConfig (#1059)', () => {
+    const predator = { id: 'ancestral-predator', type: 'augmentation', augTarget: ['shield'], name: 'Ancestral Predator' };
+    expect(applyRune(shield(), predator, { choice: 'Dragon' }).augmentation).toEqual({ ref: 'ancestral-predator', choice: 'Dragon' });
+    // baked etchConfig.choice (shop-staged path — applyRunesToGear passes no opts)
+    expect(applyRune(shield(), { ...predator, etchConfig: { choice: 'Giant' } }).augmentation)
+      .toEqual({ ref: 'ancestral-predator', choice: 'Giant' });
   });
 });

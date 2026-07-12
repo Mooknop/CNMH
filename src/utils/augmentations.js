@@ -67,6 +67,16 @@ export const augmentationOf = (host) =>
 export const hasAugmentation = (host) => augmentationOf(host) != null;
 
 /**
+ * The catalog id of the augmentation on a host, or null. Reads `ref` (a raw
+ * `{ ref, choice }` binding) or `id` (an already-resolved doc the finishItem
+ * inline produced) — so both the entry and resolved-item shapes answer.
+ */
+export const augmentationId = (host) => {
+  const a = augmentationOf(host);
+  return a ? (a.ref ?? a.id ?? null) : null;
+};
+
+/**
  * Whether `augDoc` fits `host` by target + size gate, IGNORING slot occupancy.
  * The picker predicate for both the GM swap menu and shop staging — a swap must
  * still offer compatible augmentations onto an already-augmented host.
@@ -91,11 +101,19 @@ export const canAugment = (host, augDoc) =>
  * When the host already has an augmentation this REPLACES it (swap): the old
  * binding is overwritten and destroyed. Transient loadout fields (state/hand) are
  * dropped so placement re-derives. Returns null when the augmentation doesn't fit.
+ *
+ * The etch-time choice (Ancestral Predator's creature type) comes from `opts.choice`
+ * (a GM instant-apply) or, for a shop-staged augmentation, its baked
+ * `etchConfig.choice` (#1059 carrier) — so a player's pick survives fulfillment,
+ * where the work-order applies the doc through applyRune WITHOUT opts.
  */
 export const applyAugmentation = (host, augDoc, opts = {}) => {
   if (!host || !isAugmentation(augDoc) || !augmentationFits(host, augDoc)) return null;
+  const choice = opts.choice != null
+    ? opts.choice
+    : (augDoc.etchConfig && augDoc.etchConfig.choice != null ? augDoc.etchConfig.choice : undefined);
   const binding = { ref: augDoc.id };
-  if (opts.choice != null) binding.choice = opts.choice;
+  if (choice != null) binding.choice = choice;
   const { state, hand, ...rest } = host;
   return { ...rest, uid: newEntryUid(), augmentation: binding };
 };

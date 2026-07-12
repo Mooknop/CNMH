@@ -1030,6 +1030,39 @@ describe('ShopStorefront', () => {
     });
   });
 
+  describe('augmentation work-order service (#1202 U2)', () => {
+    const mirror = { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', level: 0, price: 1, noShop: true, description: 'A hand mirror tied to a shield.' };
+    const augItems = [...items, mirror];
+    const targe = { uid: 's1', name: 'Targe', shield: { hardness: 3 }, weight: 0.1 };
+    const renderAug = ({ wares, inv = [targe] }) => {
+      mockInventory = inv;
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', wares } }}
+          items={augItems} runes={[]} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+    };
+
+    it('offers the augmentation socket on a shield and stages an augmentation as a handoff', () => {
+      renderAug({ wares: [{ runeService: true, targets: ['shield'], maxLevel: 6 }] });
+      const gear = screen.getByTestId('gear-s1');
+      fireEvent.click(within(gear).getByLabelText(/fill Augmentation slot/i));
+      const picker = screen.getByTestId('picker-s1');
+      fireEvent.click(within(picker).getByRole('button', { name: /^etch Mirror/ }));
+      // Staged onto the socket as a priced handoff line — rides the etch work-order rail.
+      expect(within(gear).getByLabelText('un-stage Mirror')).toBeInTheDocument();
+      expect(within(gear).getByTestId('staged-s1')).toHaveTextContent('1 gp');
+    });
+
+    it('hides the augmentation socket at a shop with no matching augmentation service', () => {
+      // A weapon-only service: the shield gets no augmentation slot.
+      renderAug({ wares: [{ runeService: true, targets: ['weapon'], maxLevel: 8 }] });
+      const gear = screen.getByTestId('gear-s1');
+      expect(within(gear).queryByLabelText(/fill Augmentation slot/i)).not.toBeInTheDocument();
+    });
+  });
+
   describe('multi-shop picker', () => {
     const second = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
     it('lists shops and opens one, with Back returning to the picker', () => {
