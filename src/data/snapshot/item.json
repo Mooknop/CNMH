@@ -847,6 +847,37 @@
     "id": "analysis-eye"
   },
   {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "ancestral-predator",
+    "name": "Ancestral Predator",
+    "level": 3,
+    "price": 20,
+    "rarity": "uncommon",
+    "usage": "applied to a shield",
+    "traits": [
+      "Visual"
+    ],
+    "choices": [
+      "aberration",
+      "animal",
+      "astral",
+      "dragon",
+      "elemental",
+      "ethereal",
+      "fey",
+      "fiend",
+      "giant",
+      "humanoid",
+      "monitor",
+      "undead"
+    ],
+    "description": "Stitched onto a leather face, painted, or lacquered on, you have created an image on the face of your shield that evokes an ancient fear from a specific group. Choose a type of creature that isn't typically mindless such as aberration, animal, astral, dragon, elemental, ethereal, fey, fiend, giant, humanoid, or monitor. You etch an image of an ancient foe for that type of creature on the face of your shield, and can brandish it to make yourself more intimidating. You gain a +1 circumstance bonus to all Intimidation checks made against creatures of the chosen type while you're wielding this shield. You may choose undead as your type, but consider that many undead are mindless and immune to all mental effects, including Intimidation."
+  },
+  {
     "name": "Anticorrosion Oil",
     "description": "You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae.",
     "image": "img_3f9d87d1-6113-4f77-9bbd-781784b514e9.jpg",
@@ -1340,6 +1371,20 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "barbed-edges",
+    "name": "Barbed Edges",
+    "level": 5,
+    "price": 40,
+    "rarity": "common",
+    "usage": "applied to a shield",
+    "description": "You have added barbs around the edge of your shield's face that are particularly effective when used against creatures in very tight quarters. When you use the Escape action against a creature to remove the grabbed, immobilized, or restrained condition and you do not roll a critical failure on the check, you also deal 2d6 slashing damage to the creature."
   },
   {
     "id": "battle-axe",
@@ -2686,9 +2731,9 @@
       "shield"
     ],
     "name": "Coat of Arms",
-    "level": 0,
+    "level": 3,
     "price": 20,
-    "rarity": "common",
+    "rarity": "uncommon",
     "usage": "applied to a shield",
     "noShop": true,
     "description": "Stitched onto a leather face, painted, or lacquered on, a coat of arms can mean a great deal depending on whom you're addressing. It can lend weight to your words, the deals you make, and even the insults you throw. You gain a +1 circumstance bonus to Diplomacy checks while you are wielding the shield, as long as the coat of arms represents a faction that would be feared or respected by the target of the check, at the GM's discretion."
@@ -5749,6 +5794,54 @@
     "id": "idolis-tattoo"
   },
   {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "improved-mirror",
+    "name": "Improved Mirror",
+    "level": 10,
+    "price": 1000,
+    "rarity": "uncommon",
+    "usage": "applied to a shield",
+    "description": "A mirror that is custom-fitted for your shield. You gain access to the following reaction. If you use the Shield Block reaction, or gain the benefits of the Shield Block reaction with this shield in response to a critical hit from an attack, this adjustment is broken and you cannot benefit from it until it has been repaired as part of a successful Repair action on the shield.",
+    "actuated": {
+      "cost": "none",
+      "name": "Improved Mirror",
+      "actionCount": "reaction",
+      "frequency": "once per minute",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger You are targeted by an effect with the visual trait; Effect You gain a +2 circumstance bonus to your AC or saving throw against the triggering effect. Regardless of whether you are affected by the triggering effect, you may attempt to redirect the effect at a target within 30 feet. If the effect requires a saving throw, the target must attempt the same saving throw. If it requires an attack roll, attempt a shield attack roll to determine whether it hits."
+    }
+  },
+  {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "interior-polish",
+    "name": "Interior Polish",
+    "level": 5,
+    "price": 50,
+    "rarity": "uncommon",
+    "usage": "applied to a metal shield",
+    "description": "You have used special alchemical agents to polish the interior of your shield to a reflective shine, giving you a partial view of what is happening behind you. You gain access to the following action, which can only be used one time. After you have used the action you must spend 1 minute cleaning the interior of your shield to be able to use it again. If someone uses the Repair action on your shield they can clean the shield during the repair.",
+    "actuated": {
+      "cost": "none",
+      "name": "Interior Polish",
+      "actionCount": "reaction",
+      "frequency": "see description",
+      "traits": [
+        "Envision"
+      ],
+      "description": "Trigger An enemy attacks you and you have the flat-footed condition because they are flanking you or you are unaware of them. Effect You do not suffer the penalty of the flat-footed condition until the end of the current turn."
+    }
+  },
+  {
     "name": "Inventor's Chair",
     "description": "A traveler's chair crafted by a gifted inventor who lost the use of their legs, it is a marvel of clockwork engineering that maneuvers about on its own, equipped with wheel blades and built-in sterling artisan's tools. As a relic it awakens further gifts: emotion surge and a Crafting muse (minor), emotion conduit and enthralling (major), and artistic perfection in Crafting (grand).",
     "image": "img_9c154fcc-85b9-45db-b9b7-945e9593bdaf.jpg",
@@ -6369,9 +6462,9 @@
       "shield"
     ],
     "name": "Mirror",
-    "level": 0,
+    "level": 1,
     "price": 1,
-    "rarity": "common",
+    "rarity": "uncommon",
     "usage": "applied to a shield",
     "noShop": true,
     "description": "A simple hand mirror that can be tied to a shield. You gain access to the following reaction, which causes the mirror to fall off of the shield when used. You may reattach the mirror to the shield as part of a Repair action, or by adding it to the shield again as normal. If you use the Shield Block reaction, or gain the benefits of the Shield Block reaction with this shield in response to a critical hit from an attack, this adjustment is destroyed and cannot be repaired.",
@@ -9544,6 +9637,38 @@
     "id": "shield-gauntlet"
   },
   {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "shield-harness",
+    "name": "Shield Harness",
+    "level": 7,
+    "price": 105,
+    "rarity": "common",
+    "usage": "applied to a medium or heavy shield",
+    "shieldCategories": [
+      "medium",
+      "heavy"
+    ],
+    "description": "Your shield has been modified so that you can harness it firmly to your back when you are not actively wielding it. When you are wearing your shield instead of wielding it, you gain a +1 circumstance bonus to AC against attacks made against you if you are considered flat-footed against the attack because you are flanked by another enemy. If you are hit by such an attack, you take the damage as normal. The shield also takes the damage but reduces it by its Hardness. If the shield is broken or destroyed, you no longer receive this benefit."
+  },
+  {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "shield-sheath",
+    "name": "Shield Sheath",
+    "level": 1,
+    "price": 1,
+    "rarity": "common",
+    "usage": "applied to a shield",
+    "description": "You have added a bracket or sheath to your shield that allows you to stow your weapon. A weapon sheath can contain a single one-handed weapon whose bulk cannot exceed the bulk of the shield. When you draw your shield, if you have a free hand and there is a weapon in the shield's weapon sheath, you may draw that weapon with the same Interact action you use to draw the shield. Stowing a weapon in the sheath requires a single Interact action. This adjustment cannot be applied to a shield with the accessible trait."
+  },
+  {
     "id": "shield-spikes",
     "name": "Shield Spikes",
     "price": 0.5,
@@ -9568,6 +9693,24 @@
       ]
     },
     "material": "Steel"
+  },
+  {
+    "type": "augmentation",
+    "augTarget": [
+      "shield"
+    ],
+    "noShop": true,
+    "id": "shield-strap",
+    "name": "Shield Strap",
+    "level": 1,
+    "price": 1,
+    "rarity": "common",
+    "usage": "applied to a light or medium shield",
+    "shieldCategories": [
+      "light",
+      "medium"
+    ],
+    "description": "You have attached a leather or chain strap to your shield that you can loop over your forearm or a shoulder. When you Release your shield it doesn't fall to the ground and is considered to be worn. You may draw it as normal after Releasing it. The strap has a quick release, allowing you to still use actions and reactions that require throwing your shield, such as Interrupting Shield, but reattaching the strap is a three-action activity with the manipulate trait."
   },
   {
     "id": "shortbow",
