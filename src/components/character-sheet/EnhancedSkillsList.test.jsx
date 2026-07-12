@@ -223,6 +223,26 @@ describe('EnhancedSkillsList', () => {
       expect(hints[0]).toMatch(/\+2 vs find secret doors and traps.*Eagle-eye Elixir/);
     });
 
+    it('reads hints from the RESOLVED effects prop when provided (#1411)', () => {
+      // Raw useEffects is empty — the conditional mod lives only in the resolved
+      // universe StatsBlock passes (an augmentation's synthetic effect).
+      useEffects.mockReturnValue({ effects: [] });
+      useContent.mockReturnValue({ effects: [] });
+      const coat = { id: 'aug-sh1', name: 'Coat of Arms', modifiers: [
+        { stat: 'diplomacy', kind: 'circumstance', amount: 1, vs: 'a faction (GM)' },
+      ] };
+      const { container } = render(
+        <EnhancedSkillsList
+          character={{ id: '1' }}
+          conditionalEffects={[{ effectId: 'aug-sh1' }]}
+          conditionalCatalog={[coat]}
+        />,
+      );
+      const hints = hintTexts(container);
+      expect(hints).toHaveLength(1);
+      expect(hints[0]).toMatch(/\+1 vs a faction \(GM\).*Coat of Arms/);
+    });
+
     it('renders no hint when the actor has no conditional modifiers', () => {
       const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
       expect(container.querySelectorAll('.skill-conditional-hint')).toHaveLength(0);
