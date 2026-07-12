@@ -4,6 +4,7 @@ import { useShield } from './useShield';
 import { useWornGear } from './useWornGear';
 import { useSyncedState } from './useSyncedState';
 import { heldShieldRuneEffects } from '../utils/shieldRuneEffects';
+import { augmentationEffects } from '../utils/augmentationEffects';
 import { brokenArmorEffect } from '../utils/rustBlessing';
 import { useContent } from '../contexts/ContentContext';
 import { CharacterContext } from '../contexts/CharacterContext';
@@ -47,6 +48,9 @@ export const useResolvedEffects = (charId, inventory = []) => {
       // Held-shield property runes (#1196 G3): passive effects from a wielded
       // shield (e.g. Energy-Resistant resistance vs its chosen type).
       ...heldShieldRuneEffects(inventory),
+      // Bound augmentations (#1411): passive bonuses from an equipped weapon/
+      // armor/shield's augmentation (e.g. Eyecatcher's Deception item bonus).
+      ...augmentationEffects(inventory),
       ...(brokenArmor ? [brokenArmor] : []),
     ];
     if (!synth.length) {
