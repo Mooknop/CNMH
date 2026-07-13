@@ -30,16 +30,23 @@ const DEFAULT_PRIORITY = 1000;
 
 /**
  * First matching rule's `play` recipe, or null. `facts` is a flat bag; a rule
- * matches when every key in its `when` strictly equals the same fact. A `when`
- * key outside the current fact vocabulary compares against undefined and never
- * matches — rules authored for a future matcher degrade to no-ops, not errors.
+ * matches when every key in its `when` matches the same fact — strict
+ * equality for scalar facts, MEMBERSHIP for array facts (`trait` is an array
+ * of trait strings, so `when: { trait: 'Bomb' }` reads "has the Bomb trait").
+ * A `when` key outside the current fact vocabulary compares against undefined
+ * and never matches — rules authored for a future matcher degrade to no-ops,
+ * not errors.
  */
 export function resolveFxRule(rules, facts) {
   const ordered = (Array.isArray(rules) ? rules : [])
     .filter((r) => r?.when && typeof r.play?.shape === 'string' && typeof r.play?.file === 'string')
     .sort((a, b) => (a.priority ?? DEFAULT_PRIORITY) - (b.priority ?? DEFAULT_PRIORITY));
+  const matches = (k, v) => {
+    const fact = facts?.[k];
+    return Array.isArray(fact) ? fact.includes(v) : fact === v;
+  };
   for (const rule of ordered) {
-    if (Object.entries(rule.when).every(([k, v]) => facts?.[k] === v)) return rule.play;
+    if (Object.entries(rule.when).every(([k, v]) => matches(k, v))) return rule.play;
   }
   return null;
 }
@@ -56,6 +63,8 @@ export function strikeFxFacts(ability) {
     abilityName: ability?.name ?? null,
     damageType: ability?.damageType ?? null,
     rangeType: ability?.type === 'ranged' ? 'ranged' : 'melee',
+    // Array fact — rules match by membership (`trait: 'Bomb'` = has trait).
+    trait: Array.isArray(ability?.traits) ? ability.traits : [],
   };
 }
 
@@ -64,13 +73,15 @@ export function strikeFxFacts(ability) {
  * 'attack' vs 'save' so one catalog rule covers all three saves
  * (the equality matcher can't express "any save").
  */
-export function spellFxFacts({ abilityName, damageType, defense }) {
+export function spellFxFacts({ abilityName, damageType, defense, traits }) {
   return {
     kind: 'spell',
     abilityName: abilityName ?? null,
     damageType: damageType ?? null,
     defense: defense ?? null,
     defenseKind: defense == null ? null : (defense === 'ac' ? 'attack' : 'save'),
+    // Array fact — rules match by membership (`trait: 'Fire'` = has trait).
+    trait: Array.isArray(traits) ? traits : [],
   };
 }
 
@@ -88,6 +99,7 @@ export function abilityFxFacts(ability, damageProfile) {
     abilityName: ability?.name,
     damageType: damageProfile?.typeLabel ?? ability?.damageData?.type ?? ability?.damageType ?? null,
     defense: ability?.targetDefense ?? (ability?.traits?.includes('Attack') ? 'ac' : null),
+    traits: ability?.traits,
   });
 }
 
@@ -150,6 +162,7 @@ export function resolveSaveRequestFx({ fxAnimations, ability, damageProfile, cas
     abilityName: ability?.name,
     damageType: damageProfile?.typeLabel ?? ability?.damageData?.type ?? null,
     defense: defense ?? null,
+    traits: ability?.traits,
   }));
   if (!play) return null;
   return { ...play, source: casterEntryId ?? null };

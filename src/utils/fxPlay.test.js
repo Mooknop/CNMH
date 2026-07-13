@@ -55,6 +55,33 @@ describe('resolveFxRule', () => {
     expect(resolveFxRule(null, { kind: 'strike' })).toBeNull();
   });
 
+  it('array facts match by membership (trait) — scalars still by equality', () => {
+    const rules = [
+      {
+        id: 'bomb',
+        priority: 100,
+        when: { kind: 'strike', trait: 'Bomb', damageType: 'fire' },
+        play: { shape: 'burst', file: 'jb2a.explosion.01.orange' },
+      },
+      {
+        id: 'ranged',
+        priority: 200,
+        when: { kind: 'strike', rangeType: 'ranged' },
+        play: { shape: 'projectile', file: 'jb2a.arrow.physical.white.01' },
+      },
+    ];
+    const bombFacts = {
+      kind: 'strike', rangeType: 'ranged', damageType: 'fire',
+      trait: ['Attack', 'Bomb', 'Splash', 'Fire', 'Ranged'],
+    };
+    expect(resolveFxRule(rules, bombFacts).file).toBe('jb2a.explosion.01.orange');
+    // A bow shot has no Bomb trait — falls through to the ranged rule.
+    const bowFacts = { ...bombFacts, trait: ['Attack', 'Ranged'] };
+    expect(resolveFxRule(rules, bowFacts).file).toBe('jb2a.arrow.physical.white.01');
+    // Empty trait array never matches a trait rule.
+    expect(resolveFxRule(rules, { ...bombFacts, trait: [] }).file).toBe('jb2a.arrow.physical.white.01');
+  });
+
   it('skips malformed rules and rules with future matcher fields', () => {
     const rules = [
       { id: 'bad-no-play', when: { kind: 'strike' } },
@@ -74,7 +101,16 @@ describe('strikeFxFacts', () => {
       abilityName: 'Light Hammer Strike',
       damageType: 'bludgeoning',
       rangeType: 'melee',
+      trait: [],
     });
+  });
+
+  it('carries the traits array as the trait fact', () => {
+    const facts = strikeFxFacts({
+      name: 'Acid Flask', type: 'ranged', damageType: 'acid',
+      traits: ['Attack', 'Bomb', 'Splash', 'Acid', 'Ranged'],
+    });
+    expect(facts.trait).toContain('Bomb');
   });
 
   it('classifies ranged strikes', () => {
