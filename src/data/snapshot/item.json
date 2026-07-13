@@ -346,6 +346,15 @@
   {
     "name": "Aeon Stone (Clear Spindle)",
     "description": "This clear, spindle-shaped stone orbits your head. You don't need to eat or drink while it's invested by you. It doesn't function until it has been worn continuously for a week and invested each day therein; if invested by someone else, this interval starts over. Resonant Power You can cast air bubble as a primal innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "air-bubble",
+          "tradition": "primal",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -452,6 +461,12 @@
   {
     "name": "Aeon Stone (Pearly White Spindle)",
     "description": "This pale, spindle-shaped stone orbits your head. While it's invested, it slowly heals your wounds, restoring 1 Hit Point every minute. Resonant Power You gain resistance 1 to void damage.",
+    "resonant": {
+      "resistance": {
+        "amount": 1,
+        "type": "void"
+      }
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -469,6 +484,15 @@
   {
     "name": "Aeon Stone (Polished Pebble)",
     "description": "This smooth, river-worn pebble orbits your head. While invested, you gain a +1 item bonus to saves and DCs against attempts to Grapple or Swallow you. Resonant Power You can cast grease as a primal innate spell once per day, but only to target a surface.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "grease",
+          "tradition": "primal",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
