@@ -58,6 +58,11 @@ let mockAbsorbed = {};
 const mockSetAbsorbed = vi.fn((next) => {
   mockAbsorbed = typeof next === 'function' ? next(mockAbsorbed) : next;
 });
+// Aeon-stone → wayfinder slot overlay (#928).
+let mockSlots = {};
+const mockSetSlots = vi.fn((next) => {
+  mockSlots = typeof next === 'function' ? next(mockSlots) : next;
+});
 let mockInvested = {};
 const mockSetInvested = vi.fn((next) => {
   mockInvested = typeof next === 'function' ? next(mockInvested) : next;
@@ -86,6 +91,7 @@ vi.mock('../../hooks/useSyncedState', () => ({
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
     if (String(key).startsWith('cnmh_absorbed_')) return [mockAbsorbed, mockSetAbsorbed];
+    if (String(key).startsWith('cnmh_wayfinder_')) return [mockSlots, mockSetSlots];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
     if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     if (String(key).startsWith('cnmh_runeconfig_')) return [mockRuneConfig, mockSetRuneConfig];
@@ -166,8 +172,10 @@ beforeEach(() => {
   mockAffixed = {};
   mockAttached = {};
   mockAbsorbed = {};
+  mockSlots = {};
   mockSetAttached.mockClear();
   mockSetAbsorbed.mockClear();
+  mockSetSlots.mockClear();
   mockConsumed = {};
   mockInvested = {};
   mockRuneConfig = {};
@@ -2388,5 +2396,61 @@ describe('ItemModal — durability panel (#539/#542)', () => {
     unmount();
     open({ ...sword, uid: undefined }); // no inventory uid — nothing to key the overlay
     expect(screen.queryByTestId('item-durability')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — aeon-stone / wayfinder slotting (#928)', () => {
+  const wayfinder = () => ({ uid: 'wf', id: 'wayfinder', name: 'Wayfinder', traits: ['Invested', 'Magical'], quantity: 1 });
+  const pearly = () => ({
+    uid: 'st', id: 'aeon-stone-pearly-white-spindle', name: 'Aeon Stone (Pearly White Spindle)',
+    traits: ['Invested', 'Magical'], quantity: 1,
+    resonant: { resistance: { amount: 1, type: 'void' }, grantedSpells: [{ ref: 'grease', tradition: 'primal' }] },
+  });
+  const hero = (inv) => ({ id: 'h', name: 'Hero', __inventory: inv });
+
+  it('offers a wayfinder picker on an aeon stone and slots it', () => {
+    const wf = wayfinder(); const st = pearly();
+    render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.getByTestId('item-slot')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('slot-wayfinder-wf'));
+    expect(mockSlots).toEqual({ wf: 'st' });
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('slotted Aeon Stone (Pearly White Spindle) into Wayfinder') }),
+    );
+  });
+
+  it('shows the host + Remove once slotted, and clears the binding', () => {
+    mockSlots = { wf: 'st' };
+    const wf = wayfinder(); const st = pearly();
+    render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.getByText(/Slotted into/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('item-action-unslot'));
+    expect(mockSlots).toEqual({});
+  });
+
+  it('renders the socket on the wayfinder card and removes the slotted stone', () => {
+    mockSlots = { wf: 'st' };
+    mockInvested = { wf: true, st: true };
+    const wf = wayfinder(); const st = pearly();
+    render(<ItemModal isOpen onClose={vi.fn()} item={wf} character={hero([wf, st])} />);
+    const socket = screen.getByTestId('wayfinder-socket');
+    expect(within(socket).getByText(/resonant power active/)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('wayfinder-unslot'));
+    expect(mockSlots).toEqual({});
+  });
+
+  it('surfaces the resonant innate spell only while resonant-active', () => {
+    mockSpells = [{ id: 'grease', name: 'Grease', level: 1 }];
+    const wf = wayfinder(); const st = pearly();
+    // Merely invested, not slotted → no resonant innate spell.
+    mockInvested = { wf: true, st: true };
+    mockSlots = {};
+    const { unmount } = render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.queryByTestId('granted-cast-spell')).not.toBeInTheDocument();
+    unmount();
+    // Slotted into an invested wayfinder → the resonant grease cast appears.
+    mockSlots = { wf: 'st' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.getByTestId('granted-cast-spell')).toHaveTextContent('Cast Grease');
   });
 });
