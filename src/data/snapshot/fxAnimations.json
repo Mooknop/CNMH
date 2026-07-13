@@ -7,6 +7,20 @@
     "play": { "shape": "projectile", "file": "jb2a.eldritch_blast.purple" }
   },
   {
+    "id": "fx-spell-attack-acid",
+    "name": "Spell attack — acid",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "acid" },
+    "play": { "shape": "projectile", "file": "jb2a.disintegrate.green" }
+  },
+  {
+    "id": "fx-spell-attack-bludgeoning",
+    "name": "Spell attack — bludgeoning (telekinetic boulder)",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "bludgeoning" },
+    "play": { "shape": "projectile", "file": "jb2a.boulder.toss.02.01.stone.brown" }
+  },
+  {
     "id": "fx-spell-attack-cold",
     "name": "Spell attack — cold",
     "priority": 100,
@@ -42,6 +56,27 @@
     "play": { "shape": "burst", "file": "jb2a.impact.001.blue" }
   },
   {
+    "id": "fx-spell-save-acid",
+    "name": "Save spell — acid",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "acid" },
+    "play": { "shape": "burst", "file": "jb2a.water_splash.circle.01.blue", "opts": { "tint": "#66cc33" } }
+  },
+  {
+    "id": "fx-spell-save-bludgeoning",
+    "name": "Save spell — bludgeoning (crushing rocks)",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "bludgeoning" },
+    "play": { "shape": "burst", "file": "jb2a.falling_rocks.top.1x1.grey" }
+  },
+  {
+    "id": "fx-spell-save-cold",
+    "name": "Save spell — cold",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "cold" },
+    "play": { "shape": "burst", "file": "jb2a.impact_themed.ice_shard.blue" }
+  },
+  {
     "id": "fx-spell-save-electricity",
     "name": "Save spell — electricity",
     "priority": 100,
@@ -54,6 +89,34 @@
     "priority": 100,
     "when": { "kind": "spell", "defenseKind": "save", "damageType": "fire" },
     "play": { "shape": "burst", "file": "jb2a.fireball.explosion.orange" }
+  },
+  {
+    "id": "fx-spell-save-mental",
+    "name": "Save spell — mental",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "mental" },
+    "play": { "shape": "burst", "file": "jb2a.impact.001.blue", "opts": { "tint": "#b866e0" } }
+  },
+  {
+    "id": "fx-spell-save-poison",
+    "name": "Save spell — poison",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "poison" },
+    "play": { "shape": "burst", "file": "jb2a.impact.001.blue", "opts": { "tint": "#5aa832" } }
+  },
+  {
+    "id": "fx-spell-save-slashing",
+    "name": "Save spell — slashing (blade whirl)",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "slashing" },
+    "play": { "shape": "burst", "file": "jb2a.melee_generic.whirlwind.01.orange" }
+  },
+  {
+    "id": "fx-spell-save-sonic",
+    "name": "Save spell — sonic",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "sonic" },
+    "play": { "shape": "burst", "file": "jb2a.shatter.blue" }
   },
   {
     "id": "fx-spell-save-vitality",
