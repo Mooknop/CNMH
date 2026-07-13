@@ -9,6 +9,7 @@ import { hasSpellCounter, registerSpellCounter } from './spellCounter';
 import { applyPersistentFromResults } from './persistentDamage';
 import { relayDamageAndRevealIwr } from './damageRelay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from './whetstoneOnHit';
+import { applyStrikeOnCritSave } from './strikeOnCrit';
 import { APP, syncKey } from '../sync/keys';
 
 // Confirm-time appliers (extracted #1317 D4) — the remaining verbatim blocks
@@ -291,6 +292,19 @@ export const applyPostRollEffects = ({
     ability,
     character,
     castCost,
+    rayGroups,
+    chainResults: strikeChainResults,
+    order,
+    addSaveRequest,
+    appendLog,
+  });
+
+  // Intrinsic on-crit save riders (#1439 — Serpent Dagger): a Strike that
+  // inflicts a condition on a critical hit, gated by a fixed-DC save, pushes it
+  // to the GM rail (the intrinsic-weapon mirror of the Chroma Kaleidoscope crit).
+  applyStrikeOnCritSave({
+    ability,
+    character,
     rayGroups,
     chainResults: strikeChainResults,
     order,

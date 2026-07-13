@@ -208,6 +208,10 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       // on the strike so buildDamageProfile forwards them into weakness matching
       // and the typed relay; the whetstone step below unions any it also adds.
       ...(resolved?.iwrTags?.length ? { iwrTags: resolved.iwrTags } : {}),
+      // Intrinsic on-crit save (#1439 — Serpent Dagger): a condition inflicted on
+      // a critical hit, gated by a fixed-DC save. Carried onto the strike so the
+      // post-roll applier (applyStrikeOnCritSave) pushes it to the GM save rail.
+      ...(weaponStrike.onCritSave ? { onCritSave: weaponStrike.onCritSave } : {}),
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded
