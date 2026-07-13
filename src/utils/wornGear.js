@@ -54,7 +54,9 @@ export const specialModifiers = (mods) =>
 
 // Whether a worn item currently grants its magic: worn, and invested if it
 // carries the Invested trait (non-investable worn gear contributes once worn).
-const contributes = (e, isInvested) =>
+// Exported so the wayfinder rail (#928) reuses the exact worn+invested gate for
+// a host wayfinder instead of re-deriving it.
+export const contributes = (e, isInvested) =>
   isWornDefault(e) && !(isInvestable(e) && !isInvested(e.uid));
 
 // Highest worn-gear amount of a special stat (`resistance` / `weakness`) to a
