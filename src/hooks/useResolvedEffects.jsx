@@ -31,7 +31,7 @@ import { APP, syncKey } from '../sync/keys';
 export const useResolvedEffects = (charId, inventory = []) => {
   const { effects: activeEffects } = useEffects(charId);
   const { effects: contentCatalog } = useContent();
-  const { shieldEffect } = useShield(charId, inventory);
+  const { shieldEffect, raised } = useShield(charId, inventory);
   const { wornEffects } = useWornGear(charId, inventory);
   // Broken worn armor (#539): a status penalty to AC (−1/−2/−3 by category;
   // one step kinder under Rust Blessing) synthesized into the effect universe
@@ -46,8 +46,9 @@ export const useResolvedEffects = (charId, inventory = []) => {
       ...(shieldEffect ? [shieldEffect] : []),
       ...wornEffects,
       // Held-shield property runes (#1196 G3): passive effects from a wielded
-      // shield (e.g. Energy-Resistant resistance vs its chosen type).
-      ...heldShieldRuneEffects(inventory),
+      // shield (e.g. Energy-Resistant resistance vs its chosen type). The live
+      // `raised` flag gates raised-only save hints (Spellguarding, #1246).
+      ...heldShieldRuneEffects(inventory, { raised }),
       // Bound augmentations (#1411): passive bonuses from an equipped weapon/
       // armor/shield's augmentation (e.g. Eyecatcher's Deception item bonus).
       ...augmentationEffects(inventory),
@@ -60,7 +61,7 @@ export const useResolvedEffects = (charId, inventory = []) => {
       effects: [...activeEffects, ...synth.map((s) => s.entry)],
       catalog: [...(contentCatalog || []), ...synth.map((s) => s.def)],
     };
-  }, [activeEffects, contentCatalog, shieldEffect, wornEffects, inventory, itemHpState, characterDoc]);
+  }, [activeEffects, contentCatalog, shieldEffect, raised, wornEffects, inventory, itemHpState, characterDoc]);
 };
 
 export default useResolvedEffects;

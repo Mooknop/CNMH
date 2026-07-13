@@ -115,6 +115,59 @@ describe('heldShieldRuneEffects — save-hint runes (Heavy)', () => {
     const hints = conditionalModifiersFor(effects, 'fort', catalog);
     expect(hints).toEqual([{ amount: 2, kind: 'item', label: 'Heavy', vs: 'Grapple or Shove' }]);
   });
+
+  it('Heavy stays ungated by raise (always-on while wielded)', () => {
+    const fx = heldShieldRuneEffects([heldShield([heavyRune])], { raised: false });
+    expect(fx).toHaveLength(1);
+    expect(fx[0].def.modifiers[0]).toMatchObject({ stat: 'fort', vs: 'Grapple or Shove' });
+  });
+});
+
+const spellguardingRune = { id: 'spellguarding', type: 'property', target: 'shield', name: 'Spellguarding' };
+const raisedShield = (property) => ({
+  uid: 'sh2', name: 'Steel Shield', shield: { hardness: 5, bonus: 2 }, state: 'held1',
+  runes: { property },
+});
+
+describe('heldShieldRuneEffects — raised-gated save hints (#1246)', () => {
+  it('emits nothing for Spellguarding while the shield is not raised', () => {
+    expect(heldShieldRuneEffects([raisedShield([spellguardingRune])])).toEqual([]);
+    expect(heldShieldRuneEffects([raisedShield([spellguardingRune])], { raised: false })).toEqual([]);
+  });
+
+  it('emits a circumstance hint on all three saves (amount = shield AC bonus) when raised', () => {
+    const fx = heldShieldRuneEffects([raisedShield([spellguardingRune])], { raised: true });
+    expect(fx).toHaveLength(1);
+    expect(fx[0].def.modifiers).toEqual([
+      { stat: 'fort', kind: 'circumstance', amount: 2, vs: 'spells that target you' },
+      { stat: 'reflex', kind: 'circumstance', amount: 2, vs: 'spells that target you' },
+      { stat: 'will', kind: 'circumstance', amount: 2, vs: 'spells that target you' },
+    ]);
+    // Conditional — never netted into the base saves.
+    const effects = fx.map((f) => f.entry);
+    const catalog = fx.map((f) => f.def);
+    expect(computeEffectBonuses(effects, catalog).will.total).toBe(0);
+    expect(conditionalModifiersFor(effects, 'reflex', catalog)).toEqual([
+      { amount: 2, kind: 'circumstance', label: 'Spellguarding', vs: 'spells that target you' },
+    ]);
+  });
+
+  it("wires a specific magic shield's conditional save bonuses (Dragonslayer's Shield)", () => {
+    const ds = { uid: 'ds1', id: 'dragonslayers-shield', name: "Dragonslayer's Shield", shield: { hardness: 8, bonus: 2 }, state: 'held1' };
+    expect(heldShieldRuneEffects([ds], { raised: false })).toEqual([]);
+    const fx = heldShieldRuneEffects([ds], { raised: true });
+    expect(fx).toHaveLength(1);
+    expect(fx[0].def.modifiers).toEqual([
+      { stat: 'reflex', kind: 'circumstance', amount: 2, vs: 'area effects' },
+      { stat: 'will', kind: 'circumstance', amount: 2, vs: "a dragon's frightful presence" },
+    ]);
+    const effects = fx.map((f) => f.entry);
+    const catalog = fx.map((f) => f.def);
+    expect(computeEffectBonuses(effects, catalog).reflex.total).toBe(0);
+    expect(conditionalModifiersFor(effects, 'will', catalog)).toEqual([
+      { amount: 2, kind: 'circumstance', label: "Dragonslayer's Shield", vs: "a dragon's frightful presence" },
+    ]);
+  });
 });
 
 describe('heldShieldRollBonus — opt-in roll toggles (Knowing / Glamourous)', () => {
