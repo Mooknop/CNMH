@@ -343,6 +343,15 @@ describe('bundled item catalog (Slice 3)', () => {
     // End-to-end pass-through is covered by strikeUtils' Monarch intrinsic-rider test.
   });
 
+  it('Serpent Dagger carries an on-crit save (#1439)', () => {
+    const sd = items.find((i) => i.id === 'serpent-dagger');
+    const melee = (Array.isArray(sd.strikes) ? sd.strikes : [sd.strikes]).find((s) => s.type === 'melee');
+    expect(melee.onCritSave).toMatchObject({ defense: 'fortitude', dc: 19 });
+    expect(melee.onCritSave.conditions.failure).toContainEqual(
+      expect.objectContaining({ id: 'sickened', value: 1 }),
+    );
+  });
+
   it('worn items carry conditional save-hint modifiers (#912)', () => {
     // Aeon Stone (Polished Pebble): a conditional Fortitude hint (vs Grapple/Swallow).
     const pebble = items.find((i) => i.id === 'aeon-stone-polished-pebble');
