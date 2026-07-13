@@ -9,7 +9,10 @@ import { hasSpellCounter, registerSpellCounter } from './spellCounter';
 import { applyPersistentFromResults } from './persistentDamage';
 import { relayDamageAndRevealIwr } from './damageRelay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from './whetstoneOnHit';
-import { applyStrikeOnCritSave, applyStrikeOnCritConditions, applyStrikeOnHitConditions } from './strikeOnCrit';
+import {
+  applyStrikeOnCritSave, applyStrikeOnCritConditions,
+  applyStrikeOnHitConditions, applyStrikeOnHitNotes,
+} from './strikeOnCrit';
 import { APP, syncKey } from '../sync/keys';
 
 // Confirm-time appliers (extracted #1317 D4) — the remaining verbatim blocks
@@ -331,6 +334,17 @@ export const applyPostRollEffects = ({
     chainResults: strikeChainResults,
     order,
     applyEnemyCondition,
+    appendLog,
+  });
+
+  // Intrinsic on-hit reminders (#1439 tail): a status penalty the app can't apply
+  // to an enemy (Frost Vial / Sulfur Bomb / Glue Bomb Speed & check penalties),
+  // surfaced as a targeted combat-log note on each hit.
+  applyStrikeOnHitNotes({
+    ability,
+    rayGroups,
+    chainResults: strikeChainResults,
+    order,
     appendLog,
   });
 };

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyStrikeOnCritSave, applyStrikeOnCritConditions, applyStrikeOnHitConditions } from './strikeOnCrit';
+import {
+  applyStrikeOnCritSave, applyStrikeOnCritConditions,
+  applyStrikeOnHitConditions, applyStrikeOnHitNotes,
+} from './strikeOnCrit';
 
 const onCritSave = {
   defense: 'fortitude', dc: 19, label: 'Serpent Dagger',
@@ -154,5 +157,48 @@ describe('applyStrikeOnHitConditions (#1439 tail — on-hit)', () => {
     const plain = hbag([{ entryId: 'g1', degree: 'success' }], { ability: { name: 'Plain' } });
     applyStrikeOnHitConditions(plain);
     expect(plain.applyEnemyCondition).not.toHaveBeenCalled();
+  });
+});
+
+describe('applyStrikeOnHitNotes (#1439 tail — on-hit penalty reminders)', () => {
+  const ability = { name: 'Frost Vial', source: 'Frost Vial', onHitNotes: ['−5-foot status penalty to Speeds'] };
+  const order = [{ entryId: 'g1', name: 'Ogre', kind: 'enemy', defenses: {} }];
+  const nbag = (results, over = {}) => ({
+    ability,
+    order,
+    rayGroups: [{ results }],
+    chainResults: null,
+    appendLog: vi.fn(),
+    ...over,
+  });
+
+  it('logs a targeted, source-labelled reminder on a hit', () => {
+    const b = nbag([{ entryId: 'g1', degree: 'success' }]);
+    applyStrikeOnHitNotes(b);
+    expect(b.appendLog).toHaveBeenCalledTimes(1);
+    const { text } = b.appendLog.mock.calls[0][0];
+    expect(text).toContain('Frost Vial');
+    expect(text).toContain('Ogre');
+    expect(text).toContain('Speeds');
+  });
+
+  it('does nothing on a miss', () => {
+    const b = nbag([{ entryId: 'g1', degree: 'failure' }]);
+    applyStrikeOnHitNotes(b);
+    expect(b.appendLog).not.toHaveBeenCalled();
+  });
+
+  it('logs once per target (de-duped), skips non-enemies, no-ops without notes', () => {
+    const dup = nbag([{ entryId: 'g1', degree: 'success' }, { entryId: 'g1', degree: 'criticalSuccess' }]);
+    applyStrikeOnHitNotes(dup);
+    expect(dup.appendLog).toHaveBeenCalledTimes(1);
+    const ally = nbag([{ entryId: 'a1', degree: 'success' }], {
+      order: [{ entryId: 'a1', name: 'Ally', kind: 'ally', defenses: {} }],
+    });
+    applyStrikeOnHitNotes(ally);
+    expect(ally.appendLog).not.toHaveBeenCalled();
+    const none = nbag([{ entryId: 'g1', degree: 'success' }], { ability: { name: 'Plain' } });
+    applyStrikeOnHitNotes(none);
+    expect(none.appendLog).not.toHaveBeenCalled();
   });
 });

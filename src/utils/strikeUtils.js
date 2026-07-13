@@ -226,6 +226,10 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       // every tier's strike; a strike-level block overrides it.
       ...((weaponStrike.onHitConditions || item.onHitConditions)
         ? { onHitConditions: weaponStrike.onHitConditions || item.onHitConditions } : {}),
+      // Intrinsic on-hit reminders (#1439 tail): a status penalty the app can't
+      // apply to an enemy, surfaced as a targeted combat-log note on each hit.
+      ...((weaponStrike.onHitNotes || item.onHitNotes)
+        ? { onHitNotes: weaponStrike.onHitNotes || item.onHitNotes } : {}),
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded

@@ -146,4 +146,39 @@ export const applyStrikeOnHitConditions = ({
   });
 };
 
+/**
+ * Intrinsic on-hit reminders (#1439 tail). Some throwables impose a status
+ * PENALTY on a hit — Frost Vial (−5-ft Speed), Sulfur Bomb (−1 Perception/attacks),
+ * Glue Bomb (−10-ft Speed) — that the app has no enemy-modifier engine for (and
+ * the GM rolls enemy checks anyway). So `onHitNotes` surfaces the penalty as a
+ * targeted, source-labelled combat-log reminder on each hit, rather than leaving
+ * it buried in the item description.
+ *
+ * Shape (item- or strike-level): onHitNotes: ['<penalty + duration text>', ...]
+ */
+export const applyStrikeOnHitNotes = ({
+  ability,
+  rayGroups,
+  chainResults,
+  order,
+  appendLog,
+}) => {
+  const notes = ability?.onHitNotes;
+  if (!Array.isArray(notes) || !notes.length || !appendLog) return;
+  const hits = strikeResults(rayGroups, chainResults)
+    .filter((r) => r?.degree === 'success' || r?.degree === 'criticalSuccess');
+  if (!hits.length) return;
+
+  const source = ability.source || ability.name || 'On-hit effect';
+  const seen = new Set();
+  hits.forEach((r) => {
+    const entry = (order || []).find((e) => e.entryId === r.entryId);
+    if (!entry || entry.kind !== 'enemy' || seen.has(entry.entryId)) return;
+    seen.add(entry.entryId);
+    notes.forEach((text) => {
+      if (text) appendLog({ type: 'system', text: `${source}: ${entry.name} — ${text}.` });
+    });
+  });
+};
+
 export default applyStrikeOnCritSave;

@@ -425,6 +425,16 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(strike.onHitConditions).toEqual([{ id: 'off-guard' }]);
   });
 
+  test('item-level onHitNotes rides the resolved strike (#1439 tail)', () => {
+    const vial = {
+      uid: 'fv', name: 'Frost Vial',
+      onHitNotes: ['−5-foot status penalty to Speeds'],
+      strikes: [{ name: 'Frost Vial', proficiency: 'martial', type: 'ranged', damage: '1d6', damageType: 'cold' }],
+    };
+    const strike = getStrikes({ ...martialChar, inventory: [vial] }).find((s) => s.name === 'Frost Vial');
+    expect(strike.onHitNotes).toEqual(['−5-foot status penalty to Speeds']);
+  });
+
   test('a Ghost Touch property rune surfaces its counts-as tag on the strike (#1436)', () => {
     const char = {
       ...martialChar,
