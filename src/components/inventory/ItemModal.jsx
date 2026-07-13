@@ -48,6 +48,7 @@ import {
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations, accessoryRuneOf } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { itemGrantedSpells, buildItemGrantedSpell } from '../../utils/itemGrantedSpells';
+import { parseFrequency, lockMessage } from '../../utils/frequency';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
@@ -68,6 +69,7 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { useGiveItem } from '../../hooks/useGiveItem';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useItemActivation } from '../../hooks/useItemActivation';
+import { useFrequency } from '../../hooks/useFrequency';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -133,6 +135,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const { gameDate, time } = useGameDate();
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const itemAct = useItemActivation(character, item, { nowSecs });
+  // Frequency ledger for item-granted innate spells (#914 slice 2 / #916 rail) —
+  // gates the once/day grants on the card (the cast flow records the use itself).
+  const { gateFor: grantGateFor } = useFrequency(character?.id);
   // Stack-split amount for giving a consumable (#657). Clamped to the remaining
   // quantity at render so it can't exceed what's on hand.
   const [giveCount, setGiveCount] = useState(1);
@@ -1591,22 +1596,39 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       <ItemActivations item={withAccessoryActivations(item)} />
 
       {/* Item-granted innate spells (#914) — cast a catalog spell the item grants
-          (Pendant of the Occult → guidance) through the shared cast flow. */}
+          (Pendant of the Occult → guidance) through the shared cast flow. A
+          frequency-gated grant (#914 slice 2) reflects the shared per-character
+          ledger: the button disables while the once/day use is spent (the cast
+          flow records the use itself, keyed by the same synthetic spell id). */}
       {grantedSpellCasts.length > 0 && (
         <div className="item-granted-spells">
           <h3>Innate Spells</h3>
           <div className="granted-spell-controls">
-            {grantedSpellCasts.map(({ grant, doc, spell }) => (
-              <button
-                key={grant.ref}
-                type="button"
-                className="btn-small btn-primary"
-                data-testid="granted-cast-spell"
-                onClick={() => setGrantedCast(spell)}
-              >
-                Cast {doc.name}
-              </button>
-            ))}
+            {grantedSpellCasts.map(({ grant, doc, spell }) => {
+              const rule = spell.frequency ? parseFrequency(spell) : null;
+              const gate = rule ? grantGateFor({ id: spell.id, frequency: spell.frequency }, { nowSecs }) : null;
+              const locked = !!gate && !gate.available;
+              return (
+                <div key={grant.ref} className="granted-spell">
+                  <button
+                    type="button"
+                    className="btn-small btn-primary"
+                    data-testid="granted-cast-spell"
+                    disabled={locked}
+                    onClick={() => setGrantedCast(spell)}
+                  >
+                    Cast {doc.name}
+                  </button>
+                  {rule && (
+                    <span className="granted-spell-freq" data-testid="granted-spell-freq">
+                      {locked
+                        ? lockMessage(gate, rule, nowSecs)
+                        : spell.frequency.replace(/^./, (c) => c.toUpperCase())}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

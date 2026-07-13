@@ -4358,6 +4358,13 @@
         "description": "Activate 1 minute (Interact); Frequency once per day; Effect You gain the effects of a 1st-level illusory disguise, except that the illusion only alters the appearance of the dweomerweave robe, changing it into another garment with an appearance of your choice. The spell persists until the next activation. You can Dismiss the activation."
       }
     ],
+    "grantedSpells": [
+      {
+        "ref": "illusory-disguise",
+        "tradition": "arcane",
+        "frequency": "once per day"
+      }
+    ],
     "id": "dweomerweave-robe"
   },
   {

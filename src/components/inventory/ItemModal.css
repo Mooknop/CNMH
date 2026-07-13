@@ -346,10 +346,13 @@
 .loot-scroll .item-runestone-note { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; color: var(--shell-text-tertiary); font-style: italic; margin: 0.5rem 0 0; }
 /* Quiet italic GM-adjudicated marker on an augmentation card (#1411 C/E). */
 .loot-scroll .item-rune-note { font-family: var(--font-body); font-size: 0.82rem; line-height: 1.4; color: var(--shell-text-tertiary); font-style: italic; margin: 0.4rem 0 0; }
-/* Item-granted innate spells (#914) — a Cast button per granted catalog spell. */
+/* Item-granted innate spells (#914) — a Cast button per granted catalog spell,
+   with an optional frequency note for gated grants (slice 2). */
 .loot-scroll .item-granted-spells { margin: 0.75rem 0 0; }
 .loot-scroll .item-granted-spells h3 { margin: 0 0 0.4rem; }
-.loot-scroll .granted-spell-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.loot-scroll .granted-spell-controls { display: flex; flex-wrap: wrap; gap: 0.6rem 0.8rem; }
+.loot-scroll .granted-spell { display: flex; flex-direction: column; gap: 0.2rem; align-items: flex-start; }
+.loot-scroll .granted-spell-freq { font-family: var(--font-body); font-size: 0.78rem; line-height: 1.35; color: var(--shell-text-tertiary); font-style: italic; }
 /* Full rune effect in the runestone block (#1055 S1) — shared RuneMechanics. */
 .loot-scroll .rune-mech { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
 .loot-scroll .rune-mech-desc,

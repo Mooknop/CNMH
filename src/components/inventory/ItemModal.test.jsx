@@ -154,6 +154,13 @@ vi.mock('../../hooks/useItemActivation', () => ({
   useItemActivation: () => mockItemAct,
 }));
 
+// Frequency ledger (#914 slice 2) — a controllable gate so the Innate Spells card
+// can be driven into the available / locked states without seeding the ledger.
+let mockGrantGate = { available: true, availableAtSecs: null, lastUsedSecs: null, lockKind: null };
+vi.mock('../../hooks/useFrequency', () => ({
+  useFrequency: () => ({ gateFor: () => mockGrantGate }),
+}));
+
 beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
@@ -182,6 +189,7 @@ beforeEach(() => {
   mockMode = 'exploration';
   mockCharacters = [];
   mockSpells = [];
+  mockGrantGate = { available: true, availableAtSecs: null, lastUsedSecs: null, lockKind: null };
   mockItemAct = makeItemAct();
   mockItemHp = {};
   mockSetItemHp.mockClear();
@@ -1966,6 +1974,36 @@ describe('ItemModal — item-granted innate spell (#914)', () => {
     mockSpells = []; // guidance absent → unresolved ref, no button
     render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
     expect(screen.queryByTestId('granted-cast-spell')).not.toBeInTheDocument();
+  });
+
+  // ── Frequency-gated grant (#914 slice 2 — Dweomerweave Robe → illusory disguise) ──
+  const robe = {
+    uid: 'robe1', name: 'Dweomerweave Robe', weight: 0,
+    grantedSpells: [{ ref: 'illusory-disguise', tradition: 'arcane', frequency: 'once per day' }],
+  };
+  const disguiseDoc = { id: 'illusory-disguise', name: 'Illusory Disguise', level: 1, traditions: ['arcane'] };
+
+  it('shows a frequency note and an enabled Cast button for an available gated grant', () => {
+    mockSpells = [disguiseDoc];
+    render(<ItemModal isOpen onClose={vi.fn()} item={robe} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('granted-cast-spell')).not.toBeDisabled();
+    expect(screen.getByTestId('granted-spell-freq')).toHaveTextContent('Once per day');
+  });
+
+  it('disables the Cast button when the once/day grant is already spent', () => {
+    mockSpells = [disguiseDoc];
+    mockGrantGate = { available: false, availableAtSecs: 90000, lastUsedSecs: 3600, lockKind: 'window' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={robe} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('granted-cast-spell')).toBeDisabled();
+    expect(screen.getByTestId('granted-spell-freq')).toBeInTheDocument();
+  });
+
+  it('leaves an at-will grant (no frequency) enabled and note-less, ignoring the gate', () => {
+    mockSpells = [guidanceDoc];
+    mockGrantGate = { available: false }; // would lock a gated grant — but guidance is at-will
+    render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('granted-cast-spell')).not.toBeDisabled();
+    expect(screen.queryByTestId('granted-spell-freq')).not.toBeInTheDocument();
   });
 });
 
