@@ -1630,6 +1630,7 @@
           "Force"
         ],
         "trigger": "A creature critically misses you with a melee Strike.",
+        "triggerType": "attack-melee",
         "description": "The bands snap outward and you Shove the triggering creature, using the bands’ Athletics modifier of +14 for the Shove."
       }
     ],
@@ -13788,6 +13789,7 @@
           "Concentrate"
         ],
         "trigger": "You become grabbed, restrained, or otherwise held immobilized in a creature's grasp, such as by being engulfed or swallowed.",
+        "triggerType": "grabbed",
         "description": "Your armor suddenly grows spikes, attacking the triggering creature. The armor makes a melee attack with an attack modifier of +14 that deals 2d6 piercing damage. If the creature is swallowing or engulfing you, the attack deals an additional 1d6 damage, and damage from this attack can cut you free if it equals or exceeds the Rupture value of the immobilizing ability. This attack gets an item bonus to the attack roll equal to the armor's item bonus to your AC and an item bonus to damage equal to double that amount."
       }
     ],
