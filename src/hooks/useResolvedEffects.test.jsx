@@ -14,9 +14,10 @@ vi.mock('../contexts/ContentContext', () => ({
 }));
 
 let mockShieldEffect = null;
+let mockRaised = false;
 vi.mock('./useShield', () => ({
   __esModule: true,
-  useShield: () => ({ shieldEffect: mockShieldEffect }),
+  useShield: () => ({ shieldEffect: mockShieldEffect, raised: mockRaised }),
 }));
 
 let mockWornEffects = [];
@@ -44,6 +45,7 @@ beforeEach(() => {
   mockActiveEffects = [...APP];
   mockContentCatalog = [...CONTENT];
   mockShieldEffect = null;
+  mockRaised = false;
   mockWornEffects = [];
 });
 
@@ -67,6 +69,19 @@ describe('useResolvedEffects (#922 S2)', () => {
     const { effects, catalog } = run();
     expect(effects).toEqual([...APP, SHIELD.entry, WORN.entry]);
     expect(catalog).toEqual([...CONTENT, SHIELD.def, WORN.def]);
+  });
+
+  it('gates a raised-only shield save hint on the live raised flag (#1246)', () => {
+    // Real heldShieldRuneEffects runs here — the raised flag must thread through.
+    const inv = [{
+      uid: 'sg1', name: 'Steel Shield', shield: { hardness: 5, bonus: 2 }, state: 'held1',
+      runes: { property: [{ id: 'spellguarding', name: 'Spellguarding' }] },
+    }];
+    const runInv = () => renderHook(() => useResolvedEffects('hero', inv)).result.current;
+    mockRaised = false;
+    expect(runInv().catalog.some((d) => d.name === 'Spellguarding')).toBe(false);
+    mockRaised = true;
+    expect(runInv().catalog.some((d) => d.name === 'Spellguarding')).toBe(true);
   });
 
   it('tolerates a null content catalog when synthetics are present', () => {

@@ -44,6 +44,39 @@ export const SKILL_WIRE_RUNES = {
 // always-on save number — the app can't know a check's context). Code-owned.
 export const SAVE_HINT_RUNES = {
   heavy: { stat: 'fort', amount: 2, vs: 'Grapple or Shove' },
+  // Spellguarding (#1246): while the shield is RAISED, its circumstance bonus
+  // applies to saves against spells that target you. Amount = the held shield's
+  // AC bonus; fans to all three saves (there is no 'saves' meta-stat). Raised-gated.
+  spellguarding: {
+    requiresRaised: true, amountFromShieldBonus: true, kind: 'circumstance',
+    saves: ['fort', 'reflex', 'will'], vs: 'spells that target you',
+  },
+};
+
+// Specific magic SHIELDS whose descriptive conditional save bonuses (#1246) are
+// wired as save hints, keyed by the held shield's catalog id. Each carries an
+// explicit `modifiers` list (fixed amounts) and optional `requiresRaised` — the
+// item counterpart of SAVE_HINT_RUNES. Code-owned.
+export const ITEM_SAVE_HINTS = {
+  'dragonslayers-shield': {
+    requiresRaised: true,
+    modifiers: [
+      { stat: 'reflex', kind: 'circumstance', amount: 2, vs: 'area effects' },
+      { stat: 'will', kind: 'circumstance', amount: 2, vs: "a dragon's frightful presence" },
+    ],
+  },
+};
+
+// Expand a SAVE_HINT_RUNES entry + the held shield into the conditional
+// `vs`-tagged modifiers it contributes. `amountFromShieldBonus` reads the
+// shield's AC bonus (Spellguarding); a `saves` list fans one modifier per save,
+// else the single `stat`. Empty when the amount resolves to 0.
+const saveHintModifiers = (hint, shieldEntry) => {
+  const amount = hint.amountFromShieldBonus ? (shieldEntry?.shield?.bonus || 0) : hint.amount;
+  if (!amount) return [];
+  const kind = hint.kind || 'item';
+  const stats = Array.isArray(hint.saves) ? hint.saves : [hint.stat];
+  return stats.map((stat) => ({ stat, kind, amount, vs: hint.vs }));
 };
 
 // Runes that grant an OPT-IN item bonus to a specific roll, surfaced as a toggle
@@ -87,9 +120,11 @@ export const heldShieldRollBonus = (inventory, runeId, { raised = false } = {}) 
  * no shield is held or none of its runes contribute a wired passive effect.
  *
  * @param {Array} inventory - effective (state-stamped) inventory
+ * @param {{ raised?: boolean }} [opts] - live shield-raise state; gates the
+ *   raised-only hints (Spellguarding, Dragonslayer's Shield).
  * @returns {Array<{ entry: object, def: object }>}
  */
-export const heldShieldRuneEffects = (inventory = []) => {
+export const heldShieldRuneEffects = (inventory = [], { raised = false } = {}) => {
   const shield = heldShieldEntry(inventory);
   const property = shield && shield.runes && Array.isArray(shield.runes.property) ? shield.runes.property : [];
   const out = [];
@@ -117,19 +152,24 @@ export const heldShieldRuneEffects = (inventory = []) => {
       });
       return;
     }
-    // Save-hint runes (Heavy → Fortitude vs Grapple/Shove): a conditional bonus
-    // rides on the DEF with a `vs` tag, surfacing as a save note on the sheet.
+    // Save-hint runes (Heavy → Fortitude vs Grapple/Shove; Spellguarding → all
+    // saves vs spells while raised): a conditional bonus rides on the DEF with a
+    // `vs` tag, surfacing as a save note on the sheet.
     const saveHint = SAVE_HINT_RUNES[rune.id];
-    if (saveHint) {
-      out.push({
-        entry: { id, effectId: id },
-        def: {
-          id, name: rune.name,
-          modifiers: [{ stat: saveHint.stat, kind: 'item', amount: saveHint.amount, vs: saveHint.vs }],
-        },
-      });
+    if (saveHint && !(saveHint.requiresRaised && !raised)) {
+      const modifiers = saveHintModifiers(saveHint, shield);
+      if (modifiers.length) {
+        out.push({ entry: { id, effectId: id }, def: { id, name: rune.name, modifiers } });
+      }
     }
   });
+  // Specific magic shields with descriptive conditional save bonuses (#1246 —
+  // Dragonslayer's Shield), keyed by the held shield's catalog id; raised-gated.
+  const itemHint = shield && ITEM_SAVE_HINTS[shield.id];
+  if (itemHint && !(itemHint.requiresRaised && !raised)) {
+    const id = `shielditem-${shield.uid}`;
+    out.push({ entry: { id, effectId: id }, def: { id, name: shield.name, modifiers: itemHint.modifiers } });
+  }
   return out;
 };
 
