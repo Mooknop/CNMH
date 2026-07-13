@@ -111,7 +111,7 @@ const UseAbilityModal = ({
   themeColor,
 }) => {
   const { getState, sendUpdate } = useSession();
-  const { characters, effects: effectCatalog } = useContent();
+  const { characters, effects: effectCatalog, fxAnimations } = useContent();
   const { gameDate, time } = useGameDate();
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
@@ -431,6 +431,7 @@ const UseAbilityModal = ({
     const ctx = {
       ability, character, caster: character, casterEntryId, order, encounter,
       characters, getState, sendUpdate, appendLog, effectiveVerb, nowSecs,
+      fxAnimations,
     };
 
     // Opposed reaction (#226-C, extracted #1317 D3) — its own resolution path

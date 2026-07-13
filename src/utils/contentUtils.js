@@ -15,6 +15,7 @@ import {
   themeDocs as defaultThemeDocs,
   effects as snapshotEffects,
   runes as snapshotRunes,
+  fxAnimations as snapshotFxAnimations,
 } from '../data';
 import bootstrapEffects from '../data/pf2eEffects';
 import bootstrapRunes from '../data/pf2eRunes';
@@ -156,6 +157,18 @@ export const normalizeRunes = (arr) =>
     ...r,
     id: r.id || slugify(r.name),
     type: r.type || 'property',
+  }));
+
+// FX animation catalog (#1416, epic #1414) — ordered rules mapping ability
+// facts to bridge animation recipes (see src/utils/fxPlay.js for the matcher
+// contract). Shards are id-sorted, so rule precedence lives in the explicit
+// `priority` field, not array order.
+export const normalizeFxAnimations = (arr) =>
+  normalizeList(arr, (r) => ({
+    ...r,
+    id: r.id || slugify(r.name),
+    when: r.when && typeof r.when === 'object' ? r.when : {},
+    play: r.play && typeof r.play === 'object' ? r.play : {},
   }));
 
 // Armor property runes (#727) share the `rune` collection — flagged
@@ -742,6 +755,9 @@ export const defaultContent = () => ({
   // Property runes (#548): brand-new collection, bootstrap-seeded until the
   // snapshot carries a `rune` array (same pattern as effects).
   rune: mergeFundamentalRunes(mergeArmorRunes(normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes))),
+  // FX animation catalog (#1416): seeded from its shard; no code bootstrap —
+  // an empty catalog simply means no canvas animations.
+  fxAnimations: normalizeFxAnimations(snapshotFxAnimations || []),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
   monster: [],

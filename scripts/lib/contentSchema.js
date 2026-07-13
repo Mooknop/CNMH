@@ -74,6 +74,14 @@ const COLLECTION_SPECS = {
     id: req('string'), type: req('string'), name: req('string'),
     level: req('number'), price: req('number'), description: req('string'),
   },
+  // FX animation catalog (#1416, epic #1414): ordered rules mapping ability
+  // facts (`when`) to bridge animation recipes (`play` — a shape from the
+  // bridge's vocabulary + a Sequencer DB file key). Precedence is ascending
+  // `priority` (shards are id-sorted, so array order carries no meaning).
+  fxAnimations: {
+    id: req('string'), name: opt('string'), priority: opt('number'),
+    when: req('object'), play: req('object'),
+  },
   image: {
     id: req('string'), name: req('string'), folder: req('string'),
     mimeType: req('string'), createdAt: req('number'),
