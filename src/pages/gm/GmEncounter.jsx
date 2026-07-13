@@ -6,6 +6,7 @@ import { useMinionActors } from '../../hooks/useMinionActors';
 import MinionSpawnButton from '../../components/encounter/MinionSpawnButton';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
+import GmFxTestFire from '../../components/gm/GmFxTestFire';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
@@ -128,6 +129,10 @@ const GmEncounter = () => {
       {phase !== 'idle' && (
         <GmTriggerConsole pcEntries={order.filter((e) => e.kind === 'pc' && e.charId)} round={round} />
       )}
+
+      {/* FX test-fire (#1456): the raw order on purpose — any combatant can
+          source or receive a test animation, not just mapped PCs. */}
+      {phase !== 'idle' && <GmFxTestFire entries={order} />}
 
       {phase !== 'idle' && <RequestedSaves />}
 
