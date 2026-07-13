@@ -133,6 +133,69 @@
     "play": { "shape": "burst", "file": "jb2a.toll_the_dead.green.complete" }
   },
   {
+    "id": "fx-strike-bomb",
+    "name": "Thrown bomb (fallback)",
+    "priority": 150,
+    "when": { "kind": "strike", "trait": "Bomb" },
+    "play": { "shape": "burst", "file": "jb2a.explosion.shrapnel.bomb.01.black" }
+  },
+  {
+    "id": "fx-strike-bomb-acid",
+    "name": "Thrown bomb — acid",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "acid" },
+    "play": { "shape": "burst", "file": "jb2a.water_splash.circle.01.blue", "opts": { "tint": "#66cc33" } }
+  },
+  {
+    "id": "fx-strike-bomb-cold",
+    "name": "Thrown bomb — cold",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "cold" },
+    "play": { "shape": "burst", "file": "jb2a.impact_themed.ice_shard.blue" }
+  },
+  {
+    "id": "fx-strike-bomb-electricity",
+    "name": "Thrown bomb — electricity",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "electricity" },
+    "play": { "shape": "burst", "file": "jb2a.static_electricity.01.blue" }
+  },
+  {
+    "id": "fx-strike-bomb-fire",
+    "name": "Thrown bomb — fire",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "fire" },
+    "play": { "shape": "burst", "file": "jb2a.explosion.01.orange" }
+  },
+  {
+    "id": "fx-strike-bomb-mental",
+    "name": "Thrown bomb — mental",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "mental" },
+    "play": { "shape": "burst", "file": "jb2a.impact.001.blue", "opts": { "tint": "#b866e0" } }
+  },
+  {
+    "id": "fx-strike-bomb-poison",
+    "name": "Thrown bomb — poison",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "poison" },
+    "play": { "shape": "burst", "file": "jb2a.impact.001.blue", "opts": { "tint": "#5aa832" } }
+  },
+  {
+    "id": "fx-strike-bomb-sonic",
+    "name": "Thrown bomb — sonic",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "sonic" },
+    "play": { "shape": "burst", "file": "jb2a.shatter.blue" }
+  },
+  {
+    "id": "fx-strike-bomb-void",
+    "name": "Thrown bomb — void",
+    "priority": 100,
+    "when": { "kind": "strike", "trait": "Bomb", "damageType": "void" },
+    "play": { "shape": "burst", "file": "jb2a.toll_the_dead.green.shockwave" }
+  },
+  {
     "id": "fx-strike-melee",
     "name": "Melee strike (fallback)",
     "priority": 250,
