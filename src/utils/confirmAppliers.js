@@ -8,6 +8,7 @@ import { markPlayingOnCast } from './playing';
 import { hasSpellCounter, registerSpellCounter } from './spellCounter';
 import { applyPersistentFromResults } from './persistentDamage';
 import { relayDamageAndRevealIwr } from './damageRelay';
+import { emitStrikeFxPlay } from './fxPlay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from './whetstoneOnHit';
 import {
   applyStrikeOnCritSave, applyStrikeOnCritConditions,
@@ -232,12 +233,14 @@ export const logRayGroupResults = ({
 export const applyPostRollEffects = ({
   ability,
   character,
+  casterEntryId,
   castCost,
   rayGroups,
   chainResults,
   hasChainStrike,
   order,
   damageProfile,
+  fxAnimations,
   setPersistentMap,
   getState,
   sendUpdate,
@@ -271,6 +274,18 @@ export const applyPostRollEffects = ({
     sourceName: ability.name,
     sendUpdate,
     revealFiredIwr,
+  });
+
+  // Canvas animation (#1416): resolve the strike against the fxAnimations
+  // content catalog and relay the recipe for the bridge to play in Foundry.
+  // Fire-and-forget juice — a miss on the catalog emits nothing.
+  emitStrikeFxPlay({
+    sendUpdate,
+    fxAnimations,
+    ability,
+    casterEntryId,
+    rayGroups,
+    chainResults: strikeChainResults,
   });
 
   // Whetstone on-hit riders (#1215) — Analysis Eye / Leeching Fangs /

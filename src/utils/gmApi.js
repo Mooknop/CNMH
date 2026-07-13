@@ -65,6 +65,7 @@ export const seedDefaults = (force = false) =>
 // (/api/gm/seed); it's only the incremental apply that must leave it alone.
 export const DIFFABLE_COLLECTIONS = [
   'quest', 'faction', 'calendar', 'trait', 'item', 'spell', 'effect', 'rune',
+  'fxAnimations',
 ];
 
 // Order-insensitive structural equality — used only to decide whether a doc

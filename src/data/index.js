@@ -14,6 +14,7 @@ import item from './snapshot/item.json';
 import spell from './snapshot/spell.json';
 import effect from './snapshot/effect.json';
 import rune from './snapshot/rune.json';
+import fxAnimationsShard from './snapshot/fxAnimations.json';
 import image from './snapshot/image.json';
 import theme from './snapshot/theme.json';
 
@@ -28,6 +29,7 @@ export const calendarEvents   = calendar   || [];
 export const images           = image      || [];
 export const themeDocs        = theme      || [];
 export const runes            = rune       || [];
+export const fxAnimations     = fxAnimationsShard || [];
 
 // Preserve the { Factions: [...] } shape that contentUtils + ContentContext expect.
 export const reputation = { Factions: faction || [] };

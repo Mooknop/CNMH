@@ -27,7 +27,7 @@ const load = (key) => JSON.parse(fs.readFileSync(path.join(shardDir, `${key}.jso
 
 const COLLECTIONS = [
   'quest', 'faction', 'calendar', 'lore', 'trait', 'character',
-  'item', 'spell', 'effect', 'rune', 'image', 'theme',
+  'item', 'spell', 'effect', 'rune', 'fxAnimations', 'image', 'theme',
 ];
 
 describe('seed schema (#1314)', () => {
