@@ -352,6 +352,15 @@ describe('bundled item catalog (Slice 3)', () => {
     );
   });
 
+  it('alchemical bombs carry item-level no-save on-crit conditions (#1439 tail)', () => {
+    const cond = (id) => items.find((i) => i.id === id)?.onCritConditions || [];
+    expect(cond('necrotic-bomb')).toContainEqual(expect.objectContaining({ id: 'sickened', value: 1 }));
+    expect(cond('mud-bomb')).toContainEqual(expect.objectContaining({ id: 'dazzled' }));
+    expect(cond('pressure-bomb')).toContainEqual(expect.objectContaining({ id: 'prone' }));
+    expect(cond('redpitch-bomb')).toContainEqual(expect.objectContaining({ id: 'clumsy', value: 1 }));
+    expect(cond('tallow-bomb')).toContainEqual(expect.objectContaining({ id: 'sickened', value: 1 }));
+  });
+
   it('worn items carry conditional save-hint modifiers (#912)', () => {
     // Aeon Stone (Polished Pebble): a conditional Fortitude hint (vs Grapple/Swallow).
     const pebble = items.find((i) => i.id === 'aeon-stone-polished-pebble');

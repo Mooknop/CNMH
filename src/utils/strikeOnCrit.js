@@ -64,4 +64,45 @@ export const applyStrikeOnCritSave = ({
   });
 };
 
+/**
+ * Intrinsic on-crit conditions WITHOUT a save (#1439 tail). A weapon whose Strike
+ * inflicts a condition automatically on a critical hit — the alchemical bombs:
+ * Necrotic Bomb (sickened 1), Mud Bomb (dazzled), Pressure Bomb (prone), Redpitch
+ * Bomb (clumsy 1), Tallow Bomb (sickened 1) — carries an `onCritConditions` array
+ * on its resolved strike. On each critical Strike result the condition applies
+ * straight to the enemy target (no roll), the direct-apply mirror of
+ * whetstoneOnHit's condition rider.
+ *
+ * Shape (authored on the item's strike): onCritConditions: [{ id, value?, note? }]
+ * A `note` is a non-mechanical rider (duration / edge case) surfaced in the log.
+ */
+export const applyStrikeOnCritConditions = ({
+  ability,
+  rayGroups,
+  chainResults,
+  order,
+  applyEnemyCondition,
+  appendLog,
+}) => {
+  const conds = ability?.onCritConditions;
+  if (!Array.isArray(conds) || !conds.length || !applyEnemyCondition) return;
+  const crits = strikeResults(rayGroups, chainResults).filter((r) => r?.degree === 'criticalSuccess');
+  if (!crits.length) return;
+
+  const source = ability.source || ability.name || 'Critical effect';
+  crits.forEach((r) => {
+    const entry = (order || []).find((e) => e.entryId === r.entryId);
+    if (!entry || entry.kind !== 'enemy') return;
+    conds.forEach((c) => {
+      if (!c?.id) return;
+      applyEnemyCondition(entry.entryId, { id: c.id, ...(c.value != null ? { value: c.value } : {}), source });
+      const label = `${c.id}${c.value != null ? ` ${c.value}` : ''}`;
+      appendLog({
+        type: 'system',
+        text: `${source}: critical hit — ${entry.name} is ${label}${c.note ? ` (${c.note})` : ''}.`,
+      });
+    });
+  });
+};
+
 export default applyStrikeOnCritSave;
