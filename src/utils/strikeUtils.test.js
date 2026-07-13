@@ -415,6 +415,16 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(strike.onCritConditions).toEqual([{ id: 'sickened', value: 1 }]);
   });
 
+  test('item-level onHitConditions rides the resolved strike (#1439 tail)', () => {
+    const bottle = {
+      uid: 'bl', name: 'Bottled Lightning',
+      onHitConditions: [{ id: 'off-guard' }],
+      strikes: [{ name: 'Bottled Lightning', proficiency: 'martial', type: 'ranged', damage: '1d6', damageType: 'electricity' }],
+    };
+    const strike = getStrikes({ ...martialChar, inventory: [bottle] }).find((s) => s.name === 'Bottled Lightning');
+    expect(strike.onHitConditions).toEqual([{ id: 'off-guard' }]);
+  });
+
   test('a Ghost Touch property rune surfaces its counts-as tag on the strike (#1436)', () => {
     const char = {
       ...martialChar,

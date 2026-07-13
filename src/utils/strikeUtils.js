@@ -221,6 +221,11 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       // variant); a strike-level block overrides it.
       ...((weaponStrike.onCritConditions || item.onCritConditions)
         ? { onCritConditions: weaponStrike.onCritConditions || item.onCritConditions } : {}),
+      // Intrinsic on-hit conditions (#1439 tail — alchemical bottles/grenades):
+      // applied to the enemy on any hit (success or crit). Item-level so it rides
+      // every tier's strike; a strike-level block overrides it.
+      ...((weaponStrike.onHitConditions || item.onHitConditions)
+        ? { onHitConditions: weaponStrike.onHitConditions || item.onHitConditions } : {}),
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded

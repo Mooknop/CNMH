@@ -2495,6 +2495,12 @@
       }
     ],
     "id": "bottled-lightning",
+    "onHitConditions": [
+      {
+        "id": "off-guard",
+        "note": "until the start of your next turn"
+      }
+    ],
     "image": "img_d640f38a-4641-4223-a4b2-115cc6c76dd3.jpg",
     "imagePosition": {
       "x": 50,
@@ -5741,6 +5747,13 @@
       }
     ],
     "id": "ghost-charge",
+    "onHitConditions": [
+      {
+        "id": "enfeebled",
+        "value": 1,
+        "note": "until the start of your next turn"
+      }
+    ],
     "image": "img_62645ecf-0f84-4b55-8a2e-522778275acc.jpg",
     "imagePosition": {
       "x": 50,
@@ -9106,7 +9119,14 @@
         ]
       }
     ],
-    "id": "peshpine-grenade"
+    "id": "peshpine-grenade",
+    "onHitConditions": [
+      {
+        "id": "stupefied",
+        "value": 1,
+        "note": "until the end of its next turn"
+      }
+    ]
   },
   {
     "name": "Phasing Trine",
