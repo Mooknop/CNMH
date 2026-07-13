@@ -41,4 +41,28 @@ describe('resonant aeon stones (#928 content)', () => {
     });
     expect(unresolved).toEqual([]);
   });
+
+  // Group B (#1450) — two stones whose resonant power modifies their BASE innate
+  // spell in a way the app can't auto-enforce (Agate's augury flat-check, Dusty
+  // Rose's shield 5→10). The base spell is a top-level `grantedSpells` (castable
+  // while invested); the resonant tweak is a display-only `resonant.note`.
+  it.each([
+    ['aeon-stone-agate-ellipsoid', 'augury', 'DC 6 flat check'],
+    ['aeon-stone-dusty-rose-prism', 'shield', 'prevents 10 damage'],
+  ])('%s casts its base %s and carries a resonant note', (id, ref, noteFragment) => {
+    const it = stone(id);
+    expect(itemGrantedSpells(it).map((g) => g.ref)).toContain(ref);
+    expect(spellIds.has(ref)).toBe(true);
+    expect(it.resonant?.note).toContain(noteFragment);
+  });
+
+  it('every top-level grantedSpells ref across all items resolves to a catalog spell', () => {
+    const unresolved = [];
+    items.forEach((it) => {
+      itemGrantedSpells(it).forEach((g) => {
+        if (!spellIds.has(g.ref)) unresolved.push(`${it.id} → ${g.ref}`);
+      });
+    });
+    expect(unresolved).toEqual([]);
+  });
 });
