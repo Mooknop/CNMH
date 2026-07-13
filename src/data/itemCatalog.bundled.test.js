@@ -13,6 +13,7 @@ import {
 import { getItemBonus } from '../utils/CharacterUtils';
 import { wornResistanceFor, itemModifiers } from '../utils/wornGear';
 import { computeEffectBonuses, conditionalModifiersFor } from '../utils/EffectUtils';
+import { matchingReactions } from '../utils/reactionTriggers';
 
 const catalogMap = itemCatalogMap(items);
 const spellMap = spellCatalogMap(spells);
@@ -391,6 +392,17 @@ describe('bundled item catalog (Slice 3)', () => {
       { id: 't', level: 20, inventory: [{ ref: 'cape-of-illumination', level: 11 }] }, items, spells,
     ).inventory[0];
     expect(resolved.grantedSpells).toContainEqual(expect.objectContaining({ ref: 'light' }));
+  });
+
+  it('item reactions that map to a trigger event carry triggerType so the prompt offers them (#1439)', () => {
+    const react = (id) => items.find((i) => i.id === id)?.reactions?.[0];
+    expect(react('bands-of-force')).toMatchObject({ triggerType: 'attack-melee' });
+    expect(react('swallow-spike')).toMatchObject({ triggerType: 'grabbed' });
+    // The reaction-prompt system offers them for the matching GM-fired event.
+    expect(matchingReactions([react('bands-of-force')], 'melee-attack')).toHaveLength(1);
+    expect(matchingReactions([react('swallow-spike')], 'grabbed')).toHaveLength(1);
+    // A different event does not offer them.
+    expect(matchingReactions([react('bands-of-force')], 'ranged-attack')).toHaveLength(0);
   });
 
   it('on-hit penalty throwables carry reminders + on-crit conditions (#1439 tail)', () => {
