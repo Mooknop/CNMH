@@ -18,6 +18,7 @@ import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
+import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -313,6 +314,12 @@ function dispatch(msg) {
   // natively so the actor's live modifiers apply; acked on cnmh_savedone_global.
   if (characterId === 'global' && key === RELAY.SAVEROLL) {
     handleSaveRoll(value);
+    return;
+  }
+
+  // Canvas-animation recipe from the app's fx catalog → Sequencer (#1415).
+  if (characterId === 'global' && key === RELAY.FXPLAY) {
+    handleFxPlay(value);
     return;
   }
 }

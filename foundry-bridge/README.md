@@ -90,6 +90,7 @@ channel, add its token there too so neither side hand-writes the string.
 | `adjacency` | bridge → app | `global` | `{ [entryId]: [adjacentEntryId, …] }` — combatant adjacency map, pushed on token-move / turn-advance / combat start; the app (`useAdjacency`) gates reach-limited actions on it (#430) |
 | `positions` | bridge → app | `global` | `{ gridSize, positions: { [entryId]: { col, row } } }` — each combatant's current grid cell; pushed on token-move and combat lifecycle, empty when no combat. App measures attacker→target distance for ranged range increments (#527) |
 | `positionsreq` | app → bridge | `global` | _(no payload)_ — request a fresh `positions` push (reconnect / resolver open) |
+| `fxplay` | app → bridge | `global` | `{ id, shape, file, source, targets:[entryId \| { x, y }], opts?, ts }` — resolved canvas-animation recipe (#1415, epic #1414). The app-side animation catalog (content) picks `shape` + `file` (a Sequencer database key); the bridge interprets the shape: `melee` = swing on each target rotated along the attack line, `projectile` = stretch source → target. Point targets are in the contract for later AoE templates. Fire-and-forget juice — silent no-op on unknown shape / unresolved tokens, warn-once when the Sequencer module is absent; needs Sequencer + an asset pack (e.g. JB2A free) in the world |
 
 ## Tests
 

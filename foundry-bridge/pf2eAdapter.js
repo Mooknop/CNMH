@@ -742,6 +742,47 @@ export function hasWallCollision(fromX, fromY, toX, toY) {
   });
 }
 
+// --- Sequencer canvas effects (#1415, epic #1414) -----------------------------
+// The animation rail plays Sequencer effects (JB2A et al. register their assets
+// in Sequencer's database). Sequencer is an OPTIONAL module: availability is
+// checked per event by animations.js, never assumed. Sequencer isn't Foundry
+// core, so a Foundry version bump doesn't touch these — they track the
+// Sequencer module's own API (stable since v3).
+
+// True when the Sequencer module is active (its global Sequence constructor
+// exists). A Sequencer-less world just means "animations off".
+export function sequencerAvailable() {
+  return typeof globalThis.Sequence === 'function';
+}
+
+// Melee swing: play `file` on the target, rotated to face the attacker so the
+// arc reads as arriving along the attack line. The anchor choice (target- vs
+// source-located) is the live-tuning knob of #1415 — flip atLocation/
+// rotateTowards here if an asset reads better source-anchored.
+export function playMeleeEffect(file, sourceToken, target, opts = {}) {
+  let effect = new globalThis.Sequence()
+    .effect()
+    .file(file)
+    .atLocation(target)
+    .rotateTowards(sourceToken)
+    .scaleToObject(opts.scale ?? 2);
+  if (opts.tint) effect = effect.tint(opts.tint);
+  return effect.play();
+}
+
+// Projectile: stretch `file` from the attacker to the target — a token or a raw
+// {x,y} canvas point (Sequencer accepts both as locations).
+export function playProjectileEffect(file, sourceToken, target, opts = {}) {
+  let effect = new globalThis.Sequence()
+    .effect()
+    .file(file)
+    .atLocation(sourceToken)
+    .stretchTo(target);
+  if (typeof opts.scale === 'number') effect = effect.scale(opts.scale);
+  if (opts.tint) effect = effect.tint(opts.tint);
+  return effect.play();
+}
+
 // --- Hooks + settings seam (#1313) -------------------------------------------
 // Feature modules never touch the Hooks/game globals directly (enforced by
 // eslint no-restricted-globals); registration funnels through these so a
