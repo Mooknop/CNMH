@@ -17,6 +17,14 @@ describe('bundled effect catalog', () => {
     ).toBe(true);
   });
 
+  it('Soothing Tonic tiers carry the fastHealing modifier (#899)', () => {
+    const fh = (id) => (effects.find((e) => e.id === id)?.modifiers || []).find((m) => m.stat === 'fastHealing')?.amount;
+    expect(fh('soothing-tonic-lesser')).toBe(1);
+    expect(fh('soothing-tonic-moderate')).toBe(3);
+    expect(fh('soothing-tonic-greater')).toBe(5);
+    expect(fh('soothing-tonic-major')).toBe(10);
+  });
+
   it('every entry has a normalized modifiers array with known kinds and numeric amounts', () => {
     effects.forEach((e) => {
       expect(Array.isArray(e.modifiers)).toBe(true);
@@ -27,7 +35,7 @@ describe('bundled effect catalog', () => {
         // modifiers — they carry no bonus `kind` and never net through
         // bestOfKind. Immunity is absolute, so it carries no `amount` either;
         // its only well-formedness gate is a truthy `vs`.
-        const special = ['dexCap', 'resistance', 'weakness', 'immunity'];
+        const special = ['dexCap', 'resistance', 'weakness', 'immunity', 'fastHealing'];
         if (!special.includes(m.stat)) {
           expect(VALID_KINDS).toContain(m.kind);
         }

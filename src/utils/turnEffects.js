@@ -79,22 +79,46 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
 }
 
 /**
- * Apply Hymn of Healing fast healing to the entry whose turn is starting, using
- * the strongest Hymn aimed at them across all casters' sustain ledgers (read
- * live, so ending the sustain stops the healing). React-free. Logs on heal.
+ * The strongest generic `fastHealing` effect-modifier on a creature's active
+ * effects (#899). Fast healing doesn't stack, so callers take the highest across
+ * sources. A `fastHealing` modifier is a special (non-bonus) modifier — like
+ * `dexCap` — so it carries no `kind`. Returns { amount, name } (name for the log).
  *
- * @param {Array}    order      - encounter.order entries (scanned for casters)
- * @param {Object}   startEntry - the entry whose turn is starting
- * @param {Function} getState   - (charId, key) => value
- * @param {Function} sendUpdate - (charId, key, value) => void
- * @param {Function} appendLog  - ({ type, text }) => void
+ * @param {Array} effects - the creature's active effect entries ([{ effectId }])
+ * @param {Array} catalog - the effect catalog (defs carry the modifiers)
  */
-export function applyTurnStartFastHealing({ order, startEntry, getState, sendUpdate, appendLog }) {
+export const effectFastHealing = (effects, catalog) => {
+  let best = { amount: 0, name: null };
+  for (const e of (Array.isArray(effects) ? effects : [])) {
+    const def = (catalog || []).find((d) => d.id === e.effectId);
+    const fh = (def?.modifiers || []).find((m) => m.stat === 'fastHealing');
+    const amt = fh?.amount || 0;
+    if (amt > best.amount) best = { amount: amt, name: def?.name || e.effectId };
+  }
+  return best;
+};
+
+/**
+ * Apply fast healing to the entry whose turn is starting, from the strongest
+ * source aimed at them (fast healing doesn't stack): Hymn of Healing across all
+ * casters' sustain ledgers (#226), or a generic `fastHealing` effect-modifier on
+ * their own active effects (#899 — e.g. Soothing Tonic). Read live, so ending the
+ * sustain or expiring the effect stops the healing. React-free. Logs on heal.
+ *
+ * @param {Array}    order        - encounter.order entries (scanned for casters)
+ * @param {Object}   startEntry   - the entry whose turn is starting
+ * @param {Function} getState     - (charId, key) => value
+ * @param {Function} sendUpdate   - (charId, key, value) => void
+ * @param {Function} appendLog    - ({ type, text }) => void
+ * @param {Array}    effectCatalog- effect catalog (resolves fastHealing modifiers)
+ */
+export function applyTurnStartFastHealing({ order, startEntry, getState, sendUpdate, appendLog, effectCatalog }) {
   if (!startEntry || startEntry.kind !== 'pc' || !startEntry.charId) return;
   const targetId = startEntry.charId;
 
   let amount = 0;
   let maxHp;
+  let source = null;
   for (const entry of order || []) {
     if (entry.kind !== 'pc' || !entry.charId) continue;
     const sustains = getState(entry.charId, APP.SUSTAINS) || [];
@@ -102,8 +126,18 @@ export function applyTurnStartFastHealing({ order, startEntry, getState, sendUpd
     if (fh > amount) {
       amount = fh;
       maxHp = sustains.find((s) => s.heal?.targetId === targetId)?.heal?.targetMaxHp;
+      source = 'Hymn of Healing';
     }
   }
+
+  // Generic fast-healing effect (#899) — the target's own active effects.
+  const eff = effectFastHealing(getState(targetId, APP.EFFECTS) || [], effectCatalog);
+  if (eff.amount > amount) {
+    amount = eff.amount;
+    maxHp = undefined; // fall back to the stored HP max
+    source = eff.name;
+  }
+
   if (amount <= 0) return;
 
   const healed = applyHymnFastHealing({
@@ -112,6 +146,6 @@ export function applyTurnStartFastHealing({ order, startEntry, getState, sendUpd
     amount,
   });
   if (healed > 0) {
-    appendLog({ type: 'system', text: `Fast healing ${amount} (Hymn of Healing) — ${startEntry.name} +${healed} HP` });
+    appendLog({ type: 'system', text: `Fast healing ${amount} (${source}) — ${startEntry.name} +${healed} HP` });
   }
 }
