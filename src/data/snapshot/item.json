@@ -11227,6 +11227,25 @@
     "strikes": [
       {
         "name": "Serpent Dagger",
+        "onCritSave": {
+          "defense": "fortitude",
+          "dc": 19,
+          "label": "Serpent Dagger",
+          "conditions": {
+            "failure": [
+              {
+                "id": "sickened",
+                "value": 1
+              }
+            ],
+            "criticalFailure": [
+              {
+                "id": "sickened",
+                "value": 1
+              }
+            ]
+          }
+        },
         "proficiency": "martial",
         "type": "melee",
         "damage": "1d4",
@@ -11242,6 +11261,25 @@
       },
       {
         "name": "Serpent Dagger (Thrown)",
+        "onCritSave": {
+          "defense": "fortitude",
+          "dc": 19,
+          "label": "Serpent Dagger",
+          "conditions": {
+            "failure": [
+              {
+                "id": "sickened",
+                "value": 1
+              }
+            ],
+            "criticalFailure": [
+              {
+                "id": "sickened",
+                "value": 1
+              }
+            ]
+          }
+        },
         "proficiency": "martial",
         "type": "ranged",
         "damage": "1d4",

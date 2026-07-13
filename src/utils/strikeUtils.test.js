@@ -393,6 +393,16 @@ describe('getStrikes weapon runes (#548)', () => {
     ]);
   });
 
+  test('an intrinsic on-crit save block passes through to the strike (#1439 — Serpent Dagger)', () => {
+    const oc = { defense: 'fortitude', dc: 19, conditions: { failure: [{ id: 'sickened', value: 1 }] } };
+    const dagger = {
+      uid: 'sd', name: 'Serpent Dagger',
+      strikes: [{ name: 'Serpent Dagger', proficiency: 'martial', type: 'melee', damage: '1d4', onCritSave: oc }],
+    };
+    const strike = getStrikes({ ...martialChar, inventory: [dagger] }).find((s) => s.name === 'Serpent Dagger');
+    expect(strike.onCritSave).toEqual(oc);
+  });
+
   test('a Ghost Touch property rune surfaces its counts-as tag on the strike (#1436)', () => {
     const char = {
       ...martialChar,
