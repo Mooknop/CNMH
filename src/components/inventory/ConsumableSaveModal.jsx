@@ -19,7 +19,16 @@ import './UseConsumableModal.css';
 // the enemy-conditions rail (#1216). Optional rolled damage is entered once and
 // each save scales it. Consuming increments the player-writable consumed overlay
 // (same mechanism as UseConsumableModal), never the GM-gated inventory.
-const ConsumableSaveModal = ({ isOpen, onClose, item, character, themeColor, actionCost = 1 }) => {
+// The same target-pick → GM-save-request flow also drives an item ACTIVATION
+// (#1439 activated abilities — Caterwaul Sling / Sparkblade / Spoiling Buckler):
+// pass `saveBlock` (the activation's save contract) + `verb: 'Activate'` + an
+// `onFire` that records the once/day use (instead of consuming), and `available`
+// (the frequency gate) in place of a stock quantity. Defaults preserve the
+// consumable behavior exactly.
+const ConsumableSaveModal = ({
+  isOpen, onClose, item, character, themeColor, actionCost = 1,
+  saveBlock = null, verb: verbProp = null, onFire = null, available = null,
+}) => {
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { appendEvent } = useSessionLog();
   const { spendActions } = useTurnState(character?.id || 'nobody');
@@ -27,7 +36,7 @@ const ConsumableSaveModal = ({ isOpen, onClose, item, character, themeColor, act
 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(character?.id || '', order);
-  const save = consumableSave(item);
+  const save = saveBlock || consumableSave(item);
   const defense = save?.defense || 'fortitude';
   const enemyTargets = useMemo(
     () => selectable.filter((e) => e.kind === 'enemy' && e.defenses),
@@ -40,9 +49,9 @@ const ConsumableSaveModal = ({ isOpen, onClose, item, character, themeColor, act
 
   if (!isOpen || !item || !character || !save) return null;
 
-  const verb = consumableVerb(item);
+  const verb = verbProp || consumableVerb(item);
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
-  const remaining = item.quantity ?? 1;
+  const remaining = available != null ? (available ? 1 : 0) : (item.quantity ?? 1);
   const saveLabel = DEFENSE_LABELS[defense] || defense;
   const hasDamage = !!save.damage?.dice;
   const log = encounter?.active ? appendLog : ({ type, text }) => appendEvent({ type, text });
@@ -77,16 +86,22 @@ const ConsumableSaveModal = ({ isOpen, onClose, item, character, themeColor, act
       ...(save.conditions && { conditions: save.conditions }),
     });
 
-    // Consume one from the player-writable overlay (mirrors UseConsumableModal).
-    setConsumed((cur) => ({
-      ...(cur || {}),
-      [item.name]: ((cur || {})[item.name] || 0) + 1,
-    }));
+    // Record the use: an activation fires its once/day frequency ledger; a
+    // consumable increments the player-writable consumed overlay (mirrors
+    // UseConsumableModal), never the GM-gated inventory.
+    if (onFire) {
+      onFire();
+    } else {
+      setConsumed((cur) => ({
+        ...(cur || {}),
+        [item.name]: ((cur || {})[item.name] || 0) + 1,
+      }));
+    }
 
     log({
       type: 'action',
       charId: character.id,
-      text: `${character.name} used ${item.name} (${save.basic ? 'basic ' : ''}${saveLabel} ${save.dc}) on ${targets.length} target${targets.length === 1 ? '' : 's'}`,
+      text: `${character.name} ${onFire ? 'activated' : 'used'} ${item.name} (${save.basic ? 'basic ' : ''}${saveLabel} ${save.dc}) on ${targets.length} target${targets.length === 1 ? '' : 's'}`,
     });
 
     if (encounterMode && actionCost > 0) spendActions(actionCost, `${verb} ${item.name}`);

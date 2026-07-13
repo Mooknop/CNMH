@@ -131,3 +131,40 @@ describe('ConsumableSaveModal (#1085)', () => {
     expect(req.damage).toMatchObject({ entered: 15, expression: '4d6', typeLabel: 'acid', riders: [] });
   });
 });
+
+describe('ConsumableSaveModal — item activation mode (#1439)', () => {
+  const sparkblade = { id: 'sparkblade', name: 'Sparkblade' };
+  const saveBlock = { defense: 'reflex', dc: 19, basic: true, damage: { dice: '2d4+4', type: 'electricity' } };
+
+  const renderActivation = (onFire = vi.fn(), available = true) => {
+    useEncounter.mockReturnValue({ encounter: { order, active: true, phase: 'in-progress' }, appendLog, addSaveRequest });
+    useTurnState.mockReturnValue({ spendActions });
+    useSessionLog.mockReturnValue({ appendEvent });
+    useSyncedState.mockImplementation(() => [consumed, setConsumed]);
+    render(
+      <SessionContext.Provider value={session()}>
+        <ConsumableSaveModal
+          isOpen onClose={() => {}} item={sparkblade} character={vera} actionCost={1}
+          saveBlock={saveBlock} verb="Activate" onFire={onFire} available={available}
+        />
+      </SessionContext.Provider>
+    );
+    return onFire;
+  };
+
+  it('fires the passed save block on picked targets and records via onFire, not consume', () => {
+    const onFire = renderActivation();
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    fireEvent.click(screen.getByRole('button', { name: /Activate/ }));
+    expect(addSaveRequest).toHaveBeenCalledWith(expect.objectContaining({
+      abilityName: 'Sparkblade', save: 'reflex', dc: 19, basic: true,
+    }));
+    expect(onFire).toHaveBeenCalledTimes(1);
+    expect(setConsumed).not.toHaveBeenCalled();
+  });
+
+  it('reads 0 remaining when the frequency is spent (available=false)', () => {
+    renderActivation(vi.fn(), false);
+    expect(screen.getByText(/×0 remaining/)).toBeInTheDocument();
+  });
+});

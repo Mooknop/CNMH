@@ -2746,6 +2746,35 @@
   },
   {
     "id": "caterwaul-sling",
+    "activatedSave": {
+      "name": "Unleash Roar",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "save": {
+        "defense": "fortitude",
+        "dc": 21,
+        "basic": true,
+        "damage": {
+          "dice": "4d6",
+          "type": "sonic"
+        },
+        "conditions": {
+          "failure": [
+            {
+              "id": "deafened",
+              "note": "1 round"
+            }
+          ],
+          "criticalFailure": [
+            {
+              "id": "deafened",
+              "note": "1 hour"
+            }
+          ]
+        },
+        "note": "Each creature in a 30-foot cone"
+      }
+    },
     "name": "Caterwaul Sling",
     "description": "Made of shiny brown leather, this +1 striking sling has a single white thread interwoven into its cord.",
     "traits": [
@@ -12330,6 +12359,21 @@
   },
   {
     "id": "sparkblade",
+    "activatedSave": {
+      "name": "Lightning Arc",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "save": {
+        "defense": "reflex",
+        "dc": 19,
+        "basic": true,
+        "damage": {
+          "dice": "2d4+4",
+          "type": "electricity"
+        },
+        "note": "a foe within 30 feet; the arc can leap to a second creature within 30 feet of the first"
+      }
+    },
     "name": "Sparkblade",
     "material": "Cold Iron",
     "description": "This +1 shortsword is forged of cold iron and etched with lightning. Cold iron weapons deal additional damage to creatures with weakness to cold iron, such as demons and fey.",
@@ -12664,6 +12708,16 @@
   },
   {
     "id": "spoiling-buckler",
+    "activatedSave": {
+      "name": "Tumbling Tumbleweed",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "save": {
+        "defense": "reflex",
+        "dc": 19,
+        "note": "one creature within 30 feet; on a failure it is carried 15 feet in a direction of your choice"
+      }
+    },
     "name": "Spoiling Buckler",
     "price": 150,
     "weight": 0.1,
