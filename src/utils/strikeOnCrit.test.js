@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyStrikeOnCritSave, applyStrikeOnCritConditions } from './strikeOnCrit';
+import { applyStrikeOnCritSave, applyStrikeOnCritConditions, applyStrikeOnHitConditions } from './strikeOnCrit';
 
 const onCritSave = {
   defense: 'fortitude', dc: 19, label: 'Serpent Dagger',
@@ -111,5 +111,48 @@ describe('applyStrikeOnCritConditions (#1439 tail — no-save on-crit)', () => {
     const b = cbag([{ entryId: 'g1', degree: 'criticalSuccess' }], { ability: { name: 'Plain' } });
     applyStrikeOnCritConditions(b);
     expect(b.applyEnemyCondition).not.toHaveBeenCalled();
+  });
+});
+
+describe('applyStrikeOnHitConditions (#1439 tail — on-hit)', () => {
+  const ability = { name: 'Ghost Charge', source: 'Ghost Charge', onHitConditions: [{ id: 'enfeebled', value: 1 }] };
+  const order = [{ entryId: 'g1', name: 'Skeleton', kind: 'enemy', defenses: {} }];
+  const hbag = (results, over = {}) => ({
+    ability,
+    order,
+    rayGroups: [{ results }],
+    chainResults: null,
+    applyEnemyCondition: vi.fn(),
+    appendLog: vi.fn(),
+    ...over,
+  });
+
+  it('applies the condition on a success', () => {
+    const b = hbag([{ entryId: 'g1', degree: 'success' }]);
+    applyStrikeOnHitConditions(b);
+    expect(b.applyEnemyCondition).toHaveBeenCalledWith('g1', { id: 'enfeebled', value: 1, source: 'Ghost Charge' });
+  });
+
+  it('also applies on a critical hit (a crit is a hit)', () => {
+    const b = hbag([{ entryId: 'g1', degree: 'criticalSuccess' }]);
+    applyStrikeOnHitConditions(b);
+    expect(b.applyEnemyCondition).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing on a miss', () => {
+    const b = hbag([{ entryId: 'g1', degree: 'failure' }]);
+    applyStrikeOnHitConditions(b);
+    expect(b.applyEnemyCondition).not.toHaveBeenCalled();
+  });
+
+  it('skips non-enemy targets and no-ops without a block', () => {
+    const ally = hbag([{ entryId: 'a1', degree: 'success' }], {
+      order: [{ entryId: 'a1', name: 'Ally', kind: 'ally', defenses: {} }],
+    });
+    applyStrikeOnHitConditions(ally);
+    expect(ally.applyEnemyCondition).not.toHaveBeenCalled();
+    const plain = hbag([{ entryId: 'g1', degree: 'success' }], { ability: { name: 'Plain' } });
+    applyStrikeOnHitConditions(plain);
+    expect(plain.applyEnemyCondition).not.toHaveBeenCalled();
   });
 });

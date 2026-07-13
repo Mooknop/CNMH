@@ -105,4 +105,45 @@ export const applyStrikeOnCritConditions = ({
   });
 };
 
+/**
+ * Intrinsic on-HIT conditions (#1439 tail). A weapon whose Strike inflicts a
+ * condition on any hit — success OR critical — carries an `onHitConditions` array
+ * on its resolved strike. Applied straight to the enemy on each hitting Strike
+ * result, the intrinsic mirror of whetstoneOnHit's condition rider (which also
+ * fires on success + crit). Alchemical bottles/grenades: Bottled Lightning
+ * (off-guard), Ghost Charge (enfeebled 1), Peshpine Grenade (stupefied).
+ *
+ * Shape (authored on the item's strike or, for tiered items, the item):
+ *   onHitConditions: [{ id, value?, note? }]
+ */
+export const applyStrikeOnHitConditions = ({
+  ability,
+  rayGroups,
+  chainResults,
+  order,
+  applyEnemyCondition,
+  appendLog,
+}) => {
+  const conds = ability?.onHitConditions;
+  if (!Array.isArray(conds) || !conds.length || !applyEnemyCondition) return;
+  const hits = strikeResults(rayGroups, chainResults)
+    .filter((r) => r?.degree === 'success' || r?.degree === 'criticalSuccess');
+  if (!hits.length) return;
+
+  const source = ability.source || ability.name || 'On-hit effect';
+  hits.forEach((r) => {
+    const entry = (order || []).find((e) => e.entryId === r.entryId);
+    if (!entry || entry.kind !== 'enemy') return;
+    conds.forEach((c) => {
+      if (!c?.id) return;
+      applyEnemyCondition(entry.entryId, { id: c.id, ...(c.value != null ? { value: c.value } : {}), source });
+      const label = `${c.id}${c.value != null ? ` ${c.value}` : ''}`;
+      appendLog({
+        type: 'system',
+        text: `${source}: ${entry.name} is ${label}${c.note ? ` (${c.note})` : ''}.`,
+      });
+    });
+  });
+};
+
 export default applyStrikeOnCritSave;

@@ -361,6 +361,13 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(cond('tallow-bomb')).toContainEqual(expect.objectContaining({ id: 'sickened', value: 1 }));
   });
 
+  it('alchemical bottles carry item-level on-hit conditions (#1439 tail)', () => {
+    const cond = (id) => items.find((i) => i.id === id)?.onHitConditions || [];
+    expect(cond('bottled-lightning')).toContainEqual(expect.objectContaining({ id: 'off-guard' }));
+    expect(cond('ghost-charge')).toContainEqual(expect.objectContaining({ id: 'enfeebled', value: 1 }));
+    expect(cond('peshpine-grenade')).toContainEqual(expect.objectContaining({ id: 'stupefied', value: 1 }));
+  });
+
   it('worn items carry conditional save-hint modifiers (#912)', () => {
     // Aeon Stone (Polished Pebble): a conditional Fortitude hint (vs Grapple/Swallow).
     const pebble = items.find((i) => i.id === 'aeon-stone-polished-pebble');
