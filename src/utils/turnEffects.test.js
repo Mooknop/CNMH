@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sweepExpiredOnBoundaries, applyTurnStartFastHealing } from './turnEffects';
+import { sweepExpiredOnBoundaries, applyTurnStartFastHealing, effectFastHealing } from './turnEffects';
 
 beforeEach(() => localStorage.clear());
 
@@ -121,5 +121,68 @@ describe('applyTurnStartFastHealing', () => {
     const sendUpdate = vi.fn();
     applyTurnStartFastHealing({ order: order2, startEntry: order2[1], getState, sendUpdate, appendLog: vi.fn() });
     expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  // #899 — generic fastHealing effect-modifier (e.g. Soothing Tonic).
+  const catalog = [{ id: 'soothing-tonic-moderate', name: 'Soothing Tonic (Moderate)', modifiers: [{ stat: 'fastHealing', amount: 3 }] }];
+  const state = (sustains, effects, hp) => (id, key) => {
+    if (key === 'sustains') return sustains[id] || [];
+    if (key === 'effects') return effects[id] || [];
+    return hp[id];
+  };
+
+  it('heals from a generic fastHealing effect and logs the effect name (#899)', () => {
+    const getState = vi.fn(state(
+      {},
+      { Ashka: [{ effectId: 'soothing-tonic-moderate' }] },
+      { Ashka: { current: 20, max: 30, temp: 0 } },
+    ));
+    const sendUpdate = vi.fn();
+    const appendLog = vi.fn();
+    applyTurnStartFastHealing({ order: order2, startEntry: order2[1], getState, sendUpdate, appendLog, effectCatalog: catalog });
+    expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'hp', expect.objectContaining({ current: 23 }));
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: expect.stringContaining('Soothing Tonic (Moderate)') }));
+  });
+
+  it('takes the strongest source (fast healing does not stack)', () => {
+    // Hymn 4 vs effect 3 → Hymn wins.
+    const getState = vi.fn(state(
+      { Izzy: [hymn('Ashka', 4, 30)] },
+      { Ashka: [{ effectId: 'soothing-tonic-moderate' }] },
+      { Ashka: { current: 20, max: 30, temp: 0 } },
+    ));
+    const sendUpdate = vi.fn();
+    const appendLog = vi.fn();
+    applyTurnStartFastHealing({ order: order2, startEntry: order2[1], getState, sendUpdate, appendLog, effectCatalog: catalog });
+    expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'hp', expect.objectContaining({ current: 24 }));
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: expect.stringContaining('Hymn of Healing') }));
+  });
+
+  it('caps healing at max HP', () => {
+    const getState = vi.fn(state(
+      {},
+      { Ashka: [{ effectId: 'soothing-tonic-moderate' }] },
+      { Ashka: { current: 29, max: 30, temp: 0 } },
+    ));
+    const sendUpdate = vi.fn();
+    applyTurnStartFastHealing({ order: order2, startEntry: order2[1], getState, sendUpdate, appendLog: vi.fn(), effectCatalog: catalog });
+    expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'hp', expect.objectContaining({ current: 30 }));
+  });
+});
+
+describe('effectFastHealing (#899)', () => {
+  const catalog = [
+    { id: 'st-lesser', name: 'Soothing Tonic (Lesser)', modifiers: [{ stat: 'fastHealing', amount: 1 }] },
+    { id: 'st-major', name: 'Soothing Tonic (Major)', modifiers: [{ stat: 'fastHealing', amount: 10 }] },
+    { id: 'heroism', name: 'Heroism', modifiers: [{ stat: 'attack', kind: 'status', amount: 1 }] },
+  ];
+  it('returns the strongest fastHealing modifier + its name', () => {
+    expect(effectFastHealing([{ effectId: 'st-lesser' }, { effectId: 'st-major' }], catalog))
+      .toEqual({ amount: 10, name: 'Soothing Tonic (Major)' });
+  });
+  it('is empty when no active effect carries fastHealing / bad input', () => {
+    expect(effectFastHealing([{ effectId: 'heroism' }], catalog)).toEqual({ amount: 0, name: null });
+    expect(effectFastHealing(null, catalog)).toEqual({ amount: 0, name: null });
+    expect(effectFastHealing({ current: 5 }, catalog)).toEqual({ amount: 0, name: null });
   });
 });

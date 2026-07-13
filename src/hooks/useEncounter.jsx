@@ -116,10 +116,10 @@ export const useEncounter = () => {
       if (cur.foundryCombatId) return;
       applyTurnStartFastHealing({
         order: cur.order, startEntry: (cur.order || [])[startIdx],
-        getState, sendUpdate, appendLog,
+        getState, sendUpdate, appendLog, effectCatalog,
       });
     },
-    [getState, sendUpdate, appendLog]
+    [getState, sendUpdate, appendLog, effectCatalog]
   );
 
   const startEncounter = useCallback(
