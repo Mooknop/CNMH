@@ -311,7 +311,16 @@
   },
   {
     "name": "Aeon Stone (Azure Briolette)",
-    "description": "This deep blue, teardrop-cut gem orbits your head. Whenever an enemy fails a save against one of your mental spells, you gain temporary Hit Points equal to twice the spell's rank until the start of your next turn. Resonant Power You can cast chill touch as an occult innate spell once per day using a two-action activation.",
+    "description": "This deep blue, teardrop-cut gem orbits your head. Whenever an enemy fails a save against one of your mental spells, you gain temporary Hit Points equal to twice the spell's rank until the start of your next turn. Resonant Power You can cast void warp as an occult innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "void-warp",
+          "tradition": "occult",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -329,6 +338,15 @@
   {
     "name": "Aeon Stone (Clear Quartz Octagon)",
     "description": "This clear, octagonal stone orbits your head. When a non-magical item in your possession worth 90 gp or less and of 1 Bulk or less would become broken, this aeon stone automatically activates, preventing the item from breaking. The aeon stone then becomes consumed. Resonant Power You can cast mending as a 1st-rank arcane innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "mending",
+          "tradition": "arcane",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -409,6 +427,15 @@
     ],
     "name": "Aeon Stone (Formulating)",
     "description": "This faceted stone orbits your head and contains the formulas of a basic crafter's book; while you have this knowledge, you can write the formulas down for later use. You gain a +1 item bonus to checks made to Craft. Resonant Power You can cast phantasmal minion as an occult innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "phantasmal-minion",
+          "tradition": "occult",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -426,6 +453,15 @@
   {
     "name": "Aeon Stone (Gold Nodule)",
     "description": "This gold nodule orbits your head when invested. When the stone is created, its creator chooses a language they know to store within it; while you invest the stone, you can understand, speak, and write that language. Resonant Power You can cast comprehend language as an occult innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "translate",
+          "tradition": "occult",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -444,6 +480,14 @@
   {
     "name": "Aeon Stone (Pale Lavender Ellipsoid)",
     "description": "This pale lavender, ellipsoid stone orbits your head. It must be activated (reaction, when a spell targets you or includes you in its area) to cast a 6th-rank dispel magic that attempts to counteract the triggering spell (counteract modifier +22); it then becomes consumed. Resonant Power You can cast the read aura cantrip as an arcane innate spell.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "read-aura",
+          "tradition": "arcane"
+        }
+      ]
+    },
     "traits": [
       "Uncommon",
       "Invested",
@@ -519,6 +563,14 @@
   {
     "name": "Aeon Stone (Preserving)",
     "description": "This translucent stone orbits your head. You gain resistance 3 to persistent damage. At the end of any turn when persistent damage you're taking can't overcome this resistance, that persistent damage ends. Resonant Power You can cast stabilize as a divine innate spell.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "stabilize",
+          "tradition": "divine"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -540,6 +592,15 @@
     ],
     "name": "Aeon Stone (Repairing)",
     "description": "This polished stone orbits your head. You gain a +1 item bonus to checks made to Craft, and when you Repair an item you restore an additional 5 Hit Points. Resonant Power You can cast mending as an arcane innate spell once per day.",
+    "resonant": {
+      "grantedSpells": [
+        {
+          "ref": "mending",
+          "tradition": "arcane",
+          "frequency": "once per day"
+        }
+      ]
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
