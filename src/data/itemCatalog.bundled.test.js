@@ -11,7 +11,8 @@ import {
   extractWandSpells,
 } from '../utils/SpellUtils';
 import { getItemBonus } from '../utils/CharacterUtils';
-import { wornResistanceFor } from '../utils/wornGear';
+import { wornResistanceFor, itemModifiers } from '../utils/wornGear';
+import { computeEffectBonuses, conditionalModifiersFor } from '../utils/EffectUtils';
 
 const catalogMap = itemCatalogMap(items);
 const spellMap = spellCatalogMap(spells);
@@ -238,7 +239,9 @@ describe('bundled item catalog (Slice 3)', () => {
   // its per-grade `sense: { name, precision?, rangeFt? }` block as an override.
   // #914: a tier-gated item-granted innate spell — only the qualifying variant
   // (Ring of Observation Moderate/Greater) carries the `grantedSpells` grant.
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense', 'grantedSpells'];
+  // #912: a variant-tiered worn-gear `modifiers` array (Backfire Mantle's Reflex-
+  // vs-spells hint scales +1 → +2 across grades).
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense', 'grantedSpells', 'modifiers'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -281,6 +284,15 @@ describe('bundled item catalog (Slice 3)', () => {
           v.overrides.grantedSpells.forEach((g) => {
             expect(typeof g.ref).toBe('string');
             expect(g.ref.length).toBeGreaterThan(0);
+          });
+        }
+        // #912: a variant-tiered worn-gear modifiers list — each is a
+        // { stat, amount } bonus modifier (kind/vs optional).
+        if (v.overrides.modifiers !== undefined) {
+          expect(Array.isArray(v.overrides.modifiers)).toBe(true);
+          v.overrides.modifiers.forEach((m) => {
+            expect(typeof m.stat).toBe('string');
+            expect(typeof m.amount).toBe('number');
           });
         }
       });
@@ -329,6 +341,32 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(riders('hunters-bow')).toContainEqual(expect.objectContaining({ dice: '1d6', on: ['criticalSuccess'] }));
     expect(riders('gloom-blade')).toContainEqual(expect.objectContaining({ dice: '1d6', type: 'precision' }));
     // End-to-end pass-through is covered by strikeUtils' Monarch intrinsic-rider test.
+  });
+
+  it('worn items carry conditional save-hint modifiers (#912)', () => {
+    // Aeon Stone (Polished Pebble): a conditional Fortitude hint (vs Grapple/Swallow).
+    const pebble = items.find((i) => i.id === 'aeon-stone-polished-pebble');
+    expect(pebble.modifiers).toContainEqual(
+      expect.objectContaining({ stat: 'fort', amount: 1, vs: 'Grapple or Swallow' }),
+    );
+    // It is CONDITIONAL — never netted into the base Fortitude save.
+    const effects = [{ id: 'peb', effectId: 'peb' }];
+    const catalog = [{ id: 'peb', modifiers: itemModifiers(pebble) }];
+    expect(computeEffectBonuses(effects, catalog).fort.total).toBe(0);
+    expect(conditionalModifiersFor(effects, 'fort', catalog)).toContainEqual(
+      expect.objectContaining({ vs: 'Grapple or Swallow' }),
+    );
+
+    // Backfire Mantle: variant-tiered Reflex-vs-spells hint via overrides.modifiers,
+    // resolving alongside the existing splash-resistance override.
+    const at = (level) => resolveCharacterItems(
+      { id: 'tester', level: 20, inventory: [{ ref: 'backfire-mantle', level }] }, items, spells,
+    ).inventory[0];
+    const std = at(3);
+    expect(std.overrides).toBeUndefined();
+    expect(std.modifiers).toContainEqual(expect.objectContaining({ stat: 'reflex', amount: 1 }));
+    expect(std.resistance).toEqual({ amount: 3, type: 'splash' });
+    expect(at(8).modifiers).toContainEqual(expect.objectContaining({ stat: 'reflex', amount: 2 }));
   });
 
   it('Sleeves of Storage Greater resolves to the override container capacity', () => {
