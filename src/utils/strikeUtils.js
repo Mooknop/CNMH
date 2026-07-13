@@ -211,7 +211,16 @@ export const resolveItemStrikes = (item, character, chamberState = null, whetsto
       // Intrinsic on-crit save (#1439 — Serpent Dagger): a condition inflicted on
       // a critical hit, gated by a fixed-DC save. Carried onto the strike so the
       // post-roll applier (applyStrikeOnCritSave) pushes it to the GM save rail.
-      ...(weaponStrike.onCritSave ? { onCritSave: weaponStrike.onCritSave } : {}),
+      // An item-level block applies to every strike/tier (survives applyVariant);
+      // a strike-level block overrides it.
+      ...((weaponStrike.onCritSave || item.onCritSave)
+        ? { onCritSave: weaponStrike.onCritSave || item.onCritSave } : {}),
+      // Intrinsic on-crit conditions with NO save (#1439 tail — alchemical bombs):
+      // applied straight to the enemy on a crit by applyStrikeOnCritConditions.
+      // Item-level so it rides every tier's strike (bombs re-declare strikes per
+      // variant); a strike-level block overrides it.
+      ...((weaponStrike.onCritConditions || item.onCritConditions)
+        ? { onCritConditions: weaponStrike.onCritConditions || item.onCritConditions } : {}),
       // Rune source breakdown (#608) — present only for runed weapons.
       ...(runeBreakdown ? { runeBreakdown } : {}),
       // Gated: a weapon's Strike is only usable while it is wielded

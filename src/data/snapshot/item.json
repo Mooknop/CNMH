@@ -8319,7 +8319,13 @@
         ]
       }
     ],
-    "id": "mud-bomb"
+    "id": "mud-bomb",
+    "onCritConditions": [
+      {
+        "id": "dazzled",
+        "note": "until the start of your next turn"
+      }
+    ]
   },
   {
     "artifact": {
@@ -8525,6 +8531,12 @@
       }
     ],
     "id": "necrotic-bomb",
+    "onCritConditions": [
+      {
+        "id": "sickened",
+        "value": 1
+      }
+    ],
     "image": "img_1852f4cc-d20d-4808-8975-2a75ed2bf940.jpg",
     "imagePosition": {
       "x": 50,
@@ -9577,6 +9589,12 @@
       }
     ],
     "id": "pressure-bomb",
+    "onCritConditions": [
+      {
+        "id": "prone",
+        "note": "a Tiny or smaller target is also pushed 5 feet"
+      }
+    ],
     "image": "img_54f7864c-ac6a-4552-a177-115e9c3abd56.jpg",
     "imagePosition": {
       "x": 50,
@@ -9999,7 +10017,14 @@
         ]
       }
     ],
-    "id": "redpitch-bomb"
+    "id": "redpitch-bomb",
+    "onCritConditions": [
+      {
+        "id": "clumsy",
+        "value": 1,
+        "note": "until the start of your next turn"
+      }
+    ]
   },
   {
     "id": "reinforced-surcoat",
@@ -13782,7 +13807,14 @@
         ]
       }
     ],
-    "id": "tallow-bomb"
+    "id": "tallow-bomb",
+    "onCritConditions": [
+      {
+        "id": "sickened",
+        "value": 1,
+        "note": "living targets; can't reduce sickened below 1 while the persistent fire lasts"
+      }
+    ]
   },
   {
     "name": "Targe",

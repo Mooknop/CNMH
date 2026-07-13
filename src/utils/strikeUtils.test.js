@@ -403,6 +403,18 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(strike.onCritSave).toEqual(oc);
   });
 
+  test('item-level onCritConditions rides the resolved strike (#1439 tail — bombs)', () => {
+    // Bombs re-declare strikes per tier, so the on-crit condition is authored at
+    // item level; resolveItemStrikes folds it onto every strike.
+    const bomb = {
+      uid: 'nb', name: 'Necrotic Bomb',
+      onCritConditions: [{ id: 'sickened', value: 1 }],
+      strikes: [{ name: 'Necrotic Bomb', proficiency: 'martial', type: 'ranged', damage: '2d6', damageType: 'void' }],
+    };
+    const strike = getStrikes({ ...martialChar, inventory: [bomb] }).find((s) => s.name === 'Necrotic Bomb');
+    expect(strike.onCritConditions).toEqual([{ id: 'sickened', value: 1 }]);
+  });
+
   test('a Ghost Touch property rune surfaces its counts-as tag on the strike (#1436)', () => {
     const char = {
       ...martialChar,

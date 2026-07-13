@@ -9,7 +9,7 @@ import { hasSpellCounter, registerSpellCounter } from './spellCounter';
 import { applyPersistentFromResults } from './persistentDamage';
 import { relayDamageAndRevealIwr } from './damageRelay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from './whetstoneOnHit';
-import { applyStrikeOnCritSave } from './strikeOnCrit';
+import { applyStrikeOnCritSave, applyStrikeOnCritConditions } from './strikeOnCrit';
 import { APP, syncKey } from '../sync/keys';
 
 // Confirm-time appliers (extracted #1317 D4) — the remaining verbatim blocks
@@ -309,6 +309,17 @@ export const applyPostRollEffects = ({
     chainResults: strikeChainResults,
     order,
     addSaveRequest,
+    appendLog,
+  });
+
+  // Intrinsic on-crit conditions with no save (#1439 tail — alchemical bombs):
+  // the condition applies straight to the enemy on a critical hit.
+  applyStrikeOnCritConditions({
+    ability,
+    rayGroups,
+    chainResults: strikeChainResults,
+    order,
+    applyEnemyCondition,
     appendLog,
   });
 };
