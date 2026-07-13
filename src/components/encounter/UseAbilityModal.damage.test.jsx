@@ -35,7 +35,7 @@ vi.mock('../../contexts/ContentContext', () => ({
       id: 'fx-strike-melee-bludgeoning',
       priority: 100,
       when: { kind: 'strike', rangeType: 'melee', damageType: 'bludgeoning' },
-      play: { shape: 'melee', file: 'jb2a.melee_generic.bludgeoning.one_handed' },
+      play: { shape: 'melee', file: 'jb2a.mace.melee.01.white' },
     }],
   }),
 }));
@@ -445,7 +445,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
     expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'fxplay', expect.objectContaining({
       shape: 'melee',
-      file: 'jb2a.melee_generic.bludgeoning.one_handed',
+      file: 'jb2a.mace.melee.01.white',
       source: 'e-caster',
       targets: ['e-gob'],
     }));

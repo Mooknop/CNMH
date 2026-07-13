@@ -48,6 +48,10 @@ const SHAPES = {
   projectile: (file, sourceToken, target, opts) => playProjectileEffect(file, sourceToken, target, opts),
 };
 
+// The shape vocabulary, exported for the app's catalog validation (#1456) and
+// the GM test-fire panel — one source of truth for what the bridge can play.
+export const FX_SHAPES = Object.freeze(Object.keys(SHAPES));
+
 // Called by bridge.js when cnmh_fxplay_global arrives.
 export async function handleFxPlay(value) {
   const { shape, file, source, targets, opts } = value || {};
