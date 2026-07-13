@@ -9,6 +9,7 @@ import GameGlyph from '../shared/GameGlyph';
 import ItemActivations from '../shared/ItemActivations';
 import RuneMechanics from '../shared/RuneMechanics';
 import CastSpellModal from '../encounter/CastSpellModal';
+import ConsumableSaveModal from './ConsumableSaveModal';
 import ShieldRuneActivations from './ShieldRuneActivations';
 import AugmentationActivations from './AugmentationActivations';
 import {
@@ -136,6 +137,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // An item-granted innate spell cast (#914) — the built cast to hand to
   // CastSpellModal, or null. Set when the Innate Spells card's Cast button fires.
   const [grantedCast, setGrantedCast] = useState(null);
+  // Open state for an activated-ability save (#1439) — Caterwaul Sling etc.
+  const [activatingSave, setActivatingSave] = useState(false);
   // Actuated-item activation state machine (#957 S4) — once/day + Overload +
   // broken/repair, driven by an item's optional `actuated` block.
   const { gameDate, time } = useGameDate();
@@ -143,7 +146,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const itemAct = useItemActivation(character, item, { nowSecs });
   // Frequency ledger for item-granted innate spells (#914 slice 2 / #916 rail) —
   // gates the once/day grants on the card (the cast flow records the use itself).
-  const { gateFor: grantGateFor } = useFrequency(character?.id);
+  const { gateFor: grantGateFor, record: recordFreq } = useFrequency(character?.id);
   // Stack-split amount for giving a consumable (#657). Clamped to the remaining
   // quantity at render so it can't exceed what's on hand.
   const [giveCount, setGiveCount] = useState(1);
@@ -388,6 +391,14 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       return doc ? { grant, doc, spell: buildItemGrantedSpell(grant, doc, itemUidOf(item)) } : null;
     })
     .filter((g) => g && g.spell);
+  // Activated ability that imposes a save (#1439 — Caterwaul Sling, Sparkblade,
+  // Spoiling Buckler): a fixed-DC save fired at picked targets through the shared
+  // save rail (ConsumableSaveModal), frequency-gated and non-consuming.
+  const activatedSave = item.activatedSave || null;
+  const activatedSaveGate = activatedSave?.frequency
+    ? grantGateFor({ id: `${itemUidOf(item)}:activatedsave`, frequency: activatedSave.frequency }, { nowSecs })
+    : null;
+  const activatedSaveLocked = !!activatedSaveGate && !activatedSaveGate.available;
   const doActuate = (rank) => {
     if (runeCastSpell) { setCastingRune(true); return; }
     const r = itemAct.activation.activate(rank);
@@ -1769,6 +1780,30 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
+      {/* Activated ability that imposes a save (#1439) — fires a fixed-DC save at
+          picked targets through the shared save rail; frequency-gated. */}
+      {activatedSave && (
+        <div className="item-granted-spells">
+          <h3>Activated Ability</h3>
+          <div className="granted-spell">
+            <button
+              type="button"
+              className="btn-small btn-primary"
+              data-testid="activated-save"
+              disabled={activatedSaveLocked}
+              onClick={() => setActivatingSave(true)}
+            >
+              {activatedSave.name}
+            </button>
+            <span className="granted-spell-freq" data-testid="activated-save-note">
+              {activatedSaveLocked && activatedSaveGate
+                ? lockMessage(activatedSaveGate, parseFrequency(activatedSave), nowSecs)
+                : `${activatedSave.save?.basic ? 'basic ' : ''}${activatedSave.save?.defense} ${activatedSave.save?.dc}`}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Shield property-rune activations (#1196 G3/G4) — each rune's actuated
           block gets its own frequency-gated card; spell-casters open the cast. */}
       {item.shield && (
@@ -1935,6 +1970,24 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           castSource="innate"
           character={character}
           themeColor={themeColor}
+        />
+      )}
+
+      {/* Activated-ability save (#1439) — the shared save-target modal, driven by
+          an item activation instead of a consumable (records the once/day use). */}
+      {activatedSave && (
+        <ConsumableSaveModal
+          isOpen={activatingSave}
+          onClose={() => setActivatingSave(false)}
+          item={item}
+          character={character}
+          themeColor={themeColor}
+          saveBlock={activatedSave.save}
+          verb="Activate"
+          actionCost={activatedSave.actionCost || 1}
+          available={activatedSaveGate ? activatedSaveGate.available : true}
+          onFire={() => activatedSave.frequency
+            && recordFreq({ id: `${itemUidOf(item)}:activatedsave`, frequency: activatedSave.frequency })}
         />
       )}
 

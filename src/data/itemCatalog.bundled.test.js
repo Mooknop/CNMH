@@ -368,6 +368,15 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(cond('peshpine-grenade')).toContainEqual(expect.objectContaining({ id: 'stupefied', value: 1 }));
   });
 
+  it('activated-ability items carry a save block (#1439)', () => {
+    const act = (id) => items.find((i) => i.id === id)?.activatedSave;
+    expect(act('sparkblade')).toMatchObject({ name: 'Lightning Arc', save: { defense: 'reflex', dc: 19, basic: true } });
+    expect(act('sparkblade').save.damage).toMatchObject({ dice: '2d4+4', type: 'electricity' });
+    expect(act('caterwaul-sling')).toMatchObject({ save: { defense: 'fortitude', dc: 21, basic: true } });
+    expect(act('caterwaul-sling').save.conditions.failure).toContainEqual(expect.objectContaining({ id: 'deafened' }));
+    expect(act('spoiling-buckler')).toMatchObject({ name: 'Tumbling Tumbleweed', save: { defense: 'reflex', dc: 19 } });
+  });
+
   it('on-hit penalty throwables carry reminders + on-crit conditions (#1439 tail)', () => {
     const item = (id) => items.find((i) => i.id === id);
     expect(item('frost-vial').onHitNotes[0]).toMatch(/Speed/i);

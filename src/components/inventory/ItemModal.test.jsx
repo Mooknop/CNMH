@@ -163,8 +163,16 @@ vi.mock('../../hooks/useItemActivation', () => ({
 // Frequency ledger (#914 slice 2) — a controllable gate so the Innate Spells card
 // can be driven into the available / locked states without seeding the ledger.
 let mockGrantGate = { available: true, availableAtSecs: null, lastUsedSecs: null, lockKind: null };
+const mockRecordFreq = vi.fn();
 vi.mock('../../hooks/useFrequency', () => ({
-  useFrequency: () => ({ gateFor: () => mockGrantGate }),
+  useFrequency: () => ({ gateFor: () => mockGrantGate, record: mockRecordFreq }),
+}));
+
+// ConsumableSaveModal (#1439) — the save-target modal; stub it so the ItemModal
+// test drives only the activated-ability wiring (open state + props handed in).
+vi.mock('./ConsumableSaveModal', () => ({
+  default: ({ isOpen, item, verb, saveBlock }) =>
+    (isOpen ? <div data-testid="consumable-save-modal">{verb} {item?.name} · {saveBlock?.defense} {saveBlock?.dc}</div> : null),
 }));
 
 beforeEach(() => {
@@ -2012,6 +2020,30 @@ describe('ItemModal — item-granted innate spell (#914)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={pendant} character={{ id: 'p', name: 'P' }} />);
     expect(screen.getByTestId('granted-cast-spell')).not.toBeDisabled();
     expect(screen.queryByTestId('granted-spell-freq')).not.toBeInTheDocument();
+  });
+});
+
+// ── Activated-ability save (#1439 — Spoiling Buckler / Sparkblade) ──
+describe('ItemModal — activated-ability save (#1439)', () => {
+  const buckler = {
+    uid: 'sb1', name: 'Spoiling Buckler', weight: 1,
+    activatedSave: { name: 'Tumbling Tumbleweed', actionCount: 2, frequency: 'once per day', save: { defense: 'reflex', dc: 19 } },
+  };
+
+  it('renders the activation button and opens the save-target modal with the block', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={buckler} character={{ id: 'p', name: 'P' }} />);
+    const btn = screen.getByTestId('activated-save');
+    expect(btn).toHaveTextContent('Tumbling Tumbleweed');
+    expect(screen.getByTestId('activated-save-note')).toHaveTextContent('reflex 19');
+    expect(screen.queryByTestId('consumable-save-modal')).not.toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(screen.getByTestId('consumable-save-modal')).toHaveTextContent('Activate Spoiling Buckler · reflex 19');
+  });
+
+  it('disables the activation button when the once/day use is spent', () => {
+    mockGrantGate = { available: false, availableAtSecs: 90000, lastUsedSecs: 3600, lockKind: 'window' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={buckler} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('activated-save')).toBeDisabled();
   });
 });
 
