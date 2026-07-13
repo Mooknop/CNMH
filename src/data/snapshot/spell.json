@@ -2651,6 +2651,26 @@
     ]
   },
   {
+    "id": "mending",
+    "name": "Mending",
+    "level": 1,
+    "baseLevel": 1,
+    "range": "Touch",
+    "targets": "non-magical object of light Bulk or less",
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "10 Minutes",
+    "description": "You repair the target item. You restore 5 Hit Points per spell rank to the target, potentially removing the broken condition if this repairs it past the item’s Broken Threshold. You can’t replace lost pieces or repair an object that’s been completely destroyed.\n\nHeightened (2nd) You can target a non-magical object of 1 Bulk or less.\nHeightened (3rd) You can target a non-magical object of 2 Bulk or less, or a magical object of 1 Bulk or less.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
     "id": "mind-games",
     "name": "Mind Games",
     "level": 2,
@@ -2981,6 +3001,25 @@
     ]
   },
   {
+    "id": "phantasmal-minion",
+    "name": "Phantasmal Minion",
+    "level": 1,
+    "baseLevel": 1,
+    "range": "60 feet",
+    "duration": "Sustained",
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Summon"
+    ],
+    "actions": "Three Actions",
+    "description": "You summon a phantasmal minion. The minion is roughly the shape of a humanoid. You can choose to have it be invisible or have an ephemeral appearance, but it’s obviously a magical effect, not a real creature.",
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "phantasmal-treasure",
     "name": "Phantasmal Treasure",
     "level": 2,
@@ -3218,6 +3257,28 @@
     },
     "traditions": [
       "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "read-aura",
+    "name": "Read Aura",
+    "level": 1,
+    "baseLevel": 1,
+    "range": "30 feet",
+    "targets": "1 object",
+    "traits": [
+      "Cantrip",
+      "Concentrate",
+      "Detection",
+      "Manipulate"
+    ],
+    "actions": "1 Minute",
+    "description": "You focus on the target object, opening your mind to perceive magical auras. When the casting is complete, you know whether that item is magical. You or anyone you advise about the aura gains a +2 circumstance bonus to Identify Magic on the item. If the object is illusory, you detect this only if the effect’s rank is lower than the rank of your read aura spell.\n\nHeightened (3rd) You can target up to 10 objects.\nHeightened (6th) You can target any number of objects.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
       "primal"
     ]
   },
@@ -3842,6 +3903,27 @@
     ]
   },
   {
+    "id": "stabilize",
+    "name": "Stabilize",
+    "level": 1,
+    "baseLevel": 1,
+    "range": "30 feet",
+    "targets": "1 dying creature",
+    "traits": [
+      "Cantrip",
+      "Concentrate",
+      "Healing",
+      "Manipulate",
+      "Vitality"
+    ],
+    "actions": "Two Actions",
+    "description": "Life energy shuts death’s door. The target loses the dying condition, though it remains unconscious at 0 Hit Points.",
+    "traditions": [
+      "divine",
+      "primal"
+    ]
+  },
+  {
     "id": "steal-the-show",
     "name": "Steal the Show",
     "level": 4,
@@ -4387,6 +4469,28 @@
       "divine",
       "occult",
       "primal"
+    ]
+  },
+  {
+    "id": "void-warp",
+    "name": "Void Warp",
+    "level": 1,
+    "baseLevel": 1,
+    "range": "30 feet",
+    "targets": "1 living creature",
+    "defense": "Fortitude",
+    "traits": [
+      "Cantrip",
+      "Concentrate",
+      "Manipulate",
+      "Void"
+    ],
+    "actions": "Two Actions",
+    "description": "You call upon the Void to harm life force. The target takes 2d4 void damage with a basic Fortitude save. On a critical failure, the target is also enfeebled 1 until the start of your next turn.\n\nHeightened (+1) The damage increases by 1d4.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
     ]
   },
   {
