@@ -320,6 +320,17 @@ describe('bundled item catalog (Slice 3)', () => {
     ]);
   });
 
+  it('specific magic weapons carry their intrinsic damage riders (#1439)', () => {
+    const riders = (id) => (items.find((i) => i.id === id)?.strikes?.[0]?.riders) || [];
+    // Unconditional flat extra damage (Monarch-style intrinsic rider, #1085).
+    expect(riders('storm-hammer')).toContainEqual(expect.objectContaining({ dice: '1', type: 'electricity' }));
+    expect(riders('alicorn-lance')).toContainEqual(expect.objectContaining({ dice: '1', type: 'spirit' }));
+    // Conditional riders carry a note (player-applied toggle); crit-gated via `on`.
+    expect(riders('hunters-bow')).toContainEqual(expect.objectContaining({ dice: '1d6', on: ['criticalSuccess'] }));
+    expect(riders('gloom-blade')).toContainEqual(expect.objectContaining({ dice: '1d6', type: 'precision' }));
+    // End-to-end pass-through is covered by strikeUtils' Monarch intrinsic-rider test.
+  });
+
   it('Sleeves of Storage Greater resolves to the override container capacity', () => {
     const owner = { id: 'tester', level: 20, inventory: [{ ref: 'sleeves-of-storage', level: 9 }] };
     const greater = resolveCharacterItems(owner, items, spells).inventory[0];

@@ -787,6 +787,14 @@
       {
         "damageType": "piercing",
         "name": "Alicorn Lance",
+        "riders": [
+          {
+            "id": "alicorn-lance-spirit",
+            "label": "Alicorn Lance (spirit)",
+            "dice": "1",
+            "type": "spirit"
+          }
+        ],
         "proficiency": "martial",
         "type": "melee",
         "damage": "1d8",
@@ -5687,7 +5695,7 @@
   {
     "id": "gloom-blade",
     "name": "Gloom Blade",
-    "description": "As black as coal, this blade grows more potent in darkness. While in bright light it functions as a +1 shortsword and doesn't radiate a magic aura to detect magic (unless the spell is 4th rank or higher). In dim light or darkness it becomes a +2 striking shortsword. Whenever you attack a creature you're undetected by, you deal 1d6 additional precision damage (descriptive). Toggle the item's illumination mode to match the lighting.",
+    "description": "As black as coal, this blade grows more potent in darkness. While in bright light it functions as a +1 shortsword and doesn't radiate a magic aura to detect magic (unless the spell is 4th rank or higher). In dim light or darkness it becomes a +2 striking shortsword. Whenever you attack a creature you're undetected by, you deal 1d6 additional precision damage. Toggle the item's illumination mode to match the lighting.",
     "traits": [
       "Agile",
       "Finesse",
@@ -5699,6 +5707,15 @@
     "strikes": [
       {
         "name": "Gloom Blade",
+        "riders": [
+          {
+            "id": "gloom-blade-precision",
+            "label": "Gloom Blade (precision)",
+            "dice": "1d6",
+            "type": "precision",
+            "note": "while undetected by the target"
+          }
+        ],
         "proficiency": "martial",
         "type": "melee",
         "damage": "1d6",
@@ -6717,6 +6734,18 @@
     "strikes": [
       {
         "name": "Hunter's Bow",
+        "riders": [
+          {
+            "id": "hunters-bow-hidden-crit",
+            "label": "Hunter's Bow (vs unseen, crit)",
+            "dice": "1d6",
+            "type": "",
+            "on": [
+              "criticalSuccess"
+            ],
+            "note": "vs a target that can't see you"
+          }
+        ],
         "proficiency": "martial",
         "type": "ranged",
         "damage": "1d6",
@@ -13160,6 +13189,14 @@
     "strikes": [
       {
         "name": "Storm Hammer",
+        "riders": [
+          {
+            "id": "storm-hammer-electricity",
+            "label": "Storm Hammer (electricity)",
+            "dice": "1",
+            "type": "electricity"
+          }
+        ],
         "proficiency": "martial",
         "type": "melee",
         "damage": "1d8",
