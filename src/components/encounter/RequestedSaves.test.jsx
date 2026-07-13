@@ -433,6 +433,36 @@ describe('RequestedSaves', () => {
     });
   });
 
+  describe('canvas animation relay (#1414 A4)', () => {
+    const fx = { shape: 'burst', file: 'jb2a.fireball.explosion.orange', source: 'e-caster' };
+
+    test('resolving fires the ridden fx recipe at every resolved target', () => {
+      useEncounter.mockReturnValue({
+        encounter: makeEncounter([{ ...baseRequest, fx }]),
+        appendLog: mockAppendLog,
+        removeSaveRequest: mockRemoveSaveReq,
+      });
+      render(<RequestedSaves />);
+      enterGoblinD20(20); // crit success — saved, but the fireball still engulfs
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'fxplay', expect.objectContaining({
+        shape: 'burst',
+        file: 'jb2a.fireball.explosion.orange',
+        source: 'e-caster',
+        targets: ['e-goblin'],
+      }));
+    });
+
+    test('requests without an fx rider emit nothing on fxplay', () => {
+      render(<RequestedSaves />);
+      enterGoblinD20(10);
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'fxplay', expect.anything());
+    });
+  });
+
   // ── persistent-damage recording (#272) ─────────────────────────────────────
 
   describe('persistent-damage recording (#272)', () => {

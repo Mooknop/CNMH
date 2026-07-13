@@ -137,11 +137,28 @@ describe('handleFxPlay', () => {
     expect(FakeSequence.instances).toHaveLength(0);
   });
 
-  test('unresolved source token is a silent no-op', async () => {
+  test('unresolved source token is a silent no-op for source-needing shapes', async () => {
     encounterWorld();
     await handleFxPlay(meleeEvent({ source: 'cbt-missing' }));
 
     expect(FakeSequence.instances).toHaveLength(0);
+  });
+
+  test('burst: radial effect on the target, no rotation, no source needed', async () => {
+    const { tokGob } = encounterWorld();
+    await handleFxPlay(meleeEvent({
+      shape: 'burst',
+      file: 'jb2a.fireball.explosion.orange',
+      source: null,
+    }));
+
+    expect(FakeSequence.instances).toHaveLength(1);
+    const seq = FakeSequence.instances[0];
+    expect(seq.played).toBe(true);
+    expect(callArgs(seq, 'atLocation')).toEqual([tokGob]);
+    expect(callArgs(seq, 'rotateTowards')).toBeUndefined();
+    expect(callArgs(seq, 'stretchTo')).toBeUndefined();
+    expect(callArgs(seq, 'scaleToObject')).toEqual([2]);
   });
 
   test('Sequencer absent: warns once across events, never throws', async () => {

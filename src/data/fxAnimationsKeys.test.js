@@ -9,7 +9,7 @@
 import fs from 'fs';
 import path from 'path';
 import { FX_SHAPES } from '../../foundry-bridge/animations';
-import { strikeFxFacts } from '../utils/fxPlay';
+import { strikeFxFacts, spellFxFacts } from '../utils/fxPlay';
 
 const rules = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'src', 'data', 'snapshot', 'fxAnimations.json'), 'utf8')
@@ -26,8 +26,12 @@ const playable = (key) =>
 
 // The matcher vocabulary is whatever facts the resolver actually produces —
 // a `when` key outside it can never match anything (fxPlay.js degrades it to
-// a dead rule, silently), which on a catalog entry is always a typo.
-const MATCHER_KEYS = new Set(Object.keys(strikeFxFacts({})));
+// a dead rule, silently), which on a catalog entry is always a typo. Union of
+// the strike and spell fact bags.
+const MATCHER_KEYS = new Set([
+  ...Object.keys(strikeFxFacts({})),
+  ...Object.keys(spellFxFacts({})),
+]);
 
 // Opts the bridge honors (pf2eAdapter playMeleeEffect/playProjectileEffect).
 // Unknown opts are silently ignored bridge-side — flag them here instead.

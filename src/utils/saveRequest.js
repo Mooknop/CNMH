@@ -1,6 +1,7 @@
 import { serializeRidersForSave } from './damage';
 import { resolveApplyTargets } from './applyAbility';
 import { isBasicDefense } from './rollResolution';
+import { resolveSaveRequestFx } from './fxPlay';
 
 /**
  * Confirm-time save-request payload for a target-save ability (#270,
@@ -29,6 +30,7 @@ export const buildTargetSaveRequest = ({
   order,
   saveDc,
   directCastRank,
+  fxAnimations,
 }) => {
   if (!(rollProfile.mode === 'target-save' && saveTargets.length > 0 && rollProfile.dc != null)) {
     return null;
@@ -67,6 +69,18 @@ export const buildTargetSaveRequest = ({
       casterEntryId,
     };
   }
+  // Canvas animation (#1414 A4): resolve the catalog rule NOW, on the
+  // caster's client (where the fxAnimations content lives), and ride the
+  // recipe with the request — RequestedSaves fires it on resolution without
+  // needing the catalog GM-side. Null when nothing matches (no animation).
+  const fx = resolveSaveRequestFx({
+    fxAnimations,
+    ability,
+    damageProfile,
+    casterEntryId,
+    defense: rollProfile.defense,
+  });
+
   return {
     casterId: character.id,
     casterName: character.name,
@@ -78,5 +92,6 @@ export const buildTargetSaveRequest = ({
     targets,
     ...(damage && { damage }),
     ...(casterEffect && { casterEffect }),
+    ...(fx && { fx }),
   };
 };

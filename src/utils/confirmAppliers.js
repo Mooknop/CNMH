@@ -8,7 +8,7 @@ import { markPlayingOnCast } from './playing';
 import { hasSpellCounter, registerSpellCounter } from './spellCounter';
 import { applyPersistentFromResults } from './persistentDamage';
 import { relayDamageAndRevealIwr } from './damageRelay';
-import { emitStrikeFxPlay } from './fxPlay';
+import { emitAbilityFxPlay } from './fxPlay';
 import { applyWhetstoneOnHit, applyWhetstoneReactionAndCrit } from './whetstoneOnHit';
 import {
   applyStrikeOnCritSave, applyStrikeOnCritConditions,
@@ -276,13 +276,16 @@ export const applyPostRollEffects = ({
     revealFiredIwr,
   });
 
-  // Canvas animation (#1416): resolve the strike against the fxAnimations
-  // content catalog and relay the recipe for the bridge to play in Foundry.
-  // Fire-and-forget juice — a miss on the catalog emits nothing.
-  emitStrikeFxPlay({
+  // Canvas animation (#1416): resolve the strike / attack-roll spell against
+  // the fxAnimations content catalog and relay the recipe for the bridge to
+  // play in Foundry. Fire-and-forget juice — a miss on the catalog emits
+  // nothing. (Save spells animate from RequestedSaves via the recipe that
+  // rides the save request.)
+  emitAbilityFxPlay({
     sendUpdate,
     fxAnimations,
     ability,
+    damageProfile,
     casterEntryId,
     rayGroups,
     chainResults: strikeChainResults,

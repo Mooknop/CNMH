@@ -4,9 +4,10 @@
 // [entryId | {x,y}], opts?, ts } — a RESOLVED recipe: the app-side animation
 // catalog (content) picks shape + file (a Sequencer database key, e.g.
 // "jb2a.melee_generic.slashing.one_handed"); the bridge only interprets the
-// shape. v1 shapes:
+// shape. Shapes:
 //   melee      — swing on each target, rotated along the attack line
 //   projectile — effect stretched from the source to each target
+//   burst      — radial effect centered on each target (source-free)
 // Target entries are combatant entryIds or raw {x,y} canvas points — the point
 // form is in the wire contract now so AoE templates later don't change the
 // payload shape.
@@ -19,7 +20,8 @@
 // pf2eAdapter.js.
 
 import {
-  resolveCombatantToken, sequencerAvailable, playMeleeEffect, playProjectileEffect,
+  resolveCombatantToken, sequencerAvailable,
+  playMeleeEffect, playProjectileEffect, playBurstEffect,
 } from './pf2eAdapter.js';
 
 let _warnedNoSequencer = false;
@@ -40,12 +42,25 @@ function resolveTargetRef(ref) {
 }
 
 // The shape vocabulary. Each entry plays ONE target; handleFxPlay loops the
-// target list. New shapes are added here (and in the adapter) only when an
-// animation family genuinely can't be expressed with the existing ones — the
-// catalog of WHICH ability plays WHAT is app-side content, never bridge code.
+// target list. `needsSource` shapes are skipped when the source token doesn't
+// resolve; `burst` is source-free (save-spell recipes may arrive without a
+// resolvable caster). New shapes are added here (and in the adapter) only
+// when an animation family genuinely can't be expressed with the existing
+// ones — the catalog of WHICH ability plays WHAT is app-side content, never
+// bridge code.
 const SHAPES = {
-  melee: (file, sourceToken, target, opts) => playMeleeEffect(file, sourceToken, target, opts),
-  projectile: (file, sourceToken, target, opts) => playProjectileEffect(file, sourceToken, target, opts),
+  melee: {
+    needsSource: true,
+    play: (file, sourceToken, target, opts) => playMeleeEffect(file, sourceToken, target, opts),
+  },
+  projectile: {
+    needsSource: true,
+    play: (file, sourceToken, target, opts) => playProjectileEffect(file, sourceToken, target, opts),
+  },
+  burst: {
+    needsSource: false,
+    play: (file, _sourceToken, target, opts) => playBurstEffect(file, target, opts),
+  },
 };
 
 // The shape vocabulary, exported for the app's catalog validation (#1456) and
@@ -55,8 +70,8 @@ export const FX_SHAPES = Object.freeze(Object.keys(SHAPES));
 // Called by bridge.js when cnmh_fxplay_global arrives.
 export async function handleFxPlay(value) {
   const { shape, file, source, targets, opts } = value || {};
-  const play = SHAPES[shape];
-  if (!play || typeof file !== 'string' || !file) return;
+  const entry = SHAPES[shape];
+  if (!entry || typeof file !== 'string' || !file) return;
 
   if (!sequencerAvailable()) {
     if (!_warnedNoSequencer) {
@@ -67,13 +82,13 @@ export async function handleFxPlay(value) {
   }
 
   const sourceToken = typeof source === 'string' ? resolveCombatantToken(source) : null;
-  if (!sourceToken) return;
+  if (entry.needsSource && !sourceToken) return;
 
   for (const ref of Array.isArray(targets) ? targets : []) {
     const target = resolveTargetRef(ref);
     if (!target) continue;
     try {
-      await play(file, sourceToken, target, opts || {});
+      await entry.play(file, sourceToken, target, opts || {});
     } catch (err) {
       console.error('CNMH Bridge | fxplay failed:', err);
     }
