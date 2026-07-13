@@ -506,6 +506,14 @@
     ],
     "price": 50,
     "weight": 0,
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 1,
+        "vs": "Grapple or Swallow"
+      }
+    ],
     "id": "aeon-stone-polished-pebble"
   },
   {
@@ -1296,7 +1304,15 @@
           "resistance": {
             "amount": 3,
             "type": "splash"
-          }
+          },
+          "modifiers": [
+            {
+              "stat": "reflex",
+              "kind": "circumstance",
+              "amount": 1,
+              "vs": "your and allies' spells"
+            }
+          ]
         }
       },
       {
@@ -1309,7 +1325,15 @@
           "resistance": {
             "amount": 10,
             "type": "splash"
-          }
+          },
+          "modifiers": [
+            {
+              "stat": "reflex",
+              "kind": "circumstance",
+              "amount": 2,
+              "vs": "your and allies' spells"
+            }
+          ]
         }
       }
     ],
