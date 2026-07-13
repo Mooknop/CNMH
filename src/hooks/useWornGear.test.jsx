@@ -7,6 +7,13 @@ vi.mock('./useInvested', () => ({
   useInvested: () => ({ isInvested: (uid) => investedSet.has(uid) }),
 }));
 
+// Drive the wayfinder-slot overlay (#928) rather than the synced store.
+let slotsMap = {};
+vi.mock('./useSyncedState', () => ({
+  __esModule: true,
+  useSyncedState: () => [slotsMap, () => {}],
+}));
+
 import { useWornGear } from './useWornGear';
 
 const setup = (inventory) =>
@@ -14,6 +21,7 @@ const setup = (inventory) =>
 
 beforeEach(() => {
   investedSet = new Set();
+  slotsMap = {};
 });
 
 const acRune = (overrides = {}) => ({
@@ -151,6 +159,38 @@ describe('useWornGear', () => {
     it('still gates a resistance-only item on investment', () => {
       // robe absent from investedSet
       expect(setup([{ uid: 'robe', name: 'Energy Robe', traits: ['Invested'], modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] }])).toEqual([]);
+    });
+  });
+
+  // ── resonant powers gated on wayfinder slotting (#928) ──
+  describe('resonant power / wayfinder slotting (#928)', () => {
+    const wayfinder = { uid: 'wf', id: 'wayfinder', name: 'Wayfinder', traits: ['Invested', 'Magical'] };
+    const pearly = {
+      uid: 'st', id: 'aeon-stone-pearly-white-spindle', name: 'Aeon Stone (Pearly White Spindle)',
+      traits: ['Invested', 'Magical'], resonant: { resistance: { amount: 1, type: 'void' } },
+    };
+
+    it('surfaces a slotted stone’s resonant resistance when active', () => {
+      investedSet.add('wf');
+      investedSet.add('st');
+      slotsMap = { wf: 'st' };
+      const out = setup([wayfinder, pearly]);
+      const stoneEntry = out.find((o) => o.def.id === 'worn-st');
+      expect(stoneEntry).toBeTruthy();
+      expect(stoneEntry.def.modifiers).toEqual([{ stat: 'resistance', amount: 1, vs: 'void' }]);
+    });
+
+    it('does not surface the resonant power while merely invested (not slotted)', () => {
+      investedSet.add('wf');
+      investedSet.add('st');
+      slotsMap = {}; // no binding
+      expect(setup([wayfinder, pearly])).toEqual([]);
+    });
+
+    it('does not surface the resonant power when the wayfinder is not invested', () => {
+      investedSet.add('st'); // wayfinder uninvested
+      slotsMap = { wf: 'st' };
+      expect(setup([wayfinder, pearly])).toEqual([]);
     });
   });
 

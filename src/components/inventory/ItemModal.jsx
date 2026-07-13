@@ -48,6 +48,10 @@ import {
 import { hasAccessoryRune, resolveAccessoryItem, accessoryDisplayName, withAccessoryActivations, accessoryRuneOf } from '../../utils/accessoryRunes';
 import { actuatedCastsSpell, buildRuneCastSpell } from '../../utils/runeSpellCast';
 import { itemGrantedSpells, buildItemGrantedSpell } from '../../utils/itemGrantedSpells';
+import {
+  isAeonStone, isWayfinder, wayfinderKey, slottedStoneUid,
+  slotStone, unslotStone, resonantActiveStoneUids, resonantMerge,
+} from '../../utils/wayfinder';
 import { parseFrequency, lockMessage } from '../../utils/frequency';
 import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
@@ -93,6 +97,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [attached, setAttached] = useSyncedState(attachedKey(character?.id), {});
   // Spellgun-absorption overlay (#1208) — spellgunUid → host glove uid.
   const [absorbed, setAbsorbed] = useSyncedState(absorbedKey(character?.id), {});
+  // Aeon-stone → wayfinder slot overlay (#928) — wayfinderUid → aeonStoneUid.
+  const [slots, setSlots] = useSyncedState(wayfinderKey(character?.id), {});
   const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, character?.id), {});
   // Durable loadout overlays (#1411 tail): a consume-on-use augmentation (Mirror)
   // falls off on activation — cleared via the runed-copy write GM Manage Gear uses.
@@ -180,6 +186,40 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const doAffix = (host) => {
     setAffixed((cur) => affix(cur, itemUidOf(item), itemUidOf(host)));
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} affixed ${item.name} to ${host.name} (10-minute activity)` });
+    onClose();
+  };
+
+  // Aeon-stone resonant power / wayfinder slotting (#928). A stone slots into a
+  // wayfinder (Interact); its resonant power activates only while the wayfinder
+  // is worn+invested and the stone invested (resonantActiveStoneUids). The set of
+  // currently-active stones gates the resonant families (esp. innate spells here).
+  const aeonStone = isAeonStone(item);
+  const wayfinderItem = isWayfinder(item);
+  const resonantActive = resonantActiveStoneUids(flatInventory, slots, isInvested);
+  // The wayfinder this stone is slotted into (stone card), and the stone slotted
+  // into this wayfinder (wayfinder card).
+  const slottedInWayfinder = aeonStone
+    ? flatInventory.find((w) => isWayfinder(w) && slottedStoneUid(slots, itemUidOf(w)) === itemUidOf(item))
+    : null;
+  const socketWayfinders = aeonStone && !slottedInWayfinder
+    ? flatInventory.filter((w) => isWayfinder(w))
+    : [];
+  const slottedStone = wayfinderItem
+    ? flatInventory.find((s) => itemUidOf(s) === slottedStoneUid(slots, itemUidOf(item)))
+    : null;
+  // This item (stone) is currently granting its resonant power.
+  const itemResonantActive = aeonStone && resonantActive.has(itemUidOf(item));
+
+  const doSlot = (wayfinder) => {
+    setSlots((cur) => slotStone(cur, itemUidOf(wayfinder), itemUidOf(item)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} slotted ${item.name} into ${wayfinder.name} (Interact)` });
+    onClose();
+  };
+  const doUnslot = (wayfinder) => {
+    const wf = wayfinder || item; // stone card passes its host; wayfinder card passes itself
+    setSlots((cur) => unslotStone(cur, itemUidOf(wf)));
+    const stoneName = wayfinder ? item.name : (slottedStone?.name || 'the aeon stone');
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${stoneName} from ${wf.name} (Interact)` });
     onClose();
   };
   // Whetstone application (#1213). A whetstone picks a weapon (1 Interact), is
@@ -339,7 +379,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Item-granted innate spells (#914) — a worn/held item that lets the wearer
   // cast a catalog spell as an innate power (Pendant of the Occult → guidance).
   // Each resolves to a cast-ready synthetic spell for the shared cast flow.
-  const grantedSpellCasts = itemGrantedSpells(item)
+  // A resonant-active aeon stone (#928) also surfaces its `resonant.grantedSpells`
+  // here (resonantMerge hoists them); a merely-invested stone does not.
+  const grantedSpellSource = itemResonantActive ? resonantMerge(item) : item;
+  const grantedSpellCasts = itemGrantedSpells(grantedSpellSource)
     .map((grant) => {
       const doc = (spells || []).find((s) => s.id === grant.ref);
       return doc ? { grant, doc, spell: buildItemGrantedSpell(grant, doc, itemUidOf(item)) } : null;
@@ -1198,6 +1241,46 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
+      {/* Aeon-stone socket (#928) — a wayfinder holds one aeon stone, shown here
+          like an absorbed spellgun: remove it from this card. The resonant power
+          activates only while both the wayfinder and stone are invested. */}
+      {wayfinderItem && (
+        <div className="item-affix" data-testid="wayfinder-socket">
+          <h3>Aeon Stone Socket</h3>
+          {slottedStone ? (
+            <div className="item-affix-state item-affix-state--stack">
+              <div className="hosted-talisman-info">
+                <span>
+                  <strong>{slottedStone.name}</strong>
+                  {resonantActive.has(itemUidOf(slottedStone))
+                    ? ' — slotted; resonant power active.'
+                    : ' — slotted.'}
+                </span>
+                {!resonantActive.has(itemUidOf(slottedStone)) && (
+                  <p className="item-affix-hint">
+                    Invest both the wayfinder and the stone to activate the resonant power.
+                  </p>
+                )}
+              </div>
+              <div className="hosted-talisman-actions">
+                <button
+                  type="button"
+                  className="btn-small btn-secondary"
+                  data-testid="wayfinder-unslot"
+                  onClick={() => doUnslot()}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="item-affix-hint">
+              Empty socket. Slot an aeon stone from its item card (Interact).
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Active item-target effects (oils, #339) — with manual removal for the
           untimed ones (timed effects also clear on the game clock). */}
       {activeItemEffects.length > 0 && (
@@ -1335,6 +1418,49 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                     </button>
                   );
                 })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Slot into a wayfinder (#928) — an aeon stone slots into a wayfinder
+          (Interact) to activate its resonant power, or shows its host + Remove. */}
+      {aeonStone && (slottedInWayfinder || socketWayfinders.length > 0) && (
+        <div className="item-affix" data-testid="item-slot">
+          <h3>Wayfinder</h3>
+          {slottedInWayfinder ? (
+            <div className="item-affix-state">
+              <span>
+                Slotted into <strong>{slottedInWayfinder.name}</strong>
+                {itemResonantActive ? ' — resonant power active' : ''}
+              </span>
+              <button
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid="item-action-unslot"
+                onClick={() => doUnslot(slottedInWayfinder)}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="item-affix-hint">
+                Slot into a wayfinder to activate its resonant power (Interact):
+              </p>
+              <div className="item-affix-hosts">
+                {socketWayfinders.map((w) => (
+                  <button
+                    key={itemUidOf(w)}
+                    type="button"
+                    className="btn-small btn-secondary"
+                    data-testid={`slot-wayfinder-${itemUidOf(w)}`}
+                    onClick={() => doSlot(w)}
+                  >
+                    {w.name}
+                  </button>
+                ))}
               </div>
             </>
           )}

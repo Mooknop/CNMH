@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { useInvested } from './useInvested';
+import { useSyncedState } from './useSyncedState';
 import { isInvestable } from '../utils/InventoryUtils';
 import { SKILL_KEYS } from '../utils/EffectUtils';
 import { isWornDefault, itemModifiers, specialModifiers } from '../utils/wornGear';
+import { wayfinderKey, applyResonant } from '../utils/wayfinder';
 
 // Worn-Gear Effects (W1, #730) — the app-owned passive-bonus spine.
 //
@@ -61,9 +63,15 @@ const contributedModifiers = (mods) => [...usableModifiers(mods), ...specialModi
  */
 export const useWornGear = (charId, inventory = []) => {
   const { isInvested } = useInvested(charId);
+  // Resonant-power slotting (#928): an aeon stone slotted into an invested
+  // wayfinder contributes its `resonant` modifiers too. applyResonant hoists
+  // them onto the active stone so the pipeline below reads them like any other
+  // authored modifier; inert (identity) until a stone is slotted + invested.
+  const [slots] = useSyncedState(wayfinderKey(charId || 'none'), {});
 
   const wornEffects = useMemo(() => {
-    return (Array.isArray(inventory) ? inventory : [])
+    const resolved = applyResonant(inventory, slots, isInvested);
+    return (Array.isArray(resolved) ? resolved : [])
       .filter((e) => {
         if (!isWornDefault(e)) return false;
         if (!contributedModifiers(itemModifiers(e)).length) return false;
@@ -79,7 +87,7 @@ export const useWornGear = (charId, inventory = []) => {
           def: { id, name: e.name, modifiers: contributedModifiers(itemModifiers(e)) },
         };
       });
-  }, [inventory, isInvested]);
+  }, [inventory, isInvested, slots]);
 
   return { wornEffects };
 };

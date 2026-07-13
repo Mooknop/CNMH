@@ -8,6 +8,7 @@ import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '
 import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { wornImmuneTo, wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
+import { applyResonant } from '../utils/wayfinder';
 import { RELAY, APP } from '../sync/keys';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
@@ -59,12 +60,18 @@ export function usePersistentReminders() {
     // overlays. (Mid-session *acquired* gear is out of scope for this reminder
     // line; the chip and HP-apply, via useResolvedEffects, cover that.)
     const character = (characters || []).find((c) => c.id === entry.charId);
-    const inventory = buildEffectiveInventory(
-      character?.inventory || [],
-      getState(entry.charId, APP.LOADOUT) || {},
-    );
     const invested = getState(entry.charId, APP.INVESTED) || {};
     const isInvested = (uid) => !!invested[uid];
+    // Resonant-power slotting (#928): fold an active aeon stone's resonant
+    // resistance/weakness/immunity onto the stone before the worn readers run.
+    const inventory = applyResonant(
+      buildEffectiveInventory(
+        character?.inventory || [],
+        getState(entry.charId, APP.LOADOUT) || {},
+      ),
+      getState(entry.charId, APP.WAYFINDER) || {},
+      isInvested,
+    );
 
     return {
       immune: isImmuneTo(effects, vsType, catalog)
