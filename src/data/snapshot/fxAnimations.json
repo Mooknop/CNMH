@@ -1,0 +1,37 @@
+[
+  {
+    "id": "fx-strike-melee",
+    "name": "Melee strike (fallback)",
+    "priority": 250,
+    "when": { "kind": "strike", "rangeType": "melee" },
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.slashing.one_handed" }
+  },
+  {
+    "id": "fx-strike-melee-bludgeoning",
+    "name": "Melee strike — bludgeoning",
+    "priority": 100,
+    "when": { "kind": "strike", "rangeType": "melee", "damageType": "bludgeoning" },
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.bludgeoning.one_handed" }
+  },
+  {
+    "id": "fx-strike-melee-piercing",
+    "name": "Melee strike — piercing",
+    "priority": 100,
+    "when": { "kind": "strike", "rangeType": "melee", "damageType": "piercing" },
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.piercing.one_handed" }
+  },
+  {
+    "id": "fx-strike-melee-slashing",
+    "name": "Melee strike — slashing",
+    "priority": 100,
+    "when": { "kind": "strike", "rangeType": "melee", "damageType": "slashing" },
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.slashing.one_handed" }
+  },
+  {
+    "id": "fx-strike-ranged",
+    "name": "Ranged strike",
+    "priority": 200,
+    "when": { "kind": "strike", "rangeType": "ranged" },
+    "play": { "shape": "projectile", "file": "jb2a.arrow.physical.white.01" }
+  }
+]

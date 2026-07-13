@@ -4,7 +4,7 @@
 
 import { seedFromBackup } from './gmApi';
 
-const KNOWN = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'theme'];
+const KNOWN = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'theme', 'fxAnimations'];
 
 // A backup may be the bare snapshot ({ quest: [...] }) or the /api/content
 // envelope ({ payload: { quest: [...] } }). Accept either.

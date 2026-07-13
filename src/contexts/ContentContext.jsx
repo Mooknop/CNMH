@@ -12,6 +12,7 @@ import {
   normalizeSpells,
   normalizeEffects,
   normalizeRunes,
+  normalizeFxAnimations,
   mergeArmorRunes,
   mergeFundamentalRunes,
   normalizeImages,
@@ -161,6 +162,7 @@ export const ContentProvider = ({ children, initialContent }) => {
   const serverSpells = serverList('spell');
   const serverEffects = serverList('effect');
   const serverRunes = serverList('rune');
+  const serverFxAnimations = serverList('fxAnimations');
   const serverImages = serverList('image');
   const serverTheme = serverList('theme');
   const serverMonsters = serverList('monster');
@@ -180,6 +182,11 @@ export const ContentProvider = ({ children, initialContent }) => {
   // Armor runes (#727) always merge in from the code seed (FALLBACK already
   // carries them), so etched armor resolves whether or not the DO was reseeded.
   const runes = mergeFundamentalRunes(mergeArmorRunes(serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune));
+  // FX animation catalog (#1416) — ordered rules for the fxplay rail; the
+  // resolver (src/utils/fxPlay.js) sorts by `priority`, so raw lists pass through.
+  const fxAnimations = serverFxAnimations.length
+    ? normalizeFxAnimations(serverFxAnimations)
+    : FALLBACK.fxAnimations;
   const images = serverImages.length ? normalizeImages(serverImages) : FALLBACK.image;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline
@@ -244,6 +251,7 @@ export const ContentProvider = ({ children, initialContent }) => {
     spells,
     effects,
     runes,
+    fxAnimations,
     images,
     theme,
     monsters: serverMonsters,
@@ -277,6 +285,7 @@ const NOOP_CONTENT = {
   spells: FALLBACK.spell,
   effects: FALLBACK.effect,
   runes: FALLBACK.rune,
+  fxAnimations: FALLBACK.fxAnimations,
   images: FALLBACK.image,
   theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
   monsters: [],

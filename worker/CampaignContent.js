@@ -9,7 +9,7 @@
 // combined) and character sheets (30-50 KB each) exceed the 128 KiB
 // per-value key-value cap. One row per entity keyed by (collection, id).
 
-const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster', 'room', 'event'];
+const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'fxAnimations', 'image', 'theme', 'monster', 'room', 'event'];
 
 // Capture-only collections are written at runtime — never bundled in the seed.
 // `monster` is the persistent bestiary, built up by `useBestiaryCapture` as the

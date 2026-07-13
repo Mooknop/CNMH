@@ -6,13 +6,13 @@ import fs from 'fs';
 import path from 'path';
 import {
   sampleCharacters, loreEntries, quests, items, spells, effects,
-  traits, calendarEvents, images, themeDocs, runes, reputation,
+  traits, calendarEvents, images, themeDocs, runes, reputation, fxAnimations,
 } from './index';
 
 const shardDir = path.join(process.cwd(), 'src', 'data', 'snapshot');
 const COLLECTIONS = [
   'quest', 'faction', 'calendar', 'lore', 'trait', 'character',
-  'item', 'spell', 'effect', 'rune', 'image', 'theme',
+  'item', 'spell', 'effect', 'rune', 'fxAnimations', 'image', 'theme',
 ];
 
 describe('sharded bundled seed', () => {
@@ -38,6 +38,7 @@ describe('sharded bundled seed', () => {
     expect(images.length).toBeGreaterThan(0);
     expect(themeDocs.length).toBeGreaterThan(0);
     expect(runes.length).toBeGreaterThan(0);
+    expect(fxAnimations.length).toBeGreaterThan(0);
     expect(Array.isArray(reputation.Factions)).toBe(true);
     expect(reputation.Factions.length).toBeGreaterThan(0);
   });

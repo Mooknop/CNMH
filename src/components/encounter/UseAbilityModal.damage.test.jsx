@@ -27,7 +27,17 @@ vi.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ getState: vi.fn(() => []), sendUpdate: sessionMock.sendUpdate, subscribe: () => () => {} }),
 }));
 vi.mock('../../contexts/ContentContext', () => ({
-  useContent: () => ({ characters: [{ id: 'char-a', name: 'Ashka' }] }),
+  useContent: () => ({
+    characters: [{ id: 'char-a', name: 'Ashka' }],
+    // Minimal fxplay catalog (#1416): the melee-bludgeoning family rule the
+    // canvas-animation emit test resolves against.
+    fxAnimations: [{
+      id: 'fx-strike-melee-bludgeoning',
+      priority: 100,
+      when: { kind: 'strike', rangeType: 'melee', damageType: 'bludgeoning' },
+      play: { shape: 'melee', file: 'jb2a.melee_generic.bludgeoning.one_handed' },
+    }],
+  }),
 }));
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
@@ -100,6 +110,7 @@ const maceStrike = {
   traits: ['Attack', 'Melee'],
   attackMod: 10,
   damage: '2d6+4',
+  damageType: 'bludgeoning',
   targetDefense: 'ac',
 };
 
@@ -137,7 +148,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
   it('hit → damage entry with the dice hint; the total lands in the log with the rider', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
     enterD20(10); // 10 + 5 = 15 vs AC 15 → Hit
-    expect(screen.getByText('2d6+4')).toBeInTheDocument();
+    expect(screen.getByText('2d6+4 bludgeoning')).toBeInTheDocument();
     enterDamage(9);
     confirm();
     // 9 + 4 (Implement's Empowerment, 2 × 2 weapon dice)
@@ -422,6 +433,30 @@ describe('UseAbilityModal — damage step (#222)', () => {
     confirm();
 
     expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
+  });
+
+  // ── canvas animation relay to Foundry (#1416, epic #1414) ──────────────────
+
+  it('confirm relays the catalog-resolved fxplay recipe for a hit', () => {
+    render(<UseAbilityModal {...props} ability={maceStrike} />);
+    enterD20(10);   // 15 vs AC 15 → hit
+    enterDamage(9);
+    confirm();
+
+    expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'fxplay', expect.objectContaining({
+      shape: 'melee',
+      file: 'jb2a.melee_generic.bludgeoning.one_handed',
+      source: 'e-caster',
+      targets: ['e-gob'],
+    }));
+  });
+
+  it('confirm relays no fxplay on a miss', () => {
+    render(<UseAbilityModal {...props} ability={maceStrike} />);
+    enterD20(2); // 7 vs AC 15 → miss
+    confirm();
+
+    expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'fxplay', expect.anything());
   });
 
   // ── monster IWR in the outgoing damage step (#1014) ────────────────────────
