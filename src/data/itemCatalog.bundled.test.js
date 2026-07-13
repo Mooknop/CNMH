@@ -236,7 +236,9 @@ describe('bundled item catalog (Slice 3)', () => {
   // into the effect catalog its while-playing bonuses come from — to the +2 def.
   // #1210 (M4h): a graded sense-granting item (the Bloodstained Bandana) carries
   // its per-grade `sense: { name, precision?, rangeFt? }` block as an override.
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense'];
+  // #914: a tier-gated item-granted innate spell — only the qualifying variant
+  // (Ring of Observation Moderate/Greater) carries the `grantedSpells` grant.
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense', 'grantedSpells'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -272,6 +274,15 @@ describe('bundled item catalog (Slice 3)', () => {
           if (v.overrides.sense.precision !== undefined) expect(typeof v.overrides.sense.precision).toBe('string');
           if (v.overrides.sense.rangeFt !== undefined) expect(typeof v.overrides.sense.rangeFt).toBe('number');
         }
+        // #914: a tier-gated item-granted spell list — each grant is { ref, … }
+        // where `ref` is a catalog spell id (#622).
+        if (v.overrides.grantedSpells !== undefined) {
+          expect(Array.isArray(v.overrides.grantedSpells)).toBe(true);
+          v.overrides.grantedSpells.forEach((g) => {
+            expect(typeof g.ref).toBe('string');
+            expect(g.ref.length).toBeGreaterThan(0);
+          });
+        }
       });
     });
   });
@@ -289,6 +300,24 @@ describe('bundled item catalog (Slice 3)', () => {
       { ...owner, inventory: [{ ref: 'cloak-of-repute', level: 4 }] }, items, spells
     ).inventory[0];
     expect(std.bonus).toEqual(['diplomacy', 1]);
+  });
+
+  it('Ring of Observation tiers gate the item-granted invisibility grant (#914)', () => {
+    const at = (level) => resolveCharacterItems(
+      { id: 'tester', level: 20, inventory: [{ ref: 'ring-of-observation', level }] }, items, spells
+    ).inventory[0];
+    // Lesser (L3): no spell grant.
+    expect(at(3).grantedSpells).toBeUndefined();
+    // Moderate (L7): invisibility, rank 2, once/day; the overrides key is dropped.
+    const mod = at(7);
+    expect(mod.overrides).toBeUndefined();
+    expect(mod.grantedSpells).toEqual([
+      { ref: 'invisibility', tradition: 'arcane', rank: 2, frequency: 'once per day' },
+    ]);
+    // Greater (L10): heightened to 4th-rank invisibility.
+    expect(at(10).grantedSpells).toEqual([
+      { ref: 'invisibility', tradition: 'arcane', rank: 4, frequency: 'once per day' },
+    ]);
   });
 
   it('Sleeves of Storage Greater resolves to the override container capacity', () => {
