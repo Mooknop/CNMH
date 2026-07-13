@@ -19,6 +19,13 @@ describe('resonant aeon stones (#928 content)', () => {
   it.each([
     ['aeon-stone-clear-spindle', 'air-bubble'],
     ['aeon-stone-polished-pebble', 'grease'],
+    ['aeon-stone-clear-quartz-octagon', 'mending'],
+    ['aeon-stone-repairing', 'mending'],
+    ['aeon-stone-gold-nodule', 'translate'],
+    ['aeon-stone-azure-briolette', 'void-warp'],
+    ['aeon-stone-pale-lavender-ellipsoid', 'read-aura'],
+    ['aeon-stone-preserving', 'stabilize'],
+    ['aeon-stone-formulating', 'phantasmal-minion'],
   ])('%s grants a resonant innate spell that resolves in the catalog', (id, ref) => {
     const grants = itemGrantedSpells(stone(id)?.resonant);
     expect(grants.map((g) => g.ref)).toContain(ref);
