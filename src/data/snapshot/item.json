@@ -10053,14 +10053,34 @@
         "label": "Moderate",
         "name": "Ring of Observation (Moderate)",
         "price": 300,
-        "effect": "The survey lasts 10 minutes and detects observers within 60 feet. You can also cast invisibility on yourself once per day."
+        "effect": "The survey lasts 10 minutes and detects observers within 60 feet. You can also cast invisibility on yourself once per day.",
+        "overrides": {
+          "grantedSpells": [
+            {
+              "ref": "invisibility",
+              "tradition": "arcane",
+              "rank": 2,
+              "frequency": "once per day"
+            }
+          ]
+        }
       },
       {
         "level": 10,
         "label": "Greater",
         "name": "Ring of Observation (Greater)",
         "price": 1160,
-        "effect": "The survey lasts 1 hour and detects observers within 120 feet. You can cast invisibility or 4th-rank invisibility on yourself once per day."
+        "effect": "The survey lasts 1 hour and detects observers within 120 feet. You can cast invisibility or 4th-rank invisibility on yourself once per day.",
+        "overrides": {
+          "grantedSpells": [
+            {
+              "ref": "invisibility",
+              "tradition": "arcane",
+              "rank": 4,
+              "frequency": "once per day"
+            }
+          ]
+        }
       }
     ],
     "id": "ring-of-observation",
