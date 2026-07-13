@@ -5548,6 +5548,9 @@
       }
     ],
     "id": "frost-vial",
+    "onHitNotes": [
+      "−5-foot status penalty to Speeds until the end of its next turn"
+    ],
     "image": "img_964e6797-e8ba-421e-87ef-70065eb078e7.jpg",
     "imagePosition": {
       "x": 50,
@@ -6027,7 +6030,16 @@
         ]
       }
     ],
-    "id": "glue-bomb"
+    "id": "glue-bomb",
+    "onHitNotes": [
+      "−10-foot status penalty to Speed for 1 minute"
+    ],
+    "onCritConditions": [
+      {
+        "id": "immobilized",
+        "note": "1 round; the target can Escape (DC 17)"
+      }
+    ]
   },
   {
     "name": "Goo Grenade",
@@ -13625,7 +13637,16 @@
         ]
       }
     ],
-    "id": "sulfur-bomb"
+    "id": "sulfur-bomb",
+    "onHitNotes": [
+      "−1 status penalty to Perception and attack rolls until the end of its next turn"
+    ],
+    "onCritConditions": [
+      {
+        "id": "sickened",
+        "value": 1
+      }
+    ]
   },
   {
     "id": "sun-dazzler",

@@ -368,6 +368,15 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(cond('peshpine-grenade')).toContainEqual(expect.objectContaining({ id: 'stupefied', value: 1 }));
   });
 
+  it('on-hit penalty throwables carry reminders + on-crit conditions (#1439 tail)', () => {
+    const item = (id) => items.find((i) => i.id === id);
+    expect(item('frost-vial').onHitNotes[0]).toMatch(/Speed/i);
+    expect(item('sulfur-bomb').onHitNotes[0]).toMatch(/Perception/i);
+    expect(item('sulfur-bomb').onCritConditions).toContainEqual(expect.objectContaining({ id: 'sickened', value: 1 }));
+    expect(item('glue-bomb').onHitNotes[0]).toMatch(/Speed/i);
+    expect(item('glue-bomb').onCritConditions).toContainEqual(expect.objectContaining({ id: 'immobilized' }));
+  });
+
   it('worn items carry conditional save-hint modifiers (#912)', () => {
     // Aeon Stone (Polished Pebble): a conditional Fortitude hint (vs Grapple/Swallow).
     const pebble = items.find((i) => i.id === 'aeon-stone-polished-pebble');
