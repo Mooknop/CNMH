@@ -2453,4 +2453,27 @@ describe('ItemModal — aeon-stone / wayfinder slotting (#928)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
     expect(screen.getByTestId('granted-cast-spell')).toHaveTextContent('Cast Grease');
   });
+
+  // Group B (#1450) — a resonant power the app can't auto-enforce surfaces as a
+  // live note only while the stone is resonant-active.
+  const agate = () => ({
+    uid: 'st', id: 'aeon-stone-agate-ellipsoid', name: 'Aeon Stone (Agate Ellipsoid)',
+    traits: ['Invested', 'Magical'], quantity: 1,
+    grantedSpells: [{ ref: 'augury', tradition: 'divine', rank: 2, frequency: 'once per day' }],
+    resonant: { note: 'The augury from this stone always succeeds at its DC 6 flat check.' },
+  });
+
+  it('shows the resonant note only when the stone is resonant-active', () => {
+    const wf = wayfinder(); const st = agate();
+    mockInvested = { wf: true, st: true };
+    // Invested but not slotted → note hidden.
+    mockSlots = {};
+    const { unmount } = render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.queryByTestId('resonant-note')).not.toBeInTheDocument();
+    unmount();
+    // Slotted into the invested wayfinder → note shows.
+    mockSlots = { wf: 'st' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={st} character={hero([wf, st])} />);
+    expect(screen.getByTestId('resonant-note')).toHaveTextContent('always succeeds at its DC 6 flat check');
+  });
 });

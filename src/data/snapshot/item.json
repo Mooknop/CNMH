@@ -295,6 +295,17 @@
   {
     "name": "Aeon Stone (Agate Ellipsoid)",
     "description": "This banded agate orbits your head. You can cast augury as a 2nd-rank divine innate spell once per day. Resonant Power The augury spell from this aeon stone always succeeds at its DC 6 flat check.",
+    "grantedSpells": [
+      {
+        "ref": "augury",
+        "tradition": "divine",
+        "rank": 2,
+        "frequency": "once per day"
+      }
+    ],
+    "resonant": {
+      "note": "The augury from this stone always succeeds at its DC 6 flat check."
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,
@@ -406,6 +417,16 @@
   {
     "name": "Aeon Stone (Dusty Rose Prism)",
     "description": "This faintly glowing pink prism orbits your head. While the stone is invested, you can cast the shield cantrip as a 1st-rank arcane innate spell, conjuring a barrier of pink energy. Resonant Power The resonant power increases the damage prevented by your aeon stone's shield spell from 5 to 10.",
+    "grantedSpells": [
+      {
+        "ref": "shield",
+        "tradition": "arcane",
+        "rank": 1
+      }
+    ],
+    "resonant": {
+      "note": "The shield spell from this stone prevents 10 damage instead of 5."
+    },
     "image": "img_c7c141da-8aa6-498b-b099-91915077267c.jpg",
     "imagePosition": {
       "x": 50,

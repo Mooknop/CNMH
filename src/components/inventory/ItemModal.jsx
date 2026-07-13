@@ -1430,20 +1430,30 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         <div className="item-affix" data-testid="item-slot">
           <h3>Wayfinder</h3>
           {slottedInWayfinder ? (
-            <div className="item-affix-state">
-              <span>
-                Slotted into <strong>{slottedInWayfinder.name}</strong>
-                {itemResonantActive ? ' — resonant power active' : ''}
-              </span>
-              <button
-                type="button"
-                className="btn-small btn-secondary"
-                data-testid="item-action-unslot"
-                onClick={() => doUnslot(slottedInWayfinder)}
-              >
-                Remove
-              </button>
-            </div>
+            <>
+              <div className="item-affix-state">
+                <span>
+                  Slotted into <strong>{slottedInWayfinder.name}</strong>
+                  {itemResonantActive ? ' — resonant power active' : ''}
+                </span>
+                <button
+                  type="button"
+                  className="btn-small btn-secondary"
+                  data-testid="item-action-unslot"
+                  onClick={() => doUnslot(slottedInWayfinder)}
+                >
+                  Remove
+                </button>
+              </div>
+              {/* A resonant power the app can't auto-enforce (Agate's augury
+                  flat-check auto-success, Dusty Rose's shield 5→10, #1450 Group B)
+                  surfaces as a live callout only while the power is active. */}
+              {itemResonantActive && item.resonant?.note && (
+                <p className="item-affix-hint" data-testid="resonant-note">
+                  ✨ {item.resonant.note}
+                </p>
+              )}
+            </>
           ) : (
             <>
               <p className="item-affix-hint">
