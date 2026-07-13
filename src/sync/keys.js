@@ -93,4 +93,5 @@ export const APP = Object.freeze({
   VPCHALLENGE: 'vpchallenge',
   VPRESULT: 'vpresult',
   WANDS: 'wands',
+  WAYFINDER: 'wayfinder',
 });
