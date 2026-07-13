@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { applyStrikeOnCritSave } from './strikeOnCrit';
+import { applyStrikeOnCritSave, applyStrikeOnCritConditions } from './strikeOnCrit';
 
 const onCritSave = {
   defense: 'fortitude', dc: 19, label: 'Serpent Dagger',
@@ -61,5 +61,55 @@ describe('applyStrikeOnCritSave (#1439)', () => {
     const b = { ...bag([{ entryId: 'x1', degree: 'criticalSuccess' }]), order: [{ entryId: 'x1', name: 'Wraith', defenses: {} }] };
     applyStrikeOnCritSave(b);
     expect(b.addSaveRequest.mock.calls[0][0].targets[0].saveMod).toBeNull();
+  });
+});
+
+describe('applyStrikeOnCritConditions (#1439 tail — no-save on-crit)', () => {
+  const ability = { name: 'Necrotic Bomb', source: 'Necrotic Bomb', onCritConditions: [{ id: 'sickened', value: 1 }] };
+  const order = [{ entryId: 'g1', name: 'Goblin', kind: 'enemy', defenses: {} }];
+  const cbag = (results, over = {}) => ({
+    ability,
+    order,
+    rayGroups: [{ results }],
+    chainResults: null,
+    applyEnemyCondition: vi.fn(),
+    appendLog: vi.fn(),
+    ...over,
+  });
+
+  it('applies the condition (with value) straight to the enemy on a crit', () => {
+    const b = cbag([{ entryId: 'g1', degree: 'criticalSuccess' }]);
+    applyStrikeOnCritConditions(b);
+    expect(b.applyEnemyCondition).toHaveBeenCalledWith('g1', { id: 'sickened', value: 1, source: 'Necrotic Bomb' });
+    expect(b.appendLog).toHaveBeenCalled();
+  });
+
+  it('does nothing on a non-critical hit', () => {
+    const b = cbag([{ entryId: 'g1', degree: 'success' }]);
+    applyStrikeOnCritConditions(b);
+    expect(b.applyEnemyCondition).not.toHaveBeenCalled();
+  });
+
+  it('skips non-enemy targets', () => {
+    const b = cbag([{ entryId: 'a1', degree: 'criticalSuccess' }], {
+      order: [{ entryId: 'a1', name: 'Ally', kind: 'ally', defenses: {} }],
+    });
+    applyStrikeOnCritConditions(b);
+    expect(b.applyEnemyCondition).not.toHaveBeenCalled();
+  });
+
+  it('applies multiple conditions and omits value when absent', () => {
+    const b = cbag([{ entryId: 'g1', degree: 'criticalSuccess' }], {
+      ability: { name: 'Multi', onCritConditions: [{ id: 'prone' }, { id: 'clumsy', value: 1 }] },
+    });
+    applyStrikeOnCritConditions(b);
+    expect(b.applyEnemyCondition).toHaveBeenCalledWith('g1', { id: 'prone', source: 'Multi' });
+    expect(b.applyEnemyCondition).toHaveBeenCalledWith('g1', { id: 'clumsy', value: 1, source: 'Multi' });
+  });
+
+  it('no-ops without onCritConditions', () => {
+    const b = cbag([{ entryId: 'g1', degree: 'criticalSuccess' }], { ability: { name: 'Plain' } });
+    applyStrikeOnCritConditions(b);
+    expect(b.applyEnemyCondition).not.toHaveBeenCalled();
   });
 });
