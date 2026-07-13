@@ -770,6 +770,19 @@ export function playMeleeEffect(file, sourceToken, target, opts = {}) {
   return effect.play();
 }
 
+// Burst: play `file` centered on the target (token or {x,y} point) with no
+// orientation — explosions, impacts, and other radial effects. Needs no
+// source: save-spell recipes may arrive without a resolvable caster token.
+export function playBurstEffect(file, target, opts = {}) {
+  let effect = new globalThis.Sequence()
+    .effect()
+    .file(file)
+    .atLocation(target)
+    .scaleToObject(opts.scale ?? 2);
+  if (opts.tint) effect = effect.tint(opts.tint);
+  return effect.play();
+}
+
 // Projectile: stretch `file` from the attacker to the target — a token or a raw
 // {x,y} canvas point (Sequencer accepts both as locations).
 export function playProjectileEffect(file, sourceToken, target, opts = {}) {

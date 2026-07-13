@@ -1,5 +1,75 @@
 [
   {
+    "id": "fx-spell-attack",
+    "name": "Spell attack (fallback)",
+    "priority": 250,
+    "when": { "kind": "spell", "defenseKind": "attack" },
+    "play": { "shape": "projectile", "file": "jb2a.eldritch_blast.purple" }
+  },
+  {
+    "id": "fx-spell-attack-cold",
+    "name": "Spell attack — cold",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "cold" },
+    "play": { "shape": "projectile", "file": "jb2a.ray_of_frost.blue" }
+  },
+  {
+    "id": "fx-spell-attack-electricity",
+    "name": "Spell attack — electricity",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "electricity" },
+    "play": { "shape": "projectile", "file": "jb2a.witch_bolt.blue" }
+  },
+  {
+    "id": "fx-spell-attack-fire",
+    "name": "Spell attack — fire",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "fire" },
+    "play": { "shape": "projectile", "file": "jb2a.fire_bolt.orange" }
+  },
+  {
+    "id": "fx-spell-attack-force",
+    "name": "Spell attack — force",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "attack", "damageType": "force" },
+    "play": { "shape": "projectile", "file": "jb2a.magic_missile.purple" }
+  },
+  {
+    "id": "fx-spell-save",
+    "name": "Save spell (fallback)",
+    "priority": 250,
+    "when": { "kind": "spell", "defenseKind": "save" },
+    "play": { "shape": "burst", "file": "jb2a.impact.001.blue" }
+  },
+  {
+    "id": "fx-spell-save-electricity",
+    "name": "Save spell — electricity",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "electricity" },
+    "play": { "shape": "burst", "file": "jb2a.lightning_strike.blue" }
+  },
+  {
+    "id": "fx-spell-save-fire",
+    "name": "Save spell — fire",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "fire" },
+    "play": { "shape": "burst", "file": "jb2a.fireball.explosion.orange" }
+  },
+  {
+    "id": "fx-spell-save-vitality",
+    "name": "Save spell — vitality",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "vitality" },
+    "play": { "shape": "burst", "file": "jb2a.sacred_flame.target.yellow" }
+  },
+  {
+    "id": "fx-spell-save-void",
+    "name": "Save spell — void",
+    "priority": 100,
+    "when": { "kind": "spell", "defenseKind": "save", "damageType": "void" },
+    "play": { "shape": "burst", "file": "jb2a.toll_the_dead.green.complete" }
+  },
+  {
     "id": "fx-strike-melee",
     "name": "Melee strike (fallback)",
     "priority": 250,

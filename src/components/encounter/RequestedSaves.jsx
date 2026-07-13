@@ -8,6 +8,7 @@ import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../u
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 import { buildDamageApply } from '../../utils/damageRelay';
+import { emitSaveFxPlay } from '../../utils/fxPlay';
 import { SAVEDONE_KEY, SAVEDONE_FRESH_MS, buildSaveRoll } from '../../utils/saveRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -131,6 +132,11 @@ const RequestedSaves = () => {
     if (relayHits.length) {
       sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
     }
+
+    // Canvas animation (#1414 A4): the recipe resolved on the caster's client
+    // rode the request — fire it now that the saves are in. Every resolved
+    // target animates (the fireball engulfs the square either way).
+    if (req.fx) emitSaveFxPlay({ sendUpdate, fx: req.fx, results });
 
     // Reveal-on-trigger (#1014): monster IWR that just modified a target's
     // save damage becomes table knowledge.

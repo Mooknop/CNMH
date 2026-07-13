@@ -54,6 +54,25 @@ describe('buildTargetSaveRequest', () => {
     });
     expect(req.damage).toBeUndefined();
     expect(req.casterEffect).toBeUndefined();
+    expect(req.fx).toBeUndefined(); // no catalog in ctx → no animation rider
+  });
+
+  it('rides the resolved fx recipe when the catalog matches (#1414 A4)', () => {
+    const req = buildTargetSaveRequest({
+      ...baseCtx,
+      damageProfile: { typeLabel: 'fire' },
+      fxAnimations: [{
+        id: 'fx-spell-save-fire',
+        priority: 100,
+        when: { kind: 'spell', defenseKind: 'save', damageType: 'fire' },
+        play: { shape: 'burst', file: 'jb2a.fireball.explosion.orange' },
+      }],
+    });
+    expect(req.fx).toEqual({
+      shape: 'burst',
+      file: 'jb2a.fireball.explosion.orange',
+      source: 'e-caster',
+    });
   });
 
   it('missing target save mods serialize as null', () => {
