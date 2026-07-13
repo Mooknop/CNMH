@@ -4,28 +4,28 @@
     "name": "Melee strike (fallback)",
     "priority": 250,
     "when": { "kind": "strike", "rangeType": "melee" },
-    "play": { "shape": "melee", "file": "jb2a.melee_generic.slashing.one_handed" }
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.slash.01.orange" }
   },
   {
     "id": "fx-strike-melee-bludgeoning",
     "name": "Melee strike — bludgeoning",
     "priority": 100,
     "when": { "kind": "strike", "rangeType": "melee", "damageType": "bludgeoning" },
-    "play": { "shape": "melee", "file": "jb2a.melee_generic.bludgeoning.one_handed" }
+    "play": { "shape": "melee", "file": "jb2a.mace.melee.01.white" }
   },
   {
     "id": "fx-strike-melee-piercing",
     "name": "Melee strike — piercing",
     "priority": 100,
     "when": { "kind": "strike", "rangeType": "melee", "damageType": "piercing" },
-    "play": { "shape": "melee", "file": "jb2a.melee_generic.piercing.one_handed" }
+    "play": { "shape": "melee", "file": "jb2a.rapier.melee.01.white" }
   },
   {
     "id": "fx-strike-melee-slashing",
     "name": "Melee strike — slashing",
     "priority": 100,
     "when": { "kind": "strike", "rangeType": "melee", "damageType": "slashing" },
-    "play": { "shape": "melee", "file": "jb2a.melee_generic.slashing.one_handed" }
+    "play": { "shape": "melee", "file": "jb2a.melee_generic.slash.01.orange" }
   },
   {
     "id": "fx-strike-ranged",
