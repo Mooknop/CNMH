@@ -377,6 +377,22 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(act('spoiling-buckler')).toMatchObject({ name: 'Tumbling Tumbleweed', save: { defense: 'reflex', dc: 19 } });
   });
 
+  it('spell-grant activation items carry grantedSpells to real catalog spells (#914/#1439)', () => {
+    const spellIds = new Set(spells.map((s) => s.id));
+    const g = (id) => items.find((i) => i.id === id)?.grantedSpells || [];
+    expect(g('vigilant-eye')).toContainEqual(expect.objectContaining({ ref: 'detect-magic' }));
+    expect(g('spectacles-of-understanding')).toContainEqual(expect.objectContaining({ ref: 'translate', rank: 2, frequency: 'once per day' }));
+    expect(g('cape-of-illumination')).toContainEqual(expect.objectContaining({ ref: 'light' }));
+    // Refs resolve (#622).
+    ['vigilant-eye', 'spectacles-of-understanding', 'cape-of-illumination'].forEach((id) =>
+      g(id).forEach((grant) => expect(spellIds.has(grant.ref)).toBe(true)));
+    // A base-level grant rides every tier (survives applyVariant).
+    const resolved = resolveCharacterItems(
+      { id: 't', level: 20, inventory: [{ ref: 'cape-of-illumination', level: 11 }] }, items, spells,
+    ).inventory[0];
+    expect(resolved.grantedSpells).toContainEqual(expect.objectContaining({ ref: 'light' }));
+  });
+
   it('on-hit penalty throwables carry reminders + on-crit conditions (#1439 tail)', () => {
     const item = (id) => items.find((i) => i.id === id);
     expect(item('frost-vial').onHitNotes[0]).toMatch(/Speed/i);

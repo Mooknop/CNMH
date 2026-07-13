@@ -2716,7 +2716,13 @@
         "effect": "The constant light is a 7th-rank light spell. The blinding flash DC is 34, and it can be activated once per hour."
       }
     ],
-    "id": "cape-of-illumination"
+    "id": "cape-of-illumination",
+    "grantedSpells": [
+      {
+        "ref": "light",
+        "tradition": "arcane"
+      }
+    ]
   },
   {
     "actions": [
@@ -12562,7 +12568,15 @@
         "effect": "+2 item bonus to Decipher Writing; the comprehension lasts until you fold up the spectacles or the item is no longer invested by you, rather than 1 hour."
       }
     ],
-    "id": "spectacles-of-understanding"
+    "id": "spectacles-of-understanding",
+    "grantedSpells": [
+      {
+        "ref": "translate",
+        "tradition": "occult",
+        "rank": 2,
+        "frequency": "once per day"
+      }
+    ]
   },
   {
     "name": "Spellslasher",
@@ -15032,6 +15046,12 @@
   },
   {
     "id": "vigilant-eye",
+    "grantedSpells": [
+      {
+        "ref": "detect-magic",
+        "tradition": "arcane"
+      }
+    ],
     "name": "Vigilant Eye",
     "level": 9,
     "price": 650,
