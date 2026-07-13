@@ -71,7 +71,7 @@ export function useEncounterTurnEffects() {
         applyTurnStartFastHealing({
           order: snapshot.order,
           startEntry: (snapshot.order || [])[snapshot.idx || 0] || null,
-          getState, sendUpdate, appendLog,
+          getState, sendUpdate, appendLog, effectCatalog,
         });
       }
       prevRef.current = snapshot;

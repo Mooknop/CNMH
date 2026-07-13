@@ -1895,25 +1895,45 @@
     "id": "soothing-tonic-greater",
     "name": "Soothing Tonic (Greater)",
     "description": "Fast Healing 5 for 1 minute.",
-    "modifiers": []
+    "modifiers": [
+      {
+        "stat": "fastHealing",
+        "amount": 5
+      }
+    ]
   },
   {
     "id": "soothing-tonic-lesser",
     "name": "Soothing Tonic (Lesser)",
     "description": "Fast Healing 1 for 1 minute.",
-    "modifiers": []
+    "modifiers": [
+      {
+        "stat": "fastHealing",
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "soothing-tonic-major",
     "name": "Soothing Tonic (Major)",
     "description": "Fast Healing 10 for 1 minute.",
-    "modifiers": []
+    "modifiers": [
+      {
+        "stat": "fastHealing",
+        "amount": 10
+      }
+    ]
   },
   {
     "id": "soothing-tonic-moderate",
     "name": "Soothing Tonic (Moderate)",
     "description": "Fast Healing 3 for 1 minute.",
-    "modifiers": []
+    "modifiers": [
+      {
+        "stat": "fastHealing",
+        "amount": 3
+      }
+    ]
   },
   {
     "id": "stone-body-mutagen-greater",
