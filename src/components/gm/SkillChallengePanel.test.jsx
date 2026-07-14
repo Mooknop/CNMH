@@ -199,6 +199,130 @@ describe('SkillChallengePanel', () => {
     expect(screen.getByText('Assuage the Locals')).toBeInTheDocument();
   });
 
+  describe('meter tracks (#1471)', () => {
+    const METER = {
+      id: 'vpc-m',
+      name: 'Ritual Stability',
+      skills: [{ skill: 'arcana', dc: 19 }],
+      threshold: null,
+      target: 'all',
+      targetIds: ['thorn', 'lira'],
+      mode: 'perRound',
+      actionCost: 1,
+      startValue: 6,
+      min: 0,
+      max: 10,
+      failAt: 0,
+      drainPerRound: 2,
+      adjust: 0,
+      lastDrainRound: null,
+      createdAt: 1,
+    };
+
+    it('shows the pool without a threshold and includes startValue + adjust', () => {
+      setChallenges({ ...METER, drainPerRound: 0, adjust: -1 });
+      render(<SkillChallengePanel />);
+      act(() => __set('cnmh_vpresult_thorn', { 'vpc-m': [entry({ vp: 1 })] }));
+      // 6 (start) + 1 (checks) - 1 (adjust) = 6
+      expect(screen.getByText('6 VP')).toBeInTheDocument();
+    });
+
+    it('nudge buttons move the pool through adjust and log', () => {
+      setChallenges({ ...METER, drainPerRound: 0 });
+      render(<SkillChallengePanel />);
+      fireEvent.click(screen.getByLabelText('Nudge Ritual Stability down'));
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].adjust).toBe(-1);
+      expect(screen.getByText('5 VP')).toBeInTheDocument();
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('nudged -1 → 5 VP'),
+      }));
+      fireEvent.click(screen.getByLabelText('Nudge Ritual Stability up'));
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].adjust).toBe(0);
+    });
+
+    it('nudges clamp at the bounds and skip the write when fully clamped', () => {
+      setChallenges({ ...METER, drainPerRound: 0, adjust: 4 });  // pool 10 = max
+      render(<SkillChallengePanel />);
+      mockAppendEvent.mockClear();
+      fireEvent.click(screen.getByLabelText('Nudge Ritual Stability up'));
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].adjust).toBe(4);
+      expect(mockAppendEvent).not.toHaveBeenCalled();
+    });
+
+    it('flags FAILING when the pool hits failAt', () => {
+      setChallenges({ ...METER, drainPerRound: 0, adjust: -6 });  // pool 0
+      render(<SkillChallengePanel />);
+      expect(screen.getByText('FAILING')).toBeInTheDocument();
+      expect(screen.getByTestId('vp-track-vpc-m')).toHaveAttribute('data-failing', 'true');
+    });
+
+    it('arms lastDrainRound on first sighting without draining', () => {
+      mockEncounter = { active: true, round: 3 };
+      setChallenges(METER);
+      render(<SkillChallengePanel />);
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].lastDrainRound).toBe(3);
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].adjust).toBe(0);
+    });
+
+    it('drains once per round advance and logs', () => {
+      mockEncounter = { active: true, round: 3 };
+      setChallenges({ ...METER, lastDrainRound: 2 });
+      render(<SkillChallengePanel />);
+      const doc = __store['cnmh_vpchallenge_global']['vpc-m'];
+      expect(doc.adjust).toBe(-2);
+      expect(doc.lastDrainRound).toBe(3);
+      expect(screen.getByText('4 VP')).toBeInTheDocument();
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('drains 2 → 4 VP'),
+      }));
+      // Same round again (e.g. remount): no second application.
+      mockAppendEvent.mockClear();
+      render(<SkillChallengePanel />);
+      expect(__store['cnmh_vpchallenge_global']['vpc-m'].adjust).toBe(-2);
+      expect(mockAppendEvent).not.toHaveBeenCalled();
+    });
+
+    it('applies multi-round catch-up drain in one step, clamped at min', () => {
+      mockEncounter = { active: true, round: 8 };
+      setChallenges({ ...METER, lastDrainRound: 2 });  // 6 rounds × 2 = 12, pool 6 → floor 0
+      render(<SkillChallengePanel />);
+      const doc = __store['cnmh_vpchallenge_global']['vpc-m'];
+      expect(doc.lastDrainRound).toBe(8);
+      expect(screen.getByText('0 VP')).toBeInTheDocument();
+      expect(screen.getByText('FAILING')).toBeInTheDocument();
+    });
+
+    it('editing drain per round re-arms lastDrainRound', () => {
+      mockEncounter = { active: true, round: 5 };
+      setChallenges({ ...METER, drainPerRound: 0, lastDrainRound: 2 });
+      render(<SkillChallengePanel />);
+      fireEvent.change(screen.getByLabelText('Ritual Stability drain per round'), { target: { value: '3' } });
+      const doc = __store['cnmh_vpchallenge_global']['vpc-m'];
+      expect(doc.drainPerRound).toBe(3);
+      // Re-armed to the current round — rounds 3-5 are not back-charged.
+      expect(doc.lastDrainRound).toBe(5);
+      expect(doc.adjust).toBe(0);
+    });
+
+    it('ending a meter without a threshold logs held or failed', () => {
+      setChallenges({ ...METER, drainPerRound: 0 });
+      const first = render(<SkillChallengePanel />);
+      fireEvent.click(screen.getByLabelText('End Ritual Stability'));
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('6 VP (held)'),
+      }));
+      first.unmount();
+
+      mockAppendEvent.mockClear();
+      setChallenges({ ...METER, drainPerRound: 0, adjust: -6 });  // pool 0 → failing
+      render(<SkillChallengePanel />);
+      fireEvent.click(screen.getByLabelText('End Ritual Stability'));
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('0 VP (failed)'),
+      }));
+    });
+  });
+
   it('ending the last track clears the collection to null', () => {
     setChallenges(CHALLENGE);
     render(<SkillChallengePanel />);

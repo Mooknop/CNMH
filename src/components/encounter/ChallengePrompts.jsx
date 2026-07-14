@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
@@ -10,9 +11,12 @@ import {
   normalizeChallenges,
   normalizeResults,
   entriesFor,
+  poolFor,
+  isFailing,
   CHALLENGE_MODES,
 } from '../../utils/victoryPoints';
 import ActionSymbol from '../shared/ActionSymbol';
+import VpResultsCollector from '../shared/VpResultsCollector';
 import './SavePrompt.css';
 import './ChallengePrompts.css';
 import { APP, syncKey, globalKey } from '../../sync/keys';
@@ -29,7 +33,7 @@ import { APP, syncKey, globalKey } from '../../sync/keys';
  * actionCost > 0:  submitting during an active encounter spends the cost
  *                  from the character's turn state (3-action economy).
  */
-const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit }) => {
+const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, pool, failing }) => {
   const [d20Input, setD20Input] = useState('');
   const [chosenSkill, setChosenSkill] = useState(null);
 
@@ -155,15 +159,30 @@ const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit }) 
           </span>
         </div>
       )}
+
+      <div className="challenge-pool" data-failing={failing || undefined}>
+        <span aria-label={`${challenge.name} party pool`}>
+          Party: {pool}{challenge.threshold > 0 ? ` / ${challenge.threshold}` : ''} VP
+        </span>
+        {failing && <span className="challenge-failing">FAILING</span>}
+      </div>
     </div>
   );
 };
 
 const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
+  const { characters } = useContent();
   const [challengesRaw] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
   const [resultsRaw, setResults] = useSyncedState(syncKey(APP.VPRESULT, charId), null);
   const { encounter, appendLog } = useEncounter();
   const { spendActions } = useTurnState(charId);
+
+  // Party-wide result values feed the live pool display (#1471) — the pool
+  // sums every character's checks plus GM meter adjustments.
+  const [partyResults, setPartyResults] = useState({});
+  const onPartyResult = useCallback((id, res) => {
+    setPartyResults((prev) => (prev[id] === res ? prev : { ...prev, [id]: res }));
+  }, []);
 
   const challenges = normalizeChallenges(challengesRaw);
   const round = encounter?.active ? (encounter.round ?? 0) : 0;
@@ -205,18 +224,27 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
     });
   };
 
+  const roster = Array.isArray(characters) ? characters : [];
+
   return (
     <>
-      {mine.map((c) => (
-        <ChallengeCard
-          key={c.id}
-          challenge={c}
-          entries={entriesFor(resultsRaw, c.id)}
-          round={round}
-          skillModifiers={skillModifiers}
-          onSubmit={handleSubmit}
-        />
-      ))}
+      <VpResultsCollector characters={roster} onResult={onPartyResult} />
+      {mine.map((c) => {
+        const targetValues = (c.targetIds || []).map((id) => partyResults[id]);
+        const pool = poolFor(c, targetValues);
+        return (
+          <ChallengeCard
+            key={c.id}
+            challenge={c}
+            entries={entriesFor(resultsRaw, c.id)}
+            round={round}
+            skillModifiers={skillModifiers}
+            onSubmit={handleSubmit}
+            pool={pool}
+            failing={isFailing(c, pool)}
+          />
+        );
+      })}
     </>
   );
 };

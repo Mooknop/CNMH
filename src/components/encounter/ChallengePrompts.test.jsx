@@ -39,6 +39,11 @@ vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({ spendActions: mockSpendActions }),
 }));
 
+// Roster for the party-pool collector (#1471).
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ characters: [{ id: 'thorn', name: 'Thorn' }, { id: 'lira', name: 'Lira' }] }),
+}));
+
 import { __reset, __store } from '../../hooks/useSyncedState';
 import ChallengePrompts from './ChallengePrompts';
 
@@ -251,5 +256,38 @@ describe('ChallengePrompts', () => {
     setup();
     expect(screen.getByText('each round')).toBeInTheDocument();
     expect(screen.getByLabelText('costs 1 action')).toBeInTheDocument();
+  });
+
+  describe('party pool display (#1471)', () => {
+    it('shows the party pool including other characters and GM adjust', () => {
+      setChallenges(challenge({ targetIds: ['thorn', 'lira'], startValue: 6, adjust: -2 }));
+      __store['cnmh_vpresult_lira'] = { 'vpc-1': [{ round: 0, skill: 'arcana', vp: 2, at: 1 }] };
+      setup();
+      // 6 (start) + 2 (Lira) - 2 (adjust) = 6, threshold 6
+      expect(screen.getByLabelText('Bolster the Ritual party pool')).toHaveTextContent('Party: 6 / 6 VP');
+    });
+
+    it('updates the pool with own submissions', () => {
+      setChallenges(challenge());
+      setup();
+      fireEvent.click(screen.getByText('Occultism'));
+      fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Submit Occultism check'));
+      expect(screen.getByLabelText('Bolster the Ritual party pool')).toHaveTextContent('Party: 1 / 6 VP');
+    });
+
+    it('shows a threshold-less meter pool with a FAILING flag at the floor', () => {
+      setChallenges(challenge({
+        name: 'Ritual Stability',
+        threshold: null,
+        startValue: 6,
+        min: 0,
+        failAt: 0,
+        adjust: -6,
+      }));
+      setup();
+      expect(screen.getByLabelText('Ritual Stability party pool')).toHaveTextContent('Party: 0 VP');
+      expect(screen.getByText('FAILING')).toBeInTheDocument();
+    });
   });
 });

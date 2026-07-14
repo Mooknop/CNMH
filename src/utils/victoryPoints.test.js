@@ -5,6 +5,10 @@ import {
   entriesFor,
   normalizeChallenges,
   normalizeResults,
+  clampPool,
+  poolFor,
+  isFailing,
+  applyPoolDelta,
   skillLabel,
   CHALLENGE_MODES,
 } from './victoryPoints';
@@ -38,6 +42,8 @@ describe('normalizeChallenges', () => {
         threshold: 3,
         mode: CHALLENGE_MODES.ONCE,
         actionCost: 0,
+        adjust: 0,
+        drainPerRound: 0,
       },
     });
   });
@@ -56,7 +62,7 @@ describe('normalizeChallenges', () => {
 
   it('drops non-object values', () => {
     expect(normalizeChallenges({ 'vpc-1': null, 'vpc-2': { id: 'vpc-2' } })).toEqual({
-      'vpc-2': { id: 'vpc-2', mode: CHALLENGE_MODES.ONCE, actionCost: 0 },
+      'vpc-2': { id: 'vpc-2', mode: CHALLENGE_MODES.ONCE, actionCost: 0, adjust: 0, drainPerRound: 0 },
     });
   });
 });
@@ -135,6 +141,88 @@ describe('aggregateVp', () => {
 
   it('treats a missing vp field as 0', () => {
     expect(aggregateVp([{ [id]: [{ round: 1 }] }], id)).toBe(0);
+  });
+});
+
+describe('meter helpers (#1471)', () => {
+  const meter = (over = {}) => ({
+    id: 'vpc-1', name: 'Ritual Stability',
+    startValue: 6, min: 0, max: 10, failAt: 0,
+    adjust: 0, drainPerRound: 2,
+    ...over,
+  });
+
+  describe('clampPool', () => {
+    it('clamps to min and max when set', () => {
+      expect(clampPool(meter(), 12)).toBe(10);
+      expect(clampPool(meter(), -3)).toBe(0);
+      expect(clampPool(meter(), 4)).toBe(4);
+    });
+
+    it('passes through when bounds are absent', () => {
+      expect(clampPool({ id: 'x' }, -99)).toBe(-99);
+    });
+  });
+
+  describe('poolFor', () => {
+    const values = [{ 'vpc-1': [{ round: 1, vp: 1 }, { round: 2, vp: 2 }] }];
+
+    it('sums startValue + check VP + adjust', () => {
+      expect(poolFor(meter({ adjust: -4 }), values)).toBe(5);  // 6 + 3 - 4
+    });
+
+    it('clamps the result to the bounds', () => {
+      expect(poolFor(meter({ adjust: -20 }), values)).toBe(0);
+      expect(poolFor(meter({ adjust: +20 }), values)).toBe(10);
+    });
+
+    it('defaults startValue and adjust to 0 (plain T1 challenge)', () => {
+      expect(poolFor({ id: 'vpc-1' }, values)).toBe(3);
+    });
+  });
+
+  describe('isFailing', () => {
+    it('fails when the pool has hit the failAt floor', () => {
+      expect(isFailing(meter(), 0)).toBe(true);
+      expect(isFailing(meter(), 1)).toBe(false);
+    });
+
+    it('never fails without a failAt', () => {
+      expect(isFailing({ id: 'x' }, -5)).toBe(false);
+    });
+  });
+
+  describe('applyPoolDelta', () => {
+    it('moves the pool by delta and returns the new adjust', () => {
+      // base = 6 + 1 = 7; pool 7 → 5
+      const r = applyPoolDelta(meter(), 1, -2);
+      expect(r).toEqual({ adjust: -2, pool: 5, applied: -2 });
+    });
+
+    it('clamps the target so drains cannot dig below min', () => {
+      // pool 7, drain 10 → floor at 0; adjust lands the pool exactly there
+      const r = applyPoolDelta(meter(), 1, -10);
+      expect(r.pool).toBe(0);
+      expect(r.applied).toBe(-7);
+      expect(poolFor(meter({ adjust: r.adjust }), [{ 'vpc-1': [{ vp: 1 }] }])).toBe(0);
+      // recovery is immediate: +1 from the floor moves the pool
+      const up = applyPoolDelta(meter({ adjust: r.adjust }), 1, +1);
+      expect(up.pool).toBe(1);
+    });
+
+    it('absorbs a pre-existing entry deficit at the next GM mutation', () => {
+      // crit-fail spam dug vpSum to -8: unclamped base = 6 - 8 = -2, but the
+      // pool reads 0 (min). A +1 nudge moves it to 1 — not to -2 + 1.
+      const r = applyPoolDelta(meter(), -8, +1);
+      expect(r.pool).toBe(1);
+      expect(r.applied).toBe(1);
+    });
+
+    it('reports applied 0 when fully clamped', () => {
+      const r = applyPoolDelta(meter({ adjust: 3 }), 1, +5);  // pool 10 (max) already
+      expect(r.applied).toBe(0);
+      expect(r.pool).toBe(10);
+    });
   });
 });
 

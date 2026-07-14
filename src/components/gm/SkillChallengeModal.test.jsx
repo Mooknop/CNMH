@@ -123,6 +123,57 @@ describe('SkillChallengeModal', () => {
     }));
   });
 
+  it('meter fields land on the challenge doc when configured', () => {
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    fillBasics();
+    fireEvent.change(screen.getByLabelText('start value'), { target: { value: '6' } });
+    fireEvent.change(screen.getByLabelText('minimum pool'), { target: { value: '0' } });
+    fireEvent.change(screen.getByLabelText('maximum pool'), { target: { value: '10' } });
+    fireEvent.change(screen.getByLabelText('fails at'), { target: { value: '0' } });
+    fireEvent.change(screen.getByLabelText('drain per round'), { target: { value: '2' } });
+    fireEvent.click(screen.getByLabelText('Start skill challenge'));
+
+    expect(sentChallenges()[0]).toEqual(expect.objectContaining({
+      startValue: 6,
+      min: 0,
+      max: 10,
+      failAt: 0,
+      drainPerRound: 2,
+      adjust: 0,
+      lastDrainRound: null,
+    }));
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('meter starts at 6 (drains 2/round)'),
+    }));
+  });
+
+  it('meter fields are omitted when left blank', () => {
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    fillBasics();
+    fireEvent.click(screen.getByLabelText('Start skill challenge'));
+    const sent = sentChallenges()[0];
+    expect(sent).not.toHaveProperty('startValue');
+    expect(sent).not.toHaveProperty('min');
+    expect(sent).not.toHaveProperty('max');
+    expect(sent).not.toHaveProperty('failAt');
+    expect(sent.drainPerRound).toBe(0);
+  });
+
+  it('a survival meter needs no threshold — start value alone enables send', () => {
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    fireEvent.change(screen.getByLabelText('challenge name'), { target: { value: 'Ritual Stability' } });
+    fireEvent.change(screen.getByLabelText('skill 1 DC'), { target: { value: '19' } });
+    const start = screen.getByLabelText('Start skill challenge');
+    expect(start).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('start value'), { target: { value: '6' } });
+    expect(start).toBeEnabled();
+    fireEvent.click(start);
+    expect(sentChallenges()[0]).toEqual(expect.objectContaining({
+      threshold: null,
+      startValue: 6,
+    }));
+  });
+
   it('cadence and action-cost selections land on the challenge doc', () => {
     render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
     fillBasics();
