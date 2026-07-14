@@ -30,18 +30,31 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
   const [target,     setTarget]     = useState('all');
   const [mode,       setMode]       = useState(CHALLENGE_MODES.ONCE);
   const [actionCost, setActionCost] = useState('0');
+  const [startValue, setStartValue] = useState('');
+  const [minVal,     setMinVal]     = useState('');
+  const [maxVal,     setMaxVal]     = useState('');
+  const [failAt,     setFailAt]     = useState('');
+  const [drain,      setDrain]      = useState('');
 
   const updateRow = (idx, patch) =>
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
   const removeRow = (idx) => setRows((prev) => prev.filter((_, i) => i !== idx));
 
+  const numOrNull = (s) => {
+    const n = parseInt(s, 10);
+    return s === '' || isNaN(n) ? null : n;
+  };
+
   const thresholdNum = parseInt(threshold, 10);
+  const startNum = numOrNull(startValue);
+  // A survival meter (start value set) needs no success threshold — it lives
+  // and dies by failAt/nudges; anything else must have a success line.
   const canSend =
     name.trim() !== '' &&
     rows.length > 0 &&
     rows.every((r) => parseInt(r.dc, 10) > 0) &&
-    thresholdNum >= 1 &&
+    (thresholdNum >= 1 || startNum !== null) &&
     (characters || []).length > 0;
 
   const activeCount = Object.keys(normalizeChallenges(challenges)).length;
@@ -55,25 +68,42 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
     const id = `vpc-${Date.now()}`;
     const costNum = parseInt(actionCost, 10) || 0;
 
+    const minNum = numOrNull(minVal);
+    const maxNum = numOrNull(maxVal);
+    const failNum = numOrNull(failAt);
+    const drainNum = Math.max(0, numOrNull(drain) ?? 0);
+
     const doc = {
       id,
       name: name.trim(),
       skills,
-      threshold: thresholdNum,
+      threshold: thresholdNum >= 1 ? thresholdNum : null,
       target,
       targetIds: targets.map((c) => c.id),
       mode,
       actionCost: costNum,
       createdAt: Date.now(),
+      // Meter semantics (#1471) — only stamped when configured.
+      ...(startNum !== null ? { startValue: startNum } : {}),
+      ...(minNum !== null ? { min: minNum } : {}),
+      ...(maxNum !== null ? { max: maxNum } : {}),
+      ...(failNum !== null ? { failAt: failNum } : {}),
+      drainPerRound: drainNum,
+      adjust: 0,
+      lastDrainRound: null,
     };
     setChallenges((cur) => ({ ...normalizeChallenges(cur), [id]: doc }));
 
     const targetLabel = target === 'all' ? 'all characters' : (targets[0]?.name ?? target);
+    const thresholdStr = thresholdNum >= 1 ? `, threshold ${thresholdNum} VP` : '';
+    const meterStr = startNum !== null
+      ? `, meter starts at ${startNum}${drainNum > 0 ? ` (drains ${drainNum}/round)` : ''}`
+      : '';
     const cadenceStr = mode === CHALLENGE_MODES.PER_ROUND ? ', repeats each round' : '';
     const costStr = costNum > 0 ? `, costs ${costNum} action${costNum === 1 ? '' : 's'}` : '';
     appendEvent({
       type: 'challenge',
-      text: `Skill challenge "${name.trim()}" — ${skills.map((s) => skillLabel(s.skill)).join(', ')}, threshold ${thresholdNum} VP${cadenceStr}${costStr} → ${targetLabel}`,
+      text: `Skill challenge "${name.trim()}" — ${skills.map((s) => skillLabel(s.skill)).join(', ')}${thresholdStr}${meterStr}${cadenceStr}${costStr} → ${targetLabel}`,
     });
     handleClose();
   };
@@ -85,6 +115,11 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
     setTarget('all');
     setMode(CHALLENGE_MODES.ONCE);
     setActionCost('0');
+    setStartValue('');
+    setMinVal('');
+    setMaxVal('');
+    setFailAt('');
+    setDrain('');
     onClose();
   };
 
@@ -201,6 +236,70 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
               <option value="2">2 actions</option>
               <option value="3">3 actions</option>
             </select>
+          </div>
+        </div>
+
+        <div className="sc-skills-section">
+          <span className="sc-skills-heading">Meter (optional)</span>
+          <div className="sc-inline">
+            <div className="sc-row sc-row--inline">
+              <label htmlFor="sc-start">Start Value</label>
+              <input
+                id="sc-start"
+                type="number"
+                placeholder="e.g. 6"
+                aria-label="start value"
+                value={startValue}
+                onChange={(e) => setStartValue(e.target.value)}
+              />
+            </div>
+            <div className="sc-row sc-row--inline">
+              <label htmlFor="sc-min">Min</label>
+              <input
+                id="sc-min"
+                type="number"
+                placeholder="—"
+                aria-label="minimum pool"
+                value={minVal}
+                onChange={(e) => setMinVal(e.target.value)}
+              />
+            </div>
+            <div className="sc-row sc-row--inline">
+              <label htmlFor="sc-max">Max</label>
+              <input
+                id="sc-max"
+                type="number"
+                placeholder="—"
+                aria-label="maximum pool"
+                value={maxVal}
+                onChange={(e) => setMaxVal(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="sc-inline">
+            <div className="sc-row sc-row--inline">
+              <label htmlFor="sc-failat">Fails At</label>
+              <input
+                id="sc-failat"
+                type="number"
+                placeholder="e.g. 0"
+                aria-label="fails at"
+                value={failAt}
+                onChange={(e) => setFailAt(e.target.value)}
+              />
+            </div>
+            <div className="sc-row sc-row--inline">
+              <label htmlFor="sc-drain">Drain / Round</label>
+              <input
+                id="sc-drain"
+                type="number"
+                min="0"
+                placeholder="0"
+                aria-label="drain per round"
+                value={drain}
+                onChange={(e) => setDrain(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 

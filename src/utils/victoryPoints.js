@@ -12,6 +12,13 @@
  * entry carries { round, skill, d20, total, degree, vp, at } and is appended
  * by the owning character's client only, so result keys never race.
  *
+ * Meter semantics (#1471): a challenge may also carry { startValue, min,
+ * max, failAt, drainPerRound, adjust, lastDrainRound }. The live pool is
+ * startValue + check VP + adjust, clamped to [min, max]; `adjust`
+ * accumulates GM nudges and per-round drains and is written by the GM
+ * client only (again single-writer). `threshold` may be null for pure
+ * survival meters — the track then has no success line, only failAt.
+ *
  * Legacy single-object shapes (pre-#1470: one challenge / one locked result)
  * are normalized on read so a mid-session upgrade degrades gracefully.
  */
@@ -46,9 +53,57 @@ export function normalizeChallenges(raw) {
   const out = {};
   for (const [id, c] of Object.entries(map)) {
     if (!c || typeof c !== 'object') continue;
-    out[id] = { mode: CHALLENGE_MODES.ONCE, actionCost: 0, ...c };
+    out[id] = { mode: CHALLENGE_MODES.ONCE, actionCost: 0, adjust: 0, drainPerRound: 0, ...c };
   }
   return out;
+}
+
+/** Clamp a pool value to the challenge's [min, max] bounds (when set). */
+export function clampPool(challenge, value) {
+  let v = value;
+  if (typeof challenge.max === 'number') v = Math.min(v, challenge.max);
+  if (typeof challenge.min === 'number') v = Math.max(v, challenge.min);
+  return v;
+}
+
+/**
+ * Live pool for one challenge: startValue + party check VP + GM adjust,
+ * clamped to the meter bounds.
+ *
+ * @param {object} challenge - normalized challenge doc
+ * @param {Array<object|null>} resultValues - cnmh_vpresult_<charId> values
+ * @returns {number}
+ */
+export function poolFor(challenge, resultValues) {
+  const base =
+    (challenge.startValue ?? 0) +
+    aggregateVp(resultValues, challenge.id) +
+    (challenge.adjust ?? 0);
+  return clampPool(challenge, base);
+}
+
+/** A track is failing when it has a failAt floor and the pool has hit it. */
+export function isFailing(challenge, pool) {
+  return typeof challenge.failAt === 'number' && pool <= challenge.failAt;
+}
+
+/**
+ * Compute the new GM `adjust` that moves the pool by `delta` (nudges and
+ * per-round drains), respecting the clamp bounds. Pool-targeting: the
+ * result lands the pool exactly on the clamped target, so drains can never
+ * dig a hidden deficit below `min` that later recovery has to climb out of.
+ *
+ * @param {object} challenge - normalized challenge doc
+ * @param {number} vpSum - party check VP for this challenge (aggregateVp)
+ * @param {number} delta - requested pool change (negative = drain)
+ * @returns {{ adjust: number, pool: number, applied: number }}
+ *   applied is the actual pool movement after clamping (0 = no-op).
+ */
+export function applyPoolDelta(challenge, vpSum, delta) {
+  const base = (challenge.startValue ?? 0) + vpSum;
+  const current = clampPool(challenge, base + (challenge.adjust ?? 0));
+  const target = clampPool(challenge, current + delta);
+  return { adjust: target - base, pool: target, applied: target - current };
 }
 
 /**
