@@ -15,6 +15,33 @@
   margin: 0;
 }
 
+.gm-vp-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.gm-vp-mode-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-outline);
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.gm-vp-char-total {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
 .gm-vp-total {
   font-family: var(--font-display);
   font-weight: 700;

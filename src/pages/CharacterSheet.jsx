@@ -30,6 +30,7 @@ import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
+import ChallengePrompts from '../components/encounter/ChallengePrompts';
 import SpellsList from '../components/spells/SpellsList';
 
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
@@ -148,14 +149,15 @@ const CharacterSheet = () => {
       case 'play':
         // Mode-aware slot: encounter content during combat, otherwise the
         // exploration flow (ExplorationTab also renders the downtime placeholder
-        // internally when mode === 'downtime'). SkillPrompt renders in every
-        // mode — VP skill challenges run in exploration/downtime too.
+        // internally when mode === 'downtime'). SkillPrompt + ChallengePrompts
+        // render in every mode — VP challenge tracks run in exploration/downtime too.
         if (mode === 'encounter') {
           return (
             <>
               <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} character={character} />
               <ReactionPrompt character={character} themeColor={characterColor} />
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
+              <ChallengePrompts charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
@@ -193,6 +195,7 @@ const CharacterSheet = () => {
         return (
           <>
             <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
+            <ChallengePrompts charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
             <ExplorationTab character={character} characterColor={characterColor} />
           </>
         );
