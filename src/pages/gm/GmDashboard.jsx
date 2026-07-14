@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PlayModeControl from '../../components/gm/PlayModeControl';
 import PartyPanel from '../../components/gm/PartyPanel';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
+import GmFxTestFire from '../../components/gm/GmFxTestFire';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import PersistentChip from '../../components/encounter/PersistentChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
@@ -81,6 +82,10 @@ const InitiativePanel = ({ encounter, actorMap, setActorMap, characters }) => {
 
       {phase !== 'idle' && <GmSaveRequest pcEntries={pcEntries} />}
       {phase !== 'idle' && <RequestedSaves />}
+
+      {/* FX test-fire (#1456): raw order on purpose — any combatant can source
+          or receive a test animation, not just mapped PCs. */}
+      {phase !== 'idle' && <GmFxTestFire entries={order} />}
 
       {phase !== 'idle' && (
         <div className="gm-encounter-order">

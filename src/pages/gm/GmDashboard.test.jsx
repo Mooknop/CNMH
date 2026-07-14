@@ -28,6 +28,9 @@ vi.mock('../../components/gm/GmSaveRequest', () => ({
 vi.mock('../../components/encounter/RequestedSaves', () => ({
   default: () => <div data-testid="requested-saves" />,
 }));
+vi.mock('../../components/gm/GmFxTestFire', () => ({
+  default: () => <div data-testid="fx-test-fire" />,
+}));
 vi.mock('../../components/character-sheet/EffectsModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="effects-modal" /> : null),
 }));
@@ -147,6 +150,19 @@ describe('GmDashboard — Control Center', () => {
     const panel = screen.getByRole('region', { name: 'Initiative' });
     expect(panel.textContent).toMatch(/Round 3/);
     expect(panel.textContent).toMatch(/current:.*Thorn/i);
+    // FX test-fire panel (#1456) rides the live encounter alongside the save consoles.
+    expect(screen.getByTestId('fx-test-fire')).toBeInTheDocument();
+  });
+
+  it('hides the FX test-fire panel when no encounter is running', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue({
+      encounter: { phase: 'idle', order: [] },
+      actorMap: {},
+      setActorMap: vi.fn(),
+    });
+    renderDash();
+    expect(screen.queryByTestId('fx-test-fire')).not.toBeInTheDocument();
   });
 
   it('renders initiative order rows with testids', () => {
