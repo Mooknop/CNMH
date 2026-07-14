@@ -19,6 +19,15 @@
  * client only (again single-writer). `threshold` may be null for pure
  * survival meters — the track then has no success line, only failAt.
  *
+ * Influence tracks (#205): kind:'influence' plus { discoveries:[{skill,dc}],
+ * revealed:[skillKey], tiers:[{at,note}], resistNote, dcModifier,
+ * roundsTotal, sceneRound }. Influence skills live in the shared `skills`
+ * field so pool helpers apply unchanged; the pool is the NPC's influence
+ * points. Discovery submissions append entries flagged { discovery: true,
+ * vp: 0 }. `dcModifier` shifts every DC (resistances/weaknesses);
+ * `sceneRound` is the GM-advanced round used when no combat encounter is
+ * running (see roundFor).
+ *
  * Legacy single-object shapes (pre-#1470: one challenge / one locked result)
  * are normalized on read so a mid-session upgrade degrades gracefully.
  */
@@ -85,6 +94,35 @@ export function poolFor(challenge, resultValues) {
 /** A track is failing when it has a failAt floor and the pool has hit it. */
 export function isFailing(challenge, pool) {
   return typeof challenge.failAt === 'number' && pool <= challenge.failAt;
+}
+
+/** Influence tracks (#205) carry discovery/reveal/tier machinery. */
+export function isInfluence(challenge) {
+  return challenge?.kind === 'influence';
+}
+
+/**
+ * The round a challenge's per-round cadence keys on: combat rounds while an
+ * encounter is running, else the track's own GM-advanced scene round
+ * (Influence scenes outside combat, GMG 10-minute rounds).
+ */
+export function roundFor(challenge, encounter) {
+  if (encounter?.active) return encounter.round ?? 0;
+  return challenge?.sceneRound ?? 0;
+}
+
+/** A skill's live DC after the GM's global modifier (resist/weakness taps). */
+export function effectiveDc(challenge, dc) {
+  return dc + (challenge?.dcModifier ?? 0);
+}
+
+/** Highest tier the pool has reached, or null. Tiers sorted by `at`. */
+export function highestTier(challenge, pool) {
+  const tiers = Array.isArray(challenge?.tiers) ? challenge.tiers : [];
+  return tiers
+    .filter((t) => typeof t?.at === 'number' && pool >= t.at)
+    .sort((a, b) => a.at - b.at)
+    .pop() ?? null;
 }
 
 /**

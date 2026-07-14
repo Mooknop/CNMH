@@ -19,6 +19,7 @@ import CharacterStateModal from '../../components/gm/CharacterStateModal';
 import GmGearModal from '../../components/gm/GmGearModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
 import SkillChallengeModal from '../../components/gm/SkillChallengeModal';
+import InfluenceSetupModal from '../../components/gm/InfluenceSetupModal';
 import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
@@ -378,6 +379,7 @@ const GmDashboard = () => {
   const [isGearModalOpen, setIsGearModalOpen] = useState(false);
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
   const [isSkillChallengeModalOpen, setIsSkillChallengeModalOpen] = useState(false);
+  const [isInfluenceModalOpen, setIsInfluenceModalOpen] = useState(false);
   const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
   const [isBestiaryEditorOpen, setIsBestiaryEditorOpen] = useState(false);
 
@@ -493,6 +495,16 @@ const GmDashboard = () => {
               <button
                 type="button"
                 className="gm-qa"
+                aria-label="Start an influence encounter"
+                onClick={() => setIsInfluenceModalOpen(true)}
+              >
+                <GmIcon name="spark" className="gm-qa-ico" />
+                <span className="gm-qa-title">Influence</span>
+                <span className="gm-qa-desc">Run a GMG Influence encounter</span>
+              </button>
+              <button
+                type="button"
+                className="gm-qa"
                 aria-label="Set party gold"
                 onClick={() => setIsPartyGoldModalOpen(true)}
               >
@@ -557,6 +569,11 @@ const GmDashboard = () => {
       <SkillChallengeModal
         isOpen={isSkillChallengeModalOpen}
         onClose={() => setIsSkillChallengeModalOpen(false)}
+      />
+
+      <InfluenceSetupModal
+        isOpen={isInfluenceModalOpen}
+        onClose={() => setIsInfluenceModalOpen(false)}
       />
 
       <PartyGoldModal

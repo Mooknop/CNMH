@@ -8,6 +8,10 @@ import {
   clampPool,
   poolFor,
   isFailing,
+  isInfluence,
+  roundFor,
+  effectiveDc,
+  highestTier,
   applyPoolDelta,
   skillLabel,
   CHALLENGE_MODES,
@@ -222,6 +226,54 @@ describe('meter helpers (#1471)', () => {
       const r = applyPoolDelta(meter({ adjust: 3 }), 1, +5);  // pool 10 (max) already
       expect(r.applied).toBe(0);
       expect(r.pool).toBe(10);
+    });
+  });
+});
+
+describe('influence helpers (#205)', () => {
+  const influence = (over = {}) => ({
+    id: 'inf-1', kind: 'influence', name: 'Nualia',
+    dcModifier: 0, sceneRound: 1, roundsTotal: 10,
+    tiers: [{ at: 3, note: 'seven dooms' }, { at: 6, note: 'sorrow' }, { at: 9, note: 'forgiveness' }],
+    ...over,
+  });
+
+  it('isInfluence keys on kind', () => {
+    expect(isInfluence(influence())).toBe(true);
+    expect(isInfluence({ id: 'vpc-1' })).toBe(false);
+    expect(isInfluence(null)).toBe(false);
+  });
+
+  describe('roundFor', () => {
+    it('uses combat rounds while an encounter is active', () => {
+      expect(roundFor(influence(), { active: true, round: 4 })).toBe(4);
+    });
+
+    it('falls back to the GM-advanced scene round otherwise', () => {
+      expect(roundFor(influence({ sceneRound: 3 }), { active: false })).toBe(3);
+      expect(roundFor(influence({ sceneRound: 3 }), null)).toBe(3);
+      expect(roundFor({ id: 'vpc-1' }, null)).toBe(0);
+    });
+  });
+
+  describe('effectiveDc', () => {
+    it('applies the GM modifier', () => {
+      expect(effectiveDc(influence({ dcModifier: 4 }), 19)).toBe(23);
+      expect(effectiveDc(influence({ dcModifier: -4 }), 19)).toBe(15);
+      expect(effectiveDc(influence(), 19)).toBe(19);
+      expect(effectiveDc(null, 19)).toBe(19);
+    });
+  });
+
+  describe('highestTier', () => {
+    it('returns the highest reached tier', () => {
+      expect(highestTier(influence(), 7)).toEqual({ at: 6, note: 'sorrow' });
+      expect(highestTier(influence(), 9)).toEqual({ at: 9, note: 'forgiveness' });
+    });
+
+    it('returns null below the first tier or without tiers', () => {
+      expect(highestTier(influence(), 2)).toBeNull();
+      expect(highestTier({ id: 'x' }, 99)).toBeNull();
     });
   });
 });

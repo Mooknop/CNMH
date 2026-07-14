@@ -258,6 +258,112 @@ describe('ChallengePrompts', () => {
     expect(screen.getByLabelText('costs 1 action')).toBeInTheDocument();
   });
 
+  describe('influence tracks (#205)', () => {
+    const nualia = (over = {}) => ({
+      id: 'inf-1',
+      kind: 'influence',
+      name: 'Nualia',
+      skills: [
+        { skill: 'society', dc: 18 },
+        { skill: 'religion', dc: 19 },
+      ],
+      discoveries: [{ skill: 'occultism', dc: 18 }],
+      revealed: ['society'],
+      tiers: [{ at: 3, note: 'dooms' }],
+      resistNote: '',
+      dcModifier: 0,
+      roundsTotal: 10,
+      sceneRound: 1,
+      threshold: null,
+      mode: 'perRound',
+      actionCost: 1,
+      target: 'all',
+      targetIds: ['thorn'],
+      adjust: 0,
+      createdAt: 1,
+      ...over,
+    });
+
+    it('masks unrevealed influence DCs and shows revealed ones', () => {
+      setChallenges(nualia());
+      setup();
+      expect(screen.getByLabelText('Nualia influence prompt')).toBeInTheDocument();
+      // Discovery occultism DC 18 + revealed society DC 18 both visible.
+      expect(screen.getAllByText('DC 18')).toHaveLength(2);
+      expect(screen.getByText('DC ?')).toBeInTheDocument();       // unrevealed religion
+      expect(screen.getByLabelText('revealed')).toBeInTheDocument();  // ★ on society
+    });
+
+    it('applies the GM DC modifier to the submitted check', () => {
+      setChallenges(nualia({ dcModifier: 4 }));
+      setup();
+      // society base 18 + 4 = 22; mod... society not in skillMods → +0? use religion:
+      // religion mod 2, d20 17 → 19: success vs 19 but DC is now 23 → failure
+      fireEvent.click(screen.getByText(/Religion/));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '17' } });
+      fireEvent.click(screen.getByLabelText('Submit Religion check'));
+      const entry = __store['cnmh_vpresult_thorn']['inf-1'][0];
+      expect(entry.degree).toBe('failure');
+      expect(entry.vp).toBe(0);
+    });
+
+    it('discovery and influence lock independently within a round', () => {
+      setChallenges(nualia());
+      mockEncounter = { active: true, round: 1 };
+      setup();
+
+      // Discovery first: occultism mod 9, d20 12 → 21 vs DC 18 → success, vp 0
+      fireEvent.click(screen.getByText('Occultism'));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Submit Occultism check'));
+      const d = __store['cnmh_vpresult_thorn']['inf-1'][0];
+      expect(d.discovery).toBe(true);
+      expect(d.vp).toBe(0);
+      expect(mockSpendActions).toHaveBeenCalledWith(1, 'Nualia');
+
+      // Discovery group locked, influence group still open.
+      expect(screen.getByRole('radio', { name: /Occultism/ })).toBeDisabled();
+      expect(screen.getByRole('radio', { name: /Religion/ })).toBeEnabled();
+
+      // Influence: religion mod 2, d20 18 → 20 vs 19 → success, +1
+      fireEvent.click(screen.getByText(/Religion/));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '18' } });
+      fireEvent.click(screen.getByLabelText('Submit Religion check'));
+      const entries = __store['cnmh_vpresult_thorn']['inf-1'];
+      expect(entries).toHaveLength(2);
+      expect(entries[1].vp).toBe(1);
+      expect(entries[1].discovery).toBeUndefined();
+      expect(mockSpendActions).toHaveBeenCalledTimes(2);
+
+      // Both groups locked now; both results listed.
+      expect(screen.getByRole('radio', { name: /Religion/ })).toBeDisabled();
+      expect(screen.getByLabelText("this round's checks").children).toHaveLength(2);
+    });
+
+    it('uses the GM scene round outside combat', () => {
+      setChallenges(nualia({ sceneRound: 4 }));
+      setup();
+      expect(screen.getByText(/Round 4 \/ 10/)).toBeInTheDocument();
+      fireEvent.click(screen.getByText(/Religion/));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '18' } });
+      fireEvent.click(screen.getByLabelText('Submit Religion check'));
+      expect(__store['cnmh_vpresult_thorn']['inf-1'][0].round).toBe(4);
+      expect(mockSpendActions).not.toHaveBeenCalled();
+    });
+
+    it('shows no party pool and logs without VP', () => {
+      setChallenges(nualia({ adjust: 5 }));
+      setup();
+      expect(screen.queryByLabelText('Nualia party pool')).toBeNull();
+      fireEvent.click(screen.getByText(/Religion/));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '18' } });
+      fireEvent.click(screen.getByLabelText('Submit Religion check'));
+      const logged = mockAppendLog.mock.calls.at(-1)[0].text;
+      expect(logged).toContain('Religion');
+      expect(logged).not.toContain('VP');
+    });
+  });
+
   describe('party pool display (#1471)', () => {
     it('shows the party pool including other characters and GM adjust', () => {
       setChallenges(challenge({ targetIds: ['thorn', 'lira'], startValue: 6, adjust: -2 }));
