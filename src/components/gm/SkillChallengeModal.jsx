@@ -1,35 +1,35 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
-import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
-import { skillLabel } from '../../utils/victoryPoints';
+import { skillLabel, normalizeChallenges, CHALLENGE_MODES } from '../../utils/victoryPoints';
 import './SkillChallengeModal.css';
 import { APP, globalKey } from '../../sync/keys';
 
 const SKILL_KEYS = Object.keys(SKILL_ABILITY_MAP);
 
-let _reqCounter = 0;
-
 const emptyRow = () => ({ skill: 'arcana', dc: '' });
 
 /**
  * GM quick action: define and launch a Victory Point skill challenge
- * (PF2e VP subsystem). Sets cnmh_vpchallenge_global and pushes a
- * multi-skill prompt to each target via cnmh_skillprompt_<charId>.
+ * (PF2e VP subsystem). Adds a track to the cnmh_vpchallenge_global
+ * collection (#1470) — multiple tracks run concurrently; players derive
+ * their prompt cards from the collection (ChallengePrompts), so no per-PC
+ * prompt push is needed.
  */
 const SkillChallengeModal = ({ isOpen, onClose }) => {
   const { characters } = useContent();
-  const { sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
-  const [challenge, setChallenge] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
+  const [challenges, setChallenges] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
 
-  const [name,      setName]      = useState('');
-  const [rows,      setRows]      = useState([emptyRow()]);
-  const [threshold, setThreshold] = useState('');
-  const [target,    setTarget]    = useState('all');
+  const [name,       setName]       = useState('');
+  const [rows,       setRows]       = useState([emptyRow()]);
+  const [threshold,  setThreshold]  = useState('');
+  const [target,     setTarget]     = useState('all');
+  const [mode,       setMode]       = useState(CHALLENGE_MODES.ONCE);
+  const [actionCost, setActionCost] = useState('0');
 
   const updateRow = (idx, patch) =>
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
@@ -44,6 +44,8 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
     thresholdNum >= 1 &&
     (characters || []).length > 0;
 
+  const activeCount = Object.keys(normalizeChallenges(challenges)).length;
+
   const handleSend = () => {
     if (!canSend) return;
     const skills = rows.map((r) => ({ skill: r.skill, dc: parseInt(r.dc, 10) }));
@@ -51,32 +53,27 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
       ? (characters || [])
       : (characters || []).filter((c) => c.id === target);
     const id = `vpc-${Date.now()}`;
-    const reqIdBase = `${id}-${++_reqCounter}`;
+    const costNum = parseInt(actionCost, 10) || 0;
 
-    setChallenge({
+    const doc = {
       id,
       name: name.trim(),
       skills,
       threshold: thresholdNum,
       target,
       targetIds: targets.map((c) => c.id),
+      mode,
+      actionCost: costNum,
       createdAt: Date.now(),
-    });
-
-    for (const c of targets) {
-      sendUpdate(c.id, APP.VPRESULT, null);
-      sendUpdate(c.id, APP.SKILLPROMPT, {
-        reqId:       `${reqIdBase}-${c.id}`,
-        challengeId: id,
-        skills,
-        label:       name.trim(),
-      });
-    }
+    };
+    setChallenges((cur) => ({ ...normalizeChallenges(cur), [id]: doc }));
 
     const targetLabel = target === 'all' ? 'all characters' : (targets[0]?.name ?? target);
+    const cadenceStr = mode === CHALLENGE_MODES.PER_ROUND ? ', repeats each round' : '';
+    const costStr = costNum > 0 ? `, costs ${costNum} action${costNum === 1 ? '' : 's'}` : '';
     appendEvent({
       type: 'challenge',
-      text: `Skill challenge "${name.trim()}" — ${skills.map((s) => skillLabel(s.skill)).join(', ')}, threshold ${thresholdNum} VP → ${targetLabel}`,
+      text: `Skill challenge "${name.trim()}" — ${skills.map((s) => skillLabel(s.skill)).join(', ')}, threshold ${thresholdNum} VP${cadenceStr}${costStr} → ${targetLabel}`,
     });
     handleClose();
   };
@@ -86,6 +83,8 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
     setRows([emptyRow()]);
     setThreshold('');
     setTarget('all');
+    setMode(CHALLENGE_MODES.ONCE);
+    setActionCost('0');
     onClose();
   };
 
@@ -176,9 +175,38 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {challenge && (
+        <div className="sc-inline">
+          <div className="sc-row sc-row--inline">
+            <label htmlFor="sc-mode">Attempts</label>
+            <select
+              id="sc-mode"
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              aria-label="challenge cadence"
+            >
+              <option value={CHALLENGE_MODES.ONCE}>One attempt</option>
+              <option value={CHALLENGE_MODES.PER_ROUND}>Repeat each round</option>
+            </select>
+          </div>
+          <div className="sc-row sc-row--inline">
+            <label htmlFor="sc-cost">Action Cost</label>
+            <select
+              id="sc-cost"
+              value={actionCost}
+              onChange={(e) => setActionCost(e.target.value)}
+              aria-label="action cost"
+            >
+              <option value="0">Free</option>
+              <option value="1">1 action</option>
+              <option value="2">2 actions</option>
+              <option value="3">3 actions</option>
+            </select>
+          </div>
+        </div>
+
+        {activeCount > 0 && (
           <p className="sc-active-warning" role="note">
-            “{challenge.name}” is active — sending replaces it.
+            {activeCount} track{activeCount === 1 ? '' : 's'} already running — sending adds another.
           </p>
         )}
 

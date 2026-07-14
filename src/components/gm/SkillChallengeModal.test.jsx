@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 // ─── mocks ───────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
-vi.mock('../../contexts/SessionContext',  () => ({ useSession:  vi.fn() }));
 
 const mockAppendEvent = vi.fn();
 vi.mock('../../hooks/useSessionLog', () => ({
@@ -33,7 +32,6 @@ vi.mock('../../hooks/useSyncedState', () => {
 });
 
 import { useContent } from '../../contexts/ContentContext';
-import { useSession }  from '../../contexts/SessionContext';
 import { __reset, __store } from '../../hooks/useSyncedState';
 import SkillChallengeModal from './SkillChallengeModal';
 
@@ -43,14 +41,10 @@ const CHARACTERS = [
   { id: 'lira',  name: 'Lira'  },
 ];
 
-let sendUpdate;
-
 beforeEach(() => {
   __reset();
-  sendUpdate = vi.fn();
   mockAppendEvent.mockClear();
   useContent.mockReturnValue({ characters: CHARACTERS });
-  useSession.mockReturnValue({ sendUpdate });
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -60,6 +54,8 @@ const fillBasics = () => {
   fireEvent.change(screen.getByLabelText('skill 1 DC'), { target: { value: '19' } });
   fireEvent.change(screen.getByLabelText('victory point threshold'), { target: { value: '3' } });
 };
+
+const sentChallenges = () => Object.values(__store['cnmh_vpchallenge_global'] ?? {});
 
 // ─── tests ───────────────────────────────────────────────────
 describe('SkillChallengeModal', () => {
@@ -98,7 +94,7 @@ describe('SkillChallengeModal', () => {
     expect(screen.getByLabelText('Start skill challenge')).toBeEnabled();
   });
 
-  it('sending sets the global challenge and prompts every character', () => {
+  it('sending adds the challenge to the global collection with defaults', () => {
     render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
     fillBasics();
     fireEvent.click(screen.getByLabelText('Add skill'));
@@ -106,51 +102,82 @@ describe('SkillChallengeModal', () => {
     fireEvent.change(screen.getByLabelText('skill 2 DC'), { target: { value: '19' } });
     fireEvent.click(screen.getByLabelText('Start skill challenge'));
 
-    const challenge = __store['cnmh_vpchallenge_global'];
-    expect(challenge).toEqual(expect.objectContaining({
+    const sent = sentChallenges();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toEqual(expect.objectContaining({
       name: 'Bolster the Ritual',
       threshold: 3,
       target: 'all',
       targetIds: ['thorn', 'lira'],
+      mode: 'once',
+      actionCost: 0,
       skills: [
         { skill: 'arcana', dc: 19 },
         { skill: 'intimidation', dc: 19 },
       ],
     }));
-
-    // per character: vpresult cleared + skillprompt pushed
-    expect(sendUpdate).toHaveBeenCalledWith('thorn', 'vpresult', null);
-    expect(sendUpdate).toHaveBeenCalledWith('lira',  'vpresult', null);
-    expect(sendUpdate).toHaveBeenCalledWith('thorn', 'skillprompt', expect.objectContaining({
-      challengeId: challenge.id,
-      label: 'Bolster the Ritual',
-      skills: challenge.skills,
-    }));
-    expect(sendUpdate).toHaveBeenCalledWith('lira', 'skillprompt', expect.objectContaining({
-      challengeId: challenge.id,
-    }));
+    expect(__store['cnmh_vpchallenge_global'][sent[0].id]).toBe(sent[0]);
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
       type: 'challenge',
       text: expect.stringContaining('Bolster the Ritual'),
     }));
   });
 
-  it('single-target challenge prompts only that character', () => {
+  it('cadence and action-cost selections land on the challenge doc', () => {
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    fillBasics();
+    fireEvent.change(screen.getByLabelText('challenge cadence'), { target: { value: 'perRound' } });
+    fireEvent.change(screen.getByLabelText('action cost'), { target: { value: '1' } });
+    fireEvent.click(screen.getByLabelText('Start skill challenge'));
+
+    expect(sentChallenges()[0]).toEqual(expect.objectContaining({
+      mode: 'perRound',
+      actionCost: 1,
+    }));
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('repeats each round'),
+    }));
+  });
+
+  it('single-target challenge targets only that character', () => {
     render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
     fillBasics();
     fireEvent.change(screen.getByLabelText('target characters'), { target: { value: 'lira' } });
     fireEvent.click(screen.getByLabelText('Start skill challenge'));
-
-    expect(__store['cnmh_vpchallenge_global'].targetIds).toEqual(['lira']);
-    const promptCalls = sendUpdate.mock.calls.filter(([, type]) => type === 'skillprompt');
-    expect(promptCalls).toHaveLength(1);
-    expect(promptCalls[0][0]).toBe('lira');
+    expect(sentChallenges()[0].targetIds).toEqual(['lira']);
   });
 
-  it('warns when a challenge is already active', () => {
-    __store['cnmh_vpchallenge_global'] = { id: 'vpc-old', name: 'Old Hunt' };
+  it('sending adds a second concurrent track instead of replacing', () => {
+    __store['cnmh_vpchallenge_global'] = {
+      'vpc-old': { id: 'vpc-old', name: 'Old Hunt', targetIds: ['thorn'] },
+    };
     render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
-    expect(screen.getByRole('note')).toHaveTextContent('Old Hunt');
+    fillBasics();
+    fireEvent.click(screen.getByLabelText('Start skill challenge'));
+
+    const map = __store['cnmh_vpchallenge_global'];
+    expect(Object.keys(map)).toHaveLength(2);
+    expect(map['vpc-old'].name).toBe('Old Hunt');
+  });
+
+  it('upgrades the legacy single-challenge shape when adding a track', () => {
+    __store['cnmh_vpchallenge_global'] = { id: 'vpc-old', name: 'Old Hunt', targetIds: ['thorn'] };
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    fillBasics();
+    fireEvent.click(screen.getByLabelText('Start skill challenge'));
+
+    const map = __store['cnmh_vpchallenge_global'];
+    expect(Object.keys(map)).toHaveLength(2);
+    expect(map['vpc-old']).toEqual(expect.objectContaining({ name: 'Old Hunt', mode: 'once' }));
+  });
+
+  it('notes how many tracks are already running', () => {
+    __store['cnmh_vpchallenge_global'] = {
+      'vpc-a': { id: 'vpc-a', name: 'A' },
+      'vpc-b': { id: 'vpc-b', name: 'B' },
+    };
+    render(<SkillChallengeModal isOpen={true} onClose={() => {}} />);
+    expect(screen.getByRole('note')).toHaveTextContent('2 tracks already running');
   });
 
   it('calls onClose after sending', () => {
