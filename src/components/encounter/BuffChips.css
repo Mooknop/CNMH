@@ -1,0 +1,9 @@
+/* Buff chips — order-strip badges for chip-worthy effects; PlayingChip's
+   recipe with a text label. */
+.ttp-buff-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: var(--gold-light);
+  white-space: nowrap;
+  vertical-align: middle;
+}
