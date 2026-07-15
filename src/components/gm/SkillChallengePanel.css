@@ -190,6 +190,114 @@
   color: var(--shell-text-primary);
 }
 
+/* Influence track card (#205) */
+.gm-influence-round {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.gm-influence-tiers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gm-influence-tiers li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
+.gm-influence-tiers li[data-reached='true'] {
+  color: var(--shell-text-primary);
+  border-left: 3px solid var(--d-succ-fg);
+}
+
+.gm-influence-tier-at {
+  font-family: var(--font-display);
+  font-weight: 700;
+  min-width: 1.5rem;
+}
+
+.gm-influence-dcmod {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  padding: 0 var(--space-1);
+}
+
+.gm-influence-dcmod[data-hot='true'] {
+  color: var(--d-fail-fg);
+}
+
+.gm-influence-skills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.gm-influence-skills li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  font-size: var(--text-sm);
+}
+
+.gm-influence-skills .gm-vp-skill {
+  flex: 1;
+}
+
+.gm-influence-reveal {
+  padding: 1px var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
+  transition: background 0.15s;
+}
+
+.gm-influence-reveal[aria-pressed='true'] {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.gm-influence-discoveries,
+.gm-influence-resist {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+.gm-influence-resist {
+  font-style: italic;
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid var(--accent-outline);
+}
+
 .gm-vp-footer {
   display: flex;
   align-items: center;

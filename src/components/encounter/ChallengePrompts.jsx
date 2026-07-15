@@ -13,6 +13,9 @@ import {
   entriesFor,
   poolFor,
   isFailing,
+  isInfluence,
+  roundFor,
+  effectiveDc,
   CHALLENGE_MODES,
 } from '../../utils/victoryPoints';
 import ActionSymbol from '../shared/ActionSymbol';
@@ -170,6 +173,162 @@ const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, po
   );
 };
 
+/**
+ * Influence-track card (#205): the conversation with an NPC. Two check
+ * groups — Discovery (learn which skills sway the NPC) and Influence — each
+ * lockable once per round independently, so a PC can Discover AND Influence
+ * in the same combat round by spending actions on both. Influence DCs stay
+ * masked ("DC ?") until the GM reveals the skill; the GM's global dcModifier
+ * (resistances/weaknesses) silently shifts every DC at submit time. No party
+ * pool or VP chips here — the AP keeps influence totals GM-paced.
+ */
+const InfluenceCard = ({ challenge, entries, round, skillModifiers, onSubmit }) => {
+  const [d20Input, setD20Input] = useState('');
+  const [chosen, setChosen] = useState(null);  // { kind: 'discovery'|'influence', skill }
+
+  const discoveries = Array.isArray(challenge.discoveries) ? challenge.discoveries : [];
+  const influences = Array.isArray(challenge.skills) ? challenge.skills : [];
+  const revealed = new Set(challenge.revealed || []);
+
+  const roundEntries = entries.filter((e) => e.round === round);
+  const lockedDiscovery = roundEntries.some((e) => e.discovery);
+  const lockedInfluence = roundEntries.some((e) => !e.discovery);
+
+  useEffect(() => {
+    setD20Input('');
+    setChosen(null);
+  }, [round, challenge.id]);
+
+  const selected = (() => {
+    if (!chosen) return null;
+    const list = chosen.kind === 'discovery' ? discoveries : influences;
+    const opt = list.find((o) => o.skill === chosen.skill);
+    return opt ? { ...opt, discovery: chosen.kind === 'discovery' } : null;
+  })();
+  const selectedLocked = selected
+    ? (selected.discovery ? lockedDiscovery : lockedInfluence)
+    : false;
+
+  const handleSubmit = () => {
+    if (!selected || selectedLocked) return;
+    const d20 = parseInt(d20Input, 10);
+    if (isNaN(d20) || d20 < 1 || d20 > 20) return;
+    const modifier = skillModifiers[selected.skill] ?? 0;
+    const total = d20 + modifier;
+    const dc = effectiveDc(challenge, selected.dc);
+    const degree = computeSaveDegree({ d20, total, dc });
+    onSubmit(challenge, { ...selected, dc }, {
+      d20,
+      total,
+      degree,
+      vp: selected.discovery ? 0 : vpForDegree(degree),
+      discovery: selected.discovery,
+    });
+    setD20Input('');
+    setChosen(null);
+  };
+
+  const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
+  const isChosen = (kind, skill) => chosen?.kind === kind && chosen?.skill === skill;
+
+  const renderGroup = (kind, list, groupLocked, dcFor) => {
+    if (!list.length) return null;
+    const label = kind === 'discovery' ? 'Discover' : 'Influence';
+    return (
+      <div className="influence-group">
+        <span className="influence-group-label">
+          {label}
+          {groupLocked && <span className="challenge-next-round"> — again next round</span>}
+        </span>
+        <div className="skill-choices" role="radiogroup" aria-label={`${label} skills`}>
+          {list.map((o) => (
+            <button
+              key={o.skill}
+              type="button"
+              role="radio"
+              aria-checked={isChosen(kind, o.skill)}
+              disabled={groupLocked}
+              className={`skill-choice${isChosen(kind, o.skill) ? ' skill-choice--selected' : ''}`}
+              onClick={() => setChosen({ kind, skill: o.skill })}
+            >
+              <span className="skill-choice-name">
+                {skillLabel(o.skill)}
+                {kind === 'influence' && revealed.has(o.skill) && <span aria-label="revealed"> ★</span>}
+              </span>
+              <span className="skill-choice-dc">{dcFor(o)}</span>
+              <span className="skill-choice-mod">{fmtMod(skillModifiers[o.skill] ?? 0)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="save-prompt challenge-card influence-card"
+      role="region"
+      aria-label={`${challenge.name} influence prompt`}
+    >
+      <div className="save-prompt-header">
+        <span className="save-prompt-icon" aria-hidden="true">💬</span>
+        <span className="save-prompt-title">{challenge.name}</span>
+        <span className="challenge-badges">
+          <span className="challenge-mode-chip">
+            Round {round}{challenge.roundsTotal > 0 ? ` / ${challenge.roundsTotal}` : ''}
+          </span>
+          {challenge.actionCost > 0 && (
+            <span className="challenge-cost" aria-label={`costs ${challenge.actionCost} action${challenge.actionCost === 1 ? '' : 's'}`}>
+              <ActionSymbol cost={challenge.actionCost} />
+            </span>
+          )}
+        </span>
+      </div>
+
+      {renderGroup('discovery', discoveries, lockedDiscovery,
+        (o) => `DC ${effectiveDc(challenge, o.dc)}`)}
+      {renderGroup('influence', influences, lockedInfluence,
+        (o) => (revealed.has(o.skill) ? `DC ${effectiveDc(challenge, o.dc)}` : 'DC ?'))}
+
+      {selected && !selectedLocked && (
+        <div className="save-prompt-entry">
+          <input
+            type="number"
+            min="1"
+            max="20"
+            className="save-prompt-input"
+            placeholder="d20"
+            aria-label={`${challenge.name} d20 roll`}
+            value={d20Input}
+            onChange={(e) => setD20Input(e.target.value)}
+          />
+          <button
+            className="btn-primary"
+            onClick={handleSubmit}
+            disabled={d20Input === '' || parseInt(d20Input, 10) < 1 || parseInt(d20Input, 10) > 20}
+            aria-label={`Submit ${skillLabel(selected.skill)} check`}
+          >
+            Submit
+          </button>
+        </div>
+      )}
+
+      {roundEntries.length > 0 && (
+        <ul className="influence-results" aria-label="this round's checks">
+          {roundEntries.map((e, i) => (
+            <li key={i} className={`save-result ${degreeClass(e.degree)}`}>
+              {e.discovery && <span className="influence-disc-tag">Discovery</span>}
+              <span className="save-result-skill">{skillLabel(e.skill)}</span>
+              <span className="save-result-total">{e.total}</span>
+              <span className="save-result-degree">{degreeLabel(e.degree)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
   const { characters } = useContent();
   const [challengesRaw] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
@@ -185,7 +344,6 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
   }, []);
 
   const challenges = normalizeChallenges(challengesRaw);
-  const round = encounter?.active ? (encounter.round ?? 0) : 0;
 
   // Self-clean: drop result entries for challenges the GM has ended. Only this
   // client writes its own vpresult key, so the rewrite cannot race the GM.
@@ -208,8 +366,12 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
 
   if (!mine.length) return null;
 
-  const handleSubmit = (challenge, selected, { d20, total, degree, vp }) => {
-    const entry = { round, skill: selected.skill, d20, total, degree, vp, at: Date.now() };
+  const handleSubmit = (challenge, selected, { d20, total, degree, vp, discovery }) => {
+    const round = roundFor(challenge, encounter);
+    const entry = {
+      round, skill: selected.skill, d20, total, degree, vp, at: Date.now(),
+      ...(discovery ? { discovery: true } : {}),
+    };
     setResults((cur) => {
       const map = normalizeResults(cur);
       return { ...map, [challenge.id]: [...(map[challenge.id] ?? []), entry] };
@@ -217,10 +379,15 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
     if (challenge.actionCost > 0 && encounter?.active) {
       spendActions(challenge.actionCost, challenge.name);
     }
+    // Influence totals are GM-paced — keep VP deltas out of the shared log.
+    const verb = discovery ? 'Discover — ' : '';
+    const vpText = discovery || isInfluence(challenge)
+      ? ''
+      : ` (${vp >= 0 ? '+' : ''}${vp} VP)`;
     appendLog({
       type: 'action',
       charId,
-      text: `${characterName} — ${challenge.name}: ${skillLabel(selected.skill)} (DC ${selected.dc}): ${total} → ${degreeLabel(degree)} (${vp >= 0 ? '+' : ''}${vp} VP)`,
+      text: `${characterName} — ${challenge.name}: ${verb}${skillLabel(selected.skill)} (DC ${selected.dc}): ${total} → ${degreeLabel(degree)}${vpText}`,
     });
   };
 
@@ -230,6 +397,19 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
     <>
       <VpResultsCollector characters={roster} onResult={onPartyResult} />
       {mine.map((c) => {
+        const round = roundFor(c, encounter);
+        if (isInfluence(c)) {
+          return (
+            <InfluenceCard
+              key={c.id}
+              challenge={c}
+              entries={entriesFor(resultsRaw, c.id)}
+              round={round}
+              skillModifiers={skillModifiers}
+              onSubmit={handleSubmit}
+            />
+          );
+        }
         const targetValues = (c.targetIds || []).map((id) => partyResults[id]);
         const pool = poolFor(c, targetValues);
         return (

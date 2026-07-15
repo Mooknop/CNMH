@@ -64,6 +64,53 @@
   color: var(--d-cf-fg);
 }
 
+/* Influence-track card (#205) */
+.influence-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.influence-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--shell-text-tertiary);
+}
+
+.influence-group-label .challenge-next-round {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.influence-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.influence-disc-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-outline);
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.save-result-skill {
+  font-weight: 600;
+}
+
 .challenge-failing {
   font-size: 0.7rem;
   font-weight: 700;
