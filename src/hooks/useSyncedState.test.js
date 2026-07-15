@@ -94,6 +94,55 @@ describe('useSyncedState', () => {
     expect(getStateCalls).toBeLessThanOrEqual(5);
   });
 
+  it('drops a stale localStorage value once hydrated when the server has no entry', () => {
+    // The Pellias double-shield bug: an overlay (cnmh_acquired_*) cleared
+    // server-side lived on in one browser's localStorage forever — refresh
+    // never fixed it because an ABSENT server key fell through to the local
+    // copy. After FULL_STATE (hydrations > 0), absence is authoritative.
+    localStorage.setItem('cnmh_acquired_Pellias', JSON.stringify([{ ref: 'tower-shield' }]));
+    mockSession = { ...noopSession(), connected: true, hydrations: 1 };
+    const { result } = renderHook(() => useSyncedState('cnmh_acquired_Pellias', []));
+    expect(result.current[0]).toEqual([]);
+    expect(localStorage.getItem('cnmh_acquired_Pellias')).toBeNull();
+    // A reset is local reconciliation, not a player write — nothing syncs out.
+    expect(mockSession.sendUpdate).not.toHaveBeenCalled();
+  });
+
+  it('before hydration, still falls back to localStorage (offline resilience)', () => {
+    localStorage.setItem('cnmh_acquired_Pellias', JSON.stringify([{ ref: 'tower-shield' }]));
+    mockSession = { ...noopSession(), hydrations: 0 };
+    const { result } = renderHook(() => useSyncedState('cnmh_acquired_Pellias', []));
+    expect(result.current[0]).toEqual([{ ref: 'tower-shield' }]);
+    expect(localStorage.getItem('cnmh_acquired_Pellias')).not.toBeNull();
+  });
+
+  it('reconciles when a later FULL_STATE drops the key (reset mid-session)', () => {
+    // Mount against a server that HAS the key, then deliver a snapshot without
+    // it: the hydration bump must reset the value and purge the local cache.
+    let serverValue = [{ ref: 'tower-shield' }];
+    mockSession = {
+      ...noopSession(),
+      connected: true,
+      hydrations: 1,
+      getState: () => serverValue,
+    };
+    const { result, rerender } = renderHook(() => useSyncedState('cnmh_acquired_Pellias', []));
+    expect(result.current[0]).toEqual([{ ref: 'tower-shield' }]);
+    serverValue = undefined;
+    mockSession = { ...mockSession, hydrations: 2, getState: () => undefined };
+    rerender();
+    expect(result.current[0]).toEqual([]);
+    expect(localStorage.getItem('cnmh_acquired_Pellias')).toBeNull();
+  });
+
+  it('adopts the server value on hydration as before (absence fix changes nothing)', () => {
+    localStorage.setItem('cnmh_focus_IzzyUncut', JSON.stringify(4));
+    mockSession = { ...noopSession(), connected: true, hydrations: 1 };
+    mockSession.getState = (c, t) => (c === 'IzzyUncut' && t === 'focus' ? 9 : undefined);
+    const { result } = renderHook(() => useSyncedState('cnmh_focus_IzzyUncut', 0));
+    expect(result.current[0]).toBe(9);
+  });
+
   it('applies incoming subscribed updates and caches them locally', () => {
     let captured;
     mockSession.subscribe = vi.fn((c, t, cb) => { captured = cb; return vi.fn(); });

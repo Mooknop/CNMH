@@ -17,24 +17,19 @@
 import { isHeldState } from './itemState';
 import { itemUidOf } from './affix';
 import { flattenInventory } from './InventoryUtils';
-import { resolveItemStrikes } from './strikeUtils';
+import { resolveItemStrikes, isShieldAttachment } from './strikeUtils';
 import { shieldHasFinesse } from './shieldRunes';
 import { APP, syncKey } from '../sync/keys';
 
 /** Synced-state key for a character's shield-attachment overlay. */
 export const attachedKey = (charId) => syncKey(APP.ATTACHED, charId);
 
-/**
- * Whether an item is a shield attachment: a weapon (carries `strikes`) marked
- * either with an `attachment: { to: 'shield' }` block or an `Attached` trait. It
- * has no `shield` block of its own, so gearTarget classifies it as a weapon and
- * it takes weapon runes.
- */
-export const isShieldAttachment = (item) =>
-  !!item && !!item.strikes && (
-    item.attachment?.to === 'shield' ||
-    (Array.isArray(item.traits) && item.traits.some((t) => String(t).toLowerCase() === 'attached'))
-  );
+// Whether an item is a shield attachment — a weapon marked `attachment: { to:
+// 'shield' }` or carrying the Attached trait. It has no `shield` block of its
+// own, so gearTarget classifies it as a weapon and it takes weapon runes. The
+// predicate lives in strikeUtils (so getStrikes can exclude attachments from
+// the inventory-weapon pass) and is re-exported here, its lifecycle home.
+export { isShieldAttachment } from './strikeUtils';
 
 /** Valid host shields for an attachment (shields only; excludes itself). */
 export const validAttachHosts = (items, attachment) => {

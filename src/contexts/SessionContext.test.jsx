@@ -106,6 +106,23 @@ describe('SessionContext', () => {
     expect(api.getState('Pellias', 'conditions')).toEqual([1, 2]);
   });
 
+  it('counts hydrations per FULL_STATE (0 until the first snapshot)', () => {
+    // useSyncedState keys its once-per-snapshot reconcile off this counter —
+    // in particular, a key ABSENT from a snapshot is authoritative emptiness
+    // (the stale-localStorage double-shield bug), so every FULL_STATE must
+    // mint a new count, including a later one after a reconnect or reset.
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    expect(api.hydrations).toBe(0);
+    act(() => {
+      MockWS.last._open();
+      MockWS.last._msg({ type: 'FULL_STATE', payload: { IzzyUncut: { focus: 3 } } });
+    });
+    expect(api.hydrations).toBe(1);
+    act(() => { MockWS.last._msg({ type: 'FULL_STATE', payload: {} }); });
+    expect(api.hydrations).toBe(2);
+  });
+
   it('sendUpdate sends JSON when open and records state locally', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
