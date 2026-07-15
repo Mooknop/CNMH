@@ -51,6 +51,47 @@ describe('getStrikes targetDefense', () => {
   });
 });
 
+describe('getStrikes shield attachments', () => {
+  // A shield attachment's Strike is injected by shieldAttach.attachmentStrikes
+  // when it's bound to a HELD shield — getStrikes listing it too rendered the
+  // same Strike twice on the Encounter tab (Pellias's double Shield Spikes).
+  const spikes = {
+    uid: 'a1',
+    name: 'Shield Spikes',
+    attachment: { to: 'shield' },
+    strikes: [{ name: 'Shield Spikes', type: 'melee', proficiency: 'martial', damage: '1d6' }],
+  };
+
+  test('excludes attachment items from the inventory-weapon pass', () => {
+    const char = { ...minimalCharacter, inventory: [spikes] };
+    expect(getStrikes(char).filter((s) => s.name === 'Shield Spikes')).toHaveLength(0);
+  });
+
+  test('an Attached-trait weapon is excluded too', () => {
+    const boss = {
+      uid: 'a2',
+      name: 'Shield Boss',
+      traits: ['Attached'],
+      strikes: [{ name: 'Shield Boss', type: 'melee', proficiency: 'martial', damage: '1d6' }],
+    };
+    const char = { ...minimalCharacter, inventory: [boss] };
+    expect(getStrikes(char).filter((s) => s.name === 'Shield Boss')).toHaveLength(0);
+  });
+
+  test('ordinary weapons still contribute their strikes', () => {
+    const hammer = {
+      uid: 'w1',
+      name: 'Light Hammer',
+      state: 'held1',
+      strikes: [{ name: 'Light Hammer Strike', type: 'melee', proficiency: 'martial', damage: '1d6' }],
+    };
+    const char = { ...minimalCharacter, inventory: [hammer, spikes] };
+    const strikes = getStrikes(char);
+    expect(strikes.filter((s) => s.name === 'Light Hammer Strike')).toHaveLength(1);
+    expect(strikes.filter((s) => s.name === 'Shield Spikes')).toHaveLength(0);
+  });
+});
+
 describe('getStrikes damage types (#1018)', () => {
   test('a character strike passes its damageType through', () => {
     const char = {
