@@ -12,13 +12,17 @@ const TYPE_LABELS = {
 const CombatLogPanel = () => {
   const { encounter } = useEncounter();
   const [open, setOpen] = useState(true);
-  const bottomRef = useRef(null);
+  const listRef = useRef(null);
 
   const log = encounter?.log || [];
 
+  // Keep the newest entry visible by scrolling the log's OWN list, never
+  // scrollIntoView on a sentinel — that walks up every scrollable ancestor and
+  // yanks the whole character-sheet page down to the bottom of this panel when
+  // the log first hydrates (log.length 0 → N on FULL_STATE).
   useEffect(() => {
-    if (open && bottomRef.current && bottomRef.current.scrollIntoView) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (open && listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [log.length, open]);
 
@@ -36,7 +40,7 @@ const CombatLogPanel = () => {
       </button>
 
       {open && (
-        <ol className="combat-log-list" aria-label="Log entries">
+        <ol className="combat-log-list" aria-label="Log entries" ref={listRef}>
           {log.map((entry) => (
             <li
               key={entry.id}
@@ -48,7 +52,6 @@ const CombatLogPanel = () => {
               <span className="combat-log-text">{entry.text}</span>
             </li>
           ))}
-          <li ref={bottomRef} aria-hidden="true" className="combat-log-sentinel" />
         </ol>
       )}
     </div>
