@@ -30,6 +30,7 @@ export const isSandboxWritable = (stateType, characterId) =>
 const NOOP_SESSION = {
   connected: false,
   foundryConnected: false,
+  hydrations: 0,
   getState: () => undefined,
   getAllState: () => undefined,
   sendUpdate: () => {},
@@ -57,6 +58,14 @@ export const SessionProvider = ({ children }) => {
   // messages from the DO; unknown (false) until the first signal, and reset
   // whenever this client's link to the DO drops.
   const [foundryConnected, setFoundryConnected] = useState(false);
+  // How many FULL_STATE snapshots this client has received. 0 = not yet
+  // hydrated (the server state is unknown, localStorage may fill in); each
+  // increment tells useSyncedState to re-reconcile against the snapshot — in
+  // particular, a key ABSENT from a snapshot is authoritative emptiness, so a
+  // stale localStorage copy must not resurrect it (the Pellias double-shield
+  // bug: a cnmh_acquired_* overlay cleared server-side lived on in one
+  // browser's localStorage forever).
+  const [hydrations, setHydrations] = useState(0);
 
   // Offline sandbox (#553): the DO is up but Foundry isn't, so campaign-state
   // writes must be inert. Mirror the derived flag into a ref the stable
@@ -112,6 +121,9 @@ export const SessionProvider = ({ children }) => {
               notify(characterId, stateType, value);
             }
           }
+          // Notifies only cover keys IN the snapshot; bumping the hydration
+          // counter lets hooks reconcile keys the snapshot dropped.
+          if (!unmounted.current) setHydrations((n) => n + 1);
           return;
         }
 
@@ -184,7 +196,7 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ connected, foundryConnected, getState, getAllState, sendUpdate, subscribe }}>
+    <SessionContext.Provider value={{ connected, foundryConnected, hydrations, getState, getAllState, sendUpdate, subscribe }}>
       {children}
     </SessionContext.Provider>
   );

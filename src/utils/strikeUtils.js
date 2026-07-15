@@ -32,6 +32,22 @@ const propertyRuneIds = (item) =>
 export const hasReturningRune = (item) =>
   propertyRuneIds(item).some((id) => RETURNING_RUNE_IDS.includes(id));
 
+/**
+ * Whether an item is a shield attachment (Shield Spikes, Shield Boss, …): a
+ * weapon (carries `strikes`) marked either with an `attachment: { to: 'shield' }`
+ * block or an `Attached` trait. Canonical home is here (a leaf of the
+ * strike-resolution graph) so getStrikes can exclude attachments from the
+ * inventory-weapon pass — their Strike is injected by shieldAttach's
+ * attachmentStrikes when they're bound to a HELD shield, and listing them in
+ * both passes doubled the tile (the Pellias double Shield Spikes bug).
+ * Re-exported by shieldAttach.js, the attachment lifecycle module.
+ */
+export const isShieldAttachment = (item) =>
+  !!item && !!item.strikes && (
+    item.attachment?.to === 'shield' ||
+    (Array.isArray(item.traits) && item.traits.some((t) => String(t).toLowerCase() === 'attached'))
+  );
+
 const isThrownTrait = (t) => String(t).toLowerCase().startsWith('thrown');
 
 /**
@@ -380,10 +396,12 @@ export const getStrikes = (character, chambersByUid = {}, whetstonesByUid = {}, 
     allStrikes = [...allStrikes, ...featStrikes];
   }
 
-  // Inventory weapon strikes
+  // Inventory weapon strikes. Shield attachments are excluded: their Strike
+  // is injected separately (shieldAttach.attachmentStrikes) when they're bound
+  // to a held shield — including them here rendered the same Strike twice.
   if (character.inventory) {
     const weaponStrikes = character.inventory
-      .filter(item => item.strikes)
+      .filter(item => item.strikes && !isShieldAttachment(item))
       .flatMap(item => resolveItemStrikes(
         item,
         character,
