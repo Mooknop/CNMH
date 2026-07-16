@@ -55,6 +55,7 @@ test.describe('Battle Medicine', () => {
     // Battle Medicine is a character action → the deck's Actions segment.
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Battle Medicine/ }).first().click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
 
     // Target self, lowest DC, a natural 20 (with trained Medicine at level 5 this
     // clears any offered DC → success or better), then a fixed healed amount.

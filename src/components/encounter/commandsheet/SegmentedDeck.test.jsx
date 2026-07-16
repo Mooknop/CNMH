@@ -37,6 +37,17 @@ vi.mock('./DeckHeader', () => ({
   default: () => <div data-testid="deck-header" />,
 }));
 
+// TraitTag needs the TraitContext provider — inert chip here.
+vi.mock('../../shared/TraitTag', () => ({
+  default: ({ trait }) => <span>{trait}</span>,
+}));
+
+// Tap a tile, then confirm it on the sheet (tap → confirm → resolver).
+const tapAndConfirm = (tile) => {
+  fireEvent.click(tile);
+  fireEvent.click(screen.getByRole('button', { name: /^Confirm / }));
+};
+
 const baseModel = (overrides = {}) => ({
   actions: [],
   strikes: [{ name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' }],
@@ -117,12 +128,49 @@ describe('SegmentedDeck', () => {
     expect(within(skill).getByRole('button', { name: 'Feint' })).toBeInTheDocument();
   });
 
-  it('tapping a tile calls onUse directly with the raw action + cost', () => {
+  it('tapping a tile opens the confirm sheet; confirming calls onUse with the raw action + cost', () => {
     const onUse = vi.fn();
     render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
     const inHand = screen.getByRole('region', { name: 'In hand' });
     fireEvent.click(within(inHand).getByRole('button', { name: 'Longsword' }));
+
+    // Tap only previews — nothing resolves until confirm.
+    expect(onUse).not.toHaveBeenCalled();
+    const sheet = screen.getByRole('dialog', { name: 'Confirm Longsword' });
+    expect(within(sheet).getByText('Roll attack')).toBeInTheDocument();
+
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Confirm Longsword' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('Cancel closes the sheet without resolving', () => {
+    const onUse = vi.fn();
+    render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
+    const inHand = screen.getByRole('region', { name: 'In hand' });
+    fireEvent.click(within(inHand).getByRole('button', { name: 'Longsword' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onUse).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('the sheet previews the MAP-net bonus and the focused target', () => {
+    mockUseFocusTarget.mockReturnValue({
+      focusEnemy: { entryId: 'e1', kind: 'enemy', name: 'Goblin' },
+    });
+    mockUseTurnState.mockReturnValue({
+      turnState: { actionsSpent: 1, attacksMade: 1, reactionAvailable: true, hasStartedFirstTurn: true },
+    });
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const inHand = screen.getByRole('region', { name: 'In hand' });
+    fireEvent.click(within(inHand).getByRole('button', { name: 'Longsword' }));
+
+    const sheet = screen.getByRole('dialog', { name: 'Confirm Longsword' });
+    expect(within(sheet).getByText('MAP −5')).toBeInTheDocument();
+    expect(within(sheet).getByText('+4')).toBeInTheDocument(); // attackMod 9 − 5
+    expect(within(sheet).getByText('vs AC')).toBeInTheDocument(); // no reveal → no number
+    expect(within(sheet).getByText('Goblin')).toBeInTheDocument();
+    expect(within(sheet).getByText('1d8+4')).toBeInTheDocument();
   });
 
   // ── Off-turn behavior ──────────────────────────────────────────────────────
@@ -152,7 +200,7 @@ describe('SegmentedDeck', () => {
     const onUse = vi.fn();
     render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
     const stowed = screen.getByRole('region', { name: 'Not in hand' });
-    fireEvent.click(within(stowed).getByRole('button', { name: 'Longbow' }));
+    tapAndConfirm(within(stowed).getByRole('button', { name: 'Longbow' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longbow' }), 1);
     const inHand = screen.getByRole('region', { name: 'In hand' });
     expect(within(inHand).queryByRole('button', { name: 'Longbow' })).not.toBeInTheDocument();
@@ -172,11 +220,11 @@ describe('SegmentedDeck', () => {
     const reactions = screen.getByRole('region', { name: 'Reactions' });
     const shieldBlock = within(reactions).getByRole('button', { name: 'Shield Block' });
     expect(within(shieldBlock).getByText('Trigger: your shield is hit.')).toBeInTheDocument();
-    fireEvent.click(shieldBlock);
+    tapAndConfirm(shieldBlock);
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Shield Block' }), 'reaction');
 
     const free = screen.getByRole('region', { name: 'Free Actions' });
-    fireEvent.click(within(free).getByRole('button', { name: 'Quick Draw' }));
+    tapAndConfirm(within(free).getByRole('button', { name: 'Quick Draw' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Quick Draw' }), 'free');
     // Basic encounter free actions land here too.
     expect(within(free).getByRole('button', { name: 'Delay' })).toBeInTheDocument();
@@ -198,7 +246,7 @@ describe('SegmentedDeck', () => {
     );
     fireEvent.click(screen.getByRole('tab', { name: 'Actions' }));
     const skill = screen.getByRole('region', { name: 'Skill' });
-    fireEvent.click(within(skill).getByRole('button', { name: 'Demoralize' }));
+    tapAndConfirm(within(skill).getByRole('button', { name: 'Demoralize' }));
     expect(onSkillAction).toHaveBeenCalledWith(demoralize);
   });
 
@@ -268,7 +316,7 @@ describe('SegmentedDeck', () => {
     const onUse = vi.fn();
     render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
     const region = screen.getByRole('region', { name: 'Right now' });
-    fireEvent.click(within(region).getByRole('button', { name: 'Longsword' }));
+    tapAndConfirm(within(region).getByRole('button', { name: 'Longsword' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
   });
 

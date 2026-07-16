@@ -59,6 +59,7 @@ test.describe('Hunt Prey', () => {
     // the modal; only the enemy in the order is offered as prey.
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Hunt Prey/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await expect(preyList(page).getByRole('button', { name: 'E2E Goblin' })).toBeVisible();
 
     await preyList(page).getByRole('button', { name: 'E2E Goblin' }).click();
@@ -90,12 +91,14 @@ test.describe('Hunt Prey', () => {
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Hunt Prey/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await preyList(page).getByRole('button', { name: 'E2E Goblin' }).click();
     await page.getByRole('button', { name: 'Hunt Prey (1 act)', exact: true }).click();
     await session.expectSent(PREY_KEY, (v) => v?.targetName === 'E2E Goblin');
 
     // Reopen and pick the other enemy — the single designation moves.
     await page.getByRole('button', { name: /Hunt Prey/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await preyList(page).getByRole('button', { name: 'E2E Orc' }).click();
     await page.getByRole('button', { name: 'Hunt Prey (1 act)', exact: true }).click();
     await session.expectSent(PREY_KEY, (v) => v?.targetName === 'E2E Orc');
