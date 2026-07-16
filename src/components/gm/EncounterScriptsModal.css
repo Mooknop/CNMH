@@ -1,0 +1,46 @@
+.es-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.es-script {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+}
+
+.es-script-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.es-script-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.es-script-desc {
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+.es-script-tracks {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+}
+
+.es-launch-btn {
+  white-space: nowrap;
+}

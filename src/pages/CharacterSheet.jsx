@@ -31,6 +31,7 @@ import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
 import ChallengePrompts from '../components/encounter/ChallengePrompts';
+import ObjectivesStrip from '../components/encounter/ObjectivesStrip';
 import SpellsList from '../components/spells/SpellsList';
 
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
@@ -154,6 +155,7 @@ const CharacterSheet = () => {
         if (mode === 'encounter') {
           return (
             <>
+              <ObjectivesStrip />
               <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} character={character} />
               <ReactionPrompt character={character} themeColor={characterColor} />
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
@@ -194,6 +196,7 @@ const CharacterSheet = () => {
         }
         return (
           <>
+            <ObjectivesStrip />
             <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
             <ChallengePrompts charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
             <ExplorationTab character={character} characterColor={characterColor} />

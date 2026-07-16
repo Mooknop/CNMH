@@ -1,0 +1,51 @@
+.objectives-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.objective-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  font-size: var(--text-sm);
+}
+
+.objective-chip[data-failing='true'] {
+  border-color: var(--d-cf-fg);
+}
+
+.objective-name {
+  font-weight: 600;
+  color: var(--shell-text-primary);
+}
+
+.objective-state {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.objective-chip[data-failing='true'] .objective-state {
+  color: var(--d-cf-fg);
+}
+
+.objective-failing {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--d-cf-bg, var(--surface-inset));
+  border: 1px solid var(--d-cf-fg);
+  color: var(--d-cf-fg);
+}
+
+.objective-dot {
+  color: var(--shell-text-tertiary);
+}

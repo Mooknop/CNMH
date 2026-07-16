@@ -20,6 +20,7 @@ import GmGearModal from '../../components/gm/GmGearModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
 import SkillChallengeModal from '../../components/gm/SkillChallengeModal';
 import InfluenceSetupModal from '../../components/gm/InfluenceSetupModal';
+import EncounterScriptsModal from '../../components/gm/EncounterScriptsModal';
 import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
@@ -380,6 +381,7 @@ const GmDashboard = () => {
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
   const [isSkillChallengeModalOpen, setIsSkillChallengeModalOpen] = useState(false);
   const [isInfluenceModalOpen, setIsInfluenceModalOpen] = useState(false);
+  const [isScriptsModalOpen, setIsScriptsModalOpen] = useState(false);
   const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
   const [isBestiaryEditorOpen, setIsBestiaryEditorOpen] = useState(false);
 
@@ -505,6 +507,16 @@ const GmDashboard = () => {
               <button
                 type="button"
                 className="gm-qa"
+                aria-label="Launch an encounter script"
+                onClick={() => setIsScriptsModalOpen(true)}
+              >
+                <GmIcon name="scroll" className="gm-qa-ico" />
+                <span className="gm-qa-title">Encounter Script</span>
+                <span className="gm-qa-desc">Launch a preset bundle of encounter tracks</span>
+              </button>
+              <button
+                type="button"
+                className="gm-qa"
                 aria-label="Set party gold"
                 onClick={() => setIsPartyGoldModalOpen(true)}
               >
@@ -574,6 +586,11 @@ const GmDashboard = () => {
       <InfluenceSetupModal
         isOpen={isInfluenceModalOpen}
         onClose={() => setIsInfluenceModalOpen(false)}
+      />
+
+      <EncounterScriptsModal
+        isOpen={isScriptsModalOpen}
+        onClose={() => setIsScriptsModalOpen(false)}
       />
 
       <PartyGoldModal
