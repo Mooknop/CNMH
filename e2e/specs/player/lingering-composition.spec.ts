@@ -29,8 +29,7 @@ import {
   snapshotSpells,
   casterCharacter,
   gotoSheet,
-  openMagic,
-  openMagicCategory,
+  openSpellsSegment,
   castSpell,
 } from '../../helpers/spellcasting';
 
@@ -50,8 +49,8 @@ const bard = () =>
 // resolver came up with the seeded Performance modifier.
 async function openLingering(page: import('@playwright/test').Page) {
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await openMagic(page);
-  await openMagicCategory(page, 'Compositions');
+  // Compositions render in the deck's first-class Spells segment now.
+  await openSpellsSegment(page);
   await castSpell(page, 'Lingering Composition');
   // level 2 = the modal title; the spell card's own <h3> shares the name.
   await expect(page.getByRole('heading', { name: 'Lingering Composition', level: 2 })).toBeVisible();
