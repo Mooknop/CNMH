@@ -88,6 +88,8 @@ async function openScepter(
     .getByRole('navigation', { name: 'Character sheet sections' })
     .getByRole('button', { name: 'Encounter', exact: true })
     .click();
+  // Spellshape actions live in the deck's Actions segment.
+  await page.getByRole('tab', { name: 'Actions' }).click();
   await page.getByRole('button', { name: actionName, exact: true }).first().click();
   // Every chain defaults its picker to the one repertoire spell.
   await expect(page.getByLabel('spell picker')).toHaveValue(SPELL_ID);

@@ -55,7 +55,9 @@ test.describe('Hunt Prey', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
-    // Tile opens the modal; only the enemy in the order is offered as prey.
+    // Hunt Prey is a class action → the deck's Actions segment. The tile opens
+    // the modal; only the enemy in the order is offered as prey.
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Hunt Prey/ }).click();
     await expect(preyList(page).getByRole('button', { name: 'E2E Goblin' })).toBeVisible();
 
@@ -86,6 +88,7 @@ test.describe('Hunt Prey', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Hunt Prey/ }).click();
     await preyList(page).getByRole('button', { name: 'E2E Goblin' }).click();
     await page.getByRole('button', { name: 'Hunt Prey (1 act)', exact: true }).click();

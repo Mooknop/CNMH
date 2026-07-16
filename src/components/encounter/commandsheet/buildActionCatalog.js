@@ -293,3 +293,42 @@ export function categoriesPresent(tiles) {
   const present = new Set(tiles.map((t) => t.cat));
   return ['all', ...CATEGORY_ORDER.filter((c) => present.has(c))];
 }
+
+/**
+ * Partition the catalog for the Segmented Deck (encounter UI redesign).
+ * Every tile lands in exactly one bucket:
+ * - Strikes tab:  strikesHeld / strikesStowed ("Not in hand" = inactive, the
+ *                 weapon isn't held so itemAbilitiesActive zeroed it)
+ * - Actions tab:  skill (catalog skill category) / signature (character, feat
+ *                 and granted actions — a `source`-carrying action counts: the
+ *                 field means "granted by", a class as often as an item) /
+ *                 basics (the BASIC_ACTIONS_* sets)
+ * - React tab:    reactions / free
+ * - Items tab:    consumables / gear (reload + nock tiles)
+ */
+export function segmentTiles(tiles) {
+  const seg = {
+    strikesHeld: [], strikesStowed: [],
+    signature: [], skill: [], basics: [],
+    reactions: [], free: [],
+    consumables: [], gear: [],
+  };
+  (tiles || []).forEach((t) => {
+    if (t.origin === 'strike') {
+      (t.inactive ? seg.strikesStowed : seg.strikesHeld).push(t);
+    } else if (t.costGroup === 'rf') {
+      (t.cost === 'reaction' ? seg.reactions : seg.free).push(t);
+    } else if (t.origin === 'reload') {
+      seg.gear.push(t);
+    } else if (t.kind === 'consumable') {
+      seg.consumables.push(t);
+    } else if (t.cat === 'skill') {
+      seg.skill.push(t);
+    } else if (t.origin === 'custom') {
+      seg.signature.push(t);
+    } else {
+      seg.basics.push(t);
+    }
+  });
+  return seg;
+}
