@@ -25,7 +25,7 @@ import { useAdjacency } from '../../../hooks/useAdjacency';
 import { useChambers } from '../../../hooks/useChambers';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { isCharTurn } from '../../../utils/encounterUtils';
-import { buildActionCatalog, segmentTiles } from './buildActionCatalog';
+import { buildActionCatalog, segmentTiles, capacityWeaponCards } from './buildActionCatalog';
 import { suggestNow } from './suggestNow';
 import './SegmentedDeck.css';
 import { RELAY, syncKey } from '../../../sync/keys';
@@ -140,6 +140,18 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
   );
   const groups = useMemo(() => segmentTiles(tiles), [tiles]);
 
+  // Capacity-weapon cards (Crescent Cross, …): chamber track + the weapon's
+  // strikes grouped as one full-width card; those tiles leave the plain
+  // held/stowed groups so they don't render twice.
+  const capCards = useMemo(
+    () => capacityWeaponCards({ tiles, inventory, chambers }),
+    [tiles, inventory, chambers]
+  );
+  const cardTileIds = useMemo(
+    () => new Set(capCards.flatMap((c) => c.strikes.map((t) => t.id))),
+    [capCards]
+  );
+
   // "Right Now" shortlist (#413) — the most likely next actions, one tap away.
   // Ranked over the full catalog (not the active segment) against the live
   // budget + focus, so it stays useful no matter which segment is selected.
@@ -172,18 +184,76 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
   const renderTiles = (list, layout) =>
     list.map((tile) => <ActionTile key={tile.id} tile={tile} layout={layout} {...tileProps} />);
 
-  const renderStrikes = () => (
+  // A carded strike renders as a row with its chamber-use note in place of
+  // the plain stat line ("spends 1 chamber" / "melee · no chamber").
+  const chamberNoted = (tile) => {
+    const usesChamber = tile.raw.capacity != null;
+    const note = usesChamber
+      ? (tile.raw.chambersLoaded > 0 ? 'spends 1 chamber' : 'empty — reload to fire')
+      : `${tile.raw.type === 'melee' ? 'melee · ' : ''}no chamber`;
+    return { ...tile, statLine: [tile.statLine, note].filter(Boolean).join(' · ') };
+  };
+
+  const renderStrikes = () => {
+    const held = groups.strikesHeld.filter((t) => !cardTileIds.has(t.id));
+    const stowed = groups.strikesStowed.filter((t) => !cardTileIds.has(t.id));
+    return (
     <>
-      {groups.strikesHeld.length > 0 && (
+      {held.length > 0 && (
         <section aria-label="In hand">
           <SecHead label="In hand" />
-          <div className="deck-grid-2">{renderTiles(groups.strikesHeld, 'card')}</div>
+          <div className="deck-grid-2">{renderTiles(held, 'card')}</div>
         </section>
       )}
-      {groups.strikesStowed.length > 0 && (
+      {capCards.map((card) => (
+        <section key={card.uid} className="deck-cap-card" aria-label={card.name}>
+          <div className="deck-cap-head">
+            <span className="deck-cap-name">{card.name}</span>
+            <span className="deck-cap-pill">Capacity {card.capacity}</span>
+          </div>
+          <div className="deck-cap-track">
+            <span className="deck-cap-label">Chambers</span>
+            <span
+              className="deck-cap-dots"
+              role="meter"
+              aria-valuemin={0}
+              aria-valuemax={card.capacity}
+              aria-valuenow={card.loaded}
+              aria-label={`${card.loaded} of ${card.capacity} chambers loaded`}
+            >
+              {Array.from({ length: card.capacity }, (_, i) => (
+                <span
+                  key={i}
+                  className={`deck-cap-dot${i < card.loaded ? ' deck-cap-dot--loaded' : ''}`}
+                  aria-hidden="true"
+                />
+              ))}
+            </span>
+            <span className="deck-cap-count" aria-hidden="true">{card.loaded}/{card.capacity}</span>
+            {card.reloadTile ? (
+              <button
+                type="button"
+                className="deck-cap-reload"
+                onClick={() => handleTileSelect(card.reloadTile)}
+                aria-label={card.reloadTile.name}
+              >
+                Reload <ActionSymbol cost={card.reloadTile.cost} />
+              </button>
+            ) : (
+              <span className="deck-cap-full">Loaded</span>
+            )}
+          </div>
+          <div className="deck-cap-strikes">
+            {card.strikes.map((tile) => (
+              <ActionTile key={tile.id} tile={chamberNoted(tile)} layout="row" {...tileProps} />
+            ))}
+          </div>
+        </section>
+      ))}
+      {stowed.length > 0 && (
         <section aria-label="Not in hand">
           <SecHead tone="dim" label="Not in hand" />
-          {groups.strikesStowed.map((tile) => (
+          {stowed.map((tile) => (
             <button
               key={tile.id}
               type="button"
@@ -201,11 +271,12 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
           ))}
         </section>
       )}
-      {groups.strikesHeld.length + groups.strikesStowed.length === 0 && (
+      {held.length + stowed.length + capCards.length === 0 && (
         <p className="deck-empty">No strikes — equip a weapon.</p>
       )}
     </>
-  );
+    );
+  };
 
   const renderSpells = () => (
     <button type="button" className="deck-magic-launcher" aria-label="Cast a Spell" onClick={onMagicOpen}>

@@ -46,19 +46,25 @@ const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false, a
     </span>
   );
 
-  // The one sub-line that matters, in cue priority order. Rows fall back to the
+  // The one sub-line that matters, in cue priority order. Rows keep their
+  // informational line (chamber notes, reaction triggers) over the focus
+  // hint — the awaiting-focus dim still signals — and fall back to the
   // action's trigger/description so reactions read as "name — trigger".
-  const sub = outOfReach ? (
-    <span className="cmd-tile-hint">Move closer to target</span>
-  ) : awaitingFocus ? (
-    <span className="cmd-tile-hint">Tap a foe to target</span>
-  ) : drawCue ? (
+  const statLike = drawCue ? (
     <span className="cmd-tile-stat cmd-tile-stat--draw">{drawCue}</span>
   ) : tile.statLine ? (
     <span className="cmd-tile-stat">{tile.statLine}</span>
   ) : layout === 'row' && tile.raw?.description ? (
     <span className="cmd-tile-stat cmd-tile-stat--desc">{tile.raw.description}</span>
   ) : null;
+
+  const sub = outOfReach ? (
+    <span className="cmd-tile-hint">Move closer to target</span>
+  ) : awaitingFocus && layout !== 'row' ? (
+    <span className="cmd-tile-hint">Tap a foe to target</span>
+  ) : statLike || (awaitingFocus ? (
+    <span className="cmd-tile-hint">Tap a foe to target</span>
+  ) : null);
 
   if (layout === 'compact') {
     // Compact tiles stay glyph + name only — the awaiting-focus dim still
