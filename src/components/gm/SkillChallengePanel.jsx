@@ -27,8 +27,10 @@ import { APP, globalKey } from '../../sync/keys';
 const TrackRow = ({ character, challenge, resultValue, round }) => {
   const entries = entriesFor(resultValue, challenge.id);
   const perRound = challenge.mode === CHALLENGE_MODES.PER_ROUND;
+  // Latest this-round entry — in combat a PC may attempt several times per
+  // round (action-limited, not round-locked); the Σ chip carries the rest.
   const shown = perRound
-    ? entries.find((e) => e.round === round)
+    ? entries.filter((e) => e.round === round).pop()
     : entries[entries.length - 1];
   const total = charVp(resultValue, challenge.id);
 

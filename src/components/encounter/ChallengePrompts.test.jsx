@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 vi.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
@@ -44,7 +44,7 @@ vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: [{ id: 'thorn', name: 'Thorn' }, { id: 'lira', name: 'Lira' }] }),
 }));
 
-import { __reset, __store } from '../../hooks/useSyncedState';
+import { __reset, __set, __store } from '../../hooks/useSyncedState';
 import ChallengePrompts from './ChallengePrompts';
 
 const skillMods = { arcana: 7, occultism: 9, religion: 2 };
@@ -75,11 +75,6 @@ function setup(charId = 'thorn') {
     <ChallengePrompts charId={charId} characterName="Thorn" skillModifiers={skillMods} />
   );
 }
-
-const rerenderSheet = (utils, charId = 'thorn') =>
-  utils.rerender(
-    <ChallengePrompts charId={charId} characterName="Thorn" skillModifiers={skillMods} />
-  );
 
 beforeEach(() => {
   __reset();
@@ -143,16 +138,15 @@ describe('ChallengePrompts', () => {
   it('critical success contributes +2 VP, critical failure -1 VP', () => {
     setChallenges(challenge({ mode: 'perRound' }));
     mockEncounter = { active: true, round: 1 };
-    const utils = setup();
+    setup();
     // arcana mod 7, d20=20: total 27, DC 19 → success; nat 20 shifts up → crit
     fireEvent.click(screen.getByText('Arcana'));
     fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '20' } });
     fireEvent.click(screen.getByLabelText('Submit Arcana check'));
     expect(screen.getByText('+2 VP')).toBeInTheDocument();
 
+    // Second attempt in the SAME combat round — actions, not rounds, limit.
     // religion mod 2, d20=1: total 3 vs DC 21 → crit failure
-    mockEncounter = { active: true, round: 2 };
-    rerenderSheet(utils);
     fireEvent.click(screen.getByText('Religion'));
     fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '1' } });
     fireEvent.click(screen.getByLabelText('Submit Religion check'));
@@ -171,30 +165,49 @@ describe('ChallengePrompts', () => {
     expect(screen.getByText('Success')).toBeInTheDocument();
   });
 
-  it('perRound mode locks for the round and reopens when the round advances', () => {
-    setChallenges(challenge({ mode: 'perRound' }));
+  it('perRound in combat never locks — actions are the only limiter', () => {
+    setChallenges(challenge({ mode: 'perRound', actionCost: 1 }));
     mockEncounter = { active: true, round: 1 };
-    const utils = setup();
+    setup();
+
+    const attempt = () => {
+      fireEvent.click(screen.getByText('Arcana'));
+      fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '14' } });
+      fireEvent.click(screen.getByLabelText('Submit Arcana check'));
+    };
+    // Three attempts, one combat round — a full turn spent on the track.
+    attempt();
+    attempt();
+    attempt();
+
+    const entries = __store['cnmh_vpresult_thorn']['vpc-1'];
+    expect(entries).toHaveLength(3);
+    expect(entries.every((e) => e.round === 1)).toBe(true);
+    expect(mockSpendActions).toHaveBeenCalledTimes(3);
+    // Card stays open; no round lock messaging; cumulative total updates.
+    expect(screen.getByLabelText('Bolster the Ritual d20 roll')).toBeInTheDocument();
+    expect(screen.queryByText('Locked — again next round')).toBeNull();
+    expect(screen.getByLabelText('your total contribution')).toHaveTextContent('+3 VP');
+  });
+
+  it('perRound outside combat locks per GM scene round', () => {
+    setChallenges(challenge({ mode: 'perRound', sceneRound: 1 }));
+    setup();
 
     fireEvent.click(screen.getByText('Arcana'));
     fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '14' } });
     fireEvent.click(screen.getByLabelText('Submit Arcana check'));
 
-    // Locked for round 1, cumulative total shown.
+    // Locked for scene round 1.
     expect(screen.queryByLabelText('Bolster the Ritual d20 roll')).toBeNull();
     expect(screen.getByText('Locked — again next round')).toBeInTheDocument();
-    expect(screen.getByLabelText('your total contribution')).toHaveTextContent('+1 VP');
+    expect(__store['cnmh_vpresult_thorn']['vpc-1'][0].round).toBe(1);
 
-    // Round advances → input returns, second entry accumulates.
-    mockEncounter = { active: true, round: 2 };
-    rerenderSheet(utils);
+    // GM advances the scene round → input returns.
+    act(() => __set('cnmh_vpchallenge_global', {
+      'vpc-1': { ...challenge({ mode: 'perRound', sceneRound: 2 }) },
+    }));
     expect(screen.getByLabelText('Bolster the Ritual d20 roll')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Arcana'));
-    fireEvent.change(screen.getByLabelText('Bolster the Ritual d20 roll'), { target: { value: '14' } });
-    fireEvent.click(screen.getByLabelText('Submit Arcana check'));
-    expect(__store['cnmh_vpresult_thorn']['vpc-1']).toHaveLength(2);
-    expect(__store['cnmh_vpresult_thorn']['vpc-1'][1].round).toBe(2);
-    expect(screen.getByLabelText('your total contribution')).toHaveTextContent('+2 VP');
   });
 
   it('spends the action cost during an active encounter', () => {
@@ -307,12 +320,12 @@ describe('ChallengePrompts', () => {
       expect(entry.vp).toBe(0);
     });
 
-    it('discovery and influence lock independently within a round', () => {
+    it('in combat neither group locks — a PC can talk for the whole turn', () => {
       setChallenges(nualia());
       mockEncounter = { active: true, round: 1 };
       setup();
 
-      // Discovery first: occultism mod 9, d20 12 → 21 vs DC 18 → success, vp 0
+      // Discovery: occultism mod 9, d20 12 → 21 vs DC 18 → success, vp 0
       fireEvent.click(screen.getByText('Occultism'));
       fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '12' } });
       fireEvent.click(screen.getByLabelText('Submit Occultism check'));
@@ -321,23 +334,43 @@ describe('ChallengePrompts', () => {
       expect(d.vp).toBe(0);
       expect(mockSpendActions).toHaveBeenCalledWith(1, 'Nualia');
 
-      // Discovery group locked, influence group still open.
+      // Nothing locks — two more influence attempts in the same round.
+      const influenceAttempt = () => {
+        fireEvent.click(screen.getByRole('radio', { name: /Religion/ }));
+        fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '18' } });
+        fireEvent.click(screen.getByLabelText('Submit Religion check'));
+      };
+      influenceAttempt();
+      influenceAttempt();
+
+      const entries = __store['cnmh_vpresult_thorn']['inf-1'];
+      expect(entries).toHaveLength(3);
+      expect(entries.every((e) => e.round === 1)).toBe(true);
+      expect(mockSpendActions).toHaveBeenCalledTimes(3);
+      expect(screen.getByRole('radio', { name: /Occultism/ })).toBeEnabled();
+      expect(screen.getByRole('radio', { name: /Religion/ })).toBeEnabled();
+      expect(screen.getByLabelText("this round's checks").children).toHaveLength(3);
+    });
+
+    it('outside combat discovery and influence lock independently per scene round', () => {
+      setChallenges(nualia({ sceneRound: 1 }));
+      setup();
+
+      // Discovery: locks its own group only.
+      fireEvent.click(screen.getByText('Occultism'));
+      fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Submit Occultism check'));
       expect(screen.getByRole('radio', { name: /Occultism/ })).toBeDisabled();
       expect(screen.getByRole('radio', { name: /Religion/ })).toBeEnabled();
 
       // Influence: religion mod 2, d20 18 → 20 vs 19 → success, +1
-      fireEvent.click(screen.getByText(/Religion/));
+      fireEvent.click(screen.getByRole('radio', { name: /Religion/ }));
       fireEvent.change(screen.getByLabelText('Nualia d20 roll'), { target: { value: '18' } });
       fireEvent.click(screen.getByLabelText('Submit Religion check'));
-      const entries = __store['cnmh_vpresult_thorn']['inf-1'];
-      expect(entries).toHaveLength(2);
-      expect(entries[1].vp).toBe(1);
-      expect(entries[1].discovery).toBeUndefined();
-      expect(mockSpendActions).toHaveBeenCalledTimes(2);
-
-      // Both groups locked now; both results listed.
       expect(screen.getByRole('radio', { name: /Religion/ })).toBeDisabled();
-      expect(screen.getByLabelText("this round's checks").children).toHaveLength(2);
+      expect(__store['cnmh_vpresult_thorn']['inf-1']).toHaveLength(2);
+      // No action spend outside encounters.
+      expect(mockSpendActions).not.toHaveBeenCalled();
     });
 
     it('uses the GM scene round outside combat', () => {
