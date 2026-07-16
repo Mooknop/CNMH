@@ -39,11 +39,8 @@
   padding: 0;
   max-height: 200px;
   overflow-y: auto;
-}
-
-/* Invisible auto-scroll anchor at the bottom of the list. */
-.combat-log-sentinel {
-  list-style: none;
+  /* Contain auto-scroll to this list so growth never chains to the page. */
+  overscroll-behavior: contain;
 }
 
 .combat-log-entry {
