@@ -46,3 +46,10 @@ lore-vault/.obsidian/appearance.json
 lore-vault/.obsidian/core-plugins.json
 lore-vault/.obsidian/graph.json
 lore-vault/README.md
+
+# design-sync (regenerated build output + machine state)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

@@ -1,0 +1,29 @@
+// design-sync barrel entry — this app has no library build, so the sync
+// bundles the shared primitives from this hand-maintained export list.
+// Components here are default exports in src/components/shared/.
+export { default as ActionRow } from '../src/components/shared/ActionRow';
+export { default as ActionSymbol } from '../src/components/shared/ActionSymbol';
+export { default as CollapsibleCard } from '../src/components/shared/CollapsibleCard';
+export { default as ConfirmDialog } from '../src/components/shared/ConfirmDialog';
+export { default as GameGlyph } from '../src/components/shared/GameGlyph';
+export { default as HistoryTimeline } from '../src/components/shared/HistoryTimeline';
+export { default as HpFx } from '../src/components/shared/HpFx';
+export { default as ItemActivations } from '../src/components/shared/ItemActivations';
+export { default as LoreDrawer } from '../src/components/shared/LoreDrawer';
+export { default as LoreMarkdown } from '../src/components/shared/LoreMarkdown';
+export { default as Modal } from '../src/components/shared/Modal';
+export { default as PartyLedgerRow } from '../src/components/shared/PartyLedgerRow';
+export { default as PartyPresenceRail } from '../src/components/shared/PartyPresenceRail';
+export { default as PenaltyDisplay } from '../src/components/shared/PenaltyDisplay';
+export { default as ProficiencyPips } from '../src/components/shared/ProficiencyPips';
+export { default as RankRing } from '../src/components/shared/RankRing';
+export { default as ReputationModal } from '../src/components/shared/ReputationModal';
+export { default as ReputationRadarChart } from '../src/components/shared/ReputationRadarChart';
+export { default as RuneIcon } from '../src/components/shared/RuneIcon';
+export { default as RuneMechanics } from '../src/components/shared/RuneMechanics';
+export { default as SyncStatus } from '../src/components/shared/SyncStatus';
+export { default as ThassilonianRune } from '../src/components/shared/ThassilonianRune';
+export { default as TraitModal } from '../src/components/shared/TraitModal';
+export { default as TraitTag } from '../src/components/shared/TraitTag';
+export { default as TraitsField } from '../src/components/shared/TraitsField';
+export { default as UseActionChip } from '../src/components/shared/UseActionChip';
