@@ -93,12 +93,10 @@ test.describe('Familiar maneuvers', () => {
     // is a GLOBAL key shared across the shard, so the seed can land a beat late; if
     // the modal opens while `encounterMode` is still false the maneuver isn't
     // pool-gated at all (blocking is encounter-only), and `toBeDisabled` flakes to
-    // enabled. The `Command <familiar>` button renders only under `encounterMode &&
-    // hasFamiliar` — the same useEncounter the modal reads — so its visibility
-    // proves encounterMode is live app-wide.
-    await expect(
-      page.getByRole('button', { name: `Command ${FAMILIAR_NAME}` }),
-    ).toBeVisible();
+    // enabled. The deck header's turn-budget region renders only for an active,
+    // in-progress encounter on this PC's turn — the same useEncounter the modal
+    // reads — so its visibility proves encounterMode is live app-wide.
+    await expect(page.getByRole('region', { name: 'Turn budget' })).toBeVisible();
 
     // Masthead familiar button (data-driven hasFamiliar, #1142 — no feat seeded).
     const mastheadBtn = page.getByRole('button', { name: new RegExp(`^${FAMILIAR_NAME}`) });
@@ -113,7 +111,11 @@ test.describe('Familiar maneuvers', () => {
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Command: owner spends 1 action, familiar granted 2 (cross-actor key).
+    // The Command tile is a Class & Signature extra in the deck's Actions
+    // segment; the confirm sheet fronts it.
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: `Command ${FAMILIAR_NAME}` }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await session.expectSent(`cnmh_turnstate_${CHAR_ID}-familiar`, (v) => v?.actionsGranted === 2);
     await session.expectSent(`cnmh_turnstate_${CHAR_ID}`, (v) => v?.actionsSpent === 1);
 

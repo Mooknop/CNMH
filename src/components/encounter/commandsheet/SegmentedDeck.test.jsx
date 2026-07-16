@@ -28,10 +28,6 @@ vi.mock('../../../hooks/useEncounter', () => ({
   useEncounter: (...args) => mockUseEncounter(...args),
 }));
 
-vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
-  default: () => <div data-testid="thaumaturge-exploits" />,
-}));
-
 // The fused header has its own suite (DeckHeader.test.jsx) — keep it inert here.
 vi.mock('./DeckHeader', () => ({
   default: () => <div data-testid="deck-header" />,
@@ -358,11 +354,57 @@ describe('SegmentedDeck', () => {
     expect(within(tile).getByText('Move closer to target')).toBeInTheDocument();
   });
 
-  // ── Thaumaturge (#454) ─────────────────────────────────────────────────────
+  // ── Class & Signature extras (Exploit Vulnerability / Command …) ──────────
 
-  it('renders Thaumaturge exploits for a thaumaturge', () => {
-    mockUseCharacter.mockReturnValue(baseModel({ flags: { isThaumaturge: true }, thaumaturge: { implements: [] } }));
-    render(<SegmentedDeck character={character} onUse={vi.fn()} />);
-    expect(screen.getByTestId('thaumaturge-exploits')).toBeInTheDocument();
+  it('renders extra actions as signature tiles; confirming runs their handler', () => {
+    const run = vi.fn();
+    const onUse = vi.fn();
+    render(
+      <SegmentedDeck
+        character={character}
+        encounterMode
+        onUse={onUse}
+        extraActions={[{
+          id: 'exploit-vulnerability',
+          name: 'Exploit Vulnerability',
+          cost: 1,
+          traits: ['Esoterica', 'Thaumaturge'],
+          needsTarget: true,
+          verb: 'Exploit',
+          description: 'Find the best way to attack the creature.',
+          run,
+        }]}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Actions' }));
+    const signature = screen.getByRole('region', { name: 'Class & Signature' });
+    const tile = within(signature).getByRole('button', { name: 'Exploit Vulnerability' });
+    // Target-needing extra dims behind the focus cue like any tile.
+    expect(within(tile).getByText('Tap a foe to target')).toBeInTheDocument();
+
+    fireEvent.click(tile);
+    const sheet = screen.getByRole('dialog', { name: 'Confirm Exploit Vulnerability' });
+    expect(within(sheet).getByText('Exploit')).toBeInTheDocument(); // bespoke verb
+
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Confirm Exploit Vulnerability' }));
+    expect(run).toHaveBeenCalled();
+    expect(onUse).not.toHaveBeenCalled(); // extras bypass handleUse entirely
+  });
+
+  it('hides a catalog twin of an extra action (the dedicated resolver wins)', () => {
+    mockUseCharacter.mockReturnValue(baseModel({
+      // The character sheet's own Exploit Vulnerability action entry.
+      actions: [{ name: 'Exploit Vulnerability', actionCount: 1, traits: ['Esoterica'] }],
+    }));
+    render(
+      <SegmentedDeck
+        character={character}
+        encounterMode
+        onUse={vi.fn()}
+        extraActions={[{ id: 'exploit-vulnerability', name: 'Exploit Vulnerability', cost: 1, run: vi.fn() }]}
+      />
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Actions' }));
+    expect(screen.getAllByRole('button', { name: 'Exploit Vulnerability' })).toHaveLength(1);
   });
 });

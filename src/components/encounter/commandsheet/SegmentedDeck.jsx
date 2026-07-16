@@ -17,7 +17,6 @@ import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
 import ConfirmSheet from './ConfirmSheet';
 import DeckHeader from './DeckHeader';
-import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
@@ -50,8 +49,8 @@ const SecHead = ({ tone = 'muted', label, right }) => (
   </div>
 );
 
-const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpen, skillActions = [], onSkillAction }) => {
-  const { actions, strikes, reactions, freeActions, inventory, maxHp, flags, thaumaturge } = useCharacter(character);
+const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpen, skillActions = [], onSkillAction, extraActions = [] }) => {
+  const { actions, strikes, reactions, freeActions, inventory, maxHp } = useCharacter(character);
   const { focusEnemy, focusAlly } = useFocusTarget(character.id);
   const { inReach } = useAdjacency(character.id);
   const { turnState } = useTurnState(character.id);
@@ -79,14 +78,39 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
 
   // Tap → confirm sheet → existing resolver. The sheet is a preview/intent
   // step: confirming routes through the exact call a direct tap used to make
-  // (onUse → ActionsList.handleUse / onSkillAction), so the resolvers keep
-  // sole ownership of action spends, MAP recording, and chamber writes.
+  // (onUse → ActionsList.handleUse / onSkillAction / an extra action's own
+  // handler), so the resolvers keep sole ownership of action spends, MAP
+  // recording, and chamber writes.
   const [sheet, setSheet] = useState(null); // { tile, run } | null
   const handleTileSelect = (tile) =>
     setSheet({
       tile,
-      run: () => onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost),
+      run: tile.run || (() => onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost)),
     });
+
+  // Special actions with their own launch surfaces (Exploit Vulnerability,
+  // Command an Animal, Command <familiar> — the pre-deck sections above the
+  // grid) fold in as Class & Signature pseudo-tiles; confirming runs their
+  // handler instead of onUse.
+  const extraTiles = useMemo(
+    () => extraActions.map((x) => ({
+      id: `extra-${x.id}`,
+      name: x.name,
+      cost: x.cost ?? 1,
+      costGroup: String(x.cost ?? 1),
+      cat: 'other',
+      origin: 'extra',
+      traits: x.traits || [],
+      needsTarget: !!x.needsTarget,
+      supports: false,
+      inactive: false,
+      statLine: x.statLine || null,
+      verb: x.verb,
+      raw: { description: x.description, requiresTarget: x.needsTarget !== false },
+      run: x.run,
+    })),
+    [extraActions]
+  );
 
   // Player skill actions (#260) preview through the same sheet via a pseudo-
   // tile; confirming opens their own resolver (SkillActionModal).
@@ -197,13 +221,20 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
   const saNames = new Set(skillActions.map((sa) => sa.name.toLowerCase()));
   const skillTiles = groups.skill.filter((t) => !saNames.has(t.name.toLowerCase()));
   const basicTiles = groups.basics.filter((t) => !saNames.has(t.name.toLowerCase()));
+  // Same for the extras: a character sheet often carries its own "Exploit
+  // Vulnerability" action entry — the extra's dedicated resolver wins.
+  const extraNames = new Set(extraTiles.map((t) => t.name.toLowerCase()));
+  const signatureTiles = groups.signature.filter((t) => !extraNames.has(t.name.toLowerCase()));
 
   const renderActions = () => (
     <>
-      {groups.signature.length > 0 && (
+      {(extraTiles.length > 0 || signatureTiles.length > 0) && (
         <section aria-label="Class & Signature">
           <SecHead tone="ember" label="Class & Signature" />
-          <div className="deck-grid-2">{renderTiles(groups.signature, 'card')}</div>
+          <div className="deck-grid-2">
+            {renderTiles(extraTiles, 'card')}
+            {renderTiles(signatureTiles, 'card')}
+          </div>
         </section>
       )}
       {(skillTiles.length > 0 || skillActions.length > 0) && (
@@ -291,10 +322,6 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
 
   return (
     <div className="deck-root">
-      {flags?.isThaumaturge && (
-        <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
-      )}
-
       {/* The fused header, Right Now, and the segmented control pin as one
           sticky block; the segment body scrolls under it. The header renders
           for any active encounter — in setup it shows the waiting line. */}

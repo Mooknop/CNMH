@@ -28,9 +28,11 @@ const defenseRevealed = (rec, key) =>
   key === 'ac' || key === 'perception' ? isFieldRevealed(rec, key) : isSaveRevealed(rec, key);
 
 // Contextual confirm verb (design: "Roll attack", "Cast", "Stride", "Reload",
-// "Drink", "Enter stance", "Ready", …).
+// "Drink", "Enter stance", "Ready", …). A tile may state its own (the deck's
+// extra actions — Exploit Vulnerability, Command … — carry a bespoke verb).
 export const verbFor = (tile) => {
   const raw = tile.raw || {};
+  if (tile.verb) return tile.verb;
   if (tile.kind === 'reload') return raw.nock ? 'Nock' : 'Reload';
   if (tile.kind === 'consumable') return consumableVerb(raw);
   if (raw.traits?.includes('Stance')) return 'Enter stance';
