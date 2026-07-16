@@ -1,0 +1,18 @@
+/* design-sync global entry — the app-wide base rules from src/index.css,
+   minus its @imports (tokens + fx ship via tokensGlob; the Tabler icon
+   webfont is unused by the shared components) and the source-code-pro
+   code-font fallback the app never ships. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--shell-text-primary);
+  background-color: var(--shell-bg);
+  /* The app is dark throughout — dark-palette native controls. */
+  color-scheme: dark;
+}
