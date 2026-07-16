@@ -9,6 +9,9 @@ import {
   entriesFor,
   poolFor,
   isFailing,
+  isInfluence,
+  highestTier,
+  roundFor,
   applyPoolDelta,
   skillLabel,
   normalizeChallenges,
@@ -17,6 +20,7 @@ import {
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import ActionSymbol from '../shared/ActionSymbol';
 import VpResultsCollector from '../shared/VpResultsCollector';
+import InfluenceTrackCard from './InfluenceTrackCard';
 import './SkillChallengePanel.css';
 import { APP, globalKey } from '../../sync/keys';
 
@@ -227,7 +231,6 @@ const SkillChallengePanel = () => {
   if (!list.length) return null;
 
   const roster = Array.isArray(characters) ? characters : [];
-  const round = roundActive ?? 0;
 
   const patchChallenge = (id, patch) =>
     setChallenges((cur) => {
@@ -235,6 +238,30 @@ const SkillChallengePanel = () => {
       if (!map[id]) return cur;
       return { ...map, [id]: { ...map[id], ...patch } };
     });
+
+  const handleStepDc = (challenge, delta) => {
+    const next = (challenge.dcModifier ?? 0) + delta;
+    patchChallenge(challenge.id, { dcModifier: next });
+    appendEvent({
+      type: 'challenge',
+      text: `"${challenge.name}" DCs now ${next >= 0 ? '+' : ''}${next}`,
+    });
+  };
+
+  const handleToggleReveal = (challenge, skill) => {
+    const set = new Set(challenge.revealed || []);
+    const revealing = !set.has(skill);
+    if (revealing) set.add(skill); else set.delete(skill);
+    patchChallenge(challenge.id, { revealed: [...set] });
+    appendEvent({
+      type: 'challenge',
+      text: `"${challenge.name}" — ${skillLabel(skill)} ${revealing ? 'revealed' : 'hidden again'}`,
+    });
+  };
+
+  const handleNextRound = (challenge) => {
+    patchChallenge(challenge.id, { sceneRound: (challenge.sceneRound ?? 0) + 1 });
+  };
 
   const handleNudge = (challenge, delta, vpSum) => {
     const { adjust, pool, applied } = applyPoolDelta(challenge, vpSum, delta);
@@ -254,14 +281,18 @@ const SkillChallengePanel = () => {
   };
 
   const handleEnd = (challenge, pool, failing) => {
-    const hasThreshold = challenge.threshold > 0;
-    const outcome = hasThreshold
-      ? (pool >= challenge.threshold ? 'success' : 'incomplete')
-      : (failing ? 'failed' : 'held');
-    appendEvent({
-      type: 'challenge',
-      text: `"${challenge.name}" ended — ${pool}${hasThreshold ? `/${challenge.threshold}` : ''} VP (${outcome})`,
-    });
+    let text;
+    if (isInfluence(challenge)) {
+      const tier = highestTier(challenge, pool);
+      text = `"${challenge.name}" ended — ${pool} influence (${tier ? `tier ${tier.at} reached` : 'no tier reached'})`;
+    } else {
+      const hasThreshold = challenge.threshold > 0;
+      const outcome = hasThreshold
+        ? (pool >= challenge.threshold ? 'success' : 'incomplete')
+        : (failing ? 'failed' : 'held');
+      text = `"${challenge.name}" ended — ${pool}${hasThreshold ? `/${challenge.threshold}` : ''} VP (${outcome})`;
+    }
+    appendEvent({ type: 'challenge', text });
     setChallenges((cur) => {
       const map = normalizeChallenges(cur);
       if (!map[challenge.id]) return cur;
@@ -274,18 +305,40 @@ const SkillChallengePanel = () => {
   return (
     <>
       <VpResultsCollector characters={roster} onResult={onResult} />
-      {list.map((challenge) => (
-        <TrackCard
-          key={challenge.id}
-          challenge={challenge}
-          roster={roster}
-          results={results}
-          round={round}
-          onEnd={handleEnd}
-          onNudge={handleNudge}
-          onDrainChange={handleDrainChange}
-        />
-      ))}
+      {list.map((challenge) => {
+        const round = roundFor(challenge, encounter);
+        if (isInfluence(challenge)) {
+          const targetValues = (challenge.targetIds || []).map((id) => results[id]);
+          return (
+            <InfluenceTrackCard
+              key={challenge.id}
+              challenge={challenge}
+              roster={roster}
+              results={results}
+              round={round}
+              pool={poolFor(challenge, targetValues)}
+              encounterActive={!!encounter?.active}
+              onEnd={handleEnd}
+              onNudge={handleNudge}
+              onStepDc={handleStepDc}
+              onToggleReveal={handleToggleReveal}
+              onNextRound={handleNextRound}
+            />
+          );
+        }
+        return (
+          <TrackCard
+            key={challenge.id}
+            challenge={challenge}
+            roster={roster}
+            results={results}
+            round={round}
+            onEnd={handleEnd}
+            onNudge={handleNudge}
+            onDrainChange={handleDrainChange}
+          />
+        );
+      })}
     </>
   );
 };

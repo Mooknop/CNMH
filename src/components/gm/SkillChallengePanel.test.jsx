@@ -323,6 +323,117 @@ describe('SkillChallengePanel', () => {
     });
   });
 
+  describe('influence tracks (#205)', () => {
+    const NUALIA = {
+      id: 'inf-1',
+      kind: 'influence',
+      name: 'Nualia',
+      skills: [
+        { skill: 'society', dc: 18 },
+        { skill: 'religion', dc: 19 },
+      ],
+      discoveries: [{ skill: 'occultism', dc: 18 }],
+      revealed: [],
+      tiers: [{ at: 3, note: 'seven dooms warning' }, { at: 6, note: 'sorrow replaces anger' }],
+      resistNote: '+2 DCs on failed Sandpoint mention',
+      dcModifier: 0,
+      roundsTotal: 10,
+      sceneRound: 1,
+      threshold: null,
+      mode: 'perRound',
+      actionCost: 1,
+      target: 'all',
+      targetIds: ['thorn', 'lira'],
+      adjust: 0,
+      drainPerRound: 0,
+      lastDrainRound: null,
+      createdAt: 1,
+    };
+
+    it('renders points, tiers with reached flags, and the resistances note', () => {
+      setChallenges(NUALIA);
+      render(<SkillChallengePanel />);
+      act(() => __set('cnmh_vpresult_thorn', { 'inf-1': [
+        { round: 1, skill: 'society', total: 21, degree: 'success', vp: 1, at: 1 },
+        { round: 2, skill: 'religion', total: 25, degree: 'criticalSuccess', vp: 2, at: 2 },
+      ] }));
+      expect(screen.getByLabelText('Nualia influence points')).toHaveTextContent('3 pts');
+      const tiers = screen.getByLabelText('Nualia thresholds');
+      expect(tiers.children[0]).toHaveAttribute('data-reached', 'true');
+      expect(tiers.children[1]).not.toHaveAttribute('data-reached');
+      expect(screen.getByText('seven dooms warning')).toBeInTheDocument();
+      expect(screen.getByText('+2 DCs on failed Sandpoint mention')).toBeInTheDocument();
+    });
+
+    it('DC stepper shifts all DCs and logs', () => {
+      setChallenges(NUALIA);
+      render(<SkillChallengePanel />);
+      fireEvent.click(screen.getByLabelText('Nualia DCs +2'));
+      fireEvent.click(screen.getByLabelText('Nualia DCs +2'));
+      expect(__store['cnmh_vpchallenge_global']['inf-1'].dcModifier).toBe(4);
+      expect(screen.getByText('DCs +4')).toBeInTheDocument();
+      expect(screen.getByText('DC 22')).toBeInTheDocument();  // society 18 + 4
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('DCs now +4'),
+      }));
+      fireEvent.click(screen.getByLabelText('Nualia DCs -2'));
+      expect(__store['cnmh_vpchallenge_global']['inf-1'].dcModifier).toBe(2);
+    });
+
+    it('reveal toggles mark skills and log', () => {
+      setChallenges(NUALIA);
+      render(<SkillChallengePanel />);
+      fireEvent.click(screen.getByLabelText('Reveal Society for Nualia'));
+      expect(__store['cnmh_vpchallenge_global']['inf-1'].revealed).toEqual(['society']);
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('Society revealed'),
+      }));
+      fireEvent.click(screen.getByLabelText('Hide Society for Nualia'));
+      expect(__store['cnmh_vpchallenge_global']['inf-1'].revealed).toEqual([]);
+    });
+
+    it('Next Round advances the scene round outside combat only', () => {
+      setChallenges(NUALIA);
+      const first = render(<SkillChallengePanel />);
+      expect(screen.getByLabelText('Nualia round')).toHaveTextContent('Round 1 / 10');
+      fireEvent.click(screen.getByLabelText('Nualia next round'));
+      expect(__store['cnmh_vpchallenge_global']['inf-1'].sceneRound).toBe(2);
+      expect(screen.getByLabelText('Nualia round')).toHaveTextContent('Round 2 / 10');
+      first.unmount();
+
+      mockEncounter = { active: true, round: 5 };
+      render(<SkillChallengePanel />);
+      expect(screen.getByLabelText('Nualia round')).toHaveTextContent('Round 5 / 10');
+      expect(screen.queryByLabelText('Nualia next round')).toBeNull();
+    });
+
+    it('shows discovery submissions tagged and separate from influence rows', () => {
+      mockEncounter = { active: true, round: 1 };
+      setChallenges(NUALIA);
+      render(<SkillChallengePanel />);
+      act(() => __set('cnmh_vpresult_thorn', { 'inf-1': [
+        { round: 1, skill: 'occultism', total: 21, degree: 'success', vp: 0, at: 1, discovery: true },
+        { round: 1, skill: 'society', total: 20, degree: 'success', vp: 1, at: 2 },
+      ] }));
+      expect(screen.getByText('discovery')).toBeInTheDocument();
+      expect(screen.getByText('1/2 influenced this round')).toBeInTheDocument();
+    });
+
+    it('End logs influence points and the highest tier reached', () => {
+      setChallenges(NUALIA);
+      render(<SkillChallengePanel />);
+      act(() => __set('cnmh_vpresult_thorn', { 'inf-1': [
+        { round: 1, skill: 'society', total: 21, degree: 'success', vp: 1, at: 1 },
+        { round: 2, skill: 'society', total: 25, degree: 'criticalSuccess', vp: 2, at: 2 },
+      ] }));
+      fireEvent.click(screen.getByLabelText('End Nualia'));
+      expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('3 influence (tier 3 reached)'),
+      }));
+      expect(__store['cnmh_vpchallenge_global']).toBeNull();
+    });
+  });
+
   it('ending the last track clears the collection to null', () => {
     setChallenges(CHALLENGE);
     render(<SkillChallengePanel />);
