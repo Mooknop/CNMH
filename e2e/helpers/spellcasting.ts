@@ -128,14 +128,16 @@ export async function gotoSheet(page: Page, charId: string, charName: string) {
 
 /**
  * Open the Magic modal (level 1: category grid). The "Cast a Spell" launcher
- * lives in the encounter surface's action grid, so this switches the sheet's
- * play tab to Encounter first — the seeded active encounter exposes it.
+ * lives in the Segmented Deck's Spells segment, so this switches the sheet's
+ * play tab to Encounter and selects the Spells tab first — the seeded active
+ * encounter exposes it.
  */
 export async function openMagic(page: Page) {
   await page
     .getByRole('navigation', { name: 'Character sheet sections' })
     .getByRole('button', { name: 'Encounter', exact: true })
     .click();
+  await page.getByRole('tab', { name: 'Spells' }).click();
   await page.getByRole('button', { name: 'Cast a Spell' }).click();
 }
 

@@ -3,6 +3,7 @@ import {
   buildActionCatalog,
   filterTiles,
   categoriesPresent,
+  segmentTiles,
   drawCost,
 } from './buildActionCatalog';
 
@@ -308,5 +309,75 @@ describe('ally-support flag (#429)', () => {
       actions: [{ name: 'Treat Wounds', actionCount: 1, traits: ['Manipulate'] }],
     });
     expect(tiles.find((t) => t.name === 'Treat Wounds').supports).toBe(false);
+  });
+});
+
+describe('segmentTiles (Segmented Deck)', () => {
+  const catalog = () => buildActionCatalog({
+    actions: [
+      { name: 'Arcane Cascade', actionCount: 1, traits: [] },              // custom → signature
+      { name: 'Battle Medicine', actionCount: 1, traits: [], highlightSkill: 'medicine' }, // custom skill → skill
+    ],
+    strikes: [
+      { name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' },
+      { name: 'Longbow', type: 'ranged', actionCount: 1, attackMod: 7, damage: '1d8', active: false },
+    ],
+    reactions: [{ name: 'Shield Block', traits: [] }],
+    freeActions: [{ name: 'Quick Draw', traits: [] }],
+    inventory: [{ name: 'Healing Potion', state: 'worn', consumable: { kind: 'healing' } }],
+  });
+
+  it('splits strikes into held vs stowed (inactive) buckets', () => {
+    const seg = segmentTiles(catalog());
+    expect(seg.strikesHeld.map((t) => t.name)).toEqual(['Longsword']);
+    expect(seg.strikesStowed.map((t) => t.name)).toEqual(['Longbow']);
+  });
+
+  it('routes custom actions to signature, skill-flavored ones to skill', () => {
+    const seg = segmentTiles(catalog());
+    expect(seg.signature.map((t) => t.name)).toContain('Arcane Cascade');
+    // A source-carrying action is class/feat-granted, not gear (source =
+    // "granted by") — it belongs with the signature actions.
+    const withSourced = buildActionCatalog({
+      actions: [{ name: 'Reach Spell', actionCount: 1, traits: ['Spellshape'], source: 'Sorcerer' }],
+    });
+    expect(segmentTiles(withSourced).signature.map((t) => t.name)).toContain('Reach Spell');
+    expect(seg.skill.map((t) => t.name)).toContain('Battle Medicine');
+    expect(seg.skill.map((t) => t.name)).toContain('Feint'); // basic with highlightSkill
+  });
+
+  it('keeps basic maneuvers and movement in basics', () => {
+    const seg = segmentTiles(catalog());
+    const basics = seg.basics.map((t) => t.name);
+    expect(basics).toContain('Stride');
+    expect(basics).toContain('Trip');
+    expect(basics).not.toContain('Feint');
+  });
+
+  it('routes rf tiles to reactions/free and items to consumables', () => {
+    const seg = segmentTiles(catalog());
+    expect(seg.reactions.map((t) => t.name)).toContain('Shield Block');
+    expect(seg.free.map((t) => t.name)).toContain('Quick Draw');
+    expect(seg.free.map((t) => t.name)).toContain('Delay'); // basic encounter free action
+    expect(seg.consumables.map((t) => t.name)).toEqual(['Healing Potion']);
+  });
+
+  it('routes reload tiles to gear', () => {
+    const strike = {
+      name: 'Bolt', type: 'ranged', actionCount: 1, attackMod: 8, damage: '1d8',
+      capacity: 5, reload: 1, ammoType: 'bolt', traits: ['Capacity 5'],
+    };
+    const tiles = buildActionCatalog({
+      inventory: [{ uid: 'w1', name: 'Crescent Cross', state: 'held1', strikes: [strike] }],
+    });
+    const seg = segmentTiles(tiles);
+    expect(seg.gear.map((t) => t.name)).toContain('Reload Crescent Cross');
+  });
+
+  it('every tile lands in exactly one bucket', () => {
+    const tiles = catalog();
+    const seg = segmentTiles(tiles);
+    const total = Object.values(seg).reduce((n, list) => n + list.length, 0);
+    expect(total).toBe(tiles.length);
   });
 });

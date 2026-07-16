@@ -52,6 +52,8 @@ test.describe('Battle Medicine', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
+    // Battle Medicine is a character action → the deck's Actions segment.
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Battle Medicine/ }).first().click();
 
     // Target self, lowest DC, a natural 20 (with trained Medicine at level 5 this

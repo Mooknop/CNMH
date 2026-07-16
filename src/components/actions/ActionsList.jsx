@@ -1,6 +1,6 @@
 // src/components/actions/ActionsList.js
 import React, { useCallback, useState } from 'react';
-import ActionGrid from '../encounter/commandsheet/ActionGrid';
+import SegmentedDeck from '../encounter/commandsheet/SegmentedDeck';
 import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
@@ -268,24 +268,6 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
-      {encounterMode && skillActions.length > 0 && (
-        <div className="granted-actions-section" aria-label="Skill actions">
-          <h3 className="granted-actions-title">Skill Actions</h3>
-          {skillActions.map((sa) => (
-            <div key={sa.id} className="granted-action-row">
-              <span className="granted-action-name">{sa.name}</span>
-              <button
-                className="btn-encounter-use"
-                aria-label={`Use ${sa.name}`}
-                onClick={() => setSkillAction(augmentSkillAction(character, sa, { effects: activeEffects, effectCatalog }))}
-              >
-                Use ({sa.actionCost} act)
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {encounterMode && hasCompanion && (
         <div className="granted-actions-section" aria-label="Companion">
           <h3 className="granted-actions-title">Companion</h3>
@@ -341,14 +323,18 @@ const ActionsList = ({ character, characterColor }) => {
         <EncounterDoors charId={character.id} characterName={character.name} />
       )}
 
-      {/* All action types — Strikes, actions, Reactions & Free, Magic launcher —
-          live in the one grid now (#424); the old Actions/Reactions/Free tabs are gone. */}
-      <ActionGrid
+      {/* All action types live in the Segmented Deck (Strikes · Spells · Actions ·
+          React · Items) — the encounter UI redesign that replaced the one long
+          cost-grouped grid. Player skill actions (#260) are the deck's Actions-tab
+          Skill group; taps still resolve through handleUse / the skill modal. */}
+      <SegmentedDeck
         character={character}
         themeColor={themeColor}
         encounterMode={encounterMode}
         onUse={handleUse}
         onMagicOpen={hasMagic ? () => setIsMagicOpen(true) : undefined}
+        skillActions={encounterMode ? skillActions : []}
+        onSkillAction={(sa) => setSkillAction(augmentSkillAction(character, sa, { effects: activeEffects, effectCatalog }))}
       />
 
       {hasMagic && (

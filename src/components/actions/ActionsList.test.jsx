@@ -8,9 +8,9 @@ const STRIDE_ACTION = { name: 'Stride', traits: ['Move'], actionCount: 1, requir
 // A worn healing potion → effective cost 2 (drink 1 + draw 1).
 const CONSUMABLE_ITEM = { name: 'Healing Potion', traits: ['Potion'], consumable: { kind: 'healing' }, state: 'worn' };
 
-// ActionGrid is mocked as an inert testid div, plus buttons that fire the onUse
-// callback so we can exercise ActionsList.handleUse.
-vi.mock('../encounter/commandsheet/ActionGrid', () => ({
+// The SegmentedDeck is mocked as an inert testid div, plus buttons that fire the
+// onUse callback so we can exercise ActionsList.handleUse.
+vi.mock('../encounter/commandsheet/SegmentedDeck', () => ({
   default: ({ onUse }) => (
     <div data-testid="action-grid">
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>

@@ -28,14 +28,15 @@ async function waitForSheet(page: import('@playwright/test').Page, charId: strin
 }
 
 // Spells are accessed via the MagicModal, opened from the "Cast a Spell"
-// launcher in the Command Sheet action grid (ActionGrid) — which renders in the
+// launcher in the Segmented Deck's Spells segment — which renders in the
 // encounter surface. So switch to the play tab (Encounter, via the seeded active
-// encounter) before opening it.
+// encounter) and select the Spells tab before opening it.
 async function openMagic(page: import('@playwright/test').Page) {
   await page
     .getByRole('navigation', { name: 'Character sheet sections' })
     .getByRole('button', { name: 'Encounter', exact: true })
     .click();
+  await page.getByRole('tab', { name: 'Spells' }).click();
   await page.getByRole('button', { name: 'Cast a Spell' }).click();
 }
 

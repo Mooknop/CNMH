@@ -59,6 +59,8 @@ test.describe('Combat stances', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
+    // Stances are character actions → the deck's Actions segment.
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Dragon Stance/ }).click();
 
     // The stance goes live on the synced key…
@@ -98,6 +100,8 @@ test.describe('Combat stances', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
+    // Stances are character actions → the deck's Actions segment.
+    await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Dragon Stance/ }).click();
     await session.expectSent(STANCE_KEY, (v) => v?.name === 'E2E Dragon Stance');
 
