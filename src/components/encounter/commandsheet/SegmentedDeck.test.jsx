@@ -43,6 +43,11 @@ vi.mock('../../shared/TraitTag', () => ({
   default: ({ trait }) => <span>{trait}</span>,
 }));
 
+// The Spells segment has its own suite (SpellsSegment.test.jsx) — inert here.
+vi.mock('./SpellsSegment', () => ({
+  default: () => <div data-testid="spells-segment" />,
+}));
+
 // Tap a tile, then confirm it on the sheet (tap → confirm → resolver).
 const tapAndConfirm = (tile) => {
   fireEvent.click(tile);
@@ -107,15 +112,13 @@ describe('SegmentedDeck', () => {
     expect(within(inHand).getByRole('button', { name: 'Longsword' })).toBeInTheDocument();
   });
 
-  it('shows the Spells tab only when onMagicOpen is provided, and it opens the spellbook', () => {
-    const onMagicOpen = vi.fn();
+  it('shows the Spells tab only when onMagicOpen is provided, hosting the Spells segment', () => {
     const { rerender } = render(<SegmentedDeck character={character} onUse={vi.fn()} />);
     expect(screen.queryByRole('tab', { name: 'Spells' })).not.toBeInTheDocument();
 
-    rerender(<SegmentedDeck character={character} onUse={vi.fn()} onMagicOpen={onMagicOpen} />);
+    rerender(<SegmentedDeck character={character} onUse={vi.fn()} onMagicOpen={vi.fn()} />);
     fireEvent.click(screen.getByRole('tab', { name: 'Spells' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Cast a Spell' }));
-    expect(onMagicOpen).toHaveBeenCalled();
+    expect(screen.getByTestId('spells-segment')).toBeInTheDocument();
   });
 
   it('switching to Actions hides the strike and shows basics + skill groups', () => {

@@ -61,6 +61,23 @@ vi.mock('../../utils/SpellUtils', () => ({
     }
     return null;
   },
+  // Shared with the Segmented Deck's Spells segment — mirror SpellUtils.
+  getFocusSpellEntries: (character) => {
+    if (!character) return [];
+    if (character.champion?.devotion_spells) return character.champion.devotion_spells;
+    if (character.monk?.ki_spells) return character.monk.ki_spells;
+    if (character.spellcasting?.bloodline?.focus_spells) return character.spellcasting.bloodline.focus_spells;
+    if (character.focus_spells) return character.focus_spells;
+    if (character.witchwarper?.warpSpells) return character.witchwarper.warpSpells;
+    return [];
+  },
+  getFocusSpellLabel: (character) => {
+    if (character?.champion) return 'Devotion Spells';
+    if (character?.monk) return 'Qi Spells';
+    if (character?.spellcasting?.bloodline) return `${character.spellcasting.bloodline.name} Bloodline Spells`;
+    if (character?.class === 'Bard') return 'Compositions';
+    return 'Focus Spells';
+  },
 }));
 
 const baseFocusSpell = { spellRef: 'divine-lance' };

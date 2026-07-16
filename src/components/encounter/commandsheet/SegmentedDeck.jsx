@@ -17,6 +17,7 @@ import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
 import ConfirmSheet from './ConfirmSheet';
 import DeckHeader from './DeckHeader';
+import SpellsSegment from './SpellsSegment';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
@@ -279,11 +280,7 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
   };
 
   const renderSpells = () => (
-    <button type="button" className="deck-magic-launcher" aria-label="Cast a Spell" onClick={onMagicOpen}>
-      <span className="deck-magic-glyph" aria-hidden="true">✦</span>
-      <span className="deck-magic-label">Cast a Spell</span>
-      <span className="deck-magic-sub">Open spellbook</span>
-    </button>
+    <SpellsSegment character={character} themeColor={themeColor} onMagicOpen={onMagicOpen} />
   );
 
   // A player skill action (#260) and a catalog basic can carry the same name

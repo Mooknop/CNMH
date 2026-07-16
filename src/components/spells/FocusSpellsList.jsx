@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { organizeSpellsByRank, getSortedRankList, getFocusInfo } from '../../utils/SpellUtils';
+import { organizeSpellsByRank, getSortedRankList, getFocusInfo, getFocusSpellEntries, getFocusSpellLabel } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
 import GameGlyph from '../shared/GameGlyph';
@@ -13,37 +13,15 @@ const FocusSpellsList = ({ character, characterColor, onCast }) => {
   const { spells: catalogSpells } = useContent();
   const spellMap = useMemo(() => spellCatalogMap(catalogSpells), [catalogSpells]);
 
-  const getFocusSpellsLabel = () => {
-    if (character.champion) return 'Devotion Spells';
-    if (character.monk) return 'Qi Spells';
-    if (character.spellcasting?.bloodline) {
-      return `${character.spellcasting.bloodline.name} Bloodline Spells`;
-    }
-    if (character.class === 'Bard') return 'Compositions';
-    return 'Focus Spells';
-  };
-
+  // Source-priority + labeling shared with the Segmented Deck's Spells
+  // segment (SpellUtils.getFocusSpellEntries / getFocusSpellLabel).
   const hasFocusSpells = () => {
-    if (character.champion?.devotion_spells) return true;
     if (character.spellcasting?.focus) return true;
-    if (character.monk?.ki_spells) return true;
-    if (character.focus_spells?.length > 0) return true;
-    if (character.spellcasting?.bloodline?.focus_spells) return true;
-    if (character.witchwarper?.warpSpells) return true;
-    return false;
+    return getFocusSpellEntries(character).length > 0;
   };
 
-  const getFocusSpells = () => {
-    if (character.champion?.devotion_spells) return character.champion.devotion_spells;
-    if (character.monk?.ki_spells) return character.monk.ki_spells;
-    if (character.spellcasting?.bloodline?.focus_spells) return character.spellcasting.bloodline.focus_spells;
-    if (character.focus_spells) return character.focus_spells;
-    if (character.witchwarper?.warpSpells) return character.witchwarper.warpSpells;
-    return [];
-  };
-
-  const focusSpellsLabel = getFocusSpellsLabel();
-  const focusSpells = resolveFocusSpells(getFocusSpells(), spellMap);
+  const focusSpellsLabel = getFocusSpellLabel(character);
+  const focusSpells = resolveFocusSpells(getFocusSpellEntries(character), spellMap);
   const focusInfo = getFocusInfo(character);
   const focusMax = focusInfo?.max ?? 0;
   // Class-flavored focus glyph inside each bubble (Bard/Sorcerer today); other

@@ -296,3 +296,37 @@ export const getFocusInfo = (character) => {
   }
   return null;
 };
+
+/**
+ * The character's focus/devotion/ki spell entries (catalog refs, epic #622),
+ * regardless of which class-specific shape they live in. Shared by
+ * FocusSpellsList and the Segmented Deck's Spells segment — keep the source
+ * priority identical in both.
+ * @param {Object} character
+ * @returns {Array} raw entries (resolve via resolveFocusSpells)
+ */
+export const getFocusSpellEntries = (character) => {
+  if (!character) return [];
+  if (character.champion?.devotion_spells) return character.champion.devotion_spells;
+  if (character.monk?.ki_spells) return character.monk.ki_spells;
+  if (character.spellcasting?.bloodline?.focus_spells) return character.spellcasting.bloodline.focus_spells;
+  if (character.focus_spells) return character.focus_spells;
+  if (character.witchwarper?.warpSpells) return character.witchwarper.warpSpells;
+  return [];
+};
+
+/**
+ * Class-flavored label for the focus-spell pool ("Devotion Spells",
+ * "Compositions", …). Mirrors FocusSpellsList's original branch order.
+ * @param {Object} character
+ * @returns {string}
+ */
+export const getFocusSpellLabel = (character) => {
+  if (character?.champion) return 'Devotion Spells';
+  if (character?.monk) return 'Qi Spells';
+  if (character?.spellcasting?.bloodline) {
+    return `${character.spellcasting.bloodline.name} Bloodline Spells`;
+  }
+  if (character?.class === 'Bard') return 'Compositions';
+  return 'Focus Spells';
+};
