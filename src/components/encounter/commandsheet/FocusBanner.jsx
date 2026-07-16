@@ -1,9 +1,10 @@
 // src/components/encounter/commandsheet/FocusBanner.jsx
-// Command Sheet focus banner (#411, #429). The persistent target context:
+// Focus banner (#411, #429) — Row B of the Segmented Deck's fused header.
+// The persistent target context, compacted to an inline peril-tinted strip:
 // - a focused **foe** shows AC / save DCs / Perception / RK DC / weaknesses,
 //   reveal-gated by Recall Knowledge (degrades gracefully when uncaptured);
 // - a focused **ally** (#429) shows their HP + conditions — the support context
-//   the grid targets healing/Battle Medicine against.
+//   the deck targets healing/Battle Medicine against.
 import React from 'react';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
@@ -39,6 +40,7 @@ const FocusBanner = ({ charId }) => {
     const conditions = hydrateConditions(allyConditionsRaw || []);
     return (
       <div className="cmd-focus cmd-focus--ally" role="region" aria-label={`Focused ally: ${focusAlly.name}`}>
+        <span className="cmd-focus-marker" aria-hidden="true">🎯</span>
         <span className="cmd-focus-name">{focusAlly.name}</span>
         {typeof allyHp === 'number' && (
           <div className="cmd-focus-stats">
@@ -69,6 +71,7 @@ const FocusBanner = ({ charId }) => {
   if (!defenses && !bestiary) {
     return (
       <div className="cmd-focus" role="region" aria-label={`Focused: ${name}`}>
+        <span className="cmd-focus-marker" aria-hidden="true">🎯</span>
         <span className="cmd-focus-name">{name}</span>
         <span className="cmd-focus-empty">No stat block — Recall Knowledge to learn more</span>
       </div>
@@ -121,6 +124,7 @@ const FocusBanner = ({ charId }) => {
 
   return (
     <div className="cmd-focus" role="region" aria-label={`Focused: ${name}`}>
+      <span className="cmd-focus-marker" aria-hidden="true">🎯</span>
       <span className="cmd-focus-name">{name}</span>
       {stats.length > 0 && (
         <div className="cmd-focus-stats">

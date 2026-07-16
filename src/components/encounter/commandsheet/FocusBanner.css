@@ -1,20 +1,33 @@
 /* src/components/encounter/commandsheet/FocusBanner.css
-   Command Sheet focus banner (#411). Dark-shell tokens from pf2e-tokens.css. */
+   Focus banner (#411) — Row B of the Segmented Deck's fused header. Compact
+   inline strip, peril-tinted for a foe, verdant for an ally. Dark-shell
+   tokens from pf2e-tokens.css. */
 
 .cmd-focus {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: rgba(217, 122, 43, 0.1);
-  border: 1px solid rgba(217, 122, 43, 0.4);
-  border-radius: var(--radius-md);
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 3px;
+  column-gap: 8px;
+  padding: 7px 10px;
+  background: color-mix(in srgb, var(--theme-peril) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-peril) 45%, transparent);
+  border-radius: 9px;
+}
+.cmd-focus--ally {
+  background: color-mix(in srgb, var(--theme-verdant, #2e7d32) 12%, transparent);
+  border-color: color-mix(in srgb, var(--theme-verdant, #2e7d32) 40%, transparent);
+}
+
+.cmd-focus-marker {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .cmd-focus-name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-md);
+  font-weight: 600;
+  font-size: 12.5px;
   color: var(--shell-text-primary);
 }
 
@@ -24,25 +37,31 @@
   color: var(--shell-text-tertiary);
 }
 
+/* Stat pairs flow inline after the name, wrapping onto a second row when the
+   revealed set is long. */
 .cmd-focus-stats {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  row-gap: 3px;
+  column-gap: 8px;
+}
+/* Whatever follows the name (stat pips, a lone weakness, the no-stat-block
+   note) right-aligns, per the design's compact row. */
+.cmd-focus-name + .cmd-focus-stats,
+.cmd-focus-name + .cmd-focus-weak,
+.cmd-focus-name + .cmd-focus-empty {
+  margin-left: auto;
 }
 
 .cmd-focus-stat {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  padding: 2px 8px;
-  background: var(--surface-inset);
-  border: 1px solid var(--shell-border);
-  border-radius: 999px;
+  gap: 3px;
   font-variant-numeric: tabular-nums;
 }
 
 .cmd-focus-stat-label {
-  font-size: var(--text-xs);
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--shell-text-tertiary);
@@ -50,19 +69,27 @@
 
 .cmd-focus-stat-value {
   font-weight: 700;
-  font-size: var(--text-sm);
-  color: var(--shell-text-primary);
+  font-size: 10.5px;
+  color: var(--shell-text-secondary);
 }
 
 .cmd-focus-weak {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 4px;
 }
 
 .cmd-focus-weak-values {
-  font-size: var(--text-sm);
-  color: var(--color-success, var(--accent-text));
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ember-light);
+}
+
+/* Resist/immune reveals stay informational, not "hit this" ember. */
+[data-testid='cmd-focus-resist'] .cmd-focus-weak-values,
+[data-testid='cmd-focus-immune'] .cmd-focus-weak-values {
+  color: var(--shell-text-secondary);
+  font-weight: 500;
 }
 
 /* Active Exploit Vulnerability (#454) — distinct from a plain weakness reveal. */

@@ -18,7 +18,7 @@ import './TurnTrackerPanel.css';
 import { RELAY } from '../../sync/keys';
 
 // Residual turn panel (#411, #415): initiative order, round/status, action pips,
-// MAP, reaction and End Turn live in the Command Sheet (InitiativeStrip + ActionDial);
+// MAP, reaction and End Turn live in the Segmented Deck (InitiativeStrip + DeckHeader);
 // movement (Stride/Step) is now a grid tile → MoveActionSheet. What remains here is
 // the per-turn machinery with no home elsewhere yet: Raise/Lower Shield + Shield
 // Block, Dismiss aura, turn-start free-action offers, Sustain prompts, and the Bestiary.
@@ -63,7 +63,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Sustained spells (#220) — Bless, Mirror Image, Summon Undead, … prompt the
   // caster to Sustain a Spell (1 action) at the start of each of their turns.
   // `lastSustainedRound` on each entry tracks whether it's been kept alive this
-  // round. (The lapse-on-end-turn sweep now lives in ActionDial.)
+  // round. (The lapse-on-end-turn sweep now lives in useEndTurn.)
   const { sustains, sustain: doSustain, end: endSustain } = useSustains(charId);
 
   // GM-added summons (#261) are tied to a sustain. Every sustain-end path (manual

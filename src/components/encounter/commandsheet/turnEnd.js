@@ -1,5 +1,5 @@
 // Command Sheet turn-end helpers (#411). Extracted from TurnTrackerPanel so the
-// ActionDial (which now owns End Turn) and the residual TurnTrackerPanel can both
+// deck header (whose useEndTurn owns End Turn) and the residual TurnTrackerPanel can both
 // reach them without duplicating the shapes.
 import { defaultTurnState } from '../../../hooks/useTurnState';
 

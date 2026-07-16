@@ -1,3 +1,5 @@
+// Fused deck header (encounter UI redesign) — ports the retired ActionDial's
+// turn-budget + End Turn coverage onto the Segmented Deck header.
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
@@ -33,8 +35,13 @@ vi.mock('../../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate, getState: () => [] }),
 }));
 
+// Row B is FocusBanner's own concern (FocusBanner.test.jsx) — keep it inert here.
+vi.mock('./FocusBanner', () => ({
+  default: () => <div data-testid="focus-banner" />,
+}));
+
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';
-import ActionDial from './ActionDial';
+import DeckHeader from './DeckHeader';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useTurnState } from '../../../hooks/useTurnState';
 
@@ -59,7 +66,7 @@ const SyncDriver = ({ skey, onReady }) => {
   return null;
 };
 
-// One-PC turn start. ActionDial does NOT own the turn-start self-reset (that
+// One-PC turn start. The header does NOT own the turn-start self-reset (that
 // stays in TurnTrackerPanel), so tests that need a "started" turn drive the
 // turnstate explicitly via the TurnDriver.
 const startMyTurn = (getDrv, chars = [pellias]) => {
@@ -74,22 +81,37 @@ beforeEach(() => {
   mockSendUpdate.mockClear();
 });
 
-describe('ActionDial', () => {
+describe('DeckHeader', () => {
   it('renders nothing when the encounter is idle', () => {
-    const { container } = render(<ActionDial charId="Pellias" characterName="Pellias" />);
+    const { container } = render(<DeckHeader charId="Pellias" characterName="Pellias" />);
     expect(container.firstChild).toBeNull();
   });
 
-  it('shows the round number when in-progress', () => {
+  it('shows the waiting line during setup', () => {
     let drv;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias])); // setup — no initiative yet
+    const budget = screen.getByRole('region', { name: 'Turn budget' });
+    expect(budget).toHaveTextContent(/Waiting for initiative/);
+    expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
+  });
+
+  it('shows the round number inside the budget region on my turn', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
-    expect(screen.getByText('Round 1')).toBeInTheDocument();
+    const budget = screen.getByRole('region', { name: 'Turn budget' });
+    expect(budget).toHaveTextContent('Round 1');
   });
 
   it('shows actions-left, pips, and reaction on my turn; pips fill as actions spend', () => {
@@ -98,7 +120,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -116,7 +138,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -130,7 +152,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -148,7 +170,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -165,7 +187,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -181,7 +203,7 @@ describe('ActionDial', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv, [pellias, ashka]);
@@ -202,7 +224,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv, [pellias, ashka]);
@@ -220,7 +242,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -236,7 +258,7 @@ describe('ActionDial', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
-        <ActionDial charId="Pellias" characterName="Pellias" />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     startMyTurn(() => drv);
@@ -246,24 +268,20 @@ describe('ActionDial', () => {
     expect(drv.encounter.log.some((l) => l.text === 'Bless ends (not sustained)')).toBe(true);
   });
 
-  it('off-turn shows a slimmed dial and surfaces available reactions', () => {
-    let drv, ts;
-    const character = { id: 'Pellias', name: 'Pellias', reactions: [{ name: 'Shield Block' }] };
+  it('off-turn hides the budget row entirely (stage + React tab own off-turn)', () => {
+    let drv;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <ActionDial charId="Pellias" characterName="Pellias" character={character} />
+        <DeckHeader charId="Pellias" characterName="Pellias" />
       </>
     );
     // Ashka goes first (init 20) so it is NOT Pellias's turn.
     startMyTurn(() => drv, [ashka, pellias]);
-    act(() => ts.resetForNewTurn('1:0')); // gives Pellias a reaction
 
-    // No End Turn off-turn; the reaction is offered instead.
+    expect(screen.queryByRole('region', { name: 'Turn budget' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Use Shield Block' }));
-    expect(ts.turnState.reactionSpent).toBe(true);
-    expect(drv.encounter.log.some((l) => l.text.includes('used Shield Block (reaction)'))).toBe(true);
+    // Row B (focus banner) still renders for off-turn target context.
+    expect(screen.getByTestId('focus-banner')).toBeInTheDocument();
   });
 });
