@@ -11,6 +11,9 @@
  * targetIds, mode: 'once'|'perRound', actionCost: 0-3, createdAt }. A result
  * entry carries { round, skill, d20, total, degree, vp, at } and is appended
  * by the owning character's client only, so result keys never race.
+ * 'perRound' locks one attempt per round ONLY outside combat (GM-paced
+ * scene rounds); during an encounter the action cost is the sole limiter —
+ * a PC may spend all three actions on one track in a single turn.
  *
  * Meter semantics (#1471): a challenge may also carry { startValue, min,
  * max, failAt, drainPerRound, adjust, lastDrainRound }. The live pool is

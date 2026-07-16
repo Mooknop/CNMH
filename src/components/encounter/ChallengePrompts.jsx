@@ -31,19 +31,24 @@ import { APP, syncKey, globalKey } from '../../sync/keys';
  * only the owning client writes that key, so submissions never race.
  *
  * mode 'once':     one locked attempt for the challenge's lifetime.
- * mode 'perRound': the attempt locks for the current encounter round and
- *                  unlocks when the round advances; VP accumulates.
+ * mode 'perRound': DURING COMBAT the action cost is the only limiter — a PC
+ *                  may spend all three actions on the same track in one turn
+ *                  (#1469: fight, Bolster, or talk, freely). The
+ *                  once-per-round lock applies only to GM-paced scene rounds
+ *                  outside combat (GMG cadence), where no action economy
+ *                  exists to do the limiting.
  * actionCost > 0:  submitting during an active encounter spends the cost
  *                  from the character's turn state (3-action economy).
  */
-const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, pool, failing }) => {
+const ChallengeCard = ({ challenge, entries, round, combatActive, skillModifiers, onSubmit, pool, failing }) => {
   const [d20Input, setD20Input] = useState('');
   const [chosenSkill, setChosenSkill] = useState(null);
 
   const perRound = challenge.mode === CHALLENGE_MODES.PER_ROUND;
-  const roundEntry = entries.find((e) => e.round === round);
-  const locked = perRound ? !!roundEntry : entries.length > 0;
-  const shown = perRound ? roundEntry : entries[entries.length - 1];
+  const roundEntries = entries.filter((e) => e.round === round);
+  const latest = roundEntries[roundEntries.length - 1];
+  const locked = perRound ? (!combatActive && !!latest) : entries.length > 0;
+  const shown = perRound ? latest : entries[entries.length - 1];
   const myTotal = entries.reduce((sum, e) => sum + (e.vp ?? 0), 0);
 
   // A new round reopens a per-round card — clear the previous round's entry UI.
@@ -67,6 +72,9 @@ const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, po
     const total = d20 + modifier;
     const degree = computeSaveDegree({ d20, total, dc: selected.dc });
     onSubmit(challenge, selected, { d20, total, degree, vp: vpForDegree(degree) });
+    // In combat the card stays open for further action-costed attempts.
+    setD20Input('');
+    setChosenSkill(null);
   };
 
   const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
@@ -144,7 +152,7 @@ const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, po
         </div>
       )}
 
-      {locked && shown && degreeInfo && (
+      {shown && degreeInfo && (
         <div className={`save-result ${degreeInfo.cls}`} role="status" aria-label="Skill check result">
           <span className="save-result-total">{shown.total}</span>
           <span className="save-result-degree">{degreeInfo.label}</span>
@@ -175,14 +183,16 @@ const ChallengeCard = ({ challenge, entries, round, skillModifiers, onSubmit, po
 
 /**
  * Influence-track card (#205): the conversation with an NPC. Two check
- * groups — Discovery (learn which skills sway the NPC) and Influence — each
- * lockable once per round independently, so a PC can Discover AND Influence
- * in the same combat round by spending actions on both. Influence DCs stay
- * masked ("DC ?") until the GM reveals the skill; the GM's global dcModifier
- * (resistances/weaknesses) silently shifts every DC at submit time. No party
- * pool or VP chips here — the AP keeps influence totals GM-paced.
+ * groups — Discovery (learn which skills sway the NPC) and Influence.
+ * DURING COMBAT neither group locks: every attempt costs actions, so a PC
+ * can stand there and talk for all three actions if they choose (#1469).
+ * In GM-paced scenes outside combat, each group locks once per scene round
+ * (GMG cadence). Influence DCs stay masked ("DC ?") until the GM reveals
+ * the skill; the GM's global dcModifier (resistances/weaknesses) silently
+ * shifts every DC at submit time. No party pool or VP chips here — the AP
+ * keeps influence totals GM-paced.
  */
-const InfluenceCard = ({ challenge, entries, round, skillModifiers, onSubmit }) => {
+const InfluenceCard = ({ challenge, entries, round, combatActive, skillModifiers, onSubmit }) => {
   const [d20Input, setD20Input] = useState('');
   const [chosen, setChosen] = useState(null);  // { kind: 'discovery'|'influence', skill }
 
@@ -191,8 +201,8 @@ const InfluenceCard = ({ challenge, entries, round, skillModifiers, onSubmit }) 
   const revealed = new Set(challenge.revealed || []);
 
   const roundEntries = entries.filter((e) => e.round === round);
-  const lockedDiscovery = roundEntries.some((e) => e.discovery);
-  const lockedInfluence = roundEntries.some((e) => !e.discovery);
+  const lockedDiscovery = !combatActive && roundEntries.some((e) => e.discovery);
+  const lockedInfluence = !combatActive && roundEntries.some((e) => !e.discovery);
 
   useEffect(() => {
     setD20Input('');
@@ -398,6 +408,7 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
       <VpResultsCollector characters={roster} onResult={onPartyResult} />
       {mine.map((c) => {
         const round = roundFor(c, encounter);
+        const combatActive = !!encounter?.active;
         if (isInfluence(c)) {
           return (
             <InfluenceCard
@@ -405,6 +416,7 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
               challenge={c}
               entries={entriesFor(resultsRaw, c.id)}
               round={round}
+              combatActive={combatActive}
               skillModifiers={skillModifiers}
               onSubmit={handleSubmit}
             />
@@ -418,6 +430,7 @@ const ChallengePrompts = ({ charId, characterName, skillModifiers = {} }) => {
             challenge={c}
             entries={entriesFor(resultsRaw, c.id)}
             round={round}
+            combatActive={combatActive}
             skillModifiers={skillModifiers}
             onSubmit={handleSubmit}
             pool={pool}
