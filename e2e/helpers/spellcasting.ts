@@ -142,6 +142,20 @@ export async function openMagic(page: Page) {
 }
 
 /**
+ * Open the deck's first-class Spells segment (repertoire + focus render
+ * in-tab). Cast repertoire/focus spells from here via `castSpell` — going
+ * through the MagicModal instead would duplicate the spell's card (deck +
+ * modal) and trip Playwright's strict mode.
+ */
+export async function openSpellsSegment(page: Page) {
+  await page
+    .getByRole('navigation', { name: 'Character sheet sections' })
+    .getByRole('button', { name: 'Encounter', exact: true })
+    .click();
+  await page.getByRole('tab', { name: 'Spells' }).click();
+}
+
+/**
  * Level 1 → level 2: pick a category from the grid. The label is what the
  * player sees — 'Spells', 'Focus', a bard's 'Compositions', a staff's name.
  */

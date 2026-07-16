@@ -24,8 +24,7 @@ import {
   snapshotSpells,
   casterCharacter,
   gotoSheet,
-  openMagic,
-  openMagicCategory,
+  openSpellsSegment,
   castSpell,
 } from '../../helpers/spellcasting';
 
@@ -49,8 +48,8 @@ const ally = () => ({ id: ALLY_ID, name: ALLY_NAME, level: 5, maxHp: ALLY_MAX_HP
 
 async function openHymn(page: import('@playwright/test').Page) {
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await openMagic(page);
-  await openMagicCategory(page, 'Compositions');
+  // Compositions render in the deck's first-class Spells segment now.
+  await openSpellsSegment(page);
   await castSpell(page, 'Hymn of Healing');
   await expect(page.getByRole('heading', { name: 'Hymn of Healing', level: 2 })).toBeVisible();
 }
