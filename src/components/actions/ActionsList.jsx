@@ -1,5 +1,5 @@
 // src/components/actions/ActionsList.js
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import SegmentedDeck from '../encounter/commandsheet/SegmentedDeck';
 import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
@@ -104,6 +104,55 @@ const ActionsList = ({ character, characterColor }) => {
     }
     setFamiliarOpen(true);
   }, [encounterMode, spendActions, grantFamiliar, appendLog, character.id, character.name, character.familiar]);
+
+  // Special actions with their own launch surfaces, folded into the deck's
+  // Class & Signature group (they used to be standalone sections above the
+  // grid). Each carries a `run` the confirm sheet invokes; the handlers keep
+  // owning the spends/grants exactly as before.
+  const extraActions = useMemo(() => {
+    if (!encounterMode) return [];
+    const list = [];
+    if (flags.isThaumaturge) {
+      list.push({
+        id: 'exploit-vulnerability',
+        name: 'Exploit Vulnerability',
+        cost: 1,
+        traits: ['Esoterica', 'Manipulate', 'Thaumaturge'],
+        needsTarget: true,
+        statLine: 'Esoteric Lore',
+        verb: 'Exploit',
+        description: 'Attempt an Esoteric Lore check against the creature to find the best way to attack it — its Mortal Weakness, or a Personal Antithesis.',
+        run: () => setExploitOpen(true),
+      });
+    }
+    if (hasCompanion) {
+      list.push({
+        id: 'command-an-animal',
+        name: 'Command an Animal',
+        cost: 1,
+        traits: ['Auditory', 'Concentrate'],
+        needsTarget: false,
+        statLine: `${character.animalCompanion?.name || 'companion'} acts`,
+        verb: 'Command',
+        description: `Direct ${character.animalCompanion?.name || 'your companion'} — it gains 2 actions to Stride, Strike, or Support this turn.`,
+        run: handleCommandAnimal,
+      });
+    }
+    if (hasFamiliar) {
+      list.push({
+        id: 'command-familiar',
+        name: `Command ${character.familiar?.name || 'familiar'}`,
+        cost: 1,
+        traits: ['Auditory', 'Concentrate'],
+        needsTarget: false,
+        statLine: 'familiar acts',
+        verb: 'Command',
+        description: `Direct ${character.familiar?.name || 'your familiar'} — it gains 2 actions this turn.`,
+        run: handleCommandFamiliar,
+      });
+    }
+    return list;
+  }, [encounterMode, flags.isThaumaturge, hasCompanion, hasFamiliar, character.animalCompanion, character.familiar, handleCommandAnimal, handleCommandFamiliar]);
 
   const handleUse = useCallback(
     (item, cost) => {
@@ -268,56 +317,6 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
-      {encounterMode && hasCompanion && (
-        <div className="granted-actions-section" aria-label="Companion">
-          <h3 className="granted-actions-title">Companion</h3>
-          <div className="granted-action-row">
-            <span className="granted-action-name">Command an Animal</span>
-            <button
-              className="btn-encounter-use"
-              aria-label="Command an Animal"
-              onClick={handleCommandAnimal}
-            >
-              Use (1 act)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {encounterMode && hasFamiliar && (
-        <div className="granted-actions-section" aria-label="Familiar">
-          <h3 className="granted-actions-title">Familiar</h3>
-          <div className="granted-action-row">
-            <span className="granted-action-name">Command {character.familiar?.name || 'familiar'}</span>
-            <button
-              className="btn-encounter-use"
-              aria-label={`Command ${character.familiar?.name || 'familiar'}`}
-              onClick={handleCommandFamiliar}
-            >
-              Use (1 act)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Exploit Vulnerability (#454) — Thaumaturge-only. Tap a foe in the
-          initiative strip to pre-target, then open the slide-up roll panel. */}
-      {encounterMode && flags.isThaumaturge && (
-        <div className="granted-actions-section" aria-label="Exploit Vulnerability">
-          <h3 className="granted-actions-title">Thaumaturge</h3>
-          <div className="granted-action-row">
-            <span className="granted-action-name">Exploit Vulnerability</span>
-            <button
-              className="btn-encounter-use"
-              aria-label="Exploit Vulnerability"
-              onClick={() => setExploitOpen(true)}
-            >
-              Use (1 act)
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Interact: open/close a door in reach (#435) — self-hides when none nearby. */}
       {encounterMode && (
         <EncounterDoors charId={character.id} characterName={character.name} />
@@ -326,7 +325,9 @@ const ActionsList = ({ character, characterColor }) => {
       {/* All action types live in the Segmented Deck (Strikes · Spells · Actions ·
           React · Items) — the encounter UI redesign that replaced the one long
           cost-grouped grid. Player skill actions (#260) are the deck's Actions-tab
-          Skill group; taps still resolve through handleUse / the skill modal. */}
+          Skill group; Exploit Vulnerability / Command an Animal / Command familiar
+          are its Class & Signature extras; taps still resolve through handleUse,
+          the skill modal, or the extras' own handlers. */}
       <SegmentedDeck
         character={character}
         themeColor={themeColor}
@@ -335,6 +336,7 @@ const ActionsList = ({ character, characterColor }) => {
         onMagicOpen={hasMagic ? () => setIsMagicOpen(true) : undefined}
         skillActions={encounterMode ? skillActions : []}
         onSkillAction={(sa) => setSkillAction(augmentSkillAction(character, sa, { effects: activeEffects, effectCatalog }))}
+        extraActions={extraActions}
       />
 
       {hasMagic && (

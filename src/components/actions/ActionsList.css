@@ -169,73 +169,6 @@
   font-style: italic;
 }
 
-/* Thaumaturge sections */
-.thaumaturge-implements-container {
-  margin-bottom: var(--space-4);
-}
-
-.thaumaturge-section {
-  margin-bottom: var(--space-4);
-}
-
-.thaumaturge-section-header {
-  margin-top: 0;
-  margin-bottom: var(--space-3);
-  font-size: var(--text-md);
-  font-weight: 700;
-  border-bottom: 1px solid var(--color-theme, var(--shell-border));
-  padding-bottom: var(--space-2);
-  color: var(--color-theme, var(--ember-light));
-}
-
-/* Implement and exploit cards — left border uses theme color */
-.implement-card,
-.exploit-card {
-  border-left-color: var(--color-theme, var(--ember-base));
-}
-
-.implement-card h4,
-.exploit-card h4 {
-  margin-top: 0;
-  color: var(--color-theme, var(--ember-light));
-}
-
-.thaumaturge-description {
-  background: var(--surface-inset);
-  border-left: 3px solid var(--color-theme, var(--ember-base));
-  padding: var(--space-3);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  margin-bottom: var(--space-4);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-  color: var(--shell-text-secondary);
-}
-
-.implements-list,
-.exploits-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.implement-card,
-.exploit-card {
-  background: var(--surface-inset);
-  border: var(--dark-card-border);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: var(--space-4);
-  border-left-width: 4px;
-  border-left-style: solid;
-}
-
-.implement-description,
-.exploit-description {
-  margin: 0;
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-  color: var(--shell-text-secondary);
-}
-
 /* Inactive item-granted abilities */
 .is-inactive {
   opacity: 0.45;
@@ -263,10 +196,6 @@
 @media (max-width: 768px) {
   .strikes-grid {
     grid-template-columns: 1fr;
-  }
-
-  .thaumaturge-description {
-    padding: var(--space-3);
   }
 }
 

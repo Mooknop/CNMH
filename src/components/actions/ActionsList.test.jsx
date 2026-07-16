@@ -9,14 +9,19 @@ const STRIDE_ACTION = { name: 'Stride', traits: ['Move'], actionCount: 1, requir
 const CONSUMABLE_ITEM = { name: 'Healing Potion', traits: ['Potion'], consumable: { kind: 'healing' }, state: 'worn' };
 
 // The SegmentedDeck is mocked as an inert testid div, plus buttons that fire the
-// onUse callback so we can exercise ActionsList.handleUse.
+// onUse callback so we can exercise ActionsList.handleUse. The extraActions
+// (Exploit Vulnerability / Command …) render as name → run buttons, mirroring
+// the deck's Class & Signature extras.
 vi.mock('../encounter/commandsheet/SegmentedDeck', () => ({
-  default: ({ onUse }) => (
+  default: ({ onUse, extraActions = [] }) => (
     <div data-testid="action-grid">
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>
       <button onClick={() => onUse?.(HUNT_PREY_ACTION, 1)}>use-hunt-prey</button>
       <button onClick={() => onUse?.(STRIDE_ACTION, 1)}>use-stride</button>
       <button onClick={() => onUse?.(CONSUMABLE_ITEM, 2)}>use-consumable</button>
+      {extraActions.map((x) => (
+        <button key={x.id} onClick={x.run}>{x.name}</button>
+      ))}
     </div>
   ),
 }));
