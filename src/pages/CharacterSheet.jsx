@@ -22,10 +22,8 @@ import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
-import ActionDial from '../components/encounter/commandsheet/ActionDial';
 import ReadyActionButton from '../components/encounter/ReadyActionButton';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
-import FocusBanner from '../components/encounter/commandsheet/FocusBanner';
 import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
@@ -163,22 +161,18 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
-                  {/* Off-turn (#471): the action-budget dial is meaningless when it
-                      isn't your turn, so the stage REPLACES it in-progress — you only
-                      see who's acting now. In setup the dial shows its own
-                      "Waiting for initiative" state, so it stays. The Shield Block bar
-                      + ReactionPrompt below keep reactions reachable until the stage
-                      owns them (#474/#475). */}
+                  {/* Off-turn (#471): the stage spotlights whoever is acting now.
+                      On your own turn the budget (former ActionDial hero) lives in
+                      the Segmented Deck's fused sticky header, along with the
+                      focus banner — so neither renders separately here. The
+                      Shield Block bar + ReactionPrompt keep reactions reachable
+                      until the stage owns them (#474/#475). */}
                   {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
                     <EncounterStage character={character} characterColor={characterColor} />
                   ) : (
-                    <>
-                      <ActionDial charId={character.id} characterName={character.name} character={character} />
-                      <ReadyActionButton charId={character.id} characterName={character.name} />
-                    </>
+                    <ReadyActionButton charId={character.id} characterName={character.name} />
                   )}
                   <InitiativeStrip charId={character.id} />
-                  <FocusBanner charId={character.id} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
                   <HandsPanel character={character} characterColor={characterColor} />
                 </>

@@ -32,6 +32,11 @@ vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
   default: () => <div data-testid="thaumaturge-exploits" />,
 }));
 
+// The fused header has its own suite (DeckHeader.test.jsx) — keep it inert here.
+vi.mock('./DeckHeader', () => ({
+  default: () => <div data-testid="deck-header" />,
+}));
+
 const baseModel = (overrides = {}) => ({
   actions: [],
   strikes: [{ name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' }],
@@ -65,6 +70,16 @@ describe('SegmentedDeck', () => {
     mockUseTurnState.mockReturnValue({ turnState: { actionsSpent: 0, reactionAvailable: true, hasStartedFirstTurn: true } });
     mockUseAdjacency.mockReturnValue({ inReach: () => true });
     mockUseEncounter.mockReturnValue({ encounter: myTurnEncounter });
+  });
+
+  // ── Fused header ───────────────────────────────────────────────────────────
+
+  it('renders the fused header only while an encounter is active', () => {
+    const { rerender } = render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    expect(screen.getByTestId('deck-header')).toBeInTheDocument();
+    mockUseEncounter.mockReturnValue({ encounter: null });
+    rerender(<SegmentedDeck character={character} onUse={vi.fn()} />);
+    expect(screen.queryByTestId('deck-header')).not.toBeInTheDocument();
   });
 
   // ── Segmented control ──────────────────────────────────────────────────────

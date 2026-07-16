@@ -7,13 +7,15 @@
 //
 // Tapping a tile still resolves through the existing path (onUse →
 // ActionsList.handleUse → the right slide-up resolver); this component only
-// re-groups and re-presents the buildActionCatalog data. The Spells segment
-// hosts the spellbook launcher (MagicModal) — the first-class in-tab spell list
-// is a follow-up slice, as are the fused sticky header, the confirm sheet, and
-// the capacity-weapon chamber track.
+// re-groups and re-presents the buildActionCatalog data. The fused sticky
+// header (DeckHeader: turn budget + focus banner) pins above Right Now and the
+// segmented control. The Spells segment hosts the spellbook launcher
+// (MagicModal) — the first-class in-tab spell list is a follow-up slice, as
+// are the confirm sheet and the capacity-weapon chamber track.
 import React, { useEffect, useMemo, useState } from 'react';
 import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
+import DeckHeader from './DeckHeader';
 import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
@@ -97,7 +99,7 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
   const segments = onMagicOpen ? SEGMENTS : SEGMENTS.filter((s) => s.key !== 'spells');
   const activeSeg = segments.some((s) => s.key === seg) ? seg : 'strikes';
 
-  // Reaction availability for the React banner — mirrors ActionDial's states.
+  // Reaction availability for the React banner — mirrors the fused header's states.
   const { reactionAvailable, reactionSpent, hasStartedFirstTurn } = turnState || {};
   const reactionState = !hasStartedFirstTurn
     ? 'unavailable'
@@ -262,33 +264,40 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
         <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
       )}
 
-      {suggestions.length > 0 && (
-        <section className="deck-now" aria-label="Right now">
-          <h3 className="deck-now-head">
-            <span className="deck-now-dot" aria-hidden="true" />
-            Right Now
-          </h3>
-          <div className="deck-now-grid">
-            {suggestions.map((tile) => (
-              <ActionTile key={`now-${tile.id}`} tile={tile} {...tileProps} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* The fused header, Right Now, and the segmented control pin as one
+          sticky block; the segment body scrolls under it. The header renders
+          for any active encounter — in setup it shows the waiting line. */}
+      <div className="deck-sticky">
+        {!!encounter?.active && <DeckHeader charId={character.id} characterName={character.name} />}
 
-      <div className="deck-tabs" role="tablist" aria-label="Action segments">
-        {segments.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            role="tab"
-            aria-selected={activeSeg === s.key}
-            className={`deck-tab deck-tab--${s.accent}${activeSeg === s.key ? ' deck-tab--active' : ''}`}
-            onClick={() => setSeg(s.key)}
-          >
-            {s.label}
-          </button>
-        ))}
+        {suggestions.length > 0 && (
+          <section className="deck-now" aria-label="Right now">
+            <h3 className="deck-now-head">
+              <span className="deck-now-dot" aria-hidden="true" />
+              Right Now
+            </h3>
+            <div className="deck-now-grid">
+              {suggestions.map((tile) => (
+                <ActionTile key={`now-${tile.id}`} tile={tile} {...tileProps} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="deck-tabs" role="tablist" aria-label="Action segments">
+          {segments.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              role="tab"
+              aria-selected={activeSeg === s.key}
+              className={`deck-tab deck-tab--${s.accent}${activeSeg === s.key ? ' deck-tab--active' : ''}`}
+              onClick={() => setSeg(s.key)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="deck-body">{BODY[activeSeg]()}</div>

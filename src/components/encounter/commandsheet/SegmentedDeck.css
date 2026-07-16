@@ -7,15 +7,27 @@
   margin-top: 0.75rem;
 }
 
+/* ── Sticky block: fused header + Right Now + segmented control ─
+   Pins to the top of the sheet's scroll container (.character-sheet-page)
+   while the segment body scrolls under it. Opaque backing so tiles don't
+   ghost through. */
+.deck-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--shell-bg);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  overflow: hidden;
+}
+
 /* ── Right Now shortlist (#413) — pinned above the segments ──── */
 .deck-now {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 10px 0 11px;
+  padding: 10px 13px 11px;
   border-bottom: 1px solid var(--shell-border);
   background: rgba(196, 154, 46, 0.04);
-  margin-bottom: 0.15rem;
 }
 .deck-now-head {
   display: flex;
