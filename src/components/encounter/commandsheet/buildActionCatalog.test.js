@@ -4,6 +4,7 @@ import {
   filterTiles,
   categoriesPresent,
   segmentTiles,
+  capacityWeaponCards,
   drawCost,
 } from './buildActionCatalog';
 
@@ -379,5 +380,63 @@ describe('segmentTiles (Segmented Deck)', () => {
     const seg = segmentTiles(tiles);
     const total = Object.values(seg).reduce((n, list) => n + list.length, 0);
     expect(total).toBe(tiles.length);
+  });
+});
+
+describe('capacityWeaponCards (chamber track)', () => {
+  // A held Crescent Cross: melee blade + capacity-3 chambered bolt.
+  const crescent = {
+    uid: 'cc-1',
+    name: 'Crescent Cross',
+    state: 'held1',
+    strikes: [
+      { name: 'Crescent Cross Blade', type: 'melee', actionCount: 1 },
+      { name: 'Crescent Cross Bolt', type: 'ranged', capacity: 3, reload: 1, ammoType: 'bolt', traits: ['Capacity 3'] },
+    ],
+  };
+  // Resolved strike tiles the way useCharacter/getStrikes emits them: both
+  // share the resolved `source`, the chambered one carries weaponUid+capacity.
+  const strikes = (loaded = 0) => ([
+    { name: 'Crescent Cross Blade', type: 'melee', actionCount: 1, attackMod: 8, damage: '1d6+4', source: 'Crescent Cross' },
+    {
+      name: 'Crescent Cross Bolt', type: 'ranged', actionCount: 1, attackMod: 8, damage: '1d8',
+      source: 'Crescent Cross', weaponUid: 'cc-1', capacity: 3, chambersLoaded: loaded, loaded: loaded > 0,
+      active: loaded > 0,
+    },
+  ]);
+  const chambersFor = (n) => ({
+    'cc-1': { chambers: Array.from({ length: 3 }, (_, i) => (i < n ? { name: 'Bolt' } : null)), pointer: 0 },
+  });
+
+  const build = (loaded = 0) => {
+    const chambers = chambersFor(loaded);
+    const tiles = buildActionCatalog({ strikes: strikes(loaded), inventory: [crescent], chambers });
+    return capacityWeaponCards({ tiles, inventory: [crescent], chambers });
+  };
+
+  it('cards a held capacity weapon with its loaded count and both strikes', () => {
+    const [card] = build(2);
+    expect(card).toMatchObject({ uid: 'cc-1', name: 'Crescent Cross', capacity: 3, loaded: 2 });
+    expect(card.strikes.map((t) => t.name).sort()).toEqual(['Crescent Cross Blade', 'Crescent Cross Bolt']);
+    // Partially loaded → the catalog Reload tile is attached.
+    expect(card.reloadTile).toMatchObject({ name: 'Reload Crescent Cross' });
+  });
+
+  it('drops the inline Reload when every chamber is loaded', () => {
+    const [card] = build(3);
+    expect(card.loaded).toBe(3);
+    expect(card.reloadTile).toBeNull();
+  });
+
+  it('cards nothing for an unheld capacity weapon or a nock weapon', () => {
+    const stowedTiles = buildActionCatalog({ inventory: [{ ...crescent, state: 'stowed' }] });
+    expect(capacityWeaponCards({ tiles: stowedTiles, inventory: [{ ...crescent, state: 'stowed' }] })).toEqual([]);
+
+    const bow = {
+      uid: 'bow-1', name: 'Composite Longbow', state: 'held2',
+      strikes: [{ name: 'Longbow', type: 'ranged', reload: 0, ammoType: 'arrow' }],
+    };
+    const bowTiles = buildActionCatalog({ inventory: [bow] });
+    expect(capacityWeaponCards({ tiles: bowTiles, inventory: [bow] })).toEqual([]);
   });
 });

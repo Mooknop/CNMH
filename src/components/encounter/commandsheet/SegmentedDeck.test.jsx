@@ -28,6 +28,11 @@ vi.mock('../../../hooks/useEncounter', () => ({
   useEncounter: (...args) => mockUseEncounter(...args),
 }));
 
+const mockUseChambers = vi.fn();
+vi.mock('../../../hooks/useChambers', () => ({
+  useChambers: (...args) => mockUseChambers(...args),
+}));
+
 // The fused header has its own suite (DeckHeader.test.jsx) — keep it inert here.
 vi.mock('./DeckHeader', () => ({
   default: () => <div data-testid="deck-header" />,
@@ -77,6 +82,7 @@ describe('SegmentedDeck', () => {
     mockUseTurnState.mockReturnValue({ turnState: { actionsSpent: 0, reactionAvailable: true, hasStartedFirstTurn: true } });
     mockUseAdjacency.mockReturnValue({ inReach: () => true });
     mockUseEncounter.mockReturnValue({ encounter: myTurnEncounter });
+    mockUseChambers.mockReturnValue({ chambers: {} });
   });
 
   // ── Fused header ───────────────────────────────────────────────────────────
@@ -200,6 +206,77 @@ describe('SegmentedDeck', () => {
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longbow' }), 1);
     const inHand = screen.getByRole('region', { name: 'In hand' });
     expect(within(inHand).queryByRole('button', { name: 'Longbow' })).not.toBeInTheDocument();
+  });
+
+  // ── Capacity-weapon chamber track ──────────────────────────────────────────
+
+  const crescent = {
+    uid: 'cc-1',
+    name: 'Crescent Cross',
+    state: 'held1',
+    strikes: [
+      { name: 'Crescent Cross Blade', type: 'melee', actionCount: 1 },
+      { name: 'Crescent Cross Bolt', type: 'ranged', capacity: 3, reload: 1, ammoType: 'bolt', traits: ['Capacity 3'] },
+    ],
+  };
+  const crescentModel = (loaded) => baseModel({
+    strikes: [
+      { name: 'Crescent Cross Blade', type: 'melee', actionCount: 1, attackMod: 8, damage: '1d6+4', source: 'Crescent Cross' },
+      {
+        name: 'Crescent Cross Bolt', type: 'ranged', actionCount: 1, attackMod: 8, damage: '1d8',
+        source: 'Crescent Cross', weaponUid: 'cc-1', capacity: 3, chambersLoaded: loaded,
+        loaded: loaded > 0, active: loaded > 0,
+      },
+    ],
+    inventory: [crescent],
+  });
+  const mockChambers = (loaded) => {
+    mockUseChambers.mockReturnValue({
+      chambers: { 'cc-1': { chambers: Array.from({ length: 3 }, (_, i) => (i < loaded ? { name: 'Bolt' } : null)), pointer: 0 } },
+    });
+  };
+
+  it('cards a held capacity weapon: track, chamber notes, inline Reload → sheet → onUse', () => {
+    mockUseCharacter.mockReturnValue(crescentModel(2));
+    mockChambers(2);
+    const onUse = vi.fn();
+    render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
+
+    const card = screen.getByRole('region', { name: 'Crescent Cross' });
+    expect(within(card).getByText('Capacity 3')).toBeInTheDocument();
+    expect(within(card).getByRole('meter', { name: '2 of 3 chambers loaded' })).toBeInTheDocument();
+    expect(within(card).getByText('2/3')).toBeInTheDocument();
+    // Both strikes live in the card (and NOT in the plain groups)…
+    expect(within(card).getByRole('button', { name: 'Crescent Cross Blade' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Crescent Cross Bolt' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'In hand' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Not in hand' })).not.toBeInTheDocument();
+    // …with chamber-use notes.
+    expect(within(card).getByText(/spends 1 chamber/)).toBeInTheDocument();
+    expect(within(card).getByText(/melee · no chamber/)).toBeInTheDocument();
+
+    // Inline Reload previews through the sheet and routes to the reload flow.
+    fireEvent.click(within(card).getByRole('button', { name: 'Reload Crescent Cross' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Reload Crescent Cross' }));
+    expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ kind: 'reload', weaponUid: 'cc-1' }), 1);
+  });
+
+  it('swaps the inline Reload for a Loaded badge when every chamber is full', () => {
+    mockUseCharacter.mockReturnValue(crescentModel(3));
+    mockChambers(3);
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const card = screen.getByRole('region', { name: 'Crescent Cross' });
+    expect(within(card).queryByRole('button', { name: /Reload/ })).not.toBeInTheDocument();
+    expect(within(card).getByText('Loaded')).toBeInTheDocument();
+  });
+
+  it('an empty-chambered ranged strike stays in the card (not "Not in hand") with a reload cue', () => {
+    mockUseCharacter.mockReturnValue(crescentModel(0));
+    mockChambers(0);
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const card = screen.getByRole('region', { name: 'Crescent Cross' });
+    expect(within(card).getByText(/empty — reload to fire/)).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Not in hand' })).not.toBeInTheDocument();
   });
 
   // ── React segment ──────────────────────────────────────────────────────────

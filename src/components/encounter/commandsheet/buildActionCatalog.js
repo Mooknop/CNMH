@@ -25,6 +25,7 @@ import {
   reloadCost,
   normalizeChamberState,
   nextEmptyChamber,
+  loadedCount,
 } from '../../../utils/ammunition';
 import { flattenInventory } from '../../../utils/InventoryUtils';
 
@@ -306,6 +307,58 @@ export function categoriesPresent(tiles) {
  * - React tab:    reactions / free
  * - Items tab:    consumables / gear (reload + nock tiles)
  */
+/**
+ * Capacity-weapon cards for the Strikes segment (encounter UI redesign) —
+ * one full-width card per HELD capacity weapon (Crescent Cross, …): the
+ * chamber track (loaded/capacity from the cnmh_chambers overlay) with an
+ * inline Reload, plus the weapon's own strike tiles grouped under it.
+ * Nock weapons (single-slot typed ammo) are not carded — their tile + gear
+ * reload cover them.
+ *
+ * @param {Object} input
+ * @param {Array}  input.tiles      buildActionCatalog tiles (same build)
+ * @param {Array}  input.inventory  effective inventory (useCharacter().inventory)
+ * @param {Object} input.chambers   cnmh_chambers_<id> overlay keyed by weapon uid
+ * @returns {Array} [{ uid, name, capacity, loaded, strikes, reloadTile }]
+ */
+export function capacityWeaponCards({ tiles = [], inventory = [], chambers = {} } = {}) {
+  const cards = [];
+  (inventory || []).forEach((item) => {
+    if (!item || !item.strikes || !itemAbilitiesActive(item)) return;
+    const strikeList = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
+    const capStrike = strikeList.find((s) => isCapacityWeapon(s));
+    if (!capStrike) return;
+
+    const capacity = strikeAmmoCapacity(capStrike);
+    const loaded = loadedCount(normalizeChamberState((chambers || {})[item.uid], capacity));
+    const uid = item.uid || null;
+
+    // The weapon's resolved strikes: the chambered ranged one links by
+    // weaponUid; its melee sibling shares the resolved `source` name (which
+    // follows rune renames, so match on it rather than item.name).
+    const ranged = tiles.find(
+      (t) => t.origin === 'strike' && t.raw.weaponUid === uid && t.raw.capacity != null
+    );
+    const source = ranged?.raw.source;
+    const strikes = tiles.filter(
+      (t) => t.origin === 'strike' && (t === ranged || (source != null && t.raw.source === source))
+    );
+
+    // The catalog's own Reload tile (absent when every chamber is loaded).
+    const reloadTile = tiles.find((t) => t.origin === 'reload' && t.raw.weaponUid === uid) || null;
+
+    cards.push({
+      uid: uid || item.name,
+      name: source || item.name,
+      capacity,
+      loaded,
+      strikes,
+      reloadTile,
+    });
+  });
+  return cards;
+}
+
 export function segmentTiles(tiles) {
   const seg = {
     strikesHeld: [], strikesStowed: [],
