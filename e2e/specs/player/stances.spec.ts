@@ -62,6 +62,7 @@ test.describe('Combat stances', () => {
     // Stances are character actions → the deck's Actions segment.
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Dragon Stance/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
 
     // The stance goes live on the synced key…
     await session.expectSent(
@@ -103,9 +104,11 @@ test.describe('Combat stances', () => {
     // Stances are character actions → the deck's Actions segment.
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Dragon Stance/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await session.expectSent(STANCE_KEY, (v) => v?.name === 'E2E Dragon Stance');
 
     await page.getByRole('button', { name: /E2E Mountain Stance/ }).click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await session.expectSent(STANCE_KEY, (v) => v?.active === true && v?.name === 'E2E Mountain Stance');
   });
 });

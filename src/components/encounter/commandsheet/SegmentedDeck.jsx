@@ -5,16 +5,17 @@
 // pinned "Right Now" shortlist; each segment groups class/signature material on
 // top and basic actions at the bottom. Off-turn the deck auto-selects React.
 //
-// Tapping a tile still resolves through the existing path (onUse →
-// ActionsList.handleUse → the right slide-up resolver); this component only
-// re-groups and re-presents the buildActionCatalog data. The fused sticky
-// header (DeckHeader: turn budget + focus banner) pins above Right Now and the
-// segmented control. The Spells segment hosts the spellbook launcher
-// (MagicModal) — the first-class in-tab spell list is a follow-up slice, as
-// are the confirm sheet and the capacity-weapon chamber track.
+// Tapping a tile opens the ConfirmSheet preview; confirming resolves through
+// the existing path (onUse → ActionsList.handleUse → the right slide-up
+// resolver) — this component only re-groups and re-presents the
+// buildActionCatalog data. The fused sticky header (DeckHeader: turn budget +
+// focus banner) pins above Right Now and the segmented control. The Spells
+// segment hosts the spellbook launcher (MagicModal) — the first-class in-tab
+// spell list is a follow-up slice, as is the capacity-weapon chamber track.
 import React, { useEffect, useMemo, useState } from 'react';
 import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
+import ConfirmSheet from './ConfirmSheet';
 import DeckHeader from './DeckHeader';
 import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
@@ -76,8 +77,38 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
     if (encounterMode) setSeg(myTurn ? 'strikes' : 'react');
   }, [encounterMode, myTurn]);
 
+  // Tap → confirm sheet → existing resolver. The sheet is a preview/intent
+  // step: confirming routes through the exact call a direct tap used to make
+  // (onUse → ActionsList.handleUse / onSkillAction), so the resolvers keep
+  // sole ownership of action spends, MAP recording, and chamber writes.
+  const [sheet, setSheet] = useState(null); // { tile, run } | null
   const handleTileSelect = (tile) =>
-    onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost);
+    setSheet({
+      tile,
+      run: () => onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost),
+    });
+
+  // Player skill actions (#260) preview through the same sheet via a pseudo-
+  // tile; confirming opens their own resolver (SkillActionModal).
+  const openSkillAction = (sa) =>
+    setSheet({
+      tile: {
+        name: sa.name,
+        cost: sa.actionCost,
+        traits: sa.traits || [],
+        origin: 'skill-action',
+        cat: 'skill',
+        needsTarget: !!sa.defense && !sa.selfTarget,
+        raw: { description: sa.description, highlightSkill: sa.skill, targetDefense: sa.defense },
+      },
+      run: () => onSkillAction?.(sa),
+    });
+
+  const confirmSheet = () => {
+    const s = sheet;
+    setSheet(null);
+    s?.run();
+  };
 
   const tiles = useMemo(
     () => buildActionCatalog({ actions, strikes, reactions, freeActions, inventory, chambers }),
@@ -184,7 +215,7 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
                 key={`sa-${sa.id}`}
                 type="button"
                 className="cmd-tile"
-                onClick={() => onSkillAction?.(sa)}
+                onClick={() => openSkillAction(sa)}
                 aria-label={sa.name}
               >
                 <span className="cmd-tile-top">
@@ -301,6 +332,17 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
       </div>
 
       <div className="deck-body">{BODY[activeSeg]()}</div>
+
+      {sheet && (
+        <ConfirmSheet
+          tile={sheet.tile}
+          focusEnemy={focusEnemy}
+          focusAlly={focusAlly}
+          attacksMade={turnState?.attacksMade ?? 0}
+          onConfirm={confirmSheet}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 };

@@ -73,6 +73,7 @@ const setup = async (
 
   await page.getByRole('tab', { name: 'Actions' }).click();
   await page.getByRole('button', { name: new RegExp(String(action.name)) }).first().click();
+  await page.getByRole('button', { name: /^Confirm / }).click();
   await page.getByRole('button', { name: `Target ${enemyEntry.name}` }).click();
   return session;
 };

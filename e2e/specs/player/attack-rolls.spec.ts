@@ -74,6 +74,7 @@ test.describe('Attack-roll resolution', () => {
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Slash/ }).first().click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
 
     // Pick the target → the inline resolver appears.
     await page.getByRole('button', { name: 'Target E2E Goblin' }).click();
@@ -122,6 +123,7 @@ test.describe('Attack-roll resolution', () => {
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Slash/ }).first().click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
     await page.getByRole('button', { name: 'Target E2E Goblin' }).click();
 
     // d20 8 + 10 = 18 vs AC 20 → Miss until the +2 toggle is flipped.
@@ -167,6 +169,7 @@ test.describe('Attack-roll resolution', () => {
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Twin Bolt/ }).first().click();
+    await page.getByRole('button', { name: /^Confirm / }).click();
 
     // Select both enemies → ray 1 defaults to A, ray 2 to B.
     await page.getByRole('button', { name: 'Target E2E Goblin A' }).click();
