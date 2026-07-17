@@ -1,0 +1,100 @@
+/* src/components/encounter/HandsGlance.css
+   Slim read-only hands strip on the encounter play tab (hand-management
+   redesign). Dark-shell tokens from pf2e-tokens.css. */
+
+.hands-glance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+}
+
+.hands-glance-hand {
+  flex: none;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ember-light);
+}
+.hands-glance-hand--mirror {
+  transform: scaleX(-1);
+}
+
+.hands-glance-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 5px 9px 5px 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--shell-border);
+  border-radius: 8px;
+}
+.hands-glance-chip--empty {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--shell-border-strong);
+}
+/* A two-handed grip is ONE chip spanning the row, arcane-tinted. */
+.hands-glance-chip--2h {
+  background: color-mix(in srgb, var(--arcane-light) 10%, transparent);
+  border-color: color-mix(in srgb, var(--arcane-light) 40%, transparent);
+}
+
+.hands-glance-plus {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-tertiary);
+}
+
+.hands-glance-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+.hands-glance-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--shell-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hands-glance-name--empty {
+  font-weight: 500;
+  color: var(--shell-text-tertiary);
+}
+.hands-glance-slot {
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.hands-glance-badge {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--arcane-light) 25%, transparent);
+  color: color-mix(in srgb, var(--arcane-light) 65%, white);
+}
