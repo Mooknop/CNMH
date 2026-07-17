@@ -54,7 +54,7 @@ const character = () => ({
   abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
   inventory: [
     { uid: 'h-0', ref: 'sword', name: 'Longsword', weight: 1, quantity: 1, strikes: { type: 'melee', damage: '1d8 S' } },
-    { uid: 'h-1', ref: 'shield', name: 'Steel Shield', weight: 1, quantity: 1 },
+    { uid: 'h-1', ref: 'shield', name: 'Steel Shield', weight: 1, quantity: 1, shield: { bonus: 2, hardness: 5 } },
     { uid: 'h-2', ref: 'dagger', name: 'Dagger', weight: 0.1, quantity: 1, strikes: { type: 'melee', damage: '1d4 P' } },
     { uid: 'h-3', ref: 'greatsword', name: 'Greatsword', weight: 2, quantity: 1, usage: 'held in 2 hands', strikes: { type: 'melee', damage: '1d12 S' } },
   ],
@@ -231,14 +231,18 @@ describe('HandsGroup (Items-segment hands rows + hand-setter)', () => {
     expect(appendLog).not.toHaveBeenCalled();
   });
 
-  it('excludes containers and body-bound gear from the worn rows', () => {
+  it('excludes non-wieldables, containers and body-bound gear from the worn rows', () => {
     const char = character();
     char.inventory.push(
-      { uid: 'h-4', ref: 'pack', name: 'Backpack', weight: 1, quantity: 1, container: { capacity: 4 } },
-      { uid: 'h-5', ref: 'tattoo', name: 'Warding Tattoo', weight: 0, quantity: 1, traits: ['Tattoo'] }
+      // Wieldable markers on the container/tattoo prove the dedicated guards
+      // fire, not just the wieldability filter.
+      { uid: 'h-4', ref: 'pack', name: 'Backpack', weight: 1, quantity: 1, container: { capacity: 4 }, usage: 'held in 1 hand' },
+      { uid: 'h-5', ref: 'tattoo', name: 'Warding Tattoo', weight: 0, quantity: 1, traits: ['Tattoo'], strikes: { type: 'melee' } },
+      { uid: 'h-6', ref: 'potion', name: 'Healing Potion', weight: 0.1, quantity: 1 }
     );
     render(<HandsGroup character={char} encounterMode />);
     expect(screen.queryByTestId('hands-row-h-4')).not.toBeInTheDocument();
     expect(screen.queryByTestId('hands-row-h-5')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('hands-row-h-6')).not.toBeInTheDocument();
   });
 });

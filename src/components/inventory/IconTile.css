@@ -1,0 +1,308 @@
+/* src/components/inventory/IconTile.css
+   Base styles for the IconTile component — moved out of InventoryGrid.css
+   (where they were scoped under .inventory-grid) so the tile renders correctly
+   on every surface that mounts it (inventory grid, encounter HandsGlance /
+   HandsGroup, …). The tile edge arrives via the inline --tile custom property
+   set by the component. */
+
+.icon-tile {
+  --tile: 52px;
+  --tile-c: var(--iron-light);
+  --face1: var(--shell-surface-raised);
+  --face2: var(--theme-bg);
+  position: relative;
+  width: var(--tile);
+  height: var(--tile);
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(155deg, var(--face1), var(--face2));
+  border: 1px solid var(--shell-border-strong, rgba(255, 255, 255, 0.16));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.4),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  /* No overflow clip here — the rune rail deliberately escapes the tile's right
+     edge (see .icon-tile-runeicons). The art is clipped by .icon-tile-face. */
+}
+.icon-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    80% 60% at 50% 0%,
+    color-mix(in srgb, var(--tile-c) 30%, transparent),
+    transparent 70%
+  );
+}
+/* Art clip layer — fills the tile's inner (padding) box and rounds the corners,
+   the job the tile's own overflow:hidden used to do. Transparent, so the tile's
+   bevel/glow show through around imageless art. Painted AFTER the rune rail so
+   the art covers the inner half of each peeking coin. */
+.icon-tile-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.icon-tile-code {
+  font-family: var(--font-mono);
+  font-size: calc(var(--tile) * 0.2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--tile-c) 80%, var(--color-text-on-primary) 30%);
+  position: relative;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.icon-tile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  /* Suppress the browser's native image-drag ghost — the tiles use our own
+     pointer-based DnD, and the full-res native drag image balloons over the
+     page. */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.icon-tile-qty {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-family: var(--font-mono);
+  font-size: calc(var(--tile) * 0.19);
+  font-weight: 700;
+  color: var(--color-text-on-primary);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 5px;
+  padding: 0 4px;
+  line-height: 1.4;
+}
+.icon-tile-fx {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-size: calc(var(--tile) * 0.24);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px var(--arcane-light));
+  pointer-events: none;
+}
+/* Attachment medallion — a small coin in the character's accent color marking a
+   host that has a talisman/attachment bound to it (top-right, the free corner). */
+.icon-tile-attached {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: calc(var(--tile) * 0.42);
+  height: calc(var(--tile) * 0.42);
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
+  border: 1px solid var(--color-theme, var(--gold-light));
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--color-theme, var(--gold-light)) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  color: var(--color-theme, var(--gold-light));
+  pointer-events: none;
+}
+.icon-tile-attached .game-glyph {
+  width: 70%;
+  height: 70%;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
+}
+/* Broken/Destroyed badge (#539/#542) — bottom-left, the free corner; a broken
+   item warns, a destroyed one gets the skull. */
+.icon-tile-broken {
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  font-size: calc(var(--tile) * 0.24);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--peril-light) 80%, transparent));
+  pointer-events: none;
+}
+/* Rune-marked gear (thassilonianRune) — imageless items show the rune AS the
+   art, tinted by its sin token (ThassilonianRune.css). */
+.icon-tile-rune-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.icon-tile-rune-art .thassilonian-rune {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+/* With real art the rune rides as a corner medallion — same coin recipe as the
+   attachment clasp, bottom-left (the free corner), bordered in the sin tint. */
+.icon-tile-rune {
+  position: absolute;
+  bottom: -5px;
+  left: -5px;
+  width: calc(var(--tile) * 0.42);
+  height: calc(var(--tile) * 0.42);
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
+  border: 1px solid currentColor;
+  box-shadow:
+    0 0 8px color-mix(in srgb, currentColor 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.icon-tile-rune .thassilonian-rune {
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
+}
+/* Catalog-rune glyph as the art (imageless runestone, #1369) — same treatment
+   as the sin rune-as-art above. */
+.icon-tile-rune-art .rune-icon {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+}
+/* Catalog-rune rail (#1369) — every rune the item carries, uncapped, as a
+   vertical stack of coins down the tile's RIGHT edge (the sin rune owns
+   bottom-left). The stack is nudged outward so each coin peeks out from behind
+   the tile's right edge; the art layer (.icon-tile-face) paints over the inner
+   half of each coin, so they read as tucked BEHIND the icon. */
+.icon-tile-runeicons {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translate(58%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.icon-tile-runeicon {
+  width: calc(var(--tile) * 0.38);
+  height: calc(var(--tile) * 0.38);
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--void-base), var(--theme-bg));
+  border: 1px solid currentColor;
+  box-shadow:
+    0 0 8px color-mix(in srgb, currentColor 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+}
+.icon-tile-runeicon + .icon-tile-runeicon {
+  margin-top: calc(var(--tile) * -0.05);
+}
+.icon-tile-runeicon .rune-icon {
+  width: 74%;
+  height: 74%;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, currentColor 75%, transparent));
+}
+
+.icon-tile-charges {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+.icon-tile-charges i {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.icon-tile-charges i.on {
+  background: var(--arcane-light);
+  box-shadow: 0 0 4px var(--arcane-light);
+}
+
+/* type tints — scoped to the tile so the shared tint-* class names (also used
+   by the ItemModal hero) don't pick up --tile-c elsewhere. */
+.icon-tile.tint-ember {
+  --tile-c: var(--ember-mid);
+}
+.icon-tile.tint-iron {
+  --tile-c: var(--iron-light);
+}
+.icon-tile.tint-verdant {
+  --tile-c: var(--verdant-mid);
+}
+.icon-tile.tint-arcane {
+  --tile-c: var(--arcane-light);
+}
+.icon-tile.tint-gold {
+  --tile-c: var(--gold-light);
+}
+.icon-tile.tint-neutral {
+  --tile-c: #9aa3b0;
+}
+
+/* rarity rings — match the app's existing convention (uncommon = gold,
+   rare = arcane/violet, unique = pink) rather than the prototype's blue. */
+.icon-tile.rar-uncommon {
+  border-color: color-mix(in srgb, var(--gold-light) 60%, var(--shell-border-strong, rgba(255, 255, 255, 0.16)));
+}
+.icon-tile.rar-rare {
+  border-color: color-mix(in srgb, var(--arcane-light) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px color-mix(in srgb, var(--arcane-light) 40%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.icon-tile.rar-unique {
+  border-color: color-mix(in srgb, #e08bb0 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px color-mix(in srgb, #e08bb0 50%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* charge / resource glow (disabled under reduced motion) */
+.icon-tile.is-glow {
+  animation: invTileGlow 2.8s ease-in-out infinite;
+}
+.icon-tile.is-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tile-c) 70%, transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+@keyframes invTileGlow {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -8px 16px rgba(0, 0, 0, 0.4),
+      0 0 4px color-mix(in srgb, var(--tile-c) 55%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -8px 16px rgba(0, 0, 0, 0.4),
+      0 0 16px color-mix(in srgb, var(--tile-c) 85%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-tile.is-glow {
+    animation: none;
+  }
+}

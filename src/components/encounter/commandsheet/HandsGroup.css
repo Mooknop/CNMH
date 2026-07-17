@@ -8,6 +8,10 @@
   gap: 6px;
 }
 
+/* The 26px tiles read better with tighter corners than the 52px grid default. */
+.hands-group .icon-tile { border-radius: 7px; }
+.hands-group .icon-tile-face { border-radius: 6px; }
+
 /* ── Resting item rows ───────────────────────────────────────── */
 .hands-row {
   display: flex;

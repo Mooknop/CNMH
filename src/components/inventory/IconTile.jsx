@@ -5,6 +5,7 @@ import RuneIcon from '../shared/RuneIcon';
 import { runeForName } from '../../utils/thassilonianRunes';
 import { runeIconsOf, resolveRuneIcon } from '../../utils/runeIcons';
 import { itemTint, itemCharges, isGlowy, itemRarity, itemCode } from '../../utils/inventoryTile';
+import './IconTile.css';
 
 /**
  * Square placeholder tile for an inventory item: a dark bevelled face with a

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveHands, isTwoHanded, wieldableWorn, handCandidates } from './hands';
+import { deriveHands, isTwoHanded, isWieldable, wieldableWorn, handCandidates } from './hands';
 
 describe('deriveHands', () => {
   it('returns empty slots for no held items', () => {
@@ -52,14 +52,41 @@ describe('isTwoHanded', () => {
   });
 });
 
-describe('wieldableWorn / handCandidates', () => {
-  const sword = { uid: 's', name: 'Sword', state: 'held1', hand: 1 };
-  const dagger = { uid: 'd', name: 'Dagger', state: 'worn' };
-  const pack = { uid: 'p', name: 'Backpack', state: 'worn', container: { capacity: 4 } };
-  const tattoo = { uid: 't', name: 'Warding Tattoo', state: 'worn', traits: ['Tattoo'] };
+describe('isWieldable', () => {
+  it('accepts weapons, shields, staves/wands, and held-usage gear', () => {
+    expect(isWieldable({ strikes: { type: 'melee' } })).toBe(true);
+    expect(isWieldable({ shield: { bonus: 2 } })).toBe(true);
+    expect(isWieldable({ staff: { charges: { max: 5 } } })).toBe(true);
+    expect(isWieldable({ wand: {} })).toBe(true);
+    expect(isWieldable({ usage: 'held in 1 hand' })).toBe(true);
+  });
 
-  it('keeps worn wieldables, dropping containers and body-bound gear', () => {
-    expect(wieldableWorn([sword, dagger, pack, tattoo])).toEqual([dagger]);
+  it('rejects potions, armor, worn trinkets, and non-objects', () => {
+    expect(isWieldable({ name: 'Healing Potion', consumable: { kind: 'healing' } })).toBe(false);
+    expect(isWieldable({ name: 'Full Plate', acBonus: 6 })).toBe(false);
+    expect(isWieldable({ usage: 'worn cloak' })).toBe(false);
+    expect(isWieldable(null)).toBe(false);
+  });
+
+  it('rejects attachments/runes/talismans even when they carry strike data', () => {
+    // Seed shape: attachment field + Attached trait, no usage string.
+    expect(isWieldable({ name: 'Shield Spikes', attachment: { to: 'shield' }, traits: ['Attached'], strikes: { type: 'melee' } })).toBe(false);
+    expect(isWieldable({ name: 'Shield Boss', traits: ['Attached'], strikes: { type: 'melee' } })).toBe(false);
+    expect(isWieldable({ name: 'Bayonet', usage: 'attached to a firearm', strikes: { type: 'melee' } })).toBe(false);
+    expect(isWieldable({ name: 'Potency Rune', usage: 'applied to a weapon' })).toBe(false);
+    expect(isWieldable({ name: 'Talisman', usage: 'affixed to armor' })).toBe(false);
+  });
+});
+
+describe('wieldableWorn / handCandidates', () => {
+  const sword = { uid: 's', name: 'Sword', state: 'held1', hand: 1, strikes: { type: 'melee' } };
+  const dagger = { uid: 'd', name: 'Dagger', state: 'worn', strikes: { type: 'melee' } };
+  const potion = { uid: 'po', name: 'Healing Potion', state: 'worn' };
+  const pack = { uid: 'p', name: 'Backpack', state: 'worn', container: { capacity: 4 }, usage: 'held in 1 hand' };
+  const tattoo = { uid: 't', name: 'Warding Tattoo', state: 'worn', traits: ['Tattoo'], strikes: { type: 'melee' } };
+
+  it('keeps worn wieldables, dropping non-wieldables, containers and body-bound gear', () => {
+    expect(wieldableWorn([sword, dagger, potion, pack, tattoo])).toEqual([dagger]);
   });
 
   it('lists held items (one row per 2H grip) followed by the worn pool', () => {
