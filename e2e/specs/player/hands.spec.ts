@@ -1,14 +1,16 @@
 /**
- * HandsPanel + InventoryTab flow on the player character sheet.
+ * Hand management (Items-segment HandsGroup + HandsGlance strip) + InventoryTab
+ * flow on the player character sheet.
  *
- * Single test exercising the core SWAP → Held → Drop loop:
- *  - Encounter tab: SWAP a worn weapon into Hand 1, Confirm
- *  - Assert hands-slot-1 displays the weapon
+ * Single test exercising the core Swap → Held → Drop loop:
+ *  - Encounter tab: open the deck's Items segment, Swap the worn weapon into
+ *    Hand 1 via the hand-setter, Confirm hands (one Interact)
+ *  - Assert the at-a-glance strip shows the weapon in Hand 1
  *  - Inventory tab: the weapon shows in the Hands strip (Hand 1)
  *  - Open it → Release → it drops back into the Worn bag (Pick up offered)
  *
  * Runs on both desktop (chromium) and mobile (mobile-chromium) viewports
- * because the HandsPanel layout differs between phone and desktop.
+ * because the encounter surface layout differs between phone and desktop.
  */
 
 import { test, expect } from '../../fixtures/gm';
@@ -24,12 +26,12 @@ async function waitForSheet(page: import('@playwright/test').Page) {
   await expect(page.getByRole('heading', { name: 'E2E Fighter', level: 1 })).toBeVisible({ timeout: 15_000 });
 }
 
-test.describe('HandsPanel + InventoryTab', () => {
+test.describe('Hand management + InventoryTab', () => {
   test.beforeEach(async ({ reset }) => {
     await reset();
   });
 
-  test('SWAP weapon into Hand 1, Confirm, then Drop', async ({ page, seed }) => {
+  test('Swap weapon into Hand 1, Confirm, then Drop', async ({ page, seed }) => {
     await seed({
       item: [{
         id: 'e2e-longsword',
@@ -51,8 +53,8 @@ test.describe('HandsPanel + InventoryTab', () => {
       }],
     });
 
-    // HandsPanel lives in the encounter surface, so put the sheet in an active
-    // encounter via the mocked session (no Foundry / GM peer in an E2E run).
+    // The hands surfaces live on the encounter play tab, so put the sheet in
+    // an active encounter via the mocked session (no Foundry / GM peer here).
     await mockSession(page, {
       seed: { cnmh_encounter_global: activeEncounter(CHAR_ID, 'E2E Fighter') },
     });
@@ -66,14 +68,15 @@ test.describe('HandsPanel + InventoryTab', () => {
       .getByRole('button', { name: 'Encounter', exact: true })
       .click();
 
-    // --- SWAP flow ---
-    await page.getByTestId('hands-swap').click();
-    // Swap panel opens; pick our longsword into Hand 1
-    await page.getByLabel(`pick-${LONGSWORD_UID}-h1`).click();
+    // --- Swap flow: deck Items segment → hand-setter → Confirm ---
+    await page.getByRole('tab', { name: 'Items' }).click();
+    await page.getByRole('button', { name: 'Swap E2E Longsword' }).click();
+    // Hand-setter opens; place the longsword (both hands empty → Hand 1).
+    await page.getByTestId(`hands-place-${LONGSWORD_UID}`).click();
     await page.getByTestId('hands-confirm').click();
 
-    // hands-slot-1 should now show the longsword name
-    await expect(page.getByTestId('hands-slot-1')).toContainText('E2E Longsword');
+    // The at-a-glance strip shows the longsword in Hand 1.
+    await expect(page.getByTestId('hands-glance-slot-1')).toContainText('E2E Longsword');
 
     // --- Inventory tab: held indicator ---
     await page

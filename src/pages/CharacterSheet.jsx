@@ -19,7 +19,7 @@ import UseConsumableModal from '../components/inventory/UseConsumableModal';
 import SpellgunAttackModal from '../components/encounter/SpellgunAttackModal';
 import DragonbreathModal from '../components/encounter/DragonbreathModal';
 import InventoryTab from '../components/inventory/InventoryTab';
-import HandsPanel from '../components/character-sheet/HandsPanel';
+import HandsGlance from '../components/encounter/HandsGlance';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ReadyActionButton from '../components/encounter/ReadyActionButton';
@@ -174,7 +174,9 @@ const CharacterSheet = () => {
                   )}
                   <InitiativeStrip charId={character.id} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
-                  <HandsPanel character={character} characterColor={characterColor} />
+                  {/* At-a-glance hands strip (read-only) — hand CHANGES live in
+                      the deck's Items segment (HandsGroup). */}
+                  <HandsGlance character={character} />
                 </>
               ) : (
                 <div className="cs-encounter-idle">

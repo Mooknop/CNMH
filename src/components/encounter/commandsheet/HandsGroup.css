@@ -1,0 +1,292 @@
+/* src/components/encounter/commandsheet/HandsGroup.css
+   Items-segment Hands group + the inline hand-setter (hand-management
+   redesign). Dark-shell tokens from pf2e-tokens.css. */
+
+.hands-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Resting item rows ───────────────────────────────────────── */
+.hands-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: 8px;
+}
+.hands-row--worn {
+  background: rgba(255, 255, 255, 0.02);
+}
+.hands-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hands-row-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--shell-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hands-row-state {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  line-height: 1;
+  color: var(--shell-text-tertiary);
+}
+/* "In Hand n" reads in the item's material tint. */
+.hands-row-state--ember { color: color-mix(in srgb, var(--ember-light) 80%, white); }
+.hands-row-state--iron { color: var(--iron-light); }
+.hands-row-state--arcane { color: var(--arcane-light); }
+.hands-row-state--verdant { color: var(--verdant-light); }
+.hands-row-state--gold { color: var(--gold-light); }
+
+.hands-badge-2h {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--arcane-light) 25%, transparent);
+  color: color-mix(in srgb, var(--arcane-light) 65%, white);
+}
+
+/* ── Action buttons (rows + setter pool) ─────────────────────── */
+.hands-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 11px;
+  min-height: 28px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hands-btn--neutral {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
+}
+.hands-btn--neutral:hover { background: rgba(255, 255, 255, 0.1); }
+.hands-btn--accent {
+  background: var(--accent-tint);
+  border: 1px solid var(--theme-accent, var(--accent-outline));
+  color: color-mix(in srgb, var(--ember-light) 80%, white);
+}
+.hands-btn--accent:hover { background: var(--accent-tint-hover); }
+
+/* ── Hand-setter (inline expander) ───────────────────────────── */
+.hands-setter {
+  padding: 10px 11px;
+  background: var(--surface-card);
+  border: 1px solid var(--theme-accent, var(--accent-outline));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 14px -5px color-mix(in srgb, var(--theme-accent, var(--accent-outline)) 55%, transparent);
+  animation: hands-setter-in 0.18s ease;
+}
+@keyframes hands-setter-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hands-setter { animation: none; }
+}
+
+.hands-setter-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.hands-setter-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+.hands-setter-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--shell-text-tertiary);
+}
+.hands-setter-cancel {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 8px;
+  background: none;
+  border: none;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Hand target slots ───────────────────────────────────────── */
+.hands-setter-slots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.hands-setter-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-radius: 8px;
+}
+.hands-setter-slot--filled {
+  background: var(--accent-tint);
+  border: 1px solid color-mix(in srgb, var(--theme-accent, var(--accent-outline)) 50%, transparent);
+}
+.hands-setter-slot--empty {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--shell-border-strong);
+}
+.hands-setter-slot--target {
+  border-color: var(--theme-accent, var(--accent-outline));
+  border-style: solid;
+}
+.hands-setter-slot-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--shell-text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hands-setter-plus {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-tertiary);
+}
+.hands-setter-slot-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hands-setter-slot-label {
+  font-size: 7.5px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.hands-setter-slot-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hands-setter-slot-name--empty {
+  font-weight: 500;
+  color: var(--shell-text-tertiary);
+}
+.hands-setter-release {
+  flex: none;
+  min-width: 28px;
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  background: none;
+  border: none;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Worn pool ───────────────────────────────────────────────── */
+.hands-setter-pool-label {
+  margin: 0 1px 6px;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.hands-setter-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hands-pool-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--shell-border);
+  border-radius: 8px;
+}
+.hands-pool-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--shell-text-primary);
+}
+.hands-setter-empty {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Confirm ─────────────────────────────────────────────────── */
+.hands-setter-confirm {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--theme-accent, var(--accent-outline));
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hands-setter-confirm .action-sym { color: #fff; }

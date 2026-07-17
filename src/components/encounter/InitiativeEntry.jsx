@@ -11,7 +11,7 @@ import { APP, globalKey } from '../../sync/keys';
 const fmtMod = (n) => `${n >= 0 ? '+' : ''}${n}`;
 const skillLabel = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 
-// Setup-phase banner shown above HandsPanel in the Encounter tab. Each player
+// Setup-phase banner shown above the hands strip in the Encounter tab. Each player
 // enters their roll into their own sheet — the GM panel waits until every
 // entry has a number before enabling "Begin Round 1". Renders nothing
 // outside the setup phase or for characters that aren't in the order

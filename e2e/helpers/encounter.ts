@@ -1,7 +1,7 @@
 // Build a minimal *active* encounter record (cnmh_encounter_global) for seeding
 // via mockSession. An active encounter makes usePlayMode report mode==='encounter',
 // which flips the sheet's mode-aware "play" tab to Encounter and renders the
-// combat surface (HandsPanel, ActionsList → the Magic button, TurnTrackerPanel).
+// combat surface (HandsGlance, ActionsList → the Segmented Deck, TurnTrackerPanel).
 //
 // Shape mirrors src/utils/encounterUtils.js (defaultEncounter + makePcEntry).
 export function activeEncounter(

@@ -18,6 +18,7 @@ import ActionSymbol from '../../shared/ActionSymbol';
 import ConfirmSheet from './ConfirmSheet';
 import DeckHeader from './DeckHeader';
 import SpellsSegment from './SpellsSegment';
+import HandsGroup from './HandsGroup';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
@@ -27,6 +28,7 @@ import { useChambers } from '../../../hooks/useChambers';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { isCharTurn } from '../../../utils/encounterUtils';
 import { buildActionCatalog, segmentTiles, capacityWeaponCards } from './buildActionCatalog';
+import { handCandidates } from '../../../utils/hands';
 import { suggestNow } from './suggestNow';
 import './SegmentedDeck.css';
 import { RELAY, syncKey } from '../../../sync/keys';
@@ -360,8 +362,13 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
     </>
   );
 
+  // The Hands group (hand-management redesign) leads the Items segment — the
+  // single home for Interact-on-gear (sheathe/stow/swap via the hand-setter).
+  const hasHandsGear = handCandidates(inventory).length > 0;
+
   const renderItems = () => (
     <>
+      <HandsGroup character={character} encounterMode={encounterMode} />
       {groups.consumables.length > 0 && (
         <section aria-label="Consumables">
           <SecHead tone="verdant" label="Consumables" />
@@ -374,7 +381,7 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
           <div className="deck-rows">{renderTiles(groups.gear, 'row')}</div>
         </section>
       )}
-      {groups.consumables.length + groups.gear.length === 0 && (
+      {groups.consumables.length + groups.gear.length === 0 && !hasHandsGear && (
         <p className="deck-empty">No usable items carried.</p>
       )}
     </>

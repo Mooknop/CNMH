@@ -48,6 +48,11 @@ vi.mock('./SpellsSegment', () => ({
   default: () => <div data-testid="spells-segment" />,
 }));
 
+// The Items-segment Hands group has its own suite (HandsGroup.test.jsx) — inert here.
+vi.mock('./HandsGroup', () => ({
+  default: () => <div data-testid="hands-group" />,
+}));
+
 // Tap a tile, then confirm it on the sheet (tap → confirm → resolver).
 const tapAndConfirm = (tile) => {
   fireEvent.click(tile);
@@ -349,6 +354,21 @@ describe('SegmentedDeck', () => {
     const consumables = screen.getByRole('region', { name: 'Consumables' });
     const potion = within(consumables).getByRole('button', { name: 'Healing Potion' });
     expect(within(potion).getByText('draw +1')).toBeInTheDocument();
+  });
+
+  it('hosts the Hands group in the Items segment', () => {
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Items' }));
+    expect(screen.getByTestId('hands-group')).toBeInTheDocument();
+  });
+
+  it('suppresses the empty-items line when only hand gear is carried', () => {
+    mockUseCharacter.mockReturnValue(baseModel({
+      inventory: [{ uid: 'w-1', name: 'Longsword', state: 'worn', strikes: { type: 'melee' } }],
+    }));
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Items' }));
+    expect(screen.queryByText('No usable items carried.')).not.toBeInTheDocument();
   });
 
   it('lists reload tiles under Reload & Gear', () => {

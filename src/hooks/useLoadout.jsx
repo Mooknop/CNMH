@@ -4,7 +4,7 @@ import { APP, syncKey } from '../sync/keys';
 
 // Single writer for the durable live-loadout map
 // cnmh_loadout_<characterId> = { [uid]: { state?, container?, hand? } }.
-// Shared by the Encounter HandsPanel and the Inventory-tab action buttons so
+// Shared by the encounter hands surfaces (HandsGroup) and the Inventory-tab action buttons so
 // the patch semantics live in exactly one place. Reads flow back through
 // useCharacter's effective tree (kept in sync same-client by the Slice-A
 // SessionContext fix).
