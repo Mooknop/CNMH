@@ -34,6 +34,10 @@
   border: 1px solid var(--shell-border);
   border-radius: 8px;
 }
+/* The 26px chip tile reads better with tighter corners than the 52px grid
+   default. */
+.hands-glance-chip .icon-tile { border-radius: 7px; }
+.hands-glance-chip .icon-tile-face { border-radius: 6px; }
 .hands-glance-chip--empty {
   background: transparent;
   border-style: dashed;

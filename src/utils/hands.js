@@ -27,11 +27,39 @@ export const deriveHands = (items = []) => {
 export const isTwoHanded = (item) =>
   /\b(?:2|two)\s+hands\b/i.test(String(item?.usage || ''));
 
-// The Worn items a hand could take: on-person, not a container (can't be
-// held), not body-bound (tattoos can't leave the body for a hand).
+// Whether the item is something you'd wield — the Hands group's Swap list is
+// for gear that belongs in a hand, not every worn belonging. Weapons (Strike
+// data), shields, staves/wands, and anything whose usage says it's held
+// (torches, healer's tools, …) qualify; potions, armor, and plain worn
+// trinkets don't (consumables already have their own draw-costed tiles).
+export const isWieldable = (item) => {
+  if (!item) return false;
+  // Attachments, runes and talismans ride on a host — they carry strike/usage
+  // data but are never wielded on their own (Shield Spikes, weapon runes, …).
+  // Seed shapes vary: an `attachment` field / Attached trait (spikes, boss) or
+  // an attached/affixed/applied usage string (runes, talismans).
+  if (item.attachment) return false;
+  if ((item.traits || []).some((t) => String(t).toLowerCase() === 'attached')) return false;
+  if (/\b(attached|affixed|applied)\b/i.test(String(item.usage || ''))) return false;
+  return (
+    !!item.strikes ||
+    !!item.shield ||
+    !!item.staff ||
+    !!item.wand ||
+    /\bheld\b/i.test(String(item.usage || ''))
+  );
+};
+
+// The Worn items a hand could take: on-person, wieldable, not a container
+// (can't be held), not body-bound (tattoos can't leave the body for a hand).
 export const wieldableWorn = (items = []) =>
   (Array.isArray(items) ? items : []).filter(
-    (e) => e && e.state === 'worn' && !isContainer(e) && !isBodyBound(e)
+    (e) =>
+      e &&
+      e.state === 'worn' &&
+      isWieldable(e) &&
+      !isContainer(e) &&
+      !isBodyBound(e)
   );
 
 // Everything the Items-segment Hands group lists: currently-held items (a 2H
