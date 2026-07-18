@@ -130,6 +130,7 @@ const Dossier = ({ charId, character, model }) => {
     const fmtMod = (v) => (v >= 0 ? `+${v}` : `${v}`);
     return (
       <section
+        key={focusSelf.entryId}
         className="dossier dossier--self"
         role="region"
         aria-label={`Focused: ${focusSelf.name} (you)`}
@@ -204,6 +205,7 @@ const Dossier = ({ charId, character, model }) => {
     const allyInReach = inReach(focusAlly.entryId);
     return (
       <section
+        key={focusAlly.entryId}
         className="dossier dossier--ally"
         role="region"
         aria-label={`Focused ally: ${focusAlly.name}`}
@@ -272,7 +274,7 @@ const Dossier = ({ charId, character, model }) => {
   // ── Homebrew / un-captured foe — no stat block to redact or reveal ────────
   if (!defenses && !bestiary) {
     return (
-      <section className="dossier dossier--unknown" role="region" aria-label={`Focused: ${name}`}>
+      <section key={entryId} className="dossier dossier--unknown" role="region" aria-label={`Focused: ${name}`}>
         <header className="dossier-head">
           <span className="dossier-portrait dossier-portrait--unknown" aria-hidden="true">?</span>
           <div className="dossier-id">
@@ -360,6 +362,7 @@ const Dossier = ({ charId, character, model }) => {
   return (
     <>
     <section
+      key={entryId}
       className={`dossier ${identified ? 'dossier--foe' : 'dossier--unknown'}`}
       role="region"
       aria-label={`Focused: ${displayName}`}
