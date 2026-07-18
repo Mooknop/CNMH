@@ -246,3 +246,61 @@ describe('HandsGroup (Items-segment hands rows + hand-setter)', () => {
     expect(screen.queryByTestId('hands-row-h-6')).not.toBeInTheDocument();
   });
 });
+
+describe('HandsGroup — strapped shields (bucklers S3)', () => {
+  const withBuckler = () => {
+    const char = character();
+    char.inventory.push({
+      uid: 'h-7', ref: 'buckler', name: 'Buckler', weight: 0.1, quantity: 1,
+      shield: { bonus: 1, hardness: 3, health: 6, breakThreshold: 3, strapped: true },
+    });
+    return char;
+  };
+
+  it('lists a worn buckler with Strap buttons instead of Swap', () => {
+    render(<HandsGroup character={withBuckler()} encounterMode />);
+    const r = row('h-7');
+    expect(within(r).getByTestId('hands-strap-h-7-1')).toBeInTheDocument();
+    expect(within(r).getByTestId('hands-strap-h-7-2')).toBeInTheDocument();
+    expect(within(r).queryByRole('button', { name: 'Swap Buckler' })).not.toBeInTheDocument();
+  });
+
+  it('Strap commits: strapHand written, 1 Interact, log; Unstrap reverses', () => {
+    render(<HandsGroup character={withBuckler()} encounterMode />);
+    fireEvent.click(screen.getByTestId('hands-strap-h-7-1'));
+    expect(sync.__get('cnmh_loadout_hero')['h-7']).toMatchObject({ state: 'worn', strapHand: 1 });
+    expect(spendActions).toHaveBeenCalledTimes(1);
+    expect(spendActions).toHaveBeenCalledWith(1, 'Interact');
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'action',
+      charId: 'hero',
+      text: expect.stringMatching(/Hero straps the Buckler to hand 1 \(1 act\)/),
+    }));
+    expect(within(row('h-7')).getByText('On Hand 1')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('hands-unstrap-h-7'));
+    expect(sync.__get('cnmh_loadout_hero')['h-7'].strapHand).toBeUndefined();
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringMatching(/Hero unstraps the Buckler \(1 act\)/),
+    }));
+  });
+
+  it('Swap never offers or disturbs a strapped buckler', () => {
+    sync.__set('cnmh_loadout_hero', { 'h-7': { state: 'worn', strapHand: 1 } });
+    render(<HandsGroup character={withBuckler()} encounterMode />);
+    openSwap();
+    expect(screen.queryByTestId('hands-place-h-7')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('hands-place-h-0'));
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    expect(sync.__get('cnmh_loadout_hero')['h-7']).toMatchObject({ state: 'worn', strapHand: 1 });
+  });
+
+  it('reads "hand tied up" while the strapped hand wields a weapon', () => {
+    sync.__set('cnmh_loadout_hero', {
+      'h-0': { state: 'held1', hand: 1 },
+      'h-7': { state: 'worn', strapHand: 1 },
+    });
+    render(<HandsGroup character={withBuckler()} encounterMode />);
+    expect(within(row('h-7')).getByText(/On Hand 1 — hand tied up/)).toBeInTheDocument();
+  });
+});
+

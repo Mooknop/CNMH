@@ -3,7 +3,7 @@ import IconTile from './IconTile';
 import { useDraggable, DropZone } from './dnd';
 import { isContainer } from '../../utils/InventoryUtils';
 import { isBodyBound } from '../../utils/itemState';
-import { deriveHands } from '../../utils/hands';
+import { deriveHands, isStrappedShield } from '../../utils/hands';
 
 /**
  * A draggable hand tile (outside encounter). Tap opens the ItemModal; drag it
@@ -48,24 +48,38 @@ const StaticHandTile = ({ item, onItemClick, glow }) => (
  * unhand it. In encounter mode the strip is read-only — hand changes go through
  * the Encounter tab's Swap action (the PF2e Interact economy).
  *
+ * A strapped-class shield (buckler, `shield.strapped`) never occupies a slot:
+ * drop one onto a hand to STRAP it there instead (strapTo), shown as a badge
+ * under the slot label; the badge's × unstraps (outside encounter only), and
+ * tapping it opens the ItemModal. Dimmed while the hand is tied up.
+ *
  * @param {Object[]} items       - effective held items (held1 / held2)
+ * @param {Object[]} straps      - on-person strapped-class shields (worn)
  * @param {boolean}  interactive - false in encounter mode (read-only)
  * @param {Function} setHands    - useLoadout.setHands({ hand1, hand2 })
+ * @param {Function} strapTo     - useLoadout.strapTo(uid, hand)
+ * @param {Function} unstrap     - useLoadout.unstrap(uid)
  * @param {Function} onItemClick - (item) => void
  * @param {boolean}  [glow]
  */
-const HandsStrip = ({ items = [], interactive, setHands, onItemClick, glow = true }) => {
+const HandsStrip = ({ items = [], straps = [], interactive, setHands, strapTo, unstrap, onItemClick, glow = true }) => {
   const { slot1, slot2 } = deriveHands(items);
   const current = { hand1: slot1 ? slot1.uid : null, hand2: slot2 ? slot2.uid : null };
 
   // Assign an item to a hand, keeping the other hand. Dropping the same item on
-  // both hands yields a two-handed grip (setHands collapses it to held2).
-  const assignTo = (n, dropped) =>
+  // both hands yields a two-handed grip (setHands collapses it to held2). A
+  // strapped-class shield straps to the hand instead of filling it.
+  const assignTo = (n, dropped) => {
+    if (isStrappedShield(dropped)) {
+      strapTo?.(dropped.uid, n);
+      return;
+    }
     setHands(
       n === 1
         ? { hand1: dropped.uid, hand2: current.hand2 }
         : { hand1: current.hand1, hand2: dropped.uid }
     );
+  };
 
   // Containers can't be held; body-bound gear (tattoos) can't leave the body
   // for a hand either.
@@ -73,6 +87,7 @@ const HandsStrip = ({ items = [], interactive, setHands, onItemClick, glow = tru
 
   const renderSlot = (n) => {
     const item = n === 1 ? slot1 : slot2;
+    const strap = straps.find((s) => s && s.strapHand === n) || null;
     const body = (
       <>
         <span className="hands-strip-label">Hand {n}</span>
@@ -85,6 +100,32 @@ const HandsStrip = ({ items = [], interactive, setHands, onItemClick, glow = tru
         ) : (
           <span className="hands-strip-empty" aria-hidden="true">
             <i className="hands-strip-empty-mark" />
+          </span>
+        )}
+        {strap && (
+          <span
+            className={`hands-strip-strap${strap.strapUsable ? '' : ' hands-strip-strap--blocked'}`}
+            data-testid={`hands-strip-strap-${n}`}
+            title={`${strap.name} strapped on${strap.strapUsable ? '' : ' — hand tied up'}`}
+          >
+            <button
+              type="button"
+              className="hands-strip-strap-name"
+              onClick={() => onItemClick && onItemClick(strap)}
+            >
+              🛡 {strap.name}
+            </button>
+            {interactive && (
+              <button
+                type="button"
+                className="hands-strip-strap-off"
+                aria-label={`Unstrap ${strap.name}`}
+                data-testid={`hands-strip-unstrap-${n}`}
+                onClick={() => unstrap?.(strap.uid)}
+              >
+                ×
+              </button>
+            )}
           </span>
         )}
       </>

@@ -56,6 +56,12 @@
 .hands-row-state--verdant { color: var(--verdant-light); }
 .hands-row-state--gold { color: var(--gold-light); }
 
+/* Strapped-shield rows (bucklers S3): "On Hand n" reads iron while usable,
+   dimming to the warning tint when the hand is tied up. */
+.hands-row--strap { background: rgba(255, 255, 255, 0.02); }
+.hands-row-state--strapped { color: var(--iron-light); }
+.hands-row-state--blocked { color: var(--gold-light); font-style: italic; }
+
 .hands-badge-2h {
   font-size: 7px;
   font-weight: 700;
