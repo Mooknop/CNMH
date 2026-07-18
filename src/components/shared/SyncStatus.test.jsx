@@ -8,11 +8,12 @@ import SyncStatus from './SyncStatus';
 // live case models a healthy, handshaking bridge.
 const hello = (protocol = 1) => ({ protocol, module: '1.9.0', ts: Date.now() });
 
-const renderStatus = ({ connected, foundryConnected, bridgehello } = {}) =>
+const renderStatus = ({ connected, foundryConnected, bridgehello, pendingWrites } = {}) =>
   renderWithProviders(<SyncStatus />, {
     session: {
       connected,
       foundryConnected,
+      pendingWrites,
       ...(bridgehello ? { state: { global: { [RELAY.BRIDGEHELLO]: bridgehello } } } : {}),
     },
   });
@@ -49,6 +50,16 @@ describe('SyncStatus', () => {
   it('treats a downed DO as offline even if a stale Foundry flag lingers', () => {
     renderStatus({ connected: false, foundryConnected: true });
     expect(screen.getByText(/Offline/)).toHaveAttribute('data-state', 'offline');
+  });
+
+  it('shows the reconnecting badge when the link is down with writes queued', () => {
+    // A player mid-action during a reconnect window should see their change is
+    // held (SessionContext queues and flushes it), not silently lost.
+    renderStatus({ connected: false, foundryConnected: false, pendingWrites: 2 });
+    const badge = screen.getByText(/Reconnecting/);
+    expect(badge).toHaveClass('sync-pending');
+    expect(badge).toHaveAttribute('data-state', 'pending');
+    expect(badge).toHaveAttribute('data-connected', 'false');
   });
 
   it('warns when a connected bridge never said hello (pre-handshake module, #1310)', () => {

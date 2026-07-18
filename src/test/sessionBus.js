@@ -18,6 +18,7 @@ export function makeSessionBus({
   state = {},
   connected = true,
   foundryConnected = true,
+  pendingWrites = 0,
 } = {}) {
   // Deep-ish copy so a shared fixture object can't leak writes across tests.
   const serverState = JSON.parse(JSON.stringify(state));
@@ -38,6 +39,7 @@ export function makeSessionBus({
   return {
     connected,
     foundryConnected,
+    pendingWrites,
     getState: (characterId, stateType) => serverState[characterId]?.[stateType],
     getAllState: (characterId) => serverState[characterId],
     sendUpdate: (characterId, stateType, value, options) => {

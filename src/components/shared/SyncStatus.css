@@ -24,6 +24,13 @@
   background: rgba(120, 120, 120, 0.15);
 }
 
+/* Link down with queued writes waiting to flush — warmer than plain offline
+   so a mid-action player can see their change is held, not lost. */
+.sync-pending {
+  color: #8a6d00;
+  background: rgba(245, 191, 0, 0.18);
+}
+
 /* Bridge protocol behind the app's minimum (#1310) — louder than sandbox:
    the game LOOKS live but relay features are silently degraded. */
 .sync-stale {

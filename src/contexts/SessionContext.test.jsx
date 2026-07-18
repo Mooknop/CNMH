@@ -181,6 +181,104 @@ describe('SessionContext', () => {
     expect(api.getState('IzzyUncut', 'staff')).toBe(2);
   });
 
+  // The Exploit Vulnerability write-loss incident: a write during the reconnect
+  // window vanished — never sent, then wiped by the next FULL_STATE reconcile.
+  describe('reconnect write queue', () => {
+    it('queues a write made while CONNECTING and flushes it on open', () => {
+      let api;
+      render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+      act(() => { api.sendUpdate('Ashka', 'itemeffects', ['ev-combusted']); });
+      expect(MockWS.last.sent).toHaveLength(0);
+      expect(api.pendingWrites).toBe(1);
+      act(() => { MockWS.last._open(); });
+      expect(MockWS.last.sent).toHaveLength(1);
+      expect(JSON.parse(MockWS.last.sent[0])).toEqual({
+        type: 'UPDATE', characterId: 'Ashka', key: 'itemeffects', value: ['ev-combusted'],
+      });
+    });
+
+    it('dedupes queued writes per characterId+key, keeping the newest value in order', () => {
+      let api;
+      render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+      act(() => {
+        api.sendUpdate('Ashka', 'itemeffects', ['stale']);
+        api.sendUpdate('Ashka', 'hp', { current: 12 });
+        api.sendUpdate('Ashka', 'itemeffects', ['fresh']);
+      });
+      expect(api.pendingWrites).toBe(2);
+      act(() => { MockWS.last._open(); });
+      expect(MockWS.last.sent.map((f) => JSON.parse(f))).toEqual([
+        { type: 'UPDATE', characterId: 'Ashka', key: 'itemeffects', value: ['fresh'] },
+        { type: 'UPDATE', characterId: 'Ashka', key: 'hp', value: { current: 12 } },
+      ]);
+    });
+
+    it('the sandbox freeze still drops writes — they are not queued for later', () => {
+      let api;
+      render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+      act(() => { MockWS.last._open(); }); // sandbox: connected, Foundry down
+      act(() => { api.sendUpdate('Ashka', 'focus', 1); });
+      expect(api.pendingWrites).toBe(0);
+      // Reconnect cycle: a frozen write must not resurface as a flushed frame.
+      act(() => { MockWS.last._error(); });
+      act(() => { vi.advanceTimersByTime(3000); });
+      act(() => { MockWS.last._open(); });
+      expect(MockWS.last.sent).toHaveLength(0);
+    });
+
+    it('a queued write survives the hydration reconcile (overlaid onto FULL_STATE)', () => {
+      // The DO snapshots on socket attach, BEFORE the flushed frames land, so
+      // the snapshot arrives without the key — the raw #1476 reconcile would
+      // treat that absence as authoritative and wipe the write we just flushed.
+      let api;
+      render(
+        <SessionProvider>
+          <Probe onReady={(s) => { api = s; }} />
+          <Subscriber characterId="Ashka" type="itemeffects" />
+        </SessionProvider>
+      );
+      act(() => { api.sendUpdate('Ashka', 'itemeffects', ['ev-combusted']); });
+      act(() => { MockWS.last._open(); });
+      act(() => { MockWS.last._msg({ type: 'FULL_STATE', payload: {} }); });
+      expect(api.getState('Ashka', 'itemeffects')).toEqual(['ev-combusted']);
+      expect(screen.getByTestId('sub').textContent).toBe('ev-combusted');
+      expect(api.hydrations).toBe(1);
+      expect(api.pendingWrites).toBe(0);
+    });
+
+    it('a newer OPEN-path write supersedes its queued value in the overlay', () => {
+      // Queued A, flushed, then the user writes B before FULL_STATE arrives:
+      // the overlay must carry B, not revert to A.
+      let api;
+      render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+      act(() => { api.sendUpdate('Ashka', 'itemeffects', ['old']); });
+      act(() => {
+        MockWS.last._open();
+        MockWS.last._msg({ type: 'PRESENCE', foundry: true });
+      });
+      act(() => { api.sendUpdate('Ashka', 'itemeffects', ['new']); });
+      act(() => { MockWS.last._msg({ type: 'FULL_STATE', payload: {} }); });
+      expect(api.getState('Ashka', 'itemeffects')).toEqual(['new']);
+    });
+
+    it('re-flushes on the next reconnect if the socket dies before FULL_STATE confirms', () => {
+      let api;
+      render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+      act(() => { api.sendUpdate('Ashka', 'itemeffects', ['ev']); });
+      act(() => { MockWS.last._open(); });
+      expect(MockWS.last.sent).toHaveLength(1);
+      act(() => { MockWS.last._error(); }); // died before any FULL_STATE
+      act(() => { vi.advanceTimersByTime(3000); });
+      act(() => { MockWS.last._open(); });
+      // Same frame again on the fresh socket — UPDATE is full-value
+      // last-write-wins, so the resend is harmless and the write can't be lost.
+      expect(MockWS.last.sent).toHaveLength(1);
+      expect(JSON.parse(MockWS.last.sent[0]).value).toEqual(['ev']);
+      act(() => { MockWS.last._msg({ type: 'FULL_STATE', payload: {} }); });
+      expect(api.pendingWrites).toBe(0);
+    });
+  });
+
   it('ignores malformed messages', () => {
     render(<SessionProvider><Subscriber characterId="X" type="y" /></SessionProvider>);
     act(() => { MockWS.last._open(); MockWS.last._msg('not-json'); });
