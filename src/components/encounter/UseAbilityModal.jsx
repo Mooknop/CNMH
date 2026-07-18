@@ -710,6 +710,8 @@ const UseAbilityModal = ({
           <DamagePanel
             mode="save"
             profile={damageProfile}
+            charId={character.id}
+            flavor={rollFlavor}
             entered={saveDmgInput}
             onEntered={setSaveDmgInput}
             riderState={saveRiderState}
