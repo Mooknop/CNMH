@@ -1,5 +1,6 @@
 import React from 'react';
-import { riderEnabled, formatDamageBreakdown, damageHintParts, damageEntryParts } from '../../utils/damage';
+import { riderEnabled, formatDamageBreakdown, damageHintParts, damageEntryParts, damageRollFormulas } from '../../utils/damage';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './DamagePanel.css';
 
 /**
@@ -29,6 +30,12 @@ import './DamagePanel.css';
  * @param {boolean}  critDouble  - the built-in "crit ×2" toggle (off when the table
  *                                 rolls doubled dice and enters the doubled total)
  * @param {Function} onCritDouble
+ * @param {string}   [charId]    - dice-tower rail (#1490 S5): with a rail-capable
+ *                                 bridge, each entry gets a Roll button that
+ *                                 delegates its part's formula (damageRollFormulas)
+ *                                 and fills the input with the rolled TOTAL —
+ *                                 un-doubled, so the crit ×2 toggle stays honest
+ * @param {string}   [flavor]    - chat-label prefix for delegated damage rolls
  */
 const DamagePanel = ({
   mode = 'attack',
@@ -42,6 +49,8 @@ const DamagePanel = ({
   onToggleRider,
   critDouble,
   onCritDouble,
+  charId = null,
+  flavor = '',
 }) => {
   const isSave = mode === 'save';
   if (!profile || (!isSave && hitResults.length === 0)) return null;
@@ -50,6 +59,9 @@ const DamagePanel = ({
   const hintParts = damageHintParts(profile, riderState);
   const entryParts = damageEntryParts(profile, riderState);
   const multiPart = !isSave && !!onEnteredPart && entryParts.length > 1;
+  const rollFormulas = damageRollFormulas(profile, riderState);
+  const damageFlavor = (type) =>
+    `${flavor ? `${flavor} — ` : ''}${type ? `${type} ` : ''}damage`;
 
   const critToggle = anyCrit && (
     <label className="dmg-rider-toggle">
@@ -87,13 +99,15 @@ const DamagePanel = ({
           {entryParts.map((p) => (
             <label key={p.key} className="dmg-part-entry">
               <span className="dmg-part-label">{p.dice}{p.type ? ` ${p.type}` : ''}</span>
-              <input
-                type="number"
-                className="dmg-total-input"
+              <FoundryDiceInput
+                inputClassName="dmg-total-input"
                 placeholder="total"
-                aria-label={`rolled ${p.type || 'damage'} total`}
+                ariaLabel={`rolled ${p.type || 'damage'} total`}
                 value={enteredParts?.[p.key] ?? ''}
-                onChange={(e) => onEnteredPart(p.key, e.target.value)}
+                onValue={(v) => onEnteredPart(p.key, v)}
+                charId={charId}
+                formula={rollFormulas[p.key] ?? ''}
+                flavor={damageFlavor(p.type)}
               />
             </label>
           ))}
@@ -101,13 +115,15 @@ const DamagePanel = ({
         </div>
       ) : (!isSave || profile.expression) && (
         <div className="dmg-entry-row">
-          <input
-            type="number"
-            className="dmg-total-input"
+          <FoundryDiceInput
+            inputClassName="dmg-total-input"
             placeholder="total"
-            aria-label="rolled damage total"
+            ariaLabel="rolled damage total"
             value={entered}
-            onChange={(e) => onEntered(e.target.value)}
+            onValue={onEntered}
+            charId={charId}
+            formula={rollFormulas.base ?? ''}
+            flavor={damageFlavor(null)}
           />
           {critToggle}
         </div>

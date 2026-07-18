@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFoundryDice } from '../../hooks/useFoundryDice';
-import { d20FaceFrom } from '../../utils/diceRelay';
+import { d20FaceFrom, isRollableExpression } from '../../utils/diceRelay';
 import './FoundryDiceInput.css';
 
 /**
@@ -22,6 +22,11 @@ import './FoundryDiceInput.css';
  * @param {string}   [id]           - input id, for hosts that pair a <label htmlFor>
  * @param {string|number} [min]/[max] - native range attributes some hosts set (1/20)
  * @param {boolean}  [disabled]     - disables input AND roll button (resolved states)
+ * @param {string}   [formula]      - dice expression to delegate (default '1d20').
+ *                                    A d20 request fills the RAW FACE; any other
+ *                                    formula (damage, #1490 S5) fills the TOTAL.
+ *                                    A non-rollable expression ('1d6 cold' prose,
+ *                                    '') hides the button — manual entry only.
  */
 export default function FoundryDiceInput({
   value,
@@ -35,14 +40,15 @@ export default function FoundryDiceInput({
   min = undefined,
   max = undefined,
   disabled = false,
+  formula = '1d20',
 }) {
   const { roll, rolling, available } = useFoundryDice();
-  const showRoll = available && !!charId;
+  const showRoll = available && !!charId && isRollableExpression(formula);
 
   const handleRoll = async () => {
-    const ack = await roll({ formula: '1d20', flavor, charId });
-    const face = d20FaceFrom(ack);
-    if (face != null) onValue(String(face));
+    const ack = await roll({ formula, flavor, charId });
+    const filled = formula === '1d20' ? d20FaceFrom(ack) : (ack?.total ?? null);
+    if (filled != null) onValue(String(filled));
   };
 
   return (

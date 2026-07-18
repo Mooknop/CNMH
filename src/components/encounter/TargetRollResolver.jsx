@@ -305,6 +305,10 @@ const TargetRollResolver = forwardRef(({
       {damage && results && (
         <DamagePanel
           profile={damage}
+          // Damage dice delegate regardless of manual-total mode — the roll is
+          // the profile's own formula, not the d20 (#1490 S5).
+          charId={charId}
+          flavor={rollFlavor}
           hitResults={results.filter(
             (r) => r.degree === 'success' || r.degree === 'criticalSuccess'
           )}

@@ -38,6 +38,12 @@ export const buildRollRequest = ({ charId, formula, flavor }) => ({
   ts: Date.now(),
 });
 
+// Client-side guard for delegated damage formulas (#1490 S5): content
+// sometimes authors expressions with prose ('1d6 cold') that Foundry's Roll
+// parser rejects — hide the button rather than round-trip a guaranteed nack.
+export const isRollableExpression = (expr) =>
+  typeof expr === 'string' && /\d*d\d/i.test(expr) && /^[0-9dD+\-*/(), ]+$/.test(expr.trim());
+
 // The raw d20 face from an ack's kept-die pairs — what the manual d20 input
 // would have been typed with. Falls back to the total for a bare `1d20`
 // request answered by a bridge that sent no pairs.

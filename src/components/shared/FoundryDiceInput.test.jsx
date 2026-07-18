@@ -121,3 +121,48 @@ describe('FoundryDiceInput', () => {
     expect(rollButton()).toBeNull();
   });
 });
+
+// ── damage formulas (#1490 S5) ───────────────────────────────────────────────
+describe('FoundryDiceInput formula prop', () => {
+  function DamageHost({ formula }) {
+    const [val, setVal] = useState('');
+    return (
+      <FoundryDiceInput
+        value={val}
+        onValue={setVal}
+        charId="Amiri"
+        flavor="Strike: Scythe — damage"
+        formula={formula}
+        ariaLabel="rolled damage total"
+        inputClassName="dmg-total-input"
+      />
+    );
+  }
+
+  test('a damage formula fills the TOTAL from the ack, not a die face', async () => {
+    const { session } = renderWithProviders(<DamageHost formula="2d8+4" />, {
+      session: { state: RAIL_STATE },
+    });
+
+    await act(async () => { fireEvent.click(rollButton()); });
+    const req = sentReq(session);
+    expect(req.value).toEqual(expect.objectContaining({ formula: '2d8+4' }));
+
+    await act(async () => {
+      session.push('global', RELAY.ROLLDONE, {
+        id: req.value.id, charId: 'Amiri', ok: true, total: 13, faces: [[8, 5], [8, 4]], ts: Date.now(),
+      });
+    });
+    expect(screen.getByLabelText('rolled damage total')).toHaveValue(13);
+  });
+
+  test('a non-rollable expression (authored prose / empty) hides the button', () => {
+    renderWithProviders(<DamageHost formula="1d6 cold" />, { session: { state: RAIL_STATE } });
+    expect(rollButton()).toBeNull();
+  });
+
+  test('an empty formula hides the button', () => {
+    renderWithProviders(<DamageHost formula="" />, { session: { state: RAIL_STATE } });
+    expect(rollButton()).toBeNull();
+  });
+});
