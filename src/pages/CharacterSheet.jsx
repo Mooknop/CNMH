@@ -154,9 +154,11 @@ const CharacterSheet = () => {
         // internally when mode === 'downtime'). SkillPrompt + ChallengePrompts
         // render in every mode — VP challenge tracks run in exploration/downtime too.
         if (mode === 'encounter') {
+          // Focus Dossier skeleton (#1502 S5): self-status bar · TARGET ▸
+          // selector · Dossier · deck (contextual plays + segments) · tools row
+          // (TurnTrackerPanel + objectives) · ✋ Hands · Combat Log.
           return (
             <>
-              <ObjectivesStrip />
               {/* Roll toast (#1490 S3) — fixed overlay; renders nothing until a
                   fresh roll fx event lands, so it mounts unconditionally here. */}
               <RollToast />
@@ -171,11 +173,8 @@ const CharacterSheet = () => {
                   <SelfStatusBar charId={character.id} character={character} model={characterModel} />
                   <InitiativeEntry charId={character.id} character={character} />
                   {/* Off-turn (#471): the stage spotlights whoever is acting now.
-                      On your own turn the budget (former ActionDial hero) lives in
-                      the Segmented Deck's fused sticky header, along with the
-                      focus banner — so neither renders separately here. The
-                      Shield Block bar + ReactionPrompt keep reactions reachable
-                      until the stage owns them (#474/#475). */}
+                      The Shield Block bar + ReactionPrompt keep reactions
+                      reachable until the stage owns them (#474/#475). */}
                   {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
                     <EncounterStage character={character} characterColor={characterColor} />
                   ) : (
@@ -186,19 +185,27 @@ const CharacterSheet = () => {
                       leads the screen, directly under the target selector. The
                       character + derived model feed the self state (2c). */}
                   <Dossier charId={character.id} character={character} model={characterModel} />
+                  <ActionsList character={character} characterColor={characterColor} />
+                  {/* Tools row (#1502 S5): shield / aura / sustain / free-action
+                      offers / Bestiary as chips, with the objectives chips
+                      alongside — below the deck, above hands + log. */}
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
+                  <ObjectivesStrip />
                   {/* At-a-glance hands strip (read-only) — hand CHANGES live in
                       the deck's Items segment (HandsGroup). */}
                   <HandsGlance character={character} />
                 </>
               ) : (
-                <div className="cs-encounter-idle">
-                  <span className="cs-encounter-idle-title">No Active Encounter</span>
-                  <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
-                  <InitiativeEntry charId={character.id} character={character} />
-                </div>
+                <>
+                  <ObjectivesStrip />
+                  <div className="cs-encounter-idle">
+                    <span className="cs-encounter-idle-title">No Active Encounter</span>
+                    <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
+                    <InitiativeEntry charId={character.id} character={character} />
+                  </div>
+                  <ActionsList character={character} characterColor={characterColor} />
+                </>
               )}
-              <ActionsList character={character} characterColor={characterColor} />
               <CombatLogPanel />
             </>
           );

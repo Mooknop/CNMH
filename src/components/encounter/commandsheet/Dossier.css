@@ -7,6 +7,9 @@
   margin: 0 var(--space-4);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  /* Focus swap = fast cross-fade (#1502 S5); the per-entry key remounts the
+     card so the animation replays on every target change. */
+  animation: dossier-in var(--fx-duration-quick, 150ms) var(--fx-ease-out, ease-out);
   border: 1px solid color-mix(in srgb, var(--theme-peril) 30%, transparent);
   background: linear-gradient(
     180deg,
@@ -417,3 +420,10 @@
 }
 .dossier-reach--in .dossier-reach-dot { background: var(--verdant-mid); }
 .dossier-reach--out .dossier-reach-dot { background: var(--theme-peril); }
+
+@keyframes dossier-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

@@ -1,27 +1,34 @@
+/* Tools row (#1502 S5): the residual turn controls — Raise/Lower Shield,
+   Dismiss aura, Bestiary — read as one wrapping chip row below the deck.
+   Free-action offers, sustain prompts and the Shield Block bar keep their
+   own full-width rows inside it (unchanged logic). */
 .ttp-panel {
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  padding: var(--space-1) var(--space-4);
   margin-bottom: 10px;
-  background: var(--surface-card, var(--dark-card-bg));
+  background: transparent;
 }
 
 /* ── Turn controls ──────────────────────────────────────── */
 /* The pips/MAP/reaction/Submit/status/order-strip moved to the Command Sheet
-   (ActionDial / InitiativeStrip) in #411; movement moved to MoveActionSheet in
-   #415. The order-strip chip + target-picker + use-chip styles this file used to
-   host for *other* components were relocated to those components' own CSS in var(--arcane-dark).
-   What remains is the residual panel: Raise/Lower Shield, Dismiss aura, turn-start
-   offers, and sustain prompts. */
+   (SelfStatusBar / InitiativeStrip); movement moved to MoveActionSheet in
+   #415. The group flattens into the panel's chip row. */
 .ttp-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-2);
-  background: rgba(255, 255, 255, 0.03);
+  display: contents;
+}
+
+/* Chip treatment for the row's buttons. */
+.ttp-panel .btn-secondary {
+  padding: 6px 10px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--shell-border);
-  flex-wrap: wrap;
+  font-size: 10.5px;
+  font-weight: 600;
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Raise Shield toggle */
@@ -43,12 +50,13 @@
   border-color: rgba(138, 95, 200, 0.5);
 }
 
-/* Turn-start free-action offer bar (#228 — Primary Threat) */
+/* Turn-start free-action offer bar (#228 — Primary Threat) — a full-width row
+   inside the chip flow. */
 .ttp-offer {
+  flex-basis: 100%;
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border: 1px dashed var(--shell-border-strong);
   border-radius: var(--radius-sm);
@@ -74,7 +82,9 @@
   border-color: var(--color-arcane, var(--shell-border-strong));
 }
 
-/* Shield Block bar rules live in ShieldBlockBar.css (shared with ReactionPrompt). */
+/* Shield Block bar rules live in ShieldBlockBar.css (shared with ReactionPrompt);
+   inside the tools row it takes its own full-width line. */
+.ttp-panel .ttp-shieldblock-bar { flex-basis: 100%; }
 
 /* ── Dark shell overrides (match base styles already — kept for specificity) */
 
