@@ -46,8 +46,8 @@ test.describe('Encounter lifecycle & turn tracker', () => {
 
     // Active encounter → the play tab is Encounter, and setup-phase UI shows.
     await expect(page.getByRole('region', { name: 'Initiative entry' })).toBeVisible();
-    // The Command Sheet dial owns the round/status line now; in setup it waits.
-    await expect(page.getByRole('region', { name: 'Turn budget' })).toContainText(/Waiting for initiative/);
+    // The self-status bar (#1502 S3) owns the round/status line; in setup it waits.
+    await expect(page.getByRole('region', { name: 'Self status' })).toContainText(/Waiting for initiative/);
     const order = page.getByLabel('Initiative order');
     await expect(order).toContainText(CHAR_NAME);
     await expect(order).toContainText('E2E Goblin');
@@ -74,12 +74,12 @@ test.describe('Encounter lifecycle & turn tracker', () => {
     await openEncounterTab(page);
 
     const tracker = page.getByRole('region', { name: 'Encounter tracker' });
-    const dial = page.getByRole('region', { name: 'Turn budget' });
+    const bar = page.getByRole('region', { name: 'Self status' });
     const stage = page.getByRole('region', { name: 'Off-turn encounter stage' });
     const endTurn = page.getByRole('button', { name: 'End turn' });
 
-    // The dial owns round + turn budget; on my own turn it offers End Turn.
-    await expect(dial).toContainText('Round 1');
+    // The self-status bar owns round + turn budget; on my own turn it offers End Turn.
+    await expect(bar).toContainText('Round 1');
     await expect(endTurn).toBeVisible();
     await expect(stage).toBeHidden();
     // The PC's entry is the current turn in the initiative strip.
@@ -87,10 +87,11 @@ test.describe('Encounter lifecycle & turn tracker', () => {
 
     await endTurn.click();
 
-    // App advances the shared turn index; off-turn the action-budget dial is gone
-    // and the stage takes over, spotlighting whoever is acting now.
+    // App advances the shared turn index; off-turn the bar stays (vitals +
+    // reaction, #1502 S3) but the budget pieces hide, and the stage takes
+    // over, spotlighting whoever is acting now.
     await session.expectSent('cnmh_encounter_global', (v) => v?.currentTurnIndex === 1);
-    await expect(dial).toBeHidden();
+    await expect(bar.getByLabel(/actions left/)).toBeHidden();
     await expect(stage).toContainText('E2E Goblin');
     await expect(endTurn).toBeHidden();
 
@@ -99,7 +100,7 @@ test.describe('Encounter lifecycle & turn tracker', () => {
       'cnmh_encounter_global',
       encounterState({ phase: 'in-progress', round: 2, currentTurnIndex: 0, order }),
     );
-    await expect(dial).toContainText('Round 2');
+    await expect(bar).toContainText('Round 2');
     await expect(endTurn).toBeVisible();
     await expect(stage).toBeHidden();
 
