@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from '../../test/renderWithProviders';
 import TargetRollResolver from './TargetRollResolver';
 
 const goblinEntry = {
@@ -551,5 +552,45 @@ describe('TargetRollResolver', () => {
     expect(dmg.final).toBe(18); // crit ×2, nothing else
     expect(dmg.iwr).toBeUndefined();
     expect(dmg.rawFinal).toBeUndefined();
+  });
+});
+
+// ── dice-tower rail (#1490 S2) ───────────────────────────────────────────────
+// The full delegated-roll flow is covered in FoundryDiceInput.test.jsx; here we
+// pin the resolver's wiring: the button surfaces only with a charId AND a
+// derivable bonus (manual-total mode can't use a raw face), and the plain
+// renders above — no SessionProvider → no bridge — never grow one.
+describe('TargetRollResolver dice-tower wiring', () => {
+  const railSession = { state: { global: { bridgehello: { protocol: 3 } } } };
+  const rollButton = () => screen.queryByRole('button', { name: /roll in foundry/i });
+
+  test('charId + rollBonus + rail-capable bridge → Roll in Foundry button', () => {
+    renderWithProviders(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        charId="Amiri" rollFlavor="Strike: Longsword"
+      />,
+      { session: railSession },
+    );
+    expect(rollButton()).toBeInTheDocument();
+  });
+
+  test('manual-total mode (rollBonus null) hides the button even with a charId', () => {
+    renderWithProviders(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null}
+        charId="Amiri" rollFlavor="Strike: Longsword"
+      />,
+      { session: railSession },
+    );
+    expect(rollButton()).toBeNull();
+  });
+
+  test('no charId → no button', () => {
+    renderWithProviders(
+      <TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5} />,
+      { session: railSession },
+    );
+    expect(rollButton()).toBeNull();
   });
 });
