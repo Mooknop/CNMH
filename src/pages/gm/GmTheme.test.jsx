@@ -85,8 +85,10 @@ describe('GmTheme', () => {
   it('renders per-character override inputs', () => {
     render(<GmTheme />);
     expect(screen.getByText('Per-character accent overrides')).toBeInTheDocument();
-    expect(screen.getByText('Pellias')).toBeInTheDocument();
-    expect(screen.getByText('Izzy')).toBeInTheDocument();
+    // Names now render in the accent-override rows AND the dice-set rows (#1490 S7).
+    expect(screen.getAllByText('Pellias').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Izzy').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByLabelText('Accent color for Pellias')).toBeInTheDocument();
   });
 
   it('does not render overrides section when characters list is empty', () => {
