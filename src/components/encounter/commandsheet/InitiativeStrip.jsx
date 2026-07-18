@@ -1,10 +1,11 @@
 // src/components/encounter/commandsheet/InitiativeStrip.jsx
-// Command Sheet initiative strip (#411, #429). Compact horizontal turn order
-// lifted from TurnTrackerPanel. Tapping any combatant focuses it (toggle): an
-// enemy drives the foe stat line + offensive tiles, an ally drives the support
-// banner + ally-targeted support (#429). All the existing per-entry chips travel
-// with it (flanked / Hunt Prey / conditions / aura / omen / stance / playing /
-// persistent).
+// The TARGET ▸ selector (#411, #429, #1502 S2) — the compact horizontal turn
+// order, restyled as the dossier's target picker. Tapping any combatant
+// focuses it (toggle): an enemy drives the foe dossier + offensive tiles, an
+// ally the support dossier, your own entry the self dossier. Entries tint by
+// kind (enemy peril · ally arcane · self ember), the focused one filled solid.
+// All the existing per-entry chips travel with it (flanked / Hunt Prey /
+// conditions / aura / omen / stance / playing / persistent).
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useSyncedState } from '../../../hooks/useSyncedState';
@@ -54,18 +55,25 @@ const InitiativeStrip = ({ charId }) => {
 
   return (
     <div className="cmd-init" aria-label="Initiative order">
+      <span className="cmd-init-label" aria-hidden="true">Target ▸</span>
       {order.map((entry, idx) => {
         const isCurrent = isInProgress && idx === encounter.currentTurnIndex;
         const isFocused = entry.entryId === focusId;
+        // Kind tint: enemy peril, another PC arcane, the viewer's own entry ember.
+        const kindClass = entry.kind === 'enemy'
+          ? 'cmd-init-entry--enemy'
+          : entry.charId === charId
+          ? 'cmd-init-entry--self'
+          : 'cmd-init-entry--ally';
         const className = [
           'cmd-init-entry',
+          kindClass,
           isCurrent ? 'cmd-init-entry--current' : '',
-          entry.kind === 'enemy' ? 'cmd-init-entry--enemy' : '',
           isFocused ? 'cmd-init-entry--focused' : '',
         ].filter(Boolean).join(' ');
 
         // Every combatant is tap-to-focus (#429): foes drive offense, allies
-        // drive support.
+        // drive support, yourself the personal readout (#1502 S2).
         return (
           <button
             key={entry.entryId}

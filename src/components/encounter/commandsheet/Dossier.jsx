@@ -1,13 +1,15 @@
 // src/components/encounter/commandsheet/Dossier.jsx
-// Focus Dossier (#1502 S1) — FocusBanner promoted into the visual lead of the
-// encounter tab. The focused combatant renders as a full card under the
+// Focus Dossier (#1502 S1/S2) — FocusBanner promoted into the visual lead of
+// the encounter tab. The focused combatant renders as a full card under the
 // initiative strip:
 // - a **revealed foe** leads with its recall-knowledge stat block (AC / Perc DC /
 //   RK DC / saves as a grid), IWR chips, and the active Exploit banner;
 // - an **unidentified foe** shows the same grid redacted to `??` per cell —
 //   Recall Knowledge / Exploit Vulnerability / damage reveals fill it in live;
-// - a **focused ally** flips to the support view: vitals + conditions + reach.
-// Self focus (state 2c) and the contextual action list are later slices.
+// - a **focused ally** flips to the support view: vitals + conditions + reach;
+// - the viewer's **own entry** (S2) is the personal readout: vitals, effects
+//   on you, your defenses, and the hero/focus/speed meta row.
+// The contextual action list is a later slice.
 import React from 'react';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
@@ -15,8 +17,10 @@ import { useExploitVulnerability } from '../../../hooks/useExploitVulnerability'
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { useAdjacency } from '../../../hooks/useAdjacency';
 import { useEnemyEffects } from '../../../hooks/useEnemyEffects';
+import { useEffects } from '../../../hooks/useEffects';
 import { useContent } from '../../../contexts/ContentContext';
 import { defenseDC } from '../../../utils/defense';
+import { getFocusInfo } from '../../../utils/SpellUtils';
 import { hydrateConditions, getCondition } from '../../../data/pf2eConditions';
 import {
   rkKeyFor,
@@ -26,7 +30,7 @@ import {
   isIwrRevealed,
 } from '../../../utils/recallKnowledge';
 import './Dossier.css';
-import { RELAY, globalKey, syncKey } from '../../../sync/keys';
+import { RELAY, APP, globalKey, syncKey } from '../../../sync/keys';
 
 const SAVE_KEYS = ['fortitude', 'reflex', 'will'];
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
@@ -48,23 +52,146 @@ const RkChip = ({ label, state }) => (
   </span>
 );
 
-const Dossier = ({ charId }) => {
-  const { focusEnemy, focusAlly } = useFocusTarget(charId);
+// The relay HP key holds a plain number (bridge writes) or a {current, max}
+// object (app writes) — normalize both, preferring an explicit max and falling
+// back to the caller's (own maxHp from the character model, null for allies).
+const readHp = (raw, fallbackMax = null) => {
+  if (typeof raw === 'number') return { current: raw, max: fallbackMax };
+  if (raw && typeof raw === 'object') {
+    return { current: raw.current ?? null, max: raw.max ?? fallbackMax };
+  }
+  return { current: null, max: fallbackMax };
+};
+
+// Shared vitals block: HIT POINTS label + current(/max) + bar when max known.
+const HpBlock = ({ hp, testid }) => (
+  <div className="dossier-hp" data-testid={testid}>
+    <div className="dossier-hp-row">
+      <span className="dossier-hp-label">Hit Points</span>
+      <span className="dossier-hp-value">
+        {hp.current}
+        {hp.max > 0 && <span className="dossier-hp-max">/{hp.max}</span>}
+      </span>
+    </div>
+    {hp.max > 0 && hp.current != null && (
+      <div className="dossier-hp-bar" aria-hidden="true">
+        {/* --hp-pct: fill width as a CSS custom property (avoids inline width) */}
+        <div
+          className="dossier-hp-fill"
+          style={{ '--hp-pct': `${Math.max(0, Math.min(100, (hp.current / hp.max) * 100))}%` }}
+        />
+      </div>
+    )}
+  </div>
+);
+
+const Dossier = ({ charId, character, model }) => {
+  const { focusEnemy, focusAlly, focusSelf } = useFocusTarget(charId);
   const { recordFor } = useRecallKnowledge();
   const { exploitFor } = useExploitVulnerability();
   const { effectsFor } = useEnemyEffects();
   const { effects: effectCatalog } = useContent();
   const { hasData: hasReachData, inReach } = useAdjacency(charId);
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
-  // Ally state (read unconditionally to keep hook order stable; keys are inert
-  // when no ally is focused).
-  const allyId = focusAlly?.charId || 'none';
-  const [allyHp] = useSyncedState(syncKey(RELAY.HP, allyId), null);
-  const [allyConditionsRaw] = useSyncedState(syncKey(RELAY.CONDITIONS, allyId), []);
+  // Focused-PC state — ally or self (read unconditionally to keep hook order
+  // stable; keys are inert when no PC is focused).
+  const pcId = (focusAlly || focusSelf)?.charId || 'none';
+  const [pcHpRaw] = useSyncedState(syncKey(RELAY.HP, pcId), null);
+  const [pcConditionsRaw] = useSyncedState(syncKey(RELAY.CONDITIONS, pcId), []);
+  // Self-only meta (own hero points, focus-points spent, effects on you).
+  const [heroPoints] = useSyncedState(syncKey(RELAY.HEROPOINTS, charId || 'none'), 0);
+  const [focusSpentRaw] = useSyncedState(syncKey(APP.FOCUS, charId || 'none'), 0);
+  const { effects: selfEffects } = useEffects(charId || 'none');
+
+  // ── Self focus (#1502 S2) — personal status readout ───────────────────────
+  if (focusSelf) {
+    const conditions = hydrateConditions(pcConditionsRaw || []);
+    const hp = readHp(pcHpRaw, model?.maxHp || null);
+    const saves = model?.saves || {};
+    // Effective AC (#746: armor-derived when worn gear owns it) and the Speed
+    // spine's derived total (#1219: `speed` is {base, total, …}, not a number).
+    const acValue = model?.armorClass?.value ?? model?.ac ?? null;
+    const speedValue = typeof model?.speed === 'number' ? model.speed : model?.speed?.total ?? null;
+    const focusInfo = getFocusInfo(character);
+    const focusMax = focusInfo?.max ?? 0;
+    const focusLeft = Math.max(0, focusMax - (Number(focusSpentRaw) || 0));
+    const subLine = [character?.ancestry, character?.class, character?.level != null ? `Level ${character.level}` : null]
+      .filter(Boolean)
+      .join(' · ');
+    const fmtMod = (v) => (v >= 0 ? `+${v}` : `${v}`);
+    return (
+      <section
+        className="dossier dossier--self"
+        role="region"
+        aria-label={`Focused: ${focusSelf.name} (you)`}
+      >
+        <header className="dossier-head">
+          <span className="dossier-portrait dossier-portrait--self" aria-hidden="true">
+            {monogram(focusSelf.name)}
+          </span>
+          <div className="dossier-id">
+            <span className="dossier-name dossier-name--self">
+              {focusSelf.name}
+              <span className="dossier-you-badge">YOU</span>
+            </span>
+            {subLine && <span className="dossier-sub dossier-sub--traits">{subLine}</span>}
+            {(selfEffects.length > 0 || conditions.length > 0) && (
+              <div className="dossier-chips">
+                {selfEffects.map((e) => (
+                  <span key={e.id} className="dossier-chip dossier-chip--gold">{e.name}</span>
+                ))}
+                {conditions.map((c) => (
+                  <span key={c.id} className="dossier-chip dossier-chip--peril">
+                    {c.name}{c.value ? ` ${c.value}` : ''}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </header>
+        {hp.current != null && <HpBlock hp={hp} testid="dossier-self-hp" />}
+        <div className="dossier-grid dossier-grid--defense" data-testid="dossier-self-defenses">
+          {[
+            { key: 'ac', label: 'AC', value: acValue },
+            { key: 'fortitude', label: 'Fort', value: saves.fortitude != null ? fmtMod(saves.fortitude) : null },
+            { key: 'reflex', label: 'Ref', value: saves.reflex != null ? fmtMod(saves.reflex) : null },
+            { key: 'will', label: 'Will', value: saves.will != null ? fmtMod(saves.will) : null },
+          ].map((c) => (
+            <div key={c.key} className="dossier-cell">
+              <span className="dossier-cell-value">{c.value ?? '—'}</span>
+              <span className="dossier-cell-label">{c.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="dossier-meta" data-testid="dossier-self-meta">
+          <span className="dossier-meta-item">
+            Hero
+            <span
+              className="dossier-meta-pips"
+              aria-label={`${heroPoints || 0} of 3 hero points`}
+            >
+              {[1, 2, 3].map((n) => (
+                <span
+                  key={n}
+                  className={`dossier-meta-pip${n <= (heroPoints || 0) ? ' dossier-meta-pip--full' : ''}`}
+                  aria-hidden="true"
+                />
+              ))}
+            </span>
+          </span>
+          {focusMax > 0 && (
+            <span className="dossier-meta-item">Focus <b>{focusLeft}/{focusMax}</b></span>
+          )}
+          {speedValue != null && <span className="dossier-meta-item">Speed {speedValue} ft</span>}
+        </div>
+      </section>
+    );
+  }
 
   // ── Focused ally (#429) — support view ────────────────────────────────────
   if (focusAlly) {
-    const conditions = hydrateConditions(allyConditionsRaw || []);
+    const conditions = hydrateConditions(pcConditionsRaw || []);
+    const hp = readHp(pcHpRaw);
     const allyInReach = inReach(focusAlly.entryId);
     return (
       <section
@@ -84,12 +211,7 @@ const Dossier = ({ charId }) => {
             <span className="dossier-sub">Ally</span>
           </div>
         </header>
-        {typeof allyHp === 'number' && (
-          <div className="dossier-hp" data-testid="dossier-ally-hp">
-            <span className="dossier-hp-label">Hit Points</span>
-            <span className="dossier-hp-value">{allyHp}</span>
-          </div>
-        )}
+        {hp.current != null && <HpBlock hp={hp} testid="dossier-ally-hp" />}
         {conditions.length > 0 && (
           <div className="dossier-chips dossier-chips--pad">
             {conditions.map((c) => (

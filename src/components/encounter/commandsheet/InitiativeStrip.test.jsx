@@ -53,10 +53,11 @@ const SyncDriver = ({ skey, onReady }) => {
 };
 
 const startWithEnemy = (getDrv) => {
-  act(() => getDrv().startEncounter([pellias]));
+  act(() => getDrv().startEncounter([pellias, { id: 'Ashka', name: 'Ashka' }]));
   act(() => getDrv().addEnemy('Goblin', 8));
-  const [p] = getDrv().encounter.order;
+  const [p, a] = getDrv().encounter.order;
   act(() => getDrv().setInitiative(p.entryId, 15));
+  act(() => getDrv().setInitiative(a.entryId, 12));
   act(() => getDrv().beginRound1());
 };
 
@@ -99,12 +100,12 @@ describe('InitiativeStrip', () => {
     expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
   });
 
-  it('tapping a foe toggles focus and persists to cnmh_focus_<charId>', () => {
+  it('tapping a foe toggles focus and persists to cnmh_focustarget_<charId>', () => {
     let drv, focus;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (focus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (focus = s)} />
         <InitiativeStrip charId="Pellias" />
       </>
     );
@@ -127,7 +128,7 @@ describe('InitiativeStrip', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (focus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (focus = s)} />
         <InitiativeStrip charId="Pellias" />
       </>
     );
@@ -137,5 +138,22 @@ describe('InitiativeStrip', () => {
     fireEvent.click(btn);
     expect(focus.val).toBe(pellias.entryId);
     expect(screen.getByRole('button', { name: 'Focus Pellias' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  // ── TARGET ▸ selector styling (#1502 S2) ──────────────────────────────────
+  it('tints entries by kind — enemy peril, other PC arcane, own entry ember', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <InitiativeStrip charId="Pellias" />
+      </>
+    );
+    startWithEnemy(() => drv);
+
+    expect(screen.getByText('Target ▸')).toBeInTheDocument();
+    expect(screen.getByText('Goblin').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--enemy');
+    expect(screen.getByText('Pellias').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--self');
+    expect(screen.getByText('Ashka').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--ally');
   });
 });

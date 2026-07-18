@@ -1,14 +1,25 @@
 /* src/components/encounter/commandsheet/InitiativeStrip.css
-   Command Sheet initiative strip (#411). Mirrors the old TurnTrackerPanel order rail with
-   tap-to-focus enemy chips. Dark-shell tokens from pf2e-tokens.css. */
+   The TARGET ▸ selector (#411, #1502 S2) — tap-to-focus turn order feeding the
+   Focus Dossier. Entries tint by kind: enemy peril, ally arcane, self ember;
+   the focused entry fills solid. Dark-shell tokens from pf2e-tokens.css. */
 
 .cmd-init {
   display: flex;
   flex-wrap: nowrap;
+  align-items: stretch;
   gap: var(--space-2);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 4px;
+}
+
+.cmd-init-label {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
 }
 .cmd-init::-webkit-scrollbar { height: 4px; }
 .cmd-init::-webkit-scrollbar-thumb {
@@ -45,20 +56,55 @@ button.cmd-init-entry:hover { border-color: var(--accent-outline); }
   box-shadow: var(--accent-glow);
 }
 
+/* Kind tints (#1502 S2): enemy peril · ally arcane · self ember. */
 .cmd-init-entry--enemy {
-  background: rgba(217, 122, 43, 0.1);
-  border-color: rgba(217, 122, 43, 0.4);
+  background: color-mix(in srgb, var(--theme-peril) 7%, transparent);
+  border-color: color-mix(in srgb, var(--theme-peril) 25%, transparent);
 }
 .cmd-init-entry--enemy.cmd-init-entry--current {
-  background: rgba(217, 122, 43, 0.18);
-  border-color: rgba(217, 122, 43, 0.7);
+  background: color-mix(in srgb, var(--theme-peril) 16%, transparent);
+  border-color: color-mix(in srgb, var(--theme-peril) 70%, transparent);
+}
+.cmd-init-entry--ally {
+  background: color-mix(in srgb, var(--theme-arcane) 9%, transparent);
+  border-color: color-mix(in srgb, var(--theme-arcane) 28%, transparent);
+}
+.cmd-init-entry--self {
+  background: color-mix(in srgb, var(--ember-mid) 9%, transparent);
+  border-color: color-mix(in srgb, var(--ember-mid) 28%, transparent);
 }
 
-/* Focused foe — strong ring so the target context is obvious. */
+/* The focused entry fills solid in its kind tint — the dossier's subject. */
 .cmd-init-entry--focused {
-  border-color: var(--color-theme);
-  box-shadow: 0 0 0 2px var(--color-theme);
+  box-shadow: none;
 }
+.cmd-init-entry--focused.cmd-init-entry--enemy {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--theme-peril) 20%, transparent),
+    color-mix(in srgb, var(--theme-peril) 8%, transparent)
+  );
+  border-color: var(--theme-peril);
+}
+.cmd-init-entry--focused.cmd-init-entry--enemy .cmd-init-name { color: var(--peril-light, #ff8a87); }
+.cmd-init-entry--focused.cmd-init-entry--ally {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--theme-arcane) 22%, transparent),
+    color-mix(in srgb, var(--theme-arcane) 8%, transparent)
+  );
+  border-color: var(--arcane-light);
+}
+.cmd-init-entry--focused.cmd-init-entry--ally .cmd-init-name { color: var(--arcane-light); }
+.cmd-init-entry--focused.cmd-init-entry--self {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ember-mid) 22%, transparent),
+    color-mix(in srgb, var(--ember-mid) 8%, transparent)
+  );
+  border-color: var(--ember-mid);
+}
+.cmd-init-entry--focused.cmd-init-entry--self .cmd-init-name { color: var(--ember-light); }
 
 .cmd-init-name {
   font-family: var(--font-ui);
