@@ -18,6 +18,7 @@ import {
   damageEntryParts,
   hintTypeLabel,
   traitGatedEntryIds,
+  damageRollFormulas,
 } from './damage';
 
 describe('parseDamageExpression', () => {
@@ -1224,5 +1225,49 @@ describe('persistent recoveryDc pass-through (#1215)', () => {
     expect(out.persistent[0]).toMatchObject({
       dice: '1d6', type: 'bleed', recoveryDc: { base: 17, assisted: 12 },
     });
+  });
+});
+
+// ── damageRollFormulas (#1490 S5) ────────────────────────────────────────────
+// Keys mirror damageEntryParts; the base formula folds exactly the rider dice
+// the entry parts DON'T split out, so a delegated roll matches what the player
+// would have hand-rolled into each input.
+describe('damageRollFormulas', () => {
+  it('base expression only', () => {
+    expect(damageRollFormulas({ expression: '2d8+4', typeLabel: 'piercing', riders: [] }, {}))
+      .toEqual({ base: '2d8+4' });
+  });
+
+  it('folds enabled precision / same-type / untyped rider dice into base', () => {
+    const profile = {
+      expression: '6d6', typeLabel: 'void',
+      riders: [
+        { id: 'prec', dice: '6d4', type: 'precision', defaultOn: false },
+        { id: 'same', dice: '1d6', type: 'Void', defaultOn: true },
+        { id: 'untyped', dice: '1d4', defaultOn: true },
+      ],
+    };
+    expect(damageRollFormulas(profile, { prec: true }))
+      .toEqual({ base: '6d6+6d4+1d6+1d4' });
+  });
+
+  it('a different-type rider splits into its own keyed formula', () => {
+    const profile = {
+      expression: '2d8', typeLabel: 'piercing',
+      riders: [{ id: 'flaming', dice: '1d6', type: 'fire', defaultOn: true }],
+    };
+    expect(damageRollFormulas(profile, {}))
+      .toEqual({ base: '2d8', flaming: '1d6' });
+  });
+
+  it('disabled riders contribute nothing; rider-only profiles still key correctly', () => {
+    const profile = {
+      expression: null, typeLabel: 'piercing',
+      riders: [
+        { id: 'flaming', dice: '1d6', type: 'fire', defaultOn: true },
+        { id: 'off', dice: '2d6', type: 'cold', defaultOn: false },
+      ],
+    };
+    expect(damageRollFormulas(profile, {})).toEqual({ flaming: '1d6' });
   });
 });

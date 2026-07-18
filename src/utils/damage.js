@@ -747,3 +747,31 @@ export const damageEntryParts = (profile, riderState) => {
   }
   return parts;
 };
+
+/**
+ * Foundry-rollable formula per ENTRY part (#1490 S5) — keys match
+ * damageEntryParts ('base' + splitting rider ids). The base formula folds every
+ * enabled immediate extra-dice rider that damageEntryParts does NOT split out
+ * (untyped / precision / same-type dice roll into the base total), so a
+ * delegated roll fills the input with exactly what the player would have
+ * hand-rolled. The save-mode single entry uses the base formula too.
+ *
+ * @returns {Object<string, string>} partKey → dice expression
+ */
+export const damageRollFormulas = (profile, riderState) => {
+  if (!profile) return {};
+  const baseType = (profile.typeLabel || '').toLowerCase();
+  const formulas = {};
+  let base = profile.expression || '';
+  for (const r of profile.riders || []) {
+    if (!r.dice || !riderEnabled(r, riderState)) continue;
+    const type = (r.type || '').toLowerCase();
+    if (type && type !== 'precision' && type !== baseType) {
+      formulas[r.id] = r.dice;
+    } else {
+      base = base ? `${base}+${r.dice}` : r.dice;
+    }
+  }
+  if (base) formulas.base = base;
+  return formulas;
+};
