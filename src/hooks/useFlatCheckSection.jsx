@@ -5,6 +5,7 @@ import {
   concealmentFlatCheck,
   CONCEALMENT_LEVELS,
 } from '../utils/flatChecks';
+import FoundryDiceInput from '../components/shared/FoundryDiceInput';
 
 /**
  * Condition flat checks + target concealment (#262, extracted #1317 D2):
@@ -21,7 +22,7 @@ import {
  * Concealment" then "Flat Check", rendered as one fragment in the same
  * position the two blocks always sat).
  */
-export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effectiveVerb }) => {
+export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effectiveVerb, charId = null }) => {
   // Condition flat checks (#262): raw d20 per required check (keyed by condition id).
   const [flatCheckRolls, setFlatCheckRolls] = useState({});
   // Manually-flagged target concealment (#262) — 'none' | 'concealed' | 'hidden'.
@@ -83,19 +84,19 @@ export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effec
               <div key={fc.id} className="uam-flatcheck-row">
                 <div className="uam-flatcheck-head">
                   <span className="uam-flatcheck-label">{fc.label} — DC {fc.dc}</span>
-                  <input
-                    type="number"
+                  <FoundryDiceInput
                     min="1"
                     max="20"
-                    className="uam-flatcheck-input"
-                    aria-label={`${fc.label} flat check d20`}
+                    inputClassName="uam-flatcheck-input"
+                    ariaLabel={`${fc.label} flat check d20`}
                     value={flatCheckRolls[fc.id] ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
+                    onValue={(v) => {
                       if (v === '' || (/^\d+$/.test(v) && +v >= 1 && +v <= 20)) {
                         setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: v }));
                       }
                     }}
+                    charId={charId}
+                    flavor={`${fc.label} flat check (DC ${fc.dc})`}
                   />
                   {fc.d20 != null && (
                     <span className={`uam-flatcheck-result uam-flatcheck-result--${fc.passed ? 'pass' : 'fail'}`}>

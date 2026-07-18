@@ -7,6 +7,7 @@ import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS, rkKeyFor } 
 import { formatModifier } from '../../utils/CharacterUtils';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './RecallKnowledgeResolver.css';
 
 const SKILL_LABELS = {
@@ -168,15 +169,16 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
       <section className="ct-section">
         <h3 className="ct-section-title">Roll</h3>
         <div className="trr-entry-row">
-          <input
-            type="number"
-            className="trr-roll-input"
+          <FoundryDiceInput
+            inputClassName="trr-roll-input"
             placeholder="d20"
             min="1"
             max="20"
-            aria-label="raw d20"
+            ariaLabel="raw d20"
             value={d20Input}
-            onChange={(e) => { setD20Input(e.target.value); setChoices([]); }}
+            onValue={(v) => { setD20Input(v); setChoices([]); }}
+            charId={actingCharId}
+            flavor={`Recall Knowledge: ${SKILL_LABELS[selectedSkill] || selectedSkill}`}
           />
           <span className="trr-bonus-badge" aria-label="skill modifier">
             {formatModifier(effectiveMod)}
