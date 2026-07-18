@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import TargetRollResolver from './TargetRollResolver';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
@@ -391,12 +392,13 @@ const ChainedSpellSection = forwardRef(({
           </div>
           <label className="uam-chain-field">
             Flat check (DC {HARROW_CAST_DC}) — d20:{' '}
-            <input
-              type="number"
-              className="trr-roll-input"
-              aria-label="harrow flat check d20"
+            <FoundryDiceInput
+              inputClassName="trr-roll-input"
+              ariaLabel="harrow flat check d20"
               value={flatD20}
-              onChange={(e) => setFlatD20(e.target.value)}
+              onValue={setFlatD20}
+              charId={character?.id}
+              flavor={`Harrow cast flat check (DC ${HARROW_CAST_DC})`}
             />
             {flatPassed != null && (
               <strong className={`uam-chain-flat-result ${flatPassed ? 'uam-flatcheck-result--pass' : 'uam-flatcheck-result--fail'}`}>
@@ -412,12 +414,14 @@ const ChainedSpellSection = forwardRef(({
           {(harrowEffect?.kind === 'self-heal' || harrowEffect?.kind === 'target-heal') && (
             <label className="uam-chain-field uam-chain-field--after">
               Healing rolled ({harrowEffect.dice}):{' '}
-              <input
-                type="number"
-                className="trr-roll-input"
-                aria-label="harrow healing rolled"
+              <FoundryDiceInput
+                inputClassName="trr-roll-input"
+                ariaLabel="harrow healing rolled"
                 value={healEntered}
-                onChange={(e) => setHealEntered(e.target.value)}
+                onValue={setHealEntered}
+                charId={character?.id}
+                formula={harrowEffect.dice || ''}
+                flavor={`Harrow ${drawnSuit ?? ''} — healing`}
               />
             </label>
           )}
@@ -541,6 +545,8 @@ const ChainedSpellSection = forwardRef(({
             rollBonus={rollProfile.bonus}
             damage={attackDamageProfile}
             degrees={selectedSpell?.degrees}
+            charId={character?.id}
+            rollFlavor={`Cast: ${selectedSpell?.name ?? ''}`}
           />
         ) : (
           <TargetRollResolver
@@ -550,6 +556,8 @@ const ChainedSpellSection = forwardRef(({
             rollBonus={rollProfile.bonus}
             damage={attackDamageProfile}
             degrees={selectedSpell?.degrees}
+            charId={character?.id}
+            rollFlavor={`Cast: ${selectedSpell?.name ?? ''}`}
           />
         )
       )}
@@ -567,6 +575,8 @@ const ChainedSpellSection = forwardRef(({
         <DamagePanel
           mode="save"
           profile={saveDamageProfile}
+          charId={character?.id}
+          flavor={`Cast: ${selectedSpell?.name ?? ''}`}
           entered={saveDmgInput}
           onEntered={setSaveDmgInput}
           riderState={saveRiderState}

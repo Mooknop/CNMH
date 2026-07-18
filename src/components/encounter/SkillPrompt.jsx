@@ -4,6 +4,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { skillLabel } from '../../utils/victoryPoints';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -77,15 +78,16 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
 
       {!result && (
         <div className="save-prompt-entry">
-          <input
-            type="number"
+          <FoundryDiceInput
             min="1"
             max="20"
-            className="save-prompt-input"
+            inputClassName="save-prompt-input"
             placeholder="d20"
-            aria-label="d20 roll"
+            ariaLabel="d20 roll"
             value={d20Input}
-            onChange={(e) => setD20Input(e.target.value)}
+            onValue={setD20Input}
+            charId={charId}
+            flavor={`${prompt.label || 'Recall Knowledge'}: ${skillLabel(skill)} (DC ${dc})`}
           />
           <button
             className="btn-primary"

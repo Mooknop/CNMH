@@ -23,6 +23,8 @@ const MultiRayResolver = forwardRef(({
   damage = null,
   degrees = null,
   toggles = [],
+  charId = null,
+  rollFlavor = '',
 }, ref) => {
   const rayRefs = useRef([]);
   // Per-ray chosen target entryId; unset entries fall back to defaultTargetId(i).
@@ -81,6 +83,8 @@ const MultiRayResolver = forwardRef(({
               damage={damage}
               degrees={degrees}
               toggles={toggles}
+              charId={charId}
+              rollFlavor={rollFlavor ? `${rollFlavor} — ray ${i + 1}` : ''}
             />
           </div>
         );

@@ -187,6 +187,8 @@ const ChainedStrikeSection = forwardRef(({
         rollBonus={augmentedBonus}
         damage={damageProfile}
         toggles={attackToggles}
+        charId={character?.id}
+        rollFlavor={`Strike: ${selectedStrike?.name ?? ''}`}
       />
 
       {selectedMode === 'flurry' && (
@@ -201,6 +203,8 @@ const ChainedStrikeSection = forwardRef(({
             rollBonus={strike2Bonus}
             damage={damageProfile}
             toggles={attackToggles}
+            charId={character?.id}
+            rollFlavor={`Strike: ${selectedStrike?.name ?? ''} (MAP ${formatModifier(strike2Penalty)})`}
           />
         </div>
       )}

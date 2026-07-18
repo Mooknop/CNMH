@@ -5,6 +5,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useBystander } from '../../hooks/useBystander';
 import { useInitiativeRoll } from '../../hooks/useInitiativeRoll';
 import { hasFeat } from '../../utils/CharacterUtils';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './InitiativeEntry.css';
 import { APP, globalKey } from '../../sync/keys';
 
@@ -144,11 +145,12 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
               </label>
               <label className="initiative-entry-field">
                 <span>Your d20 roll</span>
-                <input
-                  aria-label="d20-input"
-                  type="number"
+                <FoundryDiceInput
+                  ariaLabel="d20-input"
                   value={d20}
-                  onChange={(e) => setD20(e.target.value)}
+                  onValue={setD20}
+                  charId={charId}
+                  flavor={`Initiative: ${skillLabel(effectiveSkill)}`}
                 />
               </label>
               <div className="initiative-entry-breakdown" aria-label="initiative-breakdown">
@@ -217,11 +219,12 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
           <>
             <label className="initiative-entry-field">
               <span>Your d20 roll</span>
-              <input
-                aria-label="d20-input"
-                type="number"
+              <FoundryDiceInput
+                ariaLabel="d20-input"
                 value={d20}
-                onChange={(e) => handleD20(e.target.value)}
+                onValue={handleD20}
+                charId={charId}
+                flavor="Initiative: Deception (Bystander)"
               />
             </label>
             <div className="initiative-entry-breakdown" aria-label="initiative-breakdown">

@@ -227,6 +227,8 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
             rollBonus={rollProfile.bonus}
             damage={damageProfile}
             rangeByEntry={hasRangeData ? rangeByEntry : null}
+            charId={ownerId}
+            rollFlavor={`${companionData?.name ? `${companionData.name} — ` : ''}Strike: ${strike?.name ?? ''}`}
           />
         )}
 

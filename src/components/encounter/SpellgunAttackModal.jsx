@@ -268,6 +268,8 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
             rollBonus={rollBonus}
             damage={damageProfile}
             rangeByEntry={hasRangeData ? rangeByEntry : null}
+            charId={character?.id}
+            rollFlavor={`Fire: ${item?.name ?? 'Spellgun'}`}
           />
         )}
 
