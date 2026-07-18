@@ -1,0 +1,16 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "roll-1",
+    "charId": "Pellias",
+    "ok": true,
+    "total": 14,
+    "faces": [
+      [
+        20,
+        14
+      ]
+    ],
+    "ts": 1700000000000
+  }
+}

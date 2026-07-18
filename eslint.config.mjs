@@ -13,7 +13,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 
 // Foundry globals the BRIDGE is built against. Feature modules must reach them
 // through pf2eAdapter.js (the v14-migration seam) — enforced below.
-const FOUNDRY_GLOBALS = ['Hooks', 'game', 'canvas', 'CONFIG', 'ui', 'CONST', 'ChatMessage', 'fromUuid', 'fromUuidSync', 'foundry'];
+const FOUNDRY_GLOBALS = ['Hooks', 'game', 'canvas', 'CONFIG', 'ui', 'CONST', 'ChatMessage', 'Roll', 'fromUuid', 'fromUuidSync', 'foundry'];
 
 const vitestGlobals = {
   vi: 'readonly',

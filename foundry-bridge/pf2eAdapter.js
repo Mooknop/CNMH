@@ -384,6 +384,29 @@ export async function rollActorSave(actor, save, dc) {
   };
 }
 
+// Roll a raw dice formula in Foundry chat on behalf of an app character
+// (#1490 — the dice-tower rail). Deliberately a plain core Roll, NOT a PF2e
+// Statistic: the app owns every modifier, DC, and degree; Foundry contributes
+// the dice, the chat card, and Dice So Nice. The speaker comes from the mapped
+// actor so the table sees who rolled; rollMode 'publicroll' keeps the roll on
+// the table view regardless of the GM client's chat default.
+// Returns { total, faces:[[sides, face], …] } with one pair per KEPT die
+// (discarded/rerolled results are excluded) so the app can pull the raw d20
+// for nat-20/nat-1 handling, or null when the formula fails validation.
+// v14 MIGRATION: Roll and ChatMessage.getSpeaker are core APIs still exposed
+// as globals on v13; re-verify against the namespaced foundry.dice.Roll on v14.
+export async function rollFormula(formula, { actor = null, flavor = '' } = {}) {
+  if (typeof formula !== 'string' || !formula.trim() || !Roll.validate(formula)) return null;
+  const roll = await new Roll(formula).evaluate();
+  const speaker = actor ? ChatMessage.getSpeaker({ actor }) : ChatMessage.getSpeaker();
+  await roll.toMessage({ speaker, flavor }, { rollMode: 'publicroll' });
+  const faces = (roll.dice ?? []).flatMap((d) =>
+    (d.results ?? [])
+      .filter((r) => r.active !== false)
+      .map((r) => [d.faces ?? null, r.result]));
+  return { total: roll.total ?? null, faces };
+}
+
 // The version-independent combat snapshot the encounter payload is built from.
 // Keeping these reads here means a v14 Combat API rename touches only this file.
 export function getCombatState(combat) {
