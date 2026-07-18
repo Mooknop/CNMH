@@ -30,6 +30,7 @@ import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
 import ChallengePrompts from '../components/encounter/ChallengePrompts';
 import ObjectivesStrip from '../components/encounter/ObjectivesStrip';
+import RollToast from '../components/encounter/RollToast';
 import SpellsList from '../components/spells/SpellsList';
 
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
@@ -154,6 +155,9 @@ const CharacterSheet = () => {
           return (
             <>
               <ObjectivesStrip />
+              {/* Roll toast (#1490 S3) — fixed overlay; renders nothing until a
+                  fresh roll fx event lands, so it mounts unconditionally here. */}
+              <RollToast />
               <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} character={character} />
               <ReactionPrompt character={character} themeColor={characterColor} />
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
