@@ -2612,7 +2612,8 @@
       "health": 6,
       "breakThreshold": 3,
       "hardness": 3,
-      "bonus": 1
+      "bonus": 1,
+      "strapped": true
     },
     "name": "Buckler",
     "description": "This very small shield is a favorite of duelists and quick, lithe warriors. It's typically made of steel and strapped to your forearm. You can Raise a Shield with your buckler as long as you have that hand free or are holding a light object that's not a weapon in that hand.",
@@ -11625,7 +11626,8 @@
       "health": 5,
       "breakThreshold": 2,
       "hardness": 2,
-      "bonus": 1
+      "bonus": 1,
+      "strapped": true
     },
     "id": "shield-gauntlet"
   },
@@ -12744,7 +12746,8 @@
       "health": 6,
       "breakThreshold": 3,
       "hardness": 3,
-      "bonus": 1
+      "bonus": 1,
+      "strapped": true
     },
     "actions": [
       {

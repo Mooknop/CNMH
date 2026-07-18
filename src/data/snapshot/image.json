@@ -1195,5 +1195,12 @@
     "folder": "",
     "mimeType": "image/jpeg",
     "createdAt": 1783055325015
+  },
+  {
+    "id": "tok_555de5fe261afd012e33ea2167c9f26b2376041272013863137722caaa8c548c.webp",
+    "name": "Combusted",
+    "folder": "Bestiary Tokens",
+    "mimeType": "image/webp",
+    "createdAt": 1784085814248
   }
 ]

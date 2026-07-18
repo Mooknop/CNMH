@@ -37,6 +37,7 @@
       "x": 43,
       "y": 4
     },
+    "gold": 24,
     "id": "AshkaBGosh",
     "name": "Ashka B'Gosh",
     "ancestry": "Fetchling",
@@ -227,9 +228,9 @@
       },
       {
         "uid": "e-7ewsndsu0lde",
+        "level": 1,
         "ref": "elixir-of-life",
-        "quantity": 2,
-        "level": 1
+        "quantity": 2
       },
       {
         "uid": "e-3jg6hbfd0lde",
@@ -263,9 +264,9 @@
       },
       {
         "uid": "e-zooar8g6ihyp",
+        "level": 3,
         "ref": "healing-potion",
-        "quantity": 1,
-        "level": 3
+        "quantity": 1
       },
       {
         "uid": "e-we1788s5ihyp",
@@ -273,13 +274,13 @@
         "quantity": 1
       },
       {
-        "uid": "e-28tm05msakrn",
-        "ref": "vangloris-tattoo",
+        "uid": "e-vmcoysa7bqgz",
+        "ref": "midnight-milk",
         "quantity": 1
       },
       {
-        "uid": "e-vmcoysa7bqgz",
-        "ref": "midnight-milk",
+        "uid": "e-il5zjfv3oemj",
+        "ref": "superbia-tattoo",
         "quantity": 1
       }
     ],
@@ -484,8 +485,7 @@
         "reflex": 9,
         "will": 7
       }
-    },
-    "gold": 24
+    }
   },
   {
     "created": "2025-04-18T12:00:00.000Z",
@@ -2541,16 +2541,6 @@
         "quantity": 1
       },
       {
-        "uid": "e-t3802twgry1f",
-        "ref": "reinforced-tower-shield",
-        "quantity": 1
-      },
-      {
-        "uid": "e-eb7dbofmry1f",
-        "ref": "steel-shield",
-        "quantity": 1
-      },
-      {
         "uid": "e-cb9gh80vry1f",
         "ref": "sanitizing-pin",
         "quantity": 1
@@ -2572,9 +2562,9 @@
       },
       {
         "uid": "e-6yakvan8ry1f",
+        "level": 1,
         "ref": "elixir-of-life",
-        "quantity": 1,
-        "level": 1
+        "quantity": 1
       },
       {
         "uid": "e-47653xtc1xrc",
@@ -2602,8 +2592,18 @@
         "quantity": 5
       },
       {
-        "uid": "e-shieldspikespel1",
+        "uid": "e-rn972wevgus6",
+        "ref": "steel-shield",
+        "quantity": 1
+      },
+      {
+        "uid": "e-fyb55g25gus6",
         "ref": "shield-spikes",
+        "quantity": 1
+      },
+      {
+        "uid": "e-0edba8jwgus6",
+        "ref": "tower-shield",
         "quantity": 1
       }
     ],
