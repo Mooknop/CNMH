@@ -371,6 +371,48 @@
   text-align: center;
 }
 
+/* Strapped-shield badge under a hand slot (bucklers S3) — the buckler rides
+   the hand without filling it. Dimmed while that hand is tied up. */
+.inventory-grid .hands-strip-strap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  margin-top: 3px;
+  padding: 2px 4px;
+  border: 1px solid var(--shell-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.inventory-grid .hands-strip-strap--blocked { opacity: 0.5; }
+.inventory-grid .hands-strip-strap-name {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.inventory-grid .hands-strip-strap-off {
+  flex: none;
+  padding: 0 3px;
+  background: none;
+  border: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.inventory-grid .hands-strip-strap-off:hover { color: var(--shell-text-primary); }
+
 /* ---------- ICON TILE ----------
    Tile styles live unscoped in IconTile.css (imported by the component) so
    the tile renders on every surface, not just the inventory grid. */

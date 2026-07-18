@@ -102,3 +102,20 @@
   background: color-mix(in srgb, var(--arcane-light) 25%, transparent);
   color: color-mix(in srgb, var(--arcane-light) 65%, white);
 }
+
+/* Strapped-shield marker (bucklers S3) — rides the slot label. Dimmed and
+   desaturated while the strapped hand is tied up. */
+.hands-glance-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.hands-glance-strapbadge {
+  font-size: 9px;
+  line-height: 1;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--iron-light) 60%, transparent));
+}
+.hands-glance-strapbadge--blocked {
+  opacity: 0.45;
+  filter: grayscale(1);
+}

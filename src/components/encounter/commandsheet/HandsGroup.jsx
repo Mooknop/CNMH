@@ -3,7 +3,7 @@ import { useCharacter } from '../../../hooks/useCharacter';
 import { useLoadout } from '../../../hooks/useLoadout';
 import { useTurnState } from '../../../hooks/useTurnState';
 import { useEncounter } from '../../../hooks/useEncounter';
-import { deriveHands, isTwoHanded, wieldableWorn } from '../../../utils/hands';
+import { deriveHands, isTwoHanded, wieldableWorn, strappableWorn } from '../../../utils/hands';
 import { itemTint } from '../../../utils/inventoryTile';
 import ActionSymbol from '../../shared/ActionSymbol';
 import IconTile from '../../inventory/IconTile';
@@ -22,7 +22,7 @@ const isWeapon = (item) => !!(item && item.strikes);
 const HandsGroup = ({ character, encounterMode }) => {
   const charData = useCharacter(character);
   const cid = charData ? charData.id : character && character.id;
-  const { setHands } = useLoadout(cid);
+  const { setHands, strapTo, unstrap } = useLoadout(cid);
   const { spendActions } = useTurnState(cid);
   const { appendLog } = useEncounter();
 
@@ -32,6 +32,7 @@ const HandsGroup = ({ character, encounterMode }) => {
   );
   const { slot1, slot2 } = useMemo(() => deriveHands(inventory), [inventory]);
   const worn = useMemo(() => wieldableWorn(inventory), [inventory]);
+  const strappable = useMemo(() => strappableWorn(inventory), [inventory]);
 
   const [setterOpen, setSetterOpen] = useState(false);
   const [pending, setPending] = useState({ h1: null, h2: null });
@@ -44,16 +45,32 @@ const HandsGroup = ({ character, encounterMode }) => {
   const charName = charData.name || (character && character.name) || 'Someone';
   const twoHandedGrip = !!slot1 && slot1 === slot2;
   const heldRows = twoHandedGrip ? [slot1] : [slot1, slot2].filter(Boolean);
-  if (heldRows.length + worn.length === 0) return null;
+  if (heldRows.length + worn.length + strappable.length === 0) return null;
 
-  const commit = (next, text) => {
-    setHands(next);
+  const spendAndLog = (text) => {
     if (encounterMode) spendActions(1, 'Interact');
     appendLog?.({
       type: 'action',
       charId: cid,
       text: `${text}${encounterMode ? ' (1 act)' : ''}`,
     });
+  };
+
+  const commit = (next, text) => {
+    setHands(next);
+    spendAndLog(text);
+  };
+
+  // Strap / Unstrap — a buckler-class shield's own 1-action flow, deliberately
+  // separate from Swap: setHands never touches strapped items, and the setter
+  // pool never offers them.
+  const doStrap = (item, n) => {
+    strapTo(item.uid, n);
+    spendAndLog(`${charName} straps the ${item.name} to hand ${n}`);
+  };
+  const doUnstrap = (item) => {
+    unstrap(item.uid);
+    spendAndLog(`${charName} unstraps the ${item.name}`);
   };
 
   // Sheathe (weapon) / Stow — drop this item from its hand(s), keep the other.
@@ -187,6 +204,48 @@ const HandsGroup = ({ character, encounterMode }) => {
           >
             Swap <ActionSymbol cost={1} />
           </button>
+        </div>
+      ))}
+      {strappable.map((item) => (
+        <div className="hands-row hands-row--strap" key={item.uid} data-testid={`hands-row-${item.uid}`}>
+          <IconTile item={item} size={26} glow={false} />
+          <span className="hands-row-main">
+            <span className="hands-row-name">{item.name}</span>
+            {item.strapHand ? (
+              <span
+                className={`hands-row-state hands-row-state--${item.strapUsable ? 'strapped' : 'blocked'}`}
+              >
+                On Hand {item.strapHand}
+                {!item.strapUsable && ' — hand tied up'}
+              </span>
+            ) : (
+              <span className="hands-row-state">Worn</span>
+            )}
+          </span>
+          {item.strapHand ? (
+            <button
+              type="button"
+              className="hands-btn hands-btn--neutral"
+              aria-label={`Unstrap ${item.name}`}
+              data-testid={`hands-unstrap-${item.uid}`}
+              onClick={() => doUnstrap(item)}
+            >
+              Unstrap <ActionSymbol cost={1} />
+            </button>
+          ) : (
+            [1, 2].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className="hands-btn hands-btn--accent"
+                aria-label={`Strap ${item.name} to hand ${n}`}
+                data-testid={`hands-strap-${item.uid}-${n}`}
+                onClick={() => doStrap(item, n)}
+              >
+                Strap {n} <ActionSymbol cost={1} />
+              </button>
+            ))
+          )}
         </div>
       ))}
     </div>

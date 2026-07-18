@@ -7,6 +7,7 @@ import {
   handCandidates,
   isStrappedShield,
   handAllowsStrapUse,
+  strappableWorn,
 } from './hands';
 
 const buckler = { uid: 'bk', name: 'Buckler', state: 'worn', strapHand: 1, weight: 0.1, shield: { bonus: 1, strapped: true } };
@@ -163,5 +164,18 @@ describe('wieldableWorn / handCandidates', () => {
   it('tolerates non-array arguments', () => {
     expect(wieldableWorn(undefined)).toEqual([]);
     expect(handCandidates(undefined)).toEqual([]);
+    expect(strappableWorn(undefined)).toEqual([]);
+  });
+
+  it('strappableWorn keeps on-person strapped-class shields, strapped or not', () => {
+    const strapped = { ...buckler };
+    const unstrapped = { uid: 'bk2', name: 'Gauntlet Buckler', state: 'worn', shield: { bonus: 1, strapped: true } };
+    const stowedBk = { uid: 'bk3', state: 'stowed', shield: { bonus: 1, strapped: true } };
+    const plainShield = { uid: 'sh', state: 'worn', shield: { bonus: 2 } };
+    expect(strappableWorn([strapped, unstrapped, stowedBk, plainShield])).toEqual([strapped, unstrapped]);
+  });
+
+  it('handCandidates includes strappable shields so a buckler-only character keeps the Hands group', () => {
+    expect(handCandidates([buckler])).toEqual([buckler]);
   });
 });
