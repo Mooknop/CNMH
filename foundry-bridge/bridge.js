@@ -19,6 +19,7 @@ import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
+import { initDiceSets, updateDiceSets } from './diceSets.js';
 import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
@@ -89,6 +90,7 @@ Hooks.once('ready', () => {
   initDamageApply(sendUpdate);
   initSaves(sendUpdate);
   initDice(sendUpdate);
+  initDiceSets();
   connect();
 });
 
@@ -189,6 +191,10 @@ function dispatch(msg) {
       pushFlankedState();  // actorMap just became valid — re-evaluate with correct PC set
       pushMinionActors();  // minion→PC links resolve through the actor map
     }
+    // Dice sets (#1490 S7) are persisted campaign config — seed on connect so
+    // the first 3D roll after a reconnect is already styled.
+    const diceSets = msg.payload?.global?.[RELAY.DICESETS];
+    if (diceSets) updateDiceSets(diceSets);
     // Adjacency is classification-agnostic (keyed by combatant id), so it doesn't
     // need the actor map — but push once on connect so a mid-combat reconnect has
     // reach data without waiting for a token to move.
@@ -323,6 +329,12 @@ function dispatch(msg) {
   // Foundry chat (Dice So Nice animates), acked on cnmh_rolldone_global.
   if (characterId === 'global' && key === RELAY.ROLLREQ) {
     handleRollRequest(value);
+    return;
+  }
+
+  // Per-character Dice So Nice dice sets from the GM's Theme page (#1490 S7).
+  if (characterId === 'global' && key === RELAY.DICESETS) {
+    updateDiceSets(value);
     return;
   }
 

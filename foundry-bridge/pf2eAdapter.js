@@ -384,6 +384,15 @@ export async function rollActorSave(actor, save, dc) {
   };
 }
 
+// The speaker actor id a chat message carries — how the dice-set styler
+// (#1490 S7) attributes a 3D roll to a character/NPC. Null when the message
+// is gone or speaks for no actor.
+// v14 MIGRATION: game.messages is a core collection; message.speaker.actor is
+// stable core data — no expected change.
+export function getChatMessageSpeakerActorId(messageId) {
+  return game.messages?.get?.(messageId)?.speaker?.actor ?? null;
+}
+
 // Roll a raw dice formula in Foundry chat on behalf of an app character
 // (#1490 — the dice-tower rail). Deliberately a plain core Roll, NOT a PF2e
 // Statistic: the app owns every modifier, DC, and degree; Foundry contributes

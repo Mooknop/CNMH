@@ -4,6 +4,7 @@ import { saveTheme } from '../../utils/gmApi';
 import { paletteToVars } from '../../utils/themeVars';
 import { COLORBLIND_PRESETS } from '../../data/themePresets';
 import { contrastRatio, wcagLevel } from '../../utils/contrast';
+import DiceSetsPanel from '../../components/gm/DiceSetsPanel';
 import './GmTheme.css';
 
 const CB_LABEL = {
@@ -246,6 +247,10 @@ const GmTheme = () => {
         characters={characters}
         onSet={setOverride}
       />
+
+      {/* ── Dice So Nice dice sets (#1490 S7) — synced live, not part of the
+          theme draft/save (the bridge reads cnmh_dicesets_global directly). */}
+      <DiceSetsPanel />
 
       {/* ── Save / reset ─────────────────────────────────────────── */}
       <div className="gm-actions">
