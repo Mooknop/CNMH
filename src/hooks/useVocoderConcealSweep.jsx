@@ -10,7 +10,7 @@ import { RELAY, syncKey } from '../sync/keys';
 // Vocoder of Invisibility → Concealed while playing (#935). Watches the
 // character's playing flag + live inventory and writes the real `concealed`
 // condition into cnmh_conditions_<charId>, so every existing condition reader
-// (sheet masthead, StatsBlock, FocusBanner, GM state inspector) surfaces it
+// (sheet masthead, StatsBlock, the focus Dossier, GM state inspector) surfaces it
 // like any other condition. Reacting to the synced flag — rather than
 // instrumenting the cast sites — means every way playing ends (turn-boundary
 // lapse, encounter end, the sheet's manual Stop) drops the veil through this

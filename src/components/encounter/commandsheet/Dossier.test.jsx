@@ -34,9 +34,9 @@ vi.mock('../../../contexts/ContentContext', () => ({
 }));
 
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';
-import FocusBanner from './FocusBanner';
+import Dossier from './Dossier';
 import { useEncounter } from '../../../hooks/useEncounter';
-import { fullyRevealedRecord } from '../../../utils/recallKnowledge';
+import { fullyRevealedRecord, defaultRecord } from '../../../utils/recallKnowledge';
 
 const pellias = { id: 'Pellias', name: 'Pellias' };
 
@@ -73,7 +73,7 @@ const setupFocus = (getDrv, { setEnc, setFocus, patch = true } = {}) => {
       ...cur,
       order: cur.order.map((e) =>
         e.entryId === goblin.entryId
-          ? { ...e, defenses: ENEMY_DEFENSES, bestiary: { level: 3, rarity: 'common' } }
+          ? { ...e, defenses: ENEMY_DEFENSES, bestiary: { level: 3, rarity: 'common', traits: ['goblin', 'humanoid'] } }
           : e
       ),
     })));
@@ -84,20 +84,21 @@ const setupFocus = (getDrv, { setEnc, setFocus, patch = true } = {}) => {
 
 beforeEach(() => { __reset(); });
 
-describe('FocusBanner', () => {
+describe('Dossier', () => {
   it('renders nothing with no focus', () => {
     let drv;
     const { container } = render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     act(() => drv.startEncounter([pellias]));
-    expect(container.querySelector('.cmd-focus')).toBeNull();
+    expect(container.querySelector('.dossier')).toBeNull();
   });
 
-  it('shows all DC rows + RK DC + weaknesses with a fully-revealed record', () => {
+  // ── Revealed foe (design 1c) ───────────────────────────────────────────────
+  it('leads with the full stat grid + weakness for a fully-revealed record', () => {
     let drv, setEnc, setFocus, setKnowledge;
     render(
       <>
@@ -105,7 +106,7 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     const goblin = setupFocus(() => drv, { setEnc, setFocus });
@@ -113,33 +114,88 @@ describe('FocusBanner', () => {
     act(() => setKnowledge({ [goblin.entryId]: fullyRevealedRecord() }));
 
     expect(screen.getByText('Goblin')).toBeInTheDocument();
+    // Identity reveal drives the traits + level subtype line.
+    expect(screen.getByText('Goblin · Humanoid · Level 3')).toBeInTheDocument();
     expect(screen.getByText('AC')).toBeInTheDocument();
-    expect(screen.getByText('Fort')).toBeInTheDocument();
     expect(screen.getByText('19')).toBeInTheDocument(); // 10 + fort 9
     expect(screen.getByText('15')).toBeInTheDocument(); // 10 + ref 5
     expect(screen.getByText('17')).toBeInTheDocument(); // 10 + will 7
     expect(screen.getByText('Perc DC')).toBeInTheDocument();
     expect(screen.getByText('RK DC')).toBeInTheDocument();
-    expect(screen.getByText('cold 5')).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-weak')).toHaveTextContent('cold 5');
     // AC 18, Perc 18, RK DC 18 all read 18.
     expect(screen.getAllByText('18').length).toBeGreaterThanOrEqual(3);
+    // RK progress chips all confirmed.
+    expect(screen.getByText('Identity ✓')).toBeInTheDocument();
+    expect(screen.getByText('Defenses ✓')).toBeInTheDocument();
+    expect(screen.getByText('IWR ✓')).toBeInTheDocument();
+    // No redacted cells remain.
+    expect(screen.queryAllByText('??')).toHaveLength(0);
   });
 
-  it('hides unrevealed rows (default record) — shows only the name', () => {
+  it('ranks fully-revealed saves as an offense cue — lowest marked low', () => {
+    let drv, setEnc, setFocus, setKnowledge;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
+        <Dossier charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setKnowledge({ [goblin.entryId]: fullyRevealedRecord() }));
+
+    // Ref 15 is the lowest save → peril cue; Fort 19 the highest.
+    expect(screen.getByText('◂ low')).toBeInTheDocument();
+    expect(screen.getByText('15').closest('.dossier-cell')).toHaveClass('dossier-cell--low');
+    expect(screen.getByText('19').closest('.dossier-cell')).toHaveClass('dossier-cell--high');
+  });
+
+  // ── Unidentified foe (design 2a) ───────────────────────────────────────────
+  it('redacts the whole card for a default record — ?? grid + pending chips', () => {
     let drv, setEnc, setFocus;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     setupFocus(() => drv, { setEnc, setFocus });
-    expect(screen.getByText('Goblin')).toBeInTheDocument();
-    expect(screen.queryByText('AC')).toBeNull();
-    expect(screen.queryByText('RK DC')).toBeNull();
+
+    // Identity unrevealed → the name is withheld even though the strip shows it.
+    expect(screen.getByText('Unidentified creature')).toBeInTheDocument();
+    expect(screen.queryByText('Goblin')).toBeNull();
+    expect(screen.getByText(/Not yet recalled/)).toBeInTheDocument();
+    // All six stat cells redacted; the weakness stays hidden.
+    expect(screen.getAllByText('??')).toHaveLength(6);
     expect(screen.queryByText('cold 5')).toBeNull();
+    expect(screen.getByText('Identity ?')).toBeInTheDocument();
+    expect(screen.getByText('Defenses ?')).toBeInTheDocument();
+    expect(screen.getByText('IWR ?')).toBeInTheDocument();
+  });
+
+  it('gates each grid cell independently — a lone AC reveal fills only AC', () => {
+    let drv, setEnc, setFocus, setKnowledge;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
+        <Dossier charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setKnowledge({ [goblin.entryId]: { ...defaultRecord(), ac: true } }));
+
+    expect(screen.getByText('18')).toBeInTheDocument(); // AC revealed
+    expect(screen.getAllByText('??')).toHaveLength(5);  // the rest stay hidden
+    expect(screen.getByText('Unidentified creature')).toBeInTheDocument();
+    expect(screen.getByText('Defenses partial')).toBeInTheDocument();
   });
 
   it('degrades gracefully for a foe with no stat block', () => {
@@ -148,17 +204,19 @@ describe('FocusBanner', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     // No patch → the enemy has neither defenses nor bestiary.
     setupFocus(() => drv, { setFocus, patch: false });
     expect(screen.getByText('Goblin')).toBeInTheDocument();
     expect(screen.getByText(/No stat block/)).toBeInTheDocument();
+    // Nothing to redact — the reveal grid is absent entirely.
+    expect(screen.queryAllByText('??')).toHaveLength(0);
   });
 
   // ── Per-type revealed resistances/immunities (#1014) ──────────────────────
-  it('shows Resist/Immune lines for per-type damage-triggered reveals', () => {
+  it('shows Resist/Immune chips for per-type damage-triggered reveals', () => {
     let drv, setEnc, setFocus, setKnowledge;
     render(
       <>
@@ -166,7 +224,7 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     const goblin = setupFocus(() => drv, { setEnc, setFocus });
@@ -194,16 +252,17 @@ describe('FocusBanner', () => {
       },
     }));
 
-    expect(screen.getByTestId('cmd-focus-resist')).toHaveTextContent('fire 10');
-    expect(screen.getByTestId('cmd-focus-resist')).not.toHaveTextContent('acid');
-    expect(screen.getByTestId('cmd-focus-immune')).toHaveTextContent('poison');
-    expect(screen.getByTestId('cmd-focus-immune')).not.toHaveTextContent('bleed');
-    // The unrevealed weakness stays hidden.
+    expect(screen.getByTestId('dossier-resist')).toHaveTextContent('fire 10');
+    expect(screen.getByTestId('dossier-resist')).not.toHaveTextContent('acid');
+    expect(screen.getByTestId('dossier-immune')).toHaveTextContent('poison');
+    expect(screen.getByTestId('dossier-immune')).not.toHaveTextContent('bleed');
+    // The unrevealed weakness stays hidden; IWR progress reads partial.
     expect(screen.queryByText('cold 5')).toBeNull();
+    expect(screen.getByText('IWR partial')).toBeInTheDocument();
   });
 
-  // ── Active Exploit Vulnerability indicator (#454) ────────────────────────────
-  it('shows the Exploited line when this foe is the active exploit target', () => {
+  // ── Active Exploit Vulnerability banner (#454) ────────────────────────────
+  it('shows the Exploited banner when this foe is the active exploit target', () => {
     let drv, setEnc, setFocus, setExploit;
     render(
       <>
@@ -211,7 +270,7 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     const goblin = setupFocus(() => drv, { setEnc, setFocus });
@@ -219,12 +278,12 @@ describe('FocusBanner', () => {
       Pellias: { targetEntryId: goblin.entryId, type: 'mortal', weaknessType: 'cold', value: 5 },
     }));
 
-    const indicator = screen.getByTestId('cmd-focus-exploit');
-    expect(indicator).toHaveTextContent('Exploited');
-    expect(indicator).toHaveTextContent('Mortal Weakness cold 5');
+    const banner = screen.getByTestId('dossier-exploit');
+    expect(banner).toHaveTextContent('Exploited — Mortal Weakness');
+    expect(banner).toHaveTextContent('Your Strikes deal +cold 5 to this creature');
   });
 
-  it('shows the Personal Antithesis variant of the Exploited line', () => {
+  it('shows the Personal Antithesis variant of the Exploited banner', () => {
     let drv, setEnc, setFocus, setExploit;
     render(
       <>
@@ -232,7 +291,7 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     const goblin = setupFocus(() => drv, { setEnc, setFocus });
@@ -240,10 +299,12 @@ describe('FocusBanner', () => {
       Pellias: { targetEntryId: goblin.entryId, type: 'antithesis', weaknessType: null, value: 4 },
     }));
 
-    expect(screen.getByTestId('cmd-focus-exploit')).toHaveTextContent('Personal Antithesis 4');
+    const banner = screen.getByTestId('dossier-exploit');
+    expect(banner).toHaveTextContent('Exploited — Personal Antithesis');
+    expect(banner).toHaveTextContent('Your Strikes deal +4 to this creature');
   });
 
-  it('hides the Exploited line when a different foe is the exploit target', () => {
+  it('hides the Exploited banner when a different foe is the exploit target', () => {
     let drv, setEnc, setFocus, setExploit;
     render(
       <>
@@ -251,18 +312,18 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     setupFocus(() => drv, { setEnc, setFocus });
     act(() => setExploit({
       Pellias: { targetEntryId: 'some-other-entry', type: 'mortal', weaknessType: 'cold', value: 5 },
     }));
-    expect(screen.queryByTestId('cmd-focus-exploit')).toBeNull();
+    expect(screen.queryByTestId('dossier-exploit')).toBeNull();
   });
 
-  // ── Ally focus (#429) ──────────────────────────────────────────────────────
-  it('shows an ally banner with HP + conditions when an ally is focused', () => {
+  // ── Ally focus — support view (design 2b, #429) ───────────────────────────
+  it('shows the ally support card with HP + conditions when an ally is focused', () => {
     let drv, setFocus, setHp, setConds;
     render(
       <>
@@ -270,7 +331,7 @@ describe('FocusBanner', () => {
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_hp_Ashka" onReady={(s) => (setHp = s)} />
         <SyncDriver skey="cnmh_conditions_Ashka" onReady={(s) => (setConds = s)} />
-        <FocusBanner charId="Pellias" />
+        <Dossier charId="Pellias" />
       </>
     );
     act(() => drv.startEncounter([pellias, { id: 'Ashka', name: 'Ashka' }]));
@@ -279,11 +340,13 @@ describe('FocusBanner', () => {
     act(() => setConds([{ id: 'frightened', value: 1 }]));
     act(() => setFocus(ashka.entryId));
 
-    const banner = screen.getByRole('region', { name: 'Focused ally: Ashka' });
-    expect(banner).toHaveTextContent('Ashka');
-    expect(banner).toHaveTextContent('12');
-    expect(banner).toHaveTextContent(/Frightened 1/);
-    // Not the enemy stat-line banner.
+    const card = screen.getByRole('region', { name: 'Focused ally: Ashka' });
+    expect(card).toHaveTextContent('Ashka');
+    expect(screen.getByTestId('dossier-ally-hp')).toHaveTextContent('12');
+    expect(card).toHaveTextContent(/Frightened 1/);
+    // Not the foe stat-grid card.
     expect(screen.queryByText('RK DC')).toBeNull();
+    // No adjacency relay data in this fixture → the reach row stays hidden.
+    expect(screen.queryByTestId('dossier-reach')).toBeNull();
   });
 });

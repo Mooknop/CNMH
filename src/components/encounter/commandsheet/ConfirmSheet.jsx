@@ -22,7 +22,7 @@ const DEF_LABEL = { ac: 'AC', fortitude: 'Fort', reflex: 'Ref', will: 'Will', pe
 
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-// Reveal gating matches FocusBanner: numbers show only once Recall Knowledge
+// Reveal gating matches the Dossier: numbers show only once Recall Knowledge
 // (or damage-triggered reveals) has surfaced them.
 const defenseRevealed = (rec, key) =>
   key === 'ac' || key === 'perception' ? isFieldRevealed(rec, key) : isSaveRevealed(rec, key);

@@ -1,0 +1,285 @@
+/* src/components/encounter/commandsheet/Dossier.css
+   Focus Dossier (#1502 S1) — the focused combatant as the visual lead of the
+   encounter tab. Peril-tinted card for an identified foe, neutral for an
+   unidentified one, arcane for an ally. Tokens from pf2e-tokens.css. */
+
+.dossier {
+  margin: 0 var(--space-4);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--theme-peril) 30%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--theme-peril) 10%, transparent),
+    var(--surface-card)
+  );
+}
+.dossier--unknown {
+  border-color: var(--shell-border-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), var(--surface-card));
+}
+.dossier--ally {
+  border-color: color-mix(in srgb, var(--theme-arcane) 35%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--theme-arcane) 12%, transparent),
+    var(--surface-card)
+  );
+}
+
+/* ── Header: portrait + name + subtype + condition chips ─────────────────── */
+.dossier-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.dossier--foe .dossier-head {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--theme-peril) 16%, transparent), transparent);
+}
+.dossier--ally .dossier-head {
+  background: linear-gradient(120deg, color-mix(in srgb, var(--theme-arcane) 16%, transparent), transparent);
+}
+
+.dossier-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: 13px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+}
+.dossier-portrait--foe {
+  background: linear-gradient(150deg, #6a2422, #2a0f0e);
+  border: 2px solid var(--theme-peril);
+  color: var(--peril-light, #ff8a87);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--theme-peril) 40%, transparent);
+}
+.dossier-portrait--unknown {
+  background: repeating-linear-gradient(45deg, #241d18 0 6px, #1b1611 6px 12px);
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  color: var(--shell-text-secondary);
+  font-size: 26px;
+}
+.dossier-portrait--ally {
+  background: linear-gradient(150deg, #2f5a3a, #16301f);
+  border: 2px solid var(--verdant-mid);
+  color: var(--verdant-light);
+}
+
+.dossier-id {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dossier-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.05;
+  color: var(--shell-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dossier-name--foe { color: var(--peril-light, #ff8a87); }
+.dossier-name--ally { color: var(--arcane-light); }
+.dossier-marker { font-size: 12px; }
+
+.dossier-sub {
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--shell-text-secondary);
+}
+.dossier-sub--traits { text-transform: uppercase; letter-spacing: 0.08em; }
+.dossier-sub--empty { font-style: italic; color: var(--shell-text-tertiary); }
+
+.dossier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.dossier-chips--pad { padding: 0 var(--space-4) var(--space-3); margin-top: 0; }
+
+.dossier-chip {
+  font-size: var(--text-xs);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+.dossier-chip--peril {
+  background: color-mix(in srgb, var(--theme-peril) 18%, transparent);
+  color: var(--peril-light, #ff8a87);
+}
+.dossier-chip--verdant {
+  background: color-mix(in srgb, var(--theme-verdant, var(--verdant-mid)) 20%, transparent);
+  color: var(--verdant-light);
+  font-weight: var(--weight-bold);
+}
+
+/* ── RK progress chips ───────────────────────────────────────────────────── */
+.dossier-rk {
+  padding: 0 var(--space-4) var(--space-3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+.dossier-rk-head {
+  color: var(--shell-text-secondary);
+  font-weight: var(--weight-medium);
+}
+.dossier-rk-head--live { color: var(--verdant-light); }
+
+.dossier-rk-chip {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--shell-text-tertiary);
+}
+.dossier-rk-chip--done {
+  background: color-mix(in srgb, var(--theme-verdant, var(--verdant-mid)) 18%, transparent);
+  color: var(--verdant-light);
+}
+.dossier-rk-chip--part {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-secondary);
+}
+
+/* ── Stat grid: 3×2, hairline gaps over the inset surface ────────────────── */
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--shell-border);
+  border-top: 1px solid var(--shell-border);
+}
+.dossier-cell {
+  background: var(--surface-inset);
+  padding: 9px 6px;
+  text-align: center;
+}
+.dossier-cell-value {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 19px;
+  color: var(--shell-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.dossier-cell-value--hidden { color: var(--shell-text-tertiary); opacity: 0.62; }
+.dossier-cell--low .dossier-cell-value { color: var(--peril-light, #ff8a87); }
+.dossier-cell--mid .dossier-cell-value { color: var(--ember-light); }
+.dossier-cell--high .dossier-cell-value { color: var(--verdant-light); }
+
+.dossier-cell-label {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.dossier-cell-cue { color: var(--peril-light, #ff8a87); text-transform: none; }
+
+/* ── IWR + exploit ───────────────────────────────────────────────────────── */
+.dossier-iwr {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+.dossier-iwr-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.dossier-iwr-label {
+  width: 52px;
+  flex: none;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dossier-exploit {
+  margin-top: 2px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--ember-mid) 20%, transparent),
+    color-mix(in srgb, var(--ember-mid) 6%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--ember-mid) 45%, transparent);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dossier-exploit-bolt { font-size: 14px; }
+.dossier-exploit-body { display: flex; flex-direction: column; gap: 1px; }
+.dossier-exploit-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--ember-light);
+}
+.dossier-exploit-sub { font-size: var(--text-xs); color: var(--shell-text-secondary); }
+
+/* ── Ally vitals + reach ─────────────────────────────────────────────────── */
+.dossier-hp {
+  padding: 2px var(--space-4) var(--space-3);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.dossier-hp-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.dossier-hp-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--shell-text-primary);
+}
+
+.dossier-reach {
+  border-top: 1px solid var(--shell-border);
+  padding: var(--space-2) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+.dossier-reach b { font-weight: var(--weight-bold); }
+.dossier-reach--in {
+  background: color-mix(in srgb, var(--theme-verdant, var(--verdant-mid)) 6%, transparent);
+}
+.dossier-reach--in b { color: var(--verdant-light); }
+.dossier-reach--out b { color: var(--peril-light, #ff8a87); }
+
+.dossier-reach-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.dossier-reach--in .dossier-reach-dot { background: var(--verdant-mid); }
+.dossier-reach--out .dossier-reach-dot { background: var(--theme-peril); }
