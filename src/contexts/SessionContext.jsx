@@ -12,8 +12,12 @@ const RECONNECT_MS = 3000;
 // separate `consumed` write on activation, which stays frozen), so a player can
 // manage their loadout while the live game isn't running. Resource burns
 // (consumed, itemeffects, focus, gold, …) stay frozen so nothing gets used up.
+// The focus TARGET (#1502 — `focustarget`, the per-viewer "which combatant is
+// my dossier showing" pointer) is a UI selection, not a resource: it stays
+// interactive so the encounter tab remains browsable in the sandbox. (It never
+// was before S2 only because it squatted on the frozen focus-POINTS key.)
 // Keyed by the `cnmh_<type>_<id>` type segment.
-const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested', 'affixed', 'attached']);
+const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested', 'affixed', 'attached', 'focustarget']);
 
 // Whether a synced write may proceed while the live game is offline (DO up,
 // Foundry down). Two always-live categories survive the sandbox freeze:
