@@ -7,6 +7,7 @@ import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { saveBonusTalisman } from '../../utils/talismanActivation';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -114,15 +115,16 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
 
       {!result && (
         <div className="save-prompt-entry">
-          <input
-            type="number"
+          <FoundryDiceInput
             min="1"
             max="20"
-            className="save-prompt-input"
+            inputClassName="save-prompt-input"
             placeholder="d20"
-            aria-label="d20 roll"
+            ariaLabel="d20 roll"
             value={d20Input}
-            onChange={(e) => setD20Input(e.target.value)}
+            onValue={setD20Input}
+            charId={charId}
+            flavor={`${saveName} Save${prompt.effectName ? ` — ${prompt.effectName}` : ''}`}
           />
           <button
             className="btn-primary"

@@ -19,6 +19,9 @@ import './FoundryDiceInput.css';
  * @param {string}   [placeholder]  - input placeholder (default 'd20')
  * @param {string}   [ariaLabel]    - input aria-label (default 'raw d20' — the existing test contract)
  * @param {string}   [inputClassName] - class for the input so host styling (trr-roll-input …) applies
+ * @param {string}   [id]           - input id, for hosts that pair a <label htmlFor>
+ * @param {string|number} [min]/[max] - native range attributes some hosts set (1/20)
+ * @param {boolean}  [disabled]     - disables input AND roll button (resolved states)
  */
 export default function FoundryDiceInput({
   value,
@@ -28,6 +31,10 @@ export default function FoundryDiceInput({
   placeholder = 'd20',
   ariaLabel = 'raw d20',
   inputClassName = '',
+  id = undefined,
+  min = undefined,
+  max = undefined,
+  disabled = false,
 }) {
   const { roll, rolling, available } = useFoundryDice();
   const showRoll = available && !!charId;
@@ -42,18 +49,22 @@ export default function FoundryDiceInput({
     <span className="fdi">
       <input
         type="number"
+        id={id}
+        min={min}
+        max={max}
         className={inputClassName}
         placeholder={placeholder}
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onValue(e.target.value)}
+        disabled={disabled}
       />
       {showRoll && (
         <button
           type="button"
           className="fdi-btn"
           aria-label="Roll in Foundry"
-          disabled={rolling}
+          disabled={rolling || disabled}
           onClick={handleRoll}
         >
           {rolling ? 'Rolling…' : 'Roll'}

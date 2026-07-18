@@ -2,6 +2,7 @@ import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { DEGREE_LABELS_SAVE } from './TargetRollResolver';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './TargetRollResolver.css';
 
 /**
@@ -40,6 +41,8 @@ const OpposedReactionResolver = forwardRef(({
   skillOptions = null,
   defaultSkill = null,
   successNote = null,
+  charId = null,
+  rollFlavor = '',
 }, ref) => {
   const hasPicker = Array.isArray(skillOptions) && skillOptions.length > 0;
 
@@ -138,13 +141,15 @@ const OpposedReactionResolver = forwardRef(({
         ) : (
           effectiveLabel && <span className="trr-defense-label">{effectiveLabel}</span>
         )}
-        <input
-          type="number"
-          className="trr-roll-input"
+        <FoundryDiceInput
+          inputClassName="trr-roll-input"
           placeholder={rollBonus !== null ? 'd20' : 'total'}
-          aria-label="raw d20"
+          ariaLabel="raw d20"
           value={d20Input}
-          onChange={(e) => setD20Input(e.target.value)}
+          onValue={setD20Input}
+          // Manual-total mode (no derivable bonus) can't use a raw face.
+          charId={effectiveBonus !== null ? charId : null}
+          flavor={`${rollFlavor || 'Opposed check'}${effectiveLabel ? `: ${effectiveLabel}` : ''}`}
         />
         {bonusDisplay && (
           <span className="trr-bonus-badge" aria-label="roll bonus">{bonusDisplay}</span>

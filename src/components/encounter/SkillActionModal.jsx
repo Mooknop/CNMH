@@ -25,6 +25,7 @@ import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './SkillActionModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
 
@@ -488,16 +489,20 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
             <div className="sam-inputs">
               <div className="sam-field">
                 <label className="sam-label" htmlFor="sam-d20">d20 roll</label>
-                <input
+                <FoundryDiceInput
                   id="sam-d20"
-                  className="sam-input"
-                  type="number"
+                  inputClassName="sam-input"
+                  // the <label htmlFor="sam-d20"> above names this input — an
+                  // aria-label would override it (null omits the attribute)
+                  ariaLabel={null}
                   min="1"
                   max="20"
                   placeholder="1–20"
                   value={d20}
-                  onChange={handleD20}
+                  onValue={(v) => handleD20({ target: { value: v } })}
                   disabled={!!resolved}
+                  charId={character?.id}
+                  flavor={action.name}
                 />
               </div>
               <div className="sam-field">
