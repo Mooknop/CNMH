@@ -169,6 +169,9 @@ const TargetRollResolver = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     getResults: computeResults,
+    // Roll toast (#1490 S3): the raw face at confirm time, however it arrived
+    // (typed or Foundry-rolled). Null in manual-total mode's empty state too.
+    getD20Face: () => (hasD20 ? d20 : null),
   }));
 
   if (enemyTargets.length === 0) return null;

@@ -593,4 +593,14 @@ describe('TargetRollResolver dice-tower wiring', () => {
     );
     expect(rollButton()).toBeNull();
   });
+
+  test('getD20Face exposes the entered face for the roll toast (#1490 S3)', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5} />
+    );
+    expect(ref.current.getD20Face()).toBeNull();
+    enterD20(17);
+    expect(ref.current.getD20Face()).toBe(17);
+  });
 });

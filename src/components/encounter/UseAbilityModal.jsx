@@ -55,6 +55,7 @@ import {
 } from '../../utils/confirmAppliers';
 import { buildAttackToggles } from '../../utils/attackToggles';
 import { flourishFor } from '../../utils/flourishFor';
+import { buildRollFx } from '../../utils/rollToast';
 import { buildStrikeRangeGating } from '../../utils/strikeRangeGating';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
@@ -400,6 +401,11 @@ const UseAbilityModal = ({
     && (flatChecks.length === 0 || allFlatChecksRolled)
     && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
 
+  // The dice-tower chat label AND the roll toast's headline (#1490 S2/S3) —
+  // reads like the action: "Strike: Longsword (MAP -5)".
+  const rollFlavor =
+    `${verb}: ${ability.name}${mapStep ? ` (MAP ${mapPenaltyFor(ability, mapStep)})` : ''}`;
+
   const handleConfirm = () => {
     // Juice (#1346): every path through this handler is a committed use, so the
     // one emit here covers all of them — early returns, catalysts, action-folds.
@@ -409,7 +415,22 @@ const UseAbilityModal = ({
     const flourish = flourishFor({
       ability, castSource, character, bloodMagicActive: bloodMagicSection.active,
     });
-    emitFx({ kind: 'ability', charId: character.id, ...(flourish ? { flourish } : {}) });
+    // Roll toast (#1490 S3): a resolved actor-roll rides the same event as a
+    // compact `roll` payload. getD20Face only exists on the single-roll
+    // resolver, so multi-ray/chained casts emit the plain event (their toast
+    // is a later slice); getResults is pure, so this pre-read is free.
+    const rollFx = buildRollFx({
+      d20: resolverRef.current?.getD20Face?.() ?? null,
+      flavor: rollFlavor,
+      results: resolverRef.current?.getResults?.() ?? null,
+      attack: effectiveDefense === 'ac',
+    });
+    emitFx({
+      kind: 'ability',
+      charId: character.id,
+      ...(flourish ? { flourish } : {}),
+      ...(rollFx ? { roll: rollFx } : {}),
+    });
 
     // Veracious Spell (#967 R7): every path through this handler is a committed
     // use, so any cast — even one that fizzles on a flat check downstream —
@@ -670,7 +691,7 @@ const UseAbilityModal = ({
         toggles={attackToggles}
         rangeByEntry={hasRangeData ? rangeByEntry : null}
         charId={character.id}
-        rollFlavor={`${verb}: ${ability.name}${mapStep ? ` (MAP ${mapPenaltyFor(ability, mapStep)})` : ''}`}
+        rollFlavor={rollFlavor}
       />
     );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
