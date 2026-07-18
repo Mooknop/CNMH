@@ -58,7 +58,7 @@ import { flourishFor } from '../../utils/flourishFor';
 import { buildStrikeRangeGating } from '../../utils/strikeRangeGating';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { logThrownWeaponResolution } from '../../utils/thrownResolution';
-import { isAttackAbility } from '../../utils/map';
+import { isAttackAbility, mapPenaltyFor } from '../../utils/map';
 import { toGameSeconds } from '../../utils/gameTime';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useFxChannel } from '../../hooks/useFxChannel';
@@ -669,6 +669,8 @@ const UseAbilityModal = ({
         degrees={ability.degrees}
         toggles={attackToggles}
         rangeByEntry={hasRangeData ? rangeByEntry : null}
+        charId={character.id}
+        rollFlavor={`${verb}: ${ability.name}${mapStep ? ` (MAP ${mapPenaltyFor(ability, mapStep)})` : ''}`}
       />
     );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {

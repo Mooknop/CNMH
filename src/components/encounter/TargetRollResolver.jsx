@@ -1,5 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import DamagePanel from './DamagePanel';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS, ATTACK_DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
@@ -58,6 +59,10 @@ function ordinalSuffix(n) {
  *                                      (#530): { feet, increments, penalty, beyondMaxRange }.
  *                                      The penalty is auto-applied to that target's total; a
  *                                      target beyond max range shows "Out of range" and no degree.
+ * @param {string}      [charId]      - app character id for the dice-tower rail (#1490);
+ *                                      with a rail-capable bridge connected the d20 input
+ *                                      grows a "Roll in Foundry" button
+ * @param {string}      [rollFlavor]  - chat label for the delegated roll ("Strike: Longsword (MAP -5)")
  * @param {object}      ref           - forwarded ref; exposes { getResults() }
  */
 const TargetRollResolver = forwardRef(({
@@ -68,6 +73,8 @@ const TargetRollResolver = forwardRef(({
   degrees = null,
   toggles = [],
   rangeByEntry = null,
+  charId = null,
+  rollFlavor = '',
 }, ref) => {
   const [d20Input,       setD20Input]       = useState('');
   const [defenseOverride, setDefenseOverride] = useState('ac');
@@ -216,13 +223,16 @@ const TargetRollResolver = forwardRef(({
       )}
 
       <div className="trr-entry-row">
-        <input
-          type="number"
-          className="trr-roll-input"
+        <FoundryDiceInput
+          inputClassName="trr-roll-input"
           placeholder={rollBonus !== null ? 'd20' : 'total'}
-          aria-label="raw d20"
+          ariaLabel="raw d20"
           value={d20Input}
-          onChange={(e) => setD20Input(e.target.value)}
+          onValue={setD20Input}
+          // Manual-total mode (rollBonus null) can't use a raw Foundry face —
+          // the player folds their own bonus in — so the button stays hidden.
+          charId={rollBonus !== null ? charId : null}
+          flavor={rollFlavor}
         />
         <input
           type="number"
