@@ -10,7 +10,11 @@
 // - the viewer's **own entry** (S2) is the personal readout: vitals, effects
 //   on you, your defenses, and the hero/focus/speed meta row.
 // The contextual action list is a later slice.
-import React from 'react';
+import React, { useState } from 'react';
+import ActionSymbol from '../../shared/ActionSymbol';
+import BestiaryModal from '../BestiaryModal';
+import ExploitVulnerabilityModal from '../ExploitVulnerabilityModal';
+import { useEncounter } from '../../../hooks/useEncounter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
 import { useExploitVulnerability } from '../../../hooks/useExploitVulnerability';
@@ -88,7 +92,11 @@ const HpBlock = ({ hp, testid }) => (
 
 const Dossier = ({ charId, character, model }) => {
   const { focusEnemy, focusAlly, focusSelf } = useFocusTarget(charId);
+  const { encounter } = useEncounter();
   const { recordFor } = useRecallKnowledge();
+  // Discover CTAs (#1502 S4) — the unidentified state's two reveal paths.
+  const [rkOpen, setRkOpen] = useState(false);
+  const [evOpen, setEvOpen] = useState(false);
   const { exploitFor } = useExploitVulnerability();
   const { effectsFor } = useEnemyEffects();
   const { effects: effectCatalog } = useContent();
@@ -350,6 +358,7 @@ const Dossier = ({ charId, character, model }) => {
     : (defenses?.immunities || []).filter((t) => rec.immunitiesRevealed?.[t]);
 
   return (
+    <>
     <section
       className={`dossier ${identified ? 'dossier--foe' : 'dossier--unknown'}`}
       role="region"
@@ -399,6 +408,42 @@ const Dossier = ({ charId, character, model }) => {
         ))}
       </div>
 
+      {/* Discover CTAs (#1502 S4) — while unidentified, the dossier is the
+          discovery surface: Recall Knowledge (the bestiary's roll flow) and,
+          for a thaumaturge, Exploit Vulnerability. */}
+      {!identified && (
+        <div className="dossier-discover" data-testid="dossier-discover">
+          <button
+            type="button"
+            className="dossier-cta dossier-cta--arcane"
+            onClick={() => setRkOpen(true)}
+          >
+            <span className="dossier-cta-head">
+              <ActionSymbol cost={1} />
+              <b>Recall Knowledge</b>
+            </span>
+            <span className="dossier-cta-sub">
+              Identify it and reveal defenses — better degrees reveal more.
+            </span>
+          </button>
+          {character?.class === 'Thaumaturge' && !!character?.thaumaturge && (
+            <button
+              type="button"
+              className="dossier-cta dossier-cta--ember"
+              onClick={() => setEvOpen(true)}
+            >
+              <span className="dossier-cta-head">
+                <ActionSymbol cost={1} />
+                <b>Exploit Vulnerability</b>
+              </span>
+              <span className="dossier-cta-sub">
+                Discover its Mortal Weakness — or improvise a Personal Antithesis.
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+
       {(weaknessList.length > 0 || resistanceList.length > 0 || immunityList.length > 0 || activeExploit) && (
         <div className="dossier-iwr">
           {weaknessList.length > 0 && (
@@ -429,6 +474,24 @@ const Dossier = ({ charId, character, model }) => {
         </div>
       )}
     </section>
+
+    {rkOpen && (
+      <BestiaryModal
+        isOpen
+        onClose={() => setRkOpen(false)}
+        enemies={(encounter?.order || []).filter((e) => e.kind === 'enemy')}
+        actingCharId={charId}
+        actingCharName={character?.name}
+      />
+    )}
+    {evOpen && (
+      <ExploitVulnerabilityModal
+        isOpen
+        onClose={() => setEvOpen(false)}
+        character={character}
+      />
+    )}
+    </>
   );
 };
 
