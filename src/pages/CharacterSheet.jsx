@@ -25,6 +25,7 @@ import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ReadyActionButton from '../components/encounter/ReadyActionButton';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
 import Dossier from '../components/encounter/commandsheet/Dossier';
+import SelfStatusBar from '../components/encounter/commandsheet/SelfStatusBar';
 import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
@@ -165,6 +166,9 @@ const CharacterSheet = () => {
               <ChallengePrompts charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
               {encounter?.active ? (
                 <>
+                  {/* Self-status bar (#1502 S3) — the compressed turn budget
+                      (formerly DeckHeader Row A) leads the encounter skeleton. */}
+                  <SelfStatusBar charId={character.id} character={character} model={characterModel} />
                   <InitiativeEntry charId={character.id} character={character} />
                   {/* Off-turn (#471): the stage spotlights whoever is acting now.
                       On your own turn the budget (former ActionDial hero) lives in

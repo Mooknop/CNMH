@@ -18,7 +18,7 @@ import './TurnTrackerPanel.css';
 import { RELAY } from '../../sync/keys';
 
 // Residual turn panel (#411, #415): initiative order, round/status, action pips,
-// MAP, reaction and End Turn live in the Segmented Deck (InitiativeStrip + DeckHeader);
+// MAP, reaction and End Turn live in the SelfStatusBar (#1502 S3);
 // movement (Stride/Step) is now a grid tile → MoveActionSheet. What remains here is
 // the per-turn machinery with no home elsewhere yet: Raise/Lower Shield + Shield
 // Block, Dismiss aura, turn-start free-action offers, Sustain prompts, and the Bestiary.

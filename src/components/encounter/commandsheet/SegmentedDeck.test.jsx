@@ -33,10 +33,6 @@ vi.mock('../../../hooks/useChambers', () => ({
   useChambers: (...args) => mockUseChambers(...args),
 }));
 
-// The fused header has its own suite (DeckHeader.test.jsx) — keep it inert here.
-vi.mock('./DeckHeader', () => ({
-  default: () => <div data-testid="deck-header" />,
-}));
 
 // TraitTag needs the TraitContext provider — inert chip here.
 vi.mock('../../shared/TraitTag', () => ({
@@ -95,17 +91,8 @@ describe('SegmentedDeck', () => {
     mockUseChambers.mockReturnValue({ chambers: {} });
   });
 
-  // ── Fused header ───────────────────────────────────────────────────────────
-
-  it('renders the fused header only while an encounter is active', () => {
-    const { rerender } = render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
-    expect(screen.getByTestId('deck-header')).toBeInTheDocument();
-    mockUseEncounter.mockReturnValue({ encounter: null });
-    rerender(<SegmentedDeck character={character} onUse={vi.fn()} />);
-    expect(screen.queryByTestId('deck-header')).not.toBeInTheDocument();
-  });
-
   // ── Segmented control ──────────────────────────────────────────────────────
+  // (The turn budget moved out of the deck into SelfStatusBar — #1502 S3.)
 
   it('renders the segment tabs, defaulting to Strikes with the strike in hand', () => {
     render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
