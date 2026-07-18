@@ -4,20 +4,45 @@
 // item is placed by its `hand` (1 or 2), with any hand-less held items falling
 // into the first free slot(s). Shared by the encounter hands surfaces and the
 // Inventory Hands strip so the derivation lives in exactly one place.
+//
+// Strapped shields (bucklers, shield gauntlets — `shield.strapped` in the
+// catalog) are worn ON a hand rather than held IN it: they ride along as
+// `strap1`/`strap2` overlays without ever occupying a slot, and can only be
+// Raised / Activated while their hand passes `handAllowsStrapUse`.
 import { isContainer } from './InventoryUtils';
 import { isBodyBound } from './itemState';
 
+// A shield that straps to a hand instead of being held (buckler class).
+// Strap-only by design: it never enters held1/held2 and never fills a slot.
+export const isStrappedShield = (item) => !!(item && item.shield && item.shield.strapped);
+
 export const deriveHands = (items = []) => {
   const list = Array.isArray(items) ? items : [];
+  const strapFor = (h) =>
+    list.find(
+      (e) => e && e.state === 'worn' && e.strapHand === h && isStrappedShield(e)
+    ) || null;
+  const straps = { strap1: strapFor(1), strap2: strapFor(2) };
   const two = list.find((e) => e && e.state === 'held2');
-  if (two) return { slot1: two, slot2: two };
+  if (two) return { slot1: two, slot2: two, ...straps };
   const ones = list.filter((e) => e && e.state === 'held1');
   const noHand = ones.filter((e) => e.hand == null);
   const byHand = (h) => ones.find((e) => e.hand === h);
   return {
     slot1: byHand(1) || noHand[0] || null,
     slot2: byHand(2) || noHand[1] || null,
+    ...straps,
   };
+};
+
+// The buckler rule (table-agreed, matches RAW): a strapped shield can be
+// Raised / its abilities Activated while that hand is empty OR holding a light
+// object (Bulk L or negligible — weight < 1 in Bulk units) that isn't a
+// weapon. Wielding anything heavier, or any weapon, ties the hand up.
+export const handAllowsStrapUse = (hands, hand) => {
+  const occupant = hand === 2 ? hands?.slot2 : hands?.slot1;
+  if (!occupant) return true;
+  return !occupant.strikes && (occupant.weight || 0) < 1;
 };
 
 // Whether the item demands both hands to wield, from its usage text ("held in
@@ -34,6 +59,9 @@ export const isTwoHanded = (item) =>
 // trinkets don't (consumables already have their own draw-costed tiles).
 export const isWieldable = (item) => {
   if (!item) return false;
+  // Strapped shields are strap-only: they go on a hand via the Strap flow,
+  // never into a held slot, so the Swap pool must not offer them.
+  if (isStrappedShield(item)) return false;
   // Attachments, runes and talismans ride on a host — they carry strike/usage
   // data but are never wielded on their own (Shield Spikes, weapon runes, …).
   // Seed shapes vary: an `attachment` field / Attached trait (spikes, boss) or

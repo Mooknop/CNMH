@@ -3,7 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { APP, syncKey } from '../sync/keys';
 
 // Single writer for the durable live-loadout map
-// cnmh_loadout_<characterId> = { [uid]: { state?, container?, hand? } }.
+// cnmh_loadout_<characterId> = { [uid]: { state?, container?, hand?, strapHand? } }.
 // Shared by the encounter hands surfaces (HandsGroup) and the Inventory-tab action buttons so
 // the patch semantics live in exactly one place. Reads flow back through
 // useCharacter's effective tree (kept in sync same-client by the Slice-A
@@ -12,6 +12,12 @@ import { APP, syncKey } from '../sync/keys';
 // Convention: any explicit placement clears `hand`; a held assignment clears
 // `container` (held ⇒ on-person). `hand: undefined` is dropped by JSON on
 // persist, so the stored map stays clean.
+//
+// `strapHand` (1|2) marks a buckler-class shield worn ON that hand while its
+// state stays 'worn' — it never occupies a held slot, so setHands leaves
+// strapped items where they are. Leaving the hand's company (drop/stow) also
+// unstraps; a Swap that hands the strapped uid something is defensively
+// unstrapped too.
 export const useLoadout = (characterId) => {
   const [loadout, setLoadout] = useSyncedState(
     syncKey(APP.LOADOUT, characterId || 'none'),
@@ -33,7 +39,8 @@ export const useLoadout = (characterId) => {
     [patch]
   );
   const drop = useCallback(
-    (uid) => patch(uid, { state: 'dropped', container: null, hand: undefined }),
+    (uid) =>
+      patch(uid, { state: 'dropped', container: null, hand: undefined, strapHand: undefined }),
     [patch]
   );
   // pickUp / retrieve / unhand are all "back to Worn on your person".
@@ -45,7 +52,7 @@ export const useLoadout = (characterId) => {
   // effective derivation forces Stowed).
   const stow = useCallback(
     (uid, containerUid) =>
-      patch(uid, { container: containerUid, state: 'worn', hand: undefined }),
+      patch(uid, { container: containerUid, state: 'worn', hand: undefined, strapHand: undefined }),
     [patch]
   );
   // Move an already-stowed item between containers (placement only).
@@ -76,6 +83,7 @@ export const useLoadout = (characterId) => {
             state: 'held2',
             container: null,
             hand: undefined,
+            strapHand: undefined,
           };
         } else {
           if (hand1)
@@ -84,6 +92,7 @@ export const useLoadout = (characterId) => {
               state: 'held1',
               container: null,
               hand: 1,
+              strapHand: undefined,
             };
           if (hand2)
             next[hand2] = {
@@ -91,11 +100,42 @@ export const useLoadout = (characterId) => {
               state: 'held1',
               container: null,
               hand: 2,
+              strapHand: undefined,
             };
         }
         return next;
       }),
     [setLoadout]
+  );
+
+  // Strap a buckler-class shield onto a hand: worn ON it, never occupying its
+  // held slot. One strapped item per hand — a previous occupant of that strap
+  // is released (stays Worn). Strapping is an on-person placement, so it also
+  // pulls the item out of any container.
+  const strapTo = useCallback(
+    (uid, hand) =>
+      setLoadout((cur) => {
+        const next = { ...(cur || {}) };
+        Object.keys(next).forEach((k) => {
+          if (k !== uid && next[k] && next[k].strapHand === hand) {
+            next[k] = { ...next[k], strapHand: undefined };
+          }
+        });
+        next[uid] = {
+          ...(next[uid] || {}),
+          state: 'worn',
+          container: null,
+          hand: undefined,
+          strapHand: hand,
+        };
+        return next;
+      }),
+    [setLoadout]
+  );
+  // Off the arm, still Worn on your person.
+  const unstrap = useCallback(
+    (uid) => patch(uid, { strapHand: undefined }),
+    [patch]
   );
 
   return {
@@ -108,6 +148,8 @@ export const useLoadout = (characterId) => {
     stow,
     moveToContainer,
     setHands,
+    strapTo,
+    unstrap,
   };
 };
 

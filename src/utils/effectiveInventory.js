@@ -3,7 +3,7 @@
 // inventory display, Hands panel) reads this so the "real" item state is
 // consistent for everyone.
 //
-// loadout shape: { [entryUid]: { state?, container?, hand? } }
+// loadout shape: { [entryUid]: { state?, container?, hand?, strapHand? } }
 //   state     : 'worn'|'held1'|'held2'|'dropped'  (top-level only; an entry
 //               inside a container is always Stowed regardless)
 //   container : parent container entry's uid, or null = top-level.
@@ -11,6 +11,11 @@
 //   hand      : 1 | 2 — which hand a held1 item occupies (so the Encounter
 //               panel can render two distinct slots). Inert to Bulk/badges;
 //               carried through onto the effective entry when present.
+//   strapHand : 1 | 2 — which hand a strapped shield (buckler class,
+//               `shield.strapped`) is worn ON while its state stays 'worn'.
+//               It never occupies a held slot; carried through, and the
+//               derived `strapUsable` flag is stamped alongside it (whether
+//               that hand currently allows Raising/Activating it).
 //
 // Constraints preserved from the authored model: containers never nest
 // (depth-1) — a container entry is always top-level, and a move whose target
@@ -20,6 +25,7 @@
 // Bulk is then byte-identical to today (state is inert to the math except
 // `dropped`, which no authored sheet carries).
 import { STOWED, normalizeItemState } from './itemState';
+import { deriveHands, handAllowsStrapUse, isStrappedShield } from './hands';
 
 const isContainer = (entry) =>
   !!(entry && entry.container && Array.isArray(entry.container.contents));
@@ -75,10 +81,14 @@ export const buildEffectiveInventory = (resolvedInventory, loadout) => {
     normalizeItemState(uid != null && lo[uid] ? lo[uid].state : undefined);
   const handFor = (uid) =>
     uid != null && lo[uid] && lo[uid].hand ? { hand: lo[uid].hand } : null;
+  const strapFor = (uid) =>
+    uid != null && lo[uid] && lo[uid].strapHand
+      ? { strapHand: lo[uid].strapHand }
+      : null;
 
   // Rebuild immutably (never mutate the shared resolved objects). Top-level
   // state comes from the loadout (default Worn); contents are always Stowed.
-  return topLevel.map(({ entry, uid }) => {
+  const effective = topLevel.map(({ entry, uid }) => {
     if (isContainer(entry)) {
       const contents = (childrenByParent.get(uid) || []).map(({ entry: ce }) => ({
         ...ce,
@@ -91,8 +101,20 @@ export const buildEffectiveInventory = (resolvedInventory, loadout) => {
         container: { ...entry.container, contents },
       };
     }
-    return { ...entry, state: stateFor(uid), ...handFor(uid) };
+    return { ...entry, state: stateFor(uid), ...handFor(uid), ...strapFor(uid) };
   });
+
+  // Stamp `strapUsable` on strapped shields so item-only consumers
+  // (itemAbilitiesActive, ItemModal) can gate Raise/Activate without
+  // re-deriving the hands — the flag needs the whole top-level list to know
+  // whether the strapped hand is tied up.
+  if (!effective.some((e) => e.strapHand && isStrappedShield(e))) return effective;
+  const hands = deriveHands(effective);
+  return effective.map((e) =>
+    e.strapHand && isStrappedShield(e)
+      ? { ...e, strapUsable: handAllowsStrapUse(hands, e.strapHand) }
+      : e
+  );
 };
 
 export default buildEffectiveInventory;
