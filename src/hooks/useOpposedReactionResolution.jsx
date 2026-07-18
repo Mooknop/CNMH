@@ -75,6 +75,8 @@ export const useOpposedReactionResolution = ({
       skillOptions={opposedSkillOptions}
       defaultSkill={ability.roll?.skill || 'performance'}
       successNote={ability.roll?.successNote || null}
+      charId={character?.id}
+      rollFlavor={ability.name}
     />
   ) : null;
 

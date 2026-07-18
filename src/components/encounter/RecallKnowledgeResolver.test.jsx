@@ -2,6 +2,8 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import RecallKnowledgeResolver from './RecallKnowledgeResolver';
 import { useCharacter } from '../../hooks/useCharacter';
+import { SessionContext } from '../../contexts/SessionContext';
+import { makeSessionBus } from '../../test/sessionBus';
 
 // ── Mock hooks ────────────────────────────────────────────────────────────────
 
@@ -232,4 +234,18 @@ test('Cancel calls onDone without resolving', () => {
   fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
   expect(mockResolve).not.toHaveBeenCalled();
   expect(onDone).toHaveBeenCalled();
+});
+
+// ── dice-tower rail (#1490 S4) ────────────────────────────────────────────────
+// Full delegated-roll behavior lives in FoundryDiceInput.test.jsx; this pins
+// the host wiring — a rail-capable bridge surfaces the Roll button here (the
+// bare renders above run session-less and never grow one).
+test('rail-capable bridge surfaces Roll in Foundry on the RK d20 entry', () => {
+  const bus = makeSessionBus({ state: { global: { bridgehello: { protocol: 3 } } } });
+  render(
+    <SessionContext.Provider value={bus}>
+      <RecallKnowledgeResolver enemy={dragon} actingCharId="c1" actingCharName="Vex" onDone={vi.fn()} />
+    </SessionContext.Provider>
+  );
+  expect(screen.getByRole('button', { name: /roll in foundry/i })).toBeInTheDocument();
 });

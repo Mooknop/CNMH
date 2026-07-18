@@ -263,7 +263,7 @@ const UseAbilityModal = ({
   });
   const { isChamberedFire, fireExtra } = chamberFireSection;
   const bloodMagicSection = useBloodMagicSection({ character, ability, effectiveVerb, chainSpell });
-  const flatCheckSection = useFlatCheckSection({ ability, activeConditions, isAttack, effectiveVerb });
+  const flatCheckSection = useFlatCheckSection({ ability, activeConditions, isAttack, effectiveVerb, charId: character.id });
   const { flatChecks, allFlatChecksRolled, failedFlatCheck } = flatCheckSection;
 
   // Casting arithmetic (#1317 D4) — the MAP step (auto + override, #475), the
