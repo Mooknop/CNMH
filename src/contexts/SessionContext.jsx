@@ -35,6 +35,7 @@ const NOOP_SESSION = {
   connected: false,
   foundryConnected: false,
   hydrations: 0,
+  pendingWrites: 0,
   getState: () => undefined,
   getAllState: () => undefined,
   sendUpdate: () => {},
@@ -77,6 +78,17 @@ export const SessionProvider = ({ children }) => {
   const sandboxRef = useRef(false);
   sandboxRef.current = connected && !foundryConnected;
 
+  // Writes accepted while the socket wasn't OPEN (the Exploit Vulnerability
+  // write-loss incident: a reconnect window or a phone-backgrounded socket ate
+  // the send, then the next FULL_STATE reconcile wiped the local copy because
+  // the DO never heard about it). Keyed `characterId|stateType`, newest value
+  // wins, insertion order preserved for the flush. Entries live until a
+  // FULL_STATE confirms the reconnect round-trip — the DO snapshots its state
+  // when the socket attaches, so frames flushed in onopen race the snapshot
+  // and must ALSO overlay it client-side (see the FULL_STATE handler).
+  const pendingSends = useRef(new Map());
+  const [pendingWrites, setPendingWrites] = useState(0);
+
   const notify = (characterId, stateType, value) => {
     subscribers.current[characterId]?.[stateType]?.forEach((cb) => cb(value));
   };
@@ -95,6 +107,14 @@ export const SessionProvider = ({ children }) => {
       ws.current = socket;
 
       socket.onopen = () => {
+        // Flush writes queued while the link was down, in order. Acceptance was
+        // decided at write time (the sandbox freeze runs in sendUpdate), so the
+        // flush is unconditional. The queue is NOT cleared here: if this socket
+        // dies before FULL_STATE lands, the next reconnect re-flushes (UPDATE
+        // frames are full-value last-write-wins, so a resend is harmless).
+        for (const { characterId, stateType, value } of pendingSends.current.values()) {
+          socket.send(JSON.stringify({ type: 'UPDATE', characterId, key: stateType, value }));
+        }
         if (!unmounted.current) setConnected(true);
       };
 
@@ -119,6 +139,17 @@ export const SessionProvider = ({ children }) => {
         }
 
         if (msg.type === 'FULL_STATE' && msg.payload) {
+          // Overlay writes still awaiting their reconnect round-trip: the DO
+          // built this snapshot when the socket attached, BEFORE the frames
+          // flushed in onopen were processed, so those keys are stale (or
+          // absent) here. Without the overlay, useSyncedState's "absent key is
+          // authoritative" reconcile would wipe the very write we just flushed.
+          for (const { characterId, stateType, value } of pendingSends.current.values()) {
+            if (!msg.payload[characterId]) msg.payload[characterId] = {};
+            msg.payload[characterId][stateType] = value;
+          }
+          pendingSends.current.clear();
+          if (!unmounted.current) setPendingWrites(0);
           serverState.current = msg.payload;
           for (const [characterId, types] of Object.entries(msg.payload)) {
             for (const [stateType, value] of Object.entries(types)) {
@@ -178,8 +209,20 @@ export const SessionProvider = ({ children }) => {
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
     const socket = ws.current;
+    const pendingKey = `${characterId}|${stateType}`;
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: 'UPDATE', characterId, key: stateType, value }));
+      // Mid-reconnect-window (flushed but FULL_STATE not yet in): refresh the
+      // queued entry so the snapshot overlay can't revert this newer value.
+      if (pendingSends.current.has(pendingKey)) {
+        pendingSends.current.set(pendingKey, { characterId, stateType, value });
+      }
+    } else {
+      // Socket CONNECTING / CLOSING / CLOSED: queue instead of silently
+      // dropping (the write-loss incident). Deduped per key, newest wins;
+      // flushed by onopen and overlaid onto the next FULL_STATE.
+      pendingSends.current.set(pendingKey, { characterId, stateType, value });
+      setPendingWrites(pendingSends.current.size);
     }
     // Also notify *local* subscribers: the server broadcast excludes the
     // sender, so without this every other useSyncedState consumer of this key
@@ -200,7 +243,7 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ connected, foundryConnected, hydrations, getState, getAllState, sendUpdate, subscribe }}>
+    <SessionContext.Provider value={{ connected, foundryConnected, hydrations, pendingWrites, getState, getAllState, sendUpdate, subscribe }}>
       {children}
     </SessionContext.Provider>
   );

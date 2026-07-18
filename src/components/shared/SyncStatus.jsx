@@ -31,13 +31,21 @@ const STATES = {
     label: '○ Offline',
     title: 'Offline — no connection to the campaign',
   },
+  // DO link down but writes made in the gap are queued (SessionContext
+  // pendingSends) — they flush automatically on reconnect. Distinct from plain
+  // Offline so a player mid-action knows their click wasn't eaten.
+  pending: {
+    className: 'sync-pending',
+    label: '⏳ Reconnecting…',
+    title: 'Reconnecting — your recent changes are pending and will sync automatically when the connection returns',
+  },
 };
 
 const SyncStatus = () => {
-  const { connected, foundryConnected } = useSession();
+  const { connected, foundryConnected, pendingWrites } = useSession();
   const { outdated } = useBridgeStatus();
   const key = !connected
-    ? 'offline'
+    ? (pendingWrites > 0 ? 'pending' : 'offline')
     : !foundryConnected
     ? 'sandbox'
     : outdated
