@@ -35,11 +35,6 @@ vi.mock('../../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate, getState: () => [] }),
 }));
 
-// Row B is FocusBanner's own concern (FocusBanner.test.jsx) — keep it inert here.
-vi.mock('./FocusBanner', () => ({
-  default: () => <div data-testid="focus-banner" />,
-}));
-
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';
 import DeckHeader from './DeckHeader';
 import { useEncounter } from '../../../hooks/useEncounter';
@@ -281,7 +276,6 @@ describe('DeckHeader', () => {
 
     expect(screen.queryByRole('region', { name: 'Turn budget' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
-    // Row B (focus banner) still renders for off-turn target context.
-    expect(screen.getByTestId('focus-banner')).toBeInTheDocument();
+    // Off-turn target context lives in the Dossier (#1502 S1), not here.
   });
 });

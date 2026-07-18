@@ -24,6 +24,7 @@ import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ReadyActionButton from '../components/encounter/ReadyActionButton';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
+import Dossier from '../components/encounter/commandsheet/Dossier';
 import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
@@ -177,6 +178,9 @@ const CharacterSheet = () => {
                     <ReadyActionButton charId={character.id} characterName={character.name} />
                   )}
                   <InitiativeStrip charId={character.id} />
+                  {/* Focus Dossier (#1502 S1) — the focused combatant's card
+                      leads the screen, directly under the target selector. */}
+                  <Dossier charId={character.id} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
                   {/* At-a-glance hands strip (read-only) — hand CHANGES live in
                       the deck's Items segment (HandsGroup). */}
