@@ -48,7 +48,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Raise a Shield (Slice 1); the Shield Block bar is its own component now.
   // `usable` folds Broken/Destroyed in — a broken shield stays usable only for
   // a Rust-Blessed wielder (campaign boon).
-  const { heldShield, raised, broken, destroyed, usable, raiseShield, lowerShield } =
+  const { heldShield, raised, broken, destroyed, usable, strapObstructed, raiseShield, lowerShield } =
     useShield(charId, inventory);
 
   // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
@@ -121,6 +121,20 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   useEffect(() => {
     if (readied && turnState?.reactionSpent) clearReadied();
   }, [readied, turnState?.reactionSpent, clearReadied]);
+
+  // A raised strapped shield (buckler class) whose hand just got tied up — or
+  // that was unstrapped — lowers for real (bucklers S2). The derived `raised`
+  // is already false, but leaving the persisted raise stale-true would let the
+  // bonus spring back for free the moment the hand empties. This runs on the
+  // owner's client, which is also where the hand change was made.
+  useEffect(() => {
+    if (!strapObstructed) return;
+    lowerShield();
+    appendLog({
+      type: 'system',
+      text: `${characterName}'s shield is no longer raised — that hand is tied up`,
+    });
+  }, [strapObstructed, lowerShield, appendLog, characterName]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -218,6 +232,8 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
               disabled={!usable}
               title={destroyed
                 ? 'Shield is destroyed — beyond repair'
+                : heldShield.strapped && !heldShield.strapUsable
+                ? `Hand ${heldShield.strapHand} is tied up — a strapped shield needs that hand free (or holding a light non-weapon) to raise`
                 : broken && !usable
                 ? 'Shield is broken — no bonus until repaired'
                 : broken
@@ -225,7 +241,13 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
                 : `Raise ${heldShield.name || 'shield'} (+${heldShield.shield?.bonus ?? 0} AC)`}
               aria-label="Raise a Shield"
             >
-              🛡 Raise{destroyed ? ' (Destroyed)' : broken ? ' (Broken)' : ''}
+              🛡 Raise{destroyed
+                ? ' (Destroyed)'
+                : heldShield.strapped && !heldShield.strapUsable
+                ? ' (Hand full)'
+                : broken
+                ? ' (Broken)'
+                : ''}
             </button>
           )}
 
