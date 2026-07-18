@@ -1,0 +1,94 @@
+/* src/components/encounter/commandsheet/FocusPlays.css
+   Contextual play list (#1502 S4) — "Against this target / Support this ally /
+   On yourself" rows under the Dossier. Dark-shell tokens from pf2e-tokens.css. */
+
+.focus-plays {
+  padding: var(--space-3) var(--space-4) var(--space-1);
+}
+
+.focus-plays-head {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-secondary);
+}
+
+.focus-plays-hint {
+  margin: calc(-1 * var(--space-1)) 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+.focus-plays-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.focus-play {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.focus-play:hover { border-color: var(--shell-border-strong); }
+
+/* A weakness-matching play glows verdant — the "hit it here" cue. */
+.focus-play--verdant {
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--theme-verdant, var(--verdant-mid)) 14%, transparent),
+    var(--surface-card)
+  );
+  border-color: color-mix(in srgb, var(--theme-verdant, var(--verdant-mid)) 32%, transparent);
+}
+
+.focus-play-cost {
+  flex: none;
+  font-size: 15px;
+  color: var(--ember-light);
+}
+
+.focus-play-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.focus-play-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.focus-play-name {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+.focus-play-note { font-size: var(--text-xs); }
+.focus-play-note--verdant { color: var(--verdant-light); }
+.focus-play-note--arcane { color: var(--arcane-light); }
+
+.focus-play-sub {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+.focus-play-tag {
+  flex: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}
+.focus-play-tag--verdant { color: var(--verdant-light); }
+.focus-play-tag--ember { color: var(--ember-light); }

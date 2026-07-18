@@ -16,10 +16,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
 import ConfirmSheet from './ConfirmSheet';
+import FocusPlays from './FocusPlays';
 import SpellsSegment from './SpellsSegment';
 import HandsGroup from './HandsGroup';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
+import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
+import { useExploitVulnerability } from '../../../hooks/useExploitVulnerability';
 import { useTurnState } from '../../../hooks/useTurnState';
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { useAdjacency } from '../../../hooks/useAdjacency';
@@ -29,6 +32,8 @@ import { isCharTurn } from '../../../utils/encounterUtils';
 import { buildActionCatalog, segmentTiles, capacityWeaponCards } from './buildActionCatalog';
 import { handCandidates } from '../../../utils/hands';
 import { suggestNow } from './suggestNow';
+import { focusPlays, targetIntel } from './contextualPlays';
+import { rkKeyFor } from '../../../utils/recallKnowledge';
 import './SegmentedDeck.css';
 import { RELAY, syncKey } from '../../../sync/keys';
 
@@ -53,7 +58,9 @@ const SecHead = ({ tone = 'muted', label, right }) => (
 
 const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpen, skillActions = [], onSkillAction, extraActions = [] }) => {
   const { actions, strikes, reactions, freeActions, inventory, maxHp } = useCharacter(character);
-  const { focusEnemy, focusAlly } = useFocusTarget(character.id);
+  const { focusEnemy, focusAlly, focusSelf } = useFocusTarget(character.id);
+  const { recordFor } = useRecallKnowledge();
+  const { exploitFor } = useExploitVulnerability();
   const { inReach } = useAdjacency(character.id);
   const { turnState } = useTurnState(character.id);
   const { encounter } = useEncounter();
@@ -154,15 +161,32 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
     [capCards]
   );
 
+  // Contextual play list (#1502 S4) — with a focused combatant, the shortlist
+  // reframes as "how you engage them": Against this target / Support this ally
+  // / On yourself, annotated with the reveal-gated intel (weakness match,
+  // exploit rider, low-save cue). Same tiles, same confirm path.
+  const focusMode = focusEnemy ? 'foe' : focusAlly ? 'ally' : focusSelf ? 'self' : null;
+  const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
+  const intel = useMemo(
+    () => (focusEnemy ? targetIntel(focusEnemy, recordFor(rkKeyFor(focusEnemy)), exploitFor(character.id)) : null),
+    [focusEnemy, recordFor, exploitFor, character.id]
+  );
+  const plays = useMemo(
+    () => (encounterMode && myTurn && focusMode
+      ? focusPlays(tiles, { mode: focusMode, actionsLeft, hpRatio, allyInReach, intel })
+      : []),
+    [encounterMode, myTurn, focusMode, tiles, actionsLeft, hpRatio, allyInReach, intel]
+  );
+
   // "Right Now" shortlist (#413) — the most likely next actions, one tap away.
   // Ranked over the full catalog (not the active segment) against the live
   // budget + focus, so it stays useful no matter which segment is selected.
-  // Only on your own turn — off-turn there is no action budget to spend, the
-  // deck is showing React instead.
-  const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
+  // Only on your own turn with NO focus — a focused combatant swaps in the
+  // contextual play list above. Off-turn there is no action budget to spend,
+  // the deck is showing React instead.
   const suggestions = useMemo(
-    () => (encounterMode && myTurn ? suggestNow(tiles, { actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach }) : []),
-    [encounterMode, myTurn, tiles, actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach]
+    () => (encounterMode && myTurn && !focusMode ? suggestNow(tiles, { actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach }) : []),
+    [encounterMode, myTurn, focusMode, tiles, actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach]
   );
 
   const segments = onMagicOpen ? SEGMENTS : SEGMENTS.filter((s) => s.key !== 'spells');
@@ -396,6 +420,17 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
 
   return (
     <div className="deck-root">
+      {/* The contextual play list scrolls with the page (it sits visually
+          under the Dossier); only Right Now + the segmented control pin. */}
+      {plays.length > 0 && (
+        <FocusPlays
+          mode={focusMode}
+          identified={focusMode !== 'foe' || !!intel?.identified}
+          plays={plays}
+          onSelect={handleTileSelect}
+        />
+      )}
+
       {/* Right Now and the segmented control pin as one sticky block; the
           segment body scrolls under it. The turn budget lives in the
           SelfStatusBar at the top of the encounter tab (#1502 S3). */}

@@ -225,6 +225,58 @@
 }
 .dossier-cell-cue { color: var(--peril-light, #ff8a87); text-transform: none; }
 
+/* ── Discover CTAs (#1502 S4) — the unidentified state's reveal paths ────── */
+.dossier-discover {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dossier-cta {
+  text-align: left;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--shell-text-primary);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dossier-cta--arcane {
+  border: 1px solid color-mix(in srgb, var(--theme-arcane) 45%, transparent);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--theme-arcane) 16%, transparent),
+    color-mix(in srgb, var(--theme-arcane) 5%, transparent)
+  );
+}
+.dossier-cta--ember {
+  border: 1px solid color-mix(in srgb, var(--ember-mid) 45%, transparent);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--ember-mid) 16%, transparent),
+    color-mix(in srgb, var(--ember-mid) 5%, transparent)
+  );
+}
+
+.dossier-cta-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+}
+.dossier-cta--arcane .dossier-cta-head { color: var(--arcane-light); }
+.dossier-cta--ember .dossier-cta-head { color: var(--ember-light); }
+.dossier-cta-head b { color: var(--shell-text-primary); }
+
+.dossier-cta-sub {
+  font-size: var(--text-xs);
+  color: var(--shell-text-secondary);
+}
+
 /* ── IWR + exploit ───────────────────────────────────────────────────────── */
 .dossier-iwr {
   padding: var(--space-3) var(--space-4) var(--space-4);

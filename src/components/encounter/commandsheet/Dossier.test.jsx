@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent, within } from '@testing-library/react';
 
 vi.mock('../../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
@@ -31,6 +31,14 @@ vi.mock('../../../contexts/SessionContext', () => ({
 
 vi.mock('../../../contexts/ContentContext', () => ({
   useContent: () => ({ monsters: [], effects: [] }),
+}));
+
+// The Discover CTAs open the real reveal flows — each has its own suite.
+vi.mock('../BestiaryModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="bestiary-modal" /> : null),
+}));
+vi.mock('../ExploitVulnerabilityModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="exploit-modal" /> : null),
 }));
 
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';
@@ -196,6 +204,47 @@ describe('Dossier', () => {
     expect(screen.getAllByText('??')).toHaveLength(5);  // the rest stay hidden
     expect(screen.getByText('Unidentified creature')).toBeInTheDocument();
     expect(screen.getByText('Defenses partial')).toBeInTheDocument();
+  });
+
+  // ── Discover CTAs (#1502 S4) ───────────────────────────────────────────────
+  it('offers the Discover CTAs while unidentified — RK always, EV for a thaumaturge', () => {
+    let drv, setEnc, setFocus;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
+        <Dossier charId="Pellias" character={{ id: 'Pellias', name: 'Pellias', class: 'Thaumaturge', thaumaturge: {} }} />
+      </>
+    );
+    setupFocus(() => drv, { setEnc, setFocus });
+
+    const discover = screen.getByTestId('dossier-discover');
+    fireEvent.click(within(discover).getByRole('button', { name: /Recall Knowledge/ }));
+    expect(screen.getByTestId('bestiary-modal')).toBeInTheDocument();
+    fireEvent.click(within(discover).getByRole('button', { name: /Exploit Vulnerability/ }));
+    expect(screen.getByTestId('exploit-modal')).toBeInTheDocument();
+  });
+
+  it('hides the EV CTA for non-thaumaturges and the whole block once identified', () => {
+    let drv, setEnc, setFocus, setKnowledge;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
+        <Dossier charId="Pellias" character={{ id: 'Pellias', name: 'Pellias', class: 'Champion' }} />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+
+    const discover = screen.getByTestId('dossier-discover');
+    expect(within(discover).queryByRole('button', { name: /Exploit Vulnerability/ })).toBeNull();
+
+    // Identity revealed → the dossier is no longer a discovery surface.
+    act(() => setKnowledge({ [goblin.entryId]: { ...defaultRecord(), identity: true } }));
+    expect(screen.queryByTestId('dossier-discover')).toBeNull();
   });
 
   it('degrades gracefully for a foe with no stat block', () => {

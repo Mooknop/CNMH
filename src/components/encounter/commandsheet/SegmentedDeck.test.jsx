@@ -392,15 +392,47 @@ describe('SegmentedDeck', () => {
     expect(screen.queryByRole('region', { name: 'Right now' })).not.toBeInTheDocument();
   });
 
-  it('with a focused foe, a strike surfaces in Right Now and tapping it calls onUse', () => {
+  // ── Contextual play list (#1502 S4) ────────────────────────────────────────
+
+  it('with a focused foe, the Against-this-target list surfaces the strike and taps resolve', () => {
     mockUseFocusTarget.mockReturnValue({
       focusEnemy: { entryId: 'e1', kind: 'enemy', name: 'Goblin' },
     });
     const onUse = vi.fn();
     render(<SegmentedDeck character={character} encounterMode onUse={onUse} />);
-    const region = screen.getByRole('region', { name: 'Right now' });
+    // The focus swaps Right Now for the contextual list.
+    expect(screen.queryByRole('region', { name: 'Right now' })).not.toBeInTheDocument();
+    const region = screen.getByRole('region', { name: 'Against this target' });
+    // Unidentified foe (no reveal record) → the attack-blind hint shows.
+    expect(within(region).getByText(/You can still attack/)).toBeInTheDocument();
     tapAndConfirm(within(region).getByRole('button', { name: 'Longsword' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
+  });
+
+  it('with a focused ally in reach, the Support list surfaces support actions', () => {
+    mockUseCharacter.mockReturnValue(baseModel({
+      actions: [{ name: 'Battle Medicine', actionCount: 1, traits: ['Manipulate'], highlightSkill: 'medicine' }],
+    }));
+    mockUseFocusTarget.mockReturnValue({
+      focusEnemy: null,
+      focusAlly: { entryId: 'e-ally', kind: 'pc', charId: 'Ashka' },
+    });
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const region = screen.getByRole('region', { name: 'Support this ally' });
+    expect(within(region).getByRole('button', { name: 'Battle Medicine' })).toBeInTheDocument();
+  });
+
+  it('with self focused, the On-yourself list surfaces defensive plays', () => {
+    mockUseFocusTarget.mockReturnValue({
+      focusEnemy: null,
+      focusAlly: null,
+      focusSelf: { entryId: 'e-hero', kind: 'pc', charId: 'p1' },
+    });
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const region = screen.getByRole('region', { name: 'On yourself' });
+    // Defensive basics qualify for the self list (Raise a Shield et al.).
+    expect(within(region).getAllByRole('button').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('region', { name: 'Right now' })).not.toBeInTheDocument();
   });
 
   // ── Focus + reach gating (#411, #430, #434) ────────────────────────────────
