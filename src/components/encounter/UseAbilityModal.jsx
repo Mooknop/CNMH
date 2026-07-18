@@ -679,6 +679,8 @@ const UseAbilityModal = ({
         damage={damageProfile}
         degrees={ability.degrees}
         toggles={attackToggles}
+        charId={character.id}
+        rollFlavor={rollFlavor}
       />
     ) : (
       <TargetRollResolver

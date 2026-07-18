@@ -158,6 +158,8 @@ const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, charac
             enemyTargets={resolverTargets}
             targetDefense="reflex"
             rollBonus={netBonus}
+            charId={ownerId}
+            rollFlavor={`${familiarData?.name ? `${familiarData.name} — ` : ''}${maneuver?.name ?? 'Familiar maneuver'}`}
           />
         )}
 

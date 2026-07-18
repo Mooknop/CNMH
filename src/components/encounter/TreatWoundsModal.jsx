@@ -21,6 +21,7 @@ import {
   applyStaunchBleeding,
 } from '../../utils/treatWounds';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './TreatWoundsModal.css';
 import { APP } from '../../sync/keys';
 
@@ -290,13 +291,14 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
       <section className="ct-section">
         <h3 className="ct-section-title">Medicine Check</h3>
         <div className="trr-entry-row">
-          <input
-            type="number"
-            className="trr-roll-input"
+          <FoundryDiceInput
+            inputClassName="trr-roll-input"
             placeholder="d20"
-            aria-label="raw d20"
+            ariaLabel="raw d20"
             value={d20Input}
-            onChange={(e) => handleD20Change(e.target.value)}
+            onValue={handleD20Change}
+            charId={healer?.id}
+            flavor={`${actionName} (Medicine)`}
           />
           <span className="trr-bonus-badge" aria-label="medicine modifier">
             {formatModifier(medicineModifier)}
@@ -338,13 +340,16 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
             </h3>
             <div className="trr-entry-row">
               <span className="tw-hint-label">{hint}</span>
-              <input
-                type="number"
-                className="trr-roll-input"
+              <FoundryDiceInput
+                inputClassName="trr-roll-input"
                 placeholder="total"
-                aria-label={effectiveDegree === 'criticalFailure' ? 'damage total' : 'hp healed'}
+                ariaLabel={effectiveDegree === 'criticalFailure' ? 'damage total' : 'hp healed'}
                 value={amountInput}
-                onChange={(e) => setAmountInput(e.target.value)}
+                onValue={setAmountInput}
+                charId={healer?.id}
+                // '1d8 damage' prose isn't parseable — the crit-fail roll is 1d8.
+                formula={effectiveDegree === 'criticalFailure' ? '1d8' : (hint || '')}
+                flavor={`${actionName} — ${effectiveDegree === 'criticalFailure' ? 'damage' : 'healing'}`}
               />
             </div>
             {godlessApplies && (
