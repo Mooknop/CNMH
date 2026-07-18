@@ -15,6 +15,12 @@ describe('isSandboxWritable', () => {
     });
   });
 
+  it('keeps the focus target interactive — a UI pointer, not a resource (#1502)', () => {
+    // The dossier/plays pivot on tap-to-focus; the sandbox must not freeze it.
+    // (`focus` above stays frozen — that key is the focus-POINTS pool.)
+    expect(isSandboxWritable('focustarget', 'pellias')).toBe(true);
+  });
+
   it('always allows global (GM-authored) writes', () => {
     expect(isSandboxWritable('shops', 'global')).toBe(true);
   });
