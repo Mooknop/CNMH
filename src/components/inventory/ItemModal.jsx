@@ -398,7 +398,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const activatedSaveGate = activatedSave?.frequency
     ? grantGateFor({ id: `${itemUidOf(item)}:activatedsave`, frequency: activatedSave.frequency }, { nowSecs })
     : null;
-  const activatedSaveLocked = !!activatedSaveGate && !activatedSaveGate.available;
+  // A strapped shield (buckler class, Spoiling Buckler) can only Activate while
+  // its hand passes the buckler rule — `strapUsable` is stamped false by
+  // buildEffectiveInventory when that hand is tied up (bucklers S2).
+  const strapBlocked = item.strapUsable === false;
+  const activatedSaveLocked = (!!activatedSaveGate && !activatedSaveGate.available) || strapBlocked;
   const doActuate = (rank) => {
     if (runeCastSpell) { setCastingRune(true); return; }
     const r = itemAct.activation.activate(rank);
@@ -1796,7 +1800,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               {activatedSave.name}
             </button>
             <span className="granted-spell-freq" data-testid="activated-save-note">
-              {activatedSaveLocked && activatedSaveGate
+              {strapBlocked
+                ? 'Hand tied up — free it (or hold only a light non-weapon) to activate'
+                : activatedSaveLocked && activatedSaveGate
                 ? lockMessage(activatedSaveGate, parseFrequency(activatedSave), nowSecs)
                 : `${activatedSave.save?.basic ? 'basic ' : ''}${activatedSave.save?.defense} ${activatedSave.save?.dc}`}
             </span>

@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useItemHp } from './useItemHp';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { isHeldState } from '../utils/itemState';
+import { isStrappedShield } from '../utils/hands';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
@@ -42,12 +43,19 @@ export const useShield = (charId, inventory = []) => {
   // the authored shield.hp when no block has been recorded this session.
   const { hpFor, setHp } = useItemHp(charId);
 
-  // The shield currently in a hand. First held entry wins. `maxHp` is the
-  // authored (full) HP — the cap the live overlay is restored toward.
+  // The shield currently in the character's charge — kept as `heldShield` for
+  // its 16 consumers, but since the strapped-shields slices it also covers a
+  // buckler-class shield worn ON a hand (`strapHand` + stamped `strapUsable`,
+  // see utils/hands.js). A shield held IN a hand still wins; among strapped
+  // shields, one whose hand currently allows use shadows a blocked one.
+  // `maxHp` is the authored (full) HP — the cap the live overlay is restored
+  // toward.
   const heldShield = useMemo(() => {
-    const entry = (inventory || []).find(
-      (e) => e && e.shield && isHeldState(e.state)
-    );
+    const list = inventory || [];
+    const entry =
+      list.find((e) => e && e.shield && isHeldState(e.state)) ||
+      list.find((e) => e && e.shield && e.strapHand && e.strapUsable) ||
+      list.find((e) => e && e.shield && e.strapHand);
     if (!entry) return null;
     // Fold any reinforcing rune into the base durability stats before normalizing,
     // so Hardness/HP/BT (and maxHp) reflect the etched rune (#1165 S1).
@@ -57,7 +65,18 @@ export const useShield = (charId, inventory = []) => {
     const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
     // Resolved Remaster name ("Minor Reinforcing Steel Shield") for every held-
     // shield surface; a non-reinforced shield keeps its own name (#1165 S4).
-    return { uid: entry.uid, name: shieldDisplayName(entry), shield, maxHp: base.hp };
+    return {
+      uid: entry.uid,
+      name: shieldDisplayName(entry),
+      shield,
+      maxHp: base.hp,
+      // Strapped-shield extras (absent/false for a held shield). `strapUsable`
+      // is the effective-inventory stamp of the buckler rule: the strapped
+      // hand is empty or holds a light non-weapon.
+      strapped: !isHeldState(entry.state) && !!entry.strapHand,
+      strapHand: !isHeldState(entry.state) ? entry.strapHand : undefined,
+      strapUsable: isHeldState(entry.state) || entry.strapUsable === true,
+    };
   }, [inventory, hpFor]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;
@@ -70,14 +89,30 @@ export const useShield = (charId, inventory = []) => {
   const characterCtx = useContext(CharacterContext);
   const wieldBroken = hasRustBlessing(characterCtx?.getCharacter?.(charId));
 
-  // Can the held shield be used at all right now (Raise / Block)?
-  const usable = !!heldShield && !destroyed && (!broken || wieldBroken);
+  // Can the shield be used at all right now (Raise / Block)? A strapped
+  // shield additionally needs its hand to pass the buckler rule.
+  const usable =
+    !!heldShield && !destroyed && (!broken || wieldBroken) && heldShield.strapUsable;
 
   const raised =
     !!raiseState?.raised &&
     !!heldShield &&
     raiseState.uid === heldShield.uid &&
     usable;
+
+  // A raised strapped shield that can no longer stay raised: its hand got tied
+  // up (something was placed into it mid-raise), or it was unstrapped/stowed.
+  // `raised` is already false in those cases — the AC bonus is gone — but the
+  // persisted raise state is stale-true and would silently spring back the
+  // moment the hand empties. Resolved against the raise state's own uid (not
+  // the current selection) so a second shield can't mask it; the owning client
+  // (TurnTrackerPanel) watches this and actively lowers + logs.
+  const strapObstructed = useMemo(() => {
+    if (!raiseState?.raised) return false;
+    const entry = (inventory || []).find((e) => e && e.uid === raiseState.uid);
+    if (!entry || !isStrappedShield(entry) || isHeldState(entry.state)) return false;
+    return !(entry.strapHand && entry.strapUsable === true);
+  }, [raiseState, inventory]);
 
   const raiseShield = useCallback(
     (uid) => setRaiseState({ raised: true, uid, ts: Date.now() }),
@@ -138,7 +173,7 @@ export const useShield = (charId, inventory = []) => {
     };
   }, [raised, heldShield]);
 
-  return { heldShield, raised, broken, destroyed, usable, wieldBroken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
+  return { heldShield, raised, broken, destroyed, usable, wieldBroken, strapObstructed, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
 };
 
 export default useShield;

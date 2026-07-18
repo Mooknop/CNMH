@@ -2045,6 +2045,20 @@ describe('ItemModal — activated-ability save (#1439)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={buckler} character={{ id: 'p', name: 'P' }} />);
     expect(screen.getByTestId('activated-save')).toBeDisabled();
   });
+
+  it('disables the activation when the strapped hand is tied up (bucklers S2)', () => {
+    // strapUsable:false is the effective-inventory stamp for an occupied hand.
+    const blocked = { ...buckler, strapHand: 1, strapUsable: false, shield: { bonus: 1, strapped: true } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={blocked} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('activated-save')).toBeDisabled();
+    expect(screen.getByTestId('activated-save-note')).toHaveTextContent('Hand tied up');
+  });
+
+  it('keeps the activation enabled while the strapped hand allows it', () => {
+    const usable = { ...buckler, strapHand: 1, strapUsable: true, shield: { bonus: 1, strapped: true } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={usable} character={{ id: 'p', name: 'P' }} />);
+    expect(screen.getByTestId('activated-save')).not.toBeDisabled();
+  });
 });
 
 // ── Dragon's Breath etch-time dragon picker (#1055 S4) ──

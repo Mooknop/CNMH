@@ -35,9 +35,14 @@ export const isBodyBound = (item) =>
 // Whether an item's granted abilities (strikes, item actions, scroll/wand/
 // staff spells) are currently usable. True when the item is in a hand, the
 // catalog explicitly marks it usable without a hand (`noHandRequired`) — the
-// escape hatch for worn-but-functional gear — or it's body-bound (a tattoo is
-// always on you and always invested). Anything else (worn/stowed/dropped/
-// unknown) is inactive: the ability is still shown, just disabled.
+// escape hatch for worn-but-functional gear — it's body-bound (a tattoo is
+// always on you and always invested), or it's a strapped shield whose hand
+// currently passes the buckler rule (`strapUsable`, stamped by
+// buildEffectiveInventory). Anything else (worn/stowed/dropped/unknown) is
+// inactive: the ability is still shown, just disabled.
 export const itemAbilitiesActive = (item) =>
   !!item &&
-  (isHeldState(item.state) || item.noHandRequired === true || isBodyBound(item));
+  (isHeldState(item.state) ||
+    item.noHandRequired === true ||
+    isBodyBound(item) ||
+    item.strapUsable === true);
