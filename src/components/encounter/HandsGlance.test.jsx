@@ -50,4 +50,42 @@ describe('HandsGlance (read-only at-a-glance strip)', () => {
     const strip = screen.getByRole('region', { name: 'Hands' });
     expect(within(strip).queryByRole('button')).not.toBeInTheDocument();
   });
+
+  describe('strapped-shield badges (bucklers S3)', () => {
+    const buckler = {
+      uid: 'h-7', name: 'Buckler', state: 'worn', strapHand: 1,
+      shield: { bonus: 1, strapped: true },
+    };
+
+    it('marks the strapped hand without occupying its slot', () => {
+      mockUseCharacter.mockReturnValue(model([{ ...buckler, strapUsable: true }]));
+      render(<HandsGlance character={character} />);
+      // Slot stays Empty — the buckler rides the chip as a badge.
+      expect(screen.getByTestId('hands-glance-slot-1')).toHaveTextContent('Empty');
+      const badge = screen.getByTestId('hands-glance-strap-1');
+      expect(badge).toHaveAttribute('title', 'Buckler strapped on');
+      expect(badge).not.toHaveClass('hands-glance-strapbadge--blocked');
+    });
+
+    it('dims the badge when the strapped hand is tied up', () => {
+      mockUseCharacter.mockReturnValue(model([
+        { ...sword, state: 'held1', hand: 1 },
+        { ...buckler, strapUsable: false },
+      ]));
+      render(<HandsGlance character={character} />);
+      expect(screen.getByTestId('hands-glance-slot-1')).toHaveTextContent('Longsword');
+      const badge = screen.getByTestId('hands-glance-strap-1');
+      expect(badge).toHaveAttribute('title', 'Buckler strapped on — hand tied up');
+      expect(badge).toHaveClass('hands-glance-strapbadge--blocked');
+    });
+
+    it('a two-handed grip shows the badge on the spanning chip', () => {
+      mockUseCharacter.mockReturnValue(model([
+        { ...greatsword, state: 'held2' },
+        { ...buckler, strapUsable: false },
+      ]));
+      render(<HandsGlance character={character} />);
+      expect(within(screen.getByTestId('hands-glance-both')).getByTestId('hands-glance-strap-1')).toBeInTheDocument();
+    });
+  });
 });

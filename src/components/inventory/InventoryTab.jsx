@@ -10,6 +10,7 @@ import IconTile from './IconTile';
 import { DndProvider } from './dnd';
 import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } from '../../utils/InventoryUtils';
 import { isHeldState, isBodyBound } from '../../utils/itemState';
+import { isStrappedShield } from '../../utils/hands';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { absorbedKey, absorbedUidSet } from '../../utils/spellgunHost';
@@ -38,7 +39,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
   // Loadout writer — the single source of placement mutations (#556).
-  const { worn, stow, moveToContainer, setHands } = useLoadout(character?.id);
+  const { worn, stow, moveToContainer, setHands, strapTo, unstrap } = useLoadout(character?.id);
   // Attunement overlay — invested items render in the Attuned area instead of
   // their bag (placement is untouched). Eligibility = the Invested trait.
   const { isInvested, attune, unattune } = useInvested(character?.id);
@@ -127,6 +128,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const heldItems = flatGrid.filter(
     (it) => isHeldState(it.state) && !isInvested(it.uid) && !isBodyBound(it)
   );
+  // Strapped-class shields (bucklers S3) for the Hands strip's strap badges —
+  // on-person Worn, whether currently strapped or not. Kept separate from
+  // heldItems: they never occupy a slot, and invested ones still show here
+  // (the strap is placement, not attunement).
+  const strapItems = flatGrid.filter((it) => it.state === 'worn' && isStrappedShield(it));
   const elsewhere = new Set([...investedItems, ...heldItems].map((it) => it.uid));
   const inBag = (it) => isContainer(it) || !elsewhere.has(it.uid);
   const bagInventory = gridInventory.filter(inBag).map((it) =>
@@ -193,8 +199,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
               />
               <HandsStrip
                 items={heldItems}
+                straps={strapItems}
                 interactive={mode !== 'encounter'}
                 setHands={setHands}
+                strapTo={strapTo}
+                unstrap={unstrap}
                 onItemClick={onItemClick}
               />
               <BagGrid

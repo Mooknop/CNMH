@@ -90,12 +90,22 @@ export const wieldableWorn = (items = []) =>
       !isBodyBound(e)
   );
 
+// The strapped-class shields available to the Strap flow: on-person (Worn,
+// top-level — a stowed buckler must be retrieved first), whether currently
+// strapped to a hand or not.
+export const strappableWorn = (items = []) =>
+  (Array.isArray(items) ? items : []).filter(
+    (e) => e && e.state === 'worn' && isStrappedShield(e)
+  );
+
 // Everything the Items-segment Hands group lists: currently-held items (a 2H
-// grip contributes one row) followed by the wieldable Worn pool.
+// grip contributes one row), the wieldable Worn pool, then the strappable
+// shields (their own Strap flow, but they're hand gear all the same — a
+// buckler-only character still gets the Hands group).
 export const handCandidates = (items = []) => {
   const { slot1, slot2 } = deriveHands(items);
   const held = slot1 === slot2 ? [slot1].filter(Boolean) : [slot1, slot2].filter(Boolean);
-  return [...held, ...wieldableWorn(items)];
+  return [...held, ...wieldableWorn(items), ...strappableWorn(items)];
 };
 
 export default deriveHands;
