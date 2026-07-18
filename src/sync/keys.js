@@ -42,6 +42,7 @@ export const APP = Object.freeze({
   EXPLOREOVERRIDE: 'exploreoverride',
   FIELDNOTES: 'fieldnotes',
   FOCUS: 'focus',
+  FOCUSTARGET: 'focustarget',
   FOLLOWEXPERT: 'followexpert',
   FREQ: 'freq',
   FX: 'fx',

@@ -178,9 +178,10 @@ const CharacterSheet = () => {
                     <ReadyActionButton charId={character.id} characterName={character.name} />
                   )}
                   <InitiativeStrip charId={character.id} />
-                  {/* Focus Dossier (#1502 S1) — the focused combatant's card
-                      leads the screen, directly under the target selector. */}
-                  <Dossier charId={character.id} />
+                  {/* Focus Dossier (#1502 S1/S2) — the focused combatant's card
+                      leads the screen, directly under the target selector. The
+                      character + derived model feed the self state (2c). */}
+                  <Dossier charId={character.id} character={character} model={characterModel} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
                   {/* At-a-glance hands strip (read-only) — hand CHANGES live in
                       the deck's Items segment (HandsGroup). */}

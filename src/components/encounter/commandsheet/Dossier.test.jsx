@@ -104,7 +104,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -139,7 +139,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -160,7 +160,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <Dossier charId="Pellias" />
       </>
     );
@@ -184,7 +184,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -203,7 +203,7 @@ describe('Dossier', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <Dossier charId="Pellias" />
       </>
     );
@@ -222,7 +222,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -268,7 +268,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -289,7 +289,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -310,7 +310,7 @@ describe('Dossier', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
         <Dossier charId="Pellias" />
       </>
@@ -328,7 +328,7 @@ describe('Dossier', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
         <SyncDriver skey="cnmh_hp_Ashka" onReady={(s) => (setHp = s)} />
         <SyncDriver skey="cnmh_conditions_Ashka" onReady={(s) => (setConds = s)} />
         <Dossier charId="Pellias" />
@@ -348,5 +348,95 @@ describe('Dossier', () => {
     expect(screen.queryByText('RK DC')).toBeNull();
     // No adjacency relay data in this fixture → the reach row stays hidden.
     expect(screen.queryByTestId('dossier-reach')).toBeNull();
+  });
+
+  // ── Self focus — personal readout (design 2c, #1502 S2) ───────────────────
+  const selfCharacter = {
+    id: 'Pellias',
+    name: 'Pellias',
+    ancestry: 'Human',
+    class: 'Champion',
+    level: 4,
+    spellcasting: { focus: { max: 2, current: 2 } },
+  };
+  // Mirrors useCharacter's real shapes: `armorClass` is the effective AC
+  // (#746 — the scalar `ac` can be stale) and `speed` is the Speed spine's
+  // derived object (#1219), not a number.
+  const selfModel = {
+    maxHp: 40,
+    ac: 18,
+    armorClass: { value: 20, derived: true, source: 'armor' },
+    speed: { base: 25, total: 25, derived: false, breakdown: [] },
+    saves: { fortitude: 8, reflex: 11, will: 9 },
+  };
+
+  const renderSelf = (character = selfCharacter) => {
+    const handles = {};
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (handles.drv = e)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (handles.setFocus = s)} />
+        <SyncDriver skey="cnmh_hp_Pellias" onReady={(s) => (handles.setHp = s)} />
+        <SyncDriver skey="cnmh_conditions_Pellias" onReady={(s) => (handles.setConds = s)} />
+        <SyncDriver skey="cnmh_heropoints_Pellias" onReady={(s) => (handles.setHero = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (handles.setFocusSpent = s)} />
+        <SyncDriver skey="cnmh_effects_Pellias" onReady={(s) => (handles.setEffects = s)} />
+        <Dossier charId="Pellias" character={character} model={selfModel} />
+      </>
+    );
+    act(() => handles.drv.startEncounter([pellias, { id: 'Ashka', name: 'Ashka' }]));
+    handles.self = handles.drv.encounter.order.find((e) => e.name === 'Pellias');
+    return handles;
+  };
+
+  it('shows the personal readout when focusing your own entry', () => {
+    const h = renderSelf();
+    act(() => h.setHp(21));
+    act(() => h.setConds([{ id: 'frightened', value: 1 }]));
+    act(() => h.setHero(1));
+    act(() => h.setFocusSpent(1));
+    act(() => h.setEffects([{ id: 'e1', name: 'Bless +1' }]));
+    act(() => h.setFocus(h.self.entryId));
+
+    const card = screen.getByRole('region', { name: 'Focused: Pellias (you)' });
+    expect(card).toHaveTextContent('YOU');
+    expect(card).toHaveTextContent('Human · Champion · Level 4');
+    // Vitals: synced current + model max, with the bar.
+    expect(screen.getByTestId('dossier-self-hp')).toHaveTextContent('21');
+    expect(screen.getByTestId('dossier-self-hp')).toHaveTextContent('/40');
+    // Own defenses as modifiers, not DCs.
+    const grid = screen.getByTestId('dossier-self-defenses');
+    expect(grid).toHaveTextContent('20');
+    expect(grid).toHaveTextContent('+8');
+    expect(grid).toHaveTextContent('+11');
+    expect(grid).toHaveTextContent('+9');
+    // Meta row: hero pips, focus pool (max 2, 1 spent), speed.
+    expect(screen.getByLabelText('1 of 3 hero points')).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-self-meta')).toHaveTextContent('Focus 1/2');
+    expect(screen.getByTestId('dossier-self-meta')).toHaveTextContent('Speed 25 ft');
+    // Effect + condition chips on you.
+    expect(card).toHaveTextContent('Bless +1');
+    expect(card).toHaveTextContent(/Frightened 1/);
+    // Not the ally or foe cards.
+    expect(screen.queryByRole('region', { name: /Focused ally/ })).toBeNull();
+    expect(screen.queryByText('RK DC')).toBeNull();
+  });
+
+  it('hides the focus meta for a character with no focus pool', () => {
+    const { spellcasting, ...noPool } = selfCharacter;
+    const h = renderSelf(noPool);
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.getByTestId('dossier-self-meta')).not.toHaveTextContent('Focus');
+    expect(screen.getByTestId('dossier-self-meta')).toHaveTextContent('Speed 25 ft');
+  });
+
+  it('keeps the focus target and the focus-point pool on separate keys', () => {
+    const h = renderSelf();
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.getByRole('region', { name: 'Focused: Pellias (you)' })).toBeInTheDocument();
+    // Spending focus points (cnmh_focus_) must not clear the target (cnmh_focustarget_).
+    act(() => h.setFocusSpent(2));
+    expect(screen.getByRole('region', { name: 'Focused: Pellias (you)' })).toBeInTheDocument();
+    expect(screen.getByTestId('dossier-self-meta')).toHaveTextContent('Focus 0/2');
   });
 });
