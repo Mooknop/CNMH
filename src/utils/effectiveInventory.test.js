@@ -149,4 +149,55 @@ describe('buildEffectiveInventory', () => {
     expect(torch.state).toBe('stowed');
     expect('hand' in torch).toBe(false);
   });
+
+  // Strapped shields: strapHand carried through, strapUsable derived from the
+  // occupancy of that hand (buckler rule — free hand or light non-weapon).
+  const withBuckler = () => [
+    ...tree(),
+    { uid: 'c-5', ref: 'buckler', weight: 0.1, quantity: 1, shield: { bonus: 1, strapped: true } },
+  ];
+
+  it('carries strapHand and stamps strapUsable=true while the hand is free', () => {
+    const eff = buildEffectiveInventory(withBuckler(), {
+      'c-5': { strapHand: 1 },
+    });
+    const bk = find(eff, 'c-5');
+    expect(bk.state).toBe('worn');
+    expect(bk.strapHand).toBe(1);
+    expect(bk.strapUsable).toBe(true);
+    // items without a strap override are untouched
+    expect('strapHand' in find(eff, 'c-0')).toBe(false);
+    expect('strapUsable' in find(eff, 'c-0')).toBe(false);
+  });
+
+  it('stamps strapUsable=false when the strapped hand wields a weapon', () => {
+    const authored = withBuckler();
+    authored[0].strikes = { type: 'melee' }; // c-0 sword now carries Strike data
+    const eff = buildEffectiveInventory(authored, {
+      'c-0': { state: 'held1', hand: 1 },
+      'c-5': { strapHand: 1 },
+    });
+    expect(find(eff, 'c-5').strapUsable).toBe(false);
+  });
+
+  it('a light non-weapon in the strapped hand keeps strapUsable=true', () => {
+    const authored = [
+      ...withBuckler(),
+      { uid: 'c-6', ref: 'torch', weight: 0.1, quantity: 1, usage: 'held in 1 hand' },
+    ];
+    const eff = buildEffectiveInventory(authored, {
+      'c-6': { state: 'held1', hand: 2 },
+      'c-5': { strapHand: 2 },
+    });
+    expect(find(eff, 'c-5').strapUsable).toBe(true);
+  });
+
+  it('does not stamp strapUsable on a shield without the strapped catalog flag', () => {
+    const authored = [
+      ...tree(),
+      { uid: 'c-7', ref: 'steel-shield', weight: 1, quantity: 1, shield: { bonus: 2 } },
+    ];
+    const eff = buildEffectiveInventory(authored, { 'c-7': { strapHand: 1 } });
+    expect('strapUsable' in find(eff, 'c-7')).toBe(false);
+  });
 });

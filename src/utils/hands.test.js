@@ -1,27 +1,37 @@
 import { describe, it, expect } from 'vitest';
-import { deriveHands, isTwoHanded, isWieldable, wieldableWorn, handCandidates } from './hands';
+import {
+  deriveHands,
+  isTwoHanded,
+  isWieldable,
+  wieldableWorn,
+  handCandidates,
+  isStrappedShield,
+  handAllowsStrapUse,
+} from './hands';
+
+const buckler = { uid: 'bk', name: 'Buckler', state: 'worn', strapHand: 1, weight: 0.1, shield: { bonus: 1, strapped: true } };
 
 describe('deriveHands', () => {
   it('returns empty slots for no held items', () => {
-    expect(deriveHands([{ uid: 'a', state: 'worn' }])).toEqual({ slot1: null, slot2: null });
-    expect(deriveHands([])).toEqual({ slot1: null, slot2: null });
+    expect(deriveHands([{ uid: 'a', state: 'worn' }])).toEqual({ slot1: null, slot2: null, strap1: null, strap2: null });
+    expect(deriveHands([])).toEqual({ slot1: null, slot2: null, strap1: null, strap2: null });
   });
 
   it('places held1 items by their hand assignment', () => {
     const sword = { uid: 's', state: 'held1', hand: 1 };
     const shield = { uid: 'b', state: 'held1', hand: 2 };
-    expect(deriveHands([shield, sword])).toEqual({ slot1: sword, slot2: shield });
+    expect(deriveHands([shield, sword])).toEqual({ slot1: sword, slot2: shield, strap1: null, strap2: null });
   });
 
   it('fills both slots with a two-handed grip', () => {
     const bow = { uid: 'bow', state: 'held2' };
-    expect(deriveHands([bow])).toEqual({ slot1: bow, slot2: bow });
+    expect(deriveHands([bow])).toEqual({ slot1: bow, slot2: bow, strap1: null, strap2: null });
   });
 
   it('drops hand-less held1 items into the first free slots', () => {
     const a = { uid: 'a', state: 'held1' };
     const b = { uid: 'b', state: 'held1' };
-    expect(deriveHands([a, b])).toEqual({ slot1: a, slot2: b });
+    expect(deriveHands([a, b])).toEqual({ slot1: a, slot2: b, strap1: null, strap2: null });
   });
 
   it('prefers an explicit hand over a hand-less item for that slot', () => {
@@ -33,8 +43,58 @@ describe('deriveHands', () => {
   });
 
   it('tolerates a non-array argument', () => {
-    expect(deriveHands(undefined)).toEqual({ slot1: null, slot2: null });
-    expect(deriveHands(null)).toEqual({ slot1: null, slot2: null });
+    expect(deriveHands(undefined)).toEqual({ slot1: null, slot2: null, strap1: null, strap2: null });
+    expect(deriveHands(null)).toEqual({ slot1: null, slot2: null, strap1: null, strap2: null });
+  });
+
+  it('overlays a strapped shield on its hand without occupying the slot', () => {
+    const sword = { uid: 's', state: 'held1', hand: 1, strikes: { type: 'melee' } };
+    expect(deriveHands([buckler, sword])).toEqual({
+      slot1: sword,
+      slot2: null,
+      strap1: buckler,
+      strap2: null,
+    });
+  });
+
+  it('ignores strapped shields that are stowed/dropped or lack the catalog flag', () => {
+    expect(deriveHands([{ ...buckler, state: 'stowed' }]).strap1).toBe(null);
+    expect(deriveHands([{ ...buckler, state: 'dropped' }]).strap1).toBe(null);
+    const plainShield = { uid: 'sh', state: 'worn', strapHand: 1, shield: { bonus: 2 } };
+    expect(deriveHands([plainShield]).strap1).toBe(null);
+  });
+});
+
+describe('isStrappedShield', () => {
+  it('requires the shield.strapped catalog flag', () => {
+    expect(isStrappedShield(buckler)).toBe(true);
+    expect(isStrappedShield({ shield: { bonus: 2 } })).toBe(false);
+    expect(isStrappedShield({ strikes: {} })).toBe(false);
+    expect(isStrappedShield(null)).toBe(false);
+  });
+});
+
+describe('handAllowsStrapUse', () => {
+  const on = (occupant, hand = 1) =>
+    handAllowsStrapUse(
+      { slot1: hand === 1 ? occupant : null, slot2: hand === 2 ? occupant : null },
+      hand
+    );
+
+  it('allows an empty hand', () => {
+    expect(on(null)).toBe(true);
+    expect(handAllowsStrapUse(undefined, 1)).toBe(true);
+  });
+
+  it('allows a light non-weapon (wand, torch), per the RAW buckler rule', () => {
+    expect(on({ name: 'Wand of Heal', wand: {}, weight: 0 })).toBe(true);
+    expect(on({ name: 'Torch', usage: 'held in 1 hand', weight: 0.1 }, 2)).toBe(true);
+  });
+
+  it('blocks weapons of any Bulk and non-light objects', () => {
+    expect(on({ name: 'Dagger', strikes: { type: 'melee' }, weight: 0.1 })).toBe(false);
+    expect(on({ name: 'Longsword', strikes: { type: 'melee' }, weight: 1 })).toBe(false);
+    expect(on({ name: 'Healers Tools', usage: 'held in 2 hands', weight: 1 }, 2)).toBe(false);
   });
 });
 
@@ -66,6 +126,11 @@ describe('isWieldable', () => {
     expect(isWieldable({ name: 'Full Plate', acBonus: 6 })).toBe(false);
     expect(isWieldable({ usage: 'worn cloak' })).toBe(false);
     expect(isWieldable(null)).toBe(false);
+  });
+
+  it('rejects strapped shields — they are strap-only, never Swap candidates', () => {
+    expect(isWieldable(buckler)).toBe(false);
+    expect(isWieldable({ shield: { bonus: 2 } })).toBe(true); // normal shields still wieldable
   });
 
   it('rejects attachments/runes/talismans even when they carry strike data', () => {
