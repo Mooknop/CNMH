@@ -18,6 +18,7 @@ import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
+import { initDice, handleRollRequest } from './dice.js';
 import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
@@ -87,6 +88,7 @@ Hooks.once('ready', () => {
   initDoors(sendUpdate);
   initDamageApply(sendUpdate);
   initSaves(sendUpdate);
+  initDice(sendUpdate);
   connect();
 });
 
@@ -314,6 +316,13 @@ function dispatch(msg) {
   // natively so the actor's live modifiers apply; acked on cnmh_savedone_global.
   if (characterId === 'global' && key === RELAY.SAVEROLL) {
     handleSaveRoll(value);
+    return;
+  }
+
+  // Raw dice-roll request from the app's dice-tower rail (#1490) — rolled in
+  // Foundry chat (Dice So Nice animates), acked on cnmh_rolldone_global.
+  if (characterId === 'global' && key === RELAY.ROLLREQ) {
+    handleRollRequest(value);
     return;
   }
 

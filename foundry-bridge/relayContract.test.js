@@ -27,6 +27,7 @@ import { initSummonPool, pushSummonPool } from './summonPool.js';
 import { initDoors, handleDoorRequest } from './doors.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
+import { initDice, handleRollRequest } from './dice.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -289,6 +290,34 @@ const RECIPES = {
       ts: 1,
     });
     return grab(send, RELAY.SAVEDONE);
+  },
+
+  [RELAY.ROLLDONE]: async () => {
+    const send = jest.fn();
+    initDice(send);
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    global.game.actors.set('actor-pellias', makeActor({ id: 'actor-pellias', name: 'Pellias' }));
+    // Minimal core-Roll world: dice.js only touches validate/evaluate/toMessage
+    // and ChatMessage.getSpeaker.
+    global.Roll = class {
+      static validate() { return true; }
+      async evaluate() {
+        this.total = 14;
+        this.dice = [{ faces: 20, results: [{ result: 14, active: true }] }];
+        return this;
+      }
+      async toMessage() {}
+    };
+    global.ChatMessage = { getSpeaker: () => ({ actor: 'actor-pellias', alias: 'Pellias' }) };
+    try {
+      await handleRollRequest({
+        id: 'roll-1', charId: 'Pellias', formula: '1d20', flavor: 'Strike: Longsword (MAP 0)', ts: 1,
+      });
+    } finally {
+      delete global.Roll;
+      delete global.ChatMessage;
+    }
+    return grab(send, RELAY.ROLLDONE);
   },
 
   [RELAY.FLANKED]: () => {
