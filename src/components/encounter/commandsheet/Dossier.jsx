@@ -36,8 +36,8 @@ const SAVE_KEYS = ['fortitude', 'reflex', 'will'];
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 
 // Monogram fallback: initials of the first two words, or the first two letters
-// of a single-word name ("Sinspawn" → "Si").
-const monogram = (name = '') => {
+// of a single-word name ("Sinspawn" → "Si"). Shared with SelfStatusBar.
+export const monogram = (name = '') => {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
   return words[0] ? words[0].slice(0, 2) : '?';
@@ -55,7 +55,8 @@ const RkChip = ({ label, state }) => (
 // The relay HP key holds a plain number (bridge writes) or a {current, max}
 // object (app writes) — normalize both, preferring an explicit max and falling
 // back to the caller's (own maxHp from the character model, null for allies).
-const readHp = (raw, fallbackMax = null) => {
+// Shared with SelfStatusBar.
+export const readHp = (raw, fallbackMax = null) => {
   if (typeof raw === 'number') return { current: raw, max: fallbackMax };
   if (raw && typeof raw === 'object') {
     return { current: raw.current ?? null, max: raw.max ?? fallbackMax };

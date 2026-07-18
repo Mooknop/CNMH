@@ -93,10 +93,10 @@ test.describe('Familiar maneuvers', () => {
     // is a GLOBAL key shared across the shard, so the seed can land a beat late; if
     // the modal opens while `encounterMode` is still false the maneuver isn't
     // pool-gated at all (blocking is encounter-only), and `toBeDisabled` flakes to
-    // enabled. The deck header's turn-budget region renders only for an active,
-    // in-progress encounter on this PC's turn — the same useEncounter the modal
-    // reads — so its visibility proves encounterMode is live app-wide.
-    await expect(page.getByRole('region', { name: 'Turn budget' })).toBeVisible();
+    // enabled. The self-status bar's End Turn button (#1502 S3) renders only for
+    // an active, in-progress encounter on this PC's turn — the same useEncounter
+    // the modal reads — so its visibility proves encounterMode is live app-wide.
+    await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible();
 
     // Masthead familiar button (data-driven hasFamiliar, #1142 — no feat seeded).
     const mastheadBtn = page.getByRole('button', { name: new RegExp(`^${FAMILIAR_NAME}`) });

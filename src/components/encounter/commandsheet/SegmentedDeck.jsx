@@ -8,15 +8,14 @@
 // Tapping a tile opens the ConfirmSheet preview; confirming resolves through
 // the existing path (onUse → ActionsList.handleUse → the right slide-up
 // resolver) — this component only re-groups and re-presents the
-// buildActionCatalog data. The fused sticky header (DeckHeader: turn budget +
-// focus banner) pins above Right Now and the segmented control. The Spells
+// buildActionCatalog data. Right Now and the segmented control pin as the
+// sticky block (the turn budget lives in SelfStatusBar — #1502 S3). The Spells
 // segment hosts the spellbook launcher (MagicModal) — the first-class in-tab
 // spell list is a follow-up slice, as is the capacity-weapon chamber track.
 import React, { useEffect, useMemo, useState } from 'react';
 import ActionTile from './ActionTile';
 import ActionSymbol from '../../shared/ActionSymbol';
 import ConfirmSheet from './ConfirmSheet';
-import DeckHeader from './DeckHeader';
 import SpellsSegment from './SpellsSegment';
 import HandsGroup from './HandsGroup';
 import { useCharacter } from '../../../hooks/useCharacter';
@@ -397,12 +396,10 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
 
   return (
     <div className="deck-root">
-      {/* The fused header, Right Now, and the segmented control pin as one
-          sticky block; the segment body scrolls under it. The header renders
-          for any active encounter — in setup it shows the waiting line. */}
+      {/* Right Now and the segmented control pin as one sticky block; the
+          segment body scrolls under it. The turn budget lives in the
+          SelfStatusBar at the top of the encounter tab (#1502 S3). */}
       <div className="deck-sticky">
-        {!!encounter?.active && <DeckHeader charId={character.id} characterName={character.name} />}
-
         {suggestions.length > 0 && (
           <section className="deck-now" aria-label="Right now">
             <h3 className="deck-now-head">

@@ -1,5 +1,7 @@
-// Fused deck header (encounter UI redesign) — ports the retired ActionDial's
-// turn-budget + End Turn coverage onto the Segmented Deck header.
+// Self-status bar (#1502 S3) — the compressed turn budget at the top of the
+// encounter tab. Ports the DeckHeader suite (itself ported from the retired
+// ActionDial): budget pips, reaction states, MAP, End Turn flows, plus the
+// new vitals sub-label and the off-turn behavior (bar stays, budget hides).
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
@@ -36,12 +38,17 @@ vi.mock('../../../contexts/SessionContext', () => ({
 }));
 
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';
-import DeckHeader from './DeckHeader';
+import SelfStatusBar from './SelfStatusBar';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useTurnState } from '../../../hooks/useTurnState';
 
 const pellias = { id: 'Pellias', name: 'Pellias' };
 const ashka = { id: 'Ashka', name: 'Ashka' };
+const barProps = {
+  charId: 'Pellias',
+  character: pellias,
+  model: { maxHp: 40, armorClass: { value: 20, derived: true, source: 'armor' } },
+};
 
 const EncounterDriver = ({ onReady }) => {
   const enc = useEncounter();
@@ -76,9 +83,9 @@ beforeEach(() => {
   mockSendUpdate.mockClear();
 });
 
-describe('DeckHeader', () => {
+describe('SelfStatusBar', () => {
   it('renders nothing when the encounter is idle', () => {
-    const { container } = render(<DeckHeader charId="Pellias" characterName="Pellias" />);
+    const { container } = render(<SelfStatusBar {...barProps} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -87,41 +94,54 @@ describe('DeckHeader', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     act(() => drv.startEncounter([pellias])); // setup — no initiative yet
-    const budget = screen.getByRole('region', { name: 'Turn budget' });
-    expect(budget).toHaveTextContent(/Waiting for initiative/);
+    const bar = screen.getByRole('region', { name: 'Self status' });
+    expect(bar).toHaveTextContent(/Waiting for initiative/);
     expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
   });
 
-  it('shows the round number inside the budget region on my turn', () => {
+  it('shows the round number on my turn', () => {
     let drv;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
-    const budget = screen.getByRole('region', { name: 'Turn budget' });
-    expect(budget).toHaveTextContent('Round 1');
+    const bar = screen.getByRole('region', { name: 'Self status' });
+    expect(bar).toHaveTextContent('Round 1');
   });
 
-  it('shows actions-left, pips, and reaction on my turn; pips fill as actions spend', () => {
+  it('shows the vitals sub-label from the synced HP + effective AC', () => {
+    let drv, setHp;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_hp_Pellias" onReady={(s) => (setHp = s)} />
+        <SelfStatusBar {...barProps} />
+      </>
+    );
+    startMyTurn(() => drv);
+    act(() => setHp({ current: 31, max: 40, temp: 0 }));
+    expect(screen.getByLabelText('Pellias vitals')).toHaveTextContent('31/40 HP · AC 20');
+  });
+
+  it('shows actions-left pips and reaction on my turn; pips drain as actions spend', () => {
     let drv, ts;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
 
     expect(screen.getByLabelText('3 actions left')).toBeInTheDocument();
-    expect(screen.getByLabelText('Actions spent')).toBeInTheDocument();
 
     act(() => ts.spendActions(1, 'Strike'));
     expect(screen.getByLabelText('2 actions left')).toBeInTheDocument();
@@ -133,7 +153,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -147,7 +167,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -165,7 +185,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -182,7 +202,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <TurnDriver charId="Pellias" onReady={(t) => (ts = t)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -198,7 +218,7 @@ describe('DeckHeader', () => {
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv, [pellias, ashka]);
@@ -219,7 +239,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv, [pellias, ashka]);
@@ -237,7 +257,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -253,7 +273,7 @@ describe('DeckHeader', () => {
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
         <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     startMyTurn(() => drv);
@@ -263,19 +283,24 @@ describe('DeckHeader', () => {
     expect(drv.encounter.log.some((l) => l.text === 'Bless ends (not sustained)')).toBe(true);
   });
 
-  it('off-turn hides the budget row entirely (stage + React tab own off-turn)', () => {
+  it('off-turn keeps the bar (vitals + reaction) but hides the budget pieces', () => {
     let drv;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
-        <DeckHeader charId="Pellias" characterName="Pellias" />
+        <SelfStatusBar {...barProps} />
       </>
     );
     // Ashka goes first (init 20) so it is NOT Pellias's turn.
     startMyTurn(() => drv, [ashka, pellias]);
 
-    expect(screen.queryByRole('region', { name: 'Turn budget' })).toBeNull();
+    // The bar itself stays — reactions are what off-turn is about.
+    const bar = screen.getByRole('region', { name: 'Self status' });
+    expect(bar).toHaveTextContent('Round 1');
+    expect(screen.getByLabelText(/^Reaction/)).toBeInTheDocument();
+    // No budget to spend off-turn: pips, MAP and End Turn hide.
+    expect(screen.queryByLabelText(/actions left/)).toBeNull();
     expect(screen.queryByRole('button', { name: 'End turn' })).toBeNull();
-    // Off-turn target context lives in the Dossier (#1502 S1), not here.
+    expect(screen.queryByText(/^MAP/)).toBeNull();
   });
 });
