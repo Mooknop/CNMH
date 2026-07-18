@@ -52,6 +52,13 @@ describe('itemState', () => {
       expect(itemAbilitiesActive({ state: 'worn', noHandRequired: 'yes' })).toBe(false);
     });
 
+    it('a strapped shield is active only while its hand passes the buckler rule', () => {
+      // strapUsable is stamped by buildEffectiveInventory (bucklers S1/S2).
+      expect(itemAbilitiesActive({ state: 'worn', strapHand: 1, strapUsable: true })).toBe(true);
+      expect(itemAbilitiesActive({ state: 'worn', strapHand: 1, strapUsable: false })).toBe(false);
+      expect(itemAbilitiesActive({ state: 'worn', strapHand: 1 })).toBe(false);
+    });
+
     it('is false for a null / undefined item', () => {
       expect(itemAbilitiesActive(null)).toBe(false);
       expect(itemAbilitiesActive(undefined)).toBe(false);

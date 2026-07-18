@@ -161,6 +161,72 @@ describe('useShield — repairShield (#579)', () => {
   });
 });
 
+describe('useShield — strapped shields (bucklers S2)', () => {
+  const strappedBuckler = {
+    uid: 'buckler-1',
+    name: 'Buckler',
+    state: 'worn',
+    strapHand: 1,
+    strapUsable: true,
+    shield: { bonus: 1, hardness: 3, hp: 6, brokenThreshold: 3, strapped: true },
+  };
+
+  it('a strapped buckler with a usable hand is the active shield and can raise', () => {
+    const { result } = renderHook(() => useShield('Ashka', [strappedBuckler]));
+    expect(result.current.heldShield.uid).toBe('buckler-1');
+    expect(result.current.heldShield.strapped).toBe(true);
+    expect(result.current.heldShield.strapHand).toBe(1);
+    expect(result.current.usable).toBe(true);
+    act(() => result.current.raiseShield('buckler-1'));
+    expect(result.current.raised).toBe(true);
+    expect(result.current.shieldEffect.def.modifiers).toEqual([
+      { stat: 'ac', kind: 'circumstance', amount: 1 },
+    ]);
+  });
+
+  it('a tied-up hand blocks raising (usable=false) without hiding the shield', () => {
+    const blocked = { ...strappedBuckler, strapUsable: false };
+    const { result } = renderHook(() => useShield('Ashka', [blocked]));
+    expect(result.current.heldShield.uid).toBe('buckler-1');
+    expect(result.current.usable).toBe(false);
+    expect(result.current.raised).toBe(false);
+  });
+
+  it('a held shield wins over a strapped one', () => {
+    const { result } = renderHook(() => useShield('Ashka', [strappedBuckler, heldSteelShield]));
+    expect(result.current.heldShield.uid).toBe('shield-1');
+    expect(result.current.heldShield.strapped).toBe(false);
+  });
+
+  it('occupying the hand mid-raise drops the bonus and flags strapObstructed', () => {
+    const { result, rerender } = renderHook(({ inv }) => useShield('Ashka', inv), {
+      initialProps: { inv: [strappedBuckler] },
+    });
+    act(() => result.current.raiseShield('buckler-1'));
+    expect(result.current.raised).toBe(true);
+    expect(result.current.strapObstructed).toBe(false);
+    // Something lands in hand 1 → the effective-inventory stamp flips false.
+    rerender({ inv: [{ ...strappedBuckler, strapUsable: false }] });
+    expect(result.current.raised).toBe(false);
+    expect(result.current.shieldEffect).toBeNull();
+    expect(result.current.strapObstructed).toBe(true);
+    // The TurnTrackerPanel sweep responds by lowering for real.
+    act(() => result.current.lowerShield());
+    expect(result.current.strapObstructed).toBe(false);
+  });
+
+  it('unstrapping a raised buckler also flags strapObstructed', () => {
+    const { result, rerender } = renderHook(({ inv }) => useShield('Ashka', inv), {
+      initialProps: { inv: [strappedBuckler] },
+    });
+    act(() => result.current.raiseShield('buckler-1'));
+    const unstrapped = { uid: 'buckler-1', name: 'Buckler', state: 'worn', shield: strappedBuckler.shield };
+    rerender({ inv: [unstrapped] });
+    expect(result.current.raised).toBe(false);
+    expect(result.current.strapObstructed).toBe(true);
+  });
+});
+
 describe('useShield — Rust Blessing (campaign boon)', () => {
   const withCharacters = (characters) => ({ children }) => (
     <CharacterContext.Provider value={{ characters, getCharacter: (id) => characters.find((c) => c.id === id) || null }}>
