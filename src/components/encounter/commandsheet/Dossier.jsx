@@ -24,6 +24,7 @@ import { useEnemyEffects } from '../../../hooks/useEnemyEffects';
 import { useEffects } from '../../../hooks/useEffects';
 import { useContent } from '../../../contexts/ContentContext';
 import { defenseDC } from '../../../utils/defense';
+import { PERSISTENT_KEY } from '../../../utils/persistentDamage';
 import { getFocusInfo } from '../../../utils/SpellUtils';
 import { hydrateConditions, getCondition } from '../../../data/pf2eConditions';
 import {
@@ -69,16 +70,23 @@ export const readHp = (raw, fallbackMax = null) => {
 };
 
 // Shared vitals block: HIT POINTS label + current(/max) + bar when max known.
-const HpBlock = ({ hp, testid }) => (
+// `redacted` renders the ?? placeholder instead — the foe's HP before a Recall
+// Knowledge success (or GM reveal) uncovers it.
+const HpBlock = ({ hp, testid, redacted = false }) => (
   <div className="dossier-hp" data-testid={testid}>
     <div className="dossier-hp-row">
       <span className="dossier-hp-label">Hit Points</span>
-      <span className="dossier-hp-value">
-        {hp.current}
-        {hp.max > 0 && <span className="dossier-hp-max">/{hp.max}</span>}
-      </span>
+      {redacted ? (
+        <span className="dossier-hp-value dossier-cell-value--hidden">??</span>
+      ) : (
+        <span className="dossier-hp-value">
+          {hp.current}
+          {hp.max > 0 && <span className="dossier-hp-max">/{hp.max}</span>}
+        </span>
+      )}
     </div>
-    {hp.max > 0 && hp.current != null && (
+    {/* No bar while redacted — the fill fraction would leak the number. */}
+    {!redacted && hp.max > 0 && hp.current != null && (
       <div className="dossier-hp-bar" aria-hidden="true">
         {/* --hp-pct: fill width as a CSS custom property (avoids inline width) */}
         <div
@@ -102,6 +110,14 @@ const Dossier = ({ charId, character, model }) => {
   const { effects: effectCatalog } = useContent();
   const { hasData: hasReachData, inReach } = useAdjacency(charId);
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
+  // Persistent damage on the focused combatant (#272 store, keyed by entryId) —
+  // informational chips here; the strip's 🩸 badge keeps the clear controls.
+  const [persistentMap] = useSyncedState(PERSISTENT_KEY, {});
+  const persistentChipsFor = (entryId) =>
+    (persistentMap?.[entryId] || []).map((inst) => ({
+      key: `persistent-${inst.id}`,
+      label: `🩸 ${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`,
+    }));
   // Focused-PC state — ally or self (read unconditionally to keep hook order
   // stable; keys are inert when no PC is focused).
   const pcId = (focusAlly || focusSelf)?.charId || 'none';
@@ -145,7 +161,7 @@ const Dossier = ({ charId, character, model }) => {
               <span className="dossier-you-badge">YOU</span>
             </span>
             {subLine && <span className="dossier-sub dossier-sub--traits">{subLine}</span>}
-            {(selfEffects.length > 0 || conditions.length > 0) && (
+            {(selfEffects.length > 0 || conditions.length > 0 || persistentChipsFor(focusSelf.entryId).length > 0) && (
               <div className="dossier-chips">
                 {selfEffects.map((e) => (
                   <span key={e.id} className="dossier-chip dossier-chip--gold">{e.name}</span>
@@ -154,6 +170,9 @@ const Dossier = ({ charId, character, model }) => {
                   <span key={c.id} className="dossier-chip dossier-chip--peril">
                     {c.name}{c.value ? ` ${c.value}` : ''}
                   </span>
+                ))}
+                {persistentChipsFor(focusSelf.entryId).map((p) => (
+                  <span key={p.key} className="dossier-chip dossier-chip--peril">{p.label}</span>
                 ))}
               </div>
             )}
@@ -223,12 +242,15 @@ const Dossier = ({ charId, character, model }) => {
           </div>
         </header>
         {hp.current != null && <HpBlock hp={hp} testid="dossier-ally-hp" />}
-        {conditions.length > 0 && (
+        {(conditions.length > 0 || persistentChipsFor(focusAlly.entryId).length > 0) && (
           <div className="dossier-chips dossier-chips--pad">
             {conditions.map((c) => (
               <span key={c.id} className="dossier-chip dossier-chip--peril">
                 {c.name}{c.value ? ` ${c.value}` : ''}
               </span>
+            ))}
+            {persistentChipsFor(focusAlly.entryId).map((p) => (
+              <span key={p.key} className="dossier-chip dossier-chip--peril">{p.label}</span>
             ))}
           </div>
         )}
@@ -254,15 +276,19 @@ const Dossier = ({ charId, character, model }) => {
   const { defenses, bestiary, name, entryId } = focusEnemy;
   const rec = recordFor(rkKeyFor(focusEnemy));
 
-  // Condition chips: flanked (relay) + conditions applied by player actions.
+  // Condition chips: flanked (relay) + conditions applied by player actions +
+  // tracked persistent damage — the foe's full ailment picture.
   const enemyConditions = effectsFor(entryId).conditions || [];
-  const conditionChips = enemyConditions.map((c) => {
-    const cname = getCondition(c.id)?.name
-      || (effectCatalog || []).find((e) => e.id === c.id)?.name
-      || c.id;
-    const base = c.value != null ? `${cname} ${c.value}` : cname;
-    return { key: `${c.id}:${c.scopedTo || ''}`, label: c.scopedToName ? `${base} to ${c.scopedToName}` : base };
-  });
+  const conditionChips = [
+    ...enemyConditions.map((c) => {
+      const cname = getCondition(c.id)?.name
+        || (effectCatalog || []).find((e) => e.id === c.id)?.name
+        || c.id;
+      const base = c.value != null ? `${cname} ${c.value}` : cname;
+      return { key: `${c.id}:${c.scopedTo || ''}`, label: c.scopedToName ? `${base} to ${c.scopedToName}` : base };
+    }),
+    ...persistentChipsFor(entryId),
+  ];
   const isFlanked = !!flankedMap?.[entryId];
 
   // Active Exploit Vulnerability (#454) — matches the acting character's
@@ -306,6 +332,12 @@ const Dossier = ({ charId, character, model }) => {
         .filter(Boolean)
         .join(' · ')
     : 'Not yet recalled — Recall Knowledge to learn more';
+
+  // Live vitals (#1502 follow-up): the bridge keeps entry.bestiary.hp current,
+  // but the NUMBER stays behind the same reveal gate as the bestiary's HP stat
+  // (auto-revealed by any RK success, or a GM per-field toggle).
+  const foeHp = bestiary?.hp || null;
+  const hpRevealed = isFieldRevealed(rec, 'hp');
 
   // Stat grid: each cell independently gated; `??` until its reveal lands.
   const rkDC = bestiary?.level != null ? recallKnowledgeDC(bestiary.level, bestiary.rarity) : null;
@@ -387,6 +419,8 @@ const Dossier = ({ charId, character, model }) => {
           )}
         </div>
       </header>
+
+      {foeHp && <HpBlock hp={readHp(foeHp)} testid="dossier-foe-hp" redacted={!hpRevealed} />}
 
       <div className="dossier-rk" data-testid="dossier-rk">
         <span className={`dossier-rk-head${identified ? ' dossier-rk-head--live' : ''}`}>

@@ -81,7 +81,7 @@ const setupFocus = (getDrv, { setEnc, setFocus, patch = true } = {}) => {
       ...cur,
       order: cur.order.map((e) =>
         e.entryId === goblin.entryId
-          ? { ...e, defenses: ENEMY_DEFENSES, bestiary: { level: 3, rarity: 'common', traits: ['goblin', 'humanoid'] } }
+          ? { ...e, defenses: ENEMY_DEFENSES, bestiary: { level: 3, rarity: 'common', traits: ['goblin', 'humanoid'], hp: { current: 42, max: 60 } } }
           : e
       ),
     })));
@@ -131,6 +131,9 @@ describe('Dossier', () => {
     expect(screen.getByText('Perc DC')).toBeInTheDocument();
     expect(screen.getByText('RK DC')).toBeInTheDocument();
     expect(screen.getByTestId('dossier-weak')).toHaveTextContent('cold 5');
+    // Live HP (bestiary.hp, kept current by the bridge) — revealed with the record.
+    expect(screen.getByTestId('dossier-foe-hp')).toHaveTextContent('42');
+    expect(screen.getByTestId('dossier-foe-hp')).toHaveTextContent('/60');
     // AC 18, Perc 18, RK DC 18 all read 18.
     expect(screen.getAllByText('18').length).toBeGreaterThanOrEqual(3);
     // RK progress chips all confirmed.
@@ -178,8 +181,10 @@ describe('Dossier', () => {
     expect(screen.getByText('Unidentified creature')).toBeInTheDocument();
     expect(screen.queryByText('Goblin')).toBeNull();
     expect(screen.getByText(/Not yet recalled/)).toBeInTheDocument();
-    // All six stat cells redacted; the weakness stays hidden.
-    expect(screen.getAllByText('??')).toHaveLength(6);
+    // All six stat cells + the HP row redacted; the weakness stays hidden.
+    expect(screen.getAllByText('??')).toHaveLength(7);
+    expect(screen.getByTestId('dossier-foe-hp')).toHaveTextContent('??');
+    expect(screen.getByTestId('dossier-foe-hp')).not.toHaveTextContent('42');
     expect(screen.queryByText('cold 5')).toBeNull();
     expect(screen.getByText('Identity ?')).toBeInTheDocument();
     expect(screen.getByText('Defenses ?')).toBeInTheDocument();
@@ -201,9 +206,47 @@ describe('Dossier', () => {
     act(() => setKnowledge({ [goblin.entryId]: { ...defaultRecord(), ac: true } }));
 
     expect(screen.getByText('18')).toBeInTheDocument(); // AC revealed
-    expect(screen.getAllByText('??')).toHaveLength(5);  // the rest stay hidden
+    expect(screen.getAllByText('??')).toHaveLength(6);  // the rest (incl. HP) stay hidden
     expect(screen.getByText('Unidentified creature')).toBeInTheDocument();
     expect(screen.getByText('Defenses partial')).toBeInTheDocument();
+  });
+
+  // ── Persistent damage chips (full-picture vitals) ─────────────────────────
+  it('shows persistent-damage chips on the focused foe', () => {
+    let drv, setEnc, setFocus, setPersistent;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_persistent_global" onReady={(s) => (setPersistent = s)} />
+        <Dossier charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setPersistent({
+      [goblin.entryId]: [{ id: 'p1', dice: '2d6', type: 'fire' }],
+    }));
+    expect(screen.getByText('🩸 2d6 persistent fire')).toBeInTheDocument();
+  });
+
+  it('shows persistent-damage chips on a focused ally', () => {
+    let drv, setFocus, setPersistent;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_persistent_global" onReady={(s) => (setPersistent = s)} />
+        <Dossier charId="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias, { id: 'Ashka', name: 'Ashka' }]));
+    const ashka = drv.encounter.order.find((e) => e.name === 'Ashka');
+    act(() => setPersistent({
+      [ashka.entryId]: [{ id: 'p2', dice: '3', type: 'bleed', half: true }],
+    }));
+    act(() => setFocus(ashka.entryId));
+    expect(screen.getByText('🩸 3 persistent bleed (half)')).toBeInTheDocument();
   });
 
   // ── Discover CTAs (#1502 S4) ───────────────────────────────────────────────
