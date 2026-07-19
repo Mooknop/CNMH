@@ -3,7 +3,7 @@
 // until the snapshot carries an effect collection) survives normalization with
 // the invariants the resolution layer (EffectUtils, GmEffects) relies on.
 import { defaultContent } from '../utils/contentUtils';
-import { resistanceFor, conditionalModifiersFor } from '../utils/EffectUtils';
+import { resistanceFor, conditionalModifiersFor, conditionalTogglesFor } from '../utils/EffectUtils';
 
 const VALID_KINDS = ['status', 'circumstance', 'item'];
 
@@ -44,6 +44,21 @@ describe('bundled effect catalog', () => {
         ]);
       }
     }
+  });
+
+  it('Targeting Beacon surfaces as an opt-in attack toggle vs the beaconed target (#987)', () => {
+    const entry = [{ effectId: 'targeting-beacon' }];
+    // `stat: 'attacks'` fans out to all three attack stats, so the toggle is
+    // offered whichever attack the player is resolving (Shining Guidance shape).
+    for (const stat of ['meleeAttack', 'rangedAttack', 'spellAttack']) {
+      expect(conditionalTogglesFor(entry, stat, effects)).toEqual([
+        { id: 'effect-Targeting Beacon-beaconed target', label: 'Targeting Beacon (vs beaconed target)', bonus: 1 },
+      ]);
+    }
+    // Conditional — never netted into the always-on attack bonus.
+    expect(conditionalModifiersFor(entry, 'meleeAttack', effects)[0]).toMatchObject({
+      amount: 1, kind: 'circumstance', vs: 'beaconed target',
+    });
   });
 
   it('every entry has a normalized modifiers array with known kinds and numeric amounts', () => {
