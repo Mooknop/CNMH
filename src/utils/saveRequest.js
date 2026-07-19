@@ -81,6 +81,19 @@ export const buildTargetSaveRequest = ({
     defense: rollProfile.defense,
   });
 
+  // Per-degree target conditions (#987 — Steal the Show's off-guard/stupefied
+  // ladder). RequestedSaves already applies a `conditions` map to the enemy
+  // rail (#1216, authored on strike-on-crit / whetstone saves); this passes an
+  // ability-authored ladder down the *spell* path, which never emitted one.
+  //
+  // Keyed by save degree, so unlike the damageData rider ladder — which
+  // computeSaveDamage gates to ['success','failure','criticalFailure'] — this
+  // path also reaches `criticalSuccess`, letting a spell grant an outcome to a
+  // creature that resisted (Steal the Show's crit-success spotlight).
+  const conditions = ability.saveConditions && typeof ability.saveConditions === 'object'
+    ? ability.saveConditions
+    : null;
+
   return {
     casterId: character.id,
     casterName: character.name,
@@ -91,6 +104,7 @@ export const buildTargetSaveRequest = ({
     rank: directCastRank,
     targets,
     ...(damage && { damage }),
+    ...(conditions && { conditions }),
     ...(casterEffect && { casterEffect }),
     ...(fx && { fx }),
   };

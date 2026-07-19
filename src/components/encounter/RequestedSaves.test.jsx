@@ -701,6 +701,39 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
     fireEvent.click(screen.getByRole('button', { name: /log results/i }));
     expect(syncedMock.enemyFxSetter).not.toHaveBeenCalled();
   });
+
+  // …but only because the ladder above authors no criticalSuccess key. Unlike the
+  // damageData rider ladder (computeSaveDamage hard-returns null outside
+  // success/failure/criticalFailure), this path is a plain degree lookup — so a
+  // spell CAN grant an outcome to a creature that resisted (#987 — Steal the
+  // Show's crit-success spotlight).
+  test('a critical success DOES apply conditions when the ladder authors that degree', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([{
+        ...baseRequest,
+        abilityName: 'Steal the Show',
+        save: 'will',
+        conditions: {
+          criticalSuccess: [{ id: 'steal-the-show-spotlight', note: '+1 status vs the caster' }],
+          success: [{ id: 'off-guard', note: 'except the caster' }],
+        },
+      }]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '20' } }); // nat 20 → crit success
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    const fx = (syncedMock.enemyFxSetter?.mock.calls || []).reduce(
+      (acc, [u]) => (typeof u === 'function' ? u(acc) : u), {});
+    expect(fx['e-goblin'].conditions).toHaveLength(1);
+    expect(fx['e-goblin'].conditions[0]).toMatchObject({
+      id: 'steal-the-show-spotlight', source: 'Steal the Show',
+    });
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Goblin is steal-the-show-spotlight (+1 status vs the caster) — Steal the Show',
+    }));
+  });
 });
 
 // ── Foundry-rolled saves (#1275) ──────────────────────────────────────────────

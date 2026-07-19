@@ -4013,7 +4013,41 @@
     "traditions": [
       "arcane",
       "occult"
-    ]
+    ],
+    "saveConditions": {
+      "criticalSuccess": [
+        {
+          "id": "steal-the-show-spotlight",
+          "note": "+1 status bonus to attack rolls against the caster for the duration; attempts no further saves against this spell"
+        }
+      ],
+      "success": [
+        {
+          "id": "off-guard",
+          "note": "against everyone except the caster, 1 round"
+        }
+      ],
+      "failure": [
+        {
+          "id": "off-guard",
+          "note": "against everyone except the caster, 1 round"
+        },
+        {
+          "id": "stupefied",
+          "value": 2
+        }
+      ],
+      "criticalFailure": [
+        {
+          "id": "off-guard",
+          "note": "against everyone except the caster, 1 round"
+        },
+        {
+          "id": "stupefied",
+          "value": 4
+        }
+      ]
+    }
   },
   {
     "id": "stinking-cloud",

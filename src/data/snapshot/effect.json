@@ -2032,6 +2032,12 @@
     ]
   },
   {
+    "id": "steal-the-show-spotlight",
+    "name": "Steal the Show (spotlight)",
+    "description": "Critically succeeded against Steal the Show: the creature has the caster's measure, gaining a +1 status bonus to attack rolls against the caster for the spell's duration, and attempts no further saving throws against it (so Sustaining the spell no longer re-rolls this creature). Marker only — enemy attack rolls are GM-rolled, so the bonus is a reminder on the creature rather than an applied modifier.",
+    "modifiers": []
+  },
+  {
     "id": "stone-body-mutagen-greater",
     "name": "Stone Body Mutagen (Greater)",
     "description": "Your body calcifies: resistance 10 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 1 hour.",
