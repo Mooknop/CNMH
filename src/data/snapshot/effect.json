@@ -735,8 +735,14 @@
   {
     "id": "eld-charged",
     "name": "Charged (Eld)",
-    "description": "Off-guard against attacks that deal electricity damage (still descriptive — no AC-vs-type surface) and −2 to saves against electric effects (now shown as a reminder beneath each save). Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
+    "description": "Off-guard against attacks that deal electricity damage (−2 circumstance to AC, shown as a reminder beneath AC) and −2 to saves against electric effects (shown as a reminder beneath each save). Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
     "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "circumstance",
+        "amount": -2,
+        "vs": "electricity"
+      },
       {
         "stat": "fort",
         "kind": "status",
