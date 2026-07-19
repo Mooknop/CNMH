@@ -2098,6 +2098,19 @@
     ]
   },
   {
+    "id": "targeting-beacon",
+    "name": "Targeting Beacon",
+    "description": "A glowing beacon hovers over the target: all creatures gain a +1 circumstance bonus to attack rolls against it while the beacon lasts. Conditional ('vs beaconed target') — it surfaces as an opt-in toggle in the attack resolver, applied when you attack the beaconed creature. The beacon also makes an invisible creature merely concealed, and removes concealment it had from any other source. GM-triggered: the next attack roll that HITS the beaconed creature makes the beacon explode for 6d6 fire (basic Reflex, +2d6 per rank above 4th), then the spell ends — that explosion fires on a later hit rather than at cast, so it stays a manual damage/save call instead of auto-resolving.",
+    "modifiers": [
+      {
+        "stat": "attacks",
+        "kind": "circumstance",
+        "amount": 1,
+        "vs": "beaconed target"
+      }
+    ]
+  },
+  {
     "id": "theatrical-mutagen-greater",
     "name": "Theatrical Mutagen (Greater)",
     "description": "+3 item bonus to Acrobatics, Crafting, and Performance and a +10-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 10 minutes.",
