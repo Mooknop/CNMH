@@ -303,6 +303,7 @@ describe('computeEffectBonuses', () => {
     const condCat = [
       { id: 'antidote', name: 'Antidote', modifiers: [{ stat: 'fort', kind: 'item', amount: 2, vs: 'poison' }] },
       { id: 'eld-charged', name: 'Charged', modifiers: [
+        { stat: 'ac', kind: 'circumstance', amount: -2, vs: 'electricity' },
         { stat: 'reflex', kind: 'status', amount: -2, vs: 'electricity' },
         { stat: 'will', kind: 'status', amount: -2, vs: 'electricity' },
         { stat: 'fort', kind: 'status', amount: -2, vs: 'electricity' },
@@ -326,6 +327,14 @@ describe('computeEffectBonuses', () => {
     it('conditionalModifiersFor returns the modifiers for a stat', () => {
       const mods = conditionalModifiersFor([entry('eld-charged')], 'reflex', condCat);
       expect(mods).toEqual([{ amount: -2, kind: 'status', label: 'Charged', vs: 'electricity' }]);
+    });
+
+    it('surfaces the off-guard −2 AC vs electricity as an AC hint, not netted (#1411)', () => {
+      const result = computeEffectBonuses([entry('eld-charged')], condCat);
+      expect(result.ac.total).toBe(0); // conditional — never netted into the always-on AC
+      expect(conditionalModifiersFor([entry('eld-charged')], 'ac', condCat)).toEqual([
+        { amount: -2, kind: 'circumstance', label: 'Charged', vs: 'electricity' },
+      ]);
     });
 
     it('conditionalModifiersFor returns [] when none target the stat', () => {
