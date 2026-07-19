@@ -41,6 +41,41 @@ describe('buildTargetSaveRequest', () => {
     })).toBeNull();
   });
 
+  describe('per-degree target conditions (#987)', () => {
+    const ladder = {
+      criticalSuccess: [{ id: 'steal-the-show-spotlight', note: '+1 vs caster' }],
+      success: [{ id: 'off-guard', note: 'except the caster' }],
+      failure: [{ id: 'off-guard' }, { id: 'stupefied', value: 2 }],
+      criticalFailure: [{ id: 'off-guard' }, { id: 'stupefied', value: 4 }],
+    };
+
+    it('passes an ability-authored saveConditions ladder onto the request', () => {
+      const req = buildTargetSaveRequest({
+        ...baseCtx,
+        ability: { name: 'Steal the Show', saveConditions: ladder },
+      });
+      expect(req.conditions).toEqual(ladder);
+    });
+
+    it('carries a criticalSuccess entry — the degree the damage-rider ladder cannot reach', () => {
+      const req = buildTargetSaveRequest({
+        ...baseCtx,
+        ability: { name: 'Steal the Show', saveConditions: ladder },
+      });
+      expect(req.conditions.criticalSuccess).toEqual([
+        { id: 'steal-the-show-spotlight', note: '+1 vs caster' },
+      ]);
+    });
+
+    it('omits `conditions` entirely when the ability authors none', () => {
+      expect(buildTargetSaveRequest(baseCtx)).not.toHaveProperty('conditions');
+      expect(buildTargetSaveRequest({
+        ...baseCtx,
+        ability: { name: 'X', saveConditions: 'nope' },
+      })).not.toHaveProperty('conditions');
+    });
+  });
+
   it('builds the base payload: caster identity, save, DC, mapped targets', () => {
     const req = buildTargetSaveRequest(baseCtx);
     expect(req).toMatchObject({
