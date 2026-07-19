@@ -3,6 +3,7 @@
 // until the snapshot carries an effect collection) survives normalization with
 // the invariants the resolution layer (EffectUtils, GmEffects) relies on.
 import { defaultContent } from '../utils/contentUtils';
+import { resistanceFor, conditionalModifiersFor } from '../utils/EffectUtils';
 
 const VALID_KINDS = ['status', 'circumstance', 'item'];
 
@@ -23,6 +24,26 @@ describe('bundled effect catalog', () => {
     expect(fh('soothing-tonic-moderate')).toBe(3);
     expect(fh('soothing-tonic-greater')).toBe(5);
     expect(fh('soothing-tonic-major')).toBe(10);
+  });
+
+  it('Songshroud tiers grant sonic resistance + an auditory-save status bonus (#987)', () => {
+    const tiers = [
+      { id: 'songshroud', resist: 5, bonus: 1 },
+      { id: 'songshroud-4', resist: 10, bonus: 2 },
+      { id: 'songshroud-7', resist: 15, bonus: 3 },
+    ];
+    for (const { id, resist, bonus } of tiers) {
+      const entry = [{ effectId: id }];
+      // Resistance nets through the #900 damage engine.
+      expect(resistanceFor(entry, 'sonic', effects)).toBe(resist);
+      // The auditory save bonus is conditional ('vs auditory') on all three
+      // saves — surfaced as a #338 hint, never netted into the always-on save.
+      for (const save of ['fort', 'reflex', 'will']) {
+        expect(conditionalModifiersFor(entry, save, effects)).toEqual([
+          { amount: bonus, kind: 'status', label: expect.stringMatching(/^Songshroud/), vs: 'auditory' },
+        ]);
+      }
+    }
   });
 
   it('every entry has a normalized modifiers array with known kinds and numeric amounts', () => {

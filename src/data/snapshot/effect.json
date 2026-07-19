@@ -1898,6 +1898,96 @@
     ]
   },
   {
+    "id": "songshroud",
+    "name": "Songshroud (Rank 2–3)",
+    "description": "Resistance 5 to sonic damage and a +1 status bonus to saving throws against auditory effects, for 1 minute.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "sonic"
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 1,
+        "vs": "auditory"
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 1,
+        "vs": "auditory"
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 1,
+        "vs": "auditory"
+      }
+    ]
+  },
+  {
+    "id": "songshroud-4",
+    "name": "Songshroud (Rank 4–6)",
+    "description": "Resistance 10 to sonic damage and a +2 status bonus to saving throws against auditory effects, for 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "sonic"
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 2,
+        "vs": "auditory"
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 2,
+        "vs": "auditory"
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 2,
+        "vs": "auditory"
+      }
+    ]
+  },
+  {
+    "id": "songshroud-7",
+    "name": "Songshroud (Rank 7+)",
+    "description": "Resistance 15 to sonic damage and a +3 status bonus to saving throws against auditory effects, for 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 15,
+        "vs": "sonic"
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 3,
+        "vs": "auditory"
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 3,
+        "vs": "auditory"
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 3,
+        "vs": "auditory"
+      }
+    ]
+  },
+  {
     "id": "soothing-tonic-greater",
     "name": "Soothing Tonic (Greater)",
     "description": "Fast Healing 5 for 1 minute.",
