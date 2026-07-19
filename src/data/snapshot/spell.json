@@ -3349,7 +3349,30 @@
     "traditions": [
       "arcane",
       "occult"
-    ]
+    ],
+    "damageData": {
+      "base": "2d6",
+      "heightened": {
+        "+1": {
+          "base": "1d6"
+        }
+      }
+    },
+    "riderChoice": {
+      "prompt": "Damage type (a type the target has taken)",
+      "options": [
+        { "id": "acid", "label": "Acid", "damage": { "type": "acid" } },
+        { "id": "cold", "label": "Cold", "damage": { "type": "cold" } },
+        { "id": "electricity", "label": "Electricity", "damage": { "type": "electricity" } },
+        { "id": "fire", "label": "Fire", "damage": { "type": "fire" } },
+        { "id": "sonic", "label": "Sonic", "damage": { "type": "sonic" } },
+        { "id": "mental", "label": "Mental", "damage": { "type": "mental" } },
+        { "id": "poison", "label": "Poison", "damage": { "type": "poison" } },
+        { "id": "bludgeoning", "label": "Bludgeoning", "damage": { "type": "bludgeoning" } },
+        { "id": "piercing", "label": "Piercing", "damage": { "type": "piercing" } },
+        { "id": "slashing", "label": "Slashing", "damage": { "type": "slashing" } }
+      ]
+    }
   },
   {
     "id": "ring-of-truth",
@@ -3581,6 +3604,7 @@
     "level": 2,
     "baseLevel": 2,
     "traits": [
+      "Attack",
       "Concentrate",
       "Manipulate",
       "Shadow"
@@ -3598,7 +3622,28 @@
       "divine",
       "occult",
       "primal"
-    ]
+    ],
+    "damageData": {
+      "base": "2d8",
+      "heightened": {
+        "+1": {
+          "base": "1d8"
+        }
+      }
+    },
+    "riderChoice": {
+      "prompt": "Damage type (matches the chosen weapon or unarmed attack)",
+      "options": [
+        { "id": "bludgeoning", "label": "Bludgeoning", "damage": { "type": "bludgeoning" } },
+        { "id": "piercing", "label": "Piercing", "damage": { "type": "piercing" } },
+        { "id": "slashing", "label": "Slashing", "damage": { "type": "slashing" } },
+        { "id": "acid", "label": "Acid", "damage": { "type": "acid" } },
+        { "id": "cold", "label": "Cold", "damage": { "type": "cold" } },
+        { "id": "electricity", "label": "Electricity", "damage": { "type": "electricity" } },
+        { "id": "fire", "label": "Fire", "damage": { "type": "fire" } },
+        { "id": "sonic", "label": "Sonic", "damage": { "type": "sonic" } }
+      ]
+    }
   },
   {
     "id": "shared-invisibility",
