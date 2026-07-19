@@ -631,6 +631,21 @@ describe('buildDamageProfile', () => {
     expect(plain.degrees).toBeUndefined();
   });
 
+  it('variable damage type: a damageOverride type wins while base stays from damageData (#987)', () => {
+    // Reverberating Pain / Shadow's Betrayal author a typeless damageData; the
+    // chosen riderChoice option supplies { damage: { type } }, which flows in as
+    // damageOverride. Only the type is overridden — the dice come from damageData.
+    const spell = { name: 'Reverberating Pain', level: 0, damageData: { base: '2d6' } };
+    const untyped = buildDamageProfile(spell, character, {});
+    expect(untyped.expression).toBe('2d6');
+    expect(untyped.typeLabel).toBeNull();
+    const chosen = buildDamageProfile(spell, character, {
+      damageOverride: { type: 'fire' },
+    });
+    expect(chosen.expression).toBe('2d6'); // base unchanged
+    expect(chosen.typeLabel).toBe('fire');
+  });
+
   it('gates ability riders on the chosen action count', () => {
     const blast = {
       name: 'Melee Metal Blast', attackMod: 11, damage: '1d8+4',
