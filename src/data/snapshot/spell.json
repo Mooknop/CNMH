@@ -2516,6 +2516,7 @@
     ],
     "actions": "Two Actions",
     "duration": "1 minute",
+    "defense": "basic Reflex",
     "description": "You call forth a vortex around your legs, shredding everyone nearby before redirecting the vortex’s energy to propel you into the air. When you cast the spell, all adjacent creatures take 4d6 slashing damage, with a basic Reflex save. You then jump 30 feet in any direction without touching the ground. You must land on a space of solid ground within 30 feet of you, or else you fall after using your next action. On your future turns until the spell’s duration expires, you can recreate the vortex once per round as a single action with the move and manipulate traits, dealing the slashing damage and jumping up to 30 feet each time you do.",
     "heightened": {
       "+1": "Increase the slashing damage by 1d6 and the maximum distance of the jump by 5 feet."
@@ -3459,6 +3460,7 @@
     "range": "120 feet",
     "area": "20-foot burst",
     "duration": "1 minute",
+    "defense": "basic Reflex",
     "description": "You call forth a localized sandstorm that cuts at the eyes and chokes the breath of creatures within it. All creatures within the sandstorm become concealed, and all creatures outside the sandstorm become concealed to creatures within it. A creature that starts its turn in the sandstorm or enters the sandstorm takes 6d6 slashing damage with a basic Reflex save. A creature that ends its turn in the sandstorm must hold its breath to avoid suffocation. You can Dismiss the sandstorm.",
     "heightened": {
       "+1": "The slashing damage from the sandstorm increases by 1d6."
@@ -4715,6 +4717,7 @@
     "range": "120 feet",
     "area": "20-foot burst",
     "duration": "sustained up to 1 minute",
+    "defense": "basic Reflex",
     "description": "You infuse the ground with the essence of winter, coating it in supernaturally cold ice. All creatures in the area of the spell when you first cast it take 4d6 cold damage (basic Reflex save). You can Sustain this spell. While the spell lasts, the icy ground is difficult terrain, and each creature standing on the ice must succeed at their choice of a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the ice during the spell’s duration must also attempt their choice of either a Reflex save or an Acrobatics check to Balance. A creature that ends its turn standing on the ice takes 8 cold damage with a basic Fortitude save.",
     "heightened": {
       "+1": "Increase the cold damage that creatures take from the initial casting by 1d6 and the cold damage they take from ending their turn in the ice by 2."
