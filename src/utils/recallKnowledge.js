@@ -383,21 +383,27 @@ export function revealOneIwr(record, defenses) {
 // success      → adds the highest weakness type to weaknessesRevealed (partial)
 // critSuccess  → reveals all three IWR categories
 // other        → unchanged
-export function revealFromExploit(record, degree, defenses) {
+// `diverseLore` (thaumaturge feat): any success also grants the information of
+// a successful Recall Knowledge check — the auto-reveals (identity/description/
+// HP). The feat compares the check against the RK DC, which is the same
+// standard level+rarity DC Exploit Vulnerability already rolled against.
+export function revealFromExploit(record, degree, defenses, { diverseLore = false } = {}) {
   const base = record || defaultRecord();
+  const rkSuccess = (rec) =>
+    diverseLore ? { ...rec, identity: true, description: true, hp: true } : rec;
   if (degree === 'criticalSuccess') {
-    return {
+    return rkSuccess({
       ...base,
       iwr: { immunities: true, resistances: true, weaknesses: true },
-    };
+    });
   }
   if (degree === 'success') {
     const hw = highestWeakness(defenses);
-    if (!hw) return base;
-    return {
+    if (!hw) return rkSuccess(base);
+    return rkSuccess({
       ...base,
       weaknessesRevealed: { ...(base.weaknessesRevealed || {}), [hw.type]: true },
-    };
+    });
   }
   return base;
 }

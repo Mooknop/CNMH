@@ -528,6 +528,43 @@ describe('revealFromExploit', () => {
     const step2 = revealFromExploit(step1, 'success', defTwo);
     expect(step2.weaknessesRevealed).toEqual({ cold: true, fire: true });
   });
+
+  // Diverse Lore: any success also grants the RK-success auto-reveals.
+  describe('diverseLore', () => {
+    test('success also reveals identity/description/hp', () => {
+      const next = revealFromExploit(defaultRecord(), 'success', defenses, { diverseLore: true });
+      expect(next.weaknessesRevealed).toEqual({ fire: true });
+      expect(next.identity).toBe(true);
+      expect(next.description).toBe(true);
+      expect(next.hp).toBe(true);
+    });
+
+    test('success with no weaknesses still grants the RK reveals', () => {
+      const next = revealFromExploit(defaultRecord(), 'success', { weaknesses: [] }, { diverseLore: true });
+      expect(next.identity).toBe(true);
+      expect(next.description).toBe(true);
+      expect(next.hp).toBe(true);
+      expect(next.weaknessesRevealed).toEqual({});
+    });
+
+    test('criticalSuccess reveals IWR plus the RK reveals', () => {
+      const next = revealFromExploit(defaultRecord(), 'criticalSuccess', defenses, { diverseLore: true });
+      expect(next.iwr).toEqual({ immunities: true, resistances: true, weaknesses: true });
+      expect(next.identity).toBe(true);
+      expect(next.description).toBe(true);
+      expect(next.hp).toBe(true);
+    });
+
+    test('failure grants nothing (feat triggers only on a success)', () => {
+      const base = defaultRecord();
+      expect(revealFromExploit(base, 'failure', defenses, { diverseLore: true })).toEqual(base);
+    });
+
+    test('without the feat, success does not touch identity', () => {
+      const next = revealFromExploit(defaultRecord(), 'success', defenses, { diverseLore: false });
+      expect(next.identity).toBe(false);
+    });
+  });
 });
 
 // ── Damage-triggered IWR reveals (#1014) ────────────────────────────────────
