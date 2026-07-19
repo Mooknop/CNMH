@@ -237,13 +237,20 @@ const PF2E_EFFECTS = [
   },
 
   // ── Eld Power states (Izzy homebrew, #225) ──────────────────────────
-  // Conditional penalties (off-guard vs electricity, −2 saves vs electric)
-  // can't be netted by the modifier engine — they stay descriptive (#274).
+  // Conditional ('vs electricity') penalties: they can't be netted into the
+  // always-on totals (the app can't know a roll's damage context), so they
+  // surface as reminder hints — the −2 saves beneath each save (#338) and the
+  // off-guard −2 AC beneath AC (#1411).
   {
     id: 'eld-charged',
     name: 'Charged (Eld)',
-    description: 'Off-guard against attacks that deal electricity damage and −2 to saves against electric effects. Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.',
-    modifiers: [],
+    description: 'Off-guard against attacks that deal electricity damage (−2 circumstance to AC, shown as a reminder beneath AC) and −2 to saves against electric effects (shown as a reminder beneath each save). Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.',
+    modifiers: [
+      { stat: 'ac',     kind: 'circumstance', amount: -2, vs: 'electricity' },
+      { stat: 'fort',   kind: 'status',       amount: -2, vs: 'electricity' },
+      { stat: 'reflex', kind: 'status',       amount: -2, vs: 'electricity' },
+      { stat: 'will',   kind: 'status',       amount: -2, vs: 'electricity' },
+    ],
     // Rules triggers automated via catalog flags (#275): the encounter-end
     // sweeps drop it, and applying electricity damage in the GM HP flow clears it.
     encounterScoped: true,
