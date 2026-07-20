@@ -3,9 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useLore } from '../contexts/LoreContext';
 import { useContent } from '../contexts/ContentContext';
-import { useEncounter } from '../hooks/useEncounter';
 import StatsBlock from '../components/character-sheet/StatsBlock';
-import ActionsList from '../components/actions/ActionsList';
 import ExplorationTab from '../components/actions/ExplorationTab';
 import OfflineModeSwitcher from '../components/playmode/OfflineModeSwitcher';
 import { usePlayMode } from '../hooks/usePlayMode';
@@ -19,23 +17,12 @@ import UseConsumableModal from '../components/inventory/UseConsumableModal';
 import SpellgunAttackModal from '../components/encounter/SpellgunAttackModal';
 import DragonbreathModal from '../components/encounter/DragonbreathModal';
 import InventoryTab from '../components/inventory/InventoryTab';
-import HandsGlance from '../components/encounter/HandsGlance';
-import InitiativeEntry from '../components/encounter/InitiativeEntry';
-import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
-import ReadyActionButton from '../components/encounter/ReadyActionButton';
-import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
-import Dossier from '../components/encounter/commandsheet/Dossier';
-import SelfStatusBar from '../components/encounter/commandsheet/SelfStatusBar';
-import EncounterStage from '../components/encounter/stage/EncounterStage';
-import SavePrompt from '../components/encounter/SavePrompt';
-import ReactionPrompt from '../components/encounter/ReactionPrompt';
+import EncounterSkeleton from '../components/encounter/EncounterSkeleton';
 import SkillPrompt from '../components/encounter/SkillPrompt';
 import ChallengePrompts from '../components/encounter/ChallengePrompts';
 import ObjectivesStrip from '../components/encounter/ObjectivesStrip';
-import RollToast from '../components/encounter/RollToast';
 import SpellsList from '../components/spells/SpellsList';
 
-import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
 import DailyPrepModal from '../components/character-sheet/DailyPrepModal';
 import HpFx from '../components/shared/HpFx';
@@ -43,7 +30,6 @@ import { useCharacter } from '../hooks/useCharacter';
 import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
-import { isCharTurn } from '../utils/encounterUtils';
 import { isSpellgun } from '../utils/spellgun';
 import { isDragonbreath } from '../utils/dragonbreath';
 import { hydrateConditions } from '../data/pf2eConditions';
@@ -111,7 +97,6 @@ const CharacterSheet = () => {
 
   // Data layer — all character reads go through this hook
   const characterModel = useCharacter(character);
-  const { encounter } = useEncounter();
   const { mode } = usePlayMode();
 
   // Focus recovery is no longer automatic out of combat: spent Focus Points
@@ -154,60 +139,14 @@ const CharacterSheet = () => {
         // internally when mode === 'downtime'). SkillPrompt + ChallengePrompts
         // render in every mode — VP challenge tracks run in exploration/downtime too.
         if (mode === 'encounter') {
-          // Focus Dossier skeleton (#1502 S5): self-status bar · TARGET ▸
-          // selector · Dossier · deck (contextual plays + segments) · tools row
-          // (TurnTrackerPanel + objectives) · ✋ Hands · Combat Log.
+          // Encounter skeleton (#1502 S5) — extracted component so the GM
+          // Command Dock (#1525) can mount the same controls for any character.
           return (
-            <>
-              {/* Roll toast (#1490 S3) — fixed overlay; renders nothing until a
-                  fresh roll fx event lands, so it mounts unconditionally here. */}
-              <RollToast />
-              <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} character={character} />
-              <ReactionPrompt character={character} themeColor={characterColor} />
-              <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
-              <ChallengePrompts charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
-              {encounter?.active ? (
-                <>
-                  {/* Self-status bar (#1502 S3) — the compressed turn budget
-                      (formerly DeckHeader Row A) leads the encounter skeleton. */}
-                  <SelfStatusBar charId={character.id} character={character} model={characterModel} />
-                  <InitiativeEntry charId={character.id} character={character} />
-                  {/* Off-turn (#471): the stage spotlights whoever is acting now.
-                      The Shield Block bar + ReactionPrompt keep reactions
-                      reachable until the stage owns them (#474/#475). */}
-                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
-                    <EncounterStage character={character} characterColor={characterColor} />
-                  ) : (
-                    <ReadyActionButton charId={character.id} characterName={character.name} />
-                  )}
-                  <InitiativeStrip charId={character.id} />
-                  {/* Focus Dossier (#1502 S1/S2) — the focused combatant's card
-                      leads the screen, directly under the target selector. The
-                      character + derived model feed the self state (2c). */}
-                  <Dossier charId={character.id} character={character} model={characterModel} />
-                  <ActionsList character={character} characterColor={characterColor} />
-                  {/* Tools row (#1502 S5): shield / aura / sustain / free-action
-                      offers / Bestiary as chips, with the objectives chips
-                      alongside — below the deck, above hands + log. */}
-                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
-                  <ObjectivesStrip />
-                  {/* At-a-glance hands strip (read-only) — hand CHANGES live in
-                      the deck's Items segment (HandsGroup). */}
-                  <HandsGlance character={character} />
-                </>
-              ) : (
-                <>
-                  <ObjectivesStrip />
-                  <div className="cs-encounter-idle">
-                    <span className="cs-encounter-idle-title">No Active Encounter</span>
-                    <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
-                    <InitiativeEntry charId={character.id} character={character} />
-                  </div>
-                  <ActionsList character={character} characterColor={characterColor} />
-                </>
-              )}
-              <CombatLogPanel />
-            </>
+            <EncounterSkeleton
+              character={character}
+              model={characterModel}
+              characterColor={characterColor}
+            />
           );
         }
         return (
