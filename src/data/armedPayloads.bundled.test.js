@@ -49,6 +49,52 @@ describe('armed payloads (#987)', () => {
     }
   });
 
+  it('area payloads are repeatable — they fire again each time the trigger recurs', () => {
+    // Autumn's Howl / Winter's Grasp damage whoever ends a turn in the area, and
+    // Cascading Caltrops fires on every entry. A one-shot payload would vanish
+    // after the first creature.
+    for (const id of ['autumns-howl', 'winters-grasp', 'cascading-caltrops']) {
+      const p = spells.find((s) => s.id === id).armedPayloads[0];
+      expect(p.repeatable).toBe(true);
+      expect(p.trigger).toMatch(/turn|enters/i);
+    }
+  });
+
+  it("Autumn's Howl ticks persistent piercing with no save", () => {
+    const p = spells.find((s) => s.id === 'autumns-howl').armedPayloads[0];
+    expect(p.defense).toBeUndefined();          // no save — it just applies
+    expect(p.severityFromSave).toBeFalsy();     // severity never varies
+    expect(p.damageData.riders[0].persistent).toMatchObject({ dice: '1d6', type: 'piercing' });
+    // "+1 per rank" is a FLAT bump to the persistent damage, not another die.
+    expect(p.damageData.heightened['+1'].persistent).toBe(1);
+    // The cast-time blast is untouched.
+    expect(spells.find((s) => s.id === 'autumns-howl').damageData.base).toBe('3d6');
+  });
+
+  it("Winter's Grasp ticks flat 8 cold on a basic Fortitude save", () => {
+    const p = spells.find((s) => s.id === 'winters-grasp').armedPayloads[0];
+    expect(mapSpellDefense(p.defense)).toBe('fortitude'); // NOT the cast's Reflex
+    expect(p.damageData).toMatchObject({ base: '8', type: 'cold' });
+    expect(p.damageData.heightened['+1'].base).toBe('2');
+  });
+
+  it('Cascading Caltrops zeroes a success and splits the Speed penalty by degree', () => {
+    const p = spells.find((s) => s.id === 'cascading-caltrops').armedPayloads[0];
+    expect(mapSpellDefense(p.defense)).toBe('reflex');
+    // "Success: the creature is unaffected" — not the basic-save half.
+    expect(p.damageData.degrees).toEqual({ success: 0 });
+    const riders = p.damageData.riders;
+    expect(riders.find((r) => r.persistent)?.on).toEqual(['failure', 'criticalFailure']);
+    // −5 ft on a failure, −10 ft on a crit failure: degree-exclusive riders, the
+    // Creeping Cold carve-out shape.
+    const speeds = riders.filter((r) => r.condition);
+    expect(speeds).toHaveLength(2);
+    expect(speeds.find((r) => r.on.includes('failure') && !r.on.includes('criticalFailure')).condition).toMatch(/–5-foot/);
+    expect(speeds.find((r) => r.on.includes('criticalFailure')).condition).toMatch(/–10-foot/);
+    // The Acrobatics alternative is the creature's choice, so it must be stated.
+    expect(p.note).toMatch(/Acrobatics/i);
+  });
+
   it('Gruesome Marionettist arms its bleed on the prohibited action, not at cast', () => {
     const gm = spells.find((s) => s.id === 'gruesome-marionettist');
     // The whole reason this was deferred: a cast-time persistent rider would
@@ -66,6 +112,9 @@ describe('armed payloads (#987)', () => {
     expect(bleed.damageData.heightened['+1'].persistent).toBe('1d10');
     // The directed-action immunity is a GM call, so it must be stated.
     expect(bleed.note).toMatch(/directed/i);
+    // Its severity DOES vary (half/full/double from the cast save), unlike the
+    // area ticks — so the panel must offer the picker.
+    expect(bleed.severityFromSave).toBe(true);
   });
 
   it('Targeting Beacon arms its explosion rather than resolving it at cast', () => {
