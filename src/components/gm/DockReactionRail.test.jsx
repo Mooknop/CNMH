@@ -1,8 +1,17 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DockReactionRail from './DockReactionRail';
+import { APP } from '../../sync/keys';
 
+const mockSendUpdate = vi.fn();
+const mockAppendEvent = vi.fn();
 vi.mock('../../hooks/useReactionOptions', () => ({ useReactionOptions: vi.fn() }));
+vi.mock('../../contexts/SessionContext', () => ({
+  useSession: () => ({ sendUpdate: mockSendUpdate }),
+}));
+vi.mock('../../hooks/useSessionLog', () => ({
+  useSessionLog: () => ({ appendEvent: mockAppendEvent }),
+}));
 vi.mock('./GmReactionBadge', () => ({
   default: ({ charId }) => <span data-testid={`badge-${charId}`} />,
 }));
@@ -24,20 +33,37 @@ const ORDER = [
 const OPTIONS = {
   AshkaBGosh: [
     {
-      reaction: { name: 'Shield Block', trigger: 'You would take damage while your shield is raised' },
+      // Blocked despite a triggerType — must NOT be promptable.
+      reaction: {
+        name: 'Shield Block',
+        triggerType: 'attack-any',
+        trigger: 'You would take damage while your shield is raised',
+      },
       castSource: null,
       live: false,
       liveReason: 'raise a shield first',
     },
+    {
+      // Armed but no authored triggerType — nothing to fire.
+      reaction: { name: 'Untyped Parry', trigger: 'A melee attack hits you' },
+      castSource: null,
+      live: true,
+      liveReason: null,
+    },
   ],
   Pellias: [
     {
-      reaction: { name: 'Retributive Strike', trigger: 'An enemy damages your ally' },
+      reaction: {
+        name: 'Retributive Strike',
+        triggerType: 'damaged-ally',
+        trigger: 'An enemy damages your ally',
+      },
       castSource: null,
       live: true,
       liveReason: null,
     },
     {
+      // Readied actions are player-initiated — never promptable.
       reaction: { name: 'Ready: trip the runner', readied: true, trigger: 'The ghoul moves past' },
       castSource: null,
       live: true,
@@ -48,6 +74,8 @@ const OPTIONS = {
 };
 
 beforeEach(() => {
+  mockSendUpdate.mockClear();
+  mockAppendEvent.mockClear();
   useReactionOptions.mockImplementation((character) => ({
     options: OPTIONS[character.id] || [],
   }));
@@ -94,6 +122,36 @@ describe('DockReactionRail', () => {
   it('shows the per-PC empty state when a PC has no reactions', () => {
     render(<DockReactionRail encounter={{ order: ORDER }} characters={CHARS} excludeEntryId="e1" />);
     expect(screen.getByText('No reactions.')).toBeInTheDocument();
+  });
+
+  it('offers Prompt only on armed reactions with a fireable triggerType', () => {
+    render(<DockReactionRail encounter={{ order: ORDER, round: 3 }} characters={CHARS} excludeEntryId={null} />);
+    // Retributive Strike: armed + typed → promptable.
+    expect(screen.getByLabelText('Prompt Retributive Strike')).toBeInTheDocument();
+    // Blocked (Shield Block), untyped (Untyped Parry), readied → not promptable.
+    expect(screen.queryByLabelText('Prompt Shield Block')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Prompt Untyped Parry')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Prompt Ready: trip the runner')).not.toBeInTheDocument();
+  });
+
+  it('fires the matching trigger event at that PC and logs it', () => {
+    render(<DockReactionRail encounter={{ order: ORDER, round: 3 }} characters={CHARS} excludeEntryId={null} />);
+    fireEvent.click(screen.getByLabelText('Prompt Retributive Strike'));
+
+    expect(mockSendUpdate).toHaveBeenCalledTimes(1);
+    const [charId, key, payload] = mockSendUpdate.mock.calls[0];
+    expect(charId).toBe('Pellias');
+    expect(key).toBe(APP.REACTPROMPT);
+    // damaged-ally's first matching GM event is "Ally damaged nearby".
+    expect(payload.eventId).toBe('ally-damaged');
+    expect(payload.label).toBe('Ally damaged nearby');
+    expect(payload.round).toBe(3);
+    expect(payload.reqId).toEqual(expect.stringContaining('react-'));
+
+    expect(mockAppendEvent).toHaveBeenCalledWith({
+      type: 'trigger',
+      text: 'Trigger: Ally damaged nearby → Pellias (Retributive Strike)',
+    });
   });
 
   it('shows the rail empty state when no other PCs are in the order', () => {

@@ -66,6 +66,48 @@
   color: var(--color-theme, var(--shell-text));
 }
 
+.gm-dock-pin-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* ── Pin chips (S4) — stage any PC, or follow the turn pointer ── */
+.gm-dock-pins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.gm-dock-pin {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.gm-dock-pin:hover {
+  border-color: var(--shell-border-strong);
+  color: var(--shell-text);
+}
+
+.gm-dock-pin--active {
+  color: var(--accent-text, var(--shell-text));
+  background: var(--accent-tint);
+  border-color: var(--accent-outline, var(--shell-border-strong));
+}
+
 /* Stub panels for the not-yet-built modes (exploration/downtime/enemy turns). */
 .gm-dock-stub {
   max-width: 640px;
