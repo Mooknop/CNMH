@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import GmCommandDock from './GmCommandDock';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
@@ -132,5 +132,73 @@ describe('GmCommandDock', () => {
   it('stubs an empty initiative order', () => {
     render(<GmCommandDock />);
     expect(screen.getByText('No combatants')).toBeInTheDocument();
+  });
+
+  describe('pin chips (S4)', () => {
+    const TWO_PC_ORDER = [
+      { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+      { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
+      { entryId: 'e3', kind: 'pc', charId: 'AshkaBGosh', name: 'Ashka' },
+    ];
+
+    it('hides the chips outside encounter mode', () => {
+      usePlayMode.mockReturnValue({ mode: 'exploration' });
+      useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
+      render(<GmCommandDock />);
+      expect(screen.queryByRole('group', { name: 'Stage a character' })).not.toBeInTheDocument();
+    });
+
+    it('pinning a PC stages them during an enemy turn, and Follow turn returns to the stub', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({ currentTurnIndex: 1, order: TWO_PC_ORDER }),
+      });
+      render(<GmCommandDock />);
+      expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
+      expect(screen.getByText('pinned')).toBeInTheDocument();
+      // The staged PC drops out of the rail.
+      expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e3');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Follow turn' }));
+      expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
+      expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
+    });
+
+    it('pin overrides turn-follow onto another PC', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
+      });
+      render(<GmCommandDock />);
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
+      expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e3');
+    });
+
+    it('clicking the active pin chip unpins back to turn-follow', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
+      });
+      render(<GmCommandDock />);
+      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
+      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
+      expect(screen.queryByText('pinned')).not.toBeInTheDocument();
+    });
+
+    it('a pin overrides the setup stub so the GM can prep a PC', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({ phase: 'setup', round: 0, order: TWO_PC_ORDER }),
+      });
+      render(<GmCommandDock />);
+      expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Pellias' }));
+      expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
+      expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e1');
+    });
   });
 });
