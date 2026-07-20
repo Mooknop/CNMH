@@ -4462,9 +4462,13 @@
     "actions": "Three Actions",
     "range": "500 feet",
     "area": "100-foot radius, 50-foot-tall cylinder",
-    "defense": "basic Reflex and AC (see text)",
+    "defense": "basic Reflex",
     "duration": "sustained up to 1 minute",
     "description": "You conjure forth a near-mythical deluge of water. The deluge has the following effects:\n\nThe area is filled with water, which is greater difficult terrain to all creatures without a swim Speed and difficult terrain for creatures with a swim Speed. Creatures in the area that cannot breathe in water must hold their breath or immediately begin drowning.\n\nWhen you initially Cast the Spell, creatures in the area are tossed about by the rushing water, taking 10d10 bludgeoning damage with a basic Reflex save.\n\nThe water deals 20d12 damage to structures and unattended objects in the area or half this amount if the structure or object is magical.\n\nThe first time each round you Sustain this spell, you can spend an action to attack a creature in the area with debris and rushing water, making a spell attack roll against their AC and dealing 9d4 bludgeoning damage on a success, or double damage on a critical success.\n\nSpecial If you are a follower of a deity with the water domain, you can choose to give this spell the sanctified trait.",
+    "damageData": {
+      "base": "10d10",
+      "type": "bludgeoning"
+    },
     "traditions": [
       "divine",
       "primal"
