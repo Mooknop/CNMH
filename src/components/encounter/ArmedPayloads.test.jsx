@@ -11,6 +11,11 @@ vi.mock('../../hooks/useEncounter');
 const mockAdd = vi.fn();
 const mockRemove = vi.fn();
 const mockLog = vi.fn();
+// Persistent payloads write through the shared persistent-damage map.
+const mockSetPersistent = vi.fn();
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [{}, mockSetPersistent],
+}));
 
 const payload = {
   id: 'armed-1',
@@ -110,6 +115,77 @@ describe('ArmedPayloads', () => {
     render(<ArmedPayloads />);
     expect(screen.getAllByText(/10d6/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/\b6d6\b/)).not.toBeInTheDocument();
+  });
+
+  describe('persistent payloads (no save on firing)', () => {
+    // Gruesome Marionettist: the cast-time save already set severity, so firing
+    // applies the bleed directly rather than calling for another save.
+    const bleed = {
+      ...payload,
+      id: 'armed-2',
+      label: 'Prohibited-action bleed',
+      trigger: 'the creature takes the PROHIBITED action',
+      defense: undefined,
+      repeatable: true,
+      spellLevel: 5,
+      rank: 5,
+      abilityName: 'Gruesome Marionettist',
+      damageData: {
+        riders: [{ id: 'r', label: 'bleed', persistent: { dice: '5d10', type: 'bleed' } }],
+        heightened: { '+1': { persistent: '1d10' } },
+      },
+    };
+
+    it('offers a severity picker instead of a rolled-total input', () => {
+      withPayloads([bleed]);
+      render(<ArmedPayloads />);
+      expect(screen.getByLabelText('Prohibited-action bleed severity')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Prohibited-action bleed damage')).not.toBeInTheDocument();
+    });
+
+    it('shows the persistent dice, heightened at the armed rank', () => {
+      withPayloads([{ ...bleed, rank: 7 }]); // 5d10 +1d10/rank over 5 → 7d10
+      render(<ArmedPayloads />);
+      expect(screen.getAllByText(/7d10 persistent bleed/).length).toBeGreaterThan(0);
+    });
+
+    it('firing records the bleed and pushes no save request', () => {
+      withPayloads([bleed]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      expect(mockAdd).not.toHaveBeenCalled();
+      expect(mockSetPersistent).toHaveBeenCalledTimes(1);
+      const next = mockSetPersistent.mock.calls[0][0]({});
+      expect(next['e-gob']).toHaveLength(1);
+      expect(next['e-gob'][0]).toMatchObject({ dice: '5d10', type: 'bleed' });
+    });
+
+    it('a critical-failure severity doubles the dice; a success halves', () => {
+      withPayloads([bleed]);
+      const { unmount } = render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.change(screen.getByLabelText('Prohibited-action bleed severity'), { target: { value: 'double' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      expect(mockSetPersistent.mock.calls[0][0]({})['e-gob'][0].dice).toBe('10d10');
+      unmount();
+
+      vi.clearAllMocks();
+      withPayloads([bleed]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.change(screen.getByLabelText('Prohibited-action bleed severity'), { target: { value: 'half' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      expect(mockSetPersistent.mock.calls[0][0]({})['e-gob'][0]).toMatchObject({ dice: '5d10', half: true });
+    });
+
+    it('stays armed after firing because it is repeatable', () => {
+      withPayloads([bleed]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      expect(mockRemove).not.toHaveBeenCalled();
+    });
   });
 
   it('Dismiss drops the payload without pushing a save', () => {

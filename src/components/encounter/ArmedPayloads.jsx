@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
-import { buildDamageProfile } from '../../utils/damage';
+import { buildDamageProfile, doubleDice } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
 import { mapSpellDefense } from '../../utils/rollResolution';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 
 /**
  * Armed payloads (#987) — GM panel for damage/saves a cast STORED for a later
@@ -30,8 +32,23 @@ const ArmedPayloads = () => {
   const order = encounter?.order || [];
   const enemies = order.filter((e) => e.kind === 'enemy');
 
-  const [picked, setPicked] = useState({});   // { [payloadId]: entryId[] }
-  const [entered, setEntered] = useState({}); // { [payloadId]: string }
+  const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
+
+  const [picked, setPicked] = useState({});     // { [payloadId]: entryId[] }
+  const [entered, setEntered] = useState({});   // { [payloadId]: string }
+  const [severity, setSeverity] = useState({}); // { [payloadId]: 'half'|'full'|'double' }
+
+  // A payload with NO defense applies its damage directly rather than calling
+  // for a save — the bleed simply lands when the trigger happens (Gruesome
+  // Marionettist). Its severity was fixed by the CAST-time save, so the GM picks
+  // that here rather than rolling anything new. Such a payload authors its dice
+  // as persistent riders on damageData, so buildDamageProfile heightens them.
+  const isPersistent = (p) => !p.defense;
+
+  const persistentRidersFor = (p) =>
+    (profileFor(p)?.riders || [])
+      .filter((r) => r.persistent?.dice)
+      .map((r) => ({ dice: r.persistent.dice, type: r.persistent.type || '' }));
 
   const toggle = (pid, entryId) =>
     setPicked((cur) => {
@@ -61,10 +78,39 @@ const ArmedPayloads = () => {
       enemyEntries: targets,
     });
 
+  // Persistent payload: scale the authored dice by the severity the cast-time
+  // save already established, then record the instances on each target.
+  const firePersistent = (p, targets) => {
+    const sev = severity[p.id] || 'full';
+    const scaled = persistentRidersFor(p).map((inst) => ({
+      ...inst,
+      ...(sev === 'double' ? { dice: doubleDice(inst.dice) } : {}),
+      ...(sev === 'half' ? { half: true } : {}),
+    }));
+    if (!scaled.length) return;
+    setPersistentMap((m) => targets.reduce(
+      (acc, t) => addPersistent(acc, t.entryId, makeInstances(scaled, p.abilityName)),
+      m || {}
+    ));
+    appendLog({
+      type: 'system',
+      text: `${p.abilityName}: ${p.label} (${sev}) applied to ${targets.map((t) => t.name).join(', ')}`,
+    });
+  };
+
   const fire = (p) => {
     const targets = enemies.filter((e) => (picked[p.id] || []).includes(e.entryId));
+    if (!targets.length) return;
+
+    if (isPersistent(p)) {
+      firePersistent(p, targets);
+      setPicked((cur) => ({ ...cur, [p.id]: [] }));
+      if (!p.repeatable) removeArmedPayload(p.id);
+      return;
+    }
+
     const defense = mapSpellDefense(p.defense);
-    if (!targets.length || !defense) return;
+    if (!defense) return;
 
     const synthetic = syntheticFor(p);
     const req = buildTargetSaveRequest({
@@ -99,10 +145,13 @@ const ArmedPayloads = () => {
     <div className="gm-requested-saves">
       <h3>Armed Effects</h3>
       {payloads.map((p) => {
+        const persistent = isPersistent(p);
         // Show the expression the payload will ACTUALLY deal (heightened at the
         // rank it was armed with), not the un-scaled authored base.
-        const hint = profileFor(p)?.expression || p.damageData?.base;
-        const saveLabel = DEFENSE_LABELS[mapSpellDefense(p.defense)] || p.defense;
+        const hint = persistent
+          ? persistentRidersFor(p).map((i) => `${i.dice} persistent ${i.type}`).join(', ')
+          : (profileFor(p)?.expression || p.damageData?.base);
+        const saveLabel = persistent ? null : (DEFENSE_LABELS[mapSpellDefense(p.defense)] || p.defense);
         const targets = picked[p.id] || [];
         return (
           <div key={p.id} className="gm-save-req-card">
@@ -135,15 +184,31 @@ const ArmedPayloads = () => {
                 </label>
               ))}
             </div>
-            <label className="gm-save-req-target">
-              {hint ? `${hint} rolled total` : 'Rolled total'}
-              <input
-                type="number"
-                aria-label={`${p.label} damage`}
-                value={entered[p.id] ?? ''}
-                onChange={(ev) => setEntered((cur) => ({ ...cur, [p.id]: ev.target.value }))}
-              />
-            </label>
+            {persistent ? (
+              // No save on firing — the cast-time save already set how bad it is.
+              <label className="gm-save-req-target">
+                Severity (from the cast save)
+                <select
+                  aria-label={`${p.label} severity`}
+                  value={severity[p.id] || 'full'}
+                  onChange={(ev) => setSeverity((cur) => ({ ...cur, [p.id]: ev.target.value }))}
+                >
+                  <option value="half">Success — half</option>
+                  <option value="full">Failure — full</option>
+                  <option value="double">Critical failure — double</option>
+                </select>
+              </label>
+            ) : (
+              <label className="gm-save-req-target">
+                {hint ? `${hint} rolled total` : 'Rolled total'}
+                <input
+                  type="number"
+                  aria-label={`${p.label} damage`}
+                  value={entered[p.id] ?? ''}
+                  onChange={(ev) => setEntered((cur) => ({ ...cur, [p.id]: ev.target.value }))}
+                />
+              </label>
+            )}
             <div>
               <button type="button" onClick={() => fire(p)} disabled={targets.length === 0}>
                 Fire
