@@ -16,6 +16,11 @@ export const defaultEncounter = () => ({
   order: [],
   log: [],
   saveRequests: [], // pending save requests from players to the GM
+  // Armed payloads (#987) — damage/save an ability stores at cast that only
+  // fires when a LATER trigger happens (Targeting Beacon's beacon exploding on
+  // the next hit). Wiring these as cast-time damage would resolve them at the
+  // wrong moment, so they sit here until the GM fires them.
+  armedPayloads: [],
 });
 
 // saveRequest shape:
@@ -28,6 +33,17 @@ export const makeSaveRequest = (req) => ({
   id: `savereq-${Date.now()}-${++_saveReqCounter}`,
   ts: Date.now(),
   status: 'pending',
+});
+
+// Armed payload (#987) — a cast's deferred damage/save, parked on the encounter
+// until its authored trigger actually happens. Mirrors makeSaveRequest's id
+// shape so the GM panel can key on it.
+let _armedCounter = 0;
+
+export const makeArmedPayload = (payload) => ({
+  ...payload,
+  id: `armed-${Date.now()}-${++_armedCounter}`,
+  ts: Date.now(),
 });
 
 export const isPc = (entry) => !!entry && entry.kind === 'pc';

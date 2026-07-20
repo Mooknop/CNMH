@@ -4349,6 +4349,24 @@
     "heightened": {
       "+1": "The damage from the exploding beacon increases by 2d6."
     },
+    "armedPayloads": [
+      {
+        "id": "targeting-beacon-explosion",
+        "label": "Beacon explosion",
+        "trigger": "the next attack roll that HITS the beaconed creature",
+        "note": "Resolves in addition to the attack's normal effects. The spell ends when the beacon explodes — remove the Targeting Beacon effect from the party once fired.",
+        "defense": "basic Reflex",
+        "damageData": {
+          "base": "6d6",
+          "type": "fire",
+          "heightened": {
+            "+1": {
+              "base": "2d6"
+            }
+          }
+        }
+      }
+    ],
     "traditions": [
       "arcane",
       "divine",

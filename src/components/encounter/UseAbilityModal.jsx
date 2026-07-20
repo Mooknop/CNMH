@@ -115,7 +115,7 @@ const UseAbilityModal = ({
   const { getState, sendUpdate } = useSession();
   const { characters, effects: effectCatalog, fxAnimations } = useContent();
   const { gameDate, time } = useGameDate();
-  const { encounter, appendLog, addSaveRequest } = useEncounter();
+  const { encounter, appendLog, addSaveRequest, addArmedPayload } = useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
     useTurnState(character?.id || 'nobody');
   const { exploitFor } = useExploitVulnerability();
@@ -599,6 +599,34 @@ const UseAbilityModal = ({
     // picked targets (Propagating Arc's splash). Independent of the primary
     // save, so a zone with no targets is simply a no-op.
     secondaryProfiles.buildRequests(saveDc).forEach(addSaveRequest);
+
+    // Armed payloads (#987) — damage/save this cast stores for a LATER trigger
+    // (Targeting Beacon's beacon exploding on the next attack that hits).
+    // Resolving them now would fire them at the wrong moment, so they park on
+    // the encounter and the GM fires them when the trigger actually happens.
+    (Array.isArray(ability.armedPayloads) ? ability.armedPayloads : []).forEach((p) => {
+      addArmedPayload({
+        payloadId:   p.id,
+        label:       p.label,
+        trigger:     p.trigger,
+        note:        p.note ?? null,
+        defense:     p.defense,
+        damageData:  p.damageData,
+        repeatable:  !!p.repeatable,
+        dc:          saveDc,
+        rank:        directCastRank ?? null,
+        // The spell's native rank — the baseline the payload heightens FROM
+        // when it eventually fires (heightenedEntriesFor keys off it).
+        spellLevel:  ability.level,
+        abilityName: ability.name,
+        casterId:    character.id,
+        casterName:  character.name,
+      });
+      appendLog({
+        type: 'system',
+        text: `${ability.name}: ${p.label} is armed — ${p.trigger}`,
+      });
+    });
 
     // Consume chained spell results (Reach Spell, Harrow Casting, etc.;
     // extracted #1317 D3): resource spend via the section's castOption (#235),
