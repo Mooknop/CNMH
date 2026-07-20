@@ -73,6 +73,14 @@ export function makeActor(opts = {}) {
     prototypeToken = null,
     // PF2e save statistics (#1275) — pass e.g. { reflex: { roll: jest.fn() } }.
     saves = null,
+    // Offensive kit (#1531) — NPC strikes (system.actions), spellcasting
+    // entries (actor.spellcasting), ability items (itemTypes.action), and
+    // listed skills (system.skills). Build via makeNpcStrike /
+    // makeSpellcastingEntry / makeAbilityItem.
+    strikes = null,
+    spellcasting = null,
+    abilities = [],
+    skills = null,
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -80,6 +88,8 @@ export function makeActor(opts = {}) {
 
   const effectItems = effects.map((e) =>
     makeEffectItem({ slug: e.slug, name: e.name, img: e.img, isExpired: e.isExpired, disabled: e.disabled }));
+
+  const abilityItems = abilities.map((a) => (a?.type === 'action' ? a : makeAbilityItem(a)));
 
   const actor = {
     id,
@@ -118,8 +128,11 @@ export function makeActor(opts = {}) {
         ...(size !== null ? { size: { value: size } } : {}),
       },
       ...(perception !== null ? { perception: { mod: perception } } : {}),
+      ...(strikes !== null ? { actions: strikes } : {}),
+      ...(skills !== null ? { skills } : {}),
     },
-    itemTypes: { condition: conditionItems, effect: effectItems },
+    itemTypes: { condition: conditionItems, effect: effectItems, action: abilityItems },
+    ...(spellcasting !== null ? { spellcasting: { contents: spellcasting } } : {}),
     ...(saves !== null ? { saves } : {}),
     getActiveTokens: () => tokens,
     update: jest.fn().mockResolvedValue(undefined),
@@ -127,9 +140,10 @@ export function makeActor(opts = {}) {
     applyDamage: jest.fn().mockResolvedValue(undefined),
   };
 
-  // Back-link condition + effect items to their parent actor.
+  // Back-link condition + effect + ability items to their parent actor.
   conditionItems.forEach((c) => { c.parent = actor; });
   effectItems.forEach((e) => { e.parent = actor; });
+  abilityItems.forEach((a) => { a.parent = actor; });
   tokens.forEach((t) => { if (!t.actor) t.actor = actor; });
   return actor;
 }
@@ -166,6 +180,121 @@ export function makeEffectItem(opts = {}) {
     img,
     isExpired,
     system: { slug, disabled },
+    parent,
+  };
+}
+
+// An NPC strike as PF2e synthesizes it onto actor.system.actions (#1531): label,
+// total modifier, MAP variant labels, trait labels, and the source melee item
+// carrying damage rolls / attack effects.
+export function makeNpcStrike(opts = {}) {
+  const {
+    slug = 'jaws',
+    label = 'Jaws',
+    totalModifier = 9,
+    variantLabels = ['+9', '+4', '-1'],
+    traits = ['reach-10'],
+    ranged = false,
+    damageRolls = { r1: { damage: '1d8+4', damageType: 'piercing' } },
+    attackEffects = [],
+  } = opts;
+  return {
+    slug,
+    label,
+    totalModifier,
+    variants: variantLabels.map((l) => ({ label: l })),
+    traits: traits.map((t) => ({ label: t })),
+    item: {
+      name: label,
+      isRanged: ranged,
+      isMelee: !ranged,
+      system: {
+        damageRolls,
+        attackEffects: { value: attackEffects },
+        traits: { value: traits },
+      },
+    },
+  };
+}
+
+// A spell item as read off a spellcasting entry's spells collection (#1531).
+export function makeSpellItem(opts = {}) {
+  const {
+    id = autoId('spell'),
+    name = 'Test Spell',
+    rank = 1,
+    isCantrip = false,
+    time = '2',
+    uses = null,           // { value, max } for innate-style per-spell uses
+    save = null,           // { statistic, basic }
+    traits = [],
+    description = '',
+  } = opts;
+  return {
+    id,
+    name,
+    rank,
+    isCantrip,
+    system: {
+      time: { value: time },
+      traits: { value: traits },
+      description: { value: description },
+      ...(uses ? { location: { uses } } : {}),
+      ...(save ? { defense: { save } } : {}),
+    },
+  };
+}
+
+// A PF2e spellcasting entry (#1531): tradition/castingType/DC/attack under
+// system.*, per-rank slots (slot0 = cantrips), and a spells collection.
+export function makeSpellcastingEntry(opts = {}) {
+  const {
+    id = autoId('scentry'),
+    name = 'Arcane Spells',
+    tradition = 'arcane',
+    castingType = 'innate',   // 'innate' | 'prepared' | 'spontaneous' | 'focus'
+    dc = 19,
+    attack = 11,
+    slots = {},               // { slot1: { value: 2, max: 2, prepared? } }
+    spells = [],
+  } = opts;
+  return {
+    id,
+    name,
+    system: {
+      tradition: { value: tradition },
+      prepared: { value: castingType },
+      spelldc: { dc, value: attack },
+      slots,
+    },
+    spells: { contents: spells },
+  };
+}
+
+// An NPC ability item (the stat block's Actions/Reactions/Passives) as a
+// action-type embedded Item (#1531).
+export function makeAbilityItem(opts = {}) {
+  const {
+    id = autoId('ability'),
+    name = 'Test Ability',
+    actionType = 'action',    // 'action' | 'reaction' | 'free' | 'passive'
+    actions = 2,
+    category = 'offensive',
+    traits = [],
+    description = '',
+    parent = null,
+  } = opts;
+  return {
+    id,
+    type: 'action',
+    name,
+    system: {
+      actionType: { value: actionType },
+      actions: { value: actions },
+      category,
+      traits: { value: traits },
+      description: { value: description },
+    },
     parent,
   };
 }
