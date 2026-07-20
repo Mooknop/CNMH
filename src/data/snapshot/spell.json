@@ -1827,6 +1827,32 @@
     "heightened": {
       "+1": "The persistent bleed damage increases by 1d10."
     },
+    "armedPayloads": [
+      {
+        "id": "gruesome-marionettist-bleed",
+        "label": "Prohibited-action bleed",
+        "trigger": "the creature takes the PROHIBITED action or activity",
+        "note": "Pick the severity the cast's Fortitude save set. Taking the DIRECTED action instead grants immunity to this bleed until the beginning of the creature's next turn — don't fire it then. On a success the spell also ends at the beginning of your next turn (dismiss this once it has fired).",
+        "repeatable": true,
+        "damageData": {
+          "riders": [
+            {
+              "id": "gruesome-marionettist-bleed-rider",
+              "label": "Gruesome Marionettist: persistent bleed",
+              "persistent": {
+                "dice": "5d10",
+                "type": "bleed"
+              }
+            }
+          ],
+          "heightened": {
+            "+1": {
+              "persistent": "1d10"
+            }
+          }
+        }
+      }
+    ],
     "traditions": [
       "arcane",
       "divine",
