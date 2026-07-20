@@ -985,7 +985,7 @@
     "actions": "One to Three Actions",
     "range": "120 feet",
     "area": "varies",
-    "defense": "Reflex",
+    "defense": "basic Reflex",
     "description": "You briefly call forth a great stampede to batter your foes, with effects depending on the number of actions you spend. Affected creatures take bludgeoning damage and might be disoriented or knocked over based on the results of a Reflex save.\n\nSingle Action The stampede affects a single creature and deals 5d6 bludgeoning damage.\n\nTwo Actions The stampede affects all creatures in a 30-foot burst and deals 10d6 bludgeoning damage.\n\nThree Actions You conjure a stampeding creature under each of your allies, allowing them to move to safety if they can manage to ride the perilous wave. As the 2-action version except allies in the area that succeed at their save against the spell take no damage and move to the edge of the spell’s radius in a direction of their choice. Allies that fail the saving throw experience the spell’s normal effects.",
     "degrees": {
       "Critical Success": "The creature is unaffected.",
@@ -999,7 +999,61 @@
     "traditions": [
       "arcane",
       "primal"
-    ]
+    ],
+    "variants": [
+      {
+        "actions": 1,
+        "note": "1 creature, 5d6 bludgeoning",
+        "damage": {
+          "base": "5d6",
+          "type": "bludgeoning",
+          "heightened": {
+            "+1": {
+              "base": "1d6"
+            }
+          }
+        }
+      },
+      {
+        "actions": 2,
+        "note": "30-foot burst, 10d6 bludgeoning",
+        "damage": {
+          "base": "10d6",
+          "type": "bludgeoning",
+          "heightened": {
+            "+1": {
+              "base": "2d6"
+            }
+          }
+        }
+      },
+      {
+        "actions": 3,
+        "note": "as 2 actions; allies who succeed take no damage and ride to the edge of the area",
+        "damage": {
+          "base": "10d6",
+          "type": "bludgeoning",
+          "heightened": {
+            "+1": {
+              "base": "2d6"
+            }
+          }
+        }
+      }
+    ],
+    "saveConditions": {
+      "failure": [
+        {
+          "id": "off-guard",
+          "note": "1 round"
+        }
+      ],
+      "criticalFailure": [
+        {
+          "id": "prone"
+        }
+      ]
+    }
   },
   {
     "id": "darkness",

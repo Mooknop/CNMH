@@ -45,6 +45,15 @@ describe('save-condition ladders (#987)', () => {
     expect(unresolved).toEqual([]);
   });
 
+  it('Crushing Stampede ladders off-guard on a failure and prone on a critical failure', () => {
+    const sc = spells.find((s) => s.id === 'crushing-stampede').saveConditions;
+    expect(sc.failure.map((c) => c.id)).toEqual(['off-guard']);
+    // The crit-failure text is standalone ("double damage and is knocked prone"),
+    // so it does NOT inherit the failure degree's off-guard.
+    expect(sc.criticalFailure.map((c) => c.id)).toEqual(['prone']);
+    expect(sc).not.toHaveProperty('criticalSuccess');
+  });
+
   it('Steal the Show ladders off-guard + the stupefied 2/4 split, and spotlights a crit success', () => {
     const sc = spells.find((s) => s.id === 'steal-the-show').saveConditions;
     const ids = (d) => sc[d].map((c) => c.id);
