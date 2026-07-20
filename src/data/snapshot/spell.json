@@ -3221,6 +3221,23 @@
         }
       }
     },
+    "secondaryProfiles": [
+      {
+        "id": "propagating-arc-splash",
+        "label": "Splash — creatures within 10 feet",
+        "note": "Only if the target FAILED its save, and only if at least 1 creature is within 10 feet. Creatures 10–20 feet away take half this amount — resolve them as a separate cast of this zone with the halved total entered.",
+        "defense": "basic Reflex",
+        "damageData": {
+          "base": "2d6",
+          "type": "electricity",
+          "heightened": {
+            "+1": {
+              "base": "1d6"
+            }
+          }
+        }
+      }
+    ],
     "traditions": [
       "arcane",
       "primal"
