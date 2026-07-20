@@ -184,8 +184,10 @@ const ArmedPayloads = () => {
                 </label>
               ))}
             </div>
-            {persistent ? (
+            {persistent && p.severityFromSave ? (
               // No save on firing — the cast-time save already set how bad it is.
+              // Only shown when severity actually varies: an area that damages
+              // whoever ends a turn in it (Autumn's Howl) always applies in full.
               <label className="gm-save-req-target">
                 Severity (from the cast save)
                 <select
@@ -198,7 +200,7 @@ const ArmedPayloads = () => {
                   <option value="double">Critical failure — double</option>
                 </select>
               </label>
-            ) : (
+            ) : persistent ? null : (
               <label className="gm-save-req-target">
                 {hint ? `${hint} rolled total` : 'Rolled total'}
                 <input

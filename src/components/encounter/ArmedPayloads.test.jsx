@@ -137,10 +137,43 @@ describe('ArmedPayloads', () => {
     };
 
     it('offers a severity picker instead of a rolled-total input', () => {
-      withPayloads([bleed]);
+      withPayloads([{ ...bleed, severityFromSave: true }]);
       render(<ArmedPayloads />);
       expect(screen.getByLabelText('Prohibited-action bleed severity')).toBeInTheDocument();
       expect(screen.queryByLabelText('Prohibited-action bleed damage')).not.toBeInTheDocument();
+    });
+
+    it('hides the severity picker when severity never varies (an area tick)', () => {
+      // Autumn's Howl always applies in full — there was no save to soften it.
+      withPayloads([{ ...bleed, severityFromSave: false }]);
+      render(<ArmedPayloads />);
+      expect(screen.queryByLabelText('Prohibited-action bleed severity')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Prohibited-action bleed damage')).not.toBeInTheDocument();
+    });
+
+    it('applies in full when no severity picker is offered', () => {
+      withPayloads([{ ...bleed, severityFromSave: false }]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      const inst = mockSetPersistent.mock.calls[0][0]({})['e-gob'][0];
+      expect(inst.dice).toBe('5d10');
+      expect(inst.half).toBeUndefined();
+    });
+
+    it('a flat per-rank persistent bump adds to the dice rather than adding a die', () => {
+      // Autumn's Howl: 1d6 persistent piercing, "+1" per rank → 1d6+2 at rank 4.
+      withPayloads([{
+        ...bleed,
+        spellLevel: 2,
+        rank: 4,
+        damageData: {
+          riders: [{ id: 'r', label: 'p', persistent: { dice: '1d6', type: 'piercing' } }],
+          heightened: { '+1': { persistent: 1 } },
+        },
+      }]);
+      render(<ArmedPayloads />);
+      expect(screen.getAllByText(/1d6\+2 persistent piercing/).length).toBeGreaterThan(0);
     });
 
     it('shows the persistent dice, heightened at the armed rank', () => {
@@ -162,7 +195,7 @@ describe('ArmedPayloads', () => {
     });
 
     it('a critical-failure severity doubles the dice; a success halves', () => {
-      withPayloads([bleed]);
+      withPayloads([{ ...bleed, severityFromSave: true }]);
       const { unmount } = render(<ArmedPayloads />);
       fireEvent.click(screen.getByLabelText('Goblin'));
       fireEvent.change(screen.getByLabelText('Prohibited-action bleed severity'), { target: { value: 'double' } });
@@ -171,7 +204,7 @@ describe('ArmedPayloads', () => {
       unmount();
 
       vi.clearAllMocks();
-      withPayloads([bleed]);
+      withPayloads([{ ...bleed, severityFromSave: true }]);
       render(<ArmedPayloads />);
       fireEvent.click(screen.getByLabelText('Goblin'));
       fireEvent.change(screen.getByLabelText('Prohibited-action bleed severity'), { target: { value: 'half' } });
