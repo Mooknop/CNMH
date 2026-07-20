@@ -6,6 +6,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { activeEntry } from '../../utils/encounterUtils';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
+import DockReactionRail from '../../components/gm/DockReactionRail';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
 
@@ -50,6 +51,8 @@ const GmCommandDock = () => {
   const { encounter } = useEncounter();
   const { characters, theme } = useContent();
 
+  const entry = mode === 'encounter' ? activeEntry(encounter) : null;
+
   const renderEncounterPane = () => {
     if (encounter?.phase === 'setup') {
       return (
@@ -60,7 +63,6 @@ const GmCommandDock = () => {
         />
       );
     }
-    const entry = activeEntry(encounter);
     if (!entry) {
       return (
         <DockStub
@@ -98,21 +100,33 @@ const GmCommandDock = () => {
             : 'The dock follows the party’s play mode'}
         </p>
       </header>
-      {mode === 'encounter' ? (
-        renderEncounterPane()
-      ) : mode === 'downtime' ? (
-        <DockStub
-          icon="home"
-          title="Downtime"
-          sub="Downtime controls arrive in a later slice."
-        />
-      ) : (
-        <DockStub
-          icon="map"
-          title="Exploration"
-          sub="Exploration controls arrive in a later slice."
-        />
-      )}
+      <div className="gm-dock-body">
+        <div className="gm-dock-stage-col">
+          {mode === 'encounter' ? (
+            renderEncounterPane()
+          ) : mode === 'downtime' ? (
+            <DockStub
+              icon="home"
+              title="Downtime"
+              sub="Downtime controls arrive in a later slice."
+            />
+          ) : (
+            <DockStub
+              icon="map"
+              title="Exploration"
+              sub="Exploration controls arrive in a later slice."
+            />
+          )}
+        </div>
+        {mode === 'encounter' && (
+          <DockReactionRail
+            encounter={encounter}
+            characters={characters}
+            // During setup the turn pointer is meaningless — show every PC.
+            excludeEntryId={encounter?.phase === 'in-progress' ? entry?.entryId : null}
+          />
+        )}
+      </div>
     </div>
   );
 };

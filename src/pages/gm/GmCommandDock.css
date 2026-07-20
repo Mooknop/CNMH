@@ -1,9 +1,23 @@
-/* GM Command Dock (#1525 S2) — laptop/tablet-first. One stage column for now;
-   the party reaction rail (S3) lands as a second grid column beside it. */
+/* GM Command Dock (#1525) — laptop/tablet-first. Stage column (the mounted
+   player deck) + the party reaction rail (S3) beside it; single column on
+   tablet-portrait. */
 
 .gm-dock {
   max-width: 1080px;
   margin: 0 auto;
+}
+
+.gm-dock-body {
+  display: grid;
+  grid-template-columns: minmax(0, 640px) 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .gm-dock-body {
+    grid-template-columns: 1fr;
+  }
 }
 
 .gm-dock-header {
@@ -80,5 +94,104 @@
   font-size: 0.7rem;
   letter-spacing: 0.07em;
   text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Party reaction rail (S3) ────────────────────────────── */
+.dock-rail {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(5px);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dock-rail-head {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-rail-row {
+  border-top: 1px solid var(--shell-border);
+  padding-top: var(--space-2);
+}
+
+.dock-rail-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--space-2);
+}
+
+.dock-rail-row-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--shell-text);
+}
+
+.dock-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-rail-react {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+}
+
+.dock-rail-react--blocked {
+  opacity: 0.55;
+}
+
+.dock-rail-react-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dock-rail-react-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--shell-text);
+}
+
+.dock-rail-react-state {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text, var(--shell-text-secondary));
+  white-space: nowrap;
+}
+
+.dock-rail-react--blocked .dock-rail-react-state {
+  color: var(--shell-text-tertiary);
+}
+
+.dock-rail-react-trigger {
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--shell-text-secondary);
+}
+
+.dock-rail-empty {
+  margin: 0;
+  font-size: 0.72rem;
   color: var(--shell-text-tertiary);
 }
