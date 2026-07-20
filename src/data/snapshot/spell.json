@@ -170,7 +170,33 @@
           "base": "2d6"
         }
       }
-    }
+    },
+    "armedPayloads": [
+      {
+        "id": "autumns-howl-wind-bleed",
+        "label": "Ending a turn in the wind",
+        "trigger": "a creature ends its turn inside the wind",
+        "note": "No save — the persistent piercing damage simply applies. The winds also make the area difficult terrain (ground and air), which stays a GM/positional call.",
+        "repeatable": true,
+        "damageData": {
+          "riders": [
+            {
+              "id": "autumns-howl-wind-bleed-rider",
+              "label": "Autumn's Howl: persistent piercing",
+              "persistent": {
+                "dice": "1d6",
+                "type": "piercing"
+              }
+            }
+          ],
+          "heightened": {
+            "+1": {
+              "persistent": 1
+            }
+          }
+        }
+      }
+    ]
   },
   {
     "id": "bane",
@@ -659,6 +685,62 @@
     "traditions": [
       "arcane",
       "primal"
+    ],
+    "armedPayloads": [
+      {
+        "id": "cascading-caltrops-entry",
+        "label": "Entering the caltrops",
+        "trigger": "a creature enters a square in the area",
+        "note": "The creature CHOOSES a Reflex save or an Acrobatics check against your spell DC — the request rolls Reflex, so for an Acrobatics check compare its total against the same DC. A success is unaffected (degrees zero it out). On a critical failure the field is spent: dismiss this payload.",
+        "repeatable": true,
+        "defense": "Reflex",
+        "damageData": {
+          "base": "3d4",
+          "type": "piercing",
+          "degrees": {
+            "success": 0
+          },
+          "heightened": {
+            "+1": {
+              "base": "1d4",
+              "persistent": 1
+            }
+          },
+          "riders": [
+            {
+              "id": "cascading-caltrops-bleed",
+              "label": "Cascading Caltrops: persistent bleed",
+              "persistent": {
+                "dice": "3",
+                "type": "bleed"
+              },
+              "on": [
+                "failure",
+                "criticalFailure"
+              ],
+              "defaultOn": true
+            },
+            {
+              "id": "cascading-caltrops-speed",
+              "label": "Cascading Caltrops: Speed penalty",
+              "condition": "–5-foot status penalty to Speed while the persistent bleed lasts (an Interact action to pull the caltrops out lowers the flat check DC)",
+              "on": [
+                "failure"
+              ],
+              "defaultOn": true
+            },
+            {
+              "id": "cascading-caltrops-speed-critfail",
+              "label": "Cascading Caltrops: Speed penalty",
+              "condition": "–10-foot status penalty to Speed while the persistent bleed lasts (an Interact action to pull the caltrops out lowers the flat check DC)",
+              "on": [
+                "criticalFailure"
+              ],
+              "defaultOn": true
+            }
+          ]
+        }
+      }
     ]
   },
   {
@@ -1832,6 +1914,7 @@
         "id": "gruesome-marionettist-bleed",
         "label": "Prohibited-action bleed",
         "trigger": "the creature takes the PROHIBITED action or activity",
+        "severityFromSave": true,
         "note": "Pick the severity the cast's Fortitude save set. Taking the DIRECTED action instead grants immunity to this bleed until the beginning of the creature's next turn — don't fire it then. On a success the spell also ends at the beginning of your next turn (dismiss this once it has fired).",
         "repeatable": true,
         "damageData": {
@@ -4933,6 +5016,25 @@
           "base": "1d6"
         }
       }
-    }
+    },
+    "armedPayloads": [
+      {
+        "id": "winters-grasp-ice-tick",
+        "label": "Ending a turn on the ice",
+        "trigger": "a creature ends its turn standing on the ice",
+        "note": "The ice is also difficult terrain, and standing on or moving onto it calls for the creature's choice of a Reflex save or Acrobatics check against your spell DC (fall prone / Balance) — those stay positional GM calls.",
+        "repeatable": true,
+        "defense": "basic Fortitude",
+        "damageData": {
+          "base": "8",
+          "type": "cold",
+          "heightened": {
+            "+1": {
+              "base": "2"
+            }
+          }
+        }
+      }
+    ]
   }
 ]
