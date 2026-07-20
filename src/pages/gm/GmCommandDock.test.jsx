@@ -13,6 +13,11 @@ vi.mock('../../components/encounter/EncounterSkeleton', () => ({
     return <div data-testid="encounter-skeleton">{character.name}</div>;
   },
 }));
+vi.mock('../../components/gm/DockReactionRail', () => ({
+  default: function DummyDockReactionRail({ excludeEntryId }) {
+    return <div data-testid="dock-rail" data-exclude={excludeEntryId || ''} />;
+  },
+}));
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -44,6 +49,7 @@ describe('GmCommandDock', () => {
     render(<GmCommandDock />);
     expect(screen.getByText('Exploration')).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
   });
 
   it('stubs downtime mode', () => {
@@ -60,6 +66,8 @@ describe('GmCommandDock', () => {
     render(<GmCommandDock />);
     expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
+    // During setup the rail shows every PC (no exclusion).
+    expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', '');
   });
 
   it("mounts the player encounter controls for the active PC's turn", () => {
@@ -75,6 +83,8 @@ describe('GmCommandDock', () => {
     expect(screen.getByText('Acting as')).toBeInTheDocument();
     expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
     expect(screen.getByLabelText('Acting as Pellias')).toBeInTheDocument();
+    // The rail excludes the acting PC's entry.
+    expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e1');
   });
 
   it('follows currentTurnIndex, not the first entry', () => {
@@ -104,6 +114,8 @@ describe('GmCommandDock', () => {
     render(<GmCommandDock />);
     expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
+    // Rail still renders on enemy turns — every PC is an "other" then.
+    expect(screen.getByTestId('dock-rail')).toBeInTheDocument();
   });
 
   it('stubs a PC entry whose charId is not in the roster', () => {
