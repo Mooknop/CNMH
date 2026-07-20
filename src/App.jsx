@@ -30,6 +30,7 @@ import VocoderConcealSync from './components/encounter/VocoderConcealSync';
 import CodaPlayingSync from './components/encounter/CodaPlayingSync';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
+import GmCommandDock from './pages/gm/GmCommandDock';
 import GmQuests from './pages/gm/GmQuests';
 import GmReputation from './pages/gm/GmReputation';
 import GmCalendar from './pages/gm/GmCalendar';
@@ -117,6 +118,7 @@ function App() {
                         <Route path="/bestiary/:creatureKey" element={<BestiaryBrowser />} />
                         <Route path="/gm" element={<GmLayout />}>
                           <Route index element={<GmDashboard />} />
+                          <Route path="dock" element={<GmCommandDock />} />
 
                           {/* World area */}
                           <Route path="world" element={<Navigate to="/gm/world/quests" replace />} />

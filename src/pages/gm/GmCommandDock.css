@@ -1,0 +1,84 @@
+/* GM Command Dock (#1525 S2) — laptop/tablet-first. One stage column for now;
+   the party reaction rail (S3) lands as a second grid column beside it. */
+
+.gm-dock {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.gm-dock-header {
+  margin-bottom: var(--space-4);
+}
+
+.gm-dock-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--shell-text);
+}
+
+.gm-dock-sub {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary);
+}
+
+/* The stage hosts the player deck verbatim — the deck's CSS assumes the
+   character sheet's narrow column, so constrain rather than restyle. */
+.gm-dock-stage {
+  max-width: 640px;
+}
+
+.gm-dock-acting {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+}
+
+.gm-dock-acting-kicker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-dock-acting-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-theme, var(--shell-text));
+}
+
+/* Stub panels for the not-yet-built modes (exploration/downtime/enemy turns). */
+.gm-dock-stub {
+  max-width: 640px;
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gm-dock-stub-icon {
+  color: var(--shell-text-tertiary);
+}
+
+.gm-dock-stub-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--shell-text-secondary);
+}
+
+.gm-dock-stub-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}

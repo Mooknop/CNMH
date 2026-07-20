@@ -19,6 +19,7 @@ const renderAt = (path = '/gm') =>
       <Routes>
         <Route path="/gm" element={<GmLayout />}>
           <Route index element={<div data-testid="outlet">DASH</div>} />
+          <Route path="dock" element={<div data-testid="outlet">DOCK</div>} />
           <Route path="world/quests" element={<div data-testid="outlet">QUESTS</div>} />
           <Route path="world/reputation" element={<div data-testid="outlet">REP</div>} />
           <Route path="catalog/items" element={<div data-testid="outlet">ITEMS</div>} />
@@ -85,6 +86,16 @@ describe('GmLayout', () => {
     // Count chips reflect real collection sizes (quests=2, reputation=1).
     expect(screen.getByText('Quests').closest('a')).toHaveTextContent('2');
     expect(screen.getByText('Reputation').closest('a')).toHaveTextContent('1');
+  });
+
+  it('marks Dock active on /gm/dock without a subrail', async () => {
+    useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
+    seedDefaults.mockResolvedValue({ ok: true });
+    renderAt('/gm/dock');
+    expect(await screen.findByTestId('outlet')).toHaveTextContent('DOCK');
+    expect(screen.getByText('Dock').closest('a')).toHaveClass('active');
+    expect(screen.getByText('Dashboard').closest('a')).not.toHaveClass('active');
+    expect(screen.queryByText('Quests')).not.toBeInTheDocument();
   });
 
   it('does not render a subrail on top-level areas', async () => {

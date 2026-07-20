@@ -13,6 +13,7 @@ import './gm-shell.css';
 // rest go straight to content. Each link points at the area's default route.
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', to: '/gm' },
+  { id: 'dock', label: 'Dock', icon: 'sword', to: '/gm/dock' },
   { id: 'world', label: 'World', icon: 'world', to: '/gm/world/quests' },
   { id: 'catalog', label: 'Catalog', icon: 'catalog', to: '/gm/catalog/items' },
   { id: 'characters', label: 'Characters', icon: 'users', to: '/gm/characters' },
@@ -62,6 +63,7 @@ const collectionCount = (content, key) => {
 
 // Derive the active area + (for World/Catalog) active section from the URL.
 const deriveArea = (pathname) => {
+  if (pathname.startsWith('/gm/dock')) return { area: 'dock', section: null };
   if (pathname.startsWith('/gm/world')) return { area: 'world', section: pathname.split('/')[3] || 'quests' };
   if (pathname.startsWith('/gm/catalog')) return { area: 'catalog', section: pathname.split('/')[3] || 'items' };
   if (pathname.startsWith('/gm/characters')) return { area: 'characters', section: null };
