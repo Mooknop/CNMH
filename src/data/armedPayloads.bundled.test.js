@@ -1,11 +1,17 @@
 // Content-integrity gate for armed payloads (#987).
 //
 // `armedPayloads` declares damage/saves a cast STORES for a later trigger
-// instead of resolving immediately. ArmedPayloads builds each one into a normal
-// save request from a *synthetic* single-save ability, so every payload must be
-// self-sufficient: a mappable defense (else firing silently produces nothing)
-// and a damageData. The `trigger` text is the GM's only cue for when to fire it,
-// so it is mandatory too.
+// instead of resolving immediately. There are two shapes:
+//
+//   save payload      — has a mappable `defense`; firing builds a normal save
+//                       request (Targeting Beacon's explosion).
+//   persistent payload — has NO `defense`; the damage simply lands when the
+//                       trigger happens, so its dice are authored as persistent
+//                       riders and firing records them (Gruesome Marionettist).
+//
+// Either way the payload must be self-sufficient — an unmappable defense would
+// make firing silently produce nothing — and the `trigger` text is the GM's only
+// cue for when to fire it, so it is always mandatory.
 import { spells } from './index';
 import { mapSpellDefense } from '../utils/rollResolution';
 
@@ -25,10 +31,41 @@ describe('armed payloads (#987)', () => {
         // Without a trigger the GM has no cue for when this should fire.
         expect(typeof p.trigger).toBe('string');
         expect(p.trigger.length).toBeGreaterThan(0);
-        expect(mapSpellDefense(p.defense)).toBeTruthy();
-        expect(p.damageData?.base).toEqual(expect.any(String));
+
+        if (p.defense) {
+          // Save payload: the defense must map, or firing produces nothing.
+          expect(mapSpellDefense(p.defense)).toBeTruthy();
+          expect(p.damageData?.base).toEqual(expect.any(String));
+        } else {
+          // Persistent payload: no save, so it must carry persistent riders.
+          const riders = p.damageData?.riders || [];
+          expect(riders.length).toBeGreaterThan(0);
+          for (const r of riders) {
+            expect(r.persistent?.dice).toEqual(expect.any(String));
+            expect(r.persistent?.type).toEqual(expect.any(String));
+          }
+        }
       }
     }
+  });
+
+  it('Gruesome Marionettist arms its bleed on the prohibited action, not at cast', () => {
+    const gm = spells.find((s) => s.id === 'gruesome-marionettist');
+    // The whole reason this was deferred: a cast-time persistent rider would
+    // record the bleed on save resolution and tick it every round regardless of
+    // whether the creature ever takes the prohibited action.
+    expect(gm.damageData).toBeUndefined();
+
+    expect(gm.armedPayloads).toHaveLength(1);
+    const bleed = gm.armedPayloads[0];
+    expect(bleed.defense).toBeUndefined(); // no save on firing
+    expect(bleed.trigger).toMatch(/prohibited/i);
+    // Repeatable: the spell lasts its duration, so it can fire on later turns.
+    expect(bleed.repeatable).toBe(true);
+    expect(bleed.damageData.riders[0].persistent).toMatchObject({ dice: '5d10', type: 'bleed' });
+    expect(bleed.damageData.heightened['+1'].persistent).toBe('1d10');
+    // The directed-action immunity is a GM call, so it must be stated.
+    expect(bleed.note).toMatch(/directed/i);
   });
 
   it('Targeting Beacon arms its explosion rather than resolving it at cast', () => {
