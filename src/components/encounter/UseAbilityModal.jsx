@@ -45,6 +45,7 @@ import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
+import { useSecondaryProfiles } from '../../hooks/useSecondaryProfiles';
 import { applyChainStrikeResults, applyChainSpellResults } from '../../utils/chainResultsAppliers';
 import {
   buildRayGroups,
@@ -301,6 +302,20 @@ const UseAbilityModal = ({
     mapStep,
   });
   const { isOpposedReaction, section: opposedSection } = opposedReaction;
+
+  // Secondary damage profiles (#987) — extra damage zones with their own target
+  // set and save (Propagating Arc's splash). Each emits its own save request on
+  // confirm; the GM resolver already handles a list. Hoisted above the ability
+  // guard like castPlan; its saveDc arrives at buildRequests() time because
+  // rollProfile is only derived below the guard.
+  const secondaryProfiles = useSecondaryProfiles({
+    ability,
+    character,
+    order,
+    castRank: directCastRank,
+    casterEntryId,
+    fxAnimations,
+  });
 
   if (!ability || !character) return null;
 
@@ -580,6 +595,11 @@ const UseAbilityModal = ({
     });
     if (saveRequest) addSaveRequest(saveRequest);
 
+    // Secondary damage zones (#987) — one extra save request per zone that has
+    // picked targets (Propagating Arc's splash). Independent of the primary
+    // save, so a zone with no targets is simply a no-op.
+    secondaryProfiles.buildRequests(saveDc).forEach(addSaveRequest);
+
     // Consume chained spell results (Reach Spell, Harrow Casting, etc.;
     // extracted #1317 D3): resource spend via the section's castOption (#235),
     // per-ray logging (#581) with the Split Shot note (#227), the chained save
@@ -772,6 +792,7 @@ const UseAbilityModal = ({
 
       {/* Rider choice (#225) — either/or rider picked at use time */}
       {riderChoiceSection.section}
+      {secondaryProfiles.section}
 
       {/* Catalysts (#1209) — opt-in adds for this cast */}
       {catalystSection.section}
