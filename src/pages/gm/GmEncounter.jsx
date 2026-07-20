@@ -9,6 +9,7 @@ import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmFxTestFire from '../../components/gm/GmFxTestFire';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
+import ArmedPayloads from '../../components/encounter/ArmedPayloads';
 import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import PersistentChip from '../../components/encounter/PersistentChip';
 import BystanderChip from '../../components/encounter/BystanderChip';
@@ -135,6 +136,7 @@ const GmEncounter = () => {
       {phase !== 'idle' && <GmFxTestFire entries={order} />}
 
       {phase !== 'idle' && <RequestedSaves />}
+      {phase !== 'idle' && <ArmedPayloads />}
 
       {phase !== 'idle' && (
         <div className="gm-encounter-order">

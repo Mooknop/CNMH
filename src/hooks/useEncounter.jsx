@@ -11,6 +11,7 @@ import {
   makePcEntry,
   makeEnemyEntry,
   makeSaveRequest,
+  makeArmedPayload,
   sortByInitiative,
   nextTurnIndex,
   everyEntryHasInitiative,
@@ -383,10 +384,40 @@ export const useEncounter = () => {
     [setEncounter]
   );
 
+  // Armed payloads (#987) — a cast stores its deferred damage/save here; the GM
+  // fires it when the authored trigger actually happens. `repeatable` payloads
+  // (an area that damages everyone ending a turn in it) stay armed after firing;
+  // one-shot ones (Targeting Beacon's explosion) are removed by the caller.
+  const addArmedPayload = useCallback(
+    (payload) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          armedPayloads: [...(base.armedPayloads || []), makeArmedPayload(payload)],
+        };
+      }),
+    [setEncounter]
+  );
+
+  const removeArmedPayload = useCallback(
+    (id) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          armedPayloads: (base.armedPayloads || []).filter((p) => p.id !== id),
+        };
+      }),
+    [setEncounter]
+  );
+
   return {
     encounter: displayEncounter,
     actorMap,
     setActorMap,
+    addArmedPayload,
+    removeArmedPayload,
     startEncounter,
     setInitiative,
     addEnemy,
