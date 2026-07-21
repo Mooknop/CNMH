@@ -24,6 +24,11 @@ vi.mock('../../components/gm/DockEnemyPane', () => ({
   },
 }));
 vi.mock('../../hooks/useAdvanceTurn', () => ({ useAdvanceTurn: vi.fn() }));
+vi.mock('../../components/gm/DockGmConsole', () => ({
+  default: function DummyDockGmConsole({ pcEntries }) {
+    return <div data-testid="dock-console" data-pcs={pcEntries.length} />;
+  },
+}));
 vi.mock('../../components/gm/GmInitiativePanel', () => ({
   default: function DummyInitPanel({ pcs }) {
     return <div data-testid="init-panel" data-count={pcs.length} />;
@@ -66,6 +71,52 @@ describe('GmCommandDock', () => {
     expect(screen.getByText('Exploration')).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
+    // The GM console (and its toggle) are encounter-mode only.
+    expect(screen.queryByTestId('dock-console')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /GM console/ })).not.toBeInTheDocument();
+  });
+
+  describe('GM console (#1537 S2)', () => {
+    const CONSOLE_ORDER = [
+      { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+      { entryId: 'e2', kind: 'pc', charId: 'ghost', name: 'Ghost' },
+      { entryId: 'e3', kind: 'enemy', name: 'Ghoul' },
+    ];
+
+    it('renders open by default with every charId PC (roster-independent)', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({ order: CONSOLE_ORDER }),
+      });
+      render(<GmCommandDock />);
+      // Ghost isn't roster-resolvable but can still receive a save prompt.
+      expect(screen.getByTestId('dock-console')).toHaveAttribute('data-pcs', '2');
+    });
+
+    it('the header toggle collapses and reopens it', () => {
+      render(<GmCommandDock />);
+      const toggle = screen.getByRole('button', { name: 'GM console' });
+      expect(screen.getByTestId('dock-console')).toBeInTheDocument();
+
+      fireEvent.click(toggle);
+      expect(screen.queryByTestId('dock-console')).not.toBeInTheDocument();
+
+      fireEvent.click(toggle);
+      expect(screen.getByTestId('dock-console')).toBeInTheDocument();
+    });
+
+    it('badges the toggle with pending saves + armed payloads', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({
+          saveRequests: [
+            { id: 's1', status: 'pending' },
+            { id: 's2', status: 'resolved' },
+          ],
+          armedPayloads: [{ id: 'p1' }],
+        }),
+      });
+      render(<GmCommandDock />);
+      expect(screen.getByRole('button', { name: 'GM console (2)' })).toBeInTheDocument();
+    });
   });
 
   it('stubs downtime mode', () => {

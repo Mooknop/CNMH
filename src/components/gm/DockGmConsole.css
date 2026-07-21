@@ -1,0 +1,32 @@
+/* GM console column (#1537 S2) — width-constrained host for the existing
+   save/payload consoles; their own CSS styles the cards. */
+
+.dock-console {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(5px);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dock-console-head {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* The mounted consoles were built for dashboard cards — soften their outer
+   chrome inside the column so they read as sections, not nested cards. */
+.dock-console > div {
+  min-width: 0;
+}
+
+.dock-console h3 {
+  margin-top: 0;
+}

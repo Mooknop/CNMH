@@ -14,14 +14,46 @@
   align-items: start;
 }
 
+/* GM console open (#1537 S2): a third column on wide screens; below 1360px it
+   spans the full width beneath stage + rail, so nothing gets crushed. */
+.gm-dock--console {
+  max-width: 1440px;
+}
+
+.gm-dock--console .gm-dock-body {
+  grid-template-columns: minmax(0, 640px) 320px minmax(280px, 340px);
+}
+
+@media (max-width: 1360px) {
+  .gm-dock--console .gm-dock-body {
+    grid-template-columns: minmax(0, 640px) 320px;
+  }
+
+  .gm-dock--console .dock-console {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
-  .gm-dock-body {
+  .gm-dock-body,
+  .gm-dock--console .gm-dock-body {
     grid-template-columns: 1fr;
+  }
+
+  .gm-dock--console .dock-console {
+    grid-column: auto;
   }
 }
 
 .gm-dock-header {
   margin-bottom: var(--space-4);
+}
+
+.gm-dock-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .gm-dock-header h1 {

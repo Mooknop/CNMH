@@ -1,0 +1,55 @@
+import React from 'react';
+import { screen, act } from '@testing-library/react';
+import { renderWithProviders } from '../../test/renderWithProviders';
+import { RELAY } from '../../sync/keys';
+import DockGmConsole from './DockGmConsole';
+
+beforeEach(() => window.localStorage.clear());
+
+const PC_ENTRIES = [
+  { entryId: 'e-pellias', charId: 'Pellias', name: 'Pellias' },
+  { entryId: 'e-ashka', charId: 'AshkaBGosh', name: 'Ashka' },
+];
+
+describe('DockGmConsole (#1537 S2)', () => {
+  it('always offers the Request Save console for the encounter PCs', () => {
+    renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);
+
+    expect(screen.getByRole('complementary', { name: 'GM console' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Request Save' })).toBeInTheDocument();
+    // Quiet table: the resolve consoles hide themselves when nothing pends.
+    expect(screen.queryByRole('heading', { name: 'Requested Saves' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Armed Effects' })).not.toBeInTheDocument();
+  });
+
+  it('surfaces a pending save request for resolution', () => {
+    const { session } = renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);
+    act(() => {
+      session.push('global', RELAY.ENCOUNTER, {
+        active: true,
+        phase: 'in-progress',
+        round: 1,
+        currentTurnIndex: 0,
+        order: [{ entryId: 'cbt-gob', kind: 'enemy', name: 'Goblin' }],
+        log: [],
+        armedPayloads: [],
+        saveRequests: [{
+          id: 'sr1',
+          status: 'pending',
+          casterName: 'Ashka',
+          abilityName: 'Fireball',
+          save: 'reflex',
+          dc: 22,
+          basic: true,
+          damage: '6d6',
+          damageType: 'fire',
+          targets: [{ entryId: 'cbt-gob', name: 'Goblin' }],
+        }],
+      });
+    });
+
+    expect(screen.getByRole('heading', { name: 'Requested Saves' })).toBeInTheDocument();
+    expect(screen.getAllByText(/Fireball/).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Goblin d20')).toBeInTheDocument();
+  });
+});
