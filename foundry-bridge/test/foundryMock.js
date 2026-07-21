@@ -268,6 +268,8 @@ export function makeSpellcastingEntry(opts = {}) {
       slots,
     },
     spells: { contents: spells },
+    // SpellcastingEntryPF2e#cast — posts the card + consumes the slot/use (#1531 S4).
+    cast: jest.fn().mockResolvedValue(undefined),
   };
 }
 

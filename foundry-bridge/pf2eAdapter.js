@@ -598,6 +598,30 @@ export async function rollStrikeVariant(actor, actionIndex, variant = 0) {
   };
 }
 
+// Cast a spell natively through the actor's spellcasting entry (#1531 S4).
+// SpellcastingEntryPF2e#cast posts the chat card AND consumes the real
+// resource — the prepared/spontaneous slot or the innate use — which is
+// exactly the v1 decision (Foundry owns NPC resources; the foekit re-push off
+// the resulting item update refreshes the pane's remaining counts). `rank`
+// heightens when provided; omitted, PF2e casts at the spell's own rank.
+// Returns { name, rank } for the ack read-out, or null when the entry/spell
+// doesn't resolve.
+// v14 MIGRATION: SpellcastingEntryPF2e#cast(spell, { rank }) is a PF2e system
+// API (src/module/item/spellcasting-entry); re-verify the options bag on the
+// v14-era system release.
+export async function castActorSpell(actor, entryItemId, spellId, rank = null) {
+  const entries = actor?.spellcasting?.contents
+    ?? (Array.isArray(actor?.spellcasting) ? actor.spellcasting : []);
+  const entry = entries.find((e) => e?.id === entryItemId) ?? null;
+  if (typeof entry?.cast !== 'function') return null;
+  const spell = entry.spells?.get?.(spellId)
+    ?? entry.spells?.contents?.find((s) => s?.id === spellId)
+    ?? null;
+  if (!spell) return null;
+  await entry.cast(spell, Number.isInteger(rank) ? { rank } : {});
+  return { name: spell.name ?? '', rank: rank ?? spell.rank ?? null };
+}
+
 export async function rollStrikeDamage(actor, actionIndex, critical = false) {
   const strike = Array.isArray(actor?.system?.actions) ? actor.system.actions[actionIndex] : null;
   const fn = critical ? strike?.critical : strike?.damage;

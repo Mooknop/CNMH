@@ -21,6 +21,7 @@ import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
 import { initFoeKit, pushFoeKit } from './foekit.js';
 import { initStrikes, handleStrikeRequest } from './strikes.js';
+import { initCasts, handleCastRequest } from './casts.js';
 import { initDiceSets, updateDiceSets } from './diceSets.js';
 import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
@@ -94,6 +95,7 @@ Hooks.once('ready', () => {
   initDice(sendUpdate);
   initFoeKit(sendUpdate);
   initStrikes(sendUpdate);
+  initCasts(sendUpdate);
   initDiceSets();
   connect();
 });
@@ -341,6 +343,14 @@ function dispatch(msg) {
   // rolled through PF2e's own strike pipeline, acked on cnmh_strikedone_global.
   if (characterId === 'global' && key === RELAY.STRIKEREQ) {
     handleStrikeRequest(value);
+    return;
+  }
+
+  // Native NPC spellcasting from the dock's enemy pane (#1531 S4) — cast via
+  // the actor's spellcasting entry (real slot/use consumption), acked on
+  // cnmh_castdone_global.
+  if (characterId === 'global' && key === RELAY.CASTREQ) {
+    handleCastRequest(value);
     return;
   }
 
