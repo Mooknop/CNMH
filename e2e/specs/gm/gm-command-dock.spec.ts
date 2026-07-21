@@ -168,7 +168,7 @@ test.describe('GM Command Dock', () => {
   });
 
   test('an enemy turn renders the foe pane from the persisted kit, read-only, with every PC in the rail', async ({ page }) => {
-    await mockSession(page, { seed: ghoulTurnSeed() });
+    const session = await mockSession(page, { seed: ghoulTurnSeed() });
     await page.goto('/gm/dock');
 
     // Hydration gate: the enemy pane is the encounter-only element on an
@@ -195,6 +195,16 @@ test.describe('GM Command Dock', () => {
     const rail = page.getByRole('complementary', { name: 'Party reactions' });
     await expect(rail.getByRole('region', { name: `${FIGHTER_NAME} reactions` })).toBeVisible();
     await expect(rail.getByRole('region', { name: `${CLERIC_NAME} reactions` })).toBeVisible();
+
+    // #1537 S1: End enemy turn advances the encounter without leaving the dock
+    // (no foundryCombatId in the seed → the app-side advance: ghoul was last,
+    // so the pointer wraps to the fighter and the round ticks).
+    await page.getByRole('button', { name: "End E2E Ghoul's turn" }).click();
+    await session.expectSent(
+      'cnmh_encounter_global',
+      (v: any) => v?.currentTurnIndex === 0 && v?.round === 3,
+    );
+    await expect(page.getByRole('region', { name: `Acting as ${FIGHTER_NAME}` })).toBeVisible();
   });
 
   test('pin stages an off-turn PC and Follow turn returns to the pointer', async ({ page }) => {

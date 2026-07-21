@@ -108,6 +108,40 @@
   border-color: var(--accent-outline, var(--shell-border-strong));
 }
 
+/* ── Non-PC turn column: pane/stub + the advance control (#1537 S1) ── */
+.gm-dock-nonpc {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gm-dock-advance {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--shell-text);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.gm-dock-advance:hover {
+  border-color: var(--peril-light);
+  color: var(--peril-light);
+}
+
+/* ── Setup pane: initiative tally + overrides (#1537 S1) ── */
+.gm-dock-setup {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 /* Stub panels for the not-yet-built modes (exploration/downtime/enemy turns). */
 .gm-dock-stub {
   max-width: 640px;
