@@ -20,6 +20,7 @@
 .dock-enemy-head {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 
@@ -369,6 +370,8 @@
 .dock-enemy-btns {
   margin-left: auto;
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 4px;
 }
 

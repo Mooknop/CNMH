@@ -458,3 +458,68 @@ describe('handleInitRoll — auto-detect + commit', () => {
     expect(combat.startCombat).not.toHaveBeenCalled(); // Pellias retracted → incomplete
   });
 });
+
+describe('mid-turn foe vitals re-push (#1531 S5)', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  const encounterPushes = () => send.mock.calls.filter((c) => c[1] === 'encounter');
+
+  function goblinInCombat() {
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    const goblin = makeActor({ id: 'actor-goblin', name: 'Goblin', hp: { value: 8, max: 12 } });
+    global.game.actors.set('actor-goblin', goblin);
+    const combat = combatWithGoblinAndPellias();
+    global.game.combat = combat;
+    send.mockClear();
+    return { goblin, combat };
+  }
+
+  test('an enemy combat actor update re-pushes the encounter after the debounce', () => {
+    const { goblin } = goblinInCombat();
+
+    global.Hooks.fire('updateActor', goblin, { system: { attributes: { hp: { value: 8 } } } }, {});
+    expect(encounterPushes()).toHaveLength(0);  // debounced, not immediate
+
+    jest.runAllTimers();
+    const pushes = encounterPushes();
+    expect(pushes).toHaveLength(1);
+    const enemy = pushes[0][2].order.find((e) => e.kind === 'enemy');
+    expect(enemy.bestiary.hp.current).toBe(8);
+  });
+
+  test('a burst of updates coalesces into a single push', () => {
+    const { goblin } = goblinInCombat();
+
+    global.Hooks.fire('updateActor', goblin, {}, {});
+    global.Hooks.fire('updateActor', goblin, {}, {});
+    global.Hooks.fire('updateActor', goblin, {}, {});
+    jest.runAllTimers();
+
+    expect(encounterPushes()).toHaveLength(1);
+  });
+
+  test('PC-mapped actors and actors outside the combat do not re-push', () => {
+    goblinInCombat();
+
+    const pellias = makeActor({ id: 'actor-pellias', name: 'Pellias' });
+    global.Hooks.fire('updateActor', pellias, {}, {});
+
+    const bystander = makeActor({ id: 'actor-bystander', name: 'Bystander' });
+    global.Hooks.fire('updateActor', bystander, {}, {});
+
+    jest.runAllTimers();
+    expect(encounterPushes()).toHaveLength(0);
+  });
+
+  test('no active combat: enemy actor updates are ignored', () => {
+    updateActorMap({});
+    const goblin = makeActor({ id: 'actor-goblin', name: 'Goblin' });
+    global.game.combat = null;
+    send.mockClear();
+
+    global.Hooks.fire('updateActor', goblin, {}, {});
+    jest.runAllTimers();
+    expect(encounterPushes()).toHaveLength(0);
+  });
+});
