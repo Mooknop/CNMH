@@ -18,6 +18,11 @@ vi.mock('../../components/gm/DockReactionRail', () => ({
     return <div data-testid="dock-rail" data-exclude={excludeEntryId || ''} />;
   },
 }));
+vi.mock('../../components/gm/DockEnemyPane', () => ({
+  default: function DummyDockEnemyPane({ entry }) {
+    return <div data-testid="dock-enemy-pane">{entry.name}</div>;
+  },
+}));
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -101,7 +106,7 @@ describe('GmCommandDock', () => {
     expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
   });
 
-  it('stubs enemy turns with the entry name', () => {
+  it('renders the enemy pane on enemy turns (#1531 S2)', () => {
     useEncounter.mockReturnValue({
       encounter: encounterWith({
         currentTurnIndex: 1,
@@ -112,7 +117,7 @@ describe('GmCommandDock', () => {
       }),
     });
     render(<GmCommandDock />);
-    expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
+    expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     // Rail still renders on enemy turns — every PC is an "other" then.
     expect(screen.getByTestId('dock-rail')).toBeInTheDocument();
@@ -148,21 +153,22 @@ describe('GmCommandDock', () => {
       expect(screen.queryByRole('group', { name: 'Stage a character' })).not.toBeInTheDocument();
     });
 
-    it('pinning a PC stages them during an enemy turn, and Follow turn returns to the stub', () => {
+    it('pinning a PC stages them during an enemy turn, and Follow turn returns to the enemy pane', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 1, order: TWO_PC_ORDER }),
       });
       render(<GmCommandDock />);
-      expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
+      expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
 
       fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
       expect(screen.getByText('pinned')).toBeInTheDocument();
-      // The staged PC drops out of the rail.
+      // The pin overrides the enemy pane; the staged PC drops out of the rail.
+      expect(screen.queryByTestId('dock-enemy-pane')).not.toBeInTheDocument();
       expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e3');
 
       fireEvent.click(screen.getByRole('button', { name: 'Follow turn' }));
-      expect(screen.getByText("Ghoul's turn")).toBeInTheDocument();
+      expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
       expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     });
 

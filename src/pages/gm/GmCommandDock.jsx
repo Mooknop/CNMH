@@ -7,6 +7,7 @@ import { activeEntry } from '../../utils/encounterUtils';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
+import DockEnemyPane from '../../components/gm/DockEnemyPane';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
 
@@ -21,7 +22,9 @@ import './GmCommandDock.css';
 // viewport pointer, and syncing it would need a new SANDBOX_WRITABLE_TYPES
 // entry for zero cross-client value.
 //
-// Exploration / Downtime / enemy turns are stubs until their slices land.
+// Exploration / Downtime are stubs until their slices land. Enemy turns render
+// DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane, read-only until
+// the strike/cast rails (S3/S4) grow buttons on it.
 
 const DockStub = ({ icon, title, sub }) => (
   <div className="gm-dock-stub">
@@ -119,11 +122,17 @@ const GmCommandDock = () => {
       );
     }
     if (!followCharacter) {
+      if (entry.kind === 'enemy') {
+        // Keyed by entryId so the pane's disclosure/scroll state never leaks
+        // from one enemy into the next on turn handoff.
+        return <DockEnemyPane key={entry.entryId} entry={entry} />;
+      }
+      // A PC entry whose charId doesn't resolve to the roster.
       return (
         <DockStub
           icon="sword"
-          title={`${entry.name || 'Enemy'}'s turn`}
-          sub="Enemy turns join the dock in a later slice — run them in Foundry for now."
+          title={`${entry.name || 'Unknown'}'s turn`}
+          sub="This entry doesn't resolve to a roster character — check the actor map."
         />
       );
     }
