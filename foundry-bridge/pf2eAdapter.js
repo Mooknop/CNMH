@@ -550,11 +550,61 @@ export async function rollFormula(formula, { actor = null, flavor = '' } = {}) {
   const roll = await new Roll(formula).evaluate();
   const speaker = actor ? ChatMessage.getSpeaker({ actor }) : ChatMessage.getSpeaker();
   await roll.toMessage({ speaker, flavor }, { rollMode: 'publicroll' });
-  const faces = (roll.dice ?? []).flatMap((d) =>
+  return { total: roll.total ?? null, faces: keptFaces(roll) };
+}
+
+// One [sides, face] pair per KEPT die of a roll (discarded/rerolled results
+// excluded) — shared by the dice-tower and strike-rail acks.
+function keptFaces(roll) {
+  return (roll?.dice ?? []).flatMap((d) =>
     (d.results ?? [])
       .filter((r) => r.active !== false)
       .map((r) => [d.faces ?? null, r.result]));
-  return { total: roll.total ?? null, faces };
+}
+
+// Resolve a combat entry (combatant id, the app's entryId) to its live actor.
+// Mirrors resolveCombatantToken but stops at the actor — strike/spell rolls
+// act on the actor document, not its placed token.
+export function resolveCombatantActor(entryId) {
+  const combat = getActiveCombat();
+  if (!combat) return null;
+  const combatants = combat.combatants;
+  const combatant = combatants?.get?.(entryId)
+    ?? (Array.isArray(combatants) ? combatants.find((c) => c.id === entryId) : null);
+  return combatant ? getCombatantActor(combatant) : null;
+}
+
+// --- Native strike execution (#1531 S3) ---------------------------------------
+// NPC strikes are PF2e StrikeData on actor.system.actions: variants[0..2] are
+// the MAP ladder rolls, damage()/critical() post the damage card. Both resolve
+// through the system's own CheckPF2e pipeline, so the chat card carries the
+// target and native degree when the GM client has a target set (setUserTargets
+// runs first in strikes.js).
+// v14 MIGRATION: StrikeData.variants[].roll / .damage / .critical are PF2e
+// system surfaces (src/module/actor/data/base.ts); re-verify on the v14-era
+// system release. CheckRoll#options.degreeOfSuccess is set only when a DC was
+// resolvable (i.e. a target was set).
+
+export async function rollStrikeVariant(actor, actionIndex, variant = 0) {
+  const strike = Array.isArray(actor?.system?.actions) ? actor.system.actions[actionIndex] : null;
+  const v = strike?.variants?.[variant];
+  if (typeof v?.roll !== 'function') return null;
+  const roll = await v.roll({});
+  if (!roll) return null;
+  return {
+    total:  roll.total ?? null,
+    faces:  keptFaces(roll),
+    degree: roll.options?.degreeOfSuccess ?? null,
+  };
+}
+
+export async function rollStrikeDamage(actor, actionIndex, critical = false) {
+  const strike = Array.isArray(actor?.system?.actions) ? actor.system.actions[actionIndex] : null;
+  const fn = critical ? strike?.critical : strike?.damage;
+  if (typeof fn !== 'function') return null;
+  const roll = await fn.call(strike, {});
+  if (!roll) return null;
+  return { total: roll.total ?? null, faces: keptFaces(roll), degree: null };
 }
 
 // The version-independent combat snapshot the encounter payload is built from.

@@ -365,6 +365,86 @@
   color: var(--shell-text-tertiary);
 }
 
+/* ── Strike rail (S3): buttons, target chips, result read-out ── */
+.dock-enemy-btns {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dock-enemy-strike-damage .dock-enemy-btns {
+  margin-left: auto;
+}
+
+.dock-enemy-btn {
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--peril-light);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-md);
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dock-enemy-btn:hover:not(:disabled) {
+  background: var(--surface-card);
+}
+
+.dock-enemy-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dock-enemy-targets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+}
+
+.dock-enemy-targets-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-right: 4px;
+}
+
+.dock-enemy-target {
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  background: transparent;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: 999px;
+  padding: 1px 10px;
+  cursor: pointer;
+}
+
+.dock-enemy-target--active {
+  color: var(--peril-light);
+  border-color: currentColor;
+}
+
+.dock-enemy-result {
+  margin: 0 0 var(--space-2);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  color: var(--shell-text);
+}
+
+.dock-enemy-result b {
+  color: var(--peril-light);
+}
+
 /* ── Rules text / waiting note ── */
 .dock-enemy-details summary {
   cursor: pointer;

@@ -1,0 +1,17 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "strike-1",
+    "ok": true,
+    "mode": "attack",
+    "total": 24,
+    "faces": [
+      [
+        20,
+        14
+      ]
+    ],
+    "degree": 2,
+    "ts": 1700000000000
+  }
+}

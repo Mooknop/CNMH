@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, act } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import { pushRelayFixture, relayFixtures } from '../../test/relayFixtures';
 import { RELAY, APP } from '../../sync/keys';
@@ -93,6 +93,99 @@ describe('DockEnemyPane (#1531 S2)', () => {
     const kit = relayFixtures.foekit.value.kit;
     expect(kit.strikes[0]).toMatchObject({ index: expect.any(Number), variantLabels: expect.any(Array) });
     expect(kit.spellcasting[0].spells[0]).toMatchObject({ rank: expect.any(Number) });
+  });
+
+  describe('strike rail (S3)', () => {
+    // Rail live = Foundry connected (bus default) + protocol 6 hello; the
+    // encounter order supplies the PC target chips.
+    const arm = (session, { protocol = 6 } = {}) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol, module: '0.0.0-test', ts: 1 });
+        session.push('global', RELAY.ENCOUNTER, {
+          active: true, phase: 'in-progress', round: 1, currentTurnIndex: 1,
+          order: [
+            { entryId: 'e-pellias', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+            { entryId: ENTRY.entryId, kind: 'enemy', name: ENTRY.name },
+          ],
+        });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+
+    const lastStrikeReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.STRIKEREQ).at(-1);
+
+    it('MAP buttons send strikereq for the right variant; no target override by default', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Strike: Jaws at +4' }));
+
+      const req = lastStrikeReq(session);
+      expect(req.characterId).toBe('global');
+      expect(req.value).toMatchObject({ entryId: 'cbt-gob', actionIndex: 0, variant: 1 });
+      expect(req.value.targets).toBeUndefined();
+      expect(req.value.damage).toBeUndefined();
+    });
+
+    it('damage and crit buttons carry the damage mode', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Critical damage: Jaws' }));
+      expect(lastStrikeReq(session).value).toMatchObject({ actionIndex: 0, damage: 'critical' });
+    });
+
+    it('a picked PC target chip rides the request; toggling back to Foundry’s drops it', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Pellias' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Strike: Jaws at +9' }));
+      expect(lastStrikeReq(session).value.targets).toEqual(['e-pellias']);
+    });
+
+    it('the matching ack renders the result line with the degree vocabulary', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Strike: Jaws at +9' }));
+      const { id } = lastStrikeReq(session).value;
+
+      // The RECORDED strikedone fixture (id overridden to correlate) — the
+      // app half of the #1308 contract for this channel.
+      await act(async () => {
+        pushRelayFixture(session, RELAY.STRIKEDONE, { id });
+      });
+
+      const result = await screen.findByTestId('dock-enemy-result');
+      expect(result).toHaveTextContent('Jaws +9');
+      expect(result).toHaveTextContent('24');
+      expect(result).toHaveTextContent('Hit');
+    });
+
+    it('a nack falls back to the check-Foundry-chat note', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Damage: Jaws' }));
+      const { id } = lastStrikeReq(session).value;
+
+      await act(async () => {
+        session.push('global', RELAY.STRIKEDONE, { id, ok: false, ts: 2 });
+      });
+
+      expect(await screen.findByTestId('dock-enemy-result')).toHaveTextContent('check Foundry chat');
+    });
+
+    it('a pre-protocol-6 bridge keeps the read-only MAP ladder (no buttons)', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      arm(session, { protocol: 5 });
+
+      expect(screen.getByText('+9 / +4 / -1')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Strike: Jaws/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Strike target' })).not.toBeInTheDocument();
+    });
   });
 
   it('surfaces flanked, applied conditions, and persistent damage as chips', () => {

@@ -1,23 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFoeKit } from '../../hooks/useFoeKit';
+import { useFoeStrike } from '../../hooks/useFoeStrike';
 import { useActorFeed } from '../../hooks/useActorFeed';
+import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { getCondition } from '../../data/pf2eConditions';
 import { getActionGlyph } from '../../utils/actionGlyph';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
+import { STRIKE_DEGREE_LABEL } from '../../utils/strikeRelay';
 import { monogram } from '../encounter/commandsheet/Dossier';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
 
-// GM Command Dock enemy pane (#1531 S2) — replaces the enemy-turn stub with
+// GM Command Dock enemy pane (#1531 S2/S3) — replaces the enemy-turn stub with
 // everything Foundry knows about the acting enemy: identity + vitals + turn
 // economy, unredacted defenses/IWR (this is a GM surface — reveal gating stays
 // a player-facing concern), and the bridge-pushed offensive kit (strikes,
 // spellcasting with live slot/use counts, abilities, skills) from
-// cnmh_foekit_global. Read-only in this slice: the strike/cast rails (S3/S4)
-// grow buttons on these rows.
+// cnmh_foekit_global.
+//
+// S3: strike rows grow roll buttons when the strike rail is live (Foundry
+// connected, protocol 6+) — each MAP step, Damage, and Crit execute NATIVELY
+// through PF2e's strike pipeline (chat card + Dice So Nice on the table view);
+// an optional PC target chip pre-sets the Foundry target so the card carries
+// the native degree. The ack feeds a read-out line only — resolution stays in
+// Foundry. Cast buttons are S4.
 
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 
@@ -44,15 +53,34 @@ const RulesText = ({ text }) =>
     </details>
   ) : null;
 
-const StrikeRow = ({ strike }) => (
+// `live` (strike rail available) swaps the MAP read-out for roll buttons and
+// adds Damage/Crit beside the formulas; read-only otherwise (S2 shape).
+const StrikeRow = ({ strike, live, striking, onAttack, onDamage }) => (
   <li className="dock-enemy-strike" data-testid="dock-enemy-strike">
     <div className="dock-enemy-row-head">
       <CostGlyph cost={1} />
       <span className="dock-enemy-row-name">{strike.label}</span>
       {strike.ranged && <span className="dock-enemy-tag">ranged</span>}
-      <span className="dock-enemy-strike-maps">
-        {(strike.variantLabels || []).join(' / ') || fmtMod(strike.attackModifier ?? 0)}
-      </span>
+      {live ? (
+        <span className="dock-enemy-btns">
+          {(strike.variantLabels || []).map((label, v) => (
+            <button
+              key={v}
+              type="button"
+              className="dock-enemy-btn"
+              disabled={striking}
+              onClick={() => onAttack(strike, v)}
+              aria-label={`Strike: ${strike.label} at ${label}`}
+            >
+              {label}
+            </button>
+          ))}
+        </span>
+      ) : (
+        <span className="dock-enemy-strike-maps">
+          {(strike.variantLabels || []).join(' / ') || fmtMod(strike.attackModifier ?? 0)}
+        </span>
+      )}
     </div>
     <div className="dock-enemy-strike-damage">
       {(strike.damage || []).map((d, i) => (
@@ -63,6 +91,28 @@ const StrikeRow = ({ strike }) => (
       {(strike.attackEffects || []).map((fx) => (
         <span key={fx} className="dock-enemy-chip">+ {fx}</span>
       ))}
+      {live && (
+        <span className="dock-enemy-btns">
+          <button
+            type="button"
+            className="dock-enemy-btn"
+            disabled={striking}
+            onClick={() => onDamage(strike, 'roll')}
+            aria-label={`Damage: ${strike.label}`}
+          >
+            Damage
+          </button>
+          <button
+            type="button"
+            className="dock-enemy-btn"
+            disabled={striking}
+            onClick={() => onDamage(strike, 'critical')}
+            aria-label={`Critical damage: ${strike.label}`}
+          >
+            Crit
+          </button>
+        </span>
+      )}
     </div>
     {(strike.traits || []).length > 0 && (
       <div className="dock-enemy-traits">{strike.traits.join(' · ')}</div>
@@ -156,11 +206,17 @@ const AbilityRow = ({ ability }) => (
 
 const DockEnemyPane = ({ entry }) => {
   const kit = useFoeKit(entry.entryId);
+  const { strike: sendStrike, striking, available: strikeRailLive } = useFoeStrike();
+  const { encounter } = useEncounter();
   const { actions, spent, reaction } = useActorFeed(entry.entryId);
   const { effectsFor } = useEnemyEffects();
   const { effects: effectCatalog } = useContent();
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
   const [persistentMap] = useSyncedState(PERSISTENT_KEY, {});
+  // Strike-rail viewport state: the optional target override and the last
+  // ack read-out. Local — per-GM-client, like the dock pin.
+  const [targetEntryId, setTargetEntryId] = useState(null);
+  const [lastStrike, setLastStrike] = useState(null);
 
   const { name, entryId, defenses, bestiary } = entry;
   const hp = bestiary?.hp || null;
@@ -200,6 +256,25 @@ const DockEnemyPane = ({ entry }) => {
       value: defenses?.saves?.[k] != null ? fmtMod(defenses.saves[k]) : null,
     })),
   ];
+
+  // PC combatants offered as the strike target override.
+  const pcTargets = (encounter?.order || []).filter((e) => e.kind === 'pc');
+
+  const fireStrike = async (strikeDef, { variant = 0, damage = null } = {}) => {
+    const label = damage
+      ? `${strikeDef.label} — ${damage === 'critical' ? 'critical damage' : 'damage'}`
+      : `${strikeDef.label} ${strikeDef.variantLabels?.[variant] ?? ''}`.trim();
+    const ack = await sendStrike({
+      entryId,
+      actionIndex: strikeDef.index,
+      variant,
+      damage,
+      targets: targetEntryId ? [targetEntryId] : null,
+    });
+    setLastStrike(ack
+      ? { label, ok: true, total: ack.total, degree: ack.degree, mode: ack.mode }
+      : { label, ok: false });
+  };
 
   const iwrRows = [
     { key: 'weak', label: 'Weak', chips: (defenses?.weaknesses || []).map((w) => `${w.type} ${w.value}`), tone: 'verdant' },
@@ -306,8 +381,57 @@ const DockEnemyPane = ({ entry }) => {
       {kit && kit.strikes?.length > 0 && (
         <div className="dock-enemy-section">
           <h3 className="dock-enemy-section-head">Strikes</h3>
+          {strikeRailLive && pcTargets.length > 0 && (
+            <div className="dock-enemy-targets" role="group" aria-label="Strike target">
+              <span className="dock-enemy-targets-label">Target</span>
+              <button
+                type="button"
+                className={`dock-enemy-target${targetEntryId ? '' : ' dock-enemy-target--active'}`}
+                aria-pressed={!targetEntryId}
+                onClick={() => setTargetEntryId(null)}
+                title="Leave whatever is targeted in Foundry alone"
+              >
+                Foundry&apos;s
+              </button>
+              {pcTargets.map((t) => (
+                <button
+                  key={t.entryId}
+                  type="button"
+                  className={`dock-enemy-target${targetEntryId === t.entryId ? ' dock-enemy-target--active' : ''}`}
+                  aria-pressed={targetEntryId === t.entryId}
+                  onClick={() =>
+                    setTargetEntryId((cur) => (cur === t.entryId ? null : t.entryId))
+                  }
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {lastStrike && (
+            <p className="dock-enemy-result" data-testid="dock-enemy-result" role="status">
+              {lastStrike.ok ? (
+                <>
+                  <b>{lastStrike.label}</b> — {lastStrike.total}
+                  {lastStrike.degree != null
+                    && ` · ${STRIKE_DEGREE_LABEL[lastStrike.degree] ?? ''}`}
+                </>
+              ) : (
+                <><b>{lastStrike.label}</b> — no answer; check Foundry chat.</>
+              )}
+            </p>
+          )}
           <ul className="dock-enemy-list">
-            {kit.strikes.map((s) => <StrikeRow key={s.index} strike={s} />)}
+            {kit.strikes.map((s) => (
+              <StrikeRow
+                key={s.index}
+                strike={s}
+                live={strikeRailLive}
+                striking={striking}
+                onAttack={(strikeDef, v) => fireStrike(strikeDef, { variant: v })}
+                onDamage={(strikeDef, mode) => fireStrike(strikeDef, { damage: mode })}
+              />
+            ))}
           </ul>
         </div>
       )}
