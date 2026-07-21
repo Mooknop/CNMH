@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFoeKit } from '../../hooks/useFoeKit';
 import { useFoeStrike } from '../../hooks/useFoeStrike';
+import { useFoeCast } from '../../hooks/useFoeCast';
 import { useActorFeed } from '../../hooks/useActorFeed';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
@@ -26,7 +27,12 @@ import './DockEnemyPane.css';
 // through PF2e's strike pipeline (chat card + Dice So Nice on the table view);
 // an optional PC target chip pre-sets the Foundry target so the card carries
 // the native degree. The ack feeds a read-out line only — resolution stays in
-// Foundry. Cast buttons are S4.
+// Foundry.
+//
+// S4: spell rows grow Cast buttons (protocol 7+) — SpellcastingEntryPF2e#cast
+// posts the card and consumes the REAL slot/innate use in Foundry; the foekit
+// re-push refreshes the remaining-count badges, and rows with nothing left to
+// spend disable themselves.
 
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 
@@ -120,10 +126,16 @@ const StrikeRow = ({ strike, live, striking, onAttack, onDamage }) => (
   </li>
 );
 
+// A spell with nothing left to spend: its own innate uses at 0, or (for a
+// non-cantrip) the rank's slots at 0. Cantrips never spend.
+const spellSpent = (group, spell) =>
+  (spell.uses ? spell.uses.value <= 0 : false)
+  || (!spell.isCantrip && group.slot ? group.slot.value <= 0 : false);
+
 // One spellcasting entry: header (name · tradition/type · DC/atk), then spells
 // grouped by rank — cantrips first, ranks ascending — with slot state per rank
-// and per-spell innate uses.
-const SpellcastingBlock = ({ entry }) => {
+// and per-spell innate uses. `live` (cast rail available) grows Cast buttons.
+const SpellcastingBlock = ({ entry, live, casting, onCast }) => {
   const spells = entry.spells || [];
   const cantrips = spells.filter((sp) => sp.isCantrip);
   const ranked = spells.filter((sp) => !sp.isCantrip);
@@ -178,6 +190,19 @@ const SpellcastingBlock = ({ entry }) => {
                       {sp.save.basic ? 'basic ' : ''}{capitalize(sp.save.statistic)}
                     </span>
                   )}
+                  {live && (
+                    <span className="dock-enemy-btns">
+                      <button
+                        type="button"
+                        className="dock-enemy-btn"
+                        disabled={casting || spellSpent(g, sp)}
+                        onClick={() => onCast(entry, sp)}
+                        aria-label={`Cast: ${sp.name}`}
+                      >
+                        Cast
+                      </button>
+                    </span>
+                  )}
                 </div>
                 <RulesText text={sp.description} />
               </li>
@@ -207,6 +232,7 @@ const AbilityRow = ({ ability }) => (
 const DockEnemyPane = ({ entry }) => {
   const kit = useFoeKit(entry.entryId);
   const { strike: sendStrike, striking, available: strikeRailLive } = useFoeStrike();
+  const { cast: sendCast, casting, available: castRailLive } = useFoeCast();
   const { encounter } = useEncounter();
   const { actions, spent, reaction } = useActorFeed(entry.entryId);
   const { effectsFor } = useEnemyEffects();
@@ -217,6 +243,7 @@ const DockEnemyPane = ({ entry }) => {
   // ack read-out. Local — per-GM-client, like the dock pin.
   const [targetEntryId, setTargetEntryId] = useState(null);
   const [lastStrike, setLastStrike] = useState(null);
+  const [lastCast, setLastCast] = useState(null);
 
   const { name, entryId, defenses, bestiary } = entry;
   const hp = bestiary?.hp || null;
@@ -274,6 +301,18 @@ const DockEnemyPane = ({ entry }) => {
     setLastStrike(ack
       ? { label, ok: true, total: ack.total, degree: ack.degree, mode: ack.mode }
       : { label, ok: false });
+  };
+
+  const fireCast = async (spellEntry, sp) => {
+    const ack = await sendCast({
+      entryId,
+      entryItemId: spellEntry.id,
+      spellId: sp.id,
+      rank: sp.rank ?? null,
+    });
+    setLastCast(ack
+      ? { label: ack.name || sp.name, rank: ack.rank ?? null, ok: true }
+      : { label: sp.name, ok: false });
   };
 
   const iwrRows = [
@@ -439,7 +478,27 @@ const DockEnemyPane = ({ entry }) => {
       {kit && kit.spellcasting?.length > 0 && (
         <div className="dock-enemy-section">
           <h3 className="dock-enemy-section-head">Spellcasting</h3>
-          {kit.spellcasting.map((e) => <SpellcastingBlock key={e.id || e.name} entry={e} />)}
+          {lastCast && (
+            <p className="dock-enemy-result" data-testid="dock-enemy-cast-result" role="status">
+              {lastCast.ok ? (
+                <>
+                  <b>Cast: {lastCast.label}</b>
+                  {lastCast.rank != null && ` — rank ${lastCast.rank}`}
+                </>
+              ) : (
+                <><b>{lastCast.label}</b> — no answer; cast it from the Foundry sheet.</>
+              )}
+            </p>
+          )}
+          {kit.spellcasting.map((e) => (
+            <SpellcastingBlock
+              key={e.id || e.name}
+              entry={e}
+              live={castRailLive}
+              casting={casting}
+              onCast={fireCast}
+            />
+          ))}
         </div>
       )}
 

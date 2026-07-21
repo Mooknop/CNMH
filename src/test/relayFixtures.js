@@ -7,6 +7,7 @@
 // Never hand-edit a fixture: re-record instead.
 import actorfeed from '../../foundry-bridge/__fixtures__/relay/actorfeed.json';
 import adjacency from '../../foundry-bridge/__fixtures__/relay/adjacency.json';
+import castdone from '../../foundry-bridge/__fixtures__/relay/castdone.json';
 import conditions from '../../foundry-bridge/__fixtures__/relay/conditions.json';
 import dmgdone from '../../foundry-bridge/__fixtures__/relay/dmgdone.json';
 import dooropts from '../../foundry-bridge/__fixtures__/relay/dooropts.json';
@@ -31,7 +32,7 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 // Keyed by the RELAY channel token; each entry is { characterId, value } as
 // captured on the wire.
 export const relayFixtures = {
-  actorfeed, adjacency, conditions, dmgdone, dooropts, encounter, exploremove,
+  actorfeed, adjacency, castdone, conditions, dmgdone, dooropts, encounter, exploremove,
   flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
   movedone, moveopts, positions, rolldone, roster, savedone, strikedone,
   summonpool,

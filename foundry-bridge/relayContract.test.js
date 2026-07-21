@@ -30,6 +30,7 @@ import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
 import { initFoeKit } from './foekit.js';
 import { initStrikes, handleStrikeRequest } from './strikes.js';
+import { initCasts, handleCastRequest } from './casts.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -384,6 +385,21 @@ const RECIPES = {
       targets: ['cbt-pellias'], ts: 1,
     });
     return grab(send, RELAY.STRIKEDONE);
+  },
+
+  [RELAY.CASTDONE]: async () => {
+    const send = jest.fn();
+    initCasts(send);
+    const fear = makeSpellItem({ id: 'sp-fear', name: 'Fear', rank: 1 });
+    const entry = makeSpellcastingEntry({ id: 'sce-1', spells: [fear] });
+    const goblin = makeActor({ id: 'actor-gob', name: 'Goblin Warrior', spellcasting: [entry] });
+    global.game.combat = makeCombat({
+      combatants: [makeCombatant({ id: 'cbt-gob', actorId: 'actor-gob', actor: goblin })],
+    });
+    await handleCastRequest({
+      id: 'cast-1', entryId: 'cbt-gob', entryItemId: 'sce-1', spellId: 'sp-fear', rank: 1, ts: 1,
+    });
+    return grab(send, RELAY.CASTDONE);
   },
 
   [RELAY.FLANKED]: () => {

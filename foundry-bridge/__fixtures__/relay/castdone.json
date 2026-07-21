@@ -1,8 +1,10 @@
 {
   "characterId": "global",
   "value": {
-    "protocol": 7,
-    "module": "0.0.0-test",
+    "id": "cast-1",
+    "ok": true,
+    "name": "Fear",
+    "rank": 1,
     "ts": 1700000000000
   }
 }

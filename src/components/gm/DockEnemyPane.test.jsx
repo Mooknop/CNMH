@@ -188,6 +188,86 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  describe('cast rail (S4)', () => {
+    const armCast = (session, { protocol = 7 } = {}) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol, module: '0.0.0-test', ts: 1 });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+
+    const lastCastReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.CASTREQ).at(-1);
+
+    it('the Cast button sends castreq with the entry, spell, and rank', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armCast(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
+
+      const req = lastCastReq(session);
+      expect(req.characterId).toBe('global');
+      expect(req.value).toMatchObject({
+        entryId: 'cbt-gob',
+        entryItemId: relayFixtures.foekit.value.kit.spellcasting[0].id,
+        spellId: 'sp-fear',
+        rank: 1,
+      });
+    });
+
+    it('the matching ack renders the cast read-out', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armCast(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
+      const { id } = lastCastReq(session).value;
+
+      // The RECORDED castdone fixture (id overridden to correlate).
+      await act(async () => {
+        pushRelayFixture(session, RELAY.CASTDONE, { id });
+      });
+
+      const result = await screen.findByTestId('dock-enemy-cast-result');
+      expect(result).toHaveTextContent('Cast: Fear');
+      expect(result).toHaveTextContent('rank 1');
+    });
+
+    it('a nack falls back to the cast-from-Foundry note', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armCast(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
+      const { id } = lastCastReq(session).value;
+
+      await act(async () => {
+        session.push('global', RELAY.CASTDONE, { id, ok: false, ts: 2 });
+      });
+
+      expect(await screen.findByTestId('dock-enemy-cast-result'))
+        .toHaveTextContent('cast it from the Foundry sheet');
+    });
+
+    it('a spell with exhausted uses disables its Cast button', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      const spent = JSON.parse(JSON.stringify(relayFixtures.foekit.value));
+      spent.kit.spellcasting[0].spells[0].uses = { value: 0, max: 1 };
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol: 7, module: '0.0.0-test', ts: 1 });
+        session.push('global', RELAY.FOEKIT, spent);
+      });
+
+      expect(screen.getByRole('button', { name: 'Cast: Fear' })).toBeDisabled();
+    });
+
+    it('a protocol-6 bridge keeps the strike rail but grows no Cast buttons', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armCast(session, { protocol: 6 });
+
+      expect(screen.getByRole('button', { name: 'Damage: Jaws' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Cast: Fear' })).not.toBeInTheDocument();
+    });
+  });
+
   it('surfaces flanked, applied conditions, and persistent damage as chips', () => {
     const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
     act(() => {
