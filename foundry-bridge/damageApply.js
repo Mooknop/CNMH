@@ -37,7 +37,9 @@ export async function handleDamageApply(value) {
   for (const hit of hits) {
     const { entryId, name, amount, type, instances } = hit || {};
     const token = entryId ? resolveCombatantToken(entryId) : null;
-    if (!token?.actor || typeof amount !== 'number' || amount <= 0) {
+    // Negative amounts are healing (#1537 S4 — the dock's quick heal);
+    // zero / non-numeric stays a failure.
+    if (!token?.actor || typeof amount !== 'number' || amount === 0 || Number.isNaN(amount)) {
       failed.push({ entryId: entryId ?? null, name: name || '' });
       continue;
     }

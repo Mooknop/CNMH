@@ -144,6 +144,42 @@
   background: var(--peril-light);
 }
 
+/* ── GM vitals controls (#1537 S4) ── */
+.dock-enemy-gmctl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+}
+
+.dock-enemy-gmctl-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dock-enemy-gmctl input,
+.dock-enemy-gmctl select {
+  font: inherit;
+  font-size: 0.68rem;
+  color: var(--shell-text);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: 2px 6px;
+}
+
+.dock-enemy-gmctl input {
+  width: 58px;
+}
+
+.dock-enemy-gmctl .dock-enemy-result {
+  margin: 0;
+}
+
 /* ── Defense grid ── */
 .dock-enemy-grid {
   display: grid;

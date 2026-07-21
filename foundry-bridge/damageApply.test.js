@@ -203,3 +203,25 @@ describe('handleDamageApply', () => {
     expect(ack.failed).toEqual([{ entryId: 'cbt-gob', name: 'Goblin Warrior' }]);
   });
 });
+
+describe('quick heal (#1537 S4)', () => {
+  test('a negative amount heals through applyDamage as a plain number', async () => {
+    const send = jest.fn();
+    initDamageApply(send);
+    const { goblin } = setupCombat();
+
+    await handleDamageApply({
+      id: 'dmg-heal', sourceName: 'GM healing (dock)',
+      hits: [{ entryId: 'cbt-gob', name: 'Goblin Warrior', amount: -7, type: '' }],
+      ts: 1,
+    });
+
+    expect(goblin.applyDamage).toHaveBeenCalledWith(
+      expect.objectContaining({ damage: -7 })
+    );
+    const ack = send.mock.calls.filter((c) => c[1] === 'dmgdone').at(-1)[2];
+    expect(ack.applied).toEqual([
+      expect.objectContaining({ entryId: 'cbt-gob', amount: -7 }),
+    ]);
+  });
+});
