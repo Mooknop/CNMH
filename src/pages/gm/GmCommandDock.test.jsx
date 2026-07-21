@@ -23,9 +23,16 @@ vi.mock('../../components/gm/DockEnemyPane', () => ({
     return <div data-testid="dock-enemy-pane">{entry.name}</div>;
   },
 }));
+vi.mock('../../hooks/useAdvanceTurn', () => ({ useAdvanceTurn: vi.fn() }));
+vi.mock('../../components/gm/GmInitiativePanel', () => ({
+  default: function DummyInitPanel({ pcs }) {
+    return <div data-testid="init-panel" data-count={pcs.length} />;
+  },
+}));
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useAdvanceTurn } from '../../hooks/useAdvanceTurn';
 
 const CHARS = [
   { id: 'AshkaBGosh', name: 'Ashka' },
@@ -41,10 +48,14 @@ const encounterWith = (over = {}) => ({
   ...over,
 });
 
+const advanceMock = vi.fn();
+
 beforeEach(() => {
   useContent.mockReturnValue({ characters: CHARS, theme: {} });
   usePlayMode.mockReturnValue({ mode: 'encounter' });
   useEncounter.mockReturnValue({ encounter: encounterWith() });
+  advanceMock.mockClear();
+  useAdvanceTurn.mockReturnValue({ advance: advanceMock });
 });
 
 describe('GmCommandDock', () => {
@@ -64,12 +75,21 @@ describe('GmCommandDock', () => {
     expect(screen.getByText('Downtime')).toBeInTheDocument();
   });
 
-  it('shows the setup notice while initiative is being rolled', () => {
+  it('setup phase mounts the initiative panel with the expected PCs (#1537 S1)', () => {
     useEncounter.mockReturnValue({
-      encounter: encounterWith({ phase: 'setup', round: 0 }),
+      encounter: encounterWith({
+        phase: 'setup',
+        round: 0,
+        order: [
+          { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+          { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
+          { entryId: 'e3', kind: 'pc', charId: 'AshkaBGosh', name: 'Ashka' },
+        ],
+      }),
     });
     render(<GmCommandDock />);
     expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
+    expect(screen.getByTestId('init-panel')).toHaveAttribute('data-count', '2');
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     // During setup the rail shows every PC (no exclusion).
     expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', '');
@@ -121,6 +141,22 @@ describe('GmCommandDock', () => {
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     // Rail still renders on enemy turns — every PC is an "other" then.
     expect(screen.getByTestId('dock-rail')).toBeInTheDocument();
+
+    // #1537 S1: the GM advances the enemy turn without leaving the dock.
+    fireEvent.click(screen.getByRole('button', { name: "End Ghoul's turn" }));
+    expect(advanceMock).toHaveBeenCalledWith('Ghoul');
+  });
+
+  it('an unresolved PC entry gets the generic Advance turn control (#1537 S1)', () => {
+    useEncounter.mockReturnValue({
+      encounter: encounterWith({
+        order: [{ entryId: 'e1', kind: 'pc', charId: 'ghost', name: 'Ghost' }],
+      }),
+    });
+    render(<GmCommandDock />);
+    expect(screen.getByText("Ghost's turn")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Advance turn' }));
+    expect(advanceMock).toHaveBeenCalledWith('Ghost');
   });
 
   it('stubs a PC entry whose charId is not in the roster', () => {

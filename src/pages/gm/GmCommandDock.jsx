@@ -3,11 +3,13 @@ import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useAdvanceTurn } from '../../hooks/useAdvanceTurn';
 import { activeEntry } from '../../utils/encounterUtils';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
+import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
 
@@ -33,6 +35,23 @@ const DockStub = ({ icon, title, sub }) => (
     <span className="gm-dock-stub-sub">{sub}</span>
   </div>
 );
+
+// Advance past a non-PC turn (#1537 S1). The acting PC keeps their own End
+// Turn (useEndTurn, inside the deck) — this is the GM's control for every
+// other kind of entry, so ending an enemy's turn no longer means alt-tabbing
+// to Foundry.
+const AdvanceTurnControl = ({ label, logName }) => {
+  const { advance } = useAdvanceTurn();
+  return (
+    <button
+      type="button"
+      className="gm-dock-advance"
+      onClick={() => advance(logName)}
+    >
+      {label}
+    </button>
+  );
+};
 
 // Child component so useCharacter always receives a real character; keyed by
 // charId at the call site so the whole hook tree remounts on turn handoff
@@ -104,12 +123,19 @@ const GmCommandDock = () => {
       );
     }
     if (encounter?.phase === 'setup') {
+      // Setup pane (#1537 S1): the initiative tally + Start-anyway/Reopen
+      // overrides, in place of the old wait-it-out stub.
+      const setupPcs = (encounter?.order || [])
+        .filter((e) => e.kind === 'pc' && e.charId)
+        .map((e) => ({ charId: e.charId, entryId: e.entryId, name: e.name }));
       return (
-        <DockStub
-          icon="scroll"
-          title="Rolling initiative"
-          sub="The dock takes over when round 1 begins."
-        />
+        <section className="gm-dock-setup" aria-label="Initiative setup">
+          <div className="gm-dock-acting">
+            <span className="gm-dock-acting-kicker">Setup</span>
+            <span className="gm-dock-acting-name">Rolling initiative</span>
+          </div>
+          <GmInitiativePanel pcs={setupPcs} />
+        </section>
       );
     }
     if (!entry) {
@@ -125,15 +151,27 @@ const GmCommandDock = () => {
       if (entry.kind === 'enemy') {
         // Keyed by entryId so the pane's disclosure/scroll state never leaks
         // from one enemy into the next on turn handoff.
-        return <DockEnemyPane key={entry.entryId} entry={entry} />;
+        return (
+          <div className="gm-dock-nonpc" key={entry.entryId}>
+            <DockEnemyPane entry={entry} />
+            <AdvanceTurnControl
+              label={`End ${entry.name || 'enemy'}'s turn`}
+              logName={entry.name || 'Enemy'}
+            />
+          </div>
+        );
       }
-      // A PC entry whose charId doesn't resolve to the roster.
+      // A PC entry whose charId doesn't resolve to the roster — the GM can
+      // still advance past it without leaving the dock.
       return (
-        <DockStub
-          icon="sword"
-          title={`${entry.name || 'Unknown'}'s turn`}
-          sub="This entry doesn't resolve to a roster character — check the actor map."
-        />
+        <div className="gm-dock-nonpc">
+          <DockStub
+            icon="sword"
+            title={`${entry.name || 'Unknown'}'s turn`}
+            sub="This entry doesn't resolve to a roster character — check the actor map."
+          />
+          <AdvanceTurnControl label="Advance turn" logName={entry.name || null} />
+        </div>
       );
     }
     return (
