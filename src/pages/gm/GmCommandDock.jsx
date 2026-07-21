@@ -9,6 +9,7 @@ import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
+import DockGmConsole from '../../components/gm/DockGmConsole';
 import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
@@ -80,6 +81,8 @@ const GmCommandDock = () => {
   const { encounter } = useEncounter();
   const { characters, theme } = useContent();
   const [pinnedCharId, setPinnedCharId] = useState(null);
+  // Console visibility is per-GM-client viewport state, like the pin (#1537 S2).
+  const [consoleOpen, setConsoleOpen] = useState(true);
 
   const entry = mode === 'encounter' ? activeEntry(encounter) : null;
 
@@ -95,6 +98,16 @@ const GmCommandDock = () => {
   const pcEntries = (encounter?.order || []).filter(
     (e) => e.kind === 'pc' && e.charId && findCharacter(e.charId)
   );
+
+  // Console targets don't need roster resolution — any charId entry can
+  // receive a save prompt (mirrors GmEncounter's derivation).
+  const consolePcEntries = (encounter?.order || []).filter(
+    (e) => e.kind === 'pc' && e.charId
+  );
+  // Actionable-work badge for the console toggle.
+  const consolePending =
+    (encounter?.saveRequests || []).filter((r) => r.status === 'pending').length +
+    (encounter?.armedPayloads || []).length;
 
   // Turn-follow only stages a PC while the encounter is running — during setup
   // the stage shows a stub, so the pointer's PC must still count as an "other".
@@ -184,9 +197,21 @@ const GmCommandDock = () => {
   };
 
   return (
-    <div className="gm-dock">
+    <div className={`gm-dock${mode === 'encounter' && consoleOpen ? ' gm-dock--console' : ''}`}>
       <header className="gm-dock-header">
-        <h1>Command Dock</h1>
+        <div className="gm-dock-header-row">
+          <h1>Command Dock</h1>
+          {mode === 'encounter' && (
+            <button
+              type="button"
+              className={`gm-dock-pin${consoleOpen ? ' gm-dock-pin--active' : ''}`}
+              aria-pressed={consoleOpen}
+              onClick={() => setConsoleOpen((cur) => !cur)}
+            >
+              GM console{consolePending > 0 ? ` (${consolePending})` : ''}
+            </button>
+          )}
+        </div>
         <p className="gm-dock-sub">
           {mode === 'encounter'
             ? `Round ${encounter?.round || 0} — mirroring the active player's controls`
@@ -242,6 +267,9 @@ const GmCommandDock = () => {
             characters={characters}
             excludeEntryId={stagedEntryId}
           />
+        )}
+        {mode === 'encounter' && consoleOpen && (
+          <DockGmConsole pcEntries={consolePcEntries} />
         )}
       </div>
     </div>
