@@ -29,6 +29,7 @@ import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
 import { initFoeKit } from './foekit.js';
+import { initStrikes, handleStrikeRequest } from './strikes.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -356,6 +357,33 @@ const RECIPES = {
     global.game.combat = combat;
     global.Hooks.fire('createCombat', combat);
     return grab(send, RELAY.FOEKIT);
+  },
+
+  [RELAY.STRIKEDONE]: async () => {
+    const send = jest.fn();
+    initStrikes(send);
+    const strike = makeNpcStrike();
+    strike.variants[0].roll = jest.fn().mockResolvedValue({
+      total: 24,
+      dice: [{ faces: 20, results: [{ result: 14, active: true }] }],
+      options: { degreeOfSuccess: 2 },
+    });
+    const goblin = makeActor({ id: 'actor-gob', name: 'Goblin Warrior', strikes: [strike] });
+    const pc = makeActor({ id: 'actor-pellias', name: 'Pellias' });
+    const tokG = makeToken({ id: 'tok-gob', actor: goblin });
+    const tokP = makeToken({ id: 'tok-pellias', actor: pc });
+    global.game.combat = makeCombat({
+      combatants: [
+        makeCombatant({ id: 'cbt-gob', actorId: 'actor-gob', actor: goblin, tokenId: 'tok-gob' }),
+        makeCombatant({ id: 'cbt-pellias', actorId: 'actor-pellias', actor: pc, tokenId: 'tok-pellias' }),
+      ],
+    });
+    global.canvas.tokens.placeables = [tokG, tokP];
+    await handleStrikeRequest({
+      id: 'strike-1', entryId: 'cbt-gob', actionIndex: 0, variant: 0,
+      targets: ['cbt-pellias'], ts: 1,
+    });
+    return grab(send, RELAY.STRIKEDONE);
   },
 
   [RELAY.FLANKED]: () => {

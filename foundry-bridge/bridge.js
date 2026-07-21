@@ -20,6 +20,7 @@ import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
 import { initFoeKit, pushFoeKit } from './foekit.js';
+import { initStrikes, handleStrikeRequest } from './strikes.js';
 import { initDiceSets, updateDiceSets } from './diceSets.js';
 import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
@@ -92,6 +93,7 @@ Hooks.once('ready', () => {
   initSaves(sendUpdate);
   initDice(sendUpdate);
   initFoeKit(sendUpdate);
+  initStrikes(sendUpdate);
   initDiceSets();
   connect();
 });
@@ -332,6 +334,13 @@ function dispatch(msg) {
   // Foundry chat (Dice So Nice animates), acked on cnmh_rolldone_global.
   if (characterId === 'global' && key === RELAY.ROLLREQ) {
     handleRollRequest(value);
+    return;
+  }
+
+  // Native NPC strike execution from the dock's enemy pane (#1531 S3) —
+  // rolled through PF2e's own strike pipeline, acked on cnmh_strikedone_global.
+  if (characterId === 'global' && key === RELAY.STRIKEREQ) {
+    handleStrikeRequest(value);
     return;
   }
 
