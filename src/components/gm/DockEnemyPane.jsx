@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFoeKit } from '../../hooks/useFoeKit';
 import { useFoeStrike } from '../../hooks/useFoeStrike';
 import { useFoeCast } from '../../hooks/useFoeCast';
@@ -6,12 +6,19 @@ import { useActorFeed } from '../../hooks/useActorFeed';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import PF2E_CONDITIONS, { getCondition } from '../../data/pf2eConditions';
 import { getActionGlyph } from '../../utils/actionGlyph';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { STRIKE_DEGREE_LABEL } from '../../utils/strikeRelay';
+import { DAMAGE_TYPES } from '../../utils/damage';
+import { buildDamageApply } from '../../utils/damageRelay';
+import { SAVEDONE_KEY, buildSaveRoll } from '../../utils/saveRelay';
+import { computeSaveDegree } from '../../utils/saveDegree';
+import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { monogram } from '../encounter/commandsheet/Dossier';
+import PersistentChip from '../encounter/PersistentChip';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
 
@@ -125,6 +132,132 @@ const StrikeRow = ({ strike, live, striking, onAttack, onDamage }) => (
     )}
   </li>
 );
+
+const SAVE_STATS = ['fortitude', 'reflex', 'will'];
+
+// GM vitals controls (#1537 S4): ad-hoc damage/heal via the dmgapply rail
+// (typed damage → PF2e nets IWR; heal = negative untyped) and an ad-hoc save
+// roll via the saveroll rail against a GM-typed DC. Rails need live Foundry;
+// the whole block hides otherwise.
+const GmVitalsControls = ({ entryId, name }) => {
+  const { sendUpdate } = useSession();
+  const [saveAck] = useSyncedState(SAVEDONE_KEY, null);
+  const [amount, setAmount] = useState('');
+  const [dmgType, setDmgType] = useState('');
+  const [saveStat, setSaveStat] = useState('fortitude');
+  const [saveDc, setSaveDc] = useState('');
+  const [pending, setPending] = useState(null); // { id, stat, dc }
+  const [saveResult, setSaveResult] = useState(null);
+
+  useEffect(() => {
+    if (!pending || saveAck?.id !== pending.id) return;
+    const r = (saveAck.results || []).find((x) => x.entryId === entryId);
+    setSaveResult(r
+      ? {
+          stat: pending.stat,
+          dc: pending.dc,
+          total: r.total,
+          degree: computeSaveDegree({ d20: r.d20, total: r.total, dc: pending.dc }),
+        }
+      : { failed: true, stat: pending.stat });
+    setPending(null);
+  }, [saveAck, pending, entryId]);
+
+  const fireDamage = (heal) => {
+    const amt = parseInt(amount, 10);
+    if (!amt || amt <= 0) return;
+    sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({
+      hits: [{
+        entryId,
+        name,
+        amount: heal ? -amt : amt,
+        type: heal ? '' : dmgType,
+      }],
+      sourceName: heal ? 'GM healing (dock)' : 'GM damage (dock)',
+    }));
+    setAmount('');
+  };
+
+  const fireSave = () => {
+    const dc = parseInt(saveDc, 10);
+    if (!dc || pending) return;
+    const req = buildSaveRoll({
+      id: `docksave-${Date.now()}`,
+      save: saveStat,
+      dc,
+      targets: [{ entryId, name }],
+    });
+    setSaveResult(null);
+    setPending({ id: req.id, stat: saveStat, dc });
+    sendUpdate('global', RELAY.SAVEROLL, req);
+  };
+
+  return (
+    <div className="dock-enemy-gmctl" data-testid="dock-enemy-gmctl">
+      <div className="dock-enemy-gmctl-row">
+        <input
+          type="number"
+          min="1"
+          aria-label="Quick damage amount"
+          placeholder="Amt"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <select
+          aria-label="Quick damage type"
+          value={dmgType}
+          onChange={(e) => setDmgType(e.target.value)}
+        >
+          <option value="">untyped</option>
+          {DAMAGE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <button type="button" className="dock-enemy-btn" disabled={!amount} onClick={() => fireDamage(false)}>
+          Damage
+        </button>
+        <button type="button" className="dock-enemy-btn" disabled={!amount} onClick={() => fireDamage(true)}>
+          Heal
+        </button>
+      </div>
+      <div className="dock-enemy-gmctl-row">
+        <select
+          aria-label="Foe save"
+          value={saveStat}
+          onChange={(e) => setSaveStat(e.target.value)}
+        >
+          {SAVE_STATS.map((s) => <option key={s} value={s}>{SAVE_LABEL[s]}</option>)}
+        </select>
+        <input
+          type="number"
+          min="1"
+          aria-label="Foe save DC"
+          placeholder="DC"
+          value={saveDc}
+          onChange={(e) => setSaveDc(e.target.value)}
+        />
+        <button
+          type="button"
+          className="dock-enemy-btn"
+          disabled={!saveDc || !!pending}
+          onClick={fireSave}
+        >
+          Roll save
+        </button>
+      </div>
+      {saveResult && (
+        <p className="dock-enemy-result" data-testid="dock-enemy-save-result" role="status">
+          {saveResult.failed ? (
+            <><b>{SAVE_LABEL[saveResult.stat]} save</b> — no answer; roll it in Foundry.</>
+          ) : (
+            <>
+              <b>{SAVE_LABEL[saveResult.stat]} save</b> — {saveResult.total} vs DC {saveResult.dc}
+              {' · '}{DEGREE_LABELS[saveResult.degree]}
+            </>
+          )}
+        </p>
+      )}
+    </div>
+  );
+};
 
 // GM condition editor (#1537 S3): apply any catalog condition (with a value
 // when the condition is valued) onto the acting foe's app-side enemyfx record.
@@ -277,6 +410,7 @@ const DockEnemyPane = ({ entry }) => {
   const { encounter } = useEncounter();
   const { actions, spent, reaction } = useActorFeed(entry.entryId);
   const { effectsFor, applyCondition, removeCondition } = useEnemyEffects();
+  const { foundryConnected } = useSession();
   const { effects: effectCatalog } = useContent();
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
   const [persistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -317,12 +451,9 @@ const DockEnemyPane = ({ entry }) => {
       scopedTo: c.scopedTo || null,
     };
   });
-  const persistentChips = (persistentMap?.[entryId] || []).map((inst) => ({
-    key: `persistent-${inst.id}`,
-    label: `🩸 ${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`,
-  }));
+  const hasPersistent = (persistentMap?.[entryId] || []).length > 0;
   const hasChips =
-    foundryConditionChips.length > 0 || appConditionChips.length > 0 || persistentChips.length > 0;
+    foundryConditionChips.length > 0 || appConditionChips.length > 0 || hasPersistent;
   const isFlanked = !!flankedMap?.[entryId];
 
   const statCells = [
@@ -410,9 +541,9 @@ const DockEnemyPane = ({ entry }) => {
                   </button>
                 </span>
               ))}
-              {persistentChips.map((c) => (
-                <span key={c.key} className="dock-enemy-chip dock-enemy-chip--peril">{c.label}</span>
-              ))}
+              {/* #1537 S4: the real clear popover (flat check / healed), not a
+                  read-only chip — PersistentChip self-hides when untracked. */}
+              <PersistentChip entry={entry} />
             </div>
           )}
           <ConditionEditor
@@ -455,6 +586,8 @@ const DockEnemyPane = ({ entry }) => {
           )}
         </div>
       )}
+
+      {foundryConnected && <GmVitalsControls entryId={entryId} name={name} />}
 
       <div className="dock-enemy-grid" data-testid="dock-enemy-defenses">
         {statCells.map((c) => (

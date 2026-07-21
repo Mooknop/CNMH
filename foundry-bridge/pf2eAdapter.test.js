@@ -459,16 +459,26 @@ describe('applyTypedDamage (#1016)', () => {
     );
   });
 
-  test('returns false without applying for no actor / non-positive / non-numeric amounts', async () => {
+  test('returns false without applying for no actor / zero / non-numeric amounts', async () => {
     const actor = makeActor();
     const token = makeToken({ actor });
 
     expect(await applyTypedDamage(null, 8, 'fire')).toBe(false);
     expect(await applyTypedDamage({ actor: null }, 8, 'fire')).toBe(false);
     expect(await applyTypedDamage(token, 0, 'fire')).toBe(false);
-    expect(await applyTypedDamage(token, -3, 'fire')).toBe(false);
     expect(await applyTypedDamage(token, 'lots', 'fire')).toBe(false);
     expect(actor.applyDamage).not.toHaveBeenCalled();
+  });
+
+  test('a negative amount heals as a plain untyped number (#1537 S4)', async () => {
+    const actor = makeActor();
+    const token = makeToken({ actor });
+
+    expect(await applyTypedDamage(token, -3, 'fire')).toBe(true);
+    // Healing bypasses the typed DamageRoll path — no IWR applies to healing.
+    expect(actor.applyDamage).toHaveBeenCalledWith(
+      expect.objectContaining({ damage: -3 })
+    );
   });
 });
 

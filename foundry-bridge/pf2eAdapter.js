@@ -690,8 +690,16 @@ export function setUserTargets(tokens) {
 // ActorPF2e method. Re-verify both against the v14-era system release.
 export async function applyTypedDamage(token, amount, type = '') {
   const actor = token?.actor;
-  if (!actor?.applyDamage || typeof amount !== 'number' || amount <= 0) return false;
+  if (!actor?.applyDamage || typeof amount !== 'number' || amount === 0 || Number.isNaN(amount)) return false;
   const tokenDoc = token.document ?? token;
+  // Negative amount = healing (#1537 S4 — the dock's quick heal). PF2e's
+  // applyDamage heals on a plain negative number; the typed DamageRoll path
+  // is damage-only (its parser rejects negative instances), so healing is
+  // always untyped — which matches the rules (healing has no IWR).
+  if (amount < 0) {
+    await actor.applyDamage({ damage: amount, token: tokenDoc });
+    return true;
+  }
   const DamageRoll = CONFIG.Dice?.rolls?.find?.((R) => R.name === 'DamageRoll');
   if (type && DamageRoll) {
     const roll = await new DamageRoll(`${amount}[${type}]`).evaluate();

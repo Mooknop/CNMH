@@ -331,6 +331,74 @@ describe('DockEnemyPane (#1531 S2)', () => {
 
     expect(screen.getByText('⚔ flanked')).toBeInTheDocument();
     expect(screen.getByText(/Frightened 2/)).toBeInTheDocument();
-    expect(screen.getByText(/1d6 persistent fire/)).toBeInTheDocument();
+    // #1537 S4: persistent damage is the real PersistentChip (clear popover),
+    // whose badge carries the summary as its accessible name.
+    expect(screen.getByRole('button', { name: /1d6 persistent fire/ })).toBeInTheDocument();
+  });
+
+  describe('GM vitals controls (S4)', () => {
+    it('quick damage sends a typed dmgapply hit for this foe', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+
+      fireEvent.change(screen.getByLabelText('Quick damage amount'), { target: { value: '9' } });
+      fireEvent.change(screen.getByLabelText('Quick damage type'), { target: { value: 'fire' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Damage' }));
+
+      const sent = session.sent.filter((m) => m.stateType === RELAY.DMGAPPLY).at(-1);
+      expect(sent.value.sourceName).toBe('GM damage (dock)');
+      expect(sent.value.hits).toEqual([
+        expect.objectContaining({ entryId: 'cbt-gob', amount: 9, type: 'fire' }),
+      ]);
+    });
+
+    it('quick heal sends a negative untyped amount', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+
+      fireEvent.change(screen.getByLabelText('Quick damage amount'), { target: { value: '7' } });
+      fireEvent.change(screen.getByLabelText('Quick damage type'), { target: { value: 'fire' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Heal' }));
+
+      const sent = session.sent.filter((m) => m.stateType === RELAY.DMGAPPLY).at(-1);
+      expect(sent.value.sourceName).toBe('GM healing (dock)');
+      expect(sent.value.hits).toEqual([
+        expect.objectContaining({ entryId: 'cbt-gob', amount: -7, type: '' }),
+      ]);
+    });
+
+    it('ad-hoc save roll round-trips: saveroll out, degree read-out from the ack', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+
+      fireEvent.change(screen.getByLabelText('Foe save'), { target: { value: 'reflex' } });
+      fireEvent.change(screen.getByLabelText('Foe save DC'), { target: { value: '22' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Roll save' }));
+
+      const req = session.sent.filter((m) => m.stateType === RELAY.SAVEROLL).at(-1);
+      expect(req.value).toMatchObject({
+        save: 'reflex',
+        dc: 22,
+        targets: [{ entryId: 'cbt-gob', name: 'Goblin Warrior' }],
+      });
+
+      await act(async () => {
+        session.push('global', RELAY.SAVEDONE, {
+          id: req.value.id,
+          results: [{ entryId: 'cbt-gob', name: 'Goblin Warrior', d20: 10, total: 17 }],
+          failed: [],
+          ts: 2,
+        });
+      });
+
+      const result = await screen.findByTestId('dock-enemy-save-result');
+      expect(result).toHaveTextContent('Ref save');
+      expect(result).toHaveTextContent('17 vs DC 22');
+      expect(result).toHaveTextContent('Failure');
+    });
+
+    it('hides the controls entirely without Foundry (sandbox)', () => {
+      renderWithProviders(<DockEnemyPane entry={ENTRY} />, {
+        session: { foundryConnected: false },
+      });
+      expect(screen.queryByTestId('dock-enemy-gmctl')).not.toBeInTheDocument();
+    });
   });
 });
