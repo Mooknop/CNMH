@@ -239,8 +239,11 @@ function getListedSkills(actor) {
     .filter((s) => typeof s.mod === 'number');
 }
 
-// The full offensive kit for an actor — the cnmh_foekit_global payload body.
-// Returns null when actor is absent.
+// The full kit for an actor — the cnmh_foekit_global payload body. Mostly the
+// offensive package, plus the actor's REAL Foundry conditions (#1537 S3):
+// conditions are embedded items, so the foekit item hooks already re-push on
+// every change — the dock's truth chips stay fresh for free. Returns null
+// when actor is absent.
 export function getOffense(actor) {
   if (!actor) return null;
   return {
@@ -248,6 +251,7 @@ export function getOffense(actor) {
     spellcasting: getSpellcastingEntries(actor),
     abilities:    getAbilityItems(actor),
     skills:       getListedSkills(actor),
+    conditions:   getConditions(actor),
   };
 }
 

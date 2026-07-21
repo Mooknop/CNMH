@@ -89,6 +89,24 @@ export const useEnemyEffects = () => {
     [setEnemyFx]
   );
 
+  // Remove one applied condition (#1537 S3 — the dock's GM editor). Keys on
+  // id + scope like applyCondition's dedupe, so clearing a generic off-guard
+  // leaves a Feint-scoped one (and vice versa) intact.
+  const removeCondition = useCallback(
+    (entryId, { id, scopedTo = null }) => {
+      if (!entryId || !id) return;
+      setEnemyFx((cur) => {
+        const rec = cur?.[entryId];
+        if (!rec) return cur;
+        const conditions = (rec.conditions || []).filter(
+          (c) => !(c.id === id && (c.scopedTo || null) === (scopedTo || null))
+        );
+        return { ...cur, [entryId]: { ...rec, conditions } };
+      });
+    },
+    [setEnemyFx]
+  );
+
   // Stamp an ability-immunity timer on an enemy (e.g. Demoralize's 10-minute
   // per-caster immunity). Reuses the #218 immunity entry shape.
   const stampImmunity = useCallback(
@@ -111,7 +129,7 @@ export const useEnemyEffects = () => {
 
   const clearAll = useCallback(() => setEnemyFx({}), [setEnemyFx]);
 
-  return { enemyFx, effectsFor, applyCondition, stampImmunity, isImmune, clearAll };
+  return { enemyFx, effectsFor, applyCondition, removeCondition, stampImmunity, isImmune, clearAll };
 };
 
 export default useEnemyEffects;
