@@ -32,7 +32,7 @@
       ],
       "spellcasting": [
         {
-          "id": "scentry5",
+          "id": "scentry1",
           "name": "Arcane Spells",
           "tradition": "arcane",
           "castingType": "innate",
@@ -76,7 +76,7 @@
       ],
       "abilities": [
         {
-          "id": "ability6",
+          "id": "ability2",
           "name": "Goblin Scuttle",
           "actionType": "reaction",
           "actions": null,
@@ -91,6 +91,12 @@
         {
           "slug": "acrobatics",
           "mod": 5
+        }
+      ],
+      "conditions": [
+        {
+          "slug": "frightened",
+          "value": 1
         }
       ]
     },

@@ -7,7 +7,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
-import { getCondition } from '../../data/pf2eConditions';
+import PF2E_CONDITIONS, { getCondition } from '../../data/pf2eConditions';
 import { getActionGlyph } from '../../utils/actionGlyph';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { STRIKE_DEGREE_LABEL } from '../../utils/strikeRelay';
@@ -126,6 +126,47 @@ const StrikeRow = ({ strike, live, striking, onAttack, onDamage }) => (
   </li>
 );
 
+// GM condition editor (#1537 S3): apply any catalog condition (with a value
+// when the condition is valued) onto the acting foe's app-side enemyfx record.
+const ConditionEditor = ({ onApply }) => {
+  const [condId, setCondId] = useState('');
+  const [value, setValue] = useState(1);
+  const selected = getCondition(condId);
+  const apply = () => {
+    if (!condId) return;
+    onApply(condId, selected?.valued ? value : null);
+    setCondId('');
+    setValue(1);
+  };
+  return (
+    <div className="dock-enemy-cond-editor">
+      <select
+        aria-label="Add condition"
+        value={condId}
+        onChange={(e) => setCondId(e.target.value)}
+      >
+        <option value="">Add condition…</option>
+        {PF2E_CONDITIONS.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </select>
+      {selected?.valued && (
+        <input
+          type="number"
+          aria-label="Condition value"
+          min="1"
+          max={selected.maxValue || 4}
+          value={value}
+          onChange={(e) => setValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+        />
+      )}
+      <button type="button" className="dock-enemy-btn" disabled={!condId} onClick={apply}>
+        Apply
+      </button>
+    </div>
+  );
+};
+
 // A spell with nothing left to spend: its own innate uses at 0, or (for a
 // non-cantrip) the rank's slots at 0. Cantrips never spend.
 const spellSpent = (group, spell) =>
@@ -235,7 +276,7 @@ const DockEnemyPane = ({ entry }) => {
   const { cast: sendCast, casting, available: castRailLive } = useFoeCast();
   const { encounter } = useEncounter();
   const { actions, spent, reaction } = useActorFeed(entry.entryId);
-  const { effectsFor } = useEnemyEffects();
+  const { effectsFor, applyCondition, removeCondition } = useEnemyEffects();
   const { effects: effectCatalog } = useContent();
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
   const [persistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -253,24 +294,35 @@ const DockEnemyPane = ({ entry }) => {
     bestiary?.level != null ? `Level ${bestiary.level}` : null,
   ].filter(Boolean).join(' · ');
 
-  // Ailment chips — same sources as the player Dossier (enemyfx conditions,
-  // persistent damage, flanked), but unredacted.
-  const conditionChips = [
-    ...(effectsFor(entryId).conditions || []).map((c) => {
-      const cname = getCondition(c.id)?.name
-        || (effectCatalog || []).find((e) => e.id === c.id)?.name
-        || c.id;
-      const base = c.value != null ? `${cname} ${c.value}` : cname;
-      return {
-        key: `${c.id}:${c.scopedTo || ''}`,
-        label: c.scopedToName ? `${base} to ${c.scopedToName}` : base,
-      };
-    }),
-    ...(persistentMap?.[entryId] || []).map((inst) => ({
-      key: `persistent-${inst.id}`,
-      label: `🩸 ${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`,
-    })),
-  ];
+  // Ailment chips (#1537 S3): the foe's REAL Foundry conditions off the kit
+  // (truth — GM edits those in Foundry), then the app-applied enemyfx ones
+  // (player actions + this pane's editor; removable), then persistent damage.
+  const foundryConditionChips = (kit?.conditions || []).map((c) => {
+    const meta = getCondition(c.slug);
+    const showValue = meta?.valued && c.value != null;
+    return {
+      key: `foundry-${c.slug}`,
+      label: `${meta?.name || c.slug}${showValue ? ` ${c.value}` : ''}`,
+    };
+  });
+  const appConditionChips = (effectsFor(entryId).conditions || []).map((c) => {
+    const cname = getCondition(c.id)?.name
+      || (effectCatalog || []).find((e) => e.id === c.id)?.name
+      || c.id;
+    const base = c.value != null ? `${cname} ${c.value}` : cname;
+    return {
+      key: `${c.id}:${c.scopedTo || ''}`,
+      label: c.scopedToName ? `${base} to ${c.scopedToName}` : base,
+      id: c.id,
+      scopedTo: c.scopedTo || null,
+    };
+  });
+  const persistentChips = (persistentMap?.[entryId] || []).map((inst) => ({
+    key: `persistent-${inst.id}`,
+    label: `🩸 ${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`,
+  }));
+  const hasChips =
+    foundryConditionChips.length > 0 || appConditionChips.length > 0 || persistentChips.length > 0;
   const isFlanked = !!flankedMap?.[entryId];
 
   const statCells = [
@@ -339,14 +391,35 @@ const DockEnemyPane = ({ entry }) => {
         <div className="dock-enemy-id">
           <span className="dock-enemy-title">{name}</span>
           {subLine && <span className="dock-enemy-sub">{subLine}</span>}
-          {(isFlanked || conditionChips.length > 0) && (
+          {(isFlanked || hasChips) && (
             <div className="dock-enemy-chips">
               {isFlanked && <span className="dock-enemy-chip dock-enemy-chip--peril">⚔ flanked</span>}
-              {conditionChips.map((c) => (
+              {foundryConditionChips.map((c) => (
+                <span key={c.key} className="dock-enemy-chip dock-enemy-chip--foundry">{c.label}</span>
+              ))}
+              {appConditionChips.map((c) => (
+                <span key={c.key} className="dock-enemy-chip dock-enemy-chip--peril">
+                  {c.label}
+                  <button
+                    type="button"
+                    className="dock-enemy-chip-x"
+                    aria-label={`Remove ${c.label}`}
+                    onClick={() => removeCondition(entryId, { id: c.id, scopedTo: c.scopedTo })}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {persistentChips.map((c) => (
                 <span key={c.key} className="dock-enemy-chip dock-enemy-chip--peril">{c.label}</span>
               ))}
             </div>
           )}
+          <ConditionEditor
+            onApply={(id, value) =>
+              applyCondition(entryId, { id, value, source: 'GM (dock)' })
+            }
+          />
         </div>
         <div className="dock-enemy-economy" aria-label={`${actions - spent} of ${actions} actions left`}>
           <span className="dock-enemy-pips" aria-hidden="true">

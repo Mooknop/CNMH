@@ -26,6 +26,7 @@ function makeGoblin() {
     })],
     abilities: [makeAbilityItem({ name: 'Goblin Scuttle', actionType: 'reaction' })],
     skills: { acrobatics: { base: 5 }, stealth: { base: 5 } },
+    conditions: [{ slug: 'frightened', value: 2 }],
   });
 }
 
@@ -77,6 +78,8 @@ describe('foekit (#1531)', () => {
       { slug: 'acrobatics', mod: 5 },
       { slug: 'stealth', mod: 5 },
     ]);
+    // The foe's REAL Foundry conditions ride the kit (#1537 S3).
+    expect(payload.kit.conditions).toEqual([{ slug: 'frightened', value: 2 }]);
   });
 
   test('a PC turn pushes the cleared payload', () => {

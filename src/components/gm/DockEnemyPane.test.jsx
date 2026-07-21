@@ -268,6 +268,55 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  describe('condition truth + GM management (S3)', () => {
+    it('renders the foe’s recorded Foundry conditions as truth chips', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
+
+      // The recorded kit carries the foe's real Foundry conditions.
+      const recorded = relayFixtures.foekit.value.kit.conditions;
+      expect(recorded.length).toBeGreaterThan(0);
+      expect(screen.getByText('Frightened 1')).toBeInTheDocument();
+      // Truth chips have no remove control — Foundry owns them.
+      expect(screen.queryByRole('button', { name: /Remove Frightened 1/ })).not.toBeInTheDocument();
+    });
+
+    it('the GM editor applies a valued condition to the enemyfx record', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+
+      fireEvent.change(screen.getByLabelText('Add condition'), { target: { value: 'clumsy' } });
+      fireEvent.change(screen.getByLabelText('Condition value'), { target: { value: '2' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
+      const write = session.sent.filter((m) => m.stateType === 'enemyfx').at(-1);
+      expect(write.value['cbt-gob'].conditions).toEqual([
+        expect.objectContaining({ id: 'clumsy', value: 2, source: 'GM (dock)' }),
+      ]);
+    });
+
+    it('an app-applied chip removes via its × without touching other scopes', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      act(() => {
+        session.push('global', APP.ENEMYFX, {
+          'cbt-gob': {
+            conditions: [
+              { id: 'off-guard', value: null, source: 'Flanking', scopedTo: null },
+              { id: 'off-guard', value: null, source: 'Feint', scopedTo: 'Pellias', scopedToName: 'Pellias' },
+            ],
+            effects: [],
+          },
+        });
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Off-Guard' }));
+
+      const write = session.sent.filter((m) => m.stateType === 'enemyfx').at(-1);
+      expect(write.value['cbt-gob'].conditions).toEqual([
+        expect.objectContaining({ id: 'off-guard', scopedTo: 'Pellias' }),
+      ]);
+    });
+  });
+
   it('surfaces flanked, applied conditions, and persistent damage as chips', () => {
     const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
     act(() => {
@@ -281,7 +330,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
 
     expect(screen.getByText('⚔ flanked')).toBeInTheDocument();
-    expect(screen.getByText('Frightened 2')).toBeInTheDocument();
+    expect(screen.getByText(/Frightened 2/)).toBeInTheDocument();
     expect(screen.getByText(/1d6 persistent fire/)).toBeInTheDocument();
   });
 });

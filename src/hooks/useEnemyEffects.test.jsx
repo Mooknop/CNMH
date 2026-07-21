@@ -125,3 +125,33 @@ describe('offGuardAppliesTo (#348)', () => {
     expect(offGuardAppliesTo(undefined, 'izzy')).toBe(false);
   });
 });
+
+describe('removeCondition (#1537 S3)', () => {
+  it('removes exactly the id+scope pair, leaving other scopes intact', () => {
+    const { result } = renderHook(() => useEnemyEffects());
+    act(() => {
+      result.current.applyCondition(ENTRY, { id: 'off-guard', source: 'Flanking' });
+      result.current.applyCondition(ENTRY, { id: 'off-guard', source: 'Feint', scopedTo: 'Pellias' });
+      result.current.applyCondition(ENTRY, { id: 'frightened', value: 2, source: 'Demoralize' });
+    });
+
+    act(() => { result.current.removeCondition(ENTRY, { id: 'off-guard' }); });
+
+    const conditions = result.current.effectsFor(ENTRY).conditions;
+    expect(conditions).toHaveLength(2);
+    expect(conditions).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'off-guard', scopedTo: 'Pellias' }),
+      expect.objectContaining({ id: 'frightened', value: 2 }),
+    ]));
+  });
+
+  it('no-ops on an unknown entry or missing id', () => {
+    const { result } = renderHook(() => useEnemyEffects());
+    act(() => {
+      result.current.applyCondition(ENTRY, { id: 'frightened', value: 1, source: 'x' });
+      result.current.removeCondition('enemy-none', { id: 'frightened' });
+      result.current.removeCondition(ENTRY, {});
+    });
+    expect(result.current.effectsFor(ENTRY).conditions).toHaveLength(1);
+  });
+});

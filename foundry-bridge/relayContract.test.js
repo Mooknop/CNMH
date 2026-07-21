@@ -333,6 +333,7 @@ const RECIPES = {
     // ability, and listed skills — every optional field of the contract present.
     const goblin = makeActor({
       id: 'actor-gob', name: 'Goblin Warrior', level: 1,
+      conditions: [{ slug: 'frightened', value: 1 }],
       strikes: [makeNpcStrike({ attackEffects: ['grab'] })],
       spellcasting: [makeSpellcastingEntry({
         castingType: 'innate',
