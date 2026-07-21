@@ -19,6 +19,7 @@ import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
+import { initFoeKit, pushFoeKit } from './foekit.js';
 import { initDiceSets, updateDiceSets } from './diceSets.js';
 import { handleFxPlay } from './animations.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
@@ -90,6 +91,7 @@ Hooks.once('ready', () => {
   initDamageApply(sendUpdate);
   initSaves(sendUpdate);
   initDice(sendUpdate);
+  initFoeKit(sendUpdate);
   initDiceSets();
   connect();
 });
@@ -143,6 +145,7 @@ function connect() {
     pushSummonPool();
     pushMinionActors();
     pushPositions();
+    pushFoeKit();  // reconnect mid-enemy-turn → dock kit is fresh (#1531)
   };
 
   ws.onclose = (evt) => {

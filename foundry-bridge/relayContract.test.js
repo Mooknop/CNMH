@@ -28,6 +28,7 @@ import { initDoors, handleDoorRequest } from './doors.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
+import { initFoeKit } from './foekit.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -35,6 +36,7 @@ import { initActorFeed } from './actorFeed.js';
 import {
   installFoundryGlobals, makeActor, makeToken, makeCombat, makeCombatant,
   makeGame, makeChatMessage,
+  makeNpcStrike, makeSpellcastingEntry, makeSpellItem, makeAbilityItem,
 } from './test/foundryMock.js';
 
 const FIXTURE_DIR = path.join(__dirname, '__fixtures__', 'relay');
@@ -318,6 +320,42 @@ const RECIPES = {
       delete global.ChatMessage;
     }
     return grab(send, RELAY.ROLLDONE);
+  },
+
+  [RELAY.FOEKIT]: () => {
+    const send = jest.fn();
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    initFoeKit(send);
+    // A representative offensive kit: strike with MAP variants + typed damage,
+    // an innate caster entry with a per-rank slot + a save spell, a reaction
+    // ability, and listed skills — every optional field of the contract present.
+    const goblin = makeActor({
+      id: 'actor-gob', name: 'Goblin Warrior', level: 1,
+      strikes: [makeNpcStrike({ attackEffects: ['grab'] })],
+      spellcasting: [makeSpellcastingEntry({
+        castingType: 'innate',
+        slots: { slot1: { value: 2, max: 2, prepared: [{ id: 'sp-fear', expended: false }] } },
+        spells: [makeSpellItem({
+          id: 'sp-fear', name: 'Fear', rank: 1,
+          uses: { value: 1, max: 1 },
+          save: { statistic: 'will', basic: false },
+          traits: ['emotion', 'fear'],
+          description: '<p>The target is frightened.</p>',
+        })],
+      })],
+      abilities: [makeAbilityItem({
+        name: 'Goblin Scuttle', actionType: 'reaction', actions: null,
+        traits: ['goblin'], description: '<p>Step when an ally ends a move adjacent.</p>',
+      })],
+      skills: { acrobatics: { base: 5 } },
+    });
+    const combat = makeCombat({
+      combatants: [makeCombatant({ id: 'cbt-gob', actorId: 'actor-gob', actor: goblin, initiative: 20 })],
+      activeTurnIndex: 0,
+    });
+    global.game.combat = combat;
+    global.Hooks.fire('createCombat', combat);
+    return grab(send, RELAY.FOEKIT);
   },
 
   [RELAY.FLANKED]: () => {

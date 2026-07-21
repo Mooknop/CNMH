@@ -110,6 +110,147 @@ export function getDefenses(actor) {
   };
 }
 
+// --- Offensive kit (#1531 — GM Command Dock enemy turns) ----------------------
+// Everything an NPC can DO, extracted from the live actor instance (so elite/weak
+// adjustments and per-instance state are accurate): strikes, spellcasting entries
+// with per-rank slots and remaining uses, ability items, and listed skills.
+// All reads are defensive — partial actor data yields empty sections, never throws.
+
+function stripHtml(html) {
+  return typeof html === 'string' ? html.replace(/<[^>]+>/g, '').trim() : '';
+}
+
+// NPC strikes live on actor.system.actions (an array of PF2e NPCStrike objects,
+// synthesized from the actor's melee items). variants[0..2] carry the MAP labels
+// ("+9" / "+4" / "-1") the dock renders as roll buttons; `index` is the stable
+// handle the S3 strike rail will echo back (slug can be null on homebrew items).
+// v14 MIGRATION: NPCStrike shape (slug/label/totalModifier/variants/traits/item)
+// is PF2e system data; re-verify against the v14-era system release.
+function getStrikes(actor) {
+  const actions = Array.isArray(actor.system?.actions) ? actor.system.actions : [];
+  return actions.map((s, index) => {
+    const item = s?.item ?? null;
+    const damage = Object.values(item?.system?.damageRolls ?? {})
+      .map((d) => ({ formula: d?.damage ?? '', type: d?.damageType ?? '' }))
+      .filter((d) => d.formula);
+    return {
+      index,
+      slug:           s?.slug ?? null,
+      label:          s?.label ?? item?.name ?? 'Strike',
+      attackModifier: s?.totalModifier ?? null,
+      variantLabels:  (s?.variants ?? []).map((v) => v?.label ?? ''),
+      traits:         (s?.traits ?? [])
+        .map((t) => (typeof t === 'string' ? t : t?.label ?? t?.name ?? null))
+        .filter(Boolean),
+      ranged:         item?.isRanged === true,
+      damage,
+      attackEffects:  item?.system?.attackEffects?.value ?? [],
+    };
+  });
+}
+
+// Spellcasting entries with per-rank slot state and each spell's remaining uses.
+// actor.spellcasting is PF2e's ActorSpellcasting collection; entries without a
+// spells collection (e.g. ritual pseudo-entries) are skipped. slot0 is cantrips.
+// `prepared` per rank maps slot → spell id + expended, so the dock can render a
+// prepared caster's actual loadout.
+// v14 MIGRATION: SpellcastingEntry system data (tradition/prepared/spelldc/slots)
+// and SpellPF2e getters (rank/isCantrip) are PF2e system surfaces; re-verify.
+function getSpellcastingEntries(actor) {
+  const entries = actor.spellcasting?.contents
+    ?? (Array.isArray(actor.spellcasting) ? actor.spellcasting : []);
+  return entries
+    .filter((e) => e?.spells)
+    .map((e) => {
+      const slots = {};
+      for (const [key, slot] of Object.entries(e.system?.slots ?? {})) {
+        const rank = Number(String(key).replace('slot', ''));
+        if (!Number.isInteger(rank)) continue;
+        const max = slot?.max ?? 0;
+        if (!max) continue;
+        slots[rank] = {
+          value: slot?.value ?? 0,
+          max,
+          ...(Array.isArray(slot?.prepared) && slot.prepared.length
+            ? {
+                prepared: slot.prepared.map((p) => ({
+                  spellId:  p?.id ?? null,
+                  expended: p?.expended === true,
+                })),
+              }
+            : {}),
+        };
+      }
+      const spells = (e.spells?.contents ?? []).map((sp) => ({
+        id:          sp?.id ?? null,
+        name:        sp?.name ?? '',
+        rank:        sp?.rank ?? sp?.system?.level?.value ?? null,
+        isCantrip:   sp?.isCantrip
+          ?? (sp?.system?.traits?.value ?? []).includes('cantrip'),
+        cost:        sp?.system?.time?.value ?? null,
+        // Innate uses: { value, max } when the spell tracks its own count.
+        uses:        sp?.system?.location?.uses
+          ? { value: sp.system.location.uses.value ?? 0, max: sp.system.location.uses.max ?? 0 }
+          : null,
+        save:        sp?.system?.defense?.save
+          ? {
+              statistic: sp.system.defense.save.statistic ?? null,
+              basic:     sp.system.defense.save.basic === true,
+            }
+          : null,
+        traits:      sp?.system?.traits?.value ?? [],
+        description: stripHtml(sp?.system?.description?.value),
+      }));
+      return {
+        id:        e.id ?? null,
+        name:      e.name ?? '',
+        tradition: e.system?.tradition?.value ?? null,
+        // 'innate' | 'prepared' | 'spontaneous' | 'focus'
+        castingType: e.system?.prepared?.value ?? null,
+        dc:        e.system?.spelldc?.dc ?? null,
+        attack:    e.system?.spelldc?.value ?? null,
+        slots,
+        spells,
+      };
+    });
+}
+
+// Ability items (the NPC stat block's Actions/Reactions/Passives): action-type
+// embedded Items. `category` is PF2e's NPC grouping ('offensive' | 'defensive' |
+// 'interaction'); `actionCost` mirrors the raw cost hints the actor feed reads.
+function getAbilityItems(actor) {
+  return (actor.itemTypes?.action ?? []).map((a) => ({
+    id:          a?.id ?? null,
+    name:        a?.name ?? '',
+    // 'action' | 'reaction' | 'free' | 'passive'
+    actionType:  a?.system?.actionType?.value ?? null,
+    actions:     a?.system?.actions?.value ?? null,
+    category:    a?.system?.category ?? null,
+    traits:      a?.system?.traits?.value ?? [],
+    description: stripHtml(a?.system?.description?.value),
+  }));
+}
+
+// The skills the NPC lists on its stat block (system.skills carries only those,
+// unlike the all-skills statistics collection).
+function getListedSkills(actor) {
+  return Object.entries(actor.system?.skills ?? {})
+    .map(([slug, s]) => ({ slug, mod: s?.mod ?? s?.base ?? s?.value ?? null }))
+    .filter((s) => typeof s.mod === 'number');
+}
+
+// The full offensive kit for an actor — the cnmh_foekit_global payload body.
+// Returns null when actor is absent.
+export function getOffense(actor) {
+  if (!actor) return null;
+  return {
+    strikes:      getStrikes(actor),
+    spellcasting: getSpellcastingEntries(actor),
+    abilities:    getAbilityItems(actor),
+    skills:       getListedSkills(actor),
+  };
+}
+
 // Resolve a combatant to its live actor document. Prefers the already-embedded
 // actor reference (combatant.actor); falls back to game.actors lookup.
 export function getCombatantActor(combatant) {

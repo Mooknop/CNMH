@@ -1,0 +1,99 @@
+{
+  "characterId": "global",
+  "value": {
+    "entryId": "cbt-gob",
+    "foundryActorId": "actor-gob",
+    "kit": {
+      "strikes": [
+        {
+          "index": 0,
+          "slug": "jaws",
+          "label": "Jaws",
+          "attackModifier": 9,
+          "variantLabels": [
+            "+9",
+            "+4",
+            "-1"
+          ],
+          "traits": [
+            "reach-10"
+          ],
+          "ranged": false,
+          "damage": [
+            {
+              "formula": "1d8+4",
+              "type": "piercing"
+            }
+          ],
+          "attackEffects": [
+            "grab"
+          ]
+        }
+      ],
+      "spellcasting": [
+        {
+          "id": "scentry5",
+          "name": "Arcane Spells",
+          "tradition": "arcane",
+          "castingType": "innate",
+          "dc": 19,
+          "attack": 11,
+          "slots": {
+            "1": {
+              "value": 2,
+              "max": 2,
+              "prepared": [
+                {
+                  "spellId": "sp-fear",
+                  "expended": false
+                }
+              ]
+            }
+          },
+          "spells": [
+            {
+              "id": "sp-fear",
+              "name": "Fear",
+              "rank": 1,
+              "isCantrip": false,
+              "cost": "2",
+              "uses": {
+                "value": 1,
+                "max": 1
+              },
+              "save": {
+                "statistic": "will",
+                "basic": false
+              },
+              "traits": [
+                "emotion",
+                "fear"
+              ],
+              "description": "The target is frightened."
+            }
+          ]
+        }
+      ],
+      "abilities": [
+        {
+          "id": "ability6",
+          "name": "Goblin Scuttle",
+          "actionType": "reaction",
+          "actions": null,
+          "category": "offensive",
+          "traits": [
+            "goblin"
+          ],
+          "description": "Step when an ally ends a move adjacent."
+        }
+      ],
+      "skills": [
+        {
+          "slug": "acrobatics",
+          "mod": 5
+        }
+      ]
+    },
+    "ts": 1700000000000
+  }
+}
