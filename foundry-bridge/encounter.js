@@ -11,7 +11,7 @@
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
-  getBestiaryInfo,
+  getBestiaryInfo, getActorId,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   setMultipleInitiatives, rollNpcInitiatives, startCombat,
   onHook,
@@ -53,6 +53,30 @@ export function initEncounter(sendUpdateFn) {
   // be complete, so re-check after the push.
   onHook('deleteCombatant', (combatant)          => { pushEncounterState(combatant.combat); maybeCommitInitiative(combatant.combat); });
   onHook('updateCombat',    (combat, diff, opts) => { _activeCombatId = combat.id; onUpdateCombat(combat, diff, opts); });
+  onHook('updateActor',     (actor)              => onUpdateActor(actor));
+}
+
+// Mid-turn foe vitals freshness (#1531 S5). Enemy HP rides entry.bestiary.hp
+// inside the encounter payload, which historically only refreshed on combat
+// hooks — damage applied MID-turn (dmgapply, a PC reaction, GM sheet edits)
+// went stale on the dock enemy pane and the Focus Dossier alike. Any update to
+// an ENEMY combat actor now re-pushes the encounter. PC actors are excluded:
+// their vitals ride the dedicated cnmh_hp channel (characterSync), and their
+// app→Foundry HP write-backs would echo here as pointless full re-pushes.
+// Debounced so a multi-instance damage application coalesces into one push.
+const FOE_REPUSH_DEBOUNCE_MS = 200;
+let _foeRepushTimer = null;
+
+function onUpdateActor(actor) {
+  const actorId = getActorId(actor);
+  if (!actorId || _actorMap[actorId]) return;
+  const combat = resolveActiveCombat();
+  if (!combat) return;
+  const { combatants } = getCombatState(combat);
+  const inCombat = combatants?.some?.((c) => getCombatantActorId(c) === actorId);
+  if (!inCombat) return;
+  clearTimeout(_foeRepushTimer);
+  _foeRepushTimer = setTimeout(() => pushEncounterState(resolveActiveCombat()), FOE_REPUSH_DEBOUNCE_MS);
 }
 
 // Resolve the live combat the bridge should act on. Prefer the stored id over the
