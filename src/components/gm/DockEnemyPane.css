@@ -1,0 +1,392 @@
+/* GM Command Dock enemy pane (#1531 S2) — GM-shell styling (shell tokens, not
+   the player accent theme); enemy identity leans on the peril tone. */
+
+.dock-enemy {
+  max-width: 640px;
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dock-enemy-name-accent {
+  color: var(--peril-light);
+}
+
+/* ── Header: portrait + identity + turn economy ── */
+.dock-enemy-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.dock-enemy-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dock-enemy-portrait--mono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--peril-light);
+}
+
+.dock-enemy-id {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dock-enemy-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--shell-text);
+}
+
+.dock-enemy-sub {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--shell-text-secondary);
+}
+
+.dock-enemy-economy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dock-enemy-pips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dock-enemy-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--peril-light);
+}
+
+.dock-enemy-pip--spent {
+  background: transparent;
+  border: 1px solid var(--shell-border-strong);
+}
+
+.dock-enemy-reaction {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--peril-light);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+.dock-enemy-reaction--spent {
+  color: var(--shell-text-tertiary);
+  text-decoration: line-through;
+}
+
+/* ── Vitals ── */
+.dock-enemy-hp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.dock-enemy-hp-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-hp-value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--shell-text);
+}
+
+.dock-enemy-hp-max {
+  color: var(--shell-text-tertiary);
+  font-size: 0.8rem;
+}
+
+.dock-enemy-hp-bar {
+  margin-top: 4px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--shell-border);
+  overflow: hidden;
+}
+
+.dock-enemy-hp-fill {
+  height: 100%;
+  width: var(--hp-pct, 0%);
+  border-radius: inherit;
+  background: var(--peril-light);
+}
+
+/* ── Defense grid ── */
+.dock-enemy-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+}
+
+@media (max-width: 560px) {
+  .dock-enemy-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.dock-enemy-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 6px 4px;
+}
+
+.dock-enemy-cell-value {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--shell-text);
+}
+
+.dock-enemy-cell-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Chips / IWR ── */
+.dock-enemy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dock-enemy-chip {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.dock-enemy-chip--peril {
+  color: var(--peril-light);
+  border-color: currentColor;
+}
+
+.dock-enemy-chip--verdant {
+  color: var(--success-light, var(--shell-text));
+  border-color: currentColor;
+}
+
+.dock-enemy-chip--damage {
+  color: var(--shell-text);
+  border-color: var(--shell-border-strong);
+}
+
+.dock-enemy-chip--slots {
+  color: var(--shell-text-secondary);
+}
+
+.dock-enemy-iwr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-enemy-iwr-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dock-enemy-iwr-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  width: 52px;
+}
+
+/* ── Kit sections ── */
+.dock-enemy-section {
+  border-top: 1px solid var(--shell-border);
+  padding-top: var(--space-3);
+}
+
+.dock-enemy-section-head {
+  margin: 0 0 var(--space-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-enemy-strike,
+.dock-enemy-ability,
+.dock-enemy-spell {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dock-enemy-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dock-enemy-glyph {
+  color: var(--peril-light);
+  font-size: 0.9rem;
+}
+
+.dock-enemy-cost-text {
+  font-size: 0.62rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-row-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text);
+}
+
+.dock-enemy-strike-maps {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--peril-light);
+  white-space: nowrap;
+}
+
+.dock-enemy-strike-damage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dock-enemy-tag {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+.dock-enemy-traits {
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Spellcasting ── */
+.dock-enemy-spellentry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-enemy-spellentry + .dock-enemy-spellentry {
+  margin-top: var(--space-3);
+}
+
+.dock-enemy-spellentry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dock-enemy-spellentry-meta {
+  font-size: 0.65rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-enemy-rank-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Rules text / waiting note ── */
+.dock-enemy-details summary {
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-details p {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--shell-text-secondary);
+  white-space: pre-line;
+}
+
+.dock-enemy-waiting {
+  margin: 0;
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: 0.7rem;
+  color: var(--shell-text-tertiary);
+  text-align: center;
+}

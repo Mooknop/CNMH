@@ -13,6 +13,7 @@ import dooropts from '../../foundry-bridge/__fixtures__/relay/dooropts.json';
 import encounter from '../../foundry-bridge/__fixtures__/relay/encounter.json';
 import exploremove from '../../foundry-bridge/__fixtures__/relay/exploremove.json';
 import flanked from '../../foundry-bridge/__fixtures__/relay/flanked.json';
+import foekit from '../../foundry-bridge/__fixtures__/relay/foekit.json';
 import foundryeffects from '../../foundry-bridge/__fixtures__/relay/foundryeffects.json';
 import heropoints from '../../foundry-bridge/__fixtures__/relay/heropoints.json';
 import hp from '../../foundry-bridge/__fixtures__/relay/hp.json';
@@ -30,8 +31,8 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 // captured on the wire.
 export const relayFixtures = {
   actorfeed, adjacency, conditions, dmgdone, dooropts, encounter, exploremove,
-  flanked, foundryeffects, heropoints, hp, minionactors, minions, movedone,
-  moveopts, positions, rolldone, roster, savedone, summonpool,
+  flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
+  movedone, moveopts, positions, rolldone, roster, savedone, summonpool,
 };
 
 // Push a fixture into a test session bus as if the bridge sent it.

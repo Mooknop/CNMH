@@ -12,6 +12,7 @@ import { useAdjacency } from '../hooks/useAdjacency';
 import { useMinions } from '../hooks/useMinions';
 import { useDoors } from '../hooks/useDoors';
 import { useCharacterLiveState } from '../hooks/useCharacterLiveState';
+import { useFoeKit } from '../hooks/useFoeKit';
 
 beforeEach(() => window.localStorage.clear());
 
@@ -73,6 +74,47 @@ describe('encounter', () => {
     expect(enc.round).toBe(relayFixtures.encounter.value.round);
     expect(enc.order.length).toBe(relayFixtures.encounter.value.order.length);
     expect(enc.order[0]).toMatchObject({ entryId: expect.any(String), kind: expect.any(String), name: expect.any(String) });
+  });
+});
+
+describe('foekit (#1531)', () => {
+  it('useFoeKit exposes the recorded kit for the matching entry', () => {
+    const recordedEntryId = relayFixtures.foekit.value.entryId;
+    const { result, session } = renderHookWithProviders(() => useFoeKit(recordedEntryId));
+    act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
+
+    // The fields the pane actually reads — typed asserts so a bridge re-record
+    // that renames one fails here instead of passing on undefined.
+    expect(result.current.strikes[0]).toMatchObject({
+      index: expect.any(Number),
+      label: expect.any(String),
+      attackModifier: expect.any(Number),
+      variantLabels: expect.any(Array),
+      damage: expect.any(Array),
+    });
+    expect(result.current.strikes[0].damage[0]).toMatchObject({
+      formula: expect.any(String), type: expect.any(String),
+    });
+    expect(result.current.spellcasting[0]).toMatchObject({
+      name: expect.any(String),
+      dc: expect.any(Number),
+      spells: expect.any(Array),
+    });
+    expect(result.current.spellcasting[0].spells[0]).toMatchObject({
+      name: expect.any(String), rank: expect.any(Number),
+    });
+    expect(result.current.abilities[0]).toMatchObject({
+      name: expect.any(String), actionType: expect.any(String),
+    });
+    expect(result.current.skills[0]).toMatchObject({
+      slug: expect.any(String), mod: expect.any(Number),
+    });
+  });
+
+  it('guards against a stale kit keyed to another combatant', () => {
+    const { result, session } = renderHookWithProviders(() => useFoeKit('cbt-someone-else'));
+    act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
+    expect(result.current).toBeNull();
   });
 });
 
