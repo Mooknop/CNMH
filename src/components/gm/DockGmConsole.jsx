@@ -9,6 +9,12 @@ import SkillChallengePanel from './SkillChallengePanel';
 import SkillChallengeModal from './SkillChallengeModal';
 import InfluenceSetupModal from './InfluenceSetupModal';
 import EncounterScriptsModal from './EncounterScriptsModal';
+import GmFxTestFire from './GmFxTestFire';
+import SessionLogPanel from './SessionLogPanel';
+import PlayModeControl from './PlayModeControl';
+import BestiaryEditor from './BestiaryEditor';
+import EffectsModal from '../character-sheet/EffectsModal';
+import Modal from '../shared/Modal';
 import { useMinionActors } from '../../hooks/useMinionActors';
 import { useContent } from '../../contexts/ContentContext';
 import './DockGmConsole.css';
@@ -29,11 +35,16 @@ import './DockGmConsole.css';
 // while nothing runs) with its three launchers, and the free-form Fire
 // Trigger console (arbitrary event/target/note — the reaction rail only
 // prompts armed, mappable reactions).
-const DockGmConsole = ({ pcEntries, round = 0 }) => {
+// Table block (#1537 S8): play-mode control, FX test fire, Apply Effect +
+// Bestiary redaction launchers, and the session log — the /gm/encounter
+// long tail, after which that page retires.
+const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
   const [addSummonOpen, setAddSummonOpen] = useState(false);
   const [challengeOpen, setChallengeOpen] = useState(false);
   const [influenceOpen, setInfluenceOpen] = useState(false);
   const [scriptsOpen, setScriptsOpen] = useState(false);
+  const [effectsOpen, setEffectsOpen] = useState(false);
+  const [bestiaryOpen, setBestiaryOpen] = useState(false);
   const { links: minionLinks } = useMinionActors();
   const { characters } = useContent();
 
@@ -97,10 +108,48 @@ const DockGmConsole = ({ pcEntries, round = 0 }) => {
           );
         })}
       </div>
+      <div className="dock-console-table" data-testid="dock-table">
+        <div className="dock-console-head">Table</div>
+        <PlayModeControl />
+        <div className="dock-console-launchers">
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-label="Apply Effect to character"
+            onClick={() => setEffectsOpen(true)}
+          >
+            Apply Effect
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-label="Edit monster descriptions"
+            onClick={() => setBestiaryOpen(true)}
+          >
+            Bestiary
+          </button>
+        </div>
+        <GmFxTestFire entries={entries} />
+        <SessionLogPanel />
+      </div>
       <AddSummonModal isOpen={addSummonOpen} onClose={() => setAddSummonOpen(false)} />
       <SkillChallengeModal isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
       <InfluenceSetupModal isOpen={influenceOpen} onClose={() => setInfluenceOpen(false)} />
       <EncounterScriptsModal isOpen={scriptsOpen} onClose={() => setScriptsOpen(false)} />
+      <EffectsModal
+        isOpen={effectsOpen}
+        onClose={() => setEffectsOpen(false)}
+        selfCharId="gm"
+        selfName="GM"
+      />
+      <Modal
+        isOpen={bestiaryOpen}
+        onClose={() => setBestiaryOpen(false)}
+        title="Bestiary — Description Overrides"
+        maxWidth="820px"
+      >
+        <BestiaryEditor />
+      </Modal>
     </aside>
   );
 };

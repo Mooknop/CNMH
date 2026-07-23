@@ -47,7 +47,6 @@ import GmSpells from './pages/gm/GmSpells';
 import GmEffects from './pages/gm/GmEffects';
 import GmRunes from './pages/gm/GmRunes';
 import GmArmorRunes from './pages/gm/GmArmorRunes';
-import GmEncounter from './pages/gm/GmEncounter';
 import GmImages from './pages/gm/GmImages';
 import GmTheme from './pages/gm/GmTheme';
 import GmMonsters from './pages/gm/GmMonsters';
@@ -148,8 +147,8 @@ function App() {
                           <Route path="characters" element={<GmCharacters />} />
                           <Route path="theme" element={<GmTheme />} />
 
-                          {/* Encounter stays reachable until Slice 4 folds it into the Dashboard */}
-                          <Route path="encounter" element={<GmEncounter />} />
+                          {/* Retired (#1537 S8): the Command Dock is the encounter surface. */}
+                          <Route path="encounter" element={<Navigate to="/gm/dock" replace />} />
 
                           {/* Redirects from the old flat paths (bookmarks / player deep links) */}
                           <Route path="quests" element={<Navigate to="/gm/world/quests" replace />} />

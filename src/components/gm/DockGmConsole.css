@@ -46,6 +46,15 @@
   gap: var(--space-2);
 }
 
+/* ── Table long tail (#1537 S8) ── */
+.dock-console-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+  padding-top: var(--space-3);
+}
+
 /* ── Menagerie (#1537 S6) ── */
 .dock-console-menagerie {
   display: flex;

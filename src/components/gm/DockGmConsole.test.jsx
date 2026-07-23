@@ -44,6 +44,34 @@ describe('DockGmConsole (#1537 S2)', () => {
     });
   });
 
+  describe('table long tail (S8)', () => {
+    it('mounts play-mode control, FX test fire, and the session log', () => {
+      renderWithProviders(
+        <DockGmConsole
+          pcEntries={PC_ENTRIES}
+          entries={[{ entryId: 'e-gob', kind: 'enemy', name: 'Goblin' }]}
+          round={2}
+        />
+      );
+      const table = screen.getByTestId('dock-table');
+      expect(screen.getByRole('heading', { name: 'FX Test Fire' })).toBeInTheDocument();
+      expect(table).toHaveTextContent('Table');
+      // FX target list is fed by the raw order entries prop.
+      expect(screen.getByLabelText('fx target')).toHaveTextContent('Goblin');
+    });
+
+    it('Apply Effect and Bestiary launchers open their modals', () => {
+      renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} round={2} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Effect to character' }));
+      expect(screen.getByRole('heading', { name: 'Apply Effect' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Edit monster descriptions' }));
+      expect(screen.getByRole('heading', { name: 'Bestiary — Description Overrides' })).toBeInTheDocument();
+    });
+  });
+
   describe('menagerie (S6)', () => {
     it('Add summon opens the summon modal', () => {
       renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);

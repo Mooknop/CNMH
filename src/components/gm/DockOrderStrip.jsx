@@ -15,7 +15,7 @@ import './DockOrderStrip.css';
 // combatants (no actorMap verdict yet — the auto-matcher hasn't fired and the
 // GM hasn't ruled); decided rows collapse to a ✎ so a wrong auto-match is
 // still fixable without leaving the dock. "Not a PC" stores the null sentinel
-// so ActorMapSync never re-matches a decided slot (GmEncounter precedent).
+// so ActorMapSync never re-matches a decided slot.
 const DockOrderStrip = () => {
   const { encounter, actorMap, setActorMap } = useEncounter();
   const { effectsFor } = useEnemyEffects();

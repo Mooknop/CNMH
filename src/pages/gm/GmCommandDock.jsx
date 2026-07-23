@@ -101,7 +101,7 @@ const GmCommandDock = () => {
   );
 
   // Console targets don't need roster resolution — any charId entry can
-  // receive a save prompt (mirrors GmEncounter's derivation).
+  // receive a save prompt.
   const consolePcEntries = (encounter?.order || []).filter(
     (e) => e.kind === 'pc' && e.charId
   );
@@ -274,7 +274,11 @@ const GmCommandDock = () => {
           />
         )}
         {mode === 'encounter' && consoleOpen && (
-          <DockGmConsole pcEntries={consolePcEntries} round={encounter?.round || 0} />
+          <DockGmConsole
+            pcEntries={consolePcEntries}
+            entries={encounter?.order || []}
+            round={encounter?.round || 0}
+          />
         )}
       </div>
     </div>

@@ -14,7 +14,7 @@ import { RELAY, globalKey } from '../sync/keys';
 //     exploration movement to work even before any combat has run
 //
 // Safety: only fills *absent* (undefined) slots. A present value — whether a
-// charId or an explicit null sentinel ("Not a PC", set by GmEncounter) — is
+// charId or an explicit null sentinel ("Not a PC", set from the dock order strip) — is
 // never overwritten. The functional updater re-checks freshest state at write
 // time so a concurrent GM assignment always wins.
 export const useActorMapAutoMatch = () => {
