@@ -1,0 +1,98 @@
+/* Dock order strip (#1537 S5) — compact full-order row above the dock body. */
+
+.dock-order {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dock-order-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  background: var(--surface-card);
+  min-width: 0;
+}
+
+.dock-order-entry.is-current {
+  border-color: var(--peril-light);
+}
+
+.dock-order-entry.is-pc.is-current {
+  border-color: var(--accent-outline, var(--shell-border-strong));
+}
+
+.dock-order-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.dock-order-marker {
+  color: var(--peril-light);
+  font-size: 0.6rem;
+}
+
+.dock-order-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--shell-text);
+  white-space: nowrap;
+}
+
+.dock-order-entry.is-enemy .dock-order-name {
+  color: var(--peril-light);
+}
+
+.dock-order-init {
+  font-size: 0.62rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-order-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 14px;
+}
+
+.dock-order-cond {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--peril-light);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.dock-order-edit {
+  font: inherit;
+  font-size: 0.62rem;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--shell-text-tertiary);
+  cursor: pointer;
+}
+
+.dock-order-edit:hover {
+  color: var(--shell-text);
+}
+
+.dock-order-assign {
+  font: inherit;
+  font-size: 0.65rem;
+  color: var(--shell-text);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: 1px 4px;
+  max-width: 150px;
+}

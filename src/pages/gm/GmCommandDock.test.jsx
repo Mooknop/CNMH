@@ -29,6 +29,11 @@ vi.mock('../../components/gm/DockGmConsole', () => ({
     return <div data-testid="dock-console" data-pcs={pcEntries.length} />;
   },
 }));
+vi.mock('../../components/gm/DockOrderStrip', () => ({
+  default: function DummyDockOrderStrip() {
+    return <div data-testid="dock-order-strip" />;
+  },
+}));
 vi.mock('../../components/gm/GmInitiativePanel', () => ({
   default: function DummyInitPanel({ pcs }) {
     return <div data-testid="init-panel" data-count={pcs.length} />;
@@ -71,9 +76,15 @@ describe('GmCommandDock', () => {
     expect(screen.getByText('Exploration')).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
-    // The GM console (and its toggle) are encounter-mode only.
+    // The GM console (and its toggle) and order strip are encounter-mode only.
     expect(screen.queryByTestId('dock-console')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /GM console/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('dock-order-strip')).not.toBeInTheDocument();
+  });
+
+  it('mounts the order strip in encounter mode (#1537 S5)', () => {
+    render(<GmCommandDock />);
+    expect(screen.getByTestId('dock-order-strip')).toBeInTheDocument();
   });
 
   describe('GM console (#1537 S2)', () => {

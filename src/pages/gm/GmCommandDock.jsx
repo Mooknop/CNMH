@@ -10,6 +10,7 @@ import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
 import DockGmConsole from '../../components/gm/DockGmConsole';
+import DockOrderStrip from '../../components/gm/DockOrderStrip';
 import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
@@ -243,6 +244,7 @@ const GmCommandDock = () => {
           ))}
         </div>
       )}
+      {mode === 'encounter' && <DockOrderStrip />}
       <div className="gm-dock-body">
         <div className="gm-dock-stage-col">
           {mode === 'encounter' ? (
