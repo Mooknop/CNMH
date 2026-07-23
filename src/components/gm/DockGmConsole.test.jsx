@@ -22,6 +22,28 @@ describe('DockGmConsole (#1537 S2)', () => {
     expect(screen.queryByRole('heading', { name: 'Armed Effects' })).not.toBeInTheDocument();
   });
 
+  describe('challenges + triggers (S7)', () => {
+    it('mounts the free-form Fire Trigger console for the encounter PCs', () => {
+      renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} round={2} />);
+      expect(screen.getByRole('heading', { name: 'Fire Trigger' })).toBeInTheDocument();
+    });
+
+    it('the three challenge launchers open their setup modals', () => {
+      renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} round={2} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Start a skill challenge' }));
+      expect(screen.getByRole('heading', { name: 'Skill Challenge' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Start an influence encounter' }));
+      expect(screen.getByRole('heading', { name: 'Influence Encounter' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Launch an encounter script' }));
+      expect(screen.getByRole('heading', { name: 'Encounter Scripts' })).toBeInTheDocument();
+    });
+  });
+
   describe('menagerie (S6)', () => {
     it('Add summon opens the summon modal', () => {
       renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);
