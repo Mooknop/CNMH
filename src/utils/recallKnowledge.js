@@ -121,8 +121,20 @@ export function defaultRecord() {
     immunitiesRevealed: {},  // { [type]: true } — partial per-type reveal (#1014 damage trigger)
     lockedOut: {},          // { [charId]: true } — in-combat crit-fail lock, cleared at encounter end
     dayLocked: {},          // { [charId]: dayIndex } — out-of-combat crit-fail lock, clears next in-game day (#396)
+    // Abilities the party has SEEN this creature use (#1537 S9) — the dock
+    // stamps strikes/casts on execution and abilities on a GM tap. Keyed by
+    // creatureKey like every other reveal, so witnessing one ghoul's Paralysis
+    // marks them all, for the whole campaign.
+    witnessed: {},          // { [abilityName]: { kind: 'strike'|'spell'|'ability', ts } }
     history: [],
   };
+}
+
+// Witnessed abilities as a render-ready list, oldest first (#1537 S9).
+export function witnessedList(rec) {
+  return Object.entries(rec?.witnessed || {})
+    .map(([name, w]) => ({ name, kind: w?.kind || 'ability', ts: w?.ts || 0 }))
+    .sort((a, b) => a.ts - b.ts);
 }
 
 // Ordered field list for the GM bestiary editor's per-field reveal toggles

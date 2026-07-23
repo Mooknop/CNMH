@@ -12,6 +12,8 @@ import PF2E_CONDITIONS, { getCondition } from '../../data/pf2eConditions';
 import { getActionGlyph } from '../../utils/actionGlyph';
 import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import { STRIKE_DEGREE_LABEL } from '../../utils/strikeRelay';
+import { rkKeyFor } from '../../utils/recallKnowledge';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { DAMAGE_TYPES } from '../../utils/damage';
 import { buildDamageApply } from '../../utils/damageRelay';
 import { SAVEDONE_KEY, buildSaveRoll } from '../../utils/saveRelay';
@@ -388,13 +390,31 @@ const SpellcastingBlock = ({ entry, live, casting, onCast }) => {
   );
 };
 
-const AbilityRow = ({ ability }) => (
+// Abilities have no execution rail, so the reveal is a GM tap (#1537 S9):
+// witnessed → a settled tag; unwitnessed → the 👁 button.
+const AbilityRow = ({ ability, witnessed, onReveal }) => (
   <li className="dock-enemy-ability" data-testid="dock-enemy-ability">
     <div className="dock-enemy-row-head">
       <CostGlyph cost={ability.actionType === 'action' ? ability.actions : ability.actionType} />
       <span className="dock-enemy-row-name">{ability.name}</span>
       {ability.actionType === 'passive' && <span className="dock-enemy-tag">passive</span>}
       {ability.category && <span className="dock-enemy-tag">{ability.category}</span>}
+      {onReveal && (
+        witnessed ? (
+          <span className="dock-enemy-tag dock-enemy-tag--witnessed">revealed</span>
+        ) : (
+          <span className="dock-enemy-btns">
+            <button
+              type="button"
+              className="dock-enemy-btn"
+              aria-label={`Reveal ${ability.name}`}
+              onClick={() => onReveal(ability)}
+            >
+              👁 Reveal
+            </button>
+          </span>
+        )
+      )}
     </div>
     {(ability.traits || []).length > 0 && (
       <div className="dock-enemy-traits">{ability.traits.join(' · ')}</div>
@@ -414,6 +434,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
   const { encounter } = useEncounter();
   const { actions, spent, reaction } = useActorFeed(entry.entryId);
   const { effectsFor, applyCondition, removeCondition } = useEnemyEffects();
+  const { recordFor, witness } = useRecallKnowledge();
   const { foundryConnected } = useSession();
   const { effects: effectCatalog } = useContent();
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
@@ -474,7 +495,19 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
   // PC combatants offered as the strike target override.
   const pcTargets = (encounter?.order || []).filter((e) => e.kind === 'pc');
 
+  // RK-reveal side effects (#1537 S9): executing a strike/cast from the dock
+  // means the table SAW it — auto-witness, keyed by creatureKey so every
+  // same-type creature reveals together, campaign-wide. Ability rows reveal
+  // on a GM tap (no execution rail to hook).
+  const rkKey = rkKeyFor(entry);
+  const witnessedMap = rkKey ? (recordFor(rkKey).witnessed || {}) : {};
+  const markWitnessed = (abilityName, kind) => {
+    if (!rkKey || !abilityName) return;
+    witness(rkKey, { name: abilityName, kind, creatureName: name });
+  };
+
   const fireStrike = async (strikeDef, { variant = 0, damage = null } = {}) => {
+    markWitnessed(strikeDef.label, 'strike');
     const label = damage
       ? `${strikeDef.label} — ${damage === 'critical' ? 'critical damage' : 'damage'}`
       : `${strikeDef.label} ${strikeDef.variantLabels?.[variant] ?? ''}`.trim();
@@ -491,6 +524,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
   };
 
   const fireCast = async (spellEntry, sp) => {
+    markWitnessed(sp.name, 'spell');
     const ack = await sendCast({
       entryId,
       entryItemId: spellEntry.id,
@@ -720,7 +754,14 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
         <div className="dock-enemy-section">
           <h3 className="dock-enemy-section-head">Abilities</h3>
           <ul className="dock-enemy-list">
-            {kit.abilities.map((a) => <AbilityRow key={a.id || a.name} ability={a} />)}
+            {kit.abilities.map((a) => (
+              <AbilityRow
+                key={a.id || a.name}
+                ability={a}
+                witnessed={!!witnessedMap[a.name]}
+                onReveal={rkKey ? (ab) => markWitnessed(ab.name, 'ability') : null}
+              />
+            ))}
           </ul>
         </div>
       )}

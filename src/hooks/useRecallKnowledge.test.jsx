@@ -55,3 +55,42 @@ describe('useRecallKnowledge.resolve — out-of-combat (#396)', () => {
     expect(mockKnowledge.gob.history).toHaveLength(1);
   });
 });
+
+describe('useRecallKnowledge.witness (#1537 S9)', () => {
+  it('stamps a fresh witnessed ability and logs the reveal once', () => {
+    const { result } = renderHook(() => useRecallKnowledge());
+
+    act(() => {
+      result.current.witness('ghoul-key', { name: 'Paralysis', kind: 'ability', creatureName: 'Ghoul' });
+    });
+
+    expect(mockKnowledge['ghoul-key'].witnessed.Paralysis).toEqual(
+      expect.objectContaining({ kind: 'ability' })
+    );
+    expect(mockAppendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "Ghoul's Paralysis revealed to players (witnessed)" })
+    );
+
+    // Idempotent: re-witnessing neither rewrites nor re-logs.
+    const stamped = mockKnowledge['ghoul-key'].witnessed.Paralysis;
+    act(() => {
+      result.current.witness('ghoul-key', { name: 'Paralysis', kind: 'ability', creatureName: 'Ghoul' });
+    });
+    expect(mockKnowledge['ghoul-key'].witnessed.Paralysis).toBe(stamped);
+    expect(mockAppendLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves existing reveals on the record and no-ops without a key or name', () => {
+    mockKnowledge = { 'ghoul-key': { ...{}, identity: true, witnessed: {} } };
+    const { result } = renderHook(() => useRecallKnowledge());
+
+    act(() => {
+      result.current.witness('ghoul-key', { name: 'Jaws', kind: 'strike' });
+      result.current.witness(null, { name: 'Jaws' });
+      result.current.witness('ghoul-key', {});
+    });
+
+    expect(mockKnowledge['ghoul-key'].identity).toBe(true);
+    expect(Object.keys(mockKnowledge['ghoul-key'].witnessed)).toEqual(['Jaws']);
+  });
+});

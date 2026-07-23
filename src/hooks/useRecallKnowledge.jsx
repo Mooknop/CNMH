@@ -86,12 +86,41 @@ export const useRecallKnowledge = () => {
     [setKnowledge]
   );
 
+  // Mark an ability as WITNESSED by the party (#1537 S9): the dock's enemy
+  // pane stamps strikes/casts on execution and abilities on a GM tap. Idempotent
+  // per name — re-witnessing neither rewrites the timestamp nor re-logs.
+  const witness = useCallback(
+    (entryId, { name, kind = 'ability', creatureName = null }) => {
+      if (!entryId || !name) return;
+      let fresh = false;
+      setKnowledge((cur) => {
+        const prev = cur?.[entryId] || defaultRecord();
+        if (prev.witnessed?.[name]) return cur;
+        fresh = true;
+        return {
+          ...cur,
+          [entryId]: {
+            ...prev,
+            witnessed: { ...(prev.witnessed || {}), [name]: { kind, ts: Date.now() } },
+          },
+        };
+      });
+      if (fresh) {
+        appendLog({
+          type: 'system',
+          text: `${creatureName ? `${creatureName}'s ` : ''}${name} revealed to players (witnessed)`,
+        });
+      }
+    },
+    [setKnowledge, appendLog]
+  );
+
   const clearAll = useCallback(
     () => setKnowledge({}),
     [setKnowledge]
   );
 
-  return { knowledge, recordFor, resolve, mergeRecord, clearLock, clearAll };
+  return { knowledge, recordFor, resolve, mergeRecord, witness, clearLock, clearAll };
 };
 
 export default useRecallKnowledge;

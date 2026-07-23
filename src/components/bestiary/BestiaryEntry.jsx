@@ -1,7 +1,7 @@
 import React from 'react';
 import TraitTag from '../shared/TraitTag';
 import FieldNote from './FieldNote';
-import { recallKnowledgeDC, defaultRecord } from '../../utils/recallKnowledge';
+import { recallKnowledgeDC, defaultRecord, witnessedList } from '../../utils/recallKnowledge';
 import {
   revealFlags,
   traitToAccent,
@@ -158,6 +158,17 @@ const BestiaryEntry = ({
             </div>
           )}
 
+          {/* Abilities the party has SEEN this creature use (#1537 S9) —
+              witnessed knowledge, so it shows even before identification. */}
+          {witnessedList(rec).length > 0 && (
+            <div className="dex-mini-witnessed" data-testid="bestiary-witnessed">
+              <span className="dex-witnessed-label">Witnessed</span>
+              {witnessedList(rec).map((w) => (
+                <span key={w.name} className="dex-witnessed-chip">{w.name}</span>
+              ))}
+            </div>
+          )}
+
           <div className="dex-mini-stats">
             <div className="st">
               <div className="k">AC</div>
@@ -275,6 +286,16 @@ const BestiaryEntry = ({
             {identityRevealed
               ? bestiary.traits.map((t) => <TraitTag key={t} trait={t} />)
               : <Redacted width="10ch" />}
+          </div>
+        )}
+        {/* Abilities the party has SEEN this creature use (#1537 S9) —
+            witnessed knowledge, so it shows even before identification. */}
+        {witnessedList(rec).length > 0 && (
+          <div className="dex-mini-witnessed" data-testid="bestiary-witnessed">
+            <span className="dex-witnessed-label">Witnessed</span>
+            {witnessedList(rec).map((w) => (
+              <span key={w.name} className="dex-witnessed-chip">{w.name}</span>
+            ))}
           </div>
         )}
       </div>
