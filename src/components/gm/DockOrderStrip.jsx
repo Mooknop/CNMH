@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
+import { useSummons } from '../../hooks/useSummons';
 import { useContent } from '../../contexts/ContentContext';
 import PersistentChip from '../encounter/PersistentChip';
 import BystanderChip from '../encounter/BystanderChip';
@@ -18,6 +19,7 @@ import './DockOrderStrip.css';
 const DockOrderStrip = () => {
   const { encounter, actorMap, setActorMap } = useEncounter();
   const { effectsFor } = useEnemyEffects();
+  const { removeSummon } = useSummons();
   const { characters } = useContent();
   const [editingEntryId, setEditingEntryId] = useState(null);
 
@@ -42,7 +44,12 @@ const DockOrderStrip = () => {
         const decided = e.foundryActorId ? actorMap?.[e.foundryActorId] !== undefined : true;
         const showSelect = !!e.foundryActorId && (!decided || editingEntryId === e.entryId);
         const enemyConditions = e.kind === 'enemy' ? (effectsFor(e.entryId).conditions || []) : [];
-        const kindClass = e.kind === 'summon' ? 'is-summon' : e.kind === 'enemy' ? 'is-enemy' : 'is-pc';
+        // Ally tone for FRIENDLY (1) no-charId combatants (#1537 S6).
+        const kindClass = e.kind === 'summon'
+          ? 'is-summon'
+          : e.kind === 'enemy'
+            ? (e.disposition === 1 ? 'is-ally' : 'is-enemy')
+            : 'is-pc';
         return (
           <div
             key={e.entryId}
@@ -80,6 +87,21 @@ const DockOrderStrip = () => {
                 >
                   ✎
                 </button>
+              )}
+              {e.kind === 'summon' && (
+                <>
+                  <span className="dock-order-init" aria-label={`${e.name} hp`}>
+                    {e.bestiary?.hp?.current ?? 0}/{e.bestiary?.hp?.max ?? 0}
+                  </span>
+                  <button
+                    type="button"
+                    className="dock-order-edit"
+                    aria-label={`Dismiss ${e.name}`}
+                    onClick={() => removeSummon(e.entryId)}
+                  >
+                    Dismiss
+                  </button>
+                </>
               )}
             </span>
             {showSelect && (

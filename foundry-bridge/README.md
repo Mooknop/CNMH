@@ -56,7 +56,7 @@ channel, add its token there too so neither side hand-writes the string.
 | `roster` | bridge → app | `global` | `[{ actorId, name, speed }]` — PC actor roster, pushed on connect and actor create/delete so the app can resolve charId → token before any combat |
 | `rosterreq` | app → bridge | `global` | _(no payload)_ — request a fresh `roster` push (reconnect) |
 | `actormap` | app → bridge | `global` | `{ [foundryActorId]: charId }` |
-| `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` |
+| `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` — each order entry carries `disposition` (#1537 S6): the combatant token's CONST.TOKEN_DISPOSITIONS value (FRIENDLY 1 / NEUTRAL 0 / HOSTILE -1 / SECRET -2, null without a token), so the dock renders a friendly no-charId combatant as an ally pane instead of an enemy one |
 | `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
 | `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative, statistic? }], rollNpcs }` — batch-write PC initiatives (`setMultipleInitiatives`), roll NPCs, then `startCombat` (idempotent; no-op once started) |
 | `initroll` | app → bridge | charId | `{ d20, mod, total, skill, ts }` — a player's setup-phase initiative roll; survives `encounter` overwrites. The bridge tallies these against the PC combatant set and auto-runs `initcommit` once every expected PC has rolled |

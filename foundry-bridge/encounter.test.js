@@ -523,3 +523,27 @@ describe('mid-turn foe vitals re-push (#1531 S5)', () => {
     expect(encounterPushes()).toHaveLength(0);
   });
 });
+
+describe('combatant disposition (#1537 S6)', () => {
+  test('order entries carry the token disposition; token-less combatants get null', () => {
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    const combat = makeCombat({
+      id: 'combat-disp',
+      combatants: [
+        makeCombatant({ id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: 18, token: { disposition: 1 } }),
+        makeCombatant({ id: 'cbt-ally', name: 'Summoned Ally', actorId: 'actor-ally', initiative: 12, token: { disposition: 1 } }),
+        makeCombatant({ id: 'cbt-gob', name: 'Goblin', actorId: 'actor-gob', initiative: 9, token: { disposition: -1 } }),
+        makeCombatant({ id: 'cbt-ghost', name: 'Tokenless', actorId: 'actor-ghost', initiative: 5 }),
+      ],
+      activeTurnIndex: 0,
+    });
+    global.Hooks.fire('createCombat', combat);
+
+    const payload = send.mock.calls.filter((c) => c[1] === 'encounter').at(-1)[2];
+    const byId = Object.fromEntries(payload.order.map((e) => [e.entryId, e]));
+    expect(byId['cbt-pellias'].disposition).toBe(1);
+    expect(byId['cbt-ally']).toMatchObject({ kind: 'enemy', disposition: 1 });
+    expect(byId['cbt-gob'].disposition).toBe(-1);
+    expect(byId['cbt-ghost'].disposition).toBeNull();
+  });
+});

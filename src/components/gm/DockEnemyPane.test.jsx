@@ -188,6 +188,30 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  describe('ally tone (S6)', () => {
+    it('renders the Ally kicker and drops the PC target chips, keeping the rails', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} tone="ally" />);
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol: 9, module: '0.0.0-test', ts: 1 });
+        session.push('global', RELAY.ENCOUNTER, {
+          active: true, phase: 'in-progress', round: 1, currentTurnIndex: 1,
+          order: [
+            { entryId: 'e-pellias', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+            { entryId: ENTRY.entryId, kind: 'enemy', name: ENTRY.name, disposition: 1 },
+          ],
+        });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+
+      expect(screen.getByLabelText('Ally turn: Goblin Warrior')).toBeInTheDocument();
+      expect(screen.getByText('Ally turn')).toBeInTheDocument();
+      // Strike/cast execution stays; the PC target chips do not.
+      expect(screen.getByRole('button', { name: 'Strike: Jaws at +9' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cast: Fear' })).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Strike target' })).not.toBeInTheDocument();
+    });
+  });
+
   describe('cast rail (S4)', () => {
     const armCast = (session, { protocol = 7 } = {}) => {
       act(() => {

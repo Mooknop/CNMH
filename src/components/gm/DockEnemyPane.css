@@ -16,6 +16,23 @@
   color: var(--peril-light);
 }
 
+/* Ally tone (#1537 S6): the friendly no-charId combatant's pane swaps the
+   peril accent for the success tone across the identity/economy/rail chrome. */
+.dock-enemy--ally .dock-enemy-name-accent,
+.dock-enemy--ally .dock-enemy-portrait--mono,
+.dock-enemy--ally .dock-enemy-glyph,
+.dock-enemy--ally .dock-enemy-reaction,
+.dock-enemy--ally .dock-enemy-strike-maps,
+.dock-enemy--ally .dock-enemy-btn,
+.dock-enemy--ally .dock-enemy-result b {
+  color: var(--success-light, var(--shell-text));
+}
+
+.dock-enemy--ally .dock-enemy-pip,
+.dock-enemy--ally .dock-enemy-hp-fill {
+  background: var(--success-light, var(--shell-text-secondary));
+}
+
 /* ── Header: portrait + identity + turn economy ── */
 .dock-enemy-head {
   display: flex;

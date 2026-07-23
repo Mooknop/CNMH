@@ -11,7 +11,7 @@
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
-  getBestiaryInfo, getActorId,
+  getBestiaryInfo, getActorId, getCombatantDisposition,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   setMultipleInitiatives, rollNpcInitiatives, startCombat,
   onHook,
@@ -232,6 +232,9 @@ function buildEncounterPayload(combat) {
       kind:          charId ? 'pc' : 'enemy',
       name:          c.name,
       initiative:    getCombatantInitiative(c),
+      // Token disposition (#1537 S6) — the app renders a FRIENDLY (1) no-charId
+      // combatant as an ally pane instead of an enemy one.
+      disposition:   getCombatantDisposition(c),
       foundryActorId,
       ...(charId    ? { charId }    : {}),
       ...(defenses  ? { defenses }  : {}),

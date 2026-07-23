@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, act } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import { RELAY } from '../../sync/keys';
 import DockGmConsole from './DockGmConsole';
@@ -20,6 +20,31 @@ describe('DockGmConsole (#1537 S2)', () => {
     // Quiet table: the resolve consoles hide themselves when nothing pends.
     expect(screen.queryByRole('heading', { name: 'Requested Saves' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Armed Effects' })).not.toBeInTheDocument();
+  });
+
+  describe('menagerie (S6)', () => {
+    it('Add summon opens the summon modal', () => {
+      renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add summon to encounter' }));
+      expect(screen.getByRole('heading', { name: 'Add summon' })).toBeInTheDocument();
+    });
+
+    it('linked companions/familiars list with their spawn buttons', () => {
+      const { session } = renderWithProviders(<DockGmConsole pcEntries={PC_ENTRIES} />);
+      act(() => {
+        session.push('global', RELAY.MINIONACTORS, {
+          'Pellias-familiar': {
+            foundryActorId: 'a-laz', ownerCharId: 'Pellias', role: 'familiar',
+            name: 'Lazarus', onScene: false,
+          },
+        });
+      });
+
+      const menagerie = screen.getByTestId('dock-menagerie');
+      expect(menagerie).toHaveTextContent('Lazarus');
+      expect(screen.getByRole('button', { name: 'Spawn Lazarus on the map' })).toBeInTheDocument();
+    });
   });
 
   it('surfaces a pending save request for resolution', () => {

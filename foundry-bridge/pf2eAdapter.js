@@ -378,6 +378,16 @@ export function getCombatantInitiative(combatant) {
   return combatant.initiative ?? null;
 }
 
+// The combatant token's disposition (#1537 S6): CONST.TOKEN_DISPOSITIONS —
+// FRIENDLY = 1, NEUTRAL = 0, HOSTILE = -1, SECRET = -2. Lets the app tell a
+// friendly no-charId combatant (summoned ally, NPC ally) from a real enemy.
+// Null when the combatant has no token reference.
+export function getCombatantDisposition(combatant) {
+  return combatant.token?.disposition
+    ?? combatant.token?.document?.disposition
+    ?? null;
+}
+
 // --- Combat lookup & lifecycle ---
 
 export function getCombatById(combatId) {
