@@ -89,6 +89,35 @@ describe('DockOrderStrip (#1537 S5)', () => {
     expect(within(screen.getByTestId('dock-order-e-wolf')).queryByText(/cond/)).not.toBeInTheDocument();
   });
 
+  it('summon rows show HP and dismiss through useSummons; ally disposition tones the row (#1537 S6)', () => {
+    const { session } = renderWithProviders(<DockOrderStrip />);
+    act(() => {
+      session.push('global', RELAY.ACTORMAP, { 'a-pellias': 'Pellias', 'a-gob': null, 'a-wolf': null });
+      session.push('global', APP.SUMMONS, [
+        { entryId: 'sum-1', kind: 'summon', name: 'Zombie Shambler', bestiary: { hp: { current: 9, max: 24 } } },
+      ]);
+      session.push('global', RELAY.ENCOUNTER, {
+        active: true, phase: 'in-progress', round: 2, currentTurnIndex: 1,
+        order: [
+          ...ORDER,
+          // FRIENDLY no-charId Foundry combatant → ally tone.
+          { entryId: 'e-angel', kind: 'enemy', name: 'Summoned Angel', initiative: 5, foundryActorId: 'a-angel', disposition: 1 },
+        ],
+        log: [], saveRequests: [],
+      });
+    });
+
+    // useEncounter appends cnmh_summons_global entries to the display order.
+    const summonRow = screen.getByTestId('dock-order-sum-1');
+    expect(summonRow).toHaveTextContent('9/24');
+    expect(summonRow.className).toContain('is-summon');
+    expect(screen.getByTestId('dock-order-e-angel').className).toContain('is-ally');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss Zombie Shambler' }));
+    const write = session.sent.filter((m) => m.stateType === APP.SUMMONS).at(-1);
+    expect(write.value).toEqual([]);
+  });
+
   it('renders during setup with dash initiatives and no current marker', () => {
     const { session } = renderWithProviders(<DockOrderStrip />);
     act(() => {

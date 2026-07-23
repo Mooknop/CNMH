@@ -11,6 +11,7 @@
         "kind": "enemy",
         "name": "Goblin",
         "initiative": 22,
+        "disposition": -1,
         "foundryActorId": "actor-goblin",
         "defenses": {
           "ac": null,
@@ -48,6 +49,7 @@
         "kind": "pc",
         "name": "Pellias",
         "initiative": 18,
+        "disposition": 1,
         "foundryActorId": "actor-pellias",
         "charId": "Pellias"
       }

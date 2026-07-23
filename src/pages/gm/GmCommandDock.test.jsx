@@ -19,8 +19,8 @@ vi.mock('../../components/gm/DockReactionRail', () => ({
   },
 }));
 vi.mock('../../components/gm/DockEnemyPane', () => ({
-  default: function DummyDockEnemyPane({ entry }) {
-    return <div data-testid="dock-enemy-pane">{entry.name}</div>;
+  default: function DummyDockEnemyPane({ entry, tone }) {
+    return <div data-testid="dock-enemy-pane" data-tone={tone}>{entry.name}</div>;
   },
 }));
 vi.mock('../../hooks/useAdvanceTurn', () => ({ useAdvanceTurn: vi.fn() }));
@@ -207,6 +207,23 @@ describe('GmCommandDock', () => {
     // #1537 S1: the GM advances the enemy turn without leaving the dock.
     fireEvent.click(screen.getByRole('button', { name: "End Ghoul's turn" }));
     expect(advanceMock).toHaveBeenCalledWith('Ghoul');
+    // Hostile (or unmarked) disposition = the foe tone (#1537 S6).
+    expect(screen.getByTestId('dock-enemy-pane')).toHaveAttribute('data-tone', 'foe');
+  });
+
+  it('a FRIENDLY no-charId combatant gets the ally-toned pane (#1537 S6)', () => {
+    useEncounter.mockReturnValue({
+      encounter: encounterWith({
+        currentTurnIndex: 1,
+        order: [
+          { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+          { entryId: 'e2', kind: 'enemy', name: 'Summoned Angel', disposition: 1 },
+        ],
+      }),
+    });
+    render(<GmCommandDock />);
+    expect(screen.getByTestId('dock-enemy-pane')).toHaveAttribute('data-tone', 'ally');
+    expect(screen.getByRole('button', { name: "End Summoned Angel's turn" })).toBeInTheDocument();
   });
 
   it('an unresolved PC entry gets the generic Advance turn control (#1537 S1)', () => {

@@ -163,13 +163,16 @@ const GmCommandDock = () => {
     }
     if (!followCharacter) {
       if (entry.kind === 'enemy') {
-        // Keyed by entryId so the pane's disclosure/scroll state never leaks
-        // from one enemy into the next on turn handoff.
+        // Disposition-aware (#1537 S6): a FRIENDLY (1) no-charId combatant —
+        // summoned ally, NPC ally — gets the ally-toned pane. Keyed by entryId
+        // so the pane's disclosure/scroll state never leaks from one combatant
+        // into the next on turn handoff.
+        const ally = entry.disposition === 1;
         return (
           <div className="gm-dock-nonpc" key={entry.entryId}>
-            <DockEnemyPane entry={entry} />
+            <DockEnemyPane entry={entry} tone={ally ? 'ally' : 'foe'} />
             <AdvanceTurnControl
-              label={`End ${entry.name || 'enemy'}'s turn`}
+              label={`End ${entry.name || (ally ? 'ally' : 'enemy')}'s turn`}
               logName={entry.name || 'Enemy'}
             />
           </div>

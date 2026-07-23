@@ -173,8 +173,14 @@ const RECIPES = {
     const combat = makeCombat({
       id: 'combat1',
       combatants: [
-        makeCombatant({ id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: 18 }),
-        makeCombatant({ id: 'cbt-goblin', name: 'Goblin', actorId: 'actor-goblin', initiative: 22 }),
+        makeCombatant({
+          id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: 18,
+          token: { disposition: 1 },
+        }),
+        makeCombatant({
+          id: 'cbt-goblin', name: 'Goblin', actorId: 'actor-goblin', initiative: 22,
+          token: { disposition: -1 },
+        }),
       ],
       activeTurnIndex: 0,
     });

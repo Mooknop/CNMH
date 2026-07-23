@@ -403,7 +403,11 @@ const AbilityRow = ({ ability }) => (
   </li>
 );
 
-const DockEnemyPane = ({ entry }) => {
+// tone='ally' (#1537 S6): a FRIENDLY no-charId combatant. Same pane, ally
+// styling, "Ally turn" kicker, and NO PC target chips — an ally strikes the
+// GM's Foundry-targeted enemy, never a default-offered party member.
+const DockEnemyPane = ({ entry, tone = 'foe' }) => {
+  const ally = tone === 'ally';
   const kit = useFoeKit(entry.entryId);
   const { strike: sendStrike, striking, available: strikeRailLive } = useFoeStrike();
   const { cast: sendCast, casting, available: castRailLive } = useFoeCast();
@@ -505,9 +509,13 @@ const DockEnemyPane = ({ entry }) => {
   ].filter((r) => r.chips.length > 0);
 
   return (
-    <section className="dock-enemy" aria-label={`Enemy turn: ${name}`} data-testid="dock-enemy-pane">
+    <section
+      className={`dock-enemy${ally ? ' dock-enemy--ally' : ''}`}
+      aria-label={`${ally ? 'Ally' : 'Enemy'} turn: ${name}`}
+      data-testid="dock-enemy-pane"
+    >
       <div className="gm-dock-acting">
-        <span className="gm-dock-acting-kicker">Enemy turn</span>
+        <span className="gm-dock-acting-kicker">{ally ? 'Ally turn' : 'Enemy turn'}</span>
         <span className="gm-dock-acting-name dock-enemy-name-accent">{name}</span>
       </div>
 
@@ -626,7 +634,7 @@ const DockEnemyPane = ({ entry }) => {
       {kit && kit.strikes?.length > 0 && (
         <div className="dock-enemy-section">
           <h3 className="dock-enemy-section-head">Strikes</h3>
-          {strikeRailLive && pcTargets.length > 0 && (
+          {!ally && strikeRailLive && pcTargets.length > 0 && (
             <div className="dock-enemy-targets" role="group" aria-label="Strike target">
               <span className="dock-enemy-targets-label">Target</span>
               <button
