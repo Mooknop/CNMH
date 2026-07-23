@@ -4,6 +4,11 @@ import ArmedPayloads from '../encounter/ArmedPayloads';
 import GmSaveRequest from './GmSaveRequest';
 import AddSummonModal from './AddSummonModal';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
+import GmTriggerConsole from './GmTriggerConsole';
+import SkillChallengePanel from './SkillChallengePanel';
+import SkillChallengeModal from './SkillChallengeModal';
+import InfluenceSetupModal from './InfluenceSetupModal';
+import EncounterScriptsModal from './EncounterScriptsModal';
 import { useMinionActors } from '../../hooks/useMinionActors';
 import { useContent } from '../../contexts/ContentContext';
 import './DockGmConsole.css';
@@ -20,8 +25,15 @@ import './DockGmConsole.css';
 // Menagerie (#1537 S6): summon the Summons-folder creatures and spawn linked
 // companions/familiars without leaving the dock (dismiss lives on the order
 // strip's summon rows).
-const DockGmConsole = ({ pcEntries }) => {
+// Challenges + triggers (#1537 S7): the VP/Influence tracker (self-hiding
+// while nothing runs) with its three launchers, and the free-form Fire
+// Trigger console (arbitrary event/target/note — the reaction rail only
+// prompts armed, mappable reactions).
+const DockGmConsole = ({ pcEntries, round = 0 }) => {
   const [addSummonOpen, setAddSummonOpen] = useState(false);
+  const [challengeOpen, setChallengeOpen] = useState(false);
+  const [influenceOpen, setInfluenceOpen] = useState(false);
+  const [scriptsOpen, setScriptsOpen] = useState(false);
   const { links: minionLinks } = useMinionActors();
   const { characters } = useContent();
 
@@ -31,6 +43,37 @@ const DockGmConsole = ({ pcEntries }) => {
       <RequestedSaves />
       <ArmedPayloads />
       <GmSaveRequest pcEntries={pcEntries} />
+      <GmTriggerConsole pcEntries={pcEntries} round={round} />
+      <div className="dock-console-challenges" data-testid="dock-challenges">
+        <div className="dock-console-head">Challenges</div>
+        <SkillChallengePanel />
+        <div className="dock-console-launchers">
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-label="Start a skill challenge"
+            onClick={() => setChallengeOpen(true)}
+          >
+            Skill Challenge
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-label="Start an influence encounter"
+            onClick={() => setInfluenceOpen(true)}
+          >
+            Influence
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-label="Launch an encounter script"
+            onClick={() => setScriptsOpen(true)}
+          >
+            Script
+          </button>
+        </div>
+      </div>
       <div className="dock-console-menagerie" data-testid="dock-menagerie">
         <div className="dock-console-head">Menagerie</div>
         <button
@@ -55,6 +98,9 @@ const DockGmConsole = ({ pcEntries }) => {
         })}
       </div>
       <AddSummonModal isOpen={addSummonOpen} onClose={() => setAddSummonOpen(false)} />
+      <SkillChallengeModal isOpen={challengeOpen} onClose={() => setChallengeOpen(false)} />
+      <InfluenceSetupModal isOpen={influenceOpen} onClose={() => setInfluenceOpen(false)} />
+      <EncounterScriptsModal isOpen={scriptsOpen} onClose={() => setScriptsOpen(false)} />
     </aside>
   );
 };

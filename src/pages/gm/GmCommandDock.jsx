@@ -274,7 +274,7 @@ const GmCommandDock = () => {
           />
         )}
         {mode === 'encounter' && consoleOpen && (
-          <DockGmConsole pcEntries={consolePcEntries} />
+          <DockGmConsole pcEntries={consolePcEntries} round={encounter?.round || 0} />
         )}
       </div>
     </div>
