@@ -341,6 +341,53 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  describe('RK-reveal side effects (S9)', () => {
+    const armRails = (session) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol: 9, module: '0.0.0-test', ts: 1 });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+    const knowledgeWrite = (session) =>
+      session.sent.filter((m) => m.stateType === 'knowledge').at(-1);
+
+    it('executing a strike auto-witnesses it, keyed by rkKey', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armRails(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Strike: Jaws at +9' }));
+
+      // ENTRY has no creatureKey, so rkKeyFor falls back to the entryId.
+      expect(knowledgeWrite(session).value['cbt-gob'].witnessed.Jaws).toEqual(
+        expect.objectContaining({ kind: 'strike' })
+      );
+    });
+
+    it('casting auto-witnesses the spell', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armRails(session);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
+
+      expect(knowledgeWrite(session).value['cbt-gob'].witnessed.Fear).toEqual(
+        expect.objectContaining({ kind: 'spell' })
+      );
+    });
+
+    it('abilities reveal on the GM tap and settle into the revealed tag', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Reveal Goblin Scuttle' }));
+
+      expect(knowledgeWrite(session).value['cbt-gob'].witnessed['Goblin Scuttle']).toEqual(
+        expect.objectContaining({ kind: 'ability' })
+      );
+      expect(screen.queryByRole('button', { name: 'Reveal Goblin Scuttle' })).not.toBeInTheDocument();
+      expect(screen.getByText('revealed')).toBeInTheDocument();
+    });
+  });
+
   it('surfaces flanked, applied conditions, and persistent damage as chips', () => {
     const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
     act(() => {

@@ -419,6 +419,11 @@
   padding: 0 6px;
 }
 
+.dock-enemy-tag--witnessed {
+  color: var(--success-light, var(--shell-text-secondary));
+  border-color: currentColor;
+}
+
 .dock-enemy-traits {
   font-size: 0.62rem;
   letter-spacing: 0.05em;

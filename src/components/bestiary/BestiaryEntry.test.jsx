@@ -87,3 +87,26 @@ describe('BestiaryEntry (#334)', () => {
     expect(screen.queryByText('A nasty goblin.')).not.toBeInTheDocument();
   });
 });
+
+describe('witnessed abilities (#1537 S9)', () => {
+  test('witnessed chips render even while the creature is unidentified', () => {
+    const record = {
+      ...defaultRecord(),
+      witnessed: {
+        Paralysis: { kind: 'ability', ts: 2 },
+        Jaws: { kind: 'strike', ts: 1 },
+      },
+    };
+    render(<BestiaryEntry enemy={enemy} record={record} />);
+
+    const section = screen.getByTestId('bestiary-witnessed');
+    expect(section).toHaveTextContent('Witnessed');
+    // Oldest first: Jaws (ts 1) before Paralysis (ts 2).
+    expect(section.textContent.indexOf('Jaws')).toBeLessThan(section.textContent.indexOf('Paralysis'));
+  });
+
+  test('no witnessed section on a fresh record', () => {
+    render(<BestiaryEntry enemy={enemy} record={defaultRecord()} />);
+    expect(screen.queryByTestId('bestiary-witnessed')).not.toBeInTheDocument();
+  });
+});
