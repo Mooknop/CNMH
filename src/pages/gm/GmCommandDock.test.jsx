@@ -21,6 +21,19 @@ vi.mock('../../components/encounter/EncounterSkeleton', () => ({
     return <div data-testid="encounter-skeleton">{character.name}</div>;
   },
 }));
+// S4: the real vitals card subscribes to live state (needs SessionContext);
+// the dummy keeps the acting-kicker texts the page tests assert on.
+vi.mock('../../components/gm/DockPcVitals', () => ({
+  default: function DummyDockPcVitals({ character, pinned }) {
+    return (
+      <div data-testid="dock-pc-vitals">
+        <span>Acting as</span>
+        <span>{character.name}</span>
+        {pinned && <span>pinned</span>}
+      </div>
+    );
+  },
+}));
 vi.mock('../../components/gm/DockReactionRail', () => ({
   default: function DummyDockReactionRail({ excludeEntryId }) {
     return <div data-testid="dock-rail" data-exclude={excludeEntryId || ''} />;

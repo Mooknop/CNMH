@@ -360,6 +360,25 @@
   filter: brightness(0.95);
 }
 
+/* S4 (#1556): dock-scoped skin on the mirrored deck's own End Turn — same
+   ember treatment as the enemy advance button. Scoped under .gm-dock-stage so
+   the player's own view is pixel-untouched. */
+.gm-dock-stage .selfbar-end {
+  background: linear-gradient(180deg, var(--ember-mid), var(--ember-base));
+  border: 1px solid color-mix(in srgb, var(--ember-mid) 60%, transparent);
+  color: var(--color-text-on-primary, #fff);
+  font-family: var(--font-display);
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--ember-mid) 70%, transparent);
+}
+
+.gm-dock-stage .selfbar-end:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.gm-dock-stage .selfbar-end:disabled {
+  filter: saturate(0.4) brightness(0.7);
+}
+
 /* ── Setup pane: initiative tally + overrides (#1537 S1) ── */
 .gm-dock-setup {
   max-width: 640px;

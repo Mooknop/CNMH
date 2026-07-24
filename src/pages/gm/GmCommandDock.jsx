@@ -15,6 +15,7 @@ import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
 import DockGmConsole from '../../components/gm/DockGmConsole';
 import DockOrderStrip from '../../components/gm/DockOrderStrip';
+import DockPcVitals from '../../components/gm/DockPcVitals';
 import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import GmIcon from './GmIcon';
 import './GmCommandDock.css';
@@ -85,11 +86,9 @@ const DockActingPane = ({ character, accent, pinned }) => {
       style={accent ? { '--color-theme': accent } : undefined}
       aria-label={`Acting as ${character.name}`}
     >
-      <div className="gm-dock-acting">
-        <span className="gm-dock-acting-kicker">Acting as</span>
-        <span className="gm-dock-acting-name">{character.name}</span>
-        {pinned && <span className="gm-dock-pin-tag">pinned</span>}
-      </div>
+      {/* S4 (#1556): the design's identity+vitals chrome over the mirrored
+          deck — the deck below stays byte-identical to the player's own. */}
+      <DockPcVitals character={character} model={model} pinned={pinned} />
       <EncounterSkeleton character={character} model={model} characterColor={accent} />
     </section>
   );
