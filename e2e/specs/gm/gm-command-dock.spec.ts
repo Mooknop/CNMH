@@ -181,15 +181,20 @@ test.describe('GM Command Dock', () => {
     await expect(pane.getByTestId('dock-enemy-hp')).toContainText('9/20');
     await expect(pane.getByTestId('dock-enemy-defenses')).toContainText('16');
 
-    // The kit: strike with its MAP ladder as TEXT (no Foundry presence in e2e,
-    // so the strike/cast rails never grow buttons), ability, skill.
+    // The kit rides the S3 tab strip (#1556) — Strikes is the default tab;
+    // abilities and skills live behind their tabs. MAP ladder stays TEXT
+    // (no Foundry presence in e2e, so the strike/cast rails never grow
+    // buttons).
     await expect(pane).toContainText('Jaws');
     await expect(pane).toContainText('+9 / +4 / -1');
     await expect(pane).toContainText('1d8+4 piercing');
-    await expect(pane).toContainText('E2E Paralysis');
-    await expect(pane).toContainText('Athletics +7');
     await expect(pane.getByRole('button', { name: /Strike: Jaws/ })).not.toBeVisible();
     await expect(pane.getByTestId('dock-enemy-waiting')).not.toBeVisible();
+
+    await pane.getByRole('tab', { name: /Abilities/ }).click();
+    await expect(pane).toContainText('E2E Paralysis');
+    await pane.getByRole('tab', { name: /Skills/ }).click();
+    await expect(pane).toContainText('Athletics +7');
 
     // Enemy turn = no staged PC, so BOTH PCs sit in the reaction rail.
     const rail = page.getByRole('complementary', { name: 'Party reactions' });
