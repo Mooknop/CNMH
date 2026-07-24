@@ -1,10 +1,12 @@
-/* GM console column (#1537 S2) — width-constrained host for the existing
-   save/payload consoles; their own CSS styles the cards. */
+/* GM console column — S5 battle-mode broadcast console (#1556). The mounted
+   consoles stay verbatim (they own their sync keys and self-hide when idle);
+   EVERYTHING here is scoped under .dock-console so the same components keep
+   their dashboard look on GmDashboard, which is explicitly not restyled. */
 
 .dock-console {
-  background: var(--surface-card);
+  background: rgba(0, 0, 0, 0.14);
   border: 1px solid var(--shell-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl, 14px);
   backdrop-filter: blur(5px);
   padding: var(--space-3);
   display: flex;
@@ -21,8 +23,6 @@
   color: var(--shell-text-tertiary);
 }
 
-/* The mounted consoles were built for dashboard cards — soften their outer
-   chrome inside the column so they read as sections, not nested cards. */
 .dock-console > div {
   min-width: 0;
 }
@@ -31,37 +31,118 @@
   margin-top: 0;
 }
 
-/* ── Challenges (#1537 S7) ── */
-.dock-console-challenges {
+/* ── Design cards (#1556 S5) — grouped sections and the mounted consoles'
+   own panels all read as cards in the column. ── */
+.dock-console-card,
+.dock-console > .gm-requested-saves,
+.dock-console > .gm-save-request {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border-top: 1px solid var(--shell-border);
-  padding-top: var(--space-3);
+  box-shadow: var(--shadow-md);
 }
 
+/* Card headers: the design font, tinted per tool — Request Save arcane,
+   Fire Trigger ember (the trigger console carries both classes, so its rule
+   comes second). */
+.dock-console .gm-save-request h3,
+.dock-console .gm-requested-saves h3,
+.dock-console .gm-dash-panel h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dock-console .gm-requested-saves h3 {
+  color: var(--gold-light);
+}
+
+.dock-console .gm-save-request h3 {
+  color: var(--arcane-light);
+}
+
+.dock-console .gm-trigger-console h3 {
+  color: var(--ember-light);
+}
+
+.dock-console .gm-dash-panel h2 {
+  color: var(--shell-text-secondary);
+}
+
+/* ── Broadcast log: time badge + kind dot + text (#1556 S5) ── */
+.dock-console .gm-slog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dock-console .gm-slog-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.dock-console .gm-slog-entry::before {
+  content: '';
+  align-self: center;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--shell-text-tertiary);
+}
+
+.dock-console .gm-slog-entry--gm::before { background: var(--ember-light); }
+.dock-console .gm-slog-entry--save::before { background: var(--arcane-light); }
+.dock-console .gm-slog-entry--mode::before { background: var(--gold-light); }
+.dock-console .gm-slog-entry--recall::before { background: var(--verdant-light); }
+
+.dock-console .gm-slog-time {
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-tertiary);
+  flex-shrink: 0;
+}
+
+.dock-console .gm-slog-badge {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  flex-shrink: 0;
+}
+
+.dock-console .gm-slog-text {
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ── Launchers: chip-height buttons in the card language ── */
 .dock-console-launchers {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-/* ── Table long tail (#1537 S8) ── */
-.dock-console-table {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  border-top: 1px solid var(--shell-border);
-  padding-top: var(--space-3);
+.dock-console .dock-console-launchers .btn-secondary {
+  min-height: 34px;
 }
 
-/* ── Menagerie (#1537 S6) ── */
+/* ── Challenges / Menagerie / Table section internals ── */
+.dock-console-challenges,
+.dock-console-table,
 .dock-console-menagerie {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-2);
-  border-top: 1px solid var(--shell-border);
-  padding-top: var(--space-3);
 }
 
 .dock-console-minion-row {

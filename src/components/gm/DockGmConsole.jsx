@@ -55,7 +55,7 @@ const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
       <ArmedPayloads />
       <GmSaveRequest pcEntries={pcEntries} />
       <GmTriggerConsole pcEntries={pcEntries} round={round} />
-      <div className="dock-console-challenges" data-testid="dock-challenges">
+      <div className="dock-console-card dock-console-challenges" data-testid="dock-challenges">
         <div className="dock-console-head">Challenges</div>
         <SkillChallengePanel />
         <div className="dock-console-launchers">
@@ -85,7 +85,7 @@ const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
           </button>
         </div>
       </div>
-      <div className="dock-console-menagerie" data-testid="dock-menagerie">
+      <div className="dock-console-card dock-console-menagerie" data-testid="dock-menagerie">
         <div className="dock-console-head">Menagerie</div>
         <button
           type="button"
@@ -108,7 +108,7 @@ const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
           );
         })}
       </div>
-      <div className="dock-console-table" data-testid="dock-table">
+      <div className="dock-console-card dock-console-table" data-testid="dock-table">
         <div className="dock-console-head">Table</div>
         <PlayModeControl />
         <div className="dock-console-launchers">
