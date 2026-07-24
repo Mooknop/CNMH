@@ -1,10 +1,18 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import GmCommandDock from './GmCommandDock';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/usePlayMode', () => ({ usePlayMode: vi.fn() }));
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
+// Top-bar clock + campaign location (#1556 S1).
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({ formatClockTime: () => '11:30 AM' }),
+}));
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [{ location: 'Sandpoint Cathedral', locationLoreId: '' }, vi.fn()],
+}));
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: (character) => (character ? { ...character, flags: {} } : null),
 }));
@@ -60,6 +68,14 @@ const encounterWith = (over = {}) => ({
 
 const advanceMock = vi.fn();
 
+// The dock's close affordance is a router Link (#1556 S1).
+const renderDock = () =>
+  render(
+    <MemoryRouter>
+      <GmCommandDock />
+    </MemoryRouter>
+  );
+
 beforeEach(() => {
   useContent.mockReturnValue({ characters: CHARS, theme: {} });
   usePlayMode.mockReturnValue({ mode: 'encounter' });
@@ -72,8 +88,12 @@ describe('GmCommandDock', () => {
   it('stubs exploration mode', () => {
     usePlayMode.mockReturnValue({ mode: 'exploration' });
     useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
-    render(<GmCommandDock />);
-    expect(screen.getByText('Exploration')).toBeInTheDocument();
+    renderDock();
+    // Both the top-bar kicker and the stub carry the mode name (#1556 S1).
+    expect(screen.getAllByText('Exploration').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText('Exploration controls arrive in a later slice.')
+    ).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
     // The GM console (and its toggle) and order strip are encounter-mode only.
@@ -83,7 +103,7 @@ describe('GmCommandDock', () => {
   });
 
   it('mounts the order strip in encounter mode (#1537 S5)', () => {
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByTestId('dock-order-strip')).toBeInTheDocument();
   });
 
@@ -98,13 +118,13 @@ describe('GmCommandDock', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ order: CONSOLE_ORDER }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       // Ghost isn't roster-resolvable but can still receive a save prompt.
       expect(screen.getByTestId('dock-console')).toHaveAttribute('data-pcs', '2');
     });
 
     it('the header toggle collapses and reopens it', () => {
-      render(<GmCommandDock />);
+      renderDock();
       const toggle = screen.getByRole('button', { name: 'GM console' });
       expect(screen.getByTestId('dock-console')).toBeInTheDocument();
 
@@ -125,7 +145,7 @@ describe('GmCommandDock', () => {
           armedPayloads: [{ id: 'p1' }],
         }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       expect(screen.getByRole('button', { name: 'GM console (2)' })).toBeInTheDocument();
     });
   });
@@ -133,8 +153,71 @@ describe('GmCommandDock', () => {
   it('stubs downtime mode', () => {
     usePlayMode.mockReturnValue({ mode: 'downtime' });
     useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
-    render(<GmCommandDock />);
-    expect(screen.getByText('Downtime')).toBeInTheDocument();
+    renderDock();
+    expect(screen.getAllByText('Downtime').length).toBeGreaterThan(0);
+    expect(
+      screen.getByText('Downtime controls arrive in a later slice.')
+    ).toBeInTheDocument();
+  });
+
+  describe('battle-mode top bar (#1556 S1)', () => {
+    it('shows the kicker, round, phase pill, clock and location in encounter mode', () => {
+      renderDock();
+      expect(screen.getByText('Battle Mode')).toBeInTheDocument();
+      expect(screen.getByText('Round 2')).toBeInTheDocument();
+      expect(screen.getByText('In progress')).toBeInTheDocument();
+      expect(screen.getByText('11:30 AM')).toBeInTheDocument();
+      expect(screen.getByText('Sandpoint Cathedral')).toBeInTheDocument();
+    });
+
+    it('close affordance links back to the GM dashboard', () => {
+      renderDock();
+      const close = screen.getByRole('link', { name: 'Close battle mode' });
+      expect(close).toHaveAttribute('href', '/gm');
+    });
+
+    it('announces the next combatant, wrapping past the end of the order', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({
+          currentTurnIndex: 1,
+          order: [
+            { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+            { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
+          ],
+        }),
+      });
+      renderDock();
+      expect(screen.getByText('Up next')).toBeInTheDocument();
+      // Ghoul is acting (index 1) — the wrap makes Pellias next.
+      expect(screen.getByText('Up next').parentElement).toHaveTextContent('Pellias');
+    });
+
+    it('setup phase shows the Setup pill and hides round + up-next', () => {
+      useEncounter.mockReturnValue({
+        encounter: encounterWith({
+          phase: 'setup',
+          round: 0,
+          order: [
+            { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+            { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
+          ],
+        }),
+      });
+      renderDock();
+      // 'Setup' appears as both the phase pill and the setup pane kicker.
+      expect(screen.getAllByText('Setup').length).toBeGreaterThan(0);
+      expect(screen.queryByText(/^Round /)).not.toBeInTheDocument();
+      expect(screen.queryByText('Up next')).not.toBeInTheDocument();
+    });
+
+    it('non-encounter modes drop the phase pill and up-next but keep the clock', () => {
+      usePlayMode.mockReturnValue({ mode: 'exploration' });
+      useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
+      renderDock();
+      expect(screen.queryByText('In progress')).not.toBeInTheDocument();
+      expect(screen.queryByText('Up next')).not.toBeInTheDocument();
+      expect(screen.getByText('11:30 AM')).toBeInTheDocument();
+    });
   });
 
   it('setup phase mounts the initiative panel with the expected PCs (#1537 S1)', () => {
@@ -149,7 +232,7 @@ describe('GmCommandDock', () => {
         ],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
     expect(screen.getByTestId('init-panel')).toHaveAttribute('data-count', '2');
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
@@ -166,7 +249,7 @@ describe('GmCommandDock', () => {
         ],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByText('Acting as')).toBeInTheDocument();
     expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
     expect(screen.getByLabelText('Acting as Pellias')).toBeInTheDocument();
@@ -184,7 +267,7 @@ describe('GmCommandDock', () => {
         ],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
   });
 
@@ -198,7 +281,7 @@ describe('GmCommandDock', () => {
         ],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     // Rail still renders on enemy turns — every PC is an "other" then.
@@ -221,7 +304,7 @@ describe('GmCommandDock', () => {
         ],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByTestId('dock-enemy-pane')).toHaveAttribute('data-tone', 'ally');
     expect(screen.getByRole('button', { name: "End Summoned Angel's turn" })).toBeInTheDocument();
   });
@@ -232,7 +315,7 @@ describe('GmCommandDock', () => {
         order: [{ entryId: 'e1', kind: 'pc', charId: 'ghost', name: 'Ghost' }],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByText("Ghost's turn")).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Advance turn' }));
     expect(advanceMock).toHaveBeenCalledWith('Ghost');
@@ -244,13 +327,13 @@ describe('GmCommandDock', () => {
         order: [{ entryId: 'e1', kind: 'pc', charId: 'ghost', name: 'Ghost' }],
       }),
     });
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByText("Ghost's turn")).toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
   });
 
   it('stubs an empty initiative order', () => {
-    render(<GmCommandDock />);
+    renderDock();
     expect(screen.getByText('No combatants')).toBeInTheDocument();
   });
 
@@ -264,7 +347,7 @@ describe('GmCommandDock', () => {
     it('hides the chips outside encounter mode', () => {
       usePlayMode.mockReturnValue({ mode: 'exploration' });
       useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
-      render(<GmCommandDock />);
+      renderDock();
       expect(screen.queryByRole('group', { name: 'Stage a character' })).not.toBeInTheDocument();
     });
 
@@ -272,7 +355,7 @@ describe('GmCommandDock', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 1, order: TWO_PC_ORDER }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
 
       fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
@@ -291,7 +374,7 @@ describe('GmCommandDock', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
 
       fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
@@ -303,7 +386,7 @@ describe('GmCommandDock', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
       fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
@@ -315,7 +398,7 @@ describe('GmCommandDock', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ phase: 'setup', round: 0, order: TWO_PC_ORDER }),
       });
-      render(<GmCommandDock />);
+      renderDock();
       expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Pellias' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');

@@ -88,13 +88,15 @@ describe('GmLayout', () => {
     expect(screen.getByText('Reputation').closest('a')).toHaveTextContent('1');
   });
 
-  it('marks Dock active on /gm/dock without a subrail', async () => {
+  it('renders /gm/dock chromeless — no GM top bar or subrail (#1556 S1)', async () => {
     useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
     seedDefaults.mockResolvedValue({ ok: true });
     renderAt('/gm/dock');
     expect(await screen.findByTestId('outlet')).toHaveTextContent('DOCK');
-    expect(screen.getByText('Dock').closest('a')).toHaveClass('active');
-    expect(screen.getByText('Dashboard').closest('a')).not.toHaveClass('active');
+    // Battle mode hides the whole GM chrome; the dock's own top bar carries
+    // the close affordance back to /gm.
+    expect(screen.queryByText('GM Tools')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dock')).not.toBeInTheDocument();
     expect(screen.queryByText('Quests')).not.toBeInTheDocument();
   });
 

@@ -1,25 +1,42 @@
-/* GM Command Dock (#1525) — laptop/tablet-first. Stage column (the mounted
-   player deck) + the party reaction rail (S3) beside it; single column on
-   tablet-portrait. */
+/* GM Command Dock — battle-mode frame (#1556 S1). Chromeless full-height
+   console: top bar, pins + order strip, then a column grid whose panels
+   scroll internally so the page itself never scrolls on a wide viewport.
+   Below the fold breakpoints the body scrolls as one column instead. */
 
 .gm-dock {
-  max-width: 1080px;
-  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(
+    1200px 520px at 72% -12%,
+    color-mix(in srgb, var(--ember-mid) 12%, transparent),
+    transparent 60%
+  );
 }
 
 .gm-dock-body {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 640px) 320px;
+  justify-content: center;
   gap: var(--space-6);
   align-items: start;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  overflow: hidden;
+}
+
+/* Panels own their scroll on the no-scroll frame. */
+.gm-dock-body > * {
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 /* GM console open (#1537 S2): a third column on wide screens; below 1360px it
    spans the full width beneath stage + rail, so nothing gets crushed. */
-.gm-dock--console {
-  max-width: 1440px;
-}
-
 .gm-dock--console .gm-dock-body {
   grid-template-columns: minmax(0, 640px) 320px minmax(280px, 340px);
 }
@@ -27,6 +44,16 @@
 @media (max-width: 1360px) {
   .gm-dock--console .gm-dock-body {
     grid-template-columns: minmax(0, 640px) 320px;
+    overflow-y: auto;
+  }
+
+  /* min-height must reset too: a zero minimum lets the scrolling grid size
+     row 1 below the stage's height, and the full-width console then paints
+     over the stage (caught by e2e — the End-turn click was intercepted). */
+  .gm-dock--console .gm-dock-body > * {
+    min-height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .gm-dock--console .dock-console {
@@ -38,6 +65,14 @@
   .gm-dock-body,
   .gm-dock--console .gm-dock-body {
     grid-template-columns: 1fr;
+    justify-content: stretch;
+    overflow-y: auto;
+  }
+
+  .gm-dock-body > * {
+    min-height: auto;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .gm-dock--console .dock-console {
@@ -45,29 +80,155 @@
   }
 }
 
-.gm-dock-header {
-  margin-bottom: var(--space-4);
-}
-
-.gm-dock-header-row {
+/* ── Battle-mode top bar (#1556 S1) ─────────────────────── */
+.gm-dock-topbar {
+  flex: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  min-height: 66px;
+  padding: var(--space-2) var(--space-5);
+  border-bottom: 1px solid var(--shell-border);
+  background: var(--surface-card);
+  backdrop-filter: blur(10px);
+}
+
+.gm-dock-topbar-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gm-dock-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+
+.gm-dock-topbar h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.gm-dock-topbar-divider {
+  width: 1px;
+  height: 38px;
+  background: var(--shell-border);
+}
+
+.gm-dock-topbar-round {
+  display: flex;
+  align-items: center;
   gap: var(--space-3);
 }
 
-.gm-dock-header h1 {
-  margin: 0;
+.gm-dock-round {
   font-family: var(--font-display);
-  font-size: 1.3rem;
-  color: var(--shell-text);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--ember-light);
+  white-space: nowrap;
 }
 
-.gm-dock-sub {
-  margin: 2px 0 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+.gm-dock-phase {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full, 999px);
+  padding: 3px 10px;
+  border: 1px solid var(--shell-border-strong);
   color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.gm-dock-phase--in-progress {
+  color: var(--verdant-light);
+  border-color: color-mix(in srgb, var(--verdant-light) 40%, transparent);
+  background: color-mix(in srgb, var(--verdant-mid) 16%, transparent);
+}
+
+.gm-dock-phase--setup {
+  color: var(--gold-light);
+  border-color: color-mix(in srgb, var(--gold-light) 40%, transparent);
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent);
+}
+
+.gm-dock-upnext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gm-dock-topbar-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-dock-upnext-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gm-dock-topbar-spacer {
+  flex: 1;
+}
+
+.gm-dock-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 0;
+}
+
+.gm-dock-clock-time {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  white-space: nowrap;
+}
+
+.gm-dock-clock-loc {
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.gm-dock-close {
+  display: grid;
+  place-items: center;
+  width: var(--tap-target-min, 44px);
+  height: var(--tap-target-min, 44px);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg, 10px);
+  color: var(--shell-text-secondary);
+  text-decoration: none;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.gm-dock-close:hover {
+  border-color: var(--shell-border-strong);
+  color: var(--shell-text-primary);
 }
 
 /* The stage hosts the player deck verbatim — the deck's CSS assumes the
@@ -111,10 +272,18 @@
 
 /* ── Pin chips (S4) — stage any PC, or follow the turn pointer ── */
 .gm-dock-pins {
+  flex: none;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-5) 0;
+}
+
+/* The order strip and pins sit edge-to-edge on the chromeless frame — give
+   them the frame's gutter themselves (#1556 S1). */
+.gm-dock > .dock-order {
+  flex: none;
+  margin: var(--space-3) var(--space-5) 0;
 }
 
 .gm-dock-pin {

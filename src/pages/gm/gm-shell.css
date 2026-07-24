@@ -231,6 +231,15 @@
   padding: var(--space-6);
 }
 
+/* Battle mode (#1556 S1): the dock owns its chrome and its scrolling — the
+   content region becomes a full-bleed, non-scrolling flex host. */
+.gm-main--battle {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 /* page header inside content */
 .gm-page-head {
   display: flex;
