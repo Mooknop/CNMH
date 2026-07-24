@@ -47,7 +47,11 @@
     overflow-y: auto;
   }
 
+  /* min-height must reset too: a zero minimum lets the scrolling grid size
+     row 1 below the stage's height, and the full-width console then paints
+     over the stage (caught by e2e — the End-turn click was intercepted). */
   .gm-dock--console .gm-dock-body > * {
+    min-height: auto;
     max-height: none;
     overflow-y: visible;
   }
@@ -66,6 +70,7 @@
   }
 
   .gm-dock-body > * {
+    min-height: auto;
     max-height: none;
     overflow-y: visible;
   }
