@@ -1,8 +1,9 @@
 // tokenImages unit tests (#394) — resolve a Foundry-relative token path into a
 // stable app URL by uploading the bytes to the Worker, with graceful fallbacks.
 //
-// config.js exports the real BRIDGE_SECRET ('Sanctuary') and WORKER_WSS_URL; the
-// tests assert against those so the upload URL plumbing is exercised end-to-end.
+// The worker URL falls back to config.js's WORKER_WSS_URL; the relay secret comes
+// from the per-world module setting (never the repo), so these tests stub the
+// settings mock with one.
 
 import {
   initTokenImages, resolveTokenUrl, ensureTokenUploaded,
@@ -10,6 +11,14 @@ import {
 
 const RAW = 'tokens/goblin.webp';
 const ORIGIN = 'https://foundry.example';
+const SECRET = 'test-relay-secret';
+
+// Key-aware settings stub: the module reads BOTH `workerUrl` and `bridgeSecret`,
+// so a blanket jest.fn() returning one value would poison the other.
+function stubSettings(overrides = {}) {
+  const values = { bridgeSecret: SECRET, ...overrides };
+  global.game.settings.get = jest.fn((_mod, key) => values[key]);
+}
 
 // fetch mock: first call (GET bytes) → blob; second call (POST upload) → json.
 function mockFetchHappy({ type = 'image/webp', size = 1234, uploadUrl = '/api/images/tok_abc.webp' } = {}) {
@@ -21,6 +30,7 @@ function mockFetchHappy({ type = 'image/webp', size = 1234, uploadUrl = '/api/im
 beforeEach(() => {
   initTokenImages();
   global.window = { location: { origin: ORIGIN } };
+  stubSettings();
 });
 
 afterEach(() => {
@@ -49,17 +59,28 @@ test('uploads bytes to the bridge-secret-gated Worker endpoint with a derived na
   // POST to the Worker, carrying the shared secret + a catalog name.
   const [uploadUrl, init] = global.fetch.mock.calls[1];
   expect(uploadUrl).toContain('https://cnmh.mooknop.workers.dev/api/bridge/image');
-  expect(uploadUrl).toContain('key=Sanctuary');
+  expect(uploadUrl).toContain(`key=${SECRET}`);
   expect(uploadUrl).toContain('name=goblin');
   expect(init).toMatchObject({ method: 'POST', headers: { 'Content-Type': 'image/webp' } });
 });
 
 test('derives the HTTPS Worker origin from the configured wss workerUrl setting', async () => {
-  global.game.settings.get = jest.fn(() => 'wss://staging.example.workers.dev');
+  stubSettings({ workerUrl: 'wss://staging.example.workers.dev' });
   global.fetch = mockFetchHappy();
   await ensureTokenUploaded(RAW, jest.fn());
 
   expect(global.fetch.mock.calls[1][0]).toContain('https://staging.example.workers.dev/api/bridge/image');
+});
+
+test('skips the upload entirely when no relay secret is configured', async () => {
+  stubSettings({ bridgeSecret: '' });
+  global.fetch = mockFetchHappy();
+
+  await ensureTokenUploaded(RAW, jest.fn());
+
+  // Bytes were read, but nothing was POSTed — an unauthenticated upload can only 403.
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  expect(resolveTokenUrl(RAW)).toBe(`${ORIGIN}/tokens/goblin.webp`);
 });
 
 test('falls back to the absolute URL when the bytes cannot be fetched (cross-origin/opaque)', async () => {

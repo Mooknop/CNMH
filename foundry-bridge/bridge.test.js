@@ -11,6 +11,8 @@ import { PROTOCOL_VERSION } from './syncKeys.js';
 
 // --- helpers ---------------------------------------------------------------
 
+const RELAY_SECRET = 'test-relay-secret';
+
 function makePlayerActor(opts = {}) {
   const a = makeActor(opts);
   a.type = 'character';
@@ -22,7 +24,8 @@ function makePlayerActor(opts = {}) {
 function makeTrackedWebSocketClass() {
   let lastInstance = null;
   class TrackedWS {
-    constructor() {
+    constructor(url) {
+      this.url = url;
       this.readyState = 1; // OPEN
       this.sent = [];
       lastInstance = this;
@@ -43,7 +46,9 @@ function makeTrackedWebSocketClass() {
 function loadAndPushRoster(actors) {
   const { TrackedWS, getInstance } = makeTrackedWebSocketClass();
   global.WebSocket = TrackedWS;
-  global.game = makeGame({ actors });
+  // connect() refuses to open a socket without a relay secret (it lives in the
+  // per-world module setting, never in the repo), so every world here has one.
+  global.game = makeGame({ actors, settings: { bridgeSecret: RELAY_SECRET } });
 
   let wsInstance = null;
   jest.isolateModules(() => {
@@ -109,6 +114,44 @@ describe('pushRoster', () => {
     const rosterMsg = msgs.find((m) => m.key === 'roster');
 
     expect(rosterMsg).toMatchObject({ type: 'UPDATE', characterId: 'global', key: 'roster' });
+  });
+});
+
+describe('relay secret gate', () => {
+  // Loads bridge.js against a world whose bridgeSecret setting is `secret`,
+  // fires 'ready' (→ connect()), and reports whether a socket was opened.
+  function loadAndConnect(secret) {
+    const { TrackedWS, getInstance } = makeTrackedWebSocketClass();
+    global.WebSocket = TrackedWS;
+    global.game = makeGame({ actors: [], settings: { bridgeSecret: secret } });
+
+    jest.isolateModules(() => {
+      require('./bridge.js');
+      global.Hooks.fire('ready');
+    });
+    return getInstance();
+  }
+
+  test('does not open a socket when the secret is unset', () => {
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(loadAndConnect('')).toBeNull();
+    expect(err).toHaveBeenCalledWith(expect.stringContaining('No relay secret configured'));
+
+    err.mockRestore();
+  });
+
+  test('carries the configured secret — not a repo constant — in the connect URL', () => {
+    const ws = loadAndConnect(RELAY_SECRET);
+
+    expect(ws).not.toBeNull();
+    expect(ws.url).toContain(`key=${RELAY_SECRET}`);
+  });
+
+  test('trims a pasted secret so stray whitespace does not fail auth', () => {
+    const ws = loadAndConnect(`  ${RELAY_SECRET}\n`);
+
+    expect(ws.url).toContain(`key=${RELAY_SECRET}`);
   });
 });
 
