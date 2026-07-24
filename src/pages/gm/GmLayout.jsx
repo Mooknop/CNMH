@@ -139,9 +139,15 @@ const GmLayout = () => {
   const subItems = SUBNAV[area] || [];
   const hasSub = subItems.length > 0;
   const modeMeta = MODE_META[mode] || MODE_META.exploration;
+  // Battle mode (#1556 S1): the dock is chromeless — no GM top bar, no
+  // subrail, no scrolling content gutter. The dock's own top bar carries the
+  // close affordance back to /gm. Staying nested under this layout keeps the
+  // seeding gate above in force.
+  const battle = area === 'dock';
 
   return (
     <div className="gm-shell">
+      {!battle && (
       <header className="gm-topbar">
         <div className="gm-brand">
           <span className="gm-brand-1">GM Tools</span>
@@ -169,9 +175,10 @@ const GmLayout = () => {
           <span className="gm-avatar" aria-hidden="true">GM</span>
         </div>
       </header>
+      )}
 
       <div className="gm-body">
-        {hasSub && (
+        {hasSub && !battle && (
           <aside className="gm-subrail" aria-label={`${area} sections`}>
             <div className="gm-subrail-label">{area}</div>
             {subItems.map((s) => {
@@ -190,7 +197,7 @@ const GmLayout = () => {
             })}
           </aside>
         )}
-        <main className="gm-main">
+        <main className={`gm-main${battle ? ' gm-main--battle' : ''}`}>
           <Outlet />
         </main>
       </div>

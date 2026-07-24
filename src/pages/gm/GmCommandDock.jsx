@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useAdvanceTurn } from '../../hooks/useAdvanceTurn';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { useSyncedState } from '../../hooks/useSyncedState';
+import { APP, globalKey } from '../../sync/keys';
 import { activeEntry } from '../../utils/encounterUtils';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
@@ -29,6 +33,20 @@ import './GmCommandDock.css';
 // Exploration / Downtime are stubs until their slices land. Enemy turns render
 // DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane, read-only until
 // the strike/cast rails (S3/S4) grow buttons on it.
+
+// Battle-mode top bar copy (#1556 S1). Encounter mode reads as BATTLE MODE;
+// the stub modes keep their own kicker so the chromeless frame still says
+// where the party is.
+const MODE_KICKERS = {
+  encounter: 'Battle Mode',
+  exploration: 'Exploration',
+  downtime: 'Downtime',
+};
+
+const PHASE_LABELS = {
+  setup: 'Setup',
+  'in-progress': 'In progress',
+};
 
 const DockStub = ({ icon, title, sub }) => (
   <div className="gm-dock-stub">
@@ -81,6 +99,9 @@ const GmCommandDock = () => {
   const { mode } = usePlayMode();
   const { encounter } = useEncounter();
   const { characters, theme } = useContent();
+  const { formatClockTime } = useGameDate();
+  // Read-only here — the GM edits campaign meta in PlayModeControl (console).
+  const [campaign] = useSyncedState(globalKey(APP.CAMPAIGN), { location: '', locationLoreId: '' });
   const [pinnedCharId, setPinnedCharId] = useState(null);
   // Console visibility is per-GM-client viewport state, like the pin (#1537 S2).
   const [consoleOpen, setConsoleOpen] = useState(true);
@@ -109,6 +130,15 @@ const GmCommandDock = () => {
   const consolePending =
     (encounter?.saveRequests || []).filter((r) => r.status === 'pending').length +
     (encounter?.armedPayloads || []).length;
+
+  // Top-bar readouts (#1556 S1): phase pill + up-next only mean anything in
+  // encounter mode; up-next wraps past the end of the order.
+  const phaseLabel = mode === 'encounter' ? PHASE_LABELS[encounter?.phase] : null;
+  const order = encounter?.order || [];
+  const upNext =
+    mode === 'encounter' && encounter?.phase === 'in-progress' && order.length > 1
+      ? order[((encounter?.currentTurnIndex || 0) + 1) % order.length]
+      : null;
 
   // Turn-follow only stages a PC while the encounter is running — during setup
   // the stage shows a stub, so the pointer's PC must still count as an "other".
@@ -202,25 +232,50 @@ const GmCommandDock = () => {
 
   return (
     <div className={`gm-dock${mode === 'encounter' && consoleOpen ? ' gm-dock--console' : ''}`}>
-      <header className="gm-dock-header">
-        <div className="gm-dock-header-row">
+      <header className="gm-dock-topbar">
+        <div className="gm-dock-topbar-lead">
+          <span className="gm-dock-kicker">{MODE_KICKERS[mode] || MODE_KICKERS.encounter}</span>
           <h1>Command Dock</h1>
-          {mode === 'encounter' && (
-            <button
-              type="button"
-              className={`gm-dock-pin${consoleOpen ? ' gm-dock-pin--active' : ''}`}
-              aria-pressed={consoleOpen}
-              onClick={() => setConsoleOpen((cur) => !cur)}
-            >
-              GM console{consolePending > 0 ? ` (${consolePending})` : ''}
-            </button>
+        </div>
+        {phaseLabel && (
+          <>
+            <div className="gm-dock-topbar-divider" aria-hidden="true" />
+            <div className="gm-dock-topbar-round">
+              {encounter?.phase === 'in-progress' && (
+                <span className="gm-dock-round">Round {encounter?.round || 0}</span>
+              )}
+              <span className={`gm-dock-phase gm-dock-phase--${encounter?.phase}`}>
+                {phaseLabel}
+              </span>
+            </div>
+          </>
+        )}
+        {upNext && (
+          <div className="gm-dock-upnext">
+            <span className="gm-dock-topbar-label">Up next</span>
+            <span className="gm-dock-upnext-name">{upNext.name || 'Unknown'}</span>
+          </div>
+        )}
+        <div className="gm-dock-topbar-spacer" />
+        <div className="gm-dock-clock">
+          <span className="gm-dock-clock-time">{formatClockTime()}</span>
+          {campaign?.location && (
+            <span className="gm-dock-clock-loc">{campaign.location}</span>
           )}
         </div>
-        <p className="gm-dock-sub">
-          {mode === 'encounter'
-            ? `Round ${encounter?.round || 0} — mirroring the active player's controls`
-            : 'The dock follows the party’s play mode'}
-        </p>
+        {mode === 'encounter' && (
+          <button
+            type="button"
+            className={`gm-dock-pin${consoleOpen ? ' gm-dock-pin--active' : ''}`}
+            aria-pressed={consoleOpen}
+            onClick={() => setConsoleOpen((cur) => !cur)}
+          >
+            GM console{consolePending > 0 ? ` (${consolePending})` : ''}
+          </button>
+        )}
+        <Link to="/gm" className="gm-dock-close" aria-label="Close battle mode">
+          ×
+        </Link>
       </header>
       {mode === 'encounter' && pcEntries.length > 0 && (
         <div className="gm-dock-pins" role="group" aria-label="Stage a character">
