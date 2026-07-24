@@ -336,22 +336,28 @@
   gap: var(--space-3);
 }
 
+/* The design's full-width ember End Turn button (#1556 S3). */
 .gm-dock-advance {
-  font: inherit;
-  font-size: 0.8rem;
+  min-height: 52px;
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--shell-text);
-  background: var(--surface-card);
-  border: 1px solid var(--shell-border-strong);
-  border-radius: var(--radius-md);
+  letter-spacing: 0.04em;
+  color: var(--color-text-on-primary, #fff);
+  background: linear-gradient(180deg, var(--ember-mid), var(--ember-base));
+  border: 1px solid color-mix(in srgb, var(--ember-mid) 60%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--ember-mid) 70%, transparent);
   padding: 10px 16px;
   cursor: pointer;
 }
 
 .gm-dock-advance:hover {
-  border-color: var(--peril-light);
-  color: var(--peril-light);
+  filter: brightness(1.08);
+}
+
+.gm-dock-advance:active {
+  filter: brightness(0.95);
 }
 
 /* ── Setup pane: initiative tally + overrides (#1537 S1) ── */

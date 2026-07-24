@@ -1,15 +1,25 @@
 /* GM Command Dock enemy pane (#1531 S2) — GM-shell styling (shell tokens, not
    the player accent theme); enemy identity leans on the peril tone. */
 
+/* S3 battle-mode spotlight (#1556): the pane is a transparent column of two
+   cards — identity+vitals over the tabbed abilities card. */
 .dock-enemy {
   max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dock-enemy-card {
   background: var(--surface-card);
   border: 1px solid var(--shell-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl, 14px);
+  box-shadow: var(--shadow-md);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .dock-enemy-name-accent {
@@ -28,9 +38,8 @@
   color: var(--success-light, var(--shell-text));
 }
 
-.dock-enemy--ally .dock-enemy-pip,
-.dock-enemy--ally .dock-enemy-hp-fill {
-  background: var(--success-light, var(--shell-text-secondary));
+.dock-enemy--ally .dock-enemy-pip-glyph {
+  color: var(--success-light, var(--shell-text-secondary));
 }
 
 /* ── Header: portrait + identity + turn economy ── */
@@ -93,16 +102,14 @@
   gap: 4px;
 }
 
-.dock-enemy-pip {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--peril-light);
+/* Turn budget as genuine action glyphs (#1556 S3). */
+.dock-enemy-pip-glyph {
+  font-size: 1.05rem;
+  color: var(--gold-light);
 }
 
-.dock-enemy-pip--spent {
-  background: transparent;
-  border: 1px solid var(--shell-border-strong);
+.dock-enemy-pip-glyph--spent {
+  color: rgba(255, 255, 255, 0.16);
 }
 
 .dock-enemy-reaction {
@@ -119,46 +126,139 @@
   text-decoration: line-through;
 }
 
-/* ── Vitals ── */
-.dock-enemy-hp-row {
+/* ── Vitals: HP dial + defense slabs (#1556 S3) ── */
+.dock-enemy-vitals {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
-.dock-enemy-hp-label {
-  font-size: 0.65rem;
+.dock-enemy-dial-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.dock-enemy-dial {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--dial-color, var(--verdant-mid)) calc(var(--hp-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.07) 0
+  );
+}
+
+.dock-enemy-dial.is-ok { --dial-color: var(--verdant-mid); }
+.dock-enemy-dial.is-warn { --dial-color: var(--gold-mid); }
+.dock-enemy-dial.is-low { --dial-color: var(--peril-light); }
+
+.dock-enemy-dial-inner {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: var(--shell-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.dock-enemy-dial-value {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--shell-text);
+}
+
+.dock-enemy-dial-max {
+  font-size: 0.62rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-dial-label {
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--shell-text-tertiary);
 }
 
-.dock-enemy-hp-value {
+.dock-enemy-slabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dock-enemy-slab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--shell-border);
+  border-radius: 9px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.dock-enemy-slab-value {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--shell-text-secondary);
+}
+
+.dock-enemy-slab-label {
+  font-size: 0.58rem;
   font-weight: 700;
-  color: var(--shell-text);
-}
-
-.dock-enemy-hp-max {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--shell-text-tertiary);
-  font-size: 0.8rem;
 }
 
-.dock-enemy-hp-bar {
-  margin-top: 4px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--shell-border);
-  overflow: hidden;
+.dock-enemy-slab--saves {
+  flex-direction: row;
+  gap: var(--space-3);
 }
 
-.dock-enemy-hp-fill {
-  height: 100%;
-  width: var(--hp-pct, 0%);
-  border-radius: inherit;
-  background: var(--peril-light);
+.dock-enemy-save {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.dock-enemy-save-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-save-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.dock-enemy-slab--minor {
+  align-items: flex-start;
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
 }
 
 /* ── GM vitals controls (#1537 S4) ── */
@@ -197,42 +297,86 @@
   margin: 0;
 }
 
-/* ── Defense grid ── */
-.dock-enemy-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-2);
-}
-
-@media (max-width: 560px) {
-  .dock-enemy-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.dock-enemy-cell {
+/* ── Ability tabs (#1556 S3) ── */
+.dock-enemy-tabs {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-md);
-  padding: 6px 4px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 4px;
 }
 
-.dock-enemy-cell-value {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
+.dock-enemy-tab {
+  flex: 1;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.74rem;
   font-weight: 700;
+  color: var(--shell-text-secondary);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.dock-enemy-tab:hover {
   color: var(--shell-text);
 }
 
-.dock-enemy-cell-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.dock-enemy-tab.is-active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline, var(--shell-border-strong));
+  color: var(--accent-text, var(--shell-text));
+}
+
+.dock-enemy-tab-count {
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
   color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dock-enemy-empty {
+  margin: 0;
+  padding: var(--space-4) 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Damage-pad presets (#1556 S3) ── */
+.dock-enemy-presets {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.dock-enemy-preset {
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-secondary);
+  background: var(--shell-bg);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm, 4px);
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.dock-enemy-preset:hover {
+  color: var(--shell-text);
+  border-color: var(--shell-text-tertiary);
 }
 
 /* ── Chips / IWR ── */
@@ -333,21 +477,6 @@
   text-transform: uppercase;
   color: var(--shell-text-tertiary);
   width: 52px;
-}
-
-/* ── Kit sections ── */
-.dock-enemy-section {
-  border-top: 1px solid var(--shell-border);
-  padding-top: var(--space-3);
-}
-
-.dock-enemy-section-head {
-  margin: 0 0 var(--space-2);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--shell-text-tertiary);
 }
 
 .dock-enemy-list {

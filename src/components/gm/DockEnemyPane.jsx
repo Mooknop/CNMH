@@ -219,6 +219,19 @@ const GmVitalsControls = ({ entryId, name }) => {
         <button type="button" className="dock-enemy-btn" disabled={!amount} onClick={() => fireDamage(true)}>
           Heal
         </button>
+        <span className="dock-enemy-presets">
+          {[5, 10, 15].map((v) => (
+            <button
+              key={v}
+              type="button"
+              className="dock-enemy-preset"
+              aria-label={`Preset ${v}`}
+              onClick={() => setAmount(String(v))}
+            >
+              {v}
+            </button>
+          ))}
+        </span>
       </div>
       <div className="dock-enemy-gmctl-row">
         <select
@@ -444,6 +457,9 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
   const [targetEntryId, setTargetEntryId] = useState(null);
   const [lastStrike, setLastStrike] = useState(null);
   const [lastCast, setLastCast] = useState(null);
+  // S3 battle-mode restyle (#1556): the kit sections became a tab strip.
+  // Local viewport state, defaulting to Strikes.
+  const [tab, setTab] = useState('strikes');
 
   const { name, entryId, defenses, bestiary } = entry;
   const hp = bestiary?.hp || null;
@@ -481,16 +497,11 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
     foundryConditionChips.length > 0 || appConditionChips.length > 0 || hasPersistent;
   const isFlanked = !!flankedMap?.[entryId];
 
-  const statCells = [
-    { key: 'ac', label: 'AC', value: defenses?.ac ?? null },
-    { key: 'perception', label: 'Perc', value: bestiary?.perception != null ? fmtMod(bestiary.perception) : null },
-    { key: 'speed', label: 'Speed', value: bestiary?.speed != null ? `${bestiary.speed} ft` : null },
-    ...Object.keys(SAVE_LABEL).map((k) => ({
-      key: k,
-      label: SAVE_LABEL[k],
-      value: defenses?.saves?.[k] != null ? fmtMod(defenses.saves[k]) : null,
-    })),
-  ];
+  // HP dial (#1556 S3): conic fill with the design's triage colors.
+  const hpPct = hp && hp.max > 0
+    ? Math.max(0, Math.min(100, (hp.current / hp.max) * 100))
+    : 0;
+  const hpToneClass = hpPct > 50 ? 'is-ok' : hpPct >= 25 ? 'is-warn' : 'is-low';
 
   // PC combatants offered as the strike target override.
   const pcTargets = (encounter?.order || []).filter((e) => e.kind === 'pc');
@@ -542,248 +553,295 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
     { key: 'immune', label: 'Immune', chips: defenses?.immunities || [], tone: null },
   ].filter((r) => r.chips.length > 0);
 
+  const tabs = [
+    { id: 'strikes', label: 'Strikes', count: kit?.strikes?.length || 0 },
+    {
+      id: 'spells',
+      label: 'Spells',
+      count: (kit?.spellcasting || []).reduce((n, e) => n + (e.spells?.length || 0), 0),
+    },
+    { id: 'abilities', label: 'Abilities', count: kit?.abilities?.length || 0 },
+    { id: 'skills', label: 'Skills', count: kit?.skills?.length || 0 },
+  ];
+
   return (
     <section
       className={`dock-enemy${ally ? ' dock-enemy--ally' : ''}`}
       aria-label={`${ally ? 'Ally' : 'Enemy'} turn: ${name}`}
       data-testid="dock-enemy-pane"
     >
-      <div className="gm-dock-acting">
-        <span className="gm-dock-acting-kicker">{ally ? 'Ally turn' : 'Enemy turn'}</span>
-        <span className="gm-dock-acting-name dock-enemy-name-accent">{name}</span>
-      </div>
-
-      <header className="dock-enemy-head">
-        {bestiary?.img ? (
-          <img className="dock-enemy-portrait" src={bestiary.img} alt="" />
-        ) : (
-          <span className="dock-enemy-portrait dock-enemy-portrait--mono" aria-hidden="true">
-            {monogram(name)}
-          </span>
-        )}
-        <div className="dock-enemy-id">
-          <span className="dock-enemy-title">{name}</span>
-          {subLine && <span className="dock-enemy-sub">{subLine}</span>}
-          {(isFlanked || hasChips) && (
-            <div className="dock-enemy-chips">
-              {isFlanked && <span className="dock-enemy-chip dock-enemy-chip--peril">⚔ flanked</span>}
-              {foundryConditionChips.map((c) => (
-                <span key={c.key} className="dock-enemy-chip dock-enemy-chip--foundry">{c.label}</span>
-              ))}
-              {appConditionChips.map((c) => (
-                <span key={c.key} className="dock-enemy-chip dock-enemy-chip--peril">
-                  {c.label}
-                  <button
-                    type="button"
-                    className="dock-enemy-chip-x"
-                    aria-label={`Remove ${c.label}`}
-                    onClick={() => removeCondition(entryId, { id: c.id, scopedTo: c.scopedTo })}
-                  >
-                    ×
-                  </button>
+      {/* ── Identity + vitals card (#1556 S3) ── */}
+      <div className="dock-enemy-card">
+        <header className="dock-enemy-head">
+          {bestiary?.img ? (
+            <img className="dock-enemy-portrait" src={bestiary.img} alt="" />
+          ) : (
+            <span className="dock-enemy-portrait dock-enemy-portrait--mono" aria-hidden="true">
+              {monogram(name)}
+            </span>
+          )}
+          <div className="dock-enemy-id">
+            <span className="gm-dock-acting-kicker">{ally ? 'Ally turn' : 'Enemy turn'}</span>
+            <span className="dock-enemy-title dock-enemy-name-accent">{name}</span>
+            {subLine && <span className="dock-enemy-sub">{subLine}</span>}
+          </div>
+          <div className="dock-enemy-economy" aria-label={`${actions - spent} of ${actions} actions left`}>
+            <span className="dock-enemy-pips" aria-hidden="true">
+              {Array.from({ length: actions }, (_, i) => (
+                <span
+                  key={i}
+                  className={`pf2e-action-glyph dock-enemy-pip-glyph${i < spent ? ' dock-enemy-pip-glyph--spent' : ''}`}
+                >
+                  {getActionGlyph(1)}
                 </span>
               ))}
-              {/* #1537 S4: the real clear popover (flat check / healed), not a
-                  read-only chip — PersistentChip self-hides when untracked. */}
-              <PersistentChip entry={entry} />
-            </div>
-          )}
-          <ConditionEditor
-            onApply={(id, value) =>
-              applyCondition(entryId, { id, value, source: 'GM (dock)' })
-            }
-          />
-        </div>
-        <div className="dock-enemy-economy" aria-label={`${actions - spent} of ${actions} actions left`}>
-          <span className="dock-enemy-pips" aria-hidden="true">
-            {Array.from({ length: actions }, (_, i) => (
-              <span
-                key={i}
-                className={`dock-enemy-pip${i < spent ? ' dock-enemy-pip--spent' : ''}`}
-              />
-            ))}
-          </span>
-          <span className={`dock-enemy-reaction${reaction ? '' : ' dock-enemy-reaction--spent'}`}>
-            R
-          </span>
-        </div>
-      </header>
-
-      {hp && hp.current != null && (
-        <div className="dock-enemy-hp" data-testid="dock-enemy-hp">
-          <div className="dock-enemy-hp-row">
-            <span className="dock-enemy-hp-label">Hit Points</span>
-            <span className="dock-enemy-hp-value">
-              {hp.current}
-              {hp.max > 0 && <span className="dock-enemy-hp-max">/{hp.max}</span>}
+            </span>
+            <span className={`dock-enemy-reaction${reaction ? '' : ' dock-enemy-reaction--spent'}`}>
+              R
             </span>
           </div>
-          {hp.max > 0 && (
-            <div className="dock-enemy-hp-bar" aria-hidden="true">
-              <div
-                className="dock-enemy-hp-fill"
-                style={{ '--hp-pct': `${Math.max(0, Math.min(100, (hp.current / hp.max) * 100))}%` }}
-              />
+        </header>
+
+        <div className="dock-enemy-vitals">
+          {hp && hp.current != null && (
+            <div className="dock-enemy-dial-wrap" data-testid="dock-enemy-hp">
+              <div className={`dock-enemy-dial ${hpToneClass}`} style={{ '--hp-pct': hpPct }}>
+                <div className="dock-enemy-dial-inner">
+                  <span className="dock-enemy-dial-value">{hp.current}</span>
+                  {hp.max > 0 && <span className="dock-enemy-dial-max">/{hp.max}</span>}
+                </div>
+              </div>
+              <span className="dock-enemy-dial-label">Hit Points</span>
             </div>
           )}
-        </div>
-      )}
-
-      {foundryConnected && <GmVitalsControls entryId={entryId} name={name} />}
-
-      <div className="dock-enemy-grid" data-testid="dock-enemy-defenses">
-        {statCells.map((c) => (
-          <div key={c.key} className="dock-enemy-cell">
-            <span className="dock-enemy-cell-value">{c.value ?? '—'}</span>
-            <span className="dock-enemy-cell-label">{c.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {iwrRows.length > 0 && (
-        <div className="dock-enemy-iwr">
-          {iwrRows.map((r) => (
-            <div key={r.key} className="dock-enemy-iwr-row" data-testid={`dock-enemy-${r.key}`}>
-              <span className="dock-enemy-iwr-label">{r.label}</span>
-              {r.chips.map((chip) => (
-                <span
-                  key={chip}
-                  className={`dock-enemy-chip${r.tone ? ` dock-enemy-chip--${r.tone}` : ''}`}
-                >
-                  {chip}
+          <div className="dock-enemy-slabs" data-testid="dock-enemy-defenses">
+            <div className="dock-enemy-slab dock-enemy-slab--ac">
+              <span className="dock-enemy-slab-value">{defenses?.ac ?? '—'}</span>
+              <span className="dock-enemy-slab-label">AC</span>
+            </div>
+            <div className="dock-enemy-slab dock-enemy-slab--saves">
+              {Object.keys(SAVE_LABEL).map((k) => (
+                <span key={k} className="dock-enemy-save">
+                  <span className="dock-enemy-save-label">{SAVE_LABEL[k]}</span>
+                  <span className="dock-enemy-save-value">
+                    {defenses?.saves?.[k] != null ? fmtMod(defenses.saves[k]) : '—'}
+                  </span>
                 </span>
               ))}
             </div>
-          ))}
+            <div className="dock-enemy-slab dock-enemy-slab--minor">
+              <span>Perc {bestiary?.perception != null ? fmtMod(bestiary.perception) : '—'}</span>
+              <span>Speed {bestiary?.speed != null ? `${bestiary.speed} ft` : '—'}</span>
+            </div>
+          </div>
         </div>
-      )}
 
-      {!kit && (
-        <p className="dock-enemy-waiting" data-testid="dock-enemy-waiting">
-          Strikes and spells arrive from Foundry when the bridge is connected
-          (module protocol 5+).
-        </p>
-      )}
-
-      {kit && kit.strikes?.length > 0 && (
-        <div className="dock-enemy-section">
-          <h3 className="dock-enemy-section-head">Strikes</h3>
-          {!ally && strikeRailLive && pcTargets.length > 0 && (
-            <div className="dock-enemy-targets" role="group" aria-label="Strike target">
-              <span className="dock-enemy-targets-label">Target</span>
-              <button
-                type="button"
-                className={`dock-enemy-target${targetEntryId ? '' : ' dock-enemy-target--active'}`}
-                aria-pressed={!targetEntryId}
-                onClick={() => setTargetEntryId(null)}
-                title="Leave whatever is targeted in Foundry alone"
-              >
-                Foundry&apos;s
-              </button>
-              {pcTargets.map((t) => (
+        {(isFlanked || hasChips) && (
+          <div className="dock-enemy-chips">
+            {isFlanked && <span className="dock-enemy-chip dock-enemy-chip--peril">⚔ flanked</span>}
+            {foundryConditionChips.map((c) => (
+              <span key={c.key} className="dock-enemy-chip dock-enemy-chip--foundry">{c.label}</span>
+            ))}
+            {appConditionChips.map((c) => (
+              <span key={c.key} className="dock-enemy-chip dock-enemy-chip--peril">
+                {c.label}
                 <button
-                  key={t.entryId}
                   type="button"
-                  className={`dock-enemy-target${targetEntryId === t.entryId ? ' dock-enemy-target--active' : ''}`}
-                  aria-pressed={targetEntryId === t.entryId}
-                  onClick={() =>
-                    setTargetEntryId((cur) => (cur === t.entryId ? null : t.entryId))
-                  }
+                  className="dock-enemy-chip-x"
+                  aria-label={`Remove ${c.label}`}
+                  onClick={() => removeCondition(entryId, { id: c.id, scopedTo: c.scopedTo })}
                 >
-                  {t.name}
+                  ×
+                </button>
+              </span>
+            ))}
+            {/* #1537 S4: the real clear popover (flat check / healed), not a
+                read-only chip — PersistentChip self-hides when untracked. */}
+            <PersistentChip entry={entry} />
+          </div>
+        )}
+        <ConditionEditor
+          onApply={(id, value) =>
+            applyCondition(entryId, { id, value, source: 'GM (dock)' })
+          }
+        />
+
+        {iwrRows.length > 0 && (
+          <div className="dock-enemy-iwr">
+            {iwrRows.map((r) => (
+              <div key={r.key} className="dock-enemy-iwr-row" data-testid={`dock-enemy-${r.key}`}>
+                <span className="dock-enemy-iwr-label">{r.label}</span>
+                {r.chips.map((chip) => (
+                  <span
+                    key={chip}
+                    className={`dock-enemy-chip${r.tone ? ` dock-enemy-chip--${r.tone}` : ''}`}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {foundryConnected && <GmVitalsControls entryId={entryId} name={name} />}
+      </div>
+
+      {/* ── Abilities card: tabbed kit (#1556 S3) ── */}
+      <div className="dock-enemy-card dock-enemy-card--abilities">
+        {!kit ? (
+          <p className="dock-enemy-waiting" data-testid="dock-enemy-waiting">
+            Strikes and spells arrive from Foundry when the bridge is connected
+            (module protocol 5+).
+          </p>
+        ) : (
+          <>
+            <div className="dock-enemy-tabs" role="tablist" aria-label="Ability categories">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  id={`dock-enemy-tab-${t.id}`}
+                  aria-selected={tab === t.id}
+                  aria-controls={`dock-enemy-panel-${t.id}`}
+                  className={`dock-enemy-tab${tab === t.id ? ' is-active' : ''}`}
+                  onClick={() => setTab(t.id)}
+                >
+                  {t.label} <span className="dock-enemy-tab-count">{t.count}</span>
                 </button>
               ))}
             </div>
-          )}
-          {lastStrike && (
-            <p className="dock-enemy-result" data-testid="dock-enemy-result" role="status">
-              {lastStrike.ok ? (
-                <>
-                  <b>{lastStrike.label}</b> — {lastStrike.total}
-                  {lastStrike.degree != null
-                    && ` · ${STRIKE_DEGREE_LABEL[lastStrike.degree] ?? ''}`}
-                </>
-              ) : (
-                <><b>{lastStrike.label}</b> — no answer; check Foundry chat.</>
+            <div
+              className="dock-enemy-panel"
+              role="tabpanel"
+              id={`dock-enemy-panel-${tab}`}
+              aria-labelledby={`dock-enemy-tab-${tab}`}
+            >
+              {tab === 'strikes' && (
+                (kit.strikes?.length || 0) === 0 ? (
+                  <p className="dock-enemy-empty">No strikes in the kit.</p>
+                ) : (
+                  <>
+                    {!ally && strikeRailLive && pcTargets.length > 0 && (
+                      <div className="dock-enemy-targets" role="group" aria-label="Strike target">
+                        <span className="dock-enemy-targets-label">Target</span>
+                        <button
+                          type="button"
+                          className={`dock-enemy-target${targetEntryId ? '' : ' dock-enemy-target--active'}`}
+                          aria-pressed={!targetEntryId}
+                          onClick={() => setTargetEntryId(null)}
+                          title="Leave whatever is targeted in Foundry alone"
+                        >
+                          Foundry&apos;s
+                        </button>
+                        {pcTargets.map((t) => (
+                          <button
+                            key={t.entryId}
+                            type="button"
+                            className={`dock-enemy-target${targetEntryId === t.entryId ? ' dock-enemy-target--active' : ''}`}
+                            aria-pressed={targetEntryId === t.entryId}
+                            onClick={() =>
+                              setTargetEntryId((cur) => (cur === t.entryId ? null : t.entryId))
+                            }
+                          >
+                            {t.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {lastStrike && (
+                      <p className="dock-enemy-result" data-testid="dock-enemy-result" role="status">
+                        {lastStrike.ok ? (
+                          <>
+                            <b>{lastStrike.label}</b> — {lastStrike.total}
+                            {lastStrike.degree != null
+                              && ` · ${STRIKE_DEGREE_LABEL[lastStrike.degree] ?? ''}`}
+                          </>
+                        ) : (
+                          <><b>{lastStrike.label}</b> — no answer; check Foundry chat.</>
+                        )}
+                      </p>
+                    )}
+                    <ul className="dock-enemy-list">
+                      {kit.strikes.map((s) => (
+                        <StrikeRow
+                          key={s.index}
+                          strike={s}
+                          live={strikeRailLive}
+                          striking={striking}
+                          onAttack={(strikeDef, v) => fireStrike(strikeDef, { variant: v })}
+                          onDamage={(strikeDef, mode) => fireStrike(strikeDef, { damage: mode })}
+                        />
+                      ))}
+                    </ul>
+                  </>
+                )
               )}
-            </p>
-          )}
-          <ul className="dock-enemy-list">
-            {kit.strikes.map((s) => (
-              <StrikeRow
-                key={s.index}
-                strike={s}
-                live={strikeRailLive}
-                striking={striking}
-                onAttack={(strikeDef, v) => fireStrike(strikeDef, { variant: v })}
-                onDamage={(strikeDef, mode) => fireStrike(strikeDef, { damage: mode })}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {kit && kit.spellcasting?.length > 0 && (
-        <div className="dock-enemy-section">
-          <h3 className="dock-enemy-section-head">Spellcasting</h3>
-          {lastCast && (
-            <p className="dock-enemy-result" data-testid="dock-enemy-cast-result" role="status">
-              {lastCast.ok ? (
-                <>
-                  <b>Cast: {lastCast.label}</b>
-                  {lastCast.rank != null && ` — rank ${lastCast.rank}`}
-                </>
-              ) : (
-                <><b>{lastCast.label}</b> — no answer; cast it from the Foundry sheet.</>
+              {tab === 'spells' && (
+                (kit.spellcasting?.length || 0) === 0 ? (
+                  <p className="dock-enemy-empty">No spells — relies on strikes and items.</p>
+                ) : (
+                  <>
+                    {lastCast && (
+                      <p className="dock-enemy-result" data-testid="dock-enemy-cast-result" role="status">
+                        {lastCast.ok ? (
+                          <>
+                            <b>Cast: {lastCast.label}</b>
+                            {lastCast.rank != null && ` — rank ${lastCast.rank}`}
+                          </>
+                        ) : (
+                          <><b>{lastCast.label}</b> — no answer; cast it from the Foundry sheet.</>
+                        )}
+                      </p>
+                    )}
+                    {kit.spellcasting.map((e) => (
+                      <SpellcastingBlock
+                        key={e.id || e.name}
+                        entry={e}
+                        live={castRailLive}
+                        casting={casting}
+                        onCast={fireCast}
+                      />
+                    ))}
+                  </>
+                )
               )}
-            </p>
-          )}
-          {kit.spellcasting.map((e) => (
-            <SpellcastingBlock
-              key={e.id || e.name}
-              entry={e}
-              live={castRailLive}
-              casting={casting}
-              onCast={fireCast}
-            />
-          ))}
-        </div>
-      )}
+              {tab === 'abilities' && (
+                (kit.abilities?.length || 0) === 0 ? (
+                  <p className="dock-enemy-empty">No special abilities in the kit.</p>
+                ) : (
+                  <ul className="dock-enemy-list">
+                    {kit.abilities.map((a) => (
+                      <AbilityRow
+                        key={a.id || a.name}
+                        ability={a}
+                        witnessed={!!witnessedMap[a.name]}
+                        onReveal={rkKey ? (ab) => markWitnessed(ab.name, 'ability') : null}
+                      />
+                    ))}
+                  </ul>
+                )
+              )}
+              {tab === 'skills' && (
+                (kit.skills?.length || 0) === 0 ? (
+                  <p className="dock-enemy-empty">No notable skills in the kit.</p>
+                ) : (
+                  <div className="dock-enemy-chips">
+                    {kit.skills.map((s) => (
+                      <span key={s.slug} className="dock-enemy-chip">
+                        {capitalize(s.slug)} {fmtMod(s.mod)}
+                      </span>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          </>
+        )}
 
-      {kit && kit.abilities?.length > 0 && (
-        <div className="dock-enemy-section">
-          <h3 className="dock-enemy-section-head">Abilities</h3>
-          <ul className="dock-enemy-list">
-            {kit.abilities.map((a) => (
-              <AbilityRow
-                key={a.id || a.name}
-                ability={a}
-                witnessed={!!witnessedMap[a.name]}
-                onReveal={rkKey ? (ab) => markWitnessed(ab.name, 'ability') : null}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {kit && kit.skills?.length > 0 && (
-        <div className="dock-enemy-section">
-          <h3 className="dock-enemy-section-head">Skills</h3>
-          <div className="dock-enemy-chips">
-            {kit.skills.map((s) => (
-              <span key={s.slug} className="dock-enemy-chip">
-                {capitalize(s.slug)} {fmtMod(s.mod)}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {bestiary?.description && (
-        <div className="dock-enemy-section">
-          <RulesText text={bestiary.description} />
-        </div>
-      )}
+        {bestiary?.description && <RulesText text={bestiary.description} />}
+      </div>
     </section>
   );
 };

@@ -61,20 +61,25 @@ describe('DockEnemyPane (#1531 S2)', () => {
     expect(screen.queryByTestId('dock-enemy-strike')).not.toBeInTheDocument();
   });
 
-  it('renders the recorded kit: strikes, spells with slots/uses, abilities, skills', () => {
+  it('renders the recorded kit across the ability tabs (S3 tab strip, #1556)', () => {
     const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
     act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
 
     expect(screen.queryByTestId('dock-enemy-waiting')).not.toBeInTheDocument();
 
-    // Strike row: label, MAP ladder, typed damage, attack effect.
+    // Tab strip carries per-category counts.
+    expect(screen.getByRole('tab', { name: /Strikes/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /Spells/ })).toHaveTextContent('1');
+
+    // Strikes tab (default): label, MAP ladder, typed damage, attack effect.
     const strike = screen.getByTestId('dock-enemy-strike');
     expect(strike).toHaveTextContent('Jaws');
     expect(strike).toHaveTextContent('+9 / +4 / -1');
     expect(strike).toHaveTextContent('1d8+4 piercing');
     expect(strike).toHaveTextContent('+ grab');
 
-    // Spellcasting entry: meta line, rank slot state, spell with uses + save.
+    // Spells tab: meta line, rank slot state, spell with uses + save.
+    fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
     const entry = screen.getByTestId('dock-enemy-spellentry');
     expect(entry).toHaveTextContent('Arcane Spells');
     expect(entry).toHaveTextContent('DC 19');
@@ -83,9 +88,12 @@ describe('DockEnemyPane (#1531 S2)', () => {
     expect(spell).toHaveTextContent('Fear');
     expect(spell).toHaveTextContent('1/1');
     expect(spell).toHaveTextContent('Will');
+    expect(screen.queryByTestId('dock-enemy-strike')).not.toBeInTheDocument();
 
-    // Ability + skills off the same recorded payload.
+    // Abilities + Skills tabs off the same recorded payload.
+    fireEvent.click(screen.getByRole('tab', { name: /Abilities/ }));
     expect(screen.getByTestId('dock-enemy-ability')).toHaveTextContent('Goblin Scuttle');
+    fireEvent.click(screen.getByRole('tab', { name: /Skills/ }));
     expect(screen.getByText(/Acrobatics \+5/)).toBeInTheDocument();
 
     // Typed asserts against the fixture the assertions above rode on, so a
@@ -207,8 +215,9 @@ describe('DockEnemyPane (#1531 S2)', () => {
       expect(screen.getByText('Ally turn')).toBeInTheDocument();
       // Strike/cast execution stays; the PC target chips do not.
       expect(screen.getByRole('button', { name: 'Strike: Jaws at +9' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Cast: Fear' })).toBeInTheDocument();
       expect(screen.queryByRole('group', { name: 'Strike target' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+      expect(screen.getByRole('button', { name: 'Cast: Fear' })).toBeInTheDocument();
     });
   });
 
@@ -223,9 +232,13 @@ describe('DockEnemyPane (#1531 S2)', () => {
     const lastCastReq = (session) =>
       session.sent.filter((m) => m.stateType === RELAY.CASTREQ).at(-1);
 
+    // S3 tab strip: spells live on their own tab now.
+    const openSpells = () => fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+
     it('the Cast button sends castreq with the entry, spell, and rank', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       armCast(session);
+      openSpells();
 
       fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
 
@@ -242,6 +255,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
     it('the matching ack renders the cast read-out', async () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       armCast(session);
+      openSpells();
 
       fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
       const { id } = lastCastReq(session).value;
@@ -259,6 +273,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
     it('a nack falls back to the cast-from-Foundry note', async () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       armCast(session);
+      openSpells();
 
       fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
       const { id } = lastCastReq(session).value;
@@ -279,6 +294,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
         session.push('global', RELAY.BRIDGEHELLO, { protocol: 7, module: '0.0.0-test', ts: 1 });
         session.push('global', RELAY.FOEKIT, spent);
       });
+      openSpells();
 
       expect(screen.getByRole('button', { name: 'Cast: Fear' })).toBeDisabled();
     });
@@ -288,6 +304,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
       armCast(session, { protocol: 6 });
 
       expect(screen.getByRole('button', { name: 'Damage: Jaws' })).toBeInTheDocument();
+      openSpells();
       expect(screen.queryByRole('button', { name: 'Cast: Fear' })).not.toBeInTheDocument();
     });
   });
@@ -366,6 +383,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
     it('casting auto-witnesses the spell', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       armRails(session);
+      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
 
       fireEvent.click(screen.getByRole('button', { name: 'Cast: Fear' }));
 
@@ -377,6 +395,7 @@ describe('DockEnemyPane (#1531 S2)', () => {
     it('abilities reveal on the GM tap and settle into the revealed tag', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       act(() => { pushRelayFixture(session, RELAY.FOEKIT); });
+      fireEvent.click(screen.getByRole('tab', { name: /Abilities/ }));
 
       fireEvent.click(screen.getByRole('button', { name: 'Reveal Goblin Scuttle' }));
 
@@ -463,6 +482,18 @@ describe('DockEnemyPane (#1531 S2)', () => {
       expect(result).toHaveTextContent('Ref save');
       expect(result).toHaveTextContent('17 vs DC 22');
       expect(result).toHaveTextContent('Failure');
+    });
+
+    it('preset chips fill the damage-pad amount (#1556 S3)', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Preset 10' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Damage' }));
+
+      const sent = session.sent.filter((m) => m.stateType === RELAY.DMGAPPLY).at(-1);
+      expect(sent.value.hits).toEqual([
+        expect.objectContaining({ entryId: 'cbt-gob', amount: 10, type: '' }),
+      ]);
     });
 
     it('hides the controls entirely without Foundry (sandbox)', () => {
