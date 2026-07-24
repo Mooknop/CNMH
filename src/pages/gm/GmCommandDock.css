@@ -264,6 +264,11 @@
   color: var(--shell-text-primary);
 }
 
+/* S6: the console toggle lives in the top bar now — give it tablet height. */
+.gm-dock-topbar .gm-dock-pin {
+  min-height: 36px;
+}
+
 /* The stage hosts the player deck verbatim — the deck's CSS assumes the
    character sheet's narrow column, so constrain rather than restyle. */
 .gm-dock-stage {
@@ -343,7 +348,7 @@
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--color-text-on-primary, #fff);
+  color: var(--color-text-on-primary);
   background: linear-gradient(180deg, var(--ember-mid), var(--ember-base));
   border: 1px solid color-mix(in srgb, var(--ember-mid) 60%, transparent);
   border-radius: var(--radius-lg);
@@ -366,7 +371,7 @@
 .gm-dock-stage .selfbar-end {
   background: linear-gradient(180deg, var(--ember-mid), var(--ember-base));
   border: 1px solid color-mix(in srgb, var(--ember-mid) 60%, transparent);
-  color: var(--color-text-on-primary, #fff);
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--ember-mid) 70%, transparent);
 }

@@ -287,6 +287,13 @@
   border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-md);
   padding: 2px 6px;
+  min-height: 36px;
+}
+
+/* S6: the damage pad is the spotlight's most-tapped surface — grow its
+   controls toward the tablet target. */
+.dock-enemy-gmctl .dock-enemy-btn {
+  min-height: 36px;
 }
 
 .dock-enemy-gmctl input {
@@ -308,7 +315,8 @@
 
 .dock-enemy-tab {
   flex: 1;
-  min-height: 34px;
+  /* S6 (#1556): tablet tap target — the card has the room. */
+  min-height: var(--tap-target-min, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
