@@ -28,7 +28,9 @@
 
 // Token resolution uses the app-maintained actorMap (set by GM in the encounter
 // UI) rather than a static TOKEN_MAP. charId → foundryActorId → the actor's
-// active token on the current scene.
+// active token on the current scene. The <id> segment of the movement keys is
+// charId for PCs, `<ownerCharId>-<role>` for minions (#362), or a combat
+// entryId for enemies driven from the GM dock (#1572, protocol 10).
 import { getActorMap } from './encounter.js';
 import {
   getSpeed,
@@ -44,6 +46,7 @@ import {
   measureMoveCost,
   hasWallCollision,
   moveToken,
+  resolveCombatantToken,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
 
@@ -102,7 +105,11 @@ export function resolveToken(charId) {
     return tokens[0] ?? null;
   }
 
-  return null;
+  // Enemy fallback (#1572): an id that is neither a mapped charId nor a minion
+  // link is a combat entryId — the GM dock moving a foe. Combatant ids are
+  // random Foundry ids, so they can't shadow the branches above; outside combat
+  // (or for an unknown id) this resolves null and the request is ignored.
+  return resolveCombatantToken(charId);
 }
 
 // Called by bridge.js when cnmh_movereq_<charId> arrives. moveType (step vs

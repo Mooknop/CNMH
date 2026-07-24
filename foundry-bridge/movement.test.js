@@ -3,7 +3,7 @@
 
 import { initMovement, handleMoveRequest, handleMoveConfirm, resolveToken } from './movement.js';
 import { updateActorMap } from './encounter.js';
-import { makeActor, makeToken, makeGame } from './test/foundryMock.js';
+import { makeActor, makeToken, makeGame, makeCombat, makeCombatant } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
 let send;
@@ -268,5 +268,86 @@ describe('minion movement', () => {
       feetMoved: 5,
       reqTs: 9,
     }));
+  });
+});
+
+// Enemy movement (#1572): the GM dock moves the acting foe under its combat
+// entryId. resolveToken falls through the actor map and the minion links to the
+// active combat's combatant lookup, so the movement state machine (probe →
+// confirm → piggybacked nextOpts) works unchanged for foes.
+describe('enemy movement', () => {
+  // An ogre combatant at grid (5,5), hostile, speed 25 — unmapped in the PC
+  // actor map, so only the combatant branch can resolve it.
+  function setupFoe({ speed = 25 } = {}) {
+    const token = makeToken({ id: 'tok-ogre', x: 500, y: 500, disposition: -1 });
+    const actor = makeActor({ id: 'actor-ogre', speed, tokens: [token] });
+    token.actor = actor;
+    const combatant = makeCombatant({ id: 'combatant-ogre', token });
+    global.game.combat = makeCombat({ combatants: [combatant] });
+    global.canvas.tokens.placeables = [token];
+    return { token };
+  }
+
+  test('resolveToken finds the foe token via its combat entryId', () => {
+    const { token } = setupFoe();
+    expect(resolveToken('combatant-ogre')).toBe(token);
+  });
+
+  test('resolveToken returns null for an id no combatant matches', () => {
+    setupFoe();
+    expect(resolveToken('combatant-nobody')).toBeNull();
+  });
+
+  test('resolveToken returns null for an entryId outside combat', () => {
+    setupFoe();
+    global.game.combat = null;
+    expect(resolveToken('combatant-ogre')).toBeNull();
+  });
+
+  test('handleMoveRequest pushes opts under the entryId, using the foe Speed', async () => {
+    setupFoe({ speed: 25 });
+    await handleMoveRequest('combatant-ogre', { moveType: 'stride', ts: 11 });
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const [charId, key, opts] = send.mock.calls[0];
+    expect(charId).toBe('combatant-ogre');
+    expect(key).toBe('moveopts');
+    expect(opts.origin).toEqual({ col: 5, row: 5 });
+    expect(opts.speed).toBe(25);
+    expect(opts.reqTs).toBe(11);
+    expect(opts.reachable.length + opts.blocked.length).toBe(8);
+  });
+
+  test('handleMoveConfirm moves the foe token and reports movedone', async () => {
+    const { token } = setupFoe();
+    await handleMoveConfirm('combatant-ogre', {
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 12,
+    });
+
+    expect(token.document.update).toHaveBeenCalledWith(
+      { x: 600, y: 500 },
+      { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+    );
+    expect(send).toHaveBeenCalledWith('combatant-ogre', 'movedone', expect.objectContaining({
+      newPosition: { col: 6, row: 5, x: 600, y: 500 },
+      feetMoved: 5,
+      reqTs: 12,
+    }));
+  });
+
+  test('a mapped charId still resolves through the actor map, not the combat', () => {
+    // A combatant whose id happens to equal a mapped charId must not shadow the
+    // PC path (combatant ids are random Foundry ids, but the order is the guard).
+    const pcToken = makeToken({ id: 'tok-pellias', x: 500, y: 500 });
+    const pcActor = makeActor({ id: 'actor-pellias', speed: 10, tokens: [pcToken] });
+    pcToken.actor = pcActor;
+    global.game.actors.set('actor-pellias', pcActor);
+    const decoy = makeToken({ id: 'tok-decoy', x: 900, y: 900 });
+    global.game.combat = makeCombat({
+      combatants: [makeCombatant({ id: 'Pellias', token: decoy })],
+    });
+    global.canvas.tokens.placeables = [pcToken, decoy];
+
+    expect(resolveToken('Pellias')).toBe(pcToken);
   });
 });
