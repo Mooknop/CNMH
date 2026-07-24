@@ -29,7 +29,25 @@ devices.
 | `positions.js` | Hooks into token-move / combat lifecycle to push each combatant's grid cell to the app (range-increment measurement). |
 | `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
 | `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
-| `config.js` | Per-campaign config (worker URL, secret, actor/token maps). |
+| `config.js` | Per-campaign config (worker URL, actor/token maps). **Public — no secrets.** |
+| `secret.js` | Reads the relay secret from the per-world module setting. |
+
+## Setup: the relay secret
+
+The Worker gates `/bridge/:campaignId` and `/api/bridge/image` on a shared
+secret (`BRIDGE_SECRET`, set with `wrangler secret put BRIDGE_SECRET`). The
+bridge side of it is a **per-world Foundry setting**, not a repo constant:
+
+> Configure Settings → Module Settings → CNMH Bridge → **Relay secret**
+
+Paste the current value there once per world; the bridge connects as soon as you
+save. Until it is set, the bridge logs an error, notifies the GM, and retries
+every 15s without opening a socket — it never sends an unauthenticated request.
+
+The value must never land in `config.js` or any other tracked file: this repo is
+public and the release zip ships every file in this directory verbatim. Rotating
+the secret means updating the Worker (`wrangler secret put BRIDGE_SECRET`) and
+each world's setting together — the relay 403s any bridge holding the old value.
 
 Feature modules hold logic and never touch a Foundry global directly — all of
 that goes through `pf2eAdapter.js`, including hook registration (`onHook`) and

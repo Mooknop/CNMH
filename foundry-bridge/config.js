@@ -2,12 +2,14 @@
 // UUID: right-click token in Foundry → Copy UUID.
 // WORKER_WSS_URL: point at your deployed staging Worker, e.g.
 //   wss://cnmh-staging.<account>.workers.dev  (Forge can't reach wrangler dev)
-// BRIDGE_SECRET: must match the value of the BRIDGE_SECRET Worker secret
-//   (set via `wrangler secret put BRIDGE_SECRET`).
+//
+// NO SECRETS HERE. This file is public — it is committed to the repo and shipped
+// verbatim inside the release zip. The relay secret is a per-world Foundry module
+// setting instead (Configure Settings → Module Settings → CNMH Bridge → "Relay
+// secret"); see secret.js. Anything you paste into this file is published.
 
 export const WORKER_WSS_URL = 'wss://cnmh.mooknop.workers.dev';
 export const CAMPAIGN_ID    = 'osprey-covey';
-export const BRIDGE_SECRET  = 'Sanctuary';
 
 // Maps CNMH characterId strings → Foundry actor UUIDs.
 // Populate from: right-click actor in sidebar → Copy UUID.

@@ -61,6 +61,12 @@ Every Foundry / canvas / actor / combat / PF2e API call goes through a single se
 `bridge.js` (lifecycle), `encounter.js`, `characterSync.js`, `movement.js`,
 `targeting.js`, `flanking.js`, `flankingPush.js`, `doors.js`, `effects.js`, `saves.js`.
 
+The relay route is authenticated with a shared secret: the Worker holds it as the
+`BRIDGE_SECRET` secret, each Foundry world as the module's **Relay secret**
+setting. It is deliberately absent from this repo and from the release zip —
+rotate the two together (see
+[`foundry-bridge/README.md`](foundry-bridge/README.md#setup-the-relay-secret)).
+
 The full app ↔ bridge relay key table is documented in
 [`foundry-bridge/README.md`](foundry-bridge/README.md).
 

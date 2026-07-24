@@ -16,8 +16,9 @@ module.exports = {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/test/setup.js'],
   testMatch: ['<rootDir>/**/*.test.js'],
-  // bridge.js registers Foundry hooks at import time and config.js holds secrets;
-  // neither is unit-tested here, so keep them out of the coverage denominator.
+  // bridge.js registers Foundry hooks at import time and config.js is static
+  // per-campaign data; neither is unit-tested here, so keep them out of the
+  // coverage denominator.
   collectCoverageFrom: [
     '<rootDir>/*.js',
     '!<rootDir>/jest.config.js',
