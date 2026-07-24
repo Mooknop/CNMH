@@ -89,7 +89,7 @@ channel, add its token there too so neither side hand-writes the string.
 | `spawnminion` | app → bridge | `global` | `{ ownerCharId, role }` — create the linked minion's token in an open cell adjacent to its owner's token |
 | `summonpool` | bridge → app | `global` | `[{ key, name, level, hp: { max }, defenses, traits, img }]` — actors in the designated Summons folder, re-pushed on any actor/folder change (#261) |
 | `summonpoolreq` | app → bridge | `global` | _(no payload)_ — request a fresh `summonpool` push (Add-summon modal refresh / reconnect) |
-| `movereq` | app → bridge | charId | `{ moveType, ts }` |
+| `movereq` | app → bridge | charId | `{ moveType, ts }` — the `<id>` segment (all four movement channels) is a PC charId, a minion `<ownerCharId>-<role>` id (#362), or — protocol ≥ 10 — a combat entryId for foe movement from the GM dock (#1572); the bridge resolves in that order |
 | `moveopts` | bridge → app | charId | `{ origin, reachable[], blocked[], gridSize, speed, originOccupied, reqTs }` — `reachable[]` entries `{ col, row, feet, terrain, passThrough? }`; `blocked[]` entries `{ col, row, kind: 'wall'\|'ally'\|'enemy' }`; `speed` = actor land Speed in feet (action accounting); `originOccupied` = token currently shares its cell with an ally, so the move may not END here |
 | `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts }` |
 | `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs, nextOpts }` — `nextOpts` is the `moveopts` payload for the destination cell (same shape), piggybacked so a chained step skips a `movereq`→`moveopts` round-trip (#451); consumed by `useTokenMovement` |
