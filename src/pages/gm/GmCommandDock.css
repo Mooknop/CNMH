@@ -41,6 +41,17 @@
   grid-template-columns: minmax(0, 640px) 320px minmax(280px, 340px);
 }
 
+/* Initiative rail (#1556 S2): the rail claims the left column whenever it
+   renders (encounter, non-idle, non-empty). With the console open too, four
+   columns — the console folds below at ≤1700px instead of 1360px. */
+.gm-dock-body--rail {
+  grid-template-columns: 280px minmax(0, 640px) 300px;
+}
+
+.gm-dock--console .gm-dock-body--rail {
+  grid-template-columns: 280px minmax(0, 640px) 300px minmax(280px, 340px);
+}
+
 @media (max-width: 1360px) {
   .gm-dock--console .gm-dock-body {
     grid-template-columns: minmax(0, 640px) 320px;
@@ -61,9 +72,31 @@
   }
 }
 
+/* Rail + console can't share a row below ~1700px — fold the console under the
+   three battle columns and let the body scroll as one. min-height MUST reset
+   here too (see the 1360px note above / #1563). */
+@media (max-width: 1700px) {
+  .gm-dock--console .gm-dock-body--rail {
+    grid-template-columns: 280px minmax(0, 640px) 300px;
+    overflow-y: auto;
+  }
+
+  .gm-dock--console .gm-dock-body--rail > * {
+    min-height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .gm-dock--console .gm-dock-body--rail .dock-console {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
   .gm-dock-body,
-  .gm-dock--console .gm-dock-body {
+  .gm-dock-body--rail,
+  .gm-dock--console .gm-dock-body,
+  .gm-dock--console .gm-dock-body--rail {
     grid-template-columns: 1fr;
     justify-content: stretch;
     overflow-y: auto;
@@ -270,22 +303,8 @@
   padding: 1px 8px;
 }
 
-/* ── Pin chips (S4) — stage any PC, or follow the turn pointer ── */
-.gm-dock-pins {
-  flex: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5) 0;
-}
-
-/* The order strip and pins sit edge-to-edge on the chromeless frame — give
-   them the frame's gutter themselves (#1556 S1). */
-.gm-dock > .dock-order {
-  flex: none;
-  margin: var(--space-3) var(--space-5) 0;
-}
-
+/* ── Pin chip look — now only the top-bar console toggle wears it (S2 moved
+   staging into the initiative rail). ── */
 .gm-dock-pin {
   font: inherit;
   font-size: 0.72rem;
