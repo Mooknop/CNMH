@@ -1,0 +1,238 @@
+/* PC spotlight identity + vitals card (#1556 S4). Mirrors the enemy
+   spotlight's dial/slab language; the per-PC accent rides --color-theme,
+   which the stage sets from the roster accent. */
+
+.dock-pc-card {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-xl, 14px);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  margin-bottom: var(--space-3);
+}
+
+.dock-pc-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dock-pc-medal {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: radial-gradient(
+    circle at 32% 26%,
+    rgba(255, 255, 255, 0.35),
+    var(--color-theme, var(--ember-base)) 62%
+  );
+  border: 1px solid var(--color-theme, var(--ember-base));
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dock-pc-id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dock-pc-class {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary);
+}
+
+/* ── Focus pips ── */
+.dock-pc-focus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dock-pc-focus-pips {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dock-pc-focus-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--arcane-light);
+}
+
+.dock-pc-focus-pip.is-full {
+  background: var(--arcane-light);
+}
+
+.dock-pc-focus-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Vitals: dial + slabs (same language as the enemy spotlight) ── */
+.dock-pc-vitals {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.dock-pc-dial-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.dock-pc-dial {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--dial-color, var(--verdant-mid)) calc(var(--hp-pct, 0) * 3.6deg),
+    rgba(255, 255, 255, 0.07) 0
+  );
+}
+
+.dock-pc-dial.is-ok { --dial-color: var(--verdant-mid); }
+.dock-pc-dial.is-warn { --dial-color: var(--gold-mid); }
+.dock-pc-dial.is-low { --dial-color: var(--peril-light); }
+
+.dock-pc-dial-inner {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--shell-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.dock-pc-dial-value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--shell-text);
+}
+
+.dock-pc-dial-max {
+  font-size: 0.6rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-pc-dial-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-pc-slabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dock-pc-slab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--shell-border);
+  border-radius: 9px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.dock-pc-slab-value {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--shell-text-secondary);
+}
+
+.dock-pc-slab-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-pc-slab--saves {
+  flex-direction: row;
+  gap: var(--space-3);
+}
+
+.dock-pc-save {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.dock-pc-save-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-pc-save-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+/* ── Active-effect chips ── */
+.dock-pc-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dock-pc-chip {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--arcane-light, var(--shell-text-secondary));
+  background: color-mix(in srgb, var(--arcane-base) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--arcane-light) 45%, transparent);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
