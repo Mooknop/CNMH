@@ -235,7 +235,7 @@ const GmCommandDock = () => {
   };
 
   return (
-    <div className={`gm-dock${mode === 'encounter' && consoleOpen ? ' gm-dock--console' : ''}`}>
+    <div className="gm-dock">
       <header className="gm-dock-topbar">
         <div className="gm-dock-topbar-lead">
           <span className="gm-dock-kicker">{MODE_KICKERS[mode] || MODE_KICKERS.encounter}</span>
@@ -281,7 +281,11 @@ const GmCommandDock = () => {
           ×
         </Link>
       </header>
-      <div className={`gm-dock-body${railVisible ? ' gm-dock-body--rail' : ''}`}>
+      <div
+        className={`gm-dock-body${railVisible ? ' gm-dock-body--rail' : ''}${
+          mode === 'encounter' ? ' gm-dock-body--side' : ''
+        }`}
+      >
         {railVisible && (
           <DockOrderStrip
             stagedCharId={pinnedCharId}
@@ -308,19 +312,24 @@ const GmCommandDock = () => {
             />
           )}
         </div>
+        {/* Side column (laptop-fit v2): party reactions with the GM console
+            stacked underneath — one column instead of two gives the stage
+            its horizontal space back. */}
         {mode === 'encounter' && (
-          <DockReactionRail
-            encounter={encounter}
-            characters={characters}
-            excludeEntryId={stagedEntryId}
-          />
-        )}
-        {mode === 'encounter' && consoleOpen && (
-          <DockGmConsole
-            pcEntries={consolePcEntries}
-            entries={encounter?.order || []}
-            round={encounter?.round || 0}
-          />
+          <div className="gm-dock-side">
+            <DockReactionRail
+              encounter={encounter}
+              characters={characters}
+              excludeEntryId={stagedEntryId}
+            />
+            {consoleOpen && (
+              <DockGmConsole
+                pcEntries={consolePcEntries}
+                entries={encounter?.order || []}
+                round={encounter?.round || 0}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>

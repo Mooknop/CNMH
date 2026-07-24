@@ -20,9 +20,9 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 640px) 320px;
+  grid-template-columns: minmax(0, 720px);
   justify-content: center;
-  gap: var(--space-6);
+  gap: var(--space-5);
   align-items: start;
   padding: var(--space-4) var(--space-5) var(--space-5);
   overflow: hidden;
@@ -35,83 +35,33 @@
   overflow-y: auto;
 }
 
-/* GM console open (#1537 S2): a third column on wide screens; below 1360px it
-   spans the full width beneath stage + rail, so nothing gets crushed. */
-.gm-dock--console .gm-dock-body {
-  grid-template-columns: minmax(0, 640px) 320px minmax(280px, 340px);
+/* Laptop-fit v2: three columns, always. The reaction rail and the GM console
+   share ONE side column (console stacked underneath, toggle just hides it),
+   so the stage keeps its horizontal space on a 1366-wide tablet:
+   rail 260 + stage flex + side 300-340. */
+.gm-dock-body--side {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
 }
 
-/* Initiative rail (#1556 S2): the rail claims the left column whenever it
-   renders (encounter, non-idle, non-empty). With the console open too, four
-   columns — the console folds below at ≤1700px instead of 1360px. */
-.gm-dock-body--rail {
-  grid-template-columns: 280px minmax(0, 640px) 300px;
+.gm-dock-body--rail.gm-dock-body--side {
+  grid-template-columns: 260px minmax(0, 1fr) minmax(300px, 340px);
 }
 
-.gm-dock--console .gm-dock-body--rail {
-  grid-template-columns: 280px minmax(0, 640px) 300px minmax(280px, 340px);
+/* The side column scrolls as one: reactions first, console underneath. */
+.gm-dock-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
-@media (max-width: 1360px) {
-  .gm-dock--console .gm-dock-body {
-    grid-template-columns: minmax(0, 640px) 320px;
-    overflow-y: auto;
-  }
-
-  /* min-height must reset too: a zero minimum lets the scrolling grid size
-     row 1 below the stage's height, and the full-width console then paints
-     over the stage (caught by e2e — the End-turn click was intercepted). */
-  .gm-dock--console .gm-dock-body > * {
-    min-height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .gm-dock--console .dock-console {
-    grid-column: 1 / -1;
-  }
-}
-
-/* Laptop / landscape-tablet fit (post-#1568 tweak): folding the console below
-   the battle columns forced page scroll on every screen under 1700px — i.e.
-   on the 1366×1024 design target itself. Instead, COMPACT the four columns so
-   they share the row (the deck is proven down to ~400px by the mobile player
-   views) and keep every panel scrolling internally. The stage keeps a 360px
-   floor; below ~1200px the row genuinely can't hold four columns and the
-   console folds as before. */
-@media (max-width: 1700px) {
-  .gm-dock--console .gm-dock-body--rail {
-    grid-template-columns: 250px minmax(360px, 640px) 270px minmax(240px, 320px);
-    gap: var(--space-4);
-    padding: var(--space-3) var(--space-4) var(--space-4);
-  }
-}
-
-/* Under ~1200px four columns stop fitting — fold the console under the three
-   battle columns and let the body scroll as one. min-height MUST reset here
-   too (see the 1360px note above / #1563). */
-@media (max-width: 1200px) {
-  .gm-dock--console .gm-dock-body--rail {
-    grid-template-columns: 280px minmax(0, 640px) 300px;
-    overflow-y: auto;
-  }
-
-  .gm-dock--console .gm-dock-body--rail > * {
-    min-height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .gm-dock--console .gm-dock-body--rail .dock-console {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 900px) {
+/* Under ~1000px three columns stop fitting — stack single-column and let the
+   body scroll as one. min-height must reset here (#1563: a zero minimum lets
+   the scrolling grid collapse a row and paint siblings over it). */
+@media (max-width: 1000px) {
   .gm-dock-body,
-  .gm-dock-body--rail,
-  .gm-dock--console .gm-dock-body,
-  .gm-dock--console .gm-dock-body--rail {
+  .gm-dock-body--side,
+  .gm-dock-body--rail.gm-dock-body--side {
     grid-template-columns: 1fr;
     justify-content: stretch;
     overflow-y: auto;
@@ -121,10 +71,6 @@
     min-height: auto;
     max-height: none;
     overflow-y: visible;
-  }
-
-  .gm-dock--console .dock-console {
-    grid-column: auto;
   }
 }
 
@@ -284,10 +230,50 @@
   min-height: 36px;
 }
 
-/* The stage hosts the player deck verbatim — the deck's CSS assumes the
-   character sheet's narrow column, so constrain rather than restyle. */
+/* The stage hosts the player deck verbatim (EncounterSkeleton renders a
+   FRAGMENT, so the deck's blocks are direct stage children). Laptop-fit v2:
+   the stage is a two-column grid — the acting-PC vitals card and the deck's
+   target Dossier share the first row, everything else spans full width below
+   (self bar, then the target rail, then the deck). Dock-scoped only. */
 .gm-dock-stage {
-  max-width: 640px;
+  max-width: 1000px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+  align-content: start;
+}
+
+.gm-dock-stage > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.gm-dock-stage > .dock-pc-card {
+  grid-column: 1;
+  grid-row: 1;
+  margin-bottom: 0;
+  align-self: stretch;
+}
+
+.gm-dock-stage > .dossier {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+}
+
+/* Below pair-width, the stage falls back to a single stacked column. */
+@media (max-width: 1150px) {
+  .gm-dock-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gm-dock-stage > .dock-pc-card,
+  .gm-dock-stage > .dossier {
+    grid-column: 1;
+    grid-row: auto;
+  }
 }
 
 .gm-dock-acting {
@@ -351,6 +337,8 @@
 /* ── Non-PC turn column: pane/stub + the advance control (#1537 S1) ── */
 .gm-dock-nonpc {
   max-width: 640px;
+  margin-inline: auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -402,6 +390,8 @@
 /* ── Setup pane: initiative tally + overrides (#1537 S1) ── */
 .gm-dock-setup {
   max-width: 640px;
+  margin-inline: auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -410,6 +400,8 @@
 /* Stub panels for the not-yet-built modes (exploration/downtime/enemy turns). */
 .gm-dock-stub {
   max-width: 640px;
+  margin-inline: auto;
+  width: 100%;
   border: 1px dashed var(--shell-border-strong);
   border-radius: var(--radius-lg);
   padding: var(--space-6) var(--space-4);
