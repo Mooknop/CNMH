@@ -72,10 +72,25 @@
   }
 }
 
-/* Rail + console can't share a row below ~1700px — fold the console under the
-   three battle columns and let the body scroll as one. min-height MUST reset
-   here too (see the 1360px note above / #1563). */
+/* Laptop / landscape-tablet fit (post-#1568 tweak): folding the console below
+   the battle columns forced page scroll on every screen under 1700px — i.e.
+   on the 1366×1024 design target itself. Instead, COMPACT the four columns so
+   they share the row (the deck is proven down to ~400px by the mobile player
+   views) and keep every panel scrolling internally. The stage keeps a 360px
+   floor; below ~1200px the row genuinely can't hold four columns and the
+   console folds as before. */
 @media (max-width: 1700px) {
+  .gm-dock--console .gm-dock-body--rail {
+    grid-template-columns: 250px minmax(360px, 640px) 270px minmax(240px, 320px);
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+}
+
+/* Under ~1200px four columns stop fitting — fold the console under the three
+   battle columns and let the body scroll as one. min-height MUST reset here
+   too (see the 1360px note above / #1563). */
+@media (max-width: 1200px) {
   .gm-dock--console .gm-dock-body--rail {
     grid-template-columns: 280px minmax(0, 640px) 300px;
     overflow-y: auto;
