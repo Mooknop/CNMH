@@ -8,7 +8,8 @@
 // Dispatches incoming updates to the feature modules (encounter, characterSync,
 // movement) and exposes sendUpdate for those modules to push outbound messages.
 
-import { WORKER_WSS_URL, CAMPAIGN_ID, BRIDGE_SECRET } from './config.js';
+import { WORKER_WSS_URL, CAMPAIGN_ID } from './config.js';
+import { getBridgeSecret, SECRET_SETTING } from './secret.js';
 import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, updateActorMap } from './encounter.js';
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
@@ -35,11 +36,16 @@ import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
+// Retry cadence while the relay secret is unset. Long, because there is nothing
+// to reconnect TO until a human pastes the secret into module settings — but
+// non-zero, so setting it takes effect without reloading the world.
+const UNCONFIGURED_RETRY_MS = 15_000;
 const PING_INTERVAL_MS = 30_000;
 
 let _ws          = null;
 let _reconnTimer = null;
 let _pingTimer   = null;
+let _warnedNoSecret = false;
 
 // --- Public API (used by feature modules) ---
 
@@ -66,6 +72,27 @@ Hooks.once('init', () => {
     config: true,
     type: String,
     default: CAMPAIGN_ID,
+  });
+  // The relay secret lives here and nowhere else — never in config.js, which is
+  // committed and shipped inside the release zip (see secret.js).
+  game.settings.register(MODULE_ID, SECRET_SETTING, {
+    name: 'Relay secret',
+    hint: 'Shared secret that authenticates this world to the CNMH Worker relay. Must match the Worker\'s BRIDGE_SECRET — ask the deployer for the current value. The bridge will not connect until this is set.',
+    scope: 'world',
+    config: true,
+    type: String,
+    default: '',
+    // Pasting the secret should connect the world immediately, not on the next
+    // reload. Any live socket is holding the OLD secret, so drop it first and let
+    // its onclose reconnect — reconnecting around it would leave two sockets.
+    onChange: () => {
+      _warnedNoSecret = false;
+      if (_ws && _ws.readyState !== WebSocket.CLOSED) {
+        try { _ws.close(); } catch { /* already closing — onclose reconnects */ }
+        return;
+      }
+      scheduleReconnect(0);
+    },
   });
   game.settings.register(MODULE_ID, 'summonFolder', {
     name: 'Summons folder',
@@ -127,9 +154,16 @@ Hooks.on('deleteActor', (actor) => { if (actor.hasPlayerOwner) pushRoster(); });
 // --- WebSocket management ---
 
 function connect() {
+  const secret = getBridgeSecret();
+  if (!secret) {
+    warnNoSecret();
+    scheduleReconnect(UNCONFIGURED_RETRY_MS);
+    return;
+  }
+  _warnedNoSecret = false;
   const workerUrl  = game.settings.get(MODULE_ID, 'workerUrl')  || WORKER_WSS_URL;
   const campaignId = game.settings.get(MODULE_ID, 'campaignId') || CAMPAIGN_ID;
-  const url = `${workerUrl}/bridge/${campaignId}?key=${encodeURIComponent(BRIDGE_SECRET)}`;
+  const url = `${workerUrl}/bridge/${campaignId}?key=${encodeURIComponent(secret)}`;
   let ws;
   try {
     ws = new WebSocket(url);
@@ -170,9 +204,19 @@ function connect() {
   };
 }
 
-function scheduleReconnect() {
+function scheduleReconnect(delayMs = RECONNECT_MS) {
   clearTimeout(_reconnTimer);
-  _reconnTimer = setTimeout(connect, RECONNECT_MS);
+  _reconnTimer = setTimeout(connect, delayMs);
+}
+
+// One console error + one GM notification per unconfigured stretch — the retry
+// loop would otherwise spam both every 15s.
+function warnNoSecret() {
+  if (_warnedNoSecret) return;
+  _warnedNoSecret = true;
+  const msg = 'CNMH Bridge | No relay secret configured — set it in Configure Settings → Module Settings → CNMH Bridge → "Relay secret". Not connecting.';
+  console.error(msg);
+  if (typeof ui !== 'undefined') ui.notifications?.error?.(msg);
 }
 
 function schedulePing() {

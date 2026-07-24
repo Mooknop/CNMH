@@ -495,7 +495,11 @@ export function makeGame(opts = {}) {
     user: opts.user ?? { id: 'user1', targets: new Set(), updateTokenTargets: jest.fn() },
     settings: {
       register: jest.fn(),
-      get: jest.fn((_mod, key) => (opts.settings ?? {})[key]),
+      // The relay secret lives in a per-world setting (never the repo), and the
+      // bridge refuses to talk to the Worker without one — so the mock world is
+      // "configured" by default. Tests covering the unconfigured path pass
+      // `settings: { bridgeSecret: '' }` explicitly.
+      get: jest.fn((_mod, key) => ({ bridgeSecret: 'test-relay-secret', ...(opts.settings ?? {}) })[key]),
     },
     // game.modules.get(id).version — the bridge reads its own for the hello (#1310).
     modules: new Map(Object.entries(opts.modules ?? { 'cnmh-bridge': { version: '0.0.0-test' } })),

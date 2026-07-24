@@ -14,7 +14,8 @@
 // first sighting) and ensureTokenUploaded() fills the cache, invoking a callback
 // so the caller can re-push the encounter once the URL is known.
 
-import { WORKER_WSS_URL, BRIDGE_SECRET } from './config.js';
+import { WORKER_WSS_URL } from './config.js';
+import { getBridgeSecret } from './secret.js';
 import { getModuleSetting } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -81,8 +82,10 @@ export async function ensureTokenUploaded(rawImg, onResolved) {
 // POST the bytes to the Worker's bridge-secret-gated upload endpoint. Returns the
 // stable /api/images URL on success, or null on any failure.
 async function uploadBytes(blob, rawImg) {
+  const secret = getBridgeSecret();
+  if (!secret) return null;  // unconfigured world — the POST could only 403
   const base = workerHttpBase();
-  const url = `${base}/api/bridge/image?key=${encodeURIComponent(BRIDGE_SECRET)}`
+  const url = `${base}/api/bridge/image?key=${encodeURIComponent(secret)}`
     + `&name=${encodeURIComponent(nameFromPath(rawImg))}`;
   try {
     const res = await fetch(url, {
