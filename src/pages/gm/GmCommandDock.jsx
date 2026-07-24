@@ -135,6 +135,11 @@ const GmCommandDock = () => {
   // encounter mode; up-next wraps past the end of the order.
   const phaseLabel = mode === 'encounter' ? PHASE_LABELS[encounter?.phase] : null;
   const order = encounter?.order || [];
+  // The initiative rail (S2) claims a grid column only when it will actually
+  // render — it self-hides on idle/empty, and a phantom column would shift
+  // every other column left.
+  const railVisible =
+    mode === 'encounter' && (encounter?.phase || 'idle') !== 'idle' && order.length > 0;
   const upNext =
     mode === 'encounter' && encounter?.phase === 'in-progress' && order.length > 1
       ? order[((encounter?.currentTurnIndex || 0) + 1) % order.length]
@@ -277,33 +282,16 @@ const GmCommandDock = () => {
           ×
         </Link>
       </header>
-      {mode === 'encounter' && pcEntries.length > 0 && (
-        <div className="gm-dock-pins" role="group" aria-label="Stage a character">
-          <button
-            type="button"
-            className={`gm-dock-pin${pinnedCharId ? '' : ' gm-dock-pin--active'}`}
-            aria-pressed={!pinnedCharId}
-            onClick={() => setPinnedCharId(null)}
-          >
-            Follow turn
-          </button>
-          {pcEntries.map((e) => (
-            <button
-              key={e.entryId}
-              type="button"
-              className={`gm-dock-pin${pinnedCharId === e.charId ? ' gm-dock-pin--active' : ''}`}
-              aria-pressed={pinnedCharId === e.charId}
-              onClick={() =>
-                setPinnedCharId((cur) => (cur === e.charId ? null : e.charId))
-              }
-            >
-              {e.name}
-            </button>
-          ))}
-        </div>
-      )}
-      {mode === 'encounter' && <DockOrderStrip />}
-      <div className="gm-dock-body">
+      <div className={`gm-dock-body${railVisible ? ' gm-dock-body--rail' : ''}`}>
+        {railVisible && (
+          <DockOrderStrip
+            stagedCharId={pinnedCharId}
+            onStage={(charId) =>
+              setPinnedCharId((cur) => (cur === charId ? null : charId))
+            }
+            onFollow={() => setPinnedCharId(null)}
+          />
+        )}
         <div className="gm-dock-stage-col">
           {mode === 'encounter' ? (
             renderEncounterPane()

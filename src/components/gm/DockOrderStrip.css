@@ -1,47 +1,158 @@
-/* Dock order strip (#1537 S5) — compact full-order row above the dock body. */
+/* Dock initiative rail (#1556 S2) — the battle-mode left column: one row per
+   combatant with medallion, HP micro-bar, condition chips, and init value.
+   PC rows stage on click; the current turn glows ember. */
 
 .dock-order {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(5px);
+  padding: var(--space-3);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.dock-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dock-order-head-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-order-follow {
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  background: none;
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.dock-order-follow:hover {
+  border-color: var(--shell-border-strong);
+  color: var(--shell-text);
+}
+
+.dock-order-follow.is-active {
+  color: var(--accent-text, var(--shell-text));
+  background: var(--accent-tint);
+  border-color: var(--accent-outline, var(--shell-border-strong));
+}
+
+.dock-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .dock-order-entry {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-md);
-  padding: 4px 8px;
-  background: var(--surface-card);
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.05);
   min-width: 0;
 }
 
+/* Kind-fallback medallion accents; PC rows override via inline --medal-accent. */
+.dock-order-entry.is-pc { --medal-accent: var(--ember-base); }
+.dock-order-entry.is-enemy { --medal-accent: var(--peril-base); }
+.dock-order-entry.is-ally,
+.dock-order-entry.is-summon { --medal-accent: var(--verdant-mid); }
+
 .dock-order-entry.is-current {
-  border-color: var(--peril-light);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ember-mid) 24%, transparent),
+    color-mix(in srgb, var(--ember-mid) 5%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--ember-mid) 65%, transparent);
+  box-shadow: 0 0 18px -5px color-mix(in srgb, var(--ember-mid) 75%, transparent);
 }
 
-.dock-order-entry.is-pc.is-current {
-  border-color: var(--accent-outline, var(--shell-border-strong));
+.dock-order-entry.is-staged {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
 }
 
-.dock-order-top {
+.dock-order-main {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+button.dock-order-main {
+  cursor: pointer;
+}
+
+.dock-order-medal {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(
+    circle at 32% 26%,
+    rgba(255, 255, 255, 0.35),
+    var(--medal-accent, var(--shell-border-strong)) 62%
+  );
+  border: 1px solid var(--medal-accent, var(--shell-border-strong));
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dock-order-mid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dock-order-name-row {
   display: flex;
   align-items: baseline;
   gap: 6px;
+  min-width: 0;
 }
 
 .dock-order-marker {
-  color: var(--peril-light);
+  color: var(--ember-light);
   font-size: 0.6rem;
 }
 
 .dock-order-name {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--shell-text);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dock-order-entry.is-enemy .dock-order-name {
@@ -53,27 +164,86 @@
   color: var(--success-light, var(--shell-text));
 }
 
-.dock-order-init {
-  font-size: 0.62rem;
+.dock-order-kind {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--shell-text-tertiary);
+  white-space: nowrap;
 }
 
+/* ── HP micro-bar ── */
+.dock-order-hp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dock-order-hp-track {
+  flex: 1;
+  min-width: 0;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.dock-order-hp-fill {
+  display: block;
+  height: 100%;
+  width: var(--hp-pct, 0%);
+  border-radius: 999px;
+}
+
+.dock-order-hp-track.is-ok .dock-order-hp-fill { background: var(--verdant-mid); }
+.dock-order-hp-track.is-warn .dock-order-hp-fill { background: var(--gold-mid); }
+.dock-order-hp-track.is-low .dock-order-hp-fill { background: var(--peril-light); }
+
+.dock-order-hp-text {
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.dock-order-init {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--shell-text-secondary);
+  text-align: right;
+}
+
+/* ── Badge row under the main grid ── */
 .dock-order-badges {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
-  min-height: 14px;
+  margin-left: 39px;
+  min-height: 0;
 }
 
-.dock-order-cond {
+.dock-order-badges:empty {
+  display: none;
+}
+
+.dock-order-conds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dock-order-chip {
   font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--peril-light);
-  border: 1px solid currentColor;
+  background: color-mix(in srgb, var(--peril-base) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--peril-light) 45%, transparent);
   border-radius: 999px;
-  padding: 0 6px;
+  padding: 1px 7px;
   white-space: nowrap;
 }
 
@@ -99,5 +269,7 @@
   border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-md);
   padding: 1px 4px;
-  max-width: 150px;
+  max-width: 100%;
+  margin-left: 39px;
+  align-self: flex-start;
 }

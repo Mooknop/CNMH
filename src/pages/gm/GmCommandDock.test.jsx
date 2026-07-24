@@ -37,9 +37,18 @@ vi.mock('../../components/gm/DockGmConsole', () => ({
     return <div data-testid="dock-console" data-pcs={pcEntries.length} />;
   },
 }));
+// S2: the rail owns click-to-stage — the dummy surfaces the page's staging
+// callbacks as plain buttons so the page-level pin logic stays covered here
+// (the real rail's rendering is covered in DockOrderStrip.test.jsx).
 vi.mock('../../components/gm/DockOrderStrip', () => ({
-  default: function DummyDockOrderStrip() {
-    return <div data-testid="dock-order-strip" />;
+  default: function DummyDockOrderStrip({ stagedCharId, onStage, onFollow }) {
+    return (
+      <div data-testid="dock-order-strip" data-staged={stagedCharId || ''}>
+        <button type="button" onClick={() => onStage('AshkaBGosh')}>stage-ashka</button>
+        <button type="button" onClick={() => onStage('Pellias')}>stage-pellias</button>
+        <button type="button" onClick={() => onFollow()}>follow-turn</button>
+      </div>
+    );
   },
 }));
 vi.mock('../../components/gm/GmInitiativePanel', () => ({
@@ -102,9 +111,19 @@ describe('GmCommandDock', () => {
     expect(screen.queryByTestId('dock-order-strip')).not.toBeInTheDocument();
   });
 
-  it('mounts the order strip in encounter mode (#1537 S5)', () => {
+  it('mounts the initiative rail in encounter mode with a live order (#1556 S2)', () => {
+    useEncounter.mockReturnValue({
+      encounter: encounterWith({
+        order: [{ entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' }],
+      }),
+    });
     renderDock();
     expect(screen.getByTestId('dock-order-strip')).toBeInTheDocument();
+  });
+
+  it('skips the rail column entirely when the order is empty', () => {
+    renderDock(); // default encounter has an empty order
+    expect(screen.queryByTestId('dock-order-strip')).not.toBeInTheDocument();
   });
 
   describe('GM console (#1537 S2)', () => {
@@ -337,70 +356,73 @@ describe('GmCommandDock', () => {
     expect(screen.getByText('No combatants')).toBeInTheDocument();
   });
 
-  describe('pin chips (S4)', () => {
+  describe('rail staging (S4 pins → S2 rail)', () => {
     const TWO_PC_ORDER = [
       { entryId: 'e1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
       { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
       { entryId: 'e3', kind: 'pc', charId: 'AshkaBGosh', name: 'Ashka' },
     ];
 
-    it('hides the chips outside encounter mode', () => {
+    it('offers no staging outside encounter mode (rail not mounted)', () => {
       usePlayMode.mockReturnValue({ mode: 'exploration' });
       useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
       renderDock();
-      expect(screen.queryByRole('group', { name: 'Stage a character' })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dock-order-strip')).not.toBeInTheDocument();
     });
 
-    it('pinning a PC stages them during an enemy turn, and Follow turn returns to the enemy pane', () => {
+    it('staging a PC overrides an enemy turn, and Follow turn returns to the enemy pane', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 1, order: TWO_PC_ORDER }),
       });
       renderDock();
       expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      fireEvent.click(screen.getByRole('button', { name: 'stage-ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
       expect(screen.getByText('pinned')).toBeInTheDocument();
-      // The pin overrides the enemy pane; the staged PC drops out of the rail.
+      // The rail reflects the staged charId; the staged PC drops out of the
+      // reaction rail; the enemy pane yields the stage.
+      expect(screen.getByTestId('dock-order-strip')).toHaveAttribute('data-staged', 'AshkaBGosh');
       expect(screen.queryByTestId('dock-enemy-pane')).not.toBeInTheDocument();
       expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e3');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Follow turn' }));
+      fireEvent.click(screen.getByRole('button', { name: 'follow-turn' }));
       expect(screen.getByTestId('dock-enemy-pane')).toHaveTextContent('Ghoul');
       expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
+      expect(screen.getByTestId('dock-order-strip')).toHaveAttribute('data-staged', '');
     });
 
-    it('pin overrides turn-follow onto another PC', () => {
+    it('staging overrides turn-follow onto another PC', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
       });
       renderDock();
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      fireEvent.click(screen.getByRole('button', { name: 'stage-ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
       expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e3');
     });
 
-    it('clicking the active pin chip unpins back to turn-follow', () => {
+    it('staging the staged PC again unpins back to turn-follow', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ currentTurnIndex: 0, order: TWO_PC_ORDER }),
       });
       renderDock();
-      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      fireEvent.click(screen.getByRole('button', { name: 'stage-ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Ashka');
-      fireEvent.click(screen.getByRole('button', { name: 'Ashka' }));
+      fireEvent.click(screen.getByRole('button', { name: 'stage-ashka' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
       expect(screen.queryByText('pinned')).not.toBeInTheDocument();
     });
 
-    it('a pin overrides the setup stub so the GM can prep a PC', () => {
+    it('staging overrides the setup stub so the GM can prep a PC', () => {
       useEncounter.mockReturnValue({
         encounter: encounterWith({ phase: 'setup', round: 0, order: TWO_PC_ORDER }),
       });
       renderDock();
       expect(screen.getByText('Rolling initiative')).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'Pellias' }));
+      fireEvent.click(screen.getByRole('button', { name: 'stage-pellias' }));
       expect(screen.getByTestId('encounter-skeleton')).toHaveTextContent('Pellias');
       expect(screen.getByTestId('dock-rail')).toHaveAttribute('data-exclude', 'e1');
     });
