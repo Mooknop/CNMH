@@ -43,11 +43,17 @@ import {
   openSpellsSegment,
   castSpell,
 } from '../../helpers/spellcasting';
-
-// Mirrors SNAP_TIMEOUT_MS in src/utils/snapshotRelay.js — e2e is a separate TS
-// project, so the constant is duplicated here (same as CAMPAIGN_ID in
-// fixtures/session.ts). Only used to prove a nack short-circuits it.
-const SNAP_TIMEOUT_MS = 20_000;
+// The three independent protocol floors, the capture deadline, and the hello
+// payload they are read off — copies of src/utils/snapshotRelay.js, kept in
+// helpers/bridge.ts because e2e/ never imports from src/ (see that file's
+// header). SNAP_TIMEOUT_MS is only used to prove a nack short-circuits it.
+import {
+  bridgeHello,
+  PING_PROTOCOL,
+  SNAP_PROTOCOL,
+  SNAP_TIMEOUT_MS,
+  TEMPLATE_PROTOCOL,
+} from '../../helpers/bridge';
 
 const CHAR_ID = 'e2e-map-caster';
 const CHAR_NAME = 'E2E Map Caster';
@@ -119,7 +125,7 @@ const caster = () =>
 // active encounter with the caster up, a fresh turn budget (token '1:0' or
 // TurnTrackerPanel's turn-begin sweep wipes it), and the bridge's token grid.
 const baseSeed = (protocol: number) => ({
-  cnmh_bridgehello_global: { protocol, module: 'e2e-map-bridge' },
+  cnmh_bridgehello_global: bridgeHello(protocol, 'e2e-map-bridge'),
   cnmh_encounter_global: activeEncounter(CHAR_ID, CHAR_NAME, { order: ORDER }),
   [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState('1:0'),
   cnmh_positions_global: POSITIONS,
@@ -250,7 +256,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   // ── B1: capture ────────────────────────────────────────────────────────────
 
   test('capture: snapreq → snapdone renders the served image in the viewer', async ({ page }) => {
-    const session = await mockSession(page, { seed: baseSeed(12) });
+    const session = await mockSession(page, { seed: baseSeed(PING_PROTOCOL) });
     answerCaptures(session, (id) => ackFor(id, imageUrl));
 
     await openEncounterTab(page);
@@ -275,7 +281,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   test('ping: a tap emits WORLD coordinates off the capture matrix, not raw pixels', async ({
     page,
   }) => {
-    const session = await mockSession(page, { seed: baseSeed(12) });
+    const session = await mockSession(page, { seed: baseSeed(PING_PROTOCOL) });
     answerCaptures(session, (id) => ackFor(id, imageUrl, ZOOMED_CAPTURE));
 
     await openEncounterTab(page);
@@ -310,7 +316,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   test('area placement: a burst on a protocol-13 bridge draws the template where it landed', async ({
     page,
   }) => {
-    const session = await mockSession(page, { seed: baseSeed(13) });
+    const session = await mockSession(page, { seed: baseSeed(TEMPLATE_PROTOCOL) });
     answerCaptures(session, (id) => ackFor(id, imageUrl));
 
     await openAreaCast(page);
@@ -355,7 +361,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   // ── The independent-gate matrix (SNAP 11 · PING 12 · TEMPLATE 13) ──────────
 
   test('protocol 11: capture works for placement, but Ping the Map self-hides', async ({ page }) => {
-    const session = await mockSession(page, { seed: baseSeed(11) });
+    const session = await mockSession(page, { seed: baseSeed(SNAP_PROTOCOL) });
     answerCaptures(session, (id) => ackFor(id, imageUrl));
 
     await openEncounterTab(page);
@@ -382,7 +388,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   });
 
   test('protocol 12: no outline, but the burst still pings where it landed', async ({ page }) => {
-    const session = await mockSession(page, { seed: baseSeed(12) });
+    const session = await mockSession(page, { seed: baseSeed(PING_PROTOCOL) });
     answerCaptures(session, (id) => ackFor(id, imageUrl));
 
     await openAreaCast(page);
@@ -406,7 +412,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   });
 
   test('protocol 10: below every floor, no map surface appears at all', async ({ page }) => {
-    await mockSession(page, { seed: baseSeed(10) });
+    await mockSession(page, { seed: baseSeed(SNAP_PROTOCOL - 1) });
 
     await openEncounterTab(page);
     await expect(page.getByRole('button', { name: 'Ping the map' })).toHaveCount(0);
@@ -423,7 +429,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
   test('ok:false surfaces "no snapshot" at once instead of waiting out the timeout', async ({
     page,
   }) => {
-    const session = await mockSession(page, { seed: baseSeed(12) });
+    const session = await mockSession(page, { seed: baseSeed(PING_PROTOCOL) });
     // Nack the first request, serve the second — "Try again" must genuinely
     // re-ask rather than replay the dead ack.
     let answered = 0;
@@ -460,7 +466,7 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
     // precisely so that ghost is inert.
     const session = await mockSession(page, {
       seed: {
-        ...baseSeed(12),
+        ...baseSeed(PING_PROTOCOL),
         cnmh_snapdone_global: ackFor('snap-from-a-previous-session', imageUrl),
       },
     });
