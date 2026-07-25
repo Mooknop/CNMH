@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import SyncStatus from '../shared/SyncStatus';
+import TableDiceToggle from './TableDiceToggle';
 import GameClock from './GameClock';
 import './Navbar.css';
 
@@ -27,6 +28,7 @@ const Navbar = () => {
         </li>
         <li className="nav-item nav-sync">
           <SyncStatus />
+          <TableDiceToggle />
         </li>
         {activeCharacter && (
           <li className="nav-item">

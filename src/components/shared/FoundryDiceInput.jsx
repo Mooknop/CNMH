@@ -1,6 +1,8 @@
 import React from 'react';
 import { useFoundryDice } from '../../hooks/useFoundryDice';
+import { useDevicePref } from '../../hooks/useDevicePref';
 import { d20FaceFrom, isRollableExpression } from '../../utils/diceRelay';
+import { TABLE_DICE_PREF } from '../../utils/tableDice';
 import './FoundryDiceInput.css';
 
 /**
@@ -43,7 +45,11 @@ export default function FoundryDiceInput({
   formula = '1d20',
 }) {
   const { roll, rolling, available } = useFoundryDice();
-  const showRoll = available && !!charId && isRollableExpression(formula);
+  // Table-dice mode (#1575 D3): this DEVICE prefers physical dice — suppress
+  // the delegation button everywhere; manual typing is already the base path.
+  // Orthogonal to the semantic suppressions (no charId, non-rollable formula).
+  const [tableDice] = useDevicePref(TABLE_DICE_PREF, false);
+  const showRoll = !tableDice && available && !!charId && isRollableExpression(formula);
 
   const handleRoll = async () => {
     const ack = await roll({ formula, flavor, charId });
