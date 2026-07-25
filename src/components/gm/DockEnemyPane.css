@@ -710,3 +710,38 @@
   color: var(--shell-text-tertiary);
   text-align: center;
 }
+
+/* ── Move tab (#1572 A2) — step pad for the acting foe ─────────────────────
+   GM shell tokens only. MoveGridPicker brings its own neutral grid styling;
+   the origin cell leans on the player accent vars, which the GM shell does
+   not define — restate it in ember so the current cell reads in the dock. */
+.dock-enemy-move {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.dock-enemy-move-btn {
+  font-size: 0.8rem;
+  padding: 4px 18px;
+}
+
+.dock-enemy-move-status {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-enemy-move-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--shell-text);
+}
+
+.dock-enemy-move .mgp-cell--origin {
+  background: color-mix(in srgb, var(--ember-mid) 25%, transparent);
+  border-color: var(--ember-mid);
+  box-shadow: none;
+}

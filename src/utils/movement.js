@@ -14,3 +14,8 @@
  */
 export const needsNewStride = (feetThisAction, stepFeet, speed) =>
   feetThisAction === 0 || feetThisAction + stepFeet > speed;
+
+// The bridge protocol that taught the movement rail to resolve combat entryIds
+// (#1572 A1) — the dock's foe Move tab gates on this floor so an older module
+// never shows a pad whose requests would be silently ignored.
+export const ENEMY_MOVE_PROTOCOL = 10;
