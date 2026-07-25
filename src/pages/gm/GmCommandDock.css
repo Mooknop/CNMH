@@ -463,6 +463,21 @@
   margin-bottom: var(--space-2);
 }
 
+/* Outstanding-prompt chip (#1575 D4) — counts down on the GM clock, settles
+   when the player answers (the reactprompt key clears). */
+.dock-rail-wait {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--gold-mid);
+  border: 1px solid var(--gold-mid);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent);
+}
+
 .dock-rail-row-name {
   font-family: var(--font-display);
   font-size: 0.85rem;

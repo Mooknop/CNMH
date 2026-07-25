@@ -24,8 +24,9 @@ vi.mock('../../hooks/useSyncedState', () => {
 });
 
 let mockEncounter;
+let mockAppendLog;
 vi.mock('../../hooks/useEncounter', () => ({
-  useEncounter: () => ({ encounter: mockEncounter }),
+  useEncounter: () => ({ encounter: mockEncounter, appendLog: (...a) => mockAppendLog?.(...a) }),
 }));
 
 let mockTurnState;
@@ -102,6 +103,7 @@ function setup() {
 
 beforeEach(() => {
   __reset();
+  mockAppendLog = vi.fn();
   mockEncounter = { active: true, phase: 'in-progress', round: 2 };
   mockTurnState = { hasStartedFirstTurn: true, reactionAvailable: true, reactionSpent: false };
   mockReactions = [
@@ -277,5 +279,69 @@ describe('ReactionPrompt', () => {
     act(() => setPrompt({ ...prompt })); // force a re-render with the new turn state
     expect(screen.queryByRole('region')).toBeNull();
     expect(__get(KEY)).toBeNull();
+  });
+
+  // Countdown + expiry auto-pass (#1575 D4). ttlSec anchors on prompt ARRIVAL
+  // on this device; prompts without it behave exactly as before.
+  describe('countdown (D4)', () => {
+    afterEach(() => vi.useRealTimers());
+
+    const timedPrompt = { ...prompt, ttlSec: 30 };
+
+    it('a ttl prompt shows the countdown, ticking down', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+      setup();
+      act(() => setPrompt(timedPrompt));
+
+      expect(screen.getByRole('timer')).toHaveTextContent('30');
+      act(() => { vi.advanceTimersByTime(4_000); });
+      expect(screen.getByRole('timer')).toHaveTextContent('26');
+    });
+
+    it('expiry auto-passes: clears the key and writes a combat-log line', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+      setup();
+      act(() => setPrompt(timedPrompt));
+
+      act(() => { vi.advanceTimersByTime(31_000); });
+      expect(screen.queryByRole('region')).toBeNull();
+      expect(__get(KEY)).toBeNull();
+      expect(mockAppendLog).toHaveBeenCalledWith({
+        type: 'system',
+        text: "Blu let 'Ranged attack incoming' pass (timer expired)",
+      });
+    });
+
+    it('a prompt without ttlSec shows no timer and never expires', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+      setup();
+      act(() => setPrompt(prompt));
+
+      expect(screen.queryByRole('timer')).toBeNull();
+      act(() => { vi.advanceTimersByTime(120_000); });
+      expect(screen.getByLabelText('Reaction trigger prompt')).toBeInTheDocument();
+      expect(mockAppendLog).not.toHaveBeenCalled();
+    });
+
+    it('expiry is deferred while the reaction modal is open, then fires on close', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+      setup();
+      act(() => setPrompt(timedPrompt));
+
+      fireEvent.click(screen.getByLabelText('Use Deflect Projectile'));
+      act(() => { vi.advanceTimersByTime(31_000); });
+      // Mid-resolve: nothing is yanked away.
+      expect(screen.getByTestId('use-ability-modal')).toBeInTheDocument();
+      expect(__get(KEY)).not.toBeNull();
+
+      // Cancelling the modal releases the deferred expiry.
+      fireEvent.click(screen.getByLabelText('close modal'));
+      expect(screen.queryByRole('region')).toBeNull();
+      expect(__get(KEY)).toBeNull();
+    });
   });
 });

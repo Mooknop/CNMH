@@ -2,8 +2,11 @@ import React from 'react';
 import { useReactionOptions } from '../../hooks/useReactionOptions';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
+import { useSyncedState } from '../../hooks/useSyncedState';
+import { useCountdown } from '../../hooks/useCountdown';
 import { TRIGGER_EVENTS } from '../../utils/reactionTriggers';
-import { APP } from '../../sync/keys';
+import { buildReactionPrompt } from '../../utils/reactionPrompt';
+import { APP, syncKey } from '../../sync/keys';
 import GmReactionBadge from './GmReactionBadge';
 
 // Command Dock party-reaction rail (#1525 S3/S4) — for every OTHER PC in the
@@ -19,8 +22,12 @@ import GmReactionBadge from './GmReactionBadge';
 // up with). Readied actions ride along from useReactionOptions — off-sheet
 // intel the GM otherwise has to remember (never promptable: they're player-
 // initiated and unknown to ReactionPrompt's source list).
-
-let _reqCounter = 0;
+//
+// D4 (#1575): prompts carry ttlSec (buildReactionPrompt), and while one is
+// outstanding the row header shows a waiting chip counting down on the GM's
+// own clock — it settles the moment the player uses/passes (the key clears)
+// or reads "no answer" if the countdown drains with the key still set (player
+// offline / pre-D4 client — their round stamp still kills it).
 
 const triggerTextOf = (reaction) => reaction.trigger || reaction.description || '';
 
@@ -59,14 +66,22 @@ const RailRow = ({ character, round }) => {
   const { sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
 
+  // Outstanding prompt for this PC (D4) — the same key firePrompt writes; the
+  // player device clears it on use/pass/expiry, which settles the chip.
+  const [outstanding] = useSyncedState(syncKey(APP.REACTPROMPT, character.id), null);
+  const promptLive = !!outstanding
+    && (outstanding.round == null || round == null || outstanding.round === round);
+  const deadline = promptLive && Number(outstanding.ttlSec) > 0
+    ? Number(outstanding.ts) + Number(outstanding.ttlSec) * 1000
+    : null;
+  const remaining = useCountdown(deadline);
+
   const firePrompt = (reaction, event) => {
-    sendUpdate(character.id, APP.REACTPROMPT, {
-      reqId: `react-${Date.now()}-${++_reqCounter}`,
+    sendUpdate(character.id, APP.REACTPROMPT, buildReactionPrompt({
       eventId: event.id,
       label: event.label,
       round,
-      ts: Date.now(),
-    });
+    }));
     appendEvent({
       type: 'trigger',
       text: `Trigger: ${event.label} → ${character.name} (${reaction.name})`,
@@ -77,6 +92,13 @@ const RailRow = ({ character, round }) => {
     <section className="dock-rail-row" aria-label={`${character.name} reactions`}>
       <header className="dock-rail-row-head">
         <span className="dock-rail-row-name">{character.name}</span>
+        {promptLive && (
+          <span className="dock-rail-wait" role="timer" data-testid="dock-rail-wait">
+            {remaining == null ? '⏳ prompted'
+              : remaining > 0 ? `⏳ ${remaining}s`
+              : '⏳ no answer'}
+          </span>
+        )}
         <GmReactionBadge charId={character.id} name={character.name} />
       </header>
       {options.length === 0 ? (

@@ -4,6 +4,7 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { useContent } from '../../contexts/ContentContext';
 import { getReactions } from '../../utils/actionUtils';
 import { TRIGGER_EVENTS, matchingReactions } from '../../utils/reactionTriggers';
+import { buildReactionPrompt } from '../../utils/reactionPrompt';
 import { APP } from '../../sync/keys';
 
 let _reqCounter = 0;
@@ -49,14 +50,13 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
       : pcEntries.filter((e) => e.charId === target);
 
     for (const entry of targets) {
-      sendUpdate(entry.charId, APP.REACTPROMPT, {
+      sendUpdate(entry.charId, APP.REACTPROMPT, buildReactionPrompt({
         reqId: `${reqIdBase}-${entry.charId}`,
         eventId: event.id,
         label: event.label,
         note: note.trim() || undefined,
         round,
-        ts: Date.now(),
-      });
+      }));
     }
     const targetLabel = target === 'all' ? 'all PCs' : (targets[0]?.name ?? target);
     const noteStr = note.trim() ? ` — ${note.trim()}` : '';

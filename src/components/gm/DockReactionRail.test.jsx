@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import DockReactionRail from './DockReactionRail';
 import { APP } from '../../sync/keys';
 
@@ -15,7 +15,34 @@ vi.mock('../../hooks/useSessionLog', () => ({
 vi.mock('./GmReactionBadge', () => ({
   default: ({ charId }) => <span data-testid={`badge-${charId}`} />,
 }));
+// Store-backed useSyncedState (same shape as ReactionPrompt.test's) so the D4
+// outstanding-prompt chip can be seeded and cleared.
+vi.mock('../../hooks/useSyncedState', () => {
+  const ReactLib = require('react');
+  const store = {};
+  const subs = new Set();
+  const useSyncedState = (key, init) => {
+    const [, force] = ReactLib.useReducer((x) => x + 1, 0);
+    ReactLib.useEffect(() => { subs.add(force); return () => subs.delete(force); }, []);
+    if (!(key in store)) store[key] = typeof init === 'function' ? init() : init;
+    const set = (u) => {
+      store[key] = typeof u === 'function' ? u(store[key]) : u;
+      subs.forEach((f) => f());
+    };
+    return [store[key], set];
+  };
+  return {
+    __esModule: true,
+    useSyncedState,
+    __set: (key, value) => {
+      store[key] = value;
+      subs.forEach((f) => f());
+    },
+    __reset: () => { for (const k of Object.keys(store)) delete store[k]; },
+  };
+});
 import { useReactionOptions } from '../../hooks/useReactionOptions';
+import { __set, __reset } from '../../hooks/useSyncedState';
 
 const CHARS = [
   { id: 'AshkaBGosh', name: 'Ashka' },
@@ -76,6 +103,7 @@ const OPTIONS = {
 beforeEach(() => {
   mockSendUpdate.mockClear();
   mockAppendEvent.mockClear();
+  __reset();
   useReactionOptions.mockImplementation((character) => ({
     options: OPTIONS[character.id] || [],
   }));
@@ -147,10 +175,73 @@ describe('DockReactionRail', () => {
     expect(payload.label).toBe('Ally damaged nearby');
     expect(payload.round).toBe(3);
     expect(payload.reqId).toEqual(expect.stringContaining('react-'));
+    // D4: every fired prompt carries the countdown ttl.
+    expect(payload.ttlSec).toBe(30);
+    expect(payload.ts).toEqual(expect.any(Number));
 
     expect(mockAppendEvent).toHaveBeenCalledWith({
       type: 'trigger',
       text: 'Trigger: Ally damaged nearby → Pellias (Retributive Strike)',
+    });
+  });
+
+  // D4 (#1575): the waiting chip while a prompt is outstanding.
+  describe('outstanding-prompt chip', () => {
+    it('counts down on the GM clock and reads "no answer" when it drains', () => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(1_000_000);
+        __set('cnmh_reactprompt_Pellias', {
+          reqId: 'react-x', eventId: 'ally-damaged', label: 'Ally damaged nearby',
+          round: 3, ttlSec: 30, ts: 1_000_000,
+        });
+        render(
+          <DockReactionRail
+            encounter={{ order: ORDER, round: 3 }}
+            characters={CHARS}
+            excludeEntryId={null}
+          />
+        );
+        expect(screen.getByTestId('dock-rail-wait')).toHaveTextContent('⏳ 30s');
+
+        act(() => { vi.advanceTimersByTime(31_000); });
+        expect(screen.getByTestId('dock-rail-wait')).toHaveTextContent('⏳ no answer');
+
+        // The player answering (key cleared) settles the chip.
+        act(() => { __set('cnmh_reactprompt_Pellias', null); });
+        expect(screen.queryByTestId('dock-rail-wait')).not.toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('a prompt without ttlSec (pre-D4 shape) shows the plain prompted chip', () => {
+      __set('cnmh_reactprompt_Pellias', {
+        reqId: 'react-y', eventId: 'ally-damaged', label: 'Ally damaged nearby', round: 3, ts: 5,
+      });
+      render(
+        <DockReactionRail
+          encounter={{ order: ORDER, round: 3 }}
+          characters={CHARS}
+          excludeEntryId={null}
+        />
+      );
+      expect(screen.getByTestId('dock-rail-wait')).toHaveTextContent('⏳ prompted');
+    });
+
+    it('a prompt stamped for an earlier round shows no chip', () => {
+      __set('cnmh_reactprompt_Pellias', {
+        reqId: 'react-z', eventId: 'ally-damaged', label: 'Ally damaged nearby',
+        round: 2, ttlSec: 30, ts: 5,
+      });
+      render(
+        <DockReactionRail
+          encounter={{ order: ORDER, round: 3 }}
+          characters={CHARS}
+          excludeEntryId={null}
+        />
+      );
+      expect(screen.queryByTestId('dock-rail-wait')).not.toBeInTheDocument();
     });
   });
 

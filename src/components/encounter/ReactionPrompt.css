@@ -1,0 +1,32 @@
+/* Reaction-prompt countdown ring (#1575 D4). The conic fill drains with the
+   remaining fraction (--cd-pct stamped per render); gold while comfortable,
+   peril once it turns urgent. */
+.react-countdown {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background:
+    radial-gradient(closest-side, var(--surface-raised) 72%, transparent 73% 100%),
+    conic-gradient(
+      var(--gold-mid) calc(var(--cd-pct, 0) * 1%),
+      color-mix(in srgb, var(--gold-mid) 18%, transparent) 0
+    );
+}
+
+.react-countdown--urgent {
+  background:
+    radial-gradient(closest-side, var(--surface-raised) 72%, transparent 73% 100%),
+    conic-gradient(
+      var(--peril-light) calc(var(--cd-pct, 0) * 1%),
+      color-mix(in srgb, var(--peril-light) 18%, transparent) 0
+    );
+  color: var(--peril-light);
+}
