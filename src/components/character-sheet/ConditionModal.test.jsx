@@ -263,7 +263,7 @@ describe('ConditionModal', () => {
         />
       );
       expect(screen.getByText('Encumbrance')).toBeInTheDocument();
-      expect(screen.getByText(/8 carried \/ encumbered over 5/)).toBeInTheDocument();
+      expect(screen.getByText(/8 carried \/ encumbered at 6/)).toBeInTheDocument();
       fireEvent.click(screen.getByLabelText('Derive Encumbered from carried Bulk'));
       expect(setAuto).toHaveBeenCalledWith(false);
     });

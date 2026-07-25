@@ -5,6 +5,7 @@ import {
   isContainer,
   formatDecimal,
   getBulkStatus,
+  exceedsBulkThreshold,
   normalizeShield,
   isShieldBroken,
   isConsumable,
@@ -305,9 +306,53 @@ describe('InventoryUtils', () => {
       expect(result.isOverencumbered).toBe(false);
     });
 
-    it('should handle bulk above threshold', () => {
-      const result = getBulkStatus(7.1, 10, 7);
+    it('leaves a fraction over the threshold unencumbered (Light Bulk is free)', () => {
+      expect(getBulkStatus(7.1, 10, 7).isEncumbered).toBe(false);
+      expect(getBulkStatus(7.9, 10, 7).isEncumbered).toBe(false);
+    });
+
+    it('encumbers at the next whole Bulk past the threshold', () => {
+      const result = getBulkStatus(8, 10, 7);
       expect(result.isEncumbered).toBe(true);
+      expect(result.isOverencumbered).toBe(false);
+    });
+
+    it('leaves a fraction over the limit merely encumbered, not overencumbered', () => {
+      const result = getBulkStatus(10.7, 10, 7);
+      expect(result.isEncumbered).toBe(true);
+      expect(result.isOverencumbered).toBe(false);
+    });
+
+    it('overencumbers at the next whole Bulk past the limit', () => {
+      const result = getBulkStatus(11, 10, 7);
+      expect(result.isEncumbered).toBe(false);
+      expect(result.isOverencumbered).toBe(true);
+    });
+
+    it('survives float drift from summed Light Bulk', () => {
+      // 11 assembled out of 0.1s lands just shy of 11 in IEEE 754.
+      const drifted = Array.from({ length: 110 }, () => 0.1).reduce((a, b) => a + b, 0);
+      expect(drifted).not.toBe(11);
+      expect(getBulkStatus(drifted, 10, 7).isOverencumbered).toBe(true);
+    });
+  });
+
+  describe('exceedsBulkThreshold', () => {
+    it('is false at, and a fraction past, the threshold', () => {
+      expect(exceedsBulkThreshold(10, 10)).toBe(false);
+      expect(exceedsBulkThreshold(10.7, 10)).toBe(false);
+      expect(exceedsBulkThreshold(10.9, 10)).toBe(false);
+    });
+
+    it('is true a full Bulk past the threshold', () => {
+      expect(exceedsBulkThreshold(11, 10)).toBe(true);
+      expect(exceedsBulkThreshold(12.5, 10)).toBe(true);
+    });
+
+    it('is false for non-numeric inputs', () => {
+      expect(exceedsBulkThreshold(5, undefined)).toBe(false);
+      expect(exceedsBulkThreshold(undefined, 5)).toBe(false);
+      expect(exceedsBulkThreshold(NaN, 5)).toBe(false);
     });
   });
 
