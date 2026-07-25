@@ -1,0 +1,33 @@
+/* Table-dice mode toggle (#1575 D3) — navbar chrome beside the sync badge. */
+.table-dice-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 3px 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.table-dice-toggle:hover {
+  opacity: 0.85;
+}
+
+.table-dice-toggle.is-on {
+  opacity: 1;
+  border-color: var(--gold-mid);
+  background: color-mix(in srgb, var(--gold-mid) 16%, transparent);
+}
+
+.table-dice-toggle-note {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}

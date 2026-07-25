@@ -8,6 +8,8 @@ import { renderWithProviders } from '../../test/renderWithProviders';
 import FoundryDiceInput from './FoundryDiceInput';
 import { ROLL_TIMEOUT_MS } from '../../utils/diceRelay';
 import { subscribePendingRolls } from '../../utils/pendingRolls';
+import { setDevicePref } from '../../hooks/useDevicePref';
+import { TABLE_DICE_PREF } from '../../utils/tableDice';
 import { RELAY } from '../../sync/keys';
 
 function Host({ charId = 'Amiri', flavor = 'Strike: Longsword' }) {
@@ -157,6 +159,25 @@ describe('FoundryDiceInput', () => {
       session: { state: RAIL_STATE, foundryConnected: false },
     });
     expect(rollButton()).toBeNull();
+  });
+
+  // Table-dice mode (#1575 D3): the device pref suppresses delegation
+  // everywhere while manual typing stays untouched.
+  test('table-dice mode hides the button on a rail-capable bridge; typing still works', () => {
+    setDevicePref(TABLE_DICE_PREF, true);
+    try {
+      renderWithProviders(<Host />, { session: { state: RAIL_STATE } });
+      expect(rollButton()).toBeNull();
+
+      fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '11' } });
+      expect(screen.getByLabelText(/raw d20/i)).toHaveValue(11);
+
+      // Flipping the pref back restores the button live (no remount needed).
+      act(() => setDevicePref(TABLE_DICE_PREF, false));
+      expect(rollButton()).toBeEnabled();
+    } finally {
+      setDevicePref(TABLE_DICE_PREF, false);
+    }
   });
 });
 
