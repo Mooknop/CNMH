@@ -172,6 +172,42 @@ describe('SegmentedDeck', () => {
 
   // ── Off-turn behavior ──────────────────────────────────────────────────────
 
+  // Warn-not-hide (#1575 D1): off-turn tiles stay usable; the confirm sheet
+  // carries the out-of-turn notice instead of the deck hiding them.
+  it('an off-turn tap shows the out-of-turn notice on the confirm sheet', () => {
+    mockUseEncounter.mockReturnValue({ encounter: enemyTurnEncounter });
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Strikes' }));
+    const inHand = screen.getByRole('region', { name: 'In hand' });
+    fireEvent.click(within(inHand).getByRole('button', { name: 'Longsword' }));
+
+    const notice = screen.getByTestId('out-of-turn-notice');
+    expect(notice).toHaveTextContent('Not your turn');
+    expect(notice).toHaveTextContent('Ogre is acting');
+  });
+
+  it('on your own turn the confirm sheet carries no notice', () => {
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+    const inHand = screen.getByRole('region', { name: 'In hand' });
+    fireEvent.click(within(inHand).getByRole('button', { name: 'Longsword' }));
+    expect(screen.getByRole('dialog', { name: 'Confirm Longsword' })).toBeInTheDocument();
+    expect(screen.queryByTestId('out-of-turn-notice')).not.toBeInTheDocument();
+  });
+
+  it('reaction-cost tiles are exempt from the off-turn notice', () => {
+    mockUseCharacter.mockReturnValue(baseModel({
+      reactions: [{ name: 'Shield Block', traits: [] }],
+    }));
+    mockUseEncounter.mockReturnValue({ encounter: enemyTurnEncounter });
+    render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);
+
+    // Off-turn the deck already sits on React.
+    fireEvent.click(screen.getByRole('button', { name: 'Shield Block' }));
+    expect(screen.getByRole('dialog', { name: 'Confirm Shield Block' })).toBeInTheDocument();
+    expect(screen.queryByTestId('out-of-turn-notice')).not.toBeInTheDocument();
+  });
+
   it('auto-selects the React segment when it is not your turn', () => {
     mockUseEncounter.mockReturnValue({ encounter: enemyTurnEncounter });
     render(<SegmentedDeck character={character} encounterMode onUse={vi.fn()} />);

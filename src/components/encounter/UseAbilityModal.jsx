@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
+import OutOfTurnNotice from './OutOfTurnNotice';
 import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
@@ -782,6 +783,11 @@ const UseAbilityModal = ({
       placement="bottom"
       highZ
     >
+      {/* Warn-not-hide (#1575 D1): the backstop for launch paths that bypass
+          the deck's confirm sheet (prompts, stage bars, spell lists). The
+          notice self-hides on-turn and for reaction-cost uses. */}
+      <OutOfTurnNotice charId={character?.id} cost={explicitCost} />
+
       {/* Ability summary — meta, description, notes + the actions selector */}
       <AbilitySummarySection
         ability={ability}

@@ -6,27 +6,26 @@
 
 import { useState, useCallback } from 'react';
 import { useEncounter } from './useEncounter';
+import { isCharTurn } from '../utils/encounterUtils';
 
 export const useSpellCastFlow = (character) => {
   const { encounter } = useEncounter();
   const [castRequest, setCastRequest] = useState(null); // { spell, cost, source } | null
 
-  const currentEntry = encounter?.order?.[encounter?.currentTurnIndex];
-  const isMyTurn = !!(
-    encounter?.active &&
-    encounter.phase === 'in-progress' &&
-    currentEntry?.kind === 'pc' &&
-    currentEntry?.charId === character?.id
-  );
+  const encounterLive = !!(encounter?.active && encounter.phase === 'in-progress');
+  const isMyTurn = encounterLive && isCharTurn(encounter, character?.id);
 
   // One factory per list: makeOnCast('slot' | 'focus' | 'staff' | 'wand' |
-  // 'scroll' | 'innate'). Returns undefined off-turn so the Cast chip hides.
+  // 'scroll' | 'innate'). Warn-not-hide (#1575 D1): the chip shows on ANY
+  // live-encounter turn — casting off-turn is allowed, and the cast modal's
+  // OutOfTurnNotice makes the state visible. Outside a live encounter the
+  // chip still hides (there is no resolution to run).
   const makeOnCast = useCallback(
     (source) =>
-      isMyTurn
+      encounterLive
         ? (spell, cost) => setCastRequest({ spell, cost, source })
         : undefined,
-    [isMyTurn]
+    [encounterLive]
   );
 
   const clearCast = useCallback(() => setCastRequest(null), []);
