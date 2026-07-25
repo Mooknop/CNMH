@@ -159,4 +159,84 @@ describe('handleSnapshotRequest', () => {
     await handleSnapshotRequest({ ts: 1 });
     expect(send).not.toHaveBeenCalled();
   });
+
+  // ── Capture fallback branches ─────────────────────────────────────────────
+
+  test('a PIXI-v8 render signature failure falls back to the legacy call shape', async () => {
+    const { renderer } = fakeCanvasWorld();
+    renderer.render
+      .mockImplementationOnce(() => { throw new Error('v8 signature'); });
+    await handleSnapshotRequest({ id: 'snap-7', ts: 1 });
+
+    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(lastAck().value).toMatchObject({ id: 'snap-7', ok: true });
+  });
+
+  test('renderer.plugins.extract serves when renderer.extract is absent', async () => {
+    const { renderer } = fakeCanvasWorld();
+    renderer.plugins = { extract: renderer.extract };
+    delete renderer.extract;
+    await handleSnapshotRequest({ id: 'snap-8', ts: 1 });
+    expect(lastAck().value).toMatchObject({ id: 'snap-8', ok: true });
+  });
+
+  test('without extract/PIXI the view itself is drawn (source fallback)', async () => {
+    fakeCanvasWorld();
+    delete global.canvas.app.renderer.extract;
+    delete global.PIXI;
+    global.canvas.app.view = { width: 800, height: 400 };
+    global.canvas.app.renderer.screen = null;
+    await handleSnapshotRequest({ id: 'snap-9', ts: 1 });
+
+    const ack = lastAck();
+    expect(ack.value).toMatchObject({ id: 'snap-9', ok: true });
+    // Dimensions came from the raw view; 800 ≤ maxWidth so no downscale.
+    expect(ack.value.capture).toMatchObject({ screenW: 800, screenH: 400 });
+  });
+
+  test('a missing worldTransform acks identity-matrix defaults', async () => {
+    fakeCanvasWorld();
+    global.canvas.stage.worldTransform = undefined;
+    await handleSnapshotRequest({ id: 'snap-10', ts: 1 });
+    expect(lastAck().value.capture).toMatchObject({
+      a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0,
+    });
+  });
+
+  test('a throwing toLocal falls back to scene dimensions for worldRect', async () => {
+    fakeCanvasWorld();
+    global.canvas.stage.toLocal = () => { throw new Error('no projection'); };
+    await handleSnapshotRequest({ id: 'snap-11', ts: 1 });
+    expect(lastAck().value.worldRect).toEqual({ x1: 0, y1: 0, x2: 4000, y2: 3000 });
+  });
+
+  test('a 2d context the canvas cannot supply nacks without uploading', async () => {
+    const { out } = fakeCanvasWorld();
+    out.getContext = () => null;
+    await handleSnapshotRequest({ id: 'snap-12', ts: 1 });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(lastAck().value).toMatchObject({ id: 'snap-12', ok: false });
+  });
+
+  test('a malformed capture data URL nacks instead of uploading garbage', async () => {
+    const { out } = fakeCanvasWorld();
+    out.toDataURL = () => 'not-a-data-url';
+    await handleSnapshotRequest({ id: 'snap-13', ts: 1 });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(lastAck().value).toMatchObject({ id: 'snap-13', ok: false });
+  });
+
+  test('hidden tiles are excluded alongside hidden tokens', async () => {
+    const hiddenTile = { visible: true, document: { hidden: true } };
+    const { visibleAtRender, renderer } = fakeCanvasWorld();
+    global.canvas.tiles.placeables = [hiddenTile];
+    renderer.extract.canvas.mockImplementation(() => {
+      visibleAtRender.hiddenTile = hiddenTile.visible;
+      return { fake: 'extracted' };
+    });
+    await handleSnapshotRequest({ id: 'snap-14', ts: 1 });
+
+    expect(visibleAtRender.hiddenTile).toBe(false);
+    expect(hiddenTile.visible).toBe(true);
+  });
 });
