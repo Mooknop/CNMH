@@ -31,6 +31,7 @@ import { initDice, handleRollRequest } from './dice.js';
 import { initFoeKit } from './foekit.js';
 import { initStrikes, handleStrikeRequest } from './strikes.js';
 import { initCasts, handleCastRequest } from './casts.js';
+import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -407,6 +408,57 @@ const RECIPES = {
       id: 'cast-1', entryId: 'cbt-gob', entryItemId: 'sce-1', spellId: 'sp-fear', rank: 1, ts: 1,
     });
     return grab(send, RELAY.CASTDONE);
+  },
+
+  [RELAY.SNAPDONE]: async () => {
+    const send = jest.fn();
+    initSnapshots(send);
+    // Minimal PIXI/canvas world for the real adapter capture (#1573 B1) plus a
+    // mocked secret + upload — the same seams snapshots.test.js drives.
+    const out = {
+      width: 0, height: 0,
+      getContext: () => ({ drawImage: jest.fn() }),
+      toDataURL: () => 'data:image/webp;base64,QUJD',
+    };
+    global.document = { createElement: () => out };
+    global.PIXI = {
+      RenderTexture: { create: () => ({ destroy: jest.fn() }) },
+      Point: class { constructor(x, y) { this.x = x; this.y = y; } },
+    };
+    global.canvas = {
+      app: {
+        renderer: {
+          screen: { width: 1200, height: 800 },
+          render: jest.fn(),
+          extract: { canvas: () => ({}) },
+        },
+        view: {},
+      },
+      stage: {
+        worldTransform: { a: 1.5, b: 0, c: 0, d: 1.5, tx: -100, ty: -50 },
+        toLocal: ({ x, y }) => ({ x: (x + 100) / 1.5, y: (y + 50) / 1.5 }),
+      },
+      scene: { id: 'scene-1', grid: { size: 100 } },
+      notes: { visible: true },
+      drawings: { visible: true },
+      controls: { hud: { visible: true }, rulers: { visible: true } },
+      tiles: { placeables: [] },
+      tokens: { placeables: [] },
+      dimensions: { width: 4000, height: 3000 },
+    };
+    global.game.settings = { get: (_m, key) => (key === 'bridgeSecret' ? 's3cret' : '') };
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ id: 'tok_abc.webp', url: '/api/images/tok_abc.webp' }),
+    }));
+    try {
+      await handleSnapshotRequest({ id: 'snap-1', ts: 1 });
+    } finally {
+      delete global.fetch;
+      delete global.document;
+      delete global.PIXI;
+    }
+    return grab(send, RELAY.SNAPDONE);
   },
 
   [RELAY.FLANKED]: () => {

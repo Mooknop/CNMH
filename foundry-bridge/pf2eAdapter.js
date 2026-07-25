@@ -1074,6 +1074,120 @@ export function hasWallCollision(fromX, fromY, toX, toY) {
   });
 }
 
+// --- Scene snapshot capture (#1573 B1) ----------------------------------------
+// Renders the GM client's current canvas view to a webp data URL so players —
+// who have no Foundry client — can see the battlefield and tap a point (Ping
+// the Map, template placement). GM-only layers (notes, drawings, HUD, rulers)
+// and hidden tiles/tokens are excluded; measured templates stay VISIBLE — a
+// player placing an area wants to see the zones already down (deliberate
+// divergence from the module this ports from, which hid them).
+//
+// Alongside the image rides the stage worldTransform at capture time: the app
+// inverts that affine matrix to turn a normalized tap (nx, ny) back into world
+// coordinates, with worldRect as the matrix-less fallback, and gridSize for
+// world→cell math.
+//
+// v14 MIGRATION: canvas.app.renderer / PIXI.RenderTexture / renderer.extract
+// are PIXI-v7-era surfaces and v14 ships PIXI v8 (render({container, target})
+// vs render(stage, {renderTexture})) — the nested try/catch covers both call
+// shapes, but re-verify extract.canvas and stage.worldTransform on the v14
+// build.
+export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68 } = {}) {
+  const renderer = canvas.app?.renderer;
+  const source = canvas.app?.view;
+  if (!renderer && !source) return null;
+
+  const screenW = Math.max(1, Math.round(renderer?.screen?.width || source?.width || 1));
+  const screenH = Math.max(1, Math.round(renderer?.screen?.height || source?.height || 1));
+  const scale = Math.min(1, maxWidth / screenW);
+  const out = document.createElement('canvas');
+  out.width = Math.max(1, Math.floor(screenW * scale));
+  out.height = Math.max(1, Math.floor(screenH * scale));
+  const ctx = out.getContext('2d');
+  if (!ctx) return null;
+
+  const hidden = [];
+  const hide = (node) => {
+    if (!node) return;
+    hidden.push([node, node.visible]);
+    node.visible = false;
+  };
+  try {
+    hide(canvas.notes);
+    hide(canvas.drawings);
+    hide(canvas.controls?.hud);
+    hide(canvas.controls?.rulers);
+    (canvas.tiles?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
+    (canvas.tokens?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
+
+    const extract = renderer?.extract ?? renderer?.plugins?.extract;
+    const RenderTexture = globalThis.PIXI?.RenderTexture;
+    if (extract?.canvas && RenderTexture && canvas.stage) {
+      const texture = RenderTexture.create({ width: screenW, height: screenH, resolution: 1 });
+      try {
+        try {
+          renderer.render({ container: canvas.stage, target: texture, clear: true });
+        } catch {
+          renderer.render(canvas.stage, { renderTexture: texture, clear: true });
+        }
+        ctx.drawImage(extract.canvas(texture), 0, 0, out.width, out.height);
+      } finally {
+        texture.destroy(true);
+      }
+    } else if (source) {
+      ctx.drawImage(source, 0, 0, out.width, out.height);
+    } else {
+      return null;
+    }
+  } finally {
+    for (const [node, visible] of hidden) node.visible = visible;
+  }
+
+  const wt = canvas.stage?.worldTransform;
+  return {
+    dataUrl: out.toDataURL('image/webp', quality),
+    capture: {
+      a: Number(wt?.a ?? 1),
+      b: Number(wt?.b ?? 0),
+      c: Number(wt?.c ?? 0),
+      d: Number(wt?.d ?? 1),
+      tx: Number(wt?.tx ?? 0),
+      ty: Number(wt?.ty ?? 0),
+      screenW,
+      screenH,
+      sceneId: canvas.scene?.id ?? '',
+    },
+    worldRect: viewportWorldRect(screenW, screenH),
+    gridSize: getGridSize(),
+  };
+}
+
+// The viewport's world-coordinate rectangle — the fallback mapping when the
+// capture matrix can't be applied app-side.
+function viewportWorldRect(width, height) {
+  try {
+    const Point = globalThis.PIXI?.Point;
+    if (Point && typeof canvas.stage?.toLocal === 'function') {
+      const topLeft = canvas.stage.toLocal(new Point(0, 0));
+      const bottomRight = canvas.stage.toLocal(new Point(width, height));
+      return {
+        x1: Number(topLeft.x ?? 0),
+        y1: Number(topLeft.y ?? 0),
+        x2: Number(bottomRight.x ?? 0),
+        y2: Number(bottomRight.y ?? 0),
+      };
+    }
+  } catch {
+    // fall through to scene dimensions
+  }
+  return {
+    x1: 0,
+    y1: 0,
+    x2: Number(canvas.dimensions?.width ?? width),
+    y2: Number(canvas.dimensions?.height ?? height),
+  };
+}
+
 // --- Sequencer canvas effects (#1415, epic #1414) -----------------------------
 // The animation rail plays Sequencer effects (JB2A et al. register their assets
 // in Sequencer's database). Sequencer is an OPTIONAL module: availability is
