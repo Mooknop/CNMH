@@ -32,7 +32,10 @@ export default [
   // Never lint build output or vendored/foreign trees. (The `lint` script
   // already scopes to src/, but this keeps a bare `eslint .` sane too.)
   {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', 'e2e/**'],
+    // foundry-bridge/coverage is jest's local --coverage artifact — `npm run
+    // lint` scopes to `src foundry-bridge`, so the top-level coverage/** ignore
+    // alone doesn't shield it.
+    ignores: ['dist/**', 'build/**', 'coverage/**', 'foundry-bridge/coverage/**', 'node_modules/**', 'e2e/**'],
   },
   js.configs.recommended,
   {

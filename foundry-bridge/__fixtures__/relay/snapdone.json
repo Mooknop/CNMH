@@ -1,0 +1,27 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "snap-1",
+    "ok": true,
+    "url": "/api/images/tok_abc.webp",
+    "capture": {
+      "a": 1.5,
+      "b": 0,
+      "c": 0,
+      "d": 1.5,
+      "tx": -100,
+      "ty": -50,
+      "screenW": 1200,
+      "screenH": 800,
+      "sceneId": "scene-1"
+    },
+    "worldRect": {
+      "x1": 66.66666666666667,
+      "y1": 33.333333333333336,
+      "x2": 866.6666666666666,
+      "y2": 566.6666666666666
+    },
+    "gridSize": 100,
+    "ts": 1700000000000
+  }
+}

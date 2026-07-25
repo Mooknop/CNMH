@@ -31,6 +31,7 @@ import { initPositions, pushPositions } from './positions.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
+import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
@@ -123,6 +124,7 @@ Hooks.once('ready', () => {
   initFoeKit(sendUpdate);
   initStrikes(sendUpdate);
   initCasts(sendUpdate);
+  initSnapshots(sendUpdate);
   initDiceSets();
   connect();
 });
@@ -395,6 +397,14 @@ function dispatch(msg) {
   // cnmh_castdone_global.
   if (characterId === 'global' && key === RELAY.CASTREQ) {
     handleCastRequest(value);
+    return;
+  }
+
+  // Scene snapshot for Ping the Map / template placement (#1573 B1) — capture
+  // the GM canvas, upload to R2, ack the URL + capture matrix on
+  // cnmh_snapdone_global. Live-only: never replayed from FULL_STATE.
+  if (characterId === 'global' && key === RELAY.SNAPREQ) {
+    handleSnapshotRequest(value);
     return;
   }
 

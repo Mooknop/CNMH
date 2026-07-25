@@ -318,6 +318,14 @@ async function bridgeImage({ request, env, url }) {
   const hash = await sha256Hex(bytes);
   const id = `tok_${hash}${IMAGE_EXT[mime]}`;
 
+  // Catalog folder (#1573 B1): bestiary tokens by default; scene snapshots file
+  // separately so the ephemeral captures never clutter the token folder. The
+  // allowlist keeps the bridge from inventing catalog taxonomy. Snapshots are
+  // never referenced by content docs, so the existing orphan sweep is their GC.
+  const folder = url.searchParams.get('folder') === 'Scene Snapshots'
+    ? 'Scene Snapshots'
+    : 'Bestiary Tokens';
+
   // Content-addressed: identical bytes already in R2 → skip both the byte write
   // and the catalog registration (bytes + catalog entry are created together,
   // so a head() hit means the entry already exists).
@@ -326,7 +334,7 @@ async function bridgeImage({ request, env, url }) {
     await env.CAMPAIGN_IMAGES.put(id, bytes, { httpMetadata: { contentType: mime } });
     const name = (url.searchParams.get('name') || id).slice(0, 200);
     await putCatalogEntry(env, url.origin, {
-      id, name, folder: 'Bestiary Tokens', mimeType: mime, createdAt: Date.now(),
+      id, name, folder, mimeType: mime, createdAt: Date.now(),
     });
   }
 

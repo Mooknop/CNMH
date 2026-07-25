@@ -82,11 +82,20 @@ export async function ensureTokenUploaded(rawImg, onResolved) {
 // POST the bytes to the Worker's bridge-secret-gated upload endpoint. Returns the
 // stable /api/images URL on success, or null on any failure.
 async function uploadBytes(blob, rawImg) {
+  return uploadImageBytes(blob, nameFromPath(rawImg));
+}
+
+// Shared upload primitive (#1573 B1): the same secret-gated, content-addressed
+// R2 endpoint serves bestiary tokens AND scene snapshots — `folder` picks the
+// catalog folder ('Scene Snapshots' for captures; anything else files as a
+// token). Returns the stable /api/images URL, or null on any failure.
+export async function uploadImageBytes(blob, name, { folder = null } = {}) {
   const secret = getBridgeSecret();
   if (!secret) return null;  // unconfigured world — the POST could only 403
   const base = workerHttpBase();
   const url = `${base}/api/bridge/image?key=${encodeURIComponent(secret)}`
-    + `&name=${encodeURIComponent(nameFromPath(rawImg))}`;
+    + `&name=${encodeURIComponent(name)}`
+    + (folder ? `&folder=${encodeURIComponent(folder)}` : '');
   try {
     const res = await fetch(url, {
       method: 'POST',

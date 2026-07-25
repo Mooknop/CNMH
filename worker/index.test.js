@@ -146,6 +146,40 @@ describe('worker dispatch', () => {
     expect(wrongMethod.status).toBe(405);
   });
 
+  test('bridge image upload files snapshots under Scene Snapshots; unknown folders fall back (#1573 B1)', async () => {
+    const catalogWrites = [];
+    env.CAMPAIGN_CONTENT = {
+      idFromName: () => 'id-content',
+      get: () => ({
+        fetch: async (r) => {
+          catalogWrites.push(await r.json().catch(() => null));
+          return Response.json({ ok: true });
+        },
+      }),
+    };
+    const upload = (qs) => worker.fetch(req(`/api/bridge/image?key=shhh${qs}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/webp' },
+      body: new Uint8Array([1, 2, 3]),
+    }), env);
+
+    const res = await upload('&name=snapshot-scene-1&folder=Scene%20Snapshots');
+    expect(res.status).toBe(200);
+    expect((await res.json()).url).toMatch(/^\/api\/images\/tok_/);
+    expect(catalogWrites.at(-1)).toMatchObject({
+      name: 'snapshot-scene-1',
+      folder: 'Scene Snapshots',
+    });
+
+    // The folder param is an allowlist — anything unrecognized files as a token.
+    await upload('&name=goblin&folder=..%2Fweird');
+    expect(catalogWrites.at(-1)).toMatchObject({ name: 'goblin', folder: 'Bestiary Tokens' });
+
+    // Omitted folder keeps the pre-B1 behavior.
+    await upload('&name=orc');
+    expect(catalogWrites.at(-1)).toMatchObject({ name: 'orc', folder: 'Bestiary Tokens' });
+  });
+
   test('GM image upload rejects non-multipart bodies with the envelope', async () => {
     const res = await worker.fetch(req('/api/gm/images', { method: 'POST', body: 'not-form' }), env);
     expect(res.status).toBe(400);
