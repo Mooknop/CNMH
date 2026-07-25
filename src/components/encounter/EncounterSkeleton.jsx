@@ -13,6 +13,7 @@ import ReactionPrompt from './ReactionPrompt';
 import SkillPrompt from './SkillPrompt';
 import ChallengePrompts from './ChallengePrompts';
 import ObjectivesStrip from './ObjectivesStrip';
+import PingTheMap from './PingTheMap';
 import RollToast from './RollToast';
 import CombatLogPanel from './CombatLogPanel';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -62,14 +63,21 @@ const EncounterSkeleton = ({ character, model, characterColor }) => {
               offers / Bestiary as chips, with the objectives chips
               alongside — below the deck, above hands + log. */}
           <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={model.inventory} character={character} />
-          <ObjectivesStrip />
+          <div className="cs-encounter-tools">
+            <ObjectivesStrip />
+            {/* Ping the Map (#1573 B2) — self-hides without a capable bridge. */}
+            <PingTheMap character={character} themeColor={characterColor} />
+          </div>
           {/* At-a-glance hands strip (read-only) — hand CHANGES live in
               the deck's Items segment (HandsGroup). */}
           <HandsGlance character={character} />
         </>
       ) : (
         <>
-          <ObjectivesStrip />
+          <div className="cs-encounter-tools">
+            <ObjectivesStrip />
+            <PingTheMap character={character} themeColor={characterColor} />
+          </div>
           <div className="cs-encounter-idle">
             <span className="cs-encounter-idle-title">No Active Encounter</span>
             <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>

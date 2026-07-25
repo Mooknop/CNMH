@@ -24,3 +24,14 @@
   text-transform: uppercase;
   color: var(--shell-text-tertiary);
 }
+
+/* Tools row (#1573 B2): the objectives chips with the Ping-the-Map chip
+   alongside. PingTheMap self-hides without a capable bridge, in which case
+   this collapses to exactly the pre-B2 objectives layout. */
+.cs-encounter-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
