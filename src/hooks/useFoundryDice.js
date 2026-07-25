@@ -6,6 +6,7 @@ import { RELAY } from '../sync/keys';
 import {
   ROLLDONE_KEY, ROLL_PROTOCOL, ROLL_TIMEOUT_MS, buildRollRequest,
 } from '../utils/diceRelay';
+import { emitPendingRoll } from '../utils/pendingRolls';
 
 // Delegate a raw dice roll to Foundry (#1490 S2 — the dice-tower rail).
 //
@@ -36,6 +37,18 @@ export function useFoundryDice() {
     pendingRef.current = null;
     clearTimeout(pending.timer);
     setRolling(false);
+    // Pending-roll card (#1575 D2): settle it into a result, or drop it on
+    // nack/timeout/unmount. The face is the STRICT kept-d20 pair — no
+    // d20FaceFrom total fallback, so a damage formula never fakes a d20 face.
+    if (result) {
+      const face = (result.faces || [])
+        .find((p) => Array.isArray(p) && p[0] === 20)?.[1] ?? null;
+      emitPendingRoll({
+        id: pending.id, phase: 'settle', total: result.total ?? null, face,
+      });
+    } else {
+      emitPendingRoll({ id: pending.id, phase: 'drop' });
+    }
     pending.resolve(result);
   }, []);
 
@@ -54,6 +67,7 @@ export function useFoundryDice() {
     if (!available || pendingRef.current) return Promise.resolve(null);
     const req = buildRollRequest({ charId, formula, flavor });
     setRolling(true);
+    emitPendingRoll({ id: req.id, phase: 'start', charId, formula, flavor });
     return new Promise((resolve) => {
       pendingRef.current = {
         id: req.id,

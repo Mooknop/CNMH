@@ -113,6 +113,24 @@
   align-self: center;
 }
 
+/* Pending dice-tower card (#1575 D2) — formula pulses until the ack lands. */
+.roll-toast-die--pending {
+  font-size: var(--text-base);
+  color: var(--color-theme, var(--shell-text-primary));
+  animation: roll-toast-pulse 1.1s ease-in-out infinite;
+}
+
+.roll-toast-pending-note {
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+@keyframes roll-toast-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .roll-toast { animation: none; }
+  .roll-toast-die--pending { animation: none; }
 }
