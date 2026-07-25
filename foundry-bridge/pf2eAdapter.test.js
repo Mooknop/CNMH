@@ -20,6 +20,7 @@ import {
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   getGridSize, getAllTokens, getTokenDimensions, getTokenDisposition,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
+  resolveMovedPosition,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
   applyEffectByUuid, applyTypedDamage,
   isEffectItem, getEffectItemActor, getEffects,
@@ -140,13 +141,88 @@ describe('adapter writes are echo-tagged', () => {
     );
   });
 
-  test('moveToken writes x/y tagged + animated', () => {
+  test('moveToken (v13) writes x/y tagged + animated and resolves with the request', async () => {
     const token = makeToken();
-    moveToken(token, 250, 400);
+    await expect(moveToken(token, 250, 400)).resolves.toEqual({ x: 250, y: 400 });
     expect(token.document.update).toHaveBeenCalledWith(
       { x: 250, y: 400 },
       { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
     );
+  });
+
+  // v14 movement-pipeline switch point (#1574).
+  describe('moveToken v14 pipeline', () => {
+    test('generation 14 + TokenDocument#move → the pipeline is used, not update()', async () => {
+      global.game.release = { generation: 14 };
+      const token = makeToken({ x: 100, y: 100 });
+      token.document.move = jest.fn(async ({ x, y }) => {
+        token.document.x = x;
+        token.document.y = y;
+      });
+
+      const landed = await moveToken(token, 250, 400);
+
+      expect(token.document.move).toHaveBeenCalledWith(
+        { x: 250, y: 400 },
+        { [BRIDGE_SOURCE_FLAG]: 'app' },
+      );
+      expect(token.document.update).not.toHaveBeenCalled();
+      expect(landed).toEqual({ x: 250, y: 400 });
+    });
+
+    test('generation 14 WITHOUT move() keeps the update() fallback', async () => {
+      global.game.release = { generation: 14 };
+      const token = makeToken();
+      const landed = await moveToken(token, 250, 400);
+      expect(token.document.update).toHaveBeenCalled();
+      expect(landed).toEqual({ x: 250, y: 400 });
+    });
+
+    test('generation 13 never enters the pipeline even when move() exists', async () => {
+      const token = makeToken();
+      token.document.move = jest.fn();
+      await moveToken(token, 250, 400);
+      expect(token.document.move).not.toHaveBeenCalled();
+      expect(token.document.update).toHaveBeenCalled();
+    });
+  });
+
+  // Post-move document poll (#1574) — the two pipeline gotchas.
+  describe('resolveMovedPosition', () => {
+    const FAST = { timeoutMs: 40, intervalMs: 1 };
+    const PREV = { x: 100, y: 100 };
+
+    test('document already at the target → the target, immediately', async () => {
+      const doc = { x: 250, y: 400 };
+      await expect(resolveMovedPosition(doc, { x: 250, y: 400 }, PREV, FAST))
+        .resolves.toEqual({ x: 250, y: 400 });
+    });
+
+    test('a changed position that settles is a legal stop-short', async () => {
+      const doc = { x: 200, y: 400 }; // constraint stopped the move one cell short
+      await expect(resolveMovedPosition(doc, { x: 250, y: 400 }, PREV, FAST))
+        .resolves.toEqual({ x: 200, y: 400 });
+    });
+
+    test('a document still at the start when the timeout drains is lag — trust the target', async () => {
+      const doc = { x: 100, y: 100 };
+      await expect(resolveMovedPosition(doc, { x: 250, y: 400 }, PREV, FAST))
+        .resolves.toEqual({ x: 250, y: 400 });
+    });
+
+    test('mid-animation coordinates are not trusted until they hold', async () => {
+      // Each read advances an animation frame; the token parks on the target.
+      const frames = [
+        { x: 120, y: 100 }, { x: 150, y: 200 }, { x: 180, y: 300 }, { x: 250, y: 400 },
+      ];
+      let i = 0;
+      const doc = {
+        get x() { return frames[Math.min(i, frames.length - 1)].x; },
+        get y() { return frames[Math.min(i++, frames.length - 1)].y; },
+      };
+      await expect(resolveMovedPosition(doc, { x: 250, y: 400 }, PREV, { timeoutMs: 200, intervalMs: 1 }))
+        .resolves.toEqual({ x: 250, y: 400 });
+    });
   });
 });
 

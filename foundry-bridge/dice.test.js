@@ -84,6 +84,22 @@ describe('handleRollRequest', () => {
     }));
   });
 
+  test('v14: the namespaced foundry.dice.Roll is preferred and the bare global is optional (#1574)', async () => {
+    setupWorld();
+    // v14 world: the deprecated Roll global is gone; only the namespace exists.
+    global.foundry = { dice: { Roll: MockRoll } };
+    delete global.Roll;
+    try {
+      nextRoll = { total: 17, dice: [{ faces: 20, results: [{ result: 17, active: true }] }] };
+      await handleRollRequest({ id: 'roll-ns', charId: 'Pellias', formula: '1d20', flavor: '' });
+      expect(sendUpdate).toHaveBeenCalledWith('global', 'rolldone', expect.objectContaining({
+        id: 'roll-ns', ok: true, total: 17, faces: [[20, 17]],
+      }));
+    } finally {
+      delete global.foundry;
+    }
+  });
+
   test('an unmapped charId still rolls, speaking as GM', async () => {
     nextRoll = { total: 9, dice: [{ faces: 20, results: [{ result: 9 }] }] };
 

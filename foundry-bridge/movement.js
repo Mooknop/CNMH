@@ -135,26 +135,36 @@ export async function handleMoveConfirm(charId, value) {
   const { destination } = value;
   const { x, y } = gridToPixels(destination.col, destination.row);
 
-  // Measure feet center-to-center (token position is the cell's top-left).
   const gridSize = getGridSize();
   const { width: tW, height: tH } = getTokenDimensions(token);
   const offX = (tW * gridSize) / 2;
   const offY = (tH * gridSize) / 2;
+  // Capture the start BEFORE the move — on the v14 pipeline the document may
+  // already reflect the landing by the time moveToken resolves.
+  const startX = token.x;
+  const startY = token.y;
+
+  // v14 readiness (#1574): moveToken reports where the token ACTUALLY landed —
+  // the v14 movement pipeline may stop a move short of the request. On v13 the
+  // landing always equals the request, so nothing changes.
+  const landed = (await moveToken(token, x, y)) ?? { x, y };
+  const col = Math.round(landed.x / gridSize);
+  const row = Math.round(landed.y / gridSize);
+
+  // Measure feet center-to-center (token position is the cell's top-left).
   const feetMoved = snapFeet(
-    measureMoveCost(token.x + offX, token.y + offY, x + offX, y + offY)
+    measureMoveCost(startX + offX, startY + offY, landed.x + offX, landed.y + offY)
   );
 
-  await moveToken(token, x, y);
-
-  // Piggyback the destination cell's step options so a chained move doesn't pay
-  // another movereq→moveopts round-trip (#451). Computed from the known
-  // destination, not by re-reading the token — token.x/y lag the animated move.
+  // Piggyback the landing cell's step options so a chained move doesn't pay
+  // another movereq→moveopts round-trip (#451). Computed from the reported
+  // landing, not by re-reading the token — token.x/y lag the animated move.
   const nextOpts = await getStepNeighbors(token, {
-    col: destination.col, row: destination.row, x, y,
+    col, row, x: landed.x, y: landed.y,
   });
 
   _sendUpdate?.(charId, RELAY.MOVEDONE, {
-    newPosition: { col: destination.col, row: destination.row, x, y },
+    newPosition: { col, row, x: landed.x, y: landed.y },
     feetMoved,
     reqTs: value?.ts ?? null,
     nextOpts,

@@ -8,18 +8,40 @@ data path moves, **only the adapter changes.**
 
 ## Known v14 hotspots
 
-- **Token movement API** — v14 added a planned-movement pipeline
-  (`TokenDocument.move`, the `moveToken` hook, movement-constraint options) and
-  new origin accessors. The bridge writes moves via `moveToken()` in the adapter
-  (currently `token.document.update({x,y})`, which still works on v14). This is
-  the single switch point if you migrate to the new pipeline. Marked
-  `[v14-MIGRATION]` in the adapter.
+- **Token movement API — switch point implemented (#1574).** The adapter's
+  `moveToken()` branches on `game.release.generation`: v13 keeps the
+  `token.document.update({x,y})` write byte-identical; generation ≥ 14 uses the
+  dedicated pipeline (`TokenDocument#move`) followed by `resolveMovedPosition()`
+  — a document poll that handles the two field-verified pipeline gotchas
+  (`move()` can resolve before the collection updates, and may legally stop a
+  move SHORT of the request). `handleMoveConfirm` already consumes the reported
+  landing, so a stopped-short move keeps app grid and canvas in agreement.
+  Remaining v14 work: the in-world smoke pass, plus verifying that `move()`'s
+  options bag still forwards `BRIDGE_SOURCE_FLAG` into the update context the
+  hook listeners see.
+- **Namespaced core classes — dice half resolved (#1574).** `rollFormula` reads
+  `foundry.dice.Roll` when present (the only exposure once v14 retires the
+  deprecated global) with the bare global as the v13 fallback.
+  `ChatMessage.getSpeaker` still reads the global — re-verify on v14 (likely
+  `foundry.documents`).
 - **Active Effects V2 schema** — expiry handling and the effect schema changed.
   The bridge does not yet read/write Active Effects (effects are app-side), but
   any future effect mirror lands behind the adapter.
 - **PF2e system reads** are version-gated independently of core Foundry: `getHp`,
   `getHeroPoints`, `getFocusPool`, `getSpeed`, `getConditions`. A PF2e major bump
   can move these even when core Foundry is unchanged.
+
+### Confirmed v14-era intel (2026-07, from reviewing a module targeting Foundry v14.363 + PF2e 8.2.0)
+
+- Land speed moved to `system.movement.speeds` — **already handled**: `getSpeed`
+  prefers the new path with the `attributes.speed` fallback.
+- Spell damage is an entries **map** (`Object.entries(spell.system.damage)`)
+  whose values carry `kinds` arrays (damage vs healing) — re-verify `foekit`'s
+  spell reads against the v14-era PF2e release.
+- Save defenses read from `system.defense.save.statistic` on spells.
+- The PF2e-family strike surface (`variants[]` MAP ladder, `damage`/`critical`)
+  and `SpellcastingEntry#cast(spell, { rank })` are unchanged in the v14-era
+  system — our #1531 native-execution reads should survive.
 
 ## Checklist
 

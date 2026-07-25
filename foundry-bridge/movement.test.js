@@ -335,6 +335,31 @@ describe('enemy movement', () => {
     }));
   });
 
+  test('v14 pipeline stop-short: movedone reports the ACTUAL landing (#1574)', async () => {
+    const { token } = setupFoe();
+    global.game.release = { generation: 14 };
+    // The confirmed cell is (7,5), but the movement pipeline clamps the token
+    // to (6,5) — e.g. a constraint the probe and Foundry judged differently.
+    token.document.move = jest.fn(async () => {
+      token.document.x = 600;
+      token.document.y = 500;
+    });
+
+    await handleMoveConfirm('combatant-ogre', {
+      destination: { col: 7, row: 5 }, moveType: 'stride', ts: 21,
+    });
+
+    expect(token.document.move).toHaveBeenCalled();
+    expect(token.document.update).not.toHaveBeenCalled();
+    const [, key, done] = send.mock.calls[0];
+    expect(key).toBe('movedone');
+    // Landing truth, not the request: cell (6,5) and the 5 ft actually walked.
+    expect(done.newPosition).toEqual({ col: 6, row: 5, x: 600, y: 500 });
+    expect(done.feetMoved).toBe(5);
+    expect(done.reqTs).toBe(21);
+    expect(done.nextOpts.origin).toEqual({ col: 6, row: 5 });
+  });
+
   test('a mapped charId still resolves through the actor map, not the combat', () => {
     // A combatant whose id happens to equal a mapped charId must not shadow the
     // PC path (combatant ids are random Foundry ids, but the order is the guard).
