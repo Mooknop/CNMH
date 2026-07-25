@@ -1,0 +1,16 @@
+/* Out-of-turn soft warning (#1575 D1). Gold caution tint with inherited text
+   color so it reads on both the dark deck sheet and the light resolver modal. */
+.oot-notice {
+  margin: 0 0 var(--space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--gold-mid);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.oot-notice-glyph {
+  color: var(--gold-mid);
+}

@@ -11,6 +11,7 @@
 import React from 'react';
 import ActionSymbol from '../../shared/ActionSymbol';
 import TraitTag from '../../shared/TraitTag';
+import OutOfTurnNotice from '../OutOfTurnNotice';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
 import { formatModifier } from '../../../utils/CharacterUtils';
 import { defenseDC } from '../../../utils/defense';
@@ -110,7 +111,7 @@ export function buildPreview(tile, { focusEnemy = null, focusAlly = null, attack
   };
 }
 
-const ConfirmSheet = ({ tile, focusEnemy, focusAlly, attacksMade = 0, onConfirm, onClose }) => {
+const ConfirmSheet = ({ tile, charId, focusEnemy, focusAlly, attacksMade = 0, onConfirm, onClose }) => {
   const { recordFor } = useRecallKnowledge();
   const rec = focusEnemy ? recordFor(rkKeyFor(focusEnemy)) : null;
   const p = buildPreview(tile, { focusEnemy, focusAlly, attacksMade, rec });
@@ -121,6 +122,10 @@ const ConfirmSheet = ({ tile, focusEnemy, focusAlly, attacksMade = 0, onConfirm,
       <div className="deck-sheet" role="dialog" aria-label={`Confirm ${p.name}`}>
         <div className="deck-sheet-handle" aria-hidden="true" />
         <div className="deck-sheet-eyebrow">Confirm action</div>
+
+        {/* Warn-not-hide (#1575 D1): acting off-turn is allowed — say so here,
+            at the intent step, instead of hiding tiles. Reactions exempt. */}
+        <OutOfTurnNotice charId={charId} cost={tile.cost} />
 
         <div className="deck-sheet-title">
           <span className="deck-sheet-glyph"><ActionSymbol cost={p.glyphCost} /></span>

@@ -470,6 +470,7 @@ const SegmentedDeck = ({ character, themeColor, encounterMode, onUse, onMagicOpe
       {sheet && (
         <ConfirmSheet
           tile={sheet.tile}
+          charId={character.id}
           focusEnemy={focusEnemy}
           focusAlly={focusAlly}
           attacksMade={turnState?.attacksMade ?? 0}
