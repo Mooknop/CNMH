@@ -47,6 +47,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
 import { useSecondaryProfiles } from '../../hooks/useSecondaryProfiles';
+import { useTemplatePlacementSection } from '../../hooks/useTemplatePlacementSection';
 import { applyChainStrikeResults, applyChainSpellResults } from '../../utils/chainResultsAppliers';
 import {
   buildRayGroups,
@@ -197,6 +198,14 @@ const UseAbilityModal = ({
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character?.id);
   const casterEntryId  = casterEntry?.entryId || null;
 
+  // Adopt a computed set of combatants into the target selection (#1573 B3 —
+  // the creatures standing in a placed area). Additive by design: toggling only
+  // the ones not already picked leaves a manual choice intact, and the player
+  // can still uncheck anything the geometry got wrong.
+  const adoptTargetIds = useCallback((entryIds) => {
+    (entryIds || []).forEach((id) => { if (!isTargeted(id)) toggleTarget(id); });
+  }, [isTargeted, toggleTarget]);
+
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
 
   const selectedEntries  = order.filter((e) => targets.includes(e.entryId));
@@ -316,6 +325,18 @@ const UseAbilityModal = ({
     castRank: directCastRank,
     casterEntryId,
     fxAnimations,
+  });
+
+  // Area placement (#1573 B3) — tap the battlefield snapshot to say where a
+  // burst lands, and adopt the creatures standing in it as the save targets.
+  // Deliberately gate-free (see the hook): an area spell stays castable without
+  // a bridge exactly as before. Hoisted above the ability guard like the others.
+  const placement = useTemplatePlacementSection({
+    ability,
+    order,
+    casterEntryId,
+    positionsState,
+    adoptTargets: adoptTargetIds,
   });
 
   if (!ability || !character) return null;
@@ -601,6 +622,10 @@ const UseAbilityModal = ({
     // save, so a zone with no targets is simply a no-op.
     secondaryProfiles.buildRequests(saveDc).forEach(addSaveRequest);
 
+    // Area placement (#1573 B3) — ping where the area landed so the table sees
+    // it, and log the placement. Runs beside the save requests it informed.
+    placement.applyOnConfirm();
+
     // Armed payloads (#987) — damage/save this cast stores for a LATER trigger
     // (Targeting Beacon's beacon exploding on the next attack that hits).
     // Resolving them now would fire them at the wrong moment, so they park on
@@ -826,6 +851,8 @@ const UseAbilityModal = ({
 
       {/* Rider choice (#225) — either/or rider picked at use time */}
       {riderChoiceSection.section}
+      {/* Area placement (#1573 B3) — sits with the other target-set owners */}
+      {placement.section}
       {secondaryProfiles.section}
 
       {/* Catalysts (#1209) — opt-in adds for this cast */}
