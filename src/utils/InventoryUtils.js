@@ -216,6 +216,26 @@ export const formatDecimal = (value) => {
 return parseFloat(value).toFixed(1).replace(/\.0$/, '');
 };
 
+// Bulk is summed as floats (Light Bulk is 0.1), so a "whole" total can land on
+// 10.999999999999998. Compare with a hair of slack.
+const BULK_EPSILON = 1e-6;
+
+/**
+ * House rule: Light Bulk never tips you over. A Bulk threshold only bites once
+ * carried Bulk reaches the NEXT whole Bulk past it — a 10-Bulk limit is still
+ * manageable at 10.7 and only costs you at 11. (RAW PF2e penalises any excess;
+ * we round the slop in the character's favour so a handful of L items can't
+ * silently cost a PC 10 feet of Speed.)
+ *
+ * @param {number} bulkUsed - Current Bulk carried
+ * @param {number} threshold - Bulk threshold to test against
+ * @returns {boolean} true once the penalty applies
+ */
+export const exceedsBulkThreshold = (bulkUsed, threshold) => {
+  if (!Number.isFinite(bulkUsed) || !Number.isFinite(threshold)) return false;
+  return bulkUsed + BULK_EPSILON >= threshold + 1;
+};
+
 /**
  * Derive encumbrance status from bulk values
  * @param {number} bulkUsed - Current bulk carried
@@ -225,8 +245,9 @@ return parseFloat(value).toFixed(1).replace(/\.0$/, '');
  */
 export const getBulkStatus = (bulkUsed, bulkLimit, encumberedThreshold) => {
   const percentage = bulkLimit > 0 ? (bulkUsed / bulkLimit) * 100 : 0;
-  const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
-  const isOverencumbered = bulkUsed > bulkLimit;
+  const isOverencumbered = exceedsBulkThreshold(bulkUsed, bulkLimit);
+  const isEncumbered =
+    exceedsBulkThreshold(bulkUsed, encumberedThreshold) && !isOverencumbered;
   return { percentage, isEncumbered, isOverencumbered };
 };
 

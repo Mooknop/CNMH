@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { useCharacter } from './useCharacter';
 import { getFreeActions } from '../utils/ActionsUtils';
 import { calculateEnhancedBulkLimit } from '../utils/CharacterUtils';
+import { calculateItemsBulk } from '../utils/InventoryUtils';
 import { resolveCharacterItems } from '../utils/contentUtils';
 import { items, spells } from '../data';
 
@@ -20,7 +21,7 @@ vi.mock('../utils/CharacterUtils', () => ({
   calculateClassDC: vi.fn((level) => 10 + level),
   // Real shape ({ bulkLimit, encumberedThreshold }); calculateItemsBulk is
   // mocked to 5 in this file, so the default threshold (5) is NOT exceeded
-  // (over-Bulk is strictly greater). Encumbrance tests override per-test.
+  // (the penalty needs a full Bulk more). Encumbrance tests override per-test.
   calculateEnhancedBulkLimit: vi.fn(() => ({ bulkLimit: 10, encumberedThreshold: 5 })),
   hasFeat: vi.fn(() => false),
   FEAT_NAMES: {
@@ -51,7 +52,7 @@ vi.mock('../utils/InventoryUtils', async (importOriginal) => ({
   // Real helpers stay (shieldStrikes/shieldAttach flatten the inventory);
   // Bulk/armor derivations are stubbed for the tests below.
   ...(await importOriginal()),
-  calculateItemsBulk: () => 5,
+  calculateItemsBulk: vi.fn(() => 5),
   formatBulk: (bulk) => bulk.toString(),
   ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
   isArmor: (it) => !!it && !!it.armor,
@@ -738,6 +739,14 @@ describe('useCharacter', () => {
       });
 
       it('exactly at the threshold is NOT encumbered', () => {
+        calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 10, encumberedThreshold: 5 });
+        const { result } = renderHook(() => useCharacter(runner()));
+        expect(result.current.encumbrance.overBulk).toBe(false);
+        expect(result.current.speed.total).toBe(25);
+      });
+
+      it('a fraction past the threshold is NOT encumbered (Light Bulk is free)', () => {
+        calculateItemsBulk.mockReturnValue(5.7);
         calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 10, encumberedThreshold: 5 });
         const { result } = renderHook(() => useCharacter(runner()));
         expect(result.current.encumbrance.overBulk).toBe(false);

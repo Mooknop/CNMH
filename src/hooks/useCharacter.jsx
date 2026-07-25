@@ -34,7 +34,7 @@ import {
   getArmorProficiencyBonus,
 } from '../utils/CharacterUtils';
 
-import { ARMOR_CATEGORIES, normalizeArmor } from '../utils/InventoryUtils';
+import { ARMOR_CATEGORIES, normalizeArmor, exceedsBulkThreshold } from '../utils/InventoryUtils';
 import { findWornArmor, deriveArmorClass } from '../utils/armorClass';
 
 import {
@@ -317,15 +317,14 @@ export const useCharacter = (character) => {
     const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Encumbrance (SP3, #1222) ─────────────────────────────────────────────
-    // Carried Bulk strictly over the encumbered threshold (5 + Str mod, Hefty
-    // Hauler-aware — exactly AT the threshold is fine) derives the PF2e
-    // encumbered state: the Encumbered condition (−10 ft Speed) + Clumsy 1,
-    // injected into the condition list below so the existing condition engine
-    // nets them — never hand-rolled penalties. GM/player-overridable via the
-    // cnmh_encauto_ toggle (default ON).
-    const overBulk =
-      Number.isFinite(bulkStats?.encumberedThreshold) &&
-      totalBulk > bulkStats.encumberedThreshold;
+    // Carried Bulk a full Bulk past the encumbered threshold (5 + Str mod,
+    // Hefty Hauler-aware) derives the PF2e encumbered state: the Encumbered
+    // condition (−10 ft Speed) + Clumsy 1, injected into the condition list
+    // below so the existing condition engine nets them — never hand-rolled
+    // penalties. The house rule lives in `exceedsBulkThreshold` so the sheet,
+    // the Bulk bar and this spine agree: a threshold of 5 is fine at 5.7 and
+    // only bites at 6. GM/player-overridable via cnmh_encauto_ (default ON).
+    const overBulk = exceedsBulkThreshold(totalBulk, bulkStats?.encumberedThreshold);
     const encumbrance = {
       overBulk,
       auto: encAuto !== false,

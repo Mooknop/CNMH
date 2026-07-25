@@ -141,14 +141,15 @@ const ConditionModal = ({
                 Derive Encumbered from carried Bulk
                 {totalBulk != null && encumberedThreshold != null && (
                   <span className="ct-encumbrance-detail">
-                    {' '}({totalBulk} carried / encumbered over {encumberedThreshold})
+                    {' '}({totalBulk} carried / encumbered at {encumberedThreshold + 1})
                   </span>
                 )}
               </span>
             </label>
             <p className="ct-encumbrance-hint">
-              Over the threshold: Encumbered (−10 ft Speed) and Clumsy 1 apply
-              automatically. Untick if a container, mount or party hauling makes
+              A full Bulk over the threshold: Encumbered (−10 ft Speed) and
+              Clumsy 1 apply automatically — a fraction over is still
+              manageable. Untick if a container, mount or party hauling makes
               the raw Bulk math wrong.
             </p>
           </section>

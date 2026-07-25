@@ -4,7 +4,7 @@ import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 /**
  * Bulk meter for the inventory "Loadout Grid". A label + mono `used / limit`
  * readout whose colour shifts accent → gold (encumbered) → peril (at/over the
- * limit), over a 7px track with a tick mark at the encumbered threshold. The
+ * limit), over a 7px track with a tick mark where encumbrance starts. The
  * accent is the character's theme colour (`var(--color-theme)` from the
  * surrounding scope), so no colour is threaded through as a prop.
  *
@@ -23,8 +23,10 @@ const BulkBar = ({ bulkUsed, encumberedThreshold, bulkLimit }) => {
     encumberedThreshold
   );
   const fillPct = Math.min(100, Math.max(0, percentage));
+  // The tick sits where the penalty actually starts — a full Bulk past the
+  // threshold, since fractional (Light) overage is free.
   const tickPct =
-    bulkLimit > 0 ? Math.min(100, (encumberedThreshold / bulkLimit) * 100) : 0;
+    bulkLimit > 0 ? Math.min(100, ((encumberedThreshold + 1) / bulkLimit) * 100) : 0;
 
   const cls = [
     'bulkbar',

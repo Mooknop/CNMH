@@ -11,11 +11,8 @@ vi.mock('../../utils/InventoryUtils', async () => ({
     if (bulk < 1) return 'L';
     return bulk.toString();
   },
-  getBulkStatus: (used, limit, threshold) => ({
-    percentage: limit > 0 ? (used / limit) * 100 : 0,
-    isEncumbered: used > threshold && used <= limit,
-    isOverencumbered: used > limit
-  }),
+  // Real getBulkStatus too, so the encumbered/overencumbered banners below are
+  // gated by the genuine house rule (a full Bulk past the threshold).
 }));
 
 // Consumed overlay (cnmh_consumed_<charId>) + affix overlay (cnmh_affixed_<id>);
