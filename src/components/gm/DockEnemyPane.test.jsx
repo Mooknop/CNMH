@@ -309,6 +309,98 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  describe('move rail (A2, #1572)', () => {
+    const armMove = (session, { protocol = 10 } = {}) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol, module: '0.0.0-test', ts: 1 });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+
+    const lastMoveReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.MOVEREQ).at(-1);
+
+    const openMove = () => fireEvent.click(screen.getByRole('tab', { name: 'Move' }));
+
+    // A moveopts payload in the README wire shape: one east step open, a wall
+    // west, centred where the bridge fixture puts the goblin.
+    const OPTS = {
+      origin: { col: 5, row: 5 },
+      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+      blocked: [{ col: 4, row: 5, kind: 'wall' }],
+      gridSize: 100,
+      speed: 25,
+      originOccupied: false,
+    };
+
+    it('a protocol-10 bridge grows the Move tab; protocol 9 does not', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMove(session, { protocol: 9 });
+      expect(screen.queryByRole('tab', { name: 'Move' })).not.toBeInTheDocument();
+
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol: 10, module: '0.0.0-test', ts: 2 });
+      });
+      expect(screen.getByRole('tab', { name: 'Move' })).toBeInTheDocument();
+    });
+
+    it('Move sends movereq under the combat entryId', () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMove(session);
+      openMove();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+
+      const req = lastMoveReq(session);
+      expect(req.characterId).toBe('cbt-gob');
+      expect(req.value).toMatchObject({ moveType: 'stride' });
+    });
+
+    it('moveopts opens the pad; a step confirms, chains via nextOpts, Done logs the total', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMove(session);
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...OPTS, reqTs: ts });
+      });
+
+      // The bridge's obstacles render; the open step is offered.
+      expect(screen.getByLabelText('Blocked by Wall')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Step east' }));
+      const confirm = session.sent.filter((m) => m.stateType === RELAY.MOVECONFIRM).at(-1);
+      expect(confirm.characterId).toBe('cbt-gob');
+      expect(confirm.value).toMatchObject({ destination: { col: 6, row: 5 }, moveType: 'stride' });
+
+      // movedone chains straight into the piggybacked next step's pad (#451).
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEDONE, {
+          newPosition: { col: 6, row: 5, x: 600, y: 500 },
+          feetMoved: 5,
+          reqTs: ts,
+          nextOpts: {
+            ...OPTS,
+            origin: { col: 6, row: 5 },
+            reachable: [{ col: 7, row: 5, feet: 5, terrain: 'normal' }],
+          },
+        });
+      });
+      const meta = screen.getByTestId('dock-enemy-move-meta');
+      expect(meta).toHaveTextContent('Moved 5 ft');
+      expect(meta).toHaveTextContent('1 Stride at 25 ft');
+      expect(screen.getByRole('button', { name: 'Step east' })).toBeInTheDocument();
+
+      // Done → ONE combat-log line for the whole move, dock-attributed.
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+      const encUpdate = session.sent.filter((m) => m.stateType === RELAY.ENCOUNTER).at(-1);
+      const logged = (encUpdate.value.log || []).at(-1);
+      expect(logged).toMatchObject({ type: 'action' });
+      expect(logged.text).toBe('Goblin Warrior moved 5 ft (dock)');
+    });
+  });
+
   describe('condition truth + GM management (S3)', () => {
     it('renders the foe’s recorded Foundry conditions as truth chips', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);

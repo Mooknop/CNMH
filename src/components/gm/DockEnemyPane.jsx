@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFoeKit } from '../../hooks/useFoeKit';
 import { useFoeStrike } from '../../hooks/useFoeStrike';
 import { useFoeCast } from '../../hooks/useFoeCast';
@@ -6,6 +6,8 @@ import { useActorFeed } from '../../hooks/useActorFeed';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useTokenMovement } from '../../hooks/useTokenMovement';
+import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import PF2E_CONDITIONS, { getCondition } from '../../data/pf2eConditions';
@@ -21,6 +23,8 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { monogram } from '../encounter/commandsheet/Dossier';
 import PersistentChip from '../encounter/PersistentChip';
+import MoveGridPicker from '../encounter/MoveGridPicker';
+import { needsNewStride, ENEMY_MOVE_PROTOCOL } from '../../utils/movement';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
 
@@ -42,6 +46,11 @@ import './DockEnemyPane.css';
 // posts the card and consumes the REAL slot/innate use in Foundry; the foekit
 // re-push refreshes the remaining-count badges, and rows with nothing left to
 // spend disable themselves.
+//
+// A2 (#1572): a Move tab (protocol 10+) steps the foe's token on the Foundry
+// canvas through the same movement rail PCs and minions use, keyed by the
+// combat entryId. Walls/terrain/occupancy come from the bridge probe; no
+// app-side action accounting for enemies — pips stay Foundry-authoritative.
 
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 
@@ -436,6 +445,121 @@ const AbilityRow = ({ ability, witnessed, onReveal }) => (
   </li>
 );
 
+// A2 (#1572): step-pad movement for the acting foe. Reuses the PC/minion
+// movement state machine (useTokenMovement + MoveGridPicker) keyed by the
+// combat entryId — the bridge resolves it to the combatant's token from
+// protocol 10. Tapping a direction auto-confirms a 5-ft step and chains via
+// the piggybacked nextOpts; "Done" closes the pad and writes one combat-log
+// line for the whole move. Stride tally is display-only (MinionMove's
+// accumulation via needsNewStride) — enemy action pips stay Foundry's truth.
+const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
+  const { appendLog } = useEncounter();
+  const [feetTotal, setFeetTotal] = useState(0);
+  // Distance walked under the current (implied) Stride — resets on overflow so
+  // the tally matches how a GM would charge actions, not a naive ceil().
+  const [feetThisAction, setFeetThisAction] = useState(0);
+  const [strides, setStrides] = useState(0);
+
+  // Refs so the move-done callback can re-probe without a circular dep.
+  const requestMoveRefreshRef = useRef(null);
+  const speedRef = useRef(0);
+
+  const handleMoveDone = useCallback((payload) => {
+    const stepFeet = payload?.feetMoved ?? 0;
+    setFeetTotal((f) => f + stepFeet);
+    const speed = speedRef.current || stepFeet || 5;
+    if (needsNewStride(feetThisAction, stepFeet, speed)) {
+      setStrides((s) => s + 1);
+      setFeetThisAction(stepFeet);
+    } else {
+      setFeetThisAction((f) => f + stepFeet);
+    }
+    requestMoveRefreshRef.current?.('stride');
+  }, [feetThisAction]);
+
+  const {
+    stage,
+    pickerOpts,
+    isRefreshing,
+    requestMove,
+    requestMoveRefresh,
+    confirmMove,
+    cancelMove,
+  } = useTokenMovement(entryId, { onMoveDone: handleMoveDone });
+
+  requestMoveRefreshRef.current = requestMoveRefresh;
+  speedRef.current = pickerOpts?.speed || speedRef.current || fallbackSpeed || 0;
+
+  const reset = () => {
+    setFeetTotal(0);
+    setFeetThisAction(0);
+    setStrides(0);
+  };
+
+  const handleStart = () => {
+    reset();
+    requestMove('stride');
+  };
+
+  const handleDone = () => {
+    if (feetTotal > 0) {
+      appendLog({ type: 'action', text: `${name} moved ${feetTotal} ft (dock)` });
+    }
+    reset();
+    cancelMove();
+  };
+
+  const speed = speedRef.current;
+
+  return (
+    <div className="dock-enemy-move" data-testid="dock-enemy-move">
+      {stage === null && (
+        <button
+          type="button"
+          className="dock-enemy-btn dock-enemy-move-btn"
+          onClick={handleStart}
+          aria-label={`Move ${name}`}
+        >
+          Move
+        </button>
+      )}
+      {stage === 'awaiting-opts' && !isRefreshing && (
+        <p className="dock-enemy-move-status" role="status">Calculating reachable squares…</p>
+      )}
+      {(stage === 'picking' || (isRefreshing && pickerOpts)) && (
+        <>
+          <p className="dock-enemy-move-meta" data-testid="dock-enemy-move-meta">
+            {feetTotal > 0 ? (
+              <>
+                Moved <strong>{feetTotal} ft</strong>
+                {speed > 0 && ` · ${strides} Stride${strides === 1 ? '' : 's'} at ${speed} ft`}
+              </>
+            ) : (
+              speed > 0 && `Speed ${speed} ft`
+            )}
+          </p>
+          {isRefreshing && (
+            <p className="dock-enemy-move-status" role="status">Updating…</p>
+          )}
+          <MoveGridPicker
+            origin={pickerOpts.origin}
+            reachable={pickerOpts.reachable}
+            blocked={pickerOpts.blocked}
+            radius={1}
+            stepMode
+            cancelLabel="Done"
+            onSelect={confirmMove}
+            onCancel={handleDone}
+          />
+        </>
+      )}
+      {stage === 'awaiting-done' && (
+        <p className="dock-enemy-move-status" role="status">Moving…</p>
+      )}
+    </div>
+  );
+};
+
 // tone='ally' (#1537 S6): a FRIENDLY no-charId combatant. Same pane, ally
 // styling, "Ally turn" kicker, and NO PC target chips — an ally strikes the
 // GM's Foundry-targeted enemy, never a default-offered party member.
@@ -449,6 +573,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
   const { effectsFor, applyCondition, removeCondition } = useEnemyEffects();
   const { recordFor, witness } = useRecallKnowledge();
   const { foundryConnected } = useSession();
+  const { protocol } = useBridgeStatus();
   const { effects: effectCatalog } = useContent();
   const [flankedMap] = useSyncedState(globalKey(RELAY.FLANKED), {});
   const [persistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -553,6 +678,10 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
     { key: 'immune', label: 'Immune', chips: defenses?.immunities || [], tone: null },
   ].filter((r) => r.chips.length > 0);
 
+  // A2 (#1572): the Move tab exists only when the bridge resolves entryId
+  // movement (protocol 10) — an older module never shows a dead pad.
+  const moveRailLive = !!foundryConnected && (protocol ?? 0) >= ENEMY_MOVE_PROTOCOL;
+
   const tabs = [
     { id: 'strikes', label: 'Strikes', count: kit?.strikes?.length || 0 },
     {
@@ -562,7 +691,11 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
     },
     { id: 'abilities', label: 'Abilities', count: kit?.abilities?.length || 0 },
     { id: 'skills', label: 'Skills', count: kit?.skills?.length || 0 },
+    ...(moveRailLive ? [{ id: 'move', label: 'Move', count: null }] : []),
   ];
+  // If the rail drops mid-view (disconnect), fall back to Strikes rather than
+  // rendering a tabless panel.
+  const activeTab = tabs.some((t) => t.id === tab) ? tab : 'strikes';
 
   return (
     <section
@@ -703,22 +836,23 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
                   type="button"
                   role="tab"
                   id={`dock-enemy-tab-${t.id}`}
-                  aria-selected={tab === t.id}
+                  aria-selected={activeTab === t.id}
                   aria-controls={`dock-enemy-panel-${t.id}`}
-                  className={`dock-enemy-tab${tab === t.id ? ' is-active' : ''}`}
+                  className={`dock-enemy-tab${activeTab === t.id ? ' is-active' : ''}`}
                   onClick={() => setTab(t.id)}
                 >
-                  {t.label} <span className="dock-enemy-tab-count">{t.count}</span>
+                  {t.label}
+                  {t.count != null && <span className="dock-enemy-tab-count">{t.count}</span>}
                 </button>
               ))}
             </div>
             <div
               className="dock-enemy-panel"
               role="tabpanel"
-              id={`dock-enemy-panel-${tab}`}
-              aria-labelledby={`dock-enemy-tab-${tab}`}
+              id={`dock-enemy-panel-${activeTab}`}
+              aria-labelledby={`dock-enemy-tab-${activeTab}`}
             >
-              {tab === 'strikes' && (
+              {activeTab === 'strikes' && (
                 (kit.strikes?.length || 0) === 0 ? (
                   <p className="dock-enemy-empty">No strikes in the kit.</p>
                 ) : (
@@ -778,7 +912,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
                   </>
                 )
               )}
-              {tab === 'spells' && (
+              {activeTab === 'spells' && (
                 (kit.spellcasting?.length || 0) === 0 ? (
                   <p className="dock-enemy-empty">No spells — relies on strikes and items.</p>
                 ) : (
@@ -807,7 +941,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
                   </>
                 )
               )}
-              {tab === 'abilities' && (
+              {activeTab === 'abilities' && (
                 (kit.abilities?.length || 0) === 0 ? (
                   <p className="dock-enemy-empty">No special abilities in the kit.</p>
                 ) : (
@@ -823,7 +957,7 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
                   </ul>
                 )
               )}
-              {tab === 'skills' && (
+              {activeTab === 'skills' && (
                 (kit.skills?.length || 0) === 0 ? (
                   <p className="dock-enemy-empty">No notable skills in the kit.</p>
                 ) : (
@@ -835,6 +969,13 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
                     ))}
                   </div>
                 )
+              )}
+              {activeTab === 'move' && (
+                <DockEnemyMove
+                  entryId={entryId}
+                  name={name}
+                  fallbackSpeed={bestiary?.speed}
+                />
               )}
             </div>
           </>
