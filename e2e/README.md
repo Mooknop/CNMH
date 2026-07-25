@@ -59,6 +59,26 @@ local stack. See `specs/player/movement.spec.ts` for the movement state-machine 
 use the **real** relay when the sync layer itself is under test (`specs/gm/live-sync.spec.ts`).
 It's opt-in — only specs that call `mockSession` are mocked.
 
+**The offline sandbox:** the handshake reports Foundry **present** by default, because with it absent
+the write-gate (#553) freezes per-character synced writes and unrelated assertions start failing for
+reasons the spec never meant to exercise. Pass `mockSession(page, { foundry: false, seed })` to test
+the sandbox itself; `[data-testid="sync-status"][data-state="sandbox"]` is the clean gate for
+"genuinely in the sandbox" as opposed to merely disconnected
+(`specs/player/focus-dossier.spec.ts`).
+
+## Protocol-gated bridge rails (`helpers/bridge.ts`)
+
+Presence is not enough for a rail that gates on the bridge handshake: `useBridgeStatus` reads its
+protocol off `cnmh_bridgehello_global`, and with no hello seeded that's `null`, so the feature never
+renders and the spec fails as "the button was never there". Seed `bridgeHello(N)` alongside the rest
+of the state.
+
+`helpers/bridge.ts` also holds the per-rail floors and timeouts — `ROLL_PROTOCOL` /
+`ROLL_TIMEOUT_MS` (`src/utils/diceRelay.js`) and `SNAP_PROTOCOL` / `PING_PROTOCOL` /
+`TEMPLATE_PROTOCOL` / `SNAP_TIMEOUT_MS` (`src/utils/snapshotRelay.js`). They are **copies**: `e2e/`
+deliberately never imports from `src/` (the same reason `CAMPAIGN_ID` is restated in
+`fixtures/session.ts`), so one file carries the drift rather than every spec.
+
 ## In CI
 
 - **`.github/workflows/e2e-local.yml` — the PR gate.** Runs the full suite against the local

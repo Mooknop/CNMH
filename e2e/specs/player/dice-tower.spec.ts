@@ -23,12 +23,10 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
-
-// src/utils/diceRelay.js — e2e is a separate TS project that never imports from
-// src (the same reason CAMPAIGN_ID is duplicated in fixtures/session.ts), so
-// the rail's two constants are restated here. Keep in step with the source.
-const ROLL_PROTOCOL = 3; // bridges below this never answer rollreq (#1491)
-const ROLL_TIMEOUT_MS = 10_000; // the requester's give-up deadline
+// The roll gate + deadline and the hello payload the gate reads its protocol
+// off — copies of src/utils/diceRelay.js, kept in helpers/bridge.ts because
+// e2e/ never imports from src/ (see that file's header).
+import { bridgeHello, ROLL_PROTOCOL, ROLL_TIMEOUT_MS } from '../../helpers/bridge';
 
 const CHAR_ID = 'e2e-diceroller';
 const CHAR_NAME = 'E2E Dice Roller';
@@ -66,11 +64,8 @@ const strike = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
-// The bridge hello useBridgeStatus reads its protocol off (#1310). The roll
-// button gates on THIS number being >= ROLL_PROTOCOL, deliberately not on the
-// app-wide MIN_BRIDGE_PROTOCOL.
-const bridgeHello = (protocol: number) => ({ protocol, module: '0.0.0-e2e' });
-
+// The roll button gates on the announced hello protocol being >= ROLL_PROTOCOL,
+// deliberately not on the app-wide MIN_BRIDGE_PROTOCOL.
 const rollBtn = (page: Page) => page.getByRole('button', { name: 'Roll in Foundry' });
 const d20Input = (page: Page) => page.getByLabel('raw d20');
 const degree = (page: Page) => page.locator('.trr-result-degree');
