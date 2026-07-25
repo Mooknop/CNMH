@@ -557,11 +557,15 @@ export function getChatMessageSpeakerActorId(messageId) {
 // Returns { total, faces:[[sides, face], …] } with one pair per KEPT die
 // (discarded/rerolled results are excluded) so the app can pull the raw d20
 // for nat-20/nat-1 handling, or null when the formula fails validation.
-// v14 MIGRATION: Roll and ChatMessage.getSpeaker are core APIs still exposed
-// as globals on v13; re-verify against the namespaced foundry.dice.Roll on v14.
+// v14 MIGRATION (dice half resolved, #1574): Roll reads through the namespaced
+// foundry.dice.Roll when present — the only exposure once v14 retires the
+// deprecated global — with the bare global as the v13 fallback.
+// ChatMessage.getSpeaker keeps the global read; re-verify it on the v14-era
+// release (likely foundry.documents namespace).
 export async function rollFormula(formula, { actor = null, flavor = '' } = {}) {
-  if (typeof formula !== 'string' || !formula.trim() || !Roll.validate(formula)) return null;
-  const roll = await new Roll(formula).evaluate();
+  const RollCls = globalThis.foundry?.dice?.Roll ?? Roll;
+  if (typeof formula !== 'string' || !formula.trim() || !RollCls.validate(formula)) return null;
+  const roll = await new RollCls(formula).evaluate();
   const speaker = actor ? ChatMessage.getSpeaker({ actor }) : ChatMessage.getSpeaker();
   await roll.toMessage({ speaker, flavor }, { rollMode: 'publicroll' });
   return { total: roll.total ?? null, faces: keptFaces(roll) };
@@ -811,12 +815,71 @@ export function gridToPixels(col, row) {
 }
 
 // Move a token to a pixel position, tagged so the bridge's own move/update hooks
-// ignore the echo.
-// [v14-MIGRATION]: v14 introduced a dedicated movement pipeline (TokenDocument.move /
-// the moveToken hook). The update() path still functions on v13 and v14; migrate
-// here (one switch point) for waypoint support and smoother animation.
-export function moveToken(token, x, y) {
-  return token.document.update({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true });
+// ignore the echo. Resolves with WHERE THE TOKEN ACTUALLY LANDED — callers must
+// report that, not the request.
+//
+// [v14-MIGRATION resolved, #1574]: on generation ≥ 14 this switches to the
+// dedicated movement pipeline (TokenDocument#move — waypoint support, native
+// constraint enforcement); v13 keeps the update() write byte-identical, where
+// the landing always equals the request. The version gate is deliberate
+// (MIGRATION.md step 3: behavior change → branch on game.release.generation at
+// the single switch point): v13.3xx already exposes move(), but flipping the
+// live path is a v14-smoke-pass decision, not a readiness patch.
+//
+// Two pipeline gotchas, field-verified against v14 by player-pilot:
+//   1. move() can resolve before the document collection reflects the new
+//      position — a mid-animation coordinate looks final.
+//   2. move() may legally stop SHORT of the request (movement constraints).
+// resolveMovedPosition() answers both by polling the document.
+export async function moveToken(token, x, y) {
+  const doc = token.document;
+  const generation = game.release?.generation ?? 13;
+  if (generation >= 14 && typeof doc?.move === 'function') {
+    const prev = { x: Number(token.x ?? doc.x ?? 0), y: Number(token.y ?? doc.y ?? 0) };
+    await doc.move({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+    return resolveMovedPosition(doc, { x, y }, prev);
+  }
+  await doc.update({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true });
+  return { x, y };
+}
+
+// Poll the token document for its post-move truth (#1574). Returns the target
+// as soon as the document reaches it; a position that CHANGED from `prev` and
+// then holds for 3 samples is a legal stop-short (return it); a document still
+// sitting at `prev` when the timeout drains is collection lag on an awaited
+// move — trust the target. Exported for tests; intervalMs/timeoutMs are
+// injectable so suites never wait real 900ms.
+export async function resolveMovedPosition(
+  doc,
+  target,
+  prev,
+  { timeoutMs = 900, intervalMs = 25 } = {}
+) {
+  const same = (a, b) =>
+    a && b && Math.abs(Number(a.x) - Number(b.x)) <= 0.5 && Math.abs(Number(a.y) - Number(b.y)) <= 0.5;
+  const read = () => ({ x: Number(doc.x), y: Number(doc.y) });
+
+  const startedAt = Date.now();
+  let last = null;
+  let stable = 0;
+  for (;;) {
+    const current = read();
+    if (same(current, target)) return { x: target.x, y: target.y };
+    const isRealPoint = Number.isFinite(current.x) && Number.isFinite(current.y);
+    if (isRealPoint && !same(current, prev)) {
+      stable = same(current, last) ? stable + 1 : 0;
+      last = current;
+      if (stable >= 3) return current;
+    } else {
+      stable = 0;
+    }
+    if (Date.now() - startedAt >= timeoutMs) break;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  // Timed out: a changed-but-unsettled point beats guessing; an unchanged
+  // document means lag, not failure — the awaited move() already resolved.
+  if (last && !same(last, prev)) return last;
+  return { x: target.x, y: target.y };
 }
 
 // Create a token for an actor on the active scene at a pixel position (#362).
