@@ -17,12 +17,16 @@ import { RELAY, globalKey } from '../sync/keys';
 
 export const SNAPREQ_KEY = globalKey(RELAY.SNAPREQ);
 export const SNAPDONE_KEY = globalKey(RELAY.SNAPDONE);
+export const TEMPLATEDONE_KEY = globalKey(RELAY.TEMPLATEDONE);
 
-// Per-rail protocol floors. Capture landed in protocol 11 (B1) and the ping
-// channel in 12 (B2), so each gates independently: a protocol-11 bridge can
-// still serve snapshots to B3's placement flow even though it can't ping.
+// Per-rail protocol floors. Capture landed in protocol 11 (B1), the ping
+// channel in 12 (B2) and measured templates in 13 (B4), so each gates
+// independently: a protocol-11 bridge still serves snapshots to the placement
+// flow, and a protocol-12 one still pings where an area landed even though it
+// can't draw the outline.
 export const SNAP_PROTOCOL = 11;
 export const PING_PROTOCOL = 12;
+export const TEMPLATE_PROTOCOL = 13;
 
 // Capture + upload + ack is slower than a dice round-trip (a PIXI extract plus
 // an R2 PUT), so this is deliberately longer than ROLL_TIMEOUT_MS.
@@ -39,6 +43,19 @@ export const buildSnapshotRequest = () => ({
 // Foundry's own ping pulse is what the table actually sees.
 export const buildPingPoint = ({ x, y, sceneId, name }) => ({
   id: `ping-${Date.now()}-${(counter += 1)}`,
+  x,
+  y,
+  sceneId: sceneId || '',
+  ...(name ? { name } : {}),
+  ts: Date.now(),
+});
+
+// A placed area's outline (#1573 B4). The bridge draws radial shapes only and
+// pings the centre either way, so a cone/line request is not worth sending.
+export const buildTemplatePlace = ({ shape, feet, x, y, sceneId, name }) => ({
+  id: `tpl-${Date.now()}-${(counter += 1)}`,
+  shape,
+  feet,
   x,
   y,
   sceneId: sceneId || '',

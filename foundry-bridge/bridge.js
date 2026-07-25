@@ -31,7 +31,9 @@ import { initPositions, pushPositions } from './positions.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
-import { initSnapshots, handleSnapshotRequest, handlePingPoint } from './snapshots.js';
+import {
+  initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace,
+} from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
@@ -412,6 +414,13 @@ function dispatch(msg) {
   // app-side; Foundry broadcasts the pulse. Fire-and-forget, no ack.
   if (characterId === 'global' && key === RELAY.PINGPOINT) {
     handlePingPoint(value);
+    return;
+  }
+
+  // Measured template for a placed area (#1573 B4) — draws the burst outline
+  // and pings its centre; acked on cnmh_templatedone_global.
+  if (characterId === 'global' && key === RELAY.TEMPLATEPLACE) {
+    handleTemplatePlace(value);
     return;
   }
 

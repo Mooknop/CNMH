@@ -1,7 +1,10 @@
 // Scene snapshot rail tests (#1573 B1) — capture → R2 upload → snapdone ack,
 // driving the real adapter capture against a mocked PIXI/canvas world.
 
-import { initSnapshots, handleSnapshotRequest, handlePingPoint } from './snapshots.js';
+import {
+  initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace,
+} from './snapshots.js';
+import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
 const WT = { a: 1.5, b: 0, c: 0, d: 1.5, tx: -100, ty: -50 };
 
@@ -283,6 +286,82 @@ describe('handlePingPoint', () => {
   test('never acks — the ping rail is fire-and-forget', () => {
     pingWorld();
     handlePingPoint({ id: 'ping-7', x: 500, y: 300, sceneId: 'scene-1', ts: 1 });
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
+// Measured templates (#1573 B4) — the real burst outline, not just a pulse.
+describe('handleTemplatePlace', () => {
+  const templateWorld = ({ sceneId = 'scene-1', created = [{ id: 'tpl-1' }] } = {}) => {
+    const createEmbeddedDocuments = jest.fn().mockResolvedValue(created);
+    const ping = jest.fn();
+    global.canvas = { ping, scene: { id: sceneId, createEmbeddedDocuments } };
+    return { createEmbeddedDocuments, ping };
+  };
+
+  const lastTemplateAck = () => {
+    const call = send.mock.calls.filter((c) => c[1] === 'templatedone').at(-1);
+    return call ? call[2] : null;
+  };
+
+  test('draws a circle for a burst, pings its centre, and acks the template id', async () => {
+    const { createEmbeddedDocuments, ping } = templateWorld();
+    await handleTemplatePlace({
+      id: 'tpl-req-1', shape: 'burst', feet: 20, x: 500, y: 300, sceneId: 'scene-1', ts: 1,
+    });
+
+    expect(createEmbeddedDocuments).toHaveBeenCalledWith(
+      'MeasuredTemplate',
+      [expect.objectContaining({ t: 'circle', x: 500, y: 300, distance: 20 })],
+      expect.objectContaining({ [BRIDGE_SOURCE_FLAG]: 'app' }),
+    );
+    expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-1', ok: true, templateId: 'tpl-1' });
+  });
+
+  test('an emanation is a circle too', async () => {
+    const { createEmbeddedDocuments } = templateWorld();
+    await handleTemplatePlace({
+      id: 'tpl-req-2', shape: 'emanation', feet: 30, x: 100, y: 100, ts: 1,
+    });
+    expect(createEmbeddedDocuments).toHaveBeenCalledWith(
+      'MeasuredTemplate',
+      [expect.objectContaining({ t: 'circle', distance: 30 })],
+      expect.anything(),
+    );
+  });
+
+  test('a cone draws nothing but still pings — a facing is the GM’s call', async () => {
+    const { createEmbeddedDocuments, ping } = templateWorld();
+    await handleTemplatePlace({
+      id: 'tpl-req-3', shape: 'cone', feet: 15, x: 500, y: 300, sceneId: 'scene-1', ts: 1,
+    });
+    expect(createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-3', ok: false });
+  });
+
+  test('a stale scene draws nothing and nacks', async () => {
+    const { createEmbeddedDocuments } = templateWorld({ sceneId: 'scene-2' });
+    await handleTemplatePlace({
+      id: 'tpl-req-4', shape: 'burst', feet: 20, x: 1, y: 2, sceneId: 'scene-1', ts: 1,
+    });
+    expect(createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-4', ok: false });
+  });
+
+  test('a create that throws nacks instead of bubbling', async () => {
+    templateWorld();
+    global.canvas.scene.createEmbeddedDocuments = jest.fn().mockRejectedValue(new Error('boom'));
+    await handleTemplatePlace({
+      id: 'tpl-req-5', shape: 'burst', feet: 20, x: 1, y: 2, sceneId: 'scene-1', ts: 1,
+    });
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-5', ok: false });
+  });
+
+  test('a request without an id is ignored', async () => {
+    templateWorld();
+    await handleTemplatePlace({ shape: 'burst', feet: 20, x: 1, y: 2, ts: 1 });
     expect(send).not.toHaveBeenCalled();
   });
 });

@@ -43,7 +43,9 @@ export const useTemplatePlacementSection = ({
   positionsState,
   adoptTargets,
 }) => {
-  const { request, requesting, available, canPing, ping } = useSceneSnapshot();
+  const {
+    request, requesting, available, canPing, ping, canTemplate, placeTemplate,
+  } = useSceneSnapshot();
   const { appendLog } = useEncounter();
   const [snapshot, setSnapshot] = useState(null);
   const [marker, setMarker] = useState(null);
@@ -93,13 +95,37 @@ export const useTemplatePlacementSection = ({
     setAdopted(true);
   }, [adoptTargets, occupants]);
 
-  // Confirm slice: ping where the area landed so the table sees it, and record
-  // the placement in the combat log. B4 upgrades the ping to a real
-  // MeasuredTemplate; the log line is useful either way.
+  // An emanation has no tapped point, but its centre is known: the caster's
+  // own square. That's enough to draw its outline without ever opening the map.
+  const casterWorld = useMemo(() => {
+    if (area?.shape !== 'emanation') return null;
+    const cell = positions?.[casterEntryId];
+    const size = Number(positionsState?.gridSize);
+    if (!cell || !(size > 0)) return null;
+    return { x: (cell.col + 0.5) * size, y: (cell.row + 0.5) * size };
+  }, [area, positions, casterEntryId, positionsState]);
+
+  // Where the area actually sits, whether it was tapped or derived.
+  const originWorld = area?.shape === 'emanation' ? casterWorld : placedWorld;
+
+  // Confirm slice (#1573 B4): draw the real outline on the canvas when the
+  // bridge can (the bridge pings its centre too), otherwise fall back to B2's
+  // bare ping — a protocol-12 module still shows the table where it landed.
+  // Cones and lines are never drawn: they need a facing, so they only ping.
   const applyOnConfirm = useCallback(() => {
-    if (!hasArea || !placedWorld) return;
-    if (canPing) {
-      ping({ x: placedWorld.x, y: placedWorld.y, sceneId: snapshot?.capture?.sceneId });
+    if (!hasArea || !originWorld) return;
+    const sceneId = snapshot?.capture?.sceneId;
+    const drawn = canTemplate && areaComputesOccupancy(area)
+      && placeTemplate({
+        shape: area.shape,
+        feet: area.feet,
+        x: originWorld.x,
+        y: originWorld.y,
+        sceneId,
+        name: ability?.name,
+      });
+    if (!drawn && canPing) {
+      ping({ x: originWorld.x, y: originWorld.y, sceneId });
     }
     const caught = occupants.length
       ? ` — ${occupants.length} creature${occupants.length === 1 ? '' : 's'} in the area`
@@ -108,7 +134,10 @@ export const useTemplatePlacementSection = ({
       type: 'action',
       text: `${ability?.name || 'Area'} placed (${areaLabel(area)})${caught}`,
     });
-  }, [hasArea, placedWorld, canPing, ping, snapshot, occupants, appendLog, ability, area]);
+  }, [
+    hasArea, originWorld, canTemplate, placeTemplate, canPing, ping,
+    snapshot, occupants, appendLog, ability, area,
+  ]);
 
   // Nothing to show for a spell with no area, or when the bridge can't capture.
   const section = (!hasArea || !available) ? null : (

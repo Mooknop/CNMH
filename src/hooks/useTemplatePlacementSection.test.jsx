@@ -44,7 +44,7 @@ const Probe = ({ ability, adoptTargets }) => {
   );
 };
 
-const mount = (ability, { protocol = 12, adoptTargets = vi.fn() } = {}) => {
+const mount = (ability, { protocol = 13, adoptTargets = vi.fn() } = {}) => {
   const utils = renderWithProviders(<Probe ability={ability} adoptTargets={adoptTargets} />, {
     session: { state: { global: { [RELAY.BRIDGEHELLO]: { protocol } } } },
   });
@@ -115,25 +115,61 @@ describe('useTemplatePlacementSection (#1573 B3)', () => {
     expect(screen.queryByRole('button', { name: /Target these/ })).not.toBeInTheDocument();
   });
 
-  it('confirm pings where the area landed and logs the placement', async () => {
+  it('confirm draws the real template where the area landed and logs it (#1573 B4)', async () => {
     const { session } = mount({ name: 'Fireball', area: '20-foot burst' });
     await placeMap(session);
     tapAt(0.2, 0);
 
     fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
 
-    const ping = sentOf(session, RELAY.PINGPOINT);
-    expect(ping.value).toMatchObject({ x: 200, y: 0, sceneId: 'scene-1' });
+    const tpl = sentOf(session, RELAY.TEMPLATEPLACE);
+    expect(tpl.characterId).toBe('global');
+    expect(tpl.value).toMatchObject({
+      shape: 'burst', feet: 20, x: 200, y: 0, sceneId: 'scene-1', name: 'Fireball',
+    });
+    // The bridge pings the centre itself, so the app doesn't double up.
+    expect(sentOf(session, RELAY.PINGPOINT)).toBeUndefined();
 
     const enc = sentOf(session, RELAY.ENCOUNTER);
     const logged = (enc.value.log || []).at(-1);
     expect(logged.text).toBe('Fireball placed (20-foot burst) — 2 creatures in the area');
   });
 
+  it('an emanation draws its outline from the caster square, with no map opened', () => {
+    const { session } = mount({ name: 'Gust of Wind', area: '30-foot emanation' });
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    // Caster cell (0,0) on a 100px grid → the square's centre.
+    expect(sentOf(session, RELAY.TEMPLATEPLACE).value).toMatchObject({
+      shape: 'emanation', feet: 30, x: 50, y: 50,
+    });
+  });
+
+  it('a protocol-12 bridge falls back to B2’s bare ping', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' }, { protocol: 12 });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeUndefined();
+    expect(sentOf(session, RELAY.PINGPOINT).value).toMatchObject({ x: 200, y: 0 });
+  });
+
+  it('a cone never asks for a template — only a ping', async () => {
+    const { session } = mount({ name: 'Burning Hands', area: '15-foot cone' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeUndefined();
+    expect(sentOf(session, RELAY.PINGPOINT).value).toMatchObject({ x: 200, y: 0 });
+  });
+
   it('confirm is inert when nothing was placed — the cast is unaffected', () => {
     const { session } = mount({ name: 'Fireball', area: '20-foot burst' });
     fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
     expect(sentOf(session, RELAY.PINGPOINT)).toBeUndefined();
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeUndefined();
   });
 
   it('a spell with no area renders no section at all', () => {

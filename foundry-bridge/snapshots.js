@@ -28,9 +28,18 @@
 //     WORLD coordinates. Fire-and-forget like fxplay — Foundry broadcasts the
 //     ping pulse to every client, and the player's own confirmation is local.
 //     Scene-guarded in the adapter: a snapshot of scene A never pings scene B.
+//
+// The template half (#1573 B4):
+//   App → bridge:  cnmh_templateplace_global = { id, shape, feet, x, y,
+//                                                sceneId, name?, ts }
+//   Bridge → app:  cnmh_templatedone_global  = { id, ok, templateId?, ts }
+//     Draws the real burst outline on the canvas and pings its centre, so the
+//     table sees both the shape and a "look here" pulse. Radial shapes only —
+//     a cone/line needs a facing the app can't infer, so those stay ping-only.
+//     `templateId` comes back so a later cleanup rail can remove it.
 
 import { RELAY } from './syncKeys.js';
-import { captureSceneSnapshot, pingCanvasPoint } from './pf2eAdapter.js';
+import { captureSceneSnapshot, pingCanvasPoint, createMeasuredTemplate } from './pf2eAdapter.js';
 import { uploadImageBytes } from './tokenImages.js';
 
 let _sendUpdate = null;
@@ -82,6 +91,37 @@ export function handlePingPoint(value) {
     pingCanvasPoint(x, y, { sceneId: String(value?.sceneId ?? '') });
   } catch (err) {
     console.error('CNMH Bridge | map ping failed:', err);
+  }
+}
+
+// Called by bridge.js when cnmh_templateplace_global arrives (#1573 B4).
+// Draws the area's outline, then pings its centre so the table's eye goes
+// there. Acks with the created template's id; ok:false means the app should
+// tell the player the outline didn't land.
+export async function handleTemplatePlace(value) {
+  const id = value?.id;
+  if (!id) return;
+  const ack = (payload) =>
+    _sendUpdate?.('global', RELAY.TEMPLATEDONE, { id, ...payload, ts: Date.now() });
+
+  const x = Number(value?.x);
+  const y = Number(value?.y);
+  const sceneId = String(value?.sceneId ?? '');
+  try {
+    const templateId = await createMeasuredTemplate({
+      shape: String(value?.shape ?? ''),
+      feet: Number(value?.feet),
+      x,
+      y,
+      sceneId,
+    });
+    // The pulse is worth sending even when no outline was drawn — the player
+    // still told the table where they meant.
+    pingCanvasPoint(x, y, { sceneId });
+    ack(templateId ? { ok: true, templateId } : { ok: false });
+  } catch (err) {
+    console.error('CNMH Bridge | measured template failed:', err);
+    ack({ ok: false });
   }
 }
 
