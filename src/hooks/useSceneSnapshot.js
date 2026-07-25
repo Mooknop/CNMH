@@ -4,8 +4,8 @@ import { useSyncedState } from './useSyncedState';
 import { useBridgeStatus } from './useBridgeStatus';
 import { RELAY } from '../sync/keys';
 import {
-  SNAPDONE_KEY, SNAP_PROTOCOL, PING_PROTOCOL, SNAP_TIMEOUT_MS,
-  buildSnapshotRequest, buildPingPoint,
+  SNAPDONE_KEY, SNAP_PROTOCOL, PING_PROTOCOL, TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS,
+  buildSnapshotRequest, buildPingPoint, buildTemplatePlace,
 } from '../utils/snapshotRelay';
 
 // Ask the GM's Foundry client to photograph the battlefield (#1573 B1/B2):
@@ -31,6 +31,7 @@ export function useSceneSnapshot() {
 
   const available = !!foundryConnected && (protocol ?? 0) >= SNAP_PROTOCOL;
   const canPing = !!foundryConnected && (protocol ?? 0) >= PING_PROTOCOL;
+  const canTemplate = !!foundryConnected && (protocol ?? 0) >= TEMPLATE_PROTOCOL;
 
   const settle = useCallback((result) => {
     const pending = pendingRef.current;
@@ -71,7 +72,16 @@ export function useSceneSnapshot() {
     return true;
   }, [canPing, sendUpdate]);
 
-  return { request, requesting, available, canPing, ping };
+  // Draw a placed area's outline (#1573 B4). Fire-and-forget from the caller's
+  // side — the bridge pings the centre regardless, so the table sees the spot
+  // even if the outline can't be drawn; the ack only sharpens the log line.
+  const placeTemplate = useCallback((area) => {
+    if (!canTemplate) return false;
+    sendUpdate('global', RELAY.TEMPLATEPLACE, buildTemplatePlace(area));
+    return true;
+  }, [canTemplate, sendUpdate]);
+
+  return { request, requesting, available, canPing, ping, canTemplate, placeTemplate };
 }
 
 export default useSceneSnapshot;

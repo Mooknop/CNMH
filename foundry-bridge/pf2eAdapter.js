@@ -1180,6 +1180,40 @@ export function pingCanvasPoint(x, y, { sceneId = '' } = {}) {
   return true;
 }
 
+// Draw a measured template on the GM canvas (#1573 B4) — the actual burst
+// outline the table sees, not just a ping pulse. Radial shapes only: a cone or
+// line needs a facing the app can't know from a single tapped point, so those
+// stay ping-only and the GM places them by hand.
+//
+// Scene-guarded like the ping. Returns the created template's id (so a later
+// cleanup rail can remove it) or null when nothing was drawn.
+//
+// v14 MIGRATION: MeasuredTemplateDocument's schema (t/x/y/distance/direction/
+// fillColor) is core and stable v11→v14; `t: 'circle'` is CONST.MEASURED_
+// TEMPLATE_TYPES.CIRCLE. Re-verify if v14 renames the embedded collection.
+export async function createMeasuredTemplate({
+  shape, feet, x, y, sceneId = '', fillColor = '',
+} = {}) {
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !(Number(feet) > 0)) return null;
+  if (sceneId && canvas.scene?.id && sceneId !== canvas.scene.id) return null;
+  // Bursts and emanations are both circles; everything else needs a direction.
+  if (shape !== 'burst' && shape !== 'emanation') return null;
+  const scene = canvas.scene;
+  if (typeof scene?.createEmbeddedDocuments !== 'function') return null;
+
+  const created = await scene.createEmbeddedDocuments('MeasuredTemplate', [{
+    t: 'circle',
+    x,
+    y,
+    distance: Number(feet),
+    direction: 0,
+    ...(fillColor ? { fillColor } : {}),
+  }], { [BRIDGE_SOURCE_FLAG]: 'app' });
+
+  const doc = Array.isArray(created) ? created[0] : created;
+  return doc?.id ?? null;
+}
+
 // The viewport's world-coordinate rectangle — the fallback mapping when the
 // capture matrix can't be applied app-side.
 function viewportWorldRect(width, height) {
