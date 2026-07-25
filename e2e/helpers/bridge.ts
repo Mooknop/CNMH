@@ -19,6 +19,9 @@
  *
  *   - ROLL_PROTOCOL / ROLL_TIMEOUT_MS         → src/utils/diceRelay.js
  *   - SNAP/PING/TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS → src/utils/snapshotRelay.js
+ *   - STRIKE_PROTOCOL / STRIKE_TIMEOUT_MS     → src/utils/strikeRelay.js
+ *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
+ *   - ENEMY_MOVE_PROTOCOL                     → src/utils/movement.js
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -52,6 +55,35 @@ export const TEMPLATE_PROTOCOL = 13;
 /** Capture + upload + ack (a PIXI extract plus an R2 PUT) is slower than a dice
  *  round-trip, hence longer than ROLL_TIMEOUT_MS. */
 export const SNAP_TIMEOUT_MS = 20_000;
+
+// ── src/utils/strikeRelay.js ─────────────────────────────────────────────────
+
+/** Native NPC strikes from the GM dock's enemy pane (#1531 S3) —
+ *  `cnmh_strikereq_global` → `cnmh_strikedone_global`. Below this floor the pane
+ *  keeps its read-only MAP ladder and grows no roll buttons at all. */
+export const STRIKE_PROTOCOL = 6;
+
+/** The strike requester's give-up deadline. Specs use it to prove an `ok:false`
+ *  nack settles NOW rather than waiting the deadline out. */
+export const STRIKE_TIMEOUT_MS = 10_000;
+
+// ── src/utils/castRelay.js ───────────────────────────────────────────────────
+
+/** Native NPC spellcasting (#1531 S4) — `cnmh_castreq_global` →
+ *  `cnmh_castdone_global`. Its own floor, INDEPENDENT of STRIKE_PROTOCOL: a
+ *  protocol-6 bridge rolls strikes natively but never grows Cast buttons. */
+export const CAST_PROTOCOL = 7;
+
+/** As STRIKE_TIMEOUT_MS, for the cast rail. */
+export const CAST_TIMEOUT_MS = 10_000;
+
+// ── src/utils/movement.js ────────────────────────────────────────────────────
+
+/** The dock's foe Move tab (#1572 A2). The movereq/moveopts/moveconfirm/movedone
+ *  machine itself is far older — this is the protocol at which the BRIDGE
+ *  learned to resolve a combat `entryId` to a token (A1), so an older module
+ *  hides the tab rather than offering a pad that can never move anything. */
+export const ENEMY_MOVE_PROTOCOL = 10;
 
 // ── the handshake payload ────────────────────────────────────────────────────
 
