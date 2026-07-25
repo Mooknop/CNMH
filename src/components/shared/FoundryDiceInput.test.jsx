@@ -7,6 +7,7 @@ import { screen, fireEvent, act } from '@testing-library/react';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import FoundryDiceInput from './FoundryDiceInput';
 import { ROLL_TIMEOUT_MS } from '../../utils/diceRelay';
+import { subscribePendingRolls } from '../../utils/pendingRolls';
 import { RELAY } from '../../sync/keys';
 
 function Host({ charId = 'Amiri', flavor = 'Strike: Longsword' }) {
@@ -93,6 +94,43 @@ describe('FoundryDiceInput', () => {
       expect(screen.getByLabelText(/raw d20/i)).toHaveValue(null);
     } finally {
       vi.useRealTimers();
+    }
+  });
+
+  // Pending-roll bus emissions (#1575 D2) — what RollToast's cards ride on.
+  test('the round-trip emits start → settle on the pending-roll bus; a nack emits drop', async () => {
+    const events = [];
+    const unsubscribe = subscribePendingRolls((evt) => events.push(evt));
+    try {
+      const { session } = renderWithProviders(<Host />, { session: { state: RAIL_STATE } });
+
+      await act(async () => { fireEvent.click(rollButton()); });
+      const req = sentReq(session);
+      expect(events).toEqual([expect.objectContaining({
+        id: req.value.id, phase: 'start', charId: 'Amiri',
+        formula: '1d20', flavor: 'Strike: Longsword',
+      })]);
+
+      await act(async () => {
+        session.push('global', RELAY.ROLLDONE, {
+          id: req.value.id, charId: 'Amiri', ok: true, total: 14, faces: [[20, 14]], ts: Date.now(),
+        });
+      });
+      expect(events[1]).toEqual(expect.objectContaining({
+        id: req.value.id, phase: 'settle', total: 14, face: 14,
+      }));
+
+      // Second round-trip: a nack drops the card.
+      await act(async () => { fireEvent.click(rollButton()); });
+      const req2 = session.sent.filter((s) => s.stateType === RELAY.ROLLREQ).at(-1);
+      await act(async () => {
+        session.push('global', RELAY.ROLLDONE, {
+          id: req2.value.id, charId: 'Amiri', ok: false, total: null, faces: [], ts: Date.now(),
+        });
+      });
+      expect(events.at(-1)).toEqual({ id: req2.value.id, phase: 'drop' });
+    } finally {
+      unsubscribe();
     }
   });
 
