@@ -19,6 +19,13 @@ describe('BulkBar', () => {
     expect(screen.getByText('Encumbered')).toBeInTheDocument();
   });
 
+  it('leaves a fraction past the threshold unflagged', () => {
+    render(<BulkBar bulkUsed={6.7} encumberedThreshold={6} bulkLimit={8} />);
+    const bar = screen.getByTestId('inventory-bulkbar');
+    expect(bar.className).not.toMatch(/is-encumbered|is-over/);
+    expect(screen.queryByText('Encumbered')).not.toBeInTheDocument();
+  });
+
   it('styles the over-limit state distinctly', () => {
     render(<BulkBar bulkUsed={9} encumberedThreshold={6} bulkLimit={8} />);
     const bar = screen.getByTestId('inventory-bulkbar');
@@ -32,9 +39,9 @@ describe('BulkBar', () => {
     );
     const fill = container.querySelector('.bulkbar-fill');
     const track = container.querySelector('.bulkbar-track');
-    // 4 / 8 = 50% fill; threshold 6 / 8 = 75% tick.
+    // 4 / 8 = 50% fill; the penalty starts at 7 (threshold 6 + 1), so 7 / 8 = 87.5% tick.
     expect(fill).toHaveStyle({ '--bulk-fill-w': '50%' });
-    expect(track).toHaveStyle({ '--bulk-tick-x': '75%' });
+    expect(track).toHaveStyle({ '--bulk-tick-x': '87.5%' });
   });
 
   it('clamps the fill width to 100% when over the limit', () => {
