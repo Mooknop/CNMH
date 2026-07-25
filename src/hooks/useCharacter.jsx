@@ -18,6 +18,7 @@ import { itemAbilitiesActive } from '../utils/itemState';
 import { itemUidOf } from '../utils/affix';
 import { applyItemModes } from '../utils/itemModes';
 import { wornBonusSlots, wornSenses, wornSpeedEffects } from '../utils/wornGear';
+import { featSpeedEffects } from '../utils/featEffects';
 import { listStaves } from '../utils/staffPrep';
 import { itemCatalogMap, spellCatalogMap, runeCatalogMap, resolveInventory } from '../utils/contentUtils';
 
@@ -352,16 +353,22 @@ export const useCharacter = (character) => {
       keyAbility,
       level,
     );
-    const wornSpeed = wornSpeedEffects(
-      effectiveInventory,
-      (itemUid) => !!(investedMap || {})[itemUid],
-    );
+    const speedSynth = [
+      ...wornSpeedEffects(
+        effectiveInventory,
+        (itemUid) => !!(investedMap || {})[itemUid],
+      ),
+      // Class features whose whole mechanic is a standing Speed bonus —
+      // Champion's Blessed Swiftness (+5 status). Same synth shape as worn
+      // gear, so the two net through one bucket computation.
+      ...featSpeedEffects(character),
+    ];
     // Appending synth entries+defs mirrors useResolvedEffects; with no speed
     // gear the plain call keeps computeEffectBonuses' default-catalog fallback.
-    const effectMods = wornSpeed.length
+    const effectMods = speedSynth.length
       ? computeEffectBonuses(
-          [...activeEffects, ...wornSpeed.map((s) => s.entry)],
-          [...(effectCatalog || []), ...wornSpeed.map((s) => s.def)],
+          [...activeEffects, ...speedSynth.map((s) => s.entry)],
+          [...(effectCatalog || []), ...speedSynth.map((s) => s.def)],
         )
       : computeEffectBonuses(activeEffects, effectCatalog);
     const speed = deriveSpeed({

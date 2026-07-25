@@ -724,6 +724,43 @@ describe('useCharacter', () => {
         );
       });
 
+      // Champion's Blessing of the Devoted — Blessed Swiftness. A class
+      // feature whose whole mechanic is a standing typed bonus, authored as
+      // `feats[].modifiers` and synthesized into the same bucket computation.
+      it('a feat speed modifier rides the spine (Blessed Swiftness +5 status)', () => {
+        const blessing = {
+          id: 'feat-14',
+          name: 'Blessing of the Devoted',
+          source: 'Champion',
+          level: 3,
+          modifiers: [{ stat: 'speed', kind: 'status', amount: 5 }],
+        };
+        const { result } = renderHook(() => useCharacter(runner({ feats: [blessing] })));
+        expect(result.current.speed.total).toBe(30);
+        expect(result.current.speed.breakdown).toContainEqual(
+          { label: 'Blessing of the Devoted', amount: 5, type: 'bonus' }
+        );
+      });
+
+      it('a feat status bonus stacks with worn item gear but not another status bonus', () => {
+        localStorage.setItem('cnmh_invested_runner', JSON.stringify({ 'runner-boots': true }));
+        // Drums of War is +5 status too — status collapses to the best single
+        // one (+5), and the boots' item bonus stacks on top.
+        localStorage.setItem(
+          'cnmh_effects_runner',
+          JSON.stringify([{ id: 'e1', effectId: 'coda-drums-playing' }])
+        );
+        const blessing = {
+          id: 'feat-14',
+          name: 'Blessing of the Devoted',
+          modifiers: [{ stat: 'speed', kind: 'status', amount: 5 }],
+        };
+        const { result } = renderHook(() =>
+          useCharacter(runner({ inventory: [boots], feats: [blessing] }))
+        );
+        expect(result.current.speed.total).toBe(35);
+      });
+
       it('over-Bulk derives Encumbered (−10 speed) + Clumsy 1 and flags encumbrance', () => {
         // totalBulk is mocked to 5 in this file; drop the threshold under it.
         calculateEnhancedBulkLimit.mockReturnValue({ bulkLimit: 9, encumberedThreshold: 4 });

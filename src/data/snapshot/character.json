@@ -2906,6 +2906,42 @@
       {
         "name": "Rust Blessing",
         "description": "Pellias's deity blesses implements of rust and ruin: he continues using items even while they are broken. A broken weapon he wields takes only a -2 item penalty to attack rolls; a broken shield he holds functions fully (AC bonus and Shield Block); broken armor's status penalty to AC is one step kinder for him (-0 light, -1 medium, -2 heavy). Items he uses are still destroyed at 0 Hit Points, and a destroyed item is beyond even his deity's patience."
+      },
+      {
+        "id": "feat-14",
+        "name": "Blessing of the Devoted",
+        "source": "Champion",
+        "level": 3,
+        "description": "Your deity blesses your service with a boon. This might come in the form of a spirit that visits you and inhabits your items or body, a mysterious divine tattoo upon your body, or the like. Choose one of the following blessings, or any other to which you have access.\n\nBlessed Armament: Select one weapon or handwraps of mighty blows. You gain that armament's critical specialization effect, and you grant the armament a property rune of your choice from the following list: fearsome, ghost touch, returning, shifting, or vitalizing. During your daily preparations, you can change the spirit to inhabit a different armament, grant a different rune, or both.\n\nBlessed Shield: In your hands, a shield gains the minor reinforcing rune. As you go up in level, the shield gains the reinforcing rune of your level (lesser at 7th level, moderate at 10th level, greater at 13th level, major at 16th level, and supreme at 19th level). If your shield already has the appropriate reinforcing rune for your level, or if it's a sturdy shield of the same level as the appropriate reinforcing rune, the shield's Hardness instead increases by 1.\n\nBlessed Swiftness: You gain a +5-foot status bonus to Speed. If you're mounted, your mount gains the bonus instead. In addition, when the movement of one of your allies triggers an enemy's reaction while the ally is in your champion's aura, the ally gains a +2 status bonus to all defenses against that reaction.\n\n(Pellias chose Blessed Swiftness. The +5-foot status bonus rides his Speed automatically — it shows in the Speed breakdown. While mounted the bonus would move to his mount instead; the app has no mount, so settle that with the GM if he ever rides.)",
+        "modifiers": [
+          {
+            "stat": "speed",
+            "kind": "status",
+            "amount": 5
+          }
+        ],
+        "freeActions": [
+          {
+            "name": "Blessed Swiftness (Guarded Movement)",
+            "traits": [
+              "Champion"
+            ],
+            "requiresAura": true,
+            "trigger": "An ally's movement inside your aura triggers an enemy's reaction",
+            "targets": "the ally whose movement was reacted to",
+            "effects": [
+              {
+                "effectId": "blessed-swiftness-guarded",
+                "applyTo": "ally",
+                "duration": {
+                  "until": "target-turn-end"
+                }
+              }
+            ],
+            "reminder": "Blessed Swiftness: an ally who provokes while inside Pellias's aura gains +2 status to all defenses against that reaction.",
+            "description": "This costs no action — the blessing shields the ally the moment their movement draws an enemy's reaction. Use it to stamp the +2 status bonus to all defenses on the ally who provoked. The bonus covers only the triggering reaction; the chip clears at the end of that ally's turn. Requires Pellias's aura to be up."
+          }
+        ]
       }
     ],
     "strikes": [

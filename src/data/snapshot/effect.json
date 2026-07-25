@@ -173,6 +173,33 @@
     ]
   },
   {
+    "id": "blessed-swiftness-guarded",
+    "name": "Blessed Swiftness (Guarded Movement)",
+    "description": "+2 status bonus to all defenses against the reaction the ally's movement triggered, while they're inside the champion's aura.",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 2
+      }
+    ]
+  },
+  {
     "id": "blood-booster-greater",
     "name": "Blood Booster (Greater)",
     "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
