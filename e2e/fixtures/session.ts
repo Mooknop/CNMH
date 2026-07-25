@@ -58,7 +58,28 @@ export type MockSession = {
 
 export async function mockSession(
   page: Page,
-  { seed = {}, campaignId = DEFAULT_CAMPAIGN_ID }: { seed?: Record<string, unknown>; campaignId?: string } = {},
+  {
+    seed = {},
+    campaignId = DEFAULT_CAMPAIGN_ID,
+    foundry = true,
+  }: {
+    seed?: Record<string, unknown>;
+    campaignId?: string;
+    /**
+     * What the handshake reports about the Foundry peer. Defaults to `true`
+     * because that is what almost every spec wants: with Foundry absent the
+     * offline write-gate (#553) freezes per-character synced writes and
+     * unrelated assertions start failing for reasons the spec never meant to
+     * exercise.
+     *
+     * Pass `false` to test the OFFLINE SANDBOX itself — that the app stays
+     * browsable and that the types in SANDBOX_WRITABLE_TYPES (UI pointers, not
+     * resource burns) still get through the freeze. `[data-testid="sync-status"]
+     * [data-state="sandbox"]` is the clean gate for "genuinely in the sandbox",
+     * as opposed to merely disconnected.
+     */
+    foundry?: boolean;
+  } = {},
 ): Promise<MockSession> {
   const sent: SentMessage[] = [];
   const handlers: Array<{ characterId: string; stateType: string; handler: SentHandler }> = [];
@@ -76,8 +97,9 @@ export async function mockSession(
     // Replay seeded state on (re)connect, exactly like the DO does.
     ws.send(JSON.stringify({ type: 'FULL_STATE', payload }));
     // Mirror the DO handshake (#551): report Foundry present so the offline
-    // write-gate (#553) doesn't freeze synced writes in mocked specs.
-    ws.send(JSON.stringify({ type: 'PRESENCE', foundry: true }));
+    // write-gate (#553) doesn't freeze synced writes in mocked specs — unless a
+    // spec asked for the sandbox with `foundry: false`.
+    ws.send(JSON.stringify({ type: 'PRESENCE', foundry }));
 
     ws.onMessage((raw) => {
       let msg: any;

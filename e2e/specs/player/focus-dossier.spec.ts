@@ -18,8 +18,8 @@
  * No Foundry bridge peer is needed — this is pure app + synced state, so
  * mockSession (#293) plays the GM: it seeds the encounter/knowledge/persistent
  * keys and records the app's writes. The offline-sandbox box needs a relay that
- * reports Foundry ABSENT, which the shared fixture can't do, so it uses a local
- * routeWebSocket mock (below).
+ * reports Foundry ABSENT, which is `mockSession(page, { foundry: false })`
+ * (#1606 promoted this file's local mock into the shared fixture).
  */
 
 import { type Page } from '@playwright/test';
@@ -367,11 +367,14 @@ test.describe('Focus Dossier', () => {
     // pointer, not a resource burn, so it must be in SANDBOX_WRITABLE_TYPES —
     // otherwise tapping a TARGET entry silently no-ops and the whole encounter
     // tab is unbrowsable offline.
-    const sent = await mockOfflineRelay(page, {
-      cnmh_playmode_global: 'exploration',
-      cnmh_encounter_global: encounterWith([pcEntry(CHAR_ID, CHAR_NAME, 20), foeEntry()]),
-      [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState(),
-      cnmh_knowledge_global: knowledge({ identity: true }),
+    const session = await mockSession(page, {
+      foundry: false,
+      seed: {
+        cnmh_playmode_global: 'exploration',
+        cnmh_encounter_global: encounterWith([pcEntry(CHAR_ID, CHAR_NAME, 20), foeEntry()]),
+        [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState(),
+        cnmh_knowledge_global: knowledge({ identity: true }),
+      },
     });
 
     await gotoSheet(page);
@@ -381,13 +384,11 @@ test.describe('Focus Dossier', () => {
 
     await focusButton(page, FOE_NAME).click();
 
-    // Card renders locally AND the write reached the relay — the freeze let it by.
+    // Card renders locally AND the write reached the relay — the freeze let it
+    // by. A failure here reads as "never sent cnmh_focustarget_…": that IS the
+    // sandbox having swallowed the write.
     await expect(page.getByRole('region', { name: `Focused: ${FOE_NAME}` })).toBeVisible();
-    await expect
-      .poll(() => sent.some((m) => m.stateType === 'focustarget' && m.characterId === CHAR_ID && m.value === FOE_ENTRY), {
-        message: 'the focus target was frozen by the offline sandbox',
-      })
-      .toBe(true);
+    await session.expectSent(`cnmh_focustarget_${CHAR_ID}`, (v) => v === FOE_ENTRY);
 
     // Still fully browsable offline: refocusing swaps the card.
     await focusButton(page, CHAR_NAME).click();
@@ -433,42 +434,3 @@ test.describe('Focus Dossier', () => {
     await expect(page.getByTestId('dossier-ally-hp')).toContainText('12');
   });
 });
-
-type Relayed = { characterId: string; stateType: string; value: unknown };
-
-/**
- * A relay mock that reports Foundry ABSENT — the one thing `fixtures/session.ts`
- * deliberately can't do (it hard-codes `PRESENCE foundry:true` so ordinary specs
- * aren't frozen by #553). Otherwise it mirrors the fixture: replay the seed as
- * FULL_STATE on connect, record client UPDATEs, never echo them back.
- *
- * Local to this spec on purpose — three sibling E2E specs are landing off the
- * same main, so the shared fixture stays untouched. A `foundry` option on
- * `mockSession` would be the natural home for it as a follow-up.
- */
-async function mockOfflineRelay(page: Page, seed: Record<string, unknown>): Promise<Relayed[]> {
-  const sent: Relayed[] = [];
-  const payload: Record<string, Record<string, unknown>> = {};
-  for (const [key, value] of Object.entries(seed)) {
-    const m = key.match(/^cnmh_([^_]+)_(.+)$/);
-    if (!m) throw new Error(`mockOfflineRelay: "${key}" is not a synced cnmh_<type>_<id> key`);
-    (payload[m[2]] ??= {})[m[1]] = value;
-  }
-
-  await page.routeWebSocket('**/session/osprey-covey', (ws) => {
-    ws.send(JSON.stringify({ type: 'FULL_STATE', payload }));
-    ws.send(JSON.stringify({ type: 'PRESENCE', foundry: false }));
-    ws.onMessage((raw) => {
-      let msg: { type?: string; characterId?: string; key?: string; value?: unknown };
-      try {
-        msg = JSON.parse(typeof raw === 'string' ? raw : raw.toString());
-      } catch {
-        return;
-      }
-      if (msg?.type !== 'UPDATE' || !msg.characterId || !msg.key) return;
-      sent.push({ characterId: msg.characterId, stateType: msg.key, value: msg.value });
-    });
-  });
-
-  return sent;
-}
