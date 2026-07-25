@@ -1162,6 +1162,24 @@ export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68 } = {}) {
   };
 }
 
+// Ping a world point on the GM canvas (#1573 B2) — Foundry's own ping pulse,
+// which it broadcasts to every connected client, so the table display and any
+// GM monitor both show where the player tapped.
+//
+// Scene-guarded: a snapshot taken of scene A must never ping scene B if the GM
+// navigated away between capture and tap. Returns false when the ping could not
+// be placed (wrong scene, no canvas, unsupported build).
+//
+// v14 MIGRATION: Canvas#ping(origin, options) is core (v11+) and unchanged in
+// the v14-era build; re-verify the options bag if pings gain styles.
+export function pingCanvasPoint(x, y, { sceneId = '' } = {}) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+  if (sceneId && canvas.scene?.id && sceneId !== canvas.scene.id) return false;
+  if (typeof canvas.ping !== 'function') return false;
+  canvas.ping({ x, y });
+  return true;
+}
+
 // The viewport's world-coordinate rectangle — the fallback mapping when the
 // capture matrix can't be applied app-side.
 function viewportWorldRect(width, height) {

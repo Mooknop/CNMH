@@ -21,9 +21,16 @@
 // Live-only: snapreq is never replayed from FULL_STATE (a bridge connecting
 // late simply misses it; the app's request timeout is the fallback), and an
 // ok:false nack means "no snapshot available — fall back now".
+//
+// The tap half (#1573 B2):
+//   App → bridge:  cnmh_pingpoint_global = { id, x, y, sceneId, name?, ts }
+//     The app inverts the capture matrix locally, so what arrives is already
+//     WORLD coordinates. Fire-and-forget like fxplay — Foundry broadcasts the
+//     ping pulse to every client, and the player's own confirmation is local.
+//     Scene-guarded in the adapter: a snapshot of scene A never pings scene B.
 
 import { RELAY } from './syncKeys.js';
-import { captureSceneSnapshot } from './pf2eAdapter.js';
+import { captureSceneSnapshot, pingCanvasPoint } from './pf2eAdapter.js';
 import { uploadImageBytes } from './tokenImages.js';
 
 let _sendUpdate = null;
@@ -61,6 +68,20 @@ export async function handleSnapshotRequest(value) {
   } catch (err) {
     console.error('CNMH Bridge | scene snapshot failed:', err);
     ack({ ok: false });
+  }
+}
+
+// Called by bridge.js when cnmh_pingpoint_global arrives. Fire-and-forget: no
+// ack channel — a ping that can't be placed (stale scene, no canvas) is a
+// no-op the player already saw acknowledged on their own device.
+export function handlePingPoint(value) {
+  const x = Number(value?.x);
+  const y = Number(value?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  try {
+    pingCanvasPoint(x, y, { sceneId: String(value?.sceneId ?? '') });
+  } catch (err) {
+    console.error('CNMH Bridge | map ping failed:', err);
   }
 }
 

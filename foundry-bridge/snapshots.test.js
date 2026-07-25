@@ -1,7 +1,7 @@
 // Scene snapshot rail tests (#1573 B1) — capture → R2 upload → snapdone ack,
 // driving the real adapter capture against a mocked PIXI/canvas world.
 
-import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
+import { initSnapshots, handleSnapshotRequest, handlePingPoint } from './snapshots.js';
 
 const WT = { a: 1.5, b: 0, c: 0, d: 1.5, tx: -100, ty: -50 };
 
@@ -226,7 +226,7 @@ describe('handleSnapshotRequest', () => {
     expect(lastAck().value).toMatchObject({ id: 'snap-13', ok: false });
   });
 
-  test('hidden tiles are excluded alongside hidden tokens', async () => {
+  test('hidden tiles are excluded alongside hidden tokens (#1573 B1)', async () => {
     const hiddenTile = { visible: true, document: { hidden: true } };
     const { visibleAtRender, renderer } = fakeCanvasWorld();
     global.canvas.tiles.placeables = [hiddenTile];
@@ -238,5 +238,51 @@ describe('handleSnapshotRequest', () => {
 
     expect(visibleAtRender.hiddenTile).toBe(false);
     expect(hiddenTile.visible).toBe(true);
+  });
+});
+
+// Tap-to-ping (#1573 B2). Coordinates arrive already in WORLD space — the app
+// inverted the capture matrix — so the bridge only guards and forwards.
+describe('handlePingPoint', () => {
+  const pingWorld = ({ sceneId = 'scene-1' } = {}) => {
+    const ping = jest.fn();
+    global.canvas = { ping, scene: { id: sceneId } };
+    return ping;
+  };
+
+  test('pings the world point on the canvas', () => {
+    const ping = pingWorld();
+    handlePingPoint({ id: 'ping-1', x: 500, y: 300, sceneId: 'scene-1', ts: 1 });
+    expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
+  });
+
+  test('a snapshot of another scene never pings the current one', () => {
+    const ping = pingWorld({ sceneId: 'scene-2' });
+    handlePingPoint({ id: 'ping-2', x: 500, y: 300, sceneId: 'scene-1', ts: 1 });
+    expect(ping).not.toHaveBeenCalled();
+  });
+
+  test('an omitted sceneId pings whatever scene is open', () => {
+    const ping = pingWorld();
+    handlePingPoint({ id: 'ping-3', x: 10, y: 20, ts: 1 });
+    expect(ping).toHaveBeenCalledWith({ x: 10, y: 20 });
+  });
+
+  test('non-finite coordinates are ignored', () => {
+    const ping = pingWorld();
+    handlePingPoint({ id: 'ping-4', x: 'over-there', y: 20, ts: 1 });
+    handlePingPoint({ id: 'ping-5', ts: 1 });
+    expect(ping).not.toHaveBeenCalled();
+  });
+
+  test('a build without Canvas#ping is a silent no-op, not a throw', () => {
+    global.canvas = { scene: { id: 'scene-1' } };
+    expect(() => handlePingPoint({ id: 'ping-6', x: 1, y: 2, ts: 1 })).not.toThrow();
+  });
+
+  test('never acks — the ping rail is fire-and-forget', () => {
+    pingWorld();
+    handlePingPoint({ id: 'ping-7', x: 500, y: 300, sceneId: 'scene-1', ts: 1 });
+    expect(send).not.toHaveBeenCalled();
   });
 });

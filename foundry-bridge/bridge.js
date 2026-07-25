@@ -31,7 +31,7 @@ import { initPositions, pushPositions } from './positions.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
-import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
+import { initSnapshots, handleSnapshotRequest, handlePingPoint } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
@@ -405,6 +405,13 @@ function dispatch(msg) {
   // cnmh_snapdone_global. Live-only: never replayed from FULL_STATE.
   if (characterId === 'global' && key === RELAY.SNAPREQ) {
     handleSnapshotRequest(value);
+    return;
+  }
+
+  // Tap-to-ping from a snapshot (#1573 B2) — world coords already resolved
+  // app-side; Foundry broadcasts the pulse. Fire-and-forget, no ack.
+  if (characterId === 'global' && key === RELAY.PINGPOINT) {
+    handlePingPoint(value);
     return;
   }
 

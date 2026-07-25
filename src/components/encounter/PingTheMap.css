@@ -1,0 +1,38 @@
+/* Ping the Map (#1573 B2) — a chip in the encounter tools row. */
+.ptm-btn {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.ptm-btn:hover {
+  color: var(--shell-text-primary);
+  border-color: var(--color-theme, var(--shell-border-strong));
+}
+
+.ptm-status {
+  margin: var(--space-2) 0 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+.ptm-status--fail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ptm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
