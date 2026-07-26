@@ -18,6 +18,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
+import { PERIOD, block, lockedPlan } from '../../helpers/downtime';
 
 const CHAR_ID = 'e2e-dt-planner';
 const CHAR_NAME = 'E2E Planner';
@@ -25,10 +26,6 @@ const CHAR_NAME = 'E2E Planner';
 // The GM stamps the block with the current gameDate, so pin the clock to keep
 // startedAt deterministic. gameDate is the { day, month, year } slice of it.
 const CLOCK = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
-
-// Period identity is compared by value (downtimeUtils.periodKey → JSON), so a
-// seeded block and a seeded per-PC period just have to agree with each other.
-const STARTED_AT = 1;
 
 // DowntimeControl's own panel — 'Start', 'Close block' and the per-PC inputs all
 // live here, away from the dashboard's other controls of the same name.
@@ -42,7 +39,7 @@ const pendingResearch = (topic: string) => ({
     charName: CHAR_NAME,
     topic,
     status: 'pending',
-    periodStartedAt: STARTED_AT,
+    periodStartedAt: PERIOD,
     ts: 1,
   }],
 });
@@ -84,7 +81,7 @@ test.describe('Downtime spine (GM)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_clock_global: CLOCK,
-        cnmh_downtimeblock_global: { active: true, days: 5, startedAt: STARTED_AT },
+        cnmh_downtimeblock_global: block(5),
       },
     });
     await page.goto('/gm');
@@ -107,7 +104,7 @@ test.describe('Downtime spine (GM)', () => {
     // Same period, smaller: plans stay in scope and are clamped by their readers
     // (see the shrink box in e2e/specs/player/downtime-spine.spec.ts). Minting a
     // new identity is Start's job, and Start needs the block closed first.
-    expect(written.startedAt).toBe(STARTED_AT);
+    expect(written.startedAt).toBe(PERIOD);
     await expect(panel).toContainText('2 days granted');
   });
 
@@ -116,7 +113,7 @@ test.describe('Downtime spine (GM)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_clock_global: CLOCK,
-        cnmh_downtimeblock_global: { active: true, days: 3, startedAt: STARTED_AT },
+        cnmh_downtimeblock_global: block(3),
       },
     });
     await page.goto('/gm');
@@ -138,21 +135,17 @@ test.describe('Downtime spine (GM)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_clock_global: CLOCK,
-        cnmh_downtimeblock_global: { active: true, days: 3, startedAt: STARTED_AT },
+        cnmh_downtimeblock_global: block(3),
         // The sole party member has already locked in, so the GM page mounts
         // straight into "all ready" and the auto-advance fires — no GM button
         // exists for this by design.
-        [`cnmh_downtime_${CHAR_ID}`]: {
-          periodStartedAt: STARTED_AT,
-          plan: { Research: 2, 'Earn Income': 1 },
-          status: 'ready',
-        },
+        [`cnmh_downtime_${CHAR_ID}`]: lockedPlan({ Research: 2, 'Earn Income': 1 }),
       },
     });
     await page.goto('/gm');
 
     const summary = await session.expectSent('cnmh_downtimesummary_global', (v) => !!v?.period);
-    expect(summary.period).toEqual({ days: 3, startedAt: STARTED_AT });
+    expect(summary.period).toEqual({ days: 3, startedAt: PERIOD });
     expect(summary.chars).toHaveLength(1);
     expect(summary.chars[0]).toMatchObject({ id: CHAR_ID, name: CHAR_NAME });
     expect(summary.chars[0].selected).toEqual(['Research', 'Earn Income']);
@@ -170,7 +163,7 @@ test.describe('Downtime spine (GM)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_clock_global: CLOCK,
-        cnmh_downtimeblock_global: { active: true, days: 3, startedAt: STARTED_AT },
+        cnmh_downtimeblock_global: block(3),
         cnmh_downtimeresults_global: pendingResearch('The Sihedron seals'),
         // Deliberately no per-PC downtime state: an all-ready party would
         // auto-advance and close the block, unmounting the review queue.
@@ -200,7 +193,7 @@ test.describe('Downtime spine (GM)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_clock_global: CLOCK,
-        cnmh_downtimeblock_global: { active: true, days: 3, startedAt: STARTED_AT },
+        cnmh_downtimeblock_global: block(3),
         cnmh_downtimeresults_global: pendingResearch('A dead end'),
       },
     });
