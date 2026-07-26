@@ -147,7 +147,8 @@ export function itemTake10Activities(model, { consumed = {}, affixed = {} } = {}
       talismanUid: uid,
       itemName: it.name,
       affixTo: affixTargetType(it),
-      targets: validAffixHosts(flat, it).map((t) => ({ uid: itemUidOf(t), name: t.name })),
+      // Occupied hosts are filtered out (#1657) — one talisman per item.
+      targets: validAffixHosts(flat, it, affixed).map((t) => ({ uid: itemUidOf(t), name: t.name })),
     });
   }
 
