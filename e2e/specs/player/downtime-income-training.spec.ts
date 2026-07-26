@@ -21,27 +21,12 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
+import { PERIOD, block, lockedPlan, openDowntimeTab } from '../../helpers/downtime';
 
 const EARNER_ID = 'e2e-earner';
 const EARNER_NAME = 'E2E Earner';
 const TRAINEE_ID = 'e2e-trainee';
 const TRAINEE_NAME = 'E2E Trainee';
-
-// The block's `startedAt` is the period identity; every period-scoped write is
-// compared against it by VALUE (downtimeUtils.periodKey JSON-stringifies), so a
-// plain number is a perfectly good stand-in for the game-date object.
-const PERIOD = 1;
-const block = (days: number) => ({ active: true, days, startedAt: PERIOD });
-
-// A plan the allocator has already locked in. `status: 'ready'` is what gates
-// the Earn Income resolver into the tab (DowntimeTab renders it only when
-// planLocked); selected/ledger are derived from `plan` by periodState, so the
-// plan alone is the whole seed.
-const lockedPlan = (plan: Record<string, number>) => ({
-  periodStartedAt: PERIOD,
-  plan,
-  status: 'ready',
-});
 
 // The GM's Earn Income task override (DowntimeControl writes this map).
 // Level 7 → DC 23, and for a Trained skill: 200cp on a success, 250cp on a
@@ -67,15 +52,6 @@ const shieldBlockTrack = (hours: number) => ({
 
 const expectSheet = (page: Page, name: string) =>
   expect(page.getByRole('heading', { name, level: 1 })).toBeVisible({ timeout: 15_000 });
-
-// The mode-aware play tab. It only exists once cnmh_playmode_global is
-// 'downtime' with no encounter running, so awaiting it is also the hydration
-// gate for everything the tab renders.
-const openDowntimeTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
 
 test.describe('Earn Income', () => {
   test.beforeEach(async ({ reset, seed }) => {
