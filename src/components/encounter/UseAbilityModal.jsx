@@ -361,6 +361,32 @@ const UseAbilityModal = ({
   // 2 actions on Staunch Bleeding lowers the DC by 10.
   const saveDc = rollProfile.dc != null ? rollProfile.dc + (variant?.dcDelta ?? 0) : rollProfile.dc;
 
+  // The DC an ARMED payload (#987) fires at, months of table-time after the cast
+  // that parked it (#1617). Normally that is the cast's own `saveDc` — it already
+  // carries the chosen variant's dcDelta (#215) and the actor's condition/effect
+  // netting, so nothing better exists. But a spell can arm a save payload while
+  // calling for no save *itself*: Targeting Beacon has no cast-time `defense` at
+  // all, and Cascading Caltrops' "Acrobatics or Reflex" is unparseable — both
+  // resolve to mode 'none' with a null DC. Copying that null parked a payload
+  // whose Fire button could never build a save request.
+  //
+  // A spell DC is a property of the caster and the rank, not of whether this
+  // particular cast happened to call for a save, so derive it from the payload's
+  // OWN defense through the same resolver rather than inheriting an absence.
+  const payloadDcFor = (p) => {
+    if (saveDc != null) return saveDc;
+    if (!p?.defense) return null; // save-less persistent payload — nothing to roll against
+    // A synthetic single-save spell, the same shape ArmedPayloads builds when it
+    // fires: no traits and no roll config, so this always lands on the spell-save
+    // inference branch rather than the caster's attack path.
+    const derived = resolveActionRoll(
+      { name: ability.name, level: ability.level, defense: p.defense },
+      character,
+      { conditions: activeConditions || [], effects: activeEffects || [], effectCatalog },
+    );
+    return derived.mode === 'target-save' ? derived.dc : null;
+  };
+
   // Which defense to show on the resolver (actor-roll only).
   const effectiveDefense = rollProfile.mode === 'actor-roll'
     ? rollProfile.defense
@@ -631,15 +657,19 @@ const UseAbilityModal = ({
     // Resolving them now would fire them at the wrong moment, so they park on
     // the encounter and the GM fires them when the trigger actually happens.
     (Array.isArray(ability.armedPayloads) ? ability.armedPayloads : []).forEach((p) => {
+      const { id: payloadId, ...authored } = p;
       addArmedPayload({
-        payloadId:   p.id,
-        label:       p.label,
-        trigger:     p.trigger,
+        // Carry the authored payload WHOLE (#1618). This was a fixed field list,
+        // which silently dropped `severityFromSave` — Gruesome Marionettist's
+        // half/full/double picker never rendered from a live cast, so its bleed
+        // always landed at full — and would have dropped the next authored field
+        // the same way. Spreading makes the content vocabulary the contract; the
+        // cast-time context below is layered on top and always wins.
+        ...authored,
+        payloadId,
         note:        p.note ?? null,
-        defense:     p.defense,
-        damageData:  p.damageData,
         repeatable:  !!p.repeatable,
-        dc:          saveDc,
+        dc:          payloadDcFor(p),
         rank:        directCastRank ?? null,
         // The spell's native rank — the baseline the payload heightens FROM
         // when it eventually fires (heightenedEntriesFor keys off it).
