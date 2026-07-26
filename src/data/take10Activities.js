@@ -125,6 +125,9 @@ export function itemTake10Activities(model, { consumed = {}, affixed = {} } = {}
         label: `Apply ${it.name}`,
         minutes: ITEM_ACTIVITY_MINUTES,
         itemUid: uid,
+        // The consumed ledger keys on the loadout uid (#1659), which `itemKeyOf`
+        // (authored id, else name) does not resolve to — snapshot it separately.
+        consumedUid: itemUidOf(it),
         itemName: it.name,
         meta,
         note: meta.note,

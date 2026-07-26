@@ -25,6 +25,7 @@ import {
 import { formatModifier } from '../../utils/CharacterUtils';
 import { DEGREE_LABELS, ATTACK_DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { itemUidOf } from '../../utils/affix';
+import { recordConsumed } from '../../utils/consumedLedger';
 import { absorbedKey, retrieve as retrieveAbsorbed } from '../../utils/spellgunHost';
 import './SpellgunAttackModal.css';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
@@ -157,8 +158,8 @@ const SpellgunAttackModal = ({ isOpen, onClose, item, character, themeColor }) =
     revealFiredIwr(results);
 
     // Consume the spellgun (one-shot; the device melts) — the player-writable
-    // consumed overlay, same mechanism potions use. Keyed by the (grade) name.
-    setConsumed((cur) => ({ ...(cur || {}), [item.name]: ((cur || {})[item.name] || 0) + 1 }));
+    // consumed overlay, same mechanism potions use. Keyed by uid (#1659).
+    setConsumed((cur) => recordConsumed(cur, item));
     // If the fired spellgun was absorbed into a host glove (#1208), consuming it
     // clears its binding so the glove slot frees up. Idempotent when unbound.
     setAbsorbed((cur) => retrieveAbsorbed(cur, itemUidOf(item)));

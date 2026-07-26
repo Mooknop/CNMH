@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useChambers } from './useChambers';
 import { ammoSaveDc } from '../utils/ammunition';
+import { recordConsumedBy } from '../utils/consumedLedger';
 // Bare names, not DEFENSE_LABELS (#1639): every string below supplies its own
 // "DC" (or the word "save"), so the DC-flavoured labels double up.
 import { DEFENSE_NAMES } from '../utils/defense';
@@ -77,7 +78,9 @@ export const useChamberFireSection = ({
     const ref = selectedChamberRef;
     fireChamber(ability.weaponUid, selectedFireIdx, ability.capacity);
     if (ref && !ref.default && ref.item) {
-      setConsumed((cur) => ({ ...(cur || {}), [ref.item]: ((cur || {})[ref.item] || 0) + 1 }));
+      // uid-keyed (#1659); `ref.item` is the legacy name key, still honoured for
+      // chamber refs written before the switch.
+      setConsumed((cur) => recordConsumedBy(cur, ref.itemUid ?? ref.item, ref.item));
     }
     const appliedOnHit = !!(ref && ref.onHit && ref.effectId && hitEntryIds.length > 0);
     if (appliedOnHit) {

@@ -414,7 +414,8 @@ test.describe('Ability economy — granted actions, frequency, consumed uses', (
     await prompt.getByRole('button', { name: 'Submit Fortitude save' }).click();
 
     // Burned: one use recorded by item NAME, and the affix binding dropped.
-    await session.expectSent(`cnmh_consumed_${CHAR_ID}`, (v) => v?.[PIN_ITEM.name] === 1);
+    // Uid-keyed since #1659 — a second pin in the pack keeps its own charge.
+    await session.expectSent(`cnmh_consumed_${CHAR_ID}`, (v) => v?.[PIN_UID] === 1);
     await session.expectSent(`cnmh_affixed_${CHAR_ID}`, (v) => !!v && !(PIN_UID in v));
     await expect(page.getByRole('status', { name: 'Save result' })).toBeVisible();
 

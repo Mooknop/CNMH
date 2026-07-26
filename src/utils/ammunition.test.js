@@ -213,6 +213,7 @@ describe('loadedAmmoRef', () => {
   it('captures fire-relevant fields from a special-ammunition item', () => {
     expect(loadedAmmoRef(beaconShot)).toEqual({
       name: 'Beacon Shot',
+      itemUid: 'beacon-shot', // consumed-ledger key (#1659)
       item: 'Beacon Shot',
       default: false,
       infinite: false,
@@ -228,6 +229,7 @@ describe('loadedAmmoRef', () => {
   it('degrades gracefully for an item with no ammunition block', () => {
     expect(loadedAmmoRef(elixir)).toEqual({
       name: 'Eagle-eye Elixir',
+      itemUid: 'eagle-eye-elixir',
       item: 'Eagle-eye Elixir',
       default: false,
       infinite: false,

@@ -191,17 +191,32 @@ describe('useGiveItem — consumable stack-splitting (#657)', () => {
     expect(gift[0]).toMatchObject({ name: 'Healing Potion', quantity: 2, uid: 'gift-1' });
   });
 
-  it('depletes count from the giver name-keyed consumed overlay', () => {
+  it('depletes count from the giver uid-keyed consumed overlay (#1659)', () => {
     const { result } = renderHook(() => useGiveItem('a'));
     result.current.giveConsumable('b', potion, 2);
-    expect(giverConsumed).toEqual({ 'Healing Potion': 2 });
+    expect(giverConsumed).toEqual({ pot: 2 });
   });
 
-  it('adds to any existing consumed count for that name', () => {
+  it('adds to any existing consumed count for that stack', () => {
+    giverConsumed = { pot: 1 };
+    const { result } = renderHook(() => useGiveItem('a'));
+    result.current.giveConsumable('b', potion, 1);
+    expect(giverConsumed).toEqual({ pot: 2 });
+  });
+
+  it('seeds the uid entry from a legacy name-keyed count, leaving it in place', () => {
     giverConsumed = { 'Healing Potion': 1 };
     const { result } = renderHook(() => useGiveItem('a'));
     result.current.giveConsumable('b', potion, 1);
-    expect(giverConsumed).toEqual({ 'Healing Potion': 2 });
+    expect(giverConsumed).toEqual({ 'Healing Potion': 1, pot: 2 });
+  });
+
+  it('depletes only the stack given from, not a same-named sibling', () => {
+    const otherStack = { ...potion, uid: 'pot2' };
+    const { result } = renderHook(() => useGiveItem('a'));
+    result.current.giveConsumable('b', potion, 1);
+    result.current.giveConsumable('b', otherStack, 2);
+    expect(giverConsumed).toEqual({ pot: 1, pot2: 2 });
   });
 
   it('credits the recipient BEFORE depleting the giver', () => {
@@ -226,7 +241,7 @@ describe('useGiveItem — consumable stack-splitting (#657)', () => {
   it('floors a fractional count', () => {
     const { result } = renderHook(() => useGiveItem('a'));
     result.current.giveConsumable('b', potion, 2.9);
-    expect(giverConsumed).toEqual({ 'Healing Potion': 2 });
+    expect(giverConsumed).toEqual({ pot: 2 });
   });
 
   it('freezes in the offline sandbox', () => {

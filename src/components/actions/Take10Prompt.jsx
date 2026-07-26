@@ -18,7 +18,14 @@ const buildItemEntry = (activity, target) => {
     itemName: activity.itemName,
   };
   return activity.kind === 'oil'
-    ? { ...base, itemUid: activity.itemUid, targetUid: target.uid, targetName: target.name, meta: activity.meta }
+    ? {
+        ...base,
+        itemUid: activity.itemUid,
+        consumedUid: activity.consumedUid, // ledger key for the burn (#1659)
+        targetUid: target.uid,
+        targetName: target.name,
+        meta: activity.meta,
+      }
     : { ...base, talismanUid: activity.talismanUid, hostUid: target.uid, hostName: target.name };
 };
 

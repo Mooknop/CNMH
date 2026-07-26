@@ -20,6 +20,7 @@ import {
 } from '../../utils/consumables';
 import { applyItemEffect, itemKeyOf } from '../../utils/itemEffects';
 import { durabilityFor } from '../../utils/itemDurability';
+import { recordConsumed } from '../../utils/consumedLedger';
 import './UseConsumableModal.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -111,10 +112,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
 
   const handleConfirm = () => {
     if (!confirmEnabled) return;
-    setConsumed((cur) => ({
-      ...(cur || {}),
-      [item.name]: ((cur || {})[item.name] || 0) + 1,
-    }));
+    setConsumed((cur) => recordConsumed(cur, item));
 
     const user = { id: character.id, name: character.name, maxHp: character.maxHp };
     if (isItemTarget) {

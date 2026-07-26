@@ -178,7 +178,7 @@ describe('SavePrompt — Sanitizing Pin (#254/#339)', () => {
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('(Sanitizing Pin)'),
     }));
-    expect(conVal).toEqual({ 'Sanitizing Pin': 1 });
+    expect(conVal).toEqual({ pin1: 1 }); // uid-keyed ledger (#1659)
     expect(affVal).toEqual({}); // unaffixed (consumed) on use
   });
 

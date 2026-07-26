@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { newEntryUid } from '../utils/uid';
 import { isBodyBound } from '../utils/itemState';
+import { recordConsumed } from '../utils/consumedLedger';
 import { APP, syncKey } from '../sync/keys';
 
 // Player-to-player item push (#656, #657). The recipient receives a clean,
@@ -95,9 +96,10 @@ export const useGiveItem = (giverId) => {
   );
 
   // Give part (or all) of a consumable stack (#657). The recipient gets a
-  // quantity-`count` copy; the giver depletes `count` through the name-keyed
-  // consumed overlay (the same mechanism that tracks drinking/using), so it
-  // works identically for authored and acquired stacks.
+  // quantity-`count` copy; the giver depletes `count` through the uid-keyed
+  // consumed overlay (the same mechanism that tracks drinking/using, #1659), so
+  // it works identically for authored and acquired stacks — and depletes only
+  // the stack that was given from.
   const giveConsumable = useCallback(
     (recipientId, item, count) => {
       if (offline) return false;
@@ -109,10 +111,7 @@ export const useGiveItem = (giverId) => {
 
       creditRecipient(recipientId, { ...reuid(item), quantity: n });
 
-      setConsumed((cur) => {
-        const map = cur && typeof cur === 'object' ? cur : {};
-        return { ...map, [item.name]: (map[item.name] || 0) + n };
-      });
+      setConsumed((cur) => recordConsumed(cur, item, n));
       return true;
     },
     [offline, giverId, creditRecipient, setConsumed],

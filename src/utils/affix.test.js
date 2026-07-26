@@ -164,14 +164,22 @@ describe('affix util (#254/#339)', () => {
   });
 
   describe('deactivateTalisman', () => {
-    it('bumps the consumed count (by name) and drops the affix binding (by uid)', () => {
+    // Both overlays key on the talisman's uid (#1659) — a second Wolf Fang in
+    // the pack is a separate stack and must not lose a charge to this one.
+    it('bumps the consumed count and drops the affix binding, both by uid', () => {
       let consumed = {};
       let affixed = { t1: 'w1', t2: 'a1' };
       const setConsumed = vi.fn((fn) => { consumed = fn(consumed); });
       const setAffixed = vi.fn((fn) => { affixed = fn(affixed); });
       deactivateTalisman({ talisman: wolfFang, setConsumed, setAffixed });
-      expect(consumed).toEqual({ 'Wolf Fang': 1 });
+      expect(consumed).toEqual({ t1: 1 });
       expect(affixed).toEqual({ t2: 'a1' });
+    });
+    it('seeds the first uid write from a legacy name-keyed count', () => {
+      let consumed = { 'Wolf Fang': 1 };
+      const setConsumed = vi.fn((fn) => { consumed = fn(consumed); });
+      deactivateTalisman({ talisman: wolfFang, setConsumed });
+      expect(consumed).toEqual({ 'Wolf Fang': 1, t1: 2 });
     });
     it('is a no-op without a talisman', () => {
       const setConsumed = vi.fn();

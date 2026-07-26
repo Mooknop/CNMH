@@ -13,6 +13,9 @@ import { useSyncedState } from './useSyncedState';
 import { useCharacter } from './useCharacter';
 import { getFocusInfo } from '../utils/SpellUtils';
 import { APP, syncKey } from '../sync/keys';
+import {
+  consumedKeyOf, consumedCountBy, consumedCountFor, recordConsumedBy, restoreConsumedBy,
+} from '../utils/consumedLedger';
 
 const EMPTY_SLOTS = {};
 
@@ -25,7 +28,7 @@ const wandKeyFor = (spell) => spell.wandName || spell.id;
  *   focus:       { max: number, remaining: number, spend: () => void },
  *   staff:       { max: number, remaining: number, spend: (n) => void },
  *   wands:       { stateFor: (key) => string, spend: (key) => void },
- *   consumables: { remainingFor: (name) => number, spend: (name) => void, restore: (name) => void, map: Object },
+ *   consumables: { remainingFor: (name) => number, consumedFor: (name) => number, spend: (name) => void, restore: (name) => void, map: Object },
  *   optionsFor:  (spell, castSource) => Array<{type, label, enabled, rank?, key?, reason?}>,
  *   spend:       (option) => { ok: boolean, label: string|null },
  * }}
@@ -103,28 +106,45 @@ export const useCastingResources = (character) => {
     [setWandStates]
   );
 
-  const consumableQuantity = useCallback(
-    (name) => {
-      const item = (scrollItems || []).find((it) => it.name === name);
-      return item ? (item.quantity ?? 1) : 0;
-    },
+  // Scrolls are addressed by name here (a spell knows its scroll's name, not its
+  // inventory uid), but the ledger is keyed by uid (#1659) — so every read/write
+  // resolves the name to its inventory entry first and goes through the ledger
+  // helpers, which fall back to a legacy name-keyed entry when there is one.
+  const scrollItemNamed = useCallback(
+    (name) => (scrollItems || []).find((it) => it.name === name) || null,
     [scrollItems]
   );
+  const consumableQuantity = useCallback(
+    (name) => {
+      const item = scrollItemNamed(name);
+      return item ? (item.quantity ?? 1) : 0;
+    },
+    [scrollItemNamed]
+  );
+  const consumableConsumedFor = useCallback(
+    (name) => {
+      const item = scrollItemNamed(name);
+      return item ? consumedCountFor(item, consumed) : consumedCountBy(consumed, null, name);
+    },
+    [scrollItemNamed, consumed]
+  );
   const consumableRemainingFor = useCallback(
-    (name) => Math.max(0, consumableQuantity(name) - ((consumed || {})[name] || 0)),
-    [consumableQuantity, consumed]
+    (name) => Math.max(0, consumableQuantity(name) - consumableConsumedFor(name)),
+    [consumableQuantity, consumableConsumedFor]
   );
   const spendConsumable = useCallback(
-    (name) => setConsumed((prev) => ({ ...(prev || {}), [name]: ((prev || {})[name] || 0) + 1 })),
-    [setConsumed]
+    (name) => {
+      const item = scrollItemNamed(name);
+      setConsumed((prev) => recordConsumedBy(prev, consumedKeyOf(item) ?? name, name));
+    },
+    [scrollItemNamed, setConsumed]
   );
   const restoreConsumable = useCallback(
-    (name) =>
-      setConsumed((prev) => ({
-        ...(prev || {}),
-        [name]: Math.max(0, ((prev || {})[name] || 0) - 1),
-      })),
-    [setConsumed]
+    (name) => {
+      const item = scrollItemNamed(name);
+      setConsumed((prev) => restoreConsumedBy(prev, consumedKeyOf(item) ?? name, name));
+    },
+    [scrollItemNamed, setConsumed]
   );
 
   /**
@@ -282,6 +302,7 @@ export const useCastingResources = (character) => {
     wands: { stateFor: wandStateFor, spend: spendWand },
     consumables: {
       map: consumed || {},
+      consumedFor: consumableConsumedFor,
       remainingFor: consumableRemainingFor,
       spend: spendConsumable,
       restore: restoreConsumable,

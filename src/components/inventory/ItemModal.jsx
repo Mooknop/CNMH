@@ -33,6 +33,7 @@ import {
   affix, unaffix, affixedKey, itemUidOf, deactivateTalisman, affixedTalismansByHost,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
+import { recordConsumed } from '../../utils/consumedLedger';
 import {
   isWhetstone, whetstoneMeta, whetstoneChoice, whetstoneDuration, whetstoneDurationLabel,
   eligibleWhetstoneWeapons, needsRegripNote, activeWhetstoneOn, buildWhetstoneEffectEntry,
@@ -249,7 +250,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       nowSecs,
     });
     setEffects((cur) => withWhetstoneApplied(cur, entry));
-    setConsumed((cur) => ({ ...(cur || {}), [item.name]: ((cur || {})[item.name] || 0) + 1 }));
+    setConsumed((cur) => recordConsumed(cur, item));
     const regrip = needsRegripNote(weapon)
       ? ' — regrip to keep wielding it in two hands'
       : '';

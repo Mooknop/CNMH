@@ -11,6 +11,9 @@ vi.mock('../../hooks/useCastingResources', () => ({
   useCastingResources: () => ({
     consumables: {
       map: mockConsumedMap,
+      // The hook resolves the scroll name to its ledger key (#1659); the view
+      // only ever asks for counts by name.
+      consumedFor: (name) => mockConsumedMap[name] ?? 0,
       remainingFor: (name) => mockRemaining[name] ?? 1,
       spend: mockSpend,
       restore: mockRestore,

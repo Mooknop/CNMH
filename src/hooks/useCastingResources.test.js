@@ -208,6 +208,22 @@ describe('useCastingResources', () => {
       expect(opts[0].type).toBe('scroll');
     });
 
+    // #1659 — spells address scrolls by name, but the ledger keys on the
+    // inventory entry's uid; the hook resolves one to the other.
+    it('records the burn under the scroll entry uid, reading it back by name', () => {
+      useCharacter.mockReturnValue({
+        ...charModel,
+        scrollItems: [{ uid: 's1', name: 'Scroll of Heal', quantity: 2, scroll: { name: 'Heal' } }],
+      });
+      const { result } = setup();
+      act(() => { result.current.consumables.spend('Scroll of Heal'); });
+      expect(result.current.consumables.map).toEqual({ s1: 1 });
+      expect(result.current.consumables.remainingFor('Scroll of Heal')).toBe(1);
+      expect(result.current.consumables.consumedFor('Scroll of Heal')).toBe(1);
+      act(() => { result.current.consumables.restore('Scroll of Heal'); });
+      expect(result.current.consumables.map).toEqual({ s1: 0 });
+    });
+
     it('scroll spend label names the scroll', () => {
       const { result } = setup();
       let outcome;

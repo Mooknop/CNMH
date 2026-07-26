@@ -440,7 +440,7 @@ describe('SkillActionModal (Wolf Fang on Trip, #254/#339)', () => {
     const btn = screen.getByRole('button', { name: /Activate Wolf Fang/ });
     expect(btn).toHaveTextContent('deal 4 bludgeoning');
     fireEvent.click(btn);
-    expect(consumed).toEqual({ 'Wolf Fang': 1 });
+    expect(consumed).toEqual({ t1: 1 }); // uid-keyed ledger (#1659)
     expect(affixed).toEqual({});
     expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('activates Wolf Fang: 4 bludgeoning'),

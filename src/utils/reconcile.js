@@ -10,7 +10,7 @@
 //     kind,        // one of PENDING_KINDS
 //     charId,      // resolved character id
 //     overlay,     // which durable overlay it came from (so #557 can clear it)
-//     overlayRef,  // key within that overlay to clear after commit (e.g. item name)
+//     overlayRef,  // key within that overlay to clear after commit (e.g. item uid)
 //     label,       // short human label (the item name)
 //     detail,      // human description of the change ("3 → 1", "used up")
 //     before,      // doc value before
@@ -33,6 +33,7 @@
 // truth and already equals what we wrote, so there is nothing to clear).
 
 import { isConsumable, remainingQuantity, flattenInventory } from './InventoryUtils';
+import { consumedCountFor, consumedEntryKey } from './consumedLedger';
 
 export const PENDING_KINDS = {
   CONSUMABLE_REMOVE: 'consumable-remove',
@@ -131,17 +132,20 @@ const computeConsumed = (resolved, consumed) => {
   return flattenInventory(resolved.inventory)
     .filter(isConsumable)
     .flatMap((item) => {
-      const count = used[item.name] || 0;
+      // Uid-keyed with a legacy name fallback (#1659) — the *entry* key is what
+      // the reader resolved through, so committing clears exactly that slot.
+      const count = consumedCountFor(item, used);
       if (count <= 0) return [];
+      const entryKey = consumedEntryKey(used, item);
       const authored = item.quantity ?? 1;
       const remaining = remainingQuantity(item, used); // max(0, authored - count)
       const base = {
         charId: resolved.id,
         overlay: 'consumed',
-        overlayRef: item.name,
+        overlayRef: entryKey,
         label: item.name,
         before: authored,
-        clearOverlay: (ov) => dropKey(ov, item.name),
+        clearOverlay: (ov) => dropKey(ov, entryKey),
       };
       if (remaining <= 0) {
         return [{
