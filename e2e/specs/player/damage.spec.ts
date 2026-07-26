@@ -11,7 +11,14 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { activeEncounter, encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import {
+  activeEncounter,
+  encounterState,
+  pcEntry,
+  enemyEntry,
+  readyTurnState,
+  expectOffTurnLive,
+} from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -108,8 +115,22 @@ test.describe('Damage result surface', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
-    await page.getByLabel('Shield Block damage').fill('10');
-    await page.getByRole('button', { name: 'Shield Block', exact: true }).click();
+    // #843: the Shield Block bar lives on the off-turn stage, and the stage
+    // mounts only once the encounter has hydrated on this device. Without this
+    // gate the fill() below races the mount and fails as "field not found".
+    await expectOffTurnLive(page);
+
+    const damage = page.getByLabel('Shield Block damage');
+    await expect(damage).toBeVisible();
+    await damage.fill('10');
+
+    // #843: the button is disabled while the damage field is EMPTY, not only
+    // while the reaction is unavailable — so enabled is only assertable after
+    // typing. Asserting it here (rather than clicking straight away) makes a
+    // genuinely-unavailable reaction fail on the reaction, not on the click.
+    const shieldBlock = page.getByRole('button', { name: 'Shield Block', exact: true });
+    await expect(shieldBlock).toBeEnabled();
+    await shieldBlock.click();
 
     await session.expectSent(
       'cnmh_encounter_global',

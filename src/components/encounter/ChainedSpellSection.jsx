@@ -15,7 +15,9 @@ import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll, mapSpellDefense, isBasicDefense } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
 import { useOmen } from '../../hooks/useOmen';
-import { DEFENSE_LABELS } from '../../utils/defense';
+// Bare name, not DEFENSE_LABELS (#1639): the preview writes its own "DC <n>"
+// after the defense, so the DC-flavoured label reads "Reflex DC DC 30".
+import { DEFENSE_NAMES } from '../../utils/defense';
 import { isAttackAbility } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/actionIconUtils';
 import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
@@ -564,7 +566,7 @@ const ChainedSpellSection = forwardRef(({
 
       {saveTargets.length > 0 && (
         <div className="ct-save-request-preview">
-          <strong>Save request → GM:</strong> {DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense} DC {rollProfile.dc}
+          <strong>Save request → GM:</strong> {DEFENSE_NAMES[rollProfile.defense] || rollProfile.defense} DC {rollProfile.dc}
           <ul>
             {saveTargets.map((e) => <li key={e.entryId}>{e.name}</li>)}
           </ul>
