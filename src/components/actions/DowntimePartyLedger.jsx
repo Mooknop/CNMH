@@ -51,7 +51,7 @@ const Ribbon = ({ plan, paired, blockDays }) => {
 const DowntimePartyLedger = ({ character, block }) => {
   const startedAt = block?.startedAt;
   const blockDays = block?.days ?? 0;
-  const { party, readyCount, total } = usePartyDowntime(startedAt, character?.id);
+  const { party, readyCount, total } = usePartyDowntime(startedAt, character?.id, { budget: blockDays });
 
   return (
     <div className="dpl">

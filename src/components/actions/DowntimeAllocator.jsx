@@ -97,6 +97,10 @@ const BankAllocation = ({ bank, targets, noun, labelFor, progressFor }) => (
 // so every downstream reader keeps working. Crafting hours bank into in-progress
 // projects at lock-in, tracked per-project in `craftApplied` so re-locking an
 // edited plan only banks the new delta (no double-count).
+//
+// The slider caps stop a plan going over budget from THIS surface; the budget
+// argument threaded through periodState/stampPeriod is what handles the budget
+// moving under an existing plan (#1624), whoever moved it.
 const DowntimeAllocator = ({ character, block, characterColor }) => {
   const charId = character?.id || 'unknown';
   const themeColor = characterColor || 'var(--color-theme)';
@@ -108,9 +112,13 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
   const { supported } = useLocationSupport();
 
   const startedAt = block?.startedAt;
-  const { plan, status, craftApplied, trainApplied, paired } = periodState(downtime, startedAt);
-  const { party } = usePartyDowntime(startedAt, charId);
   const blockDays = block?.days ?? 0;
+  // Every read AND write goes through the block's day budget: if the GM shrank
+  // the block under this plan, the plan reads trimmed, comes out of 'ready', and
+  // can't be re-locked at its old size (#1624 — downtimeUtils budget scoping).
+  const { plan, status, craftApplied, trainApplied, paired, clamped } =
+    periodState(downtime, startedAt, blockDays);
+  const { party } = usePartyDowntime(startedAt, charId, { budget: blockDays });
   const used = planDays(plan);
   const free = Math.max(0, blockDays - used);
   const locked = status === 'ready';
@@ -150,6 +158,9 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
 
   // The lowest a given activity's slider may go: 0 normally, the banked floor
   // for Crafting/Training (you can't un-bank hours already spent on targets).
+  // The budget wins over the floor: a block shrunk below what a PC already
+  // banked leaves that activity pinned at whatever still fits — the banked hours
+  // themselves are not clawed back (see #1624).
   const minFor = (name) => {
     if (name === 'Crafting') return craftBank.floorDays;
     if (name === 'Training') return trainBank.floorDays;
@@ -159,9 +170,10 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
 
   const setDays = (name, d) => {
     setDowntime((prev) => {
-      const cur = periodState(prev, startedAt);
+      const cur = periodState(prev, startedAt, blockDays);
       const others = planDays(cur.plan) - (cur.plan[name] || 0);
-      const capped = Math.max(minFor(name), Math.min(d, blockDays - others));
+      const room = Math.max(0, blockDays - others);
+      const capped = Math.max(Math.min(minFor(name), room), Math.min(d, room));
       const nextPlan = { ...cur.plan };
       const nextPaired = { ...cur.paired };
       if (capped <= 0) {
@@ -171,7 +183,7 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
         nextPlan[name] = capped;
       }
       // Editing always reopens a locked plan.
-      return stampPeriod(prev, startedAt, { plan: nextPlan, paired: nextPaired, status: 'planning' });
+      return stampPeriod(prev, startedAt, { plan: nextPlan, paired: nextPaired, status: 'planning' }, blockDays);
     });
   };
 
@@ -180,17 +192,17 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
   // the ledger and, for Crafting, the +2 circumstance on the Craft check.
   const togglePair = (name, expertId) => {
     setDowntime((prev) => {
-      const cur = periodState(prev, startedAt);
+      const cur = periodState(prev, startedAt, blockDays);
       const nextPaired = { ...cur.paired };
       if (nextPaired[name]) delete nextPaired[name];
       else nextPaired[name] = expertId;
-      return stampPeriod(prev, startedAt, { paired: nextPaired, status: 'planning' });
+      return stampPeriod(prev, startedAt, { paired: nextPaired, status: 'planning' }, blockDays);
     });
   };
 
   const toggleLock = () => {
     if (locked) {
-      setDowntime((prev) => stampPeriod(prev, startedAt, { status: 'planning' }));
+      setDowntime((prev) => stampPeriod(prev, startedAt, { status: 'planning' }, blockDays));
       return;
     }
     // Lock in: bank the newly-allocated hours into their targets and record
@@ -219,12 +231,14 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
       }));
     }
     setDowntime((prev) => {
-      const cur = periodState(prev, startedAt);
+      const cur = periodState(prev, startedAt, blockDays);
+      // Locking in seals the CLAMPED plan (stampPeriod re-clamps on write), so a
+      // re-confirm after the GM shrank the block can't resurrect the old size.
       return stampPeriod(prev, startedAt, {
         status: 'ready',
         craftApplied: recordApplied(cur.craftApplied, projects, craftBank.allocations),
         trainApplied: recordApplied(cur.trainApplied, tracks, trainBank.allocations),
-      });
+      }, blockDays);
     });
   };
 
@@ -263,7 +277,10 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
         {activities.map((a) => {
           const days = plan[a.name] || 0;
           const max = maxFor(a.name);
-          const min = minFor(a.name);
+          // Never let the banked floor exceed what the budget still allows —
+          // a block shrunk below the banked hours would otherwise render a
+          // slider with min > max.
+          const min = Math.min(minFor(a.name), max);
           const accumulate = a.type === 'accumulate';
           const benchmark = Number(benchDays[a.name]) || 0;
           const met = accumulate && benchmark > 0 && days >= benchmark;
@@ -384,6 +401,12 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
           <span className="dta-seal">{locked ? '✓' : '✦'}</span>
           {locked ? 'Plan locked — tap to edit' : `Lock in ${firstName}'s plan`}
         </button>
+        {clamped && (
+          <div className="dta-note">
+            The GM shortened this period — your week was trimmed to {blockDays} day
+            {blockDays === 1 ? '' : 's'}. Re-confirm it.
+          </div>
+        )}
         {used === 0 && (
           <div className="dta-note">Allocate at least one day to lock in.</div>
         )}

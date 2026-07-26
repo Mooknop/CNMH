@@ -200,6 +200,33 @@ describe('DowntimeControl', () => {
       expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument();
       expect(screen.getByText('4 days granted')).toBeInTheDocument();
     });
+
+    // #1624: startedAt IS the period's identity — every PC's locked plan is
+    // scoped to it. Re-stamping on Update orphaned the whole party's plans
+    // whenever the clock had moved since the block opened.
+    it('Update resizes the open block in place and keeps its startedAt', () => {
+      const openedAt = { day: 1, month: 0, year: 4725 };
+      withBlock({ days: 7, active: true, startedAt: openedAt });
+      render(<DowntimeControl />);
+      fireEvent.change(screen.getByLabelText('Downtime period in days'), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Update' }));
+
+      expect(mockSetBlock).toHaveBeenCalledWith(expect.any(Function));
+      const updater = mockSetBlock.mock.calls[0][0];
+      expect(updater({ days: 7, active: true, startedAt: openedAt })).toEqual({
+        days: 3, active: true, startedAt: openedAt,
+      });
+      // …and specifically NOT the current game date.
+      expect(mockGameDate).not.toEqual(openedAt);
+    });
+
+    it('Start after a closed block mints a new stamp from the current date', () => {
+      withBlock({ days: 7, active: false, startedAt: { day: 1, month: 0, year: 4725 } });
+      render(<DowntimeControl />);
+      fireEvent.change(screen.getByLabelText('Downtime period in days'), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      expect(mockSetBlock).toHaveBeenCalledWith({ days: 3, active: true, startedAt: mockGameDate });
+    });
   });
 
   describe('block actions', () => {

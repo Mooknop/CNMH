@@ -6,6 +6,7 @@
  * the GM has, all of them inside PlayModeControl → DowntimeControl:
  *
  *   - starting a period            → cnmh_downtimeblock_global
+ *   - resizing the open period     → same key, same startedAt (#1624)
  *   - Retrain/Research benchmarks  → cnmh_downtimebench_global
  *   - the party-ready auto-advance → summary + clock + block close + mode flip
  *   - the review queue             → cnmh_downtimeresults_global (confirm/reject)
@@ -76,6 +77,38 @@ test.describe('Downtime spine (GM)', () => {
     await expect(panel).toContainText('3 days granted');
     // With a block open, nobody has locked in yet.
     await expect(panel).toContainText('0/1 ready');
+  });
+
+  test('Update resizes the open period without re-stamping it', async ({ page }) => {
+    const session = await mockSession(page, {
+      seed: {
+        cnmh_playmode_global: 'downtime',
+        cnmh_clock_global: CLOCK,
+        cnmh_downtimeblock_global: { active: true, days: 5, startedAt: STARTED_AT },
+      },
+    });
+    await page.goto('/gm');
+
+    const panel = downtimePanel(page);
+    await expect(panel).toContainText('5 days granted');
+
+    // Move the clock first — that is what used to make this destructive. The
+    // button re-stamped startedAt with the current gameDate on every press, and
+    // period identity is that stamp, so every PC's locked plan fell out of the
+    // period and read as empty (#1624).
+    await panel.getByRole('button', { name: '+1 day' }).click();
+    await session.expectSent('cnmh_clock_global', (v) => v?.day === CLOCK.day + 1);
+
+    await panel.getByLabel('Downtime period in days').fill('2');
+    await panel.getByRole('button', { name: 'Update' }).click();
+
+    const written = await session.expectSent('cnmh_downtimeblock_global', (v) => v?.days === 2);
+    expect(written.active).toBe(true);
+    // Same period, smaller: plans stay in scope and are clamped by their readers
+    // (see the shrink box in e2e/specs/player/downtime-spine.spec.ts). Minting a
+    // new identity is Start's job, and Start needs the block closed first.
+    expect(written.startedAt).toBe(STARTED_AT);
+    await expect(panel).toContainText('2 days granted');
   });
 
   test('a Retrain/Research benchmark is recorded per PC', async ({ page }) => {

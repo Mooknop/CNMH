@@ -8,7 +8,8 @@ import { APP } from '../sync/keys';
 // useExplorationReady: subscribes to each PC's cnmh_downtime_<id> key so callers
 // rerender on any change. "Ready" is the explicit Party-Ledger lock-in
 // (status === 'ready') in the active period — a prior period's stamp reads as
-// 'planning'. A craft project awaiting its finish decision still holds its owner.
+// 'planning', and so does a plan that no longer fits the block's day budget.
+// A craft project awaiting its finish decision still holds its owner.
 //
 // Returns { readyCount, total, allReady }.
 export function useDowntimePartyReady(blockDays, startedAt) {
@@ -38,7 +39,10 @@ export function useDowntimePartyReady(blockDays, startedAt) {
   const total = ids.length;
   const readyCount = days == null ? 0 : ids.filter((id) => {
     const dt = getState(id, APP.DOWNTIME);
-    const locked = periodState(dt, startedAt).status === 'ready';
+    // The budget is passed in, so a plan sized against a LARGER block (the GM
+    // shrank it mid-period) reads as 'planning' again and holds the party until
+    // its owner re-confirms — see downtimeUtils' budget scoping (#1624).
+    const locked = periodState(dt, startedAt, days).status === 'ready';
     // A project awaiting its finish decision holds the party — the player must
     // choose to complete or keep working before time advances.
     const cp = getState(id, APP.CRAFTPROJECTS);

@@ -154,32 +154,25 @@ test.describe('Downtime spine (player)', () => {
     expect(session.sent.filter((m) => m.stateType === 'downtime')).toHaveLength(2);
   });
 
-  // PRODUCT BUG — the one over-allocation route the allocator does NOT close.
+  // The one over-allocation route the allocator's own sliders can't close: the
+  // budget moving UNDER an existing plan. The GM's period button reads 'Update'
+  // while a block is open and rewrites cnmh_downtimeblock_global with a new day
+  // count; a plan sized against the old, larger one was left over-budget AND
+  // still status 'ready', so useDowntimePartyReady kept counting that PC and the
+  // auto-advance closed the period on the smaller count (#1624).
   //
-  // DowntimeControl's period button reads 'Update' while a block is open and
-  // re-writes cnmh_downtimeblock_global with the new day count. Nothing re-clamps
-  // the plans that were sized against the old budget: `used` is recomputed from
-  // the stored plan, `free` floors at 0, and every PC's plan keeps its original
-  // day count. Verified live — the allocator renders "5 / 2 planned · 0 free",
-  // and the plan is still status 'ready', so useDowntimePartyReady still counts
-  // that PC and the auto-advance moves the clock by the NEW (smaller) block while
-  // the PC banked hours for the OLD one. Crafting/Training hours are already
-  // irreversibly applied at lock-in (craftApplied/trainApplied), so this is not
-  // cosmetic — it hands out free banked hours.
+  // Fixed by making the budget part of how a plan is READ, not something one GM
+  // control remembers to apply: periodState/stampPeriod take the block's day
+  // count, clamp the plan to it (the previously-caller-less
+  // downtimeUtils.clampPlan), and drop a plan the clamp actually changed back to
+  // 'planning'. That holds however the block shrank — hence this test pushes the
+  // block key straight down the relay, with no GM UI in the loop at all.
   //
-  // The fix already exists and is wired to nothing: downtimeUtils.clampPlan is
-  // exported and unit-tested but has ZERO production callers (grep clampPlan over
-  // src/). Shrinking the block should clamp each PC's plan and reopen it
-  // (status → 'planning') so they re-confirm the shorter week.
-  //
-  // Second branch of the same control, worth fixing together: startPeriod always
-  // re-stamps startedAt with the current gameDate, so if the GM advanced the
-  // clock before pressing Update the period key changes instead and the whole
-  // party's locked plans silently read as empty (periodState's stale-period path).
-  // An Update either over-budgets everyone or wipes everyone, depending on the clock.
-  //
-  // Unskip once the clamp lands; the assertions below are the desired behaviour.
-  test.skip('shrinking an open block re-clamps an already-locked plan', async ({ page }) => {
+  // NB the clamp is a read-side view: the stored key still holds the 5-day plan
+  // until its owner next writes (any edit or the re-lock re-clamps it on the way
+  // out). Hours already banked into craft projects / training tracks at lock-in
+  // stay banked — deliberately not reconciled here.
+  test('shrinking an open block re-clamps an already-locked plan', async ({ page }) => {
     const session = await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
@@ -193,15 +186,26 @@ test.describe('Downtime spine (player)', () => {
     await expectSheet(page);
     await openDowntimeTab(page);
     await expect(budgetLine(page)).toHaveText('5 / 5 planned · 0 free');
+    await expect(page.getByRole('button', { name: 'Plan locked — tap to edit' })).toBeVisible();
 
-    // The GM presses Update with a smaller number, same period (clock unmoved).
+    // The GM presses Update with a smaller number, same period (clock unmoved —
+    // Update no longer re-stamps startedAt, so the plans stay in this period).
     session.push('cnmh_downtimeblock_global', { active: true, days: 2, startedAt: STARTED_AT });
     await expect(page.getByText('2 days available')).toBeVisible();
 
-    // ACTUAL today: "5 / 2 planned · 0 free".
+    // Was "5 / 2 planned · 0 free" before the fix.
     await expect(budgetLine(page)).toHaveText('2 / 2 planned · 0 free');
-    // …and the shortened week has to be re-confirmed rather than staying sealed.
+    await expect(page.getByRole('slider', { name: 'Research days' })).toHaveValue('2');
+    // …and the shortened week has to be re-confirmed rather than staying sealed,
+    // which is the single fact the GM's ready count (and the auto-advance) reads.
     await expect(page.getByRole('button', { name: /Lock in/ })).toBeVisible();
+    await expect(page.getByText(/GM shortened this period/)).toBeVisible();
+
+    // Re-confirming persists the trimmed plan — the write can't carry the old size.
+    await page.getByRole('button', { name: /Lock in/ }).click();
+    const relocked = await session.expectSent(DOWNTIME_KEY, (v) => v?.status === 'ready');
+    expect(relocked.plan).toEqual({ Research: 2 });
+    expect(relocked.ledger).toHaveLength(2);
   });
 
   test('lock-in seals the plan and editing it reopens the period', async ({ page }) => {

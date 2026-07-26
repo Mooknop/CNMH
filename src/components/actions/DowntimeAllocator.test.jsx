@@ -289,4 +289,57 @@ describe('DowntimeAllocator', () => {
       expect(next.paired.Research).toBeUndefined();
     });
   });
+
+  // #1624 — the block shrinking UNDER a plan. The sliders can't prevent this
+  // (nothing was allocated), so the budget is applied wherever the plan is read.
+  describe('a block shrunk under an existing plan', () => {
+    const small = { days: 2, active: true, startedAt: PERIOD };
+
+    it('renders the plan trimmed to the new budget', () => {
+      setupSynced({ downtime: stamp({ plan: { Research: 5 }, status: 'ready' }) });
+      render(<DowntimeAllocator character={character} block={small} />);
+      expect(screen.getByText(/\/ 2 planned · 0 free/)).toBeInTheDocument();
+      expect(screen.getByLabelText('Research days')).toHaveValue('2');
+    });
+
+    it('reopens the plan so its owner re-confirms, and says why', () => {
+      setupSynced({ downtime: stamp({ plan: { Research: 5 }, status: 'ready' }) });
+      render(<DowntimeAllocator character={character} block={small} />);
+      expect(screen.queryByText('Plan locked — tap to edit')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Lock in/ })).toBeEnabled();
+      expect(screen.getByText(/GM shortened this period/)).toBeInTheDocument();
+    });
+
+    it('re-locking writes the trimmed plan, never the old size', () => {
+      const { setDowntime } = setupSynced({ downtime: stamp({ plan: { Research: 5 }, status: 'ready' }) });
+      render(<DowntimeAllocator character={character} block={small} />);
+      fireEvent.click(screen.getByRole('button', { name: /Lock in/ }));
+      const next = setDowntime.mock.calls[0][0](stamp({ plan: { Research: 5 }, status: 'ready' }));
+      expect(next).toMatchObject({ status: 'ready', plan: { Research: 2 } });
+      expect(next.ledger).toHaveLength(2);
+    });
+
+    it('leaves a plan that still fits sealed', () => {
+      setupSynced({ downtime: stamp({ plan: { Research: 2 }, status: 'ready' }) });
+      render(<DowntimeAllocator character={character} block={small} />);
+      expect(screen.getByText('Plan locked — tap to edit')).toBeInTheDocument();
+      expect(screen.queryByText(/GM shortened this period/)).not.toBeInTheDocument();
+    });
+
+    it('pins an over-banked Crafting slider to what still fits instead of min > max', () => {
+      useCharacter.mockReturnValue({ flags: {}, skillProficiencies: { crafting: 1 } });
+      // 32h (4 days) already banked, but the block is down to 2 days: the banked
+      // floor can't win over the budget. Those hours stay banked (not reconciled).
+      setupSynced({
+        downtime: stamp({ plan: { Crafting: 4 }, craftApplied: { p1: 32 }, status: 'ready' }),
+        craft: { projects: [{ id: 'p1', name: 'Sturdy Shield', hours: 32, threshold: 40, status: 'in-progress' }] },
+      });
+      render(<DowntimeAllocator character={character} block={small} />);
+      const slider = screen.getByLabelText('Crafting days');
+      expect(slider).toHaveAttribute('min', '2');
+      expect(slider).toHaveAttribute('max', '2');
+      // Still lockable — availableToBankHours floors at 0, so nothing is pending.
+      expect(screen.getByRole('button', { name: /Lock in/ })).toBeEnabled();
+    });
+  });
 });

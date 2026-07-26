@@ -44,15 +44,24 @@ const DowntimeControl = () => {
     if (e.key === 'Enter') applyCustom();
   };
 
-  const startPeriod = () => {
+  // Two distinct operations behind one button (#1624):
+  //   Start  — mints a NEW period, stamped with the current game date. That
+  //            stamp is the period's identity, so every PC's state resets.
+  //   Update — resizes the OPEN period in place. It must NOT re-stamp: the stamp
+  //            is what scopes each PC's locked plan, and re-minting it while the
+  //            clock has moved would orphan the whole party's plans (they'd read
+  //            as a prior period, i.e. empty). Shrinking is safe on its own —
+  //            readers clamp over-budget plans and reopen them (downtimeUtils).
+  const applyPeriod = () => {
     const n = parseInt(periodValue, 10);
     if (!n || n <= 0) return;
-    setBlock({ days: n, active: true, startedAt: gameDate });
+    if (block?.active) setBlock((prev) => ({ ...(prev || {}), days: n, active: true }));
+    else setBlock({ days: n, active: true, startedAt: gameDate });
     setPeriodValue('');
   };
 
   const handlePeriodKeyDown = (e) => {
-    if (e.key === 'Enter') startPeriod();
+    if (e.key === 'Enter') applyPeriod();
   };
 
   const periodInvalid = !periodValue || parseInt(periodValue, 10) <= 0;
@@ -83,7 +92,7 @@ const DowntimeControl = () => {
 
     const summaryChars = (charactersRef.current || []).map((c) => {
       const dt = getState(c.id, APP.DOWNTIME);
-      const { selected, ledger } = periodState(dt, blockStartedAt);
+      const { selected, ledger } = periodState(dt, blockStartedAt, blockDays);
       return { id: c.id, name: c.name, selected, ledger };
     });
     setSummary({ period: { days: blockDays, startedAt: blockStartedAt }, chars: summaryChars });
@@ -139,7 +148,7 @@ const DowntimeControl = () => {
         />
         <button
           className="pmc-btn pmc-btn--primary pmc-btn--sm"
-          onClick={startPeriod}
+          onClick={applyPeriod}
           disabled={periodInvalid}
         >
           {block?.active ? 'Update' : 'Start'}
@@ -150,6 +159,13 @@ const DowntimeControl = () => {
           </span>
         )}
       </div>
+      {block?.active && (
+        <p className="pmc-downtime-hint">
+          Update resizes this period in place — plans that no longer fit are trimmed
+          and reopened, so their owners re-confirm the shorter week. Close the block
+          first to start a fresh period.
+        </p>
+      )}
 
       {block?.active && (
         <>
