@@ -446,9 +446,24 @@ describe('InventoryUtils', () => {
       expect(isConsumable({ consumable: { kind: 'effect', effectId: 'x' } })).toBe(true);
     });
 
-    it('is false for plain items and null', () => {
+    it('is true for the Consumable TRAIT alone, case-insensitively (#1652)', () => {
+      // Spellguns, bombs, elixirs, mutagens, poisons, talismans, whetstones and
+      // catalysts all ship the trait with no `consumable`/`scroll` block — before
+      // #1652 they were silently infinite-use.
+      expect(isConsumable({ name: 'E2E Frost Spellgun', traits: ['Attack', 'Cold', 'Consumable', 'Spellgun'] })).toBe(true);
+      expect(isConsumable({ name: 'Acid Flask', traits: ['Alchemical', 'Bomb', 'consumable'] })).toBe(true);
+      expect(isConsumable({ name: 'Wolf Fang', traits: ['CONSUMABLE', 'Talisman'] })).toBe(true);
+    });
+
+    it('is false for plain items, unrelated traits, and null', () => {
       expect(isConsumable({ name: 'Sword' })).toBe(false);
+      expect(isConsumable({ name: 'Sword', traits: ['Magical', 'Versatile P'] })).toBe(false);
+      expect(isConsumable({ name: 'Sword', traits: [] })).toBe(false);
       expect(isConsumable(null)).toBe(false);
+    });
+
+    it('tolerates a non-array traits field', () => {
+      expect(isConsumable({ name: 'Odd', traits: 'Consumable' })).toBe(false);
     });
   });
 

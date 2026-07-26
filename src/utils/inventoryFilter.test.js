@@ -30,6 +30,15 @@ describe('matchesFilter', () => {
     expect(matchesFilter({ name: 'Wand', wand: {} }, 'magic')).toBe(true);
     expect(matchesFilter(rope, 'magic')).toBe(false);
   });
+  it('consumable also matches trait-only consumables — bombs, talismans, spellguns (#1652)', () => {
+    const bomb = { name: 'Acid Flask', traits: ['Alchemical', 'Bomb', 'Consumable'] };
+    const spellgun = { name: 'Sparking Spellgun', traits: ['Attack', 'Consumable', 'Spellgun'], spellgun: {} };
+    expect(matchesFilter(bomb, 'consumable')).toBe(true);
+    expect(matchesFilter(spellgun, 'consumable')).toBe(true);
+    // …and they leave the Gear catch-all bucket, which excludes consumables.
+    expect(matchesFilter(bomb, 'gear')).toBe(false);
+    expect(matchesFilter(spellgun, 'gear')).toBe(false);
+  });
   it('gear is the catch-all for non-weapon, non-consumable, non-container', () => {
     expect(matchesFilter(rope, 'gear')).toBe(true);
     expect(matchesFilter(robe, 'gear')).toBe(true); // a magical robe is still gear
