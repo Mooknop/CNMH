@@ -68,20 +68,41 @@ export const useSyncedState = (key, initialValue, options) => {
     return defaultValue();
   };
 
-  const [value, setValue] = useState(computeInitial);
+  // The value AND the key it was derived for, as one state atom (#1605).
+  //
+  // They must live in the same `useState` or the re-key path below is unsafe.
+  // That path is a render-phase update, and React does not promise a
+  // render-phase update survives: when the hook already carries a deferred
+  // update (`baseQueue`), the re-derived value is committed but `baseState` is
+  // not advanced, so a later pass replays from `baseState` and snaps the value
+  // back to what it held before the key changed. If the "already derived for
+  // this key" marker were a separate ref — or even a separate state atom, which
+  // rebases on its own queue — it would NOT snap back with it: the marker would
+  // still read as the new key, the re-derive would never run again, and the
+  // hook would return the OLD key's value for good. That is the first-PC-focus
+  // dossier bug (#1605): the ally card committed HP once and then re-rendered
+  // empty, with no setter call in between and no further key change to repair
+  // it. One atom means key and value roll back together, so a rebased render
+  // simply re-derives and the hook self-heals.
+  const [stored, setStored] = useState(() => ({ key, value: computeInitial() }));
+
+  // Set the value for whatever key the atom currently holds, bailing out when
+  // nothing moved (an identical object would otherwise force a re-render, since
+  // the atom is a fresh wrapper each time).
+  const setValue = useCallback((next) => {
+    setStored((s) => (Object.is(s.value, next) ? s : { key: s.key, value: next }));
+  }, []);
 
   // Track the latest value so functional updaters never read a stale closure.
-  const latest = useRef(value);
-  const prevKey = useRef(key);
+  const latest = useRef(stored.value);
 
   // When the key changes (e.g. switching characters on a shared hook instance),
   // re-derive the value for the new key synchronously. Without this the previous
   // key's value lingers until a server UPDATE for the new key happens to arrive.
-  let current = value;
-  if (prevKey.current !== key) {
-    prevKey.current = key;
+  let current = stored.value;
+  if (stored.key !== key) {
     current = computeInitial();
-    setValue(current);
+    setStored({ key, value: current });
   }
   latest.current = current;
 
@@ -127,7 +148,7 @@ export const useSyncedState = (key, initialValue, options) => {
       }
     }
     return unsubscribe;
-  }, [synced, characterId, stateType, key, subscribe, getState, hydrations, hydrated, defaultValue]);
+  }, [synced, characterId, stateType, key, subscribe, getState, hydrations, hydrated, defaultValue, setValue]);
 
   const setAndSync = useCallback((updater) => {
     // Offline sandbox (#553): when the DO is up but Foundry isn't, synced
@@ -142,7 +163,7 @@ export const useSyncedState = (key, initialValue, options) => {
     setValue(next);
     writeLocal(key, next);
     if (synced) sendUpdate(characterId, stateType, next, { force: authoritative });
-  }, [key, synced, characterId, stateType, sendUpdate, connected, foundryConnected, authoritative]);
+  }, [key, synced, characterId, stateType, sendUpdate, connected, foundryConnected, authoritative, setValue]);
 
   return [current, setAndSync];
 };

@@ -253,10 +253,10 @@ test.describe('Focus Dossier', () => {
   });
 
   test('focusing an ally shows the support view, not the foe stat block', async ({ page }) => {
-    // Focus is SEEDED rather than clicked here: the first PC focus of a session
-    // drops the ally's synced vitals (see the skipped regression box at the
-    // bottom of this file). The click path itself is covered on a foe above and
-    // on the self card below, both of which are unaffected.
+    // Focus is SEEDED rather than clicked here, so the ally card is a MOUNT on
+    // the ally key rather than a re-key off the 'none' placeholder — the two
+    // paths through useSyncedState are different, and the click one has its own
+    // box at the bottom of this file (#1605).
     await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'exploration',
@@ -296,7 +296,8 @@ test.describe('Focus Dossier', () => {
         // Start focused on the ally so tapping yourself is a real focus SWITCH
         // (the click path the dossier lives on) rather than the first PC focus.
         // The ally's HP is seeded too, so the switch is between two keys the
-        // snapshot actually holds — see the skipped box at the bottom.
+        // snapshot actually holds — the 'none' → PC transition has its own box
+        // at the bottom (#1605).
         [`cnmh_focustarget_${CHAR_ID}`]: ALLY_ENTRY,
         [`cnmh_hp_${ALLY_ID}`]: 12,
         [`cnmh_hp_${CHAR_ID}`]: 21,
@@ -395,25 +396,29 @@ test.describe('Focus Dossier', () => {
     await expect(page.getByRole('region', { name: `Focused: ${CHAR_NAME} (you)` })).toBeVisible();
   });
 
-  // KNOWN BUG — skipped, not hopeful. The FIRST time a session focuses a PC,
-  // the support/self card renders with no HP and no condition chips; tapping
-  // away and back fills them in.
+  // Regression guard for #1605 — the "first PC focus of a session shows an
+  // empty ally card" bug, fixed in useSyncedState.
   //
   // Dossier reads the focused PC's vitals through
   // `useSyncedState(syncKey(RELAY.HP, pcId), null)`, with `pcId` defaulting to
-  // the literal 'none' while no PC is focused. useSyncedState re-derives on a
-  // key change (`prevKey` block) — but that re-derive only lands when the key
-  // it is leaving HAD a snapshot value. Leaving a key the snapshot never held
-  // (`cnmh_hp_none`, always absent) drops the new key's value, so the card
-  // shows nothing until the next write to it.
+  // the literal 'none' while no PC is focused, so the first focus is a KEY
+  // CHANGE on a live hook instance rather than a mount. useSyncedState handles
+  // that with a render-phase `setValue(computeInitial())`, and it used to mark
+  // "already re-derived for this key" in a **ref**. React does not promise a
+  // render-phase update survives — it can rebase the hook's queue from
+  // `baseState` on a later pass — and when it did, `value` snapped back to the
+  // `null` initial while the ref stayed on the new key, so the re-derive never
+  // ran again. Traced live: the card committed HP 12 once, then re-rendered at
+  // null with no setter call in between. Anything that wrote the key afterwards
+  // (a peer HP push, refocusing) repaired it, which is why only the FIRST focus
+  // looked broken. The marker now lives in state, so it rolls back with the
+  // value and the next render re-derives.
   //
-  // Verified against main at this branch point from both a no-focus and a
-  // foe-focused start; a later focus of the SAME ally renders correctly, as
-  // does any switch between two PC keys the snapshot holds, and a peer push of
-  // `cnmh_hp_<ally>` repairs it. Fixing it means touching src/, which this
-  // E2E-only PR deliberately doesn't — un-skip once the hook (or the 'none'
-  // placeholder) is fixed.
-  test.skip('first PC focus of a session renders the ally vitals', async ({ page }) => {
+  // NOT what the issue body claimed: the re-derive is not conditional on the
+  // key being LEFT having had a snapshot value, and `computeInitial()` does
+  // read `getState` first. Both were verified directly — the re-key branch
+  // computed 12 correctly every time; the value was lost afterwards.
+  test('first PC focus of a session renders the ally vitals', async ({ page }) => {
     await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'exploration',
@@ -424,13 +429,18 @@ test.describe('Focus Dossier', () => {
         ]),
         [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState(),
         [`cnmh_hp_${ALLY_ID}`]: 12,
+        [`cnmh_conditions_${ALLY_ID}`]: [{ id: 'frightened', value: 1 }],
       },
     });
 
     await gotoSheet(page);
     await focusButton(page, ALLY_NAME).click();
 
-    await expect(page.getByRole('region', { name: `Focused ally: ${ALLY_NAME}` })).toBeVisible();
+    const support = page.getByRole('region', { name: `Focused ally: ${ALLY_NAME}` });
+    await expect(support).toBeVisible();
+    // Both re-keyed reads, since both went blank together: HP and conditions
+    // are separate useSyncedState instances on the same `pcId` transition.
     await expect(page.getByTestId('dossier-ally-hp')).toContainText('12');
+    await expect(support).toContainText('Frightened 1');
   });
 });
