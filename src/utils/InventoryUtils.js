@@ -1,6 +1,7 @@
 // src/utils/InventoryUtils.js
 // Utility functions for inventory and container calculations
 import { augmentationArmorDeltas } from './augmentations';
+import { consumedCountFor } from './consumedLedger';
 
 /**
  * Format Bulk for display
@@ -404,13 +405,17 @@ export const isConsumable = (item) =>
 /**
  * Copies of an item still unspent: authored quantity minus the consumed-overlay
  * count. Non-consumables always report their full quantity.
+ *
+ * The overlay is keyed by item **uid** (#1659) with a legacy name-keyed fallback,
+ * so two stacks of the same item deplete independently — see utils/consumedLedger.js.
+ *
  * @param {Object} item        - Resolved inventory item
- * @param {Object} consumedMap - Value of `cnmh_consumed_<charId>` ({ [name]: count })
+ * @param {Object} consumedMap - Value of `cnmh_consumed_<charId>` ({ [uid]: count })
  */
 export const remainingQuantity = (item, consumedMap = {}) => {
   const qty = item?.quantity ?? 1;
   if (!isConsumable(item)) return qty;
-  return Math.max(0, qty - ((consumedMap || {})[item.name] || 0));
+  return Math.max(0, qty - consumedCountFor(item, consumedMap));
 };
 
 /**

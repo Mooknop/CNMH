@@ -7,6 +7,7 @@ import { useTargeting } from '../../hooks/useTargeting';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { consumableSave, consumableVerb } from '../../utils/consumables';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { recordConsumed } from '../../utils/consumedLedger';
 import { APP, syncKey } from '../../sync/keys';
 import './UseConsumableModal.css';
 
@@ -92,10 +93,7 @@ const ConsumableSaveModal = ({
     if (onFire) {
       onFire();
     } else {
-      setConsumed((cur) => ({
-        ...(cur || {}),
-        [item.name]: ((cur || {})[item.name] || 0) + 1,
-      }));
+      setConsumed((cur) => recordConsumed(cur, item));
     }
 
     log({

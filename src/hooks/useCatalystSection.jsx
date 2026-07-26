@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { itemUidOf } from '../utils/affix';
+import { recordConsumed } from '../utils/consumedLedger';
 import {
   eligibleCatalystsFor,
   sumCatalystActions,
@@ -39,11 +40,11 @@ export const useCatalystSection = ({
   const toggleCatalyst = (uid) =>
     setCatalystIds((cur) => (cur.includes(uid) ? cur.filter((x) => x !== uid) : [...cur, uid]));
 
-  // Catalysts (#1209): consume each added catalyst (by name, like potions) and
-  // log its rider effect. The extra actions fold into the cast spend.
+  // Catalysts (#1209): consume each added catalyst (by uid, like potions — #1659)
+  // and log its rider effect. The extra actions fold into the cast spend.
   const applyOnConfirm = ({ appendLog }) => {
     selectedCatalysts.forEach((cat) => {
-      setConsumed((cur) => ({ ...(cur || {}), [cat.name]: ((cur || {})[cat.name] || 0) + 1 }));
+      setConsumed((cur) => recordConsumed(cur, cat));
       appendLog({
         type:   'action',
         charId: character.id,

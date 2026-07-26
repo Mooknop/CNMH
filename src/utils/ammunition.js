@@ -28,6 +28,8 @@
 //
 // This slice is data + resolver only: no chamber state, no behaviour change.
 
+import { consumedKeyOf } from './consumedLedger';
+
 /**
  * The weapon's chamber capacity (how many bolts it holds), or null when the
  * strike isn't a capacity weapon. Prefers the structured `capacity` field and
@@ -179,7 +181,8 @@ export function defaultAmmo(strike) {
 /**
  * The chamber ref stored when Reloading with a special-ammunition item (#675,
  * S3). Captures just what fire (S4) needs: the display name, the inventory
- * `item` name used to decrement the `cnmh_consumed_<id>` overlay on fire, the
+ * `itemUid` used to decrement the `cnmh_consumed_<id>` overlay on fire (#1659;
+ * `item` is the legacy name key, kept for refs chambered before the switch), the
  * extra Activate cost, and the on-hit payload. Special ammo is NOT consumed on
  * load — an unfired reload can be unloaded without losing the item — so this is
  * purely the descriptor written into the chamber slot.
@@ -199,12 +202,13 @@ export function defaultAmmo(strike) {
  *   note: '…'                                        // extra log line on hit
  *
  * @param {Object} item - the special-ammunition inventory item
- * @returns {{ name: string, item: string, default: false, infinite: false, activate: number, onHit: boolean, effectId: string|null, damage: Object|null, save: Object|null, note: string|null }}
+ * @returns {{ name: string, itemUid: string|null, item: string, default: false, infinite: false, activate: number, onHit: boolean, effectId: string|null, damage: Object|null, save: Object|null, note: string|null }}
  */
 export function loadedAmmoRef(item) {
   const block = ammoBlock(item);
   return {
     name: item?.name || 'Ammunition',
+    itemUid: consumedKeyOf(item),
     item: item?.name || null,
     default: false,
     infinite: false,

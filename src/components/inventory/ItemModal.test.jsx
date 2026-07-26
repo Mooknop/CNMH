@@ -1401,7 +1401,7 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={wolfFangActive} character={char} />);
 
     fireEvent.click(screen.getByTestId('item-action-activate'));
-    expect(mockConsumed).toEqual({ 'Wolf Fang': 1 });
+    expect(mockConsumed).toEqual({ t1: 1 }); // uid-keyed ledger (#1659)
     expect(mockAffixed).toEqual({}); // unaffixed on activation
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('activated Wolf Fang'),
@@ -1442,7 +1442,7 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={sword} character={char} />);
 
     fireEvent.click(screen.getByTestId('hosted-activate-t1'));
-    expect(mockConsumed).toEqual({ 'Wolf Fang': 1 });
+    expect(mockConsumed).toEqual({ t1: 1 }); // uid-keyed ledger (#1659)
     expect(mockAffixed).toEqual({}); // consumed → unaffixed
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('activated Wolf Fang'),
@@ -2244,7 +2244,7 @@ describe('ItemModal — whetstone application (#1213)', () => {
     expect(within(section).queryByRole('button', { name: 'Full Plate' })).not.toBeInTheDocument();
 
     fireEvent.click(within(section).getByRole('button', { name: 'Longsword' }));
-    expect(mockConsumed).toEqual({ 'Morph Jewel': 1 });
+    expect(mockConsumed).toEqual({ ws1: 1 }); // uid-keyed ledger (#1659)
     expect(mockEffects).toHaveLength(1);
     const entry = mockEffects[0];
     expect(entry.whetstone).toMatchObject({

@@ -112,7 +112,7 @@ describe('ConsumableSaveModal (#1085)', () => {
     expect(req.targets.map((t) => t.name)).toEqual(['Ogre', 'Goblin']);
     expect(req.targets[0]).toMatchObject({ entryId: 'e-a', saveMod: 14 });
 
-    expect(consumed).toEqual({ "Devil's Breath Incense": 1 });
+    expect(consumed).toEqual({ dbi: 1 }); // uid-keyed ledger (#1659)
     expect(spendActions).toHaveBeenCalledWith(1, expect.stringContaining("Devil's Breath Incense"));
   });
 

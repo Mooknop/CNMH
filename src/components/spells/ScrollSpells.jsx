@@ -35,7 +35,7 @@ const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activ
             {spellsByRank[rank].map(spell => {
               const name = spell.scrollName || spell.name;
               const remaining = consumables.remainingFor(name);
-              const consumedCount = consumables.map[name] || 0;
+              const consumedCount = consumables.consumedFor(name);
               const total = remaining + consumedCount;
               const usedUp = remaining === 0;
               return (

@@ -1,4 +1,5 @@
 import { APP, syncKey } from '../sync/keys';
+import { recordConsumed } from './consumedLedger';
 // Talisman affixing (#254/#339 folded track).
 //
 // A talisman is a discrete Consumable inventory item that gets *affixed* to a
@@ -76,9 +77,9 @@ export const affixedTalismanItems = (overlay, flatItems) => {
 };
 
 /**
- * Activate-and-consume a talisman: bump its consumed-overlay count (by name) and
- * drop its affix binding (by uid). Both writers accept a functional updater. The
- * shared path for all three activation surfaces (#254/#339).
+ * Activate-and-consume a talisman: bump its consumed-overlay count and drop its
+ * affix binding — both by uid (#1659). Both writers accept a functional updater.
+ * The shared path for all three activation surfaces (#254/#339).
  * @param {Object}   talisman
  * @param {Function} setConsumed  - setter for cnmh_consumed_<charId>
  * @param {Function} setAffixed   - setter for cnmh_affixed_<charId>
@@ -86,7 +87,7 @@ export const affixedTalismanItems = (overlay, flatItems) => {
 export const deactivateTalisman = ({ talisman, setConsumed, setAffixed }) => {
   if (!talisman) return;
   if (setConsumed) {
-    setConsumed((cur) => ({ ...(cur || {}), [talisman.name]: ((cur || {})[talisman.name] || 0) + 1 }));
+    setConsumed((cur) => recordConsumed(cur, talisman));
   }
   if (setAffixed) {
     setAffixed((cur) => unaffix(cur, itemUidOf(talisman)));

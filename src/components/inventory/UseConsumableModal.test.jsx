@@ -302,7 +302,8 @@ describe('item-target consumable (oil)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
     expect(consumables.applyEffectConsumable).not.toHaveBeenCalled();
-    expect(consumedState).toEqual({ 'Oil of Weightlessness': 1 });
+    // The ledger keys on the item's uid — here its authored id (#1659).
+    expect(consumedState).toEqual({ 'oil-of-weightlessness': 1 });
     expect(mockSendUpdate).toHaveBeenCalledWith(
       'c1',
       'itemeffects',
@@ -329,7 +330,7 @@ describe('item-target consumable (oil)', () => {
     // Rust Scrub isn't an oil, so the verb is "Use".
     fireEvent.click(screen.getByRole('button', { name: 'Use' }));
 
-    expect(consumedState).toEqual({ 'Rust Scrub': 1 });
+    expect(consumedState).toEqual({ 'rust-scrub': 1 });
     // No item-effect overlay write for an instantaneous consumable.
     expect(mockSendUpdate).not.toHaveBeenCalledWith('c1', 'itemeffects', expect.anything());
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
@@ -358,7 +359,7 @@ describe('item-target consumable (oil)', () => {
     fireEvent.change(hpInput, { target: { value: '6' } });
     fireEvent.click(screen.getByRole('button', { name: 'Use' }));
 
-    expect(consumedState).toEqual({ 'Rust Scrub': 1 });
+    expect(consumedState).toEqual({ 'rust-scrub': 1 });
     expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'itemhp', { 'plate-1': { hp: 26 } });
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
       text: 'Blu applied Rust Scrub to Full Plate — restored 6 HP (26/36)',

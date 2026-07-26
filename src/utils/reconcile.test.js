@@ -39,6 +39,51 @@ describe('computePendingChanges — guards', () => {
   });
 });
 
+// #1659 — the ledger moved to uid keys; name keys are read as a legacy fallback,
+// so every case above (which is name-keyed) still describes live behaviour.
+describe('computePendingChanges — uid-keyed consumed overlay (#1659)', () => {
+  it('reads a uid-keyed count and clears that key on commit', () => {
+    const changes = computePendingChanges(resolved(), raw(), { consumed: { p1: 2 } });
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({
+      kind: PENDING_KINDS.CONSUMABLE_DECREMENT,
+      overlayRef: 'p1',
+      label: 'Healing Potion',
+      before: 3,
+      after: 1,
+    });
+    expect(changes[0].clearOverlay({ p1: 2, other: 1 })).toEqual({ other: 1 });
+  });
+
+  it('does not double-count a uid entry against a leftover legacy name entry', () => {
+    const changes = computePendingChanges(resolved(), raw(), {
+      consumed: { 'Healing Potion': 1, p1: 2 },
+    });
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({ overlayRef: 'p1', after: 1, detail: '3 → 1' });
+  });
+
+  it('reconciles two same-named stacks independently', () => {
+    const res = {
+      ...resolved(),
+      inventory: [
+        { uid: 'p1', name: 'Healing Potion', quantity: 3, consumable: { kind: 'healing' } },
+        { uid: 'p2', name: 'Healing Potion', quantity: 3, consumable: { kind: 'healing' } },
+      ],
+    };
+    const doc = {
+      ...raw(),
+      inventory: [
+        { ref: 'healing-potion', uid: 'p1', quantity: 3 },
+        { ref: 'healing-potion', uid: 'p2', quantity: 3 },
+      ],
+    };
+    const changes = computePendingChanges(res, doc, { consumed: { p1: 2 } });
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({ overlayRef: 'p1', after: 1 });
+  });
+});
+
 describe('computePendingChanges — consumed overlay', () => {
   it('emits a decrement for a partially-used stack', () => {
     const changes = computePendingChanges(resolved(), raw(), { consumed: { 'Healing Potion': 2 } });

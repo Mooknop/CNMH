@@ -316,9 +316,9 @@ test.describe('Combat item state', () => {
     const withPin = Number(await page.getByRole('status', { name: 'Save result' }).locator('.save-result-total').innerText());
     expect(withPin).toBe(plain + 2);
 
-    // …and using it consumes it: the consumed ledger takes a use by NAME and the
-    // affix overlay drops the binding by UID (utils/affix.js deactivateTalisman).
-    await session.expectSent(CONSUMED_KEY, (v) => v?.['E2E Sanitizing Pin'] === 1);
+    // …and using it consumes it: both overlays key on the talisman's UID since
+    // #1659 (utils/affix.js deactivateTalisman).
+    await session.expectSent(CONSUMED_KEY, (v) => v?.[PIN_UID] === 1);
     await session.expectSent(AFFIXED_KEY, (v) => v && !(PIN_UID in v));
 
     // One use, then gone: a third prompt no longer offers it. The d20 field is

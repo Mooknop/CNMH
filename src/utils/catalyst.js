@@ -17,6 +17,7 @@
 // complex cross-target effects.
 
 import { flattenInventory } from './InventoryUtils';
+import { consumedCountFor } from './consumedLedger';
 
 /** The item's catalyst block (with a real target spell), or null. */
 export const catalystMeta = (item) => {
@@ -38,9 +39,9 @@ export const catalystAddActions = (item) => Number(catalystMeta(item)?.addAction
 /** Human-readable rider effect for the cast surface + log. */
 export const catalystSummary = (item) => catalystMeta(item)?.effect || item?.description || '';
 
-/** Remaining count of a consumable given the consumed overlay (by name). */
+/** Remaining count of a consumable given the consumed overlay (uid-keyed, #1659). */
 const remainingQty = (item, consumed) =>
-  (item?.quantity ?? 1) - ((consumed || {})[item?.name] || 0);
+  (item?.quantity ?? 1) - consumedCountFor(item, consumed);
 
 /**
  * Held catalysts eligible for a spell being cast: those whose `catalystFor`

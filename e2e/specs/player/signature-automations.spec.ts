@@ -316,7 +316,8 @@ test.describe('Signature automations', () => {
    * REGRESSION BOX for #1652 (filed from #1647, fixed in the same-named PR).
    *
    * `SpellgunAttackModal.handleConfirm` writes `cnmh_consumed_<charId>` with
-   * `{ [item.name]: n+1 }`, but the ONLY reader of that overlay is
+   * `{ [itemUid]: n+1 }` (name-keyed until #1659), but the ONLY reader of that
+   * overlay is
    * `InventoryUtils.applyConsumedOverlay`, which used to gate on
    * `isConsumable(item) === !!(item.scroll || item.consumable)`. No shipped
    * spellgun carries a `scroll` or `consumable` block — the five in
@@ -367,8 +368,9 @@ test.describe('Signature automations', () => {
     await page.getByLabel('raw d20').fill('15');
     await page.getByTestId('sgm-fire').click();
 
-    // The consumption write goes out…
-    await session.expectSent('cnmh_consumed_' + CHAR_ID, (v) => v?.[SPELLGUN.name] === 1);
+    // The consumption write goes out — keyed by the inventory entry's uid since
+    // #1659, so a second spellgun of the same name keeps its own charge…
+    await session.expectSent('cnmh_consumed_' + CHAR_ID, (v) => v?.[GUN_UID] === 1);
     // …and is honoured: quantity 1 minus one burn is 0, so the tile is gone.
     await expect(page.getByTestId(`grid-cell-${GUN_UID}`)).toHaveCount(0);
   });

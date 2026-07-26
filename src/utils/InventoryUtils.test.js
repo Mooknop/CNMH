@@ -561,6 +561,38 @@ describe('InventoryUtils', () => {
     it('ignores the overlay for non-consumables', () => {
       expect(remainingQuantity({ name: 'Sword', quantity: 1 }, { Sword: 1 })).toBe(1);
     });
+
+    // #1659 — the ledger is keyed by uid, reading legacy name entries as a fallback.
+    describe('uid-keyed ledger (#1659)', () => {
+      const flask = (uid, quantity = 3) => ({
+        uid, id: 'acid-flask', name: 'Acid Flask', quantity, traits: ['Consumable'],
+      });
+
+      it('subtracts a uid-keyed count from that stack only', () => {
+        expect(remainingQuantity(flask('u1'), { u1: 2 })).toBe(1);
+      });
+
+      it('leaves a same-named sibling stack untouched — the bug this fixes', () => {
+        const map = { u1: 2 };
+        expect(remainingQuantity(flask('u1'), map)).toBe(1);
+        expect(remainingQuantity(flask('u2'), map)).toBe(3);
+      });
+
+      it('still honours a legacy name-keyed entry when the uid has none', () => {
+        expect(remainingQuantity(flask('u1'), { 'Acid Flask': 2 })).toBe(1);
+      });
+
+      it('does not double-subtract a uid entry and a legacy name entry', () => {
+        // The uid entry was seeded from the legacy count on the first uid write;
+        // reading both would charge those burns twice.
+        expect(remainingQuantity(flask('u1'), { 'Acid Flask': 1, u1: 2 })).toBe(1);
+      });
+
+      it('counts once when the uid falls back to the name (no uid/id)', () => {
+        const loose = { name: 'Acid Flask', quantity: 3, traits: ['Consumable'] };
+        expect(remainingQuantity(loose, { 'Acid Flask': 2 })).toBe(1);
+      });
+    });
   });
 
   describe('flattenInventory', () => {
@@ -597,6 +629,16 @@ describe('InventoryUtils', () => {
     it('passes non-consumables through untouched and tolerates a missing overlay', () => {
       expect(applyConsumedOverlay([sword])).toEqual([sword]);
       expect(applyConsumedOverlay(null, {})).toEqual([]);
+    });
+
+    it('depletes two same-named stacks independently (#1659)', () => {
+      const stacks = [
+        { uid: 'u1', name: 'Acid Flask', quantity: 2, traits: ['Consumable'] },
+        { uid: 'u2', name: 'Acid Flask', quantity: 2, traits: ['Consumable'] },
+      ];
+      const out = applyConsumedOverlay(stacks, { u1: 2 });
+      // The burned stack is gone; its sibling still shows its full count.
+      expect(out.map((i) => [i.uid, i.quantity])).toEqual([['u2', 2]]);
     });
   });
 

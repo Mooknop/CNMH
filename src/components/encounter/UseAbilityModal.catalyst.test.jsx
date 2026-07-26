@@ -103,7 +103,7 @@ describe('UseAbilityModal — catalysts', () => {
     cast(drown, [blueSalt]);
     fireEvent.click(screen.getByTestId('catalyst-bs1'));
     fireEvent.click(screen.getByLabelText('confirm-cast'));
-    expect(mockConsumed).toEqual({ 'Blue Salt Crystal': 1 });
+    expect(mockConsumed).toEqual({ bs1: 1 }); // uid-keyed ledger (#1659)
     const texts = mockAppendLog.mock.calls.map((c) => c[0].text);
     expect(texts.some((t) => /adds Blue Salt Crystal to Drown — persistent acid = rank/.test(t))).toBe(true);
   });

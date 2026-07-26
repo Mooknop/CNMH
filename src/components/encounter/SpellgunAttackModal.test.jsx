@@ -119,7 +119,8 @@ describe('SpellgunAttackModal', () => {
     expect(howlText).toMatch(/Hit/);
     expect(howlText).toMatch(/5 ft status penalty to Speed for 1 minute/);
     // consumed overlay incremented for the graded name
-    expect(sendUpdate).toHaveBeenCalledWith('petra', 'consumed', { 'Howl of Winter (Greater)': 1 }, { force: false });
+    // Uid-keyed consumed ledger (#1659) — here the spellgun's authored id.
+    expect(sendUpdate).toHaveBeenCalledWith('petra', 'consumed', { 'howl-of-winter': 1 }, { force: false });
     // 2-action activation spent in encounter
     expect(spendActions).toHaveBeenCalledWith(2, 'Fire Howl of Winter (Greater)');
   });
@@ -148,7 +149,7 @@ describe('SpellgunAttackModal', () => {
     expect(bolaText).toMatch(/Success/);
     expect(bolaText).toMatch(/grabbed/);
     expect(sendUpdate.mock.calls.some(([id, type]) => id === 'global' && type === 'dmgapply')).toBe(false);
-    expect(sendUpdate).toHaveBeenCalledWith('petra', 'consumed', { 'Verdant Bola': 1 }, { force: false });
+    expect(sendUpdate).toHaveBeenCalledWith('petra', 'consumed', { 'verdant-bola': 1 }, { force: false });
   });
 
   it('clears the absorbed binding when the fired spellgun was in gloves (#1208)', () => {

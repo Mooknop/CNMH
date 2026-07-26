@@ -26,6 +26,7 @@
 
 import { applyItemEffect } from './itemEffects';
 import { affix } from './affix';
+import { recordConsumedBy } from './consumedLedger';
 import { APP } from '../sync/keys';
 
 export const REFOCUS_ID = 'refocus';
@@ -69,12 +70,15 @@ export function resolveTake10({ characters, openedAt, nowSecs, getState, sendUpd
           appendLog,
         });
         // Mark the oil used (player-writable overlay; the GM is the live writer).
+        // Uid-keyed (#1659); allocations stored before the switch carry only a
+        // name, which the ledger still reads and writes as the legacy fallback.
         if (sendUpdate) {
           const consumed = getState(c.id, APP.CONSUMED) || {};
-          sendUpdate(c.id, APP.CONSUMED, {
-            ...consumed,
-            [a.itemName]: (consumed[a.itemName] || 0) + 1,
-          });
+          sendUpdate(
+            c.id,
+            APP.CONSUMED,
+            recordConsumedBy(consumed, a.consumedUid ?? a.itemName, a.itemName),
+          );
         }
       } else if (a.kind === 'talisman') {
         // Affix the talisman to its chosen host; activation (which consumes it)
