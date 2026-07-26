@@ -388,8 +388,18 @@ export const wouldBreakApexLimit = (item, investedItems = []) =>
  * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
  * GM-gated content). Scrolls qualify implicitly; other consumables (potions,
  * elixirs, oils, …) opt in via catalog `consumable` metadata (#217).
+ *
+ * The PF2e **Consumable trait** is also authoritative (#1652): the trait *means*
+ * single-use, so an item carrying it is consumed whether or not the author
+ * remembered to add a `consumable` block. Spellguns, bombs, elixirs, mutagens,
+ * poisons, talismans, whetstones and catalysts all ship trait-only, and before
+ * this they were silently infinite-use. Case-insensitive, matching the trait
+ * checks above.
  */
-export const isConsumable = (item) => !!(item && (item.scroll || item.consumable));
+export const isConsumable = (item) =>
+  !!(item && (item.scroll || item.consumable ||
+    (Array.isArray(item.traits) &&
+      item.traits.some((t) => String(t).toLowerCase() === 'consumable'))));
 
 /**
  * Copies of an item still unspent: authored quantity minus the consumed-overlay
