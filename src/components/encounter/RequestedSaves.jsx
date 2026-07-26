@@ -5,7 +5,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
-import { DEFENSE_LABELS } from '../../utils/defense';
+import { DEFENSE_NAMES } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 import { buildDamageApply } from '../../utils/damageRelay';
 import { emitSaveFxPlay } from '../../utils/fxPlay';
@@ -81,7 +81,8 @@ const RequestedSaves = () => {
   // caster effects, request removal). Results come from GM-typed d20s
   // (resolveRequest) or Foundry-rolled saves (#1275 — the savedone effect).
   const finishResolve = (req, results) => {
-    const saveLabel = DEFENSE_LABELS[req.save] || req.save;
+    // Bare name (#1610): every line below writes its own "DC ${req.dc}".
+    const saveLabel = DEFENSE_NAMES[req.save] || req.save;
     results.forEach((r) => {
       const degreeLabel = DEGREE_LABELS[r.degree] || r.degree;
       const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
@@ -262,7 +263,7 @@ const RequestedSaves = () => {
     });
 
     if (results.every(Boolean)) {
-      appendLog({ type: 'system', text: `Foundry rolled the ${DEFENSE_LABELS[req.save] || req.save} saves for ${req.abilityName}` });
+      appendLog({ type: 'system', text: `Foundry rolled the ${DEFENSE_NAMES[req.save] || req.save} saves for ${req.abilityName}` });
       finishResolveRef.current(req, results);
       return;
     }
@@ -287,7 +288,8 @@ const RequestedSaves = () => {
     <div className="gm-requested-saves">
       <h3>Requested Saves</h3>
       {requests.map((req) => {
-        const saveLabel = DEFENSE_LABELS[req.save] || req.save;
+        // Bare name (#1610): the header appends its own "DC {req.dc}".
+        const saveLabel = DEFENSE_NAMES[req.save] || req.save;
         const allFilled = req.targets.every((t) => {
           const raw = getD20(req.id, t.entryId);
           return raw !== '' && !isNaN(parseInt(raw, 10));

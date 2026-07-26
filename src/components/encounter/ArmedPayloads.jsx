@@ -80,6 +80,7 @@ const ArmedPayloads = () => {
 
   // Persistent payload: scale the authored dice by the severity the cast-time
   // save already established, then record the instances on each target.
+  // Returns false when there is nothing to apply, so the caller can say so.
   const firePersistent = (p, targets) => {
     const sev = severity[p.id] || 'full';
     const scaled = persistentRidersFor(p).map((inst) => ({
@@ -87,7 +88,7 @@ const ArmedPayloads = () => {
       ...(sev === 'double' ? { dice: doubleDice(inst.dice) } : {}),
       ...(sev === 'half' ? { half: true } : {}),
     }));
-    if (!scaled.length) return;
+    if (!scaled.length) return false;
     setPersistentMap((m) => targets.reduce(
       (acc, t) => addPersistent(acc, t.entryId, makeInstances(scaled, p.abilityName)),
       m || {}
@@ -96,6 +97,22 @@ const ArmedPayloads = () => {
       type: 'system',
       text: `${p.abilityName}: ${p.label} (${sev}) applied to ${targets.map((t) => t.name).join(', ')}`,
     });
+    return true;
+  };
+
+  // A payload that cannot resolve must SAY so rather than swallow the press
+  // (#1617). Fire used to early-return before `removeArmedPayload`, so a payload
+  // that produced no request — one armed with a null DC before the arm-time
+  // derivation landed, or one whose defense won't map — left the GM clicking a
+  // dead button on a card that never cleared. The trigger really happened, so a
+  // one-shot payload is still spent; the GM resolves it by hand.
+  const cannotFire = (p, reason) => {
+    appendLog({
+      type: 'system',
+      text: `${p.abilityName}: ${p.label} could not be fired (${reason}) — resolve it by hand.`,
+    });
+    setPicked((cur) => ({ ...cur, [p.id]: [] }));
+    if (!p.repeatable) removeArmedPayload(p.id);
   };
 
   const fire = (p) => {
@@ -103,14 +120,20 @@ const ArmedPayloads = () => {
     if (!targets.length) return;
 
     if (isPersistent(p)) {
-      firePersistent(p, targets);
+      if (!firePersistent(p, targets)) {
+        cannotFire(p, 'it has no persistent damage authored');
+        return;
+      }
       setPicked((cur) => ({ ...cur, [p.id]: [] }));
       if (!p.repeatable) removeArmedPayload(p.id);
       return;
     }
 
     const defense = mapSpellDefense(p.defense);
-    if (!defense) return;
+    if (!defense) {
+      cannotFire(p, `"${p.defense}" is not a save this app can request`);
+      return;
+    }
 
     const synthetic = syntheticFor(p);
     const req = buildTargetSaveRequest({
@@ -126,7 +149,10 @@ const ArmedPayloads = () => {
       saveDc: p.dc,
       directCastRank: p.rank ?? undefined,
     });
-    if (!req) return;
+    if (!req) {
+      cannotFire(p, p.dc == null ? 'it was armed without a save DC' : 'it produced no save request');
+      return;
+    }
 
     addSaveRequest(req);
     appendLog({
@@ -151,7 +177,14 @@ const ArmedPayloads = () => {
         const hint = persistent
           ? persistentRidersFor(p).map((i) => `${i.dice} persistent ${i.type}`).join(', ')
           : (profileFor(p)?.expression || p.damageData?.base);
-        const saveLabel = persistent ? null : (DEFENSE_LABELS[mapSpellDefense(p.defense)] || p.defense);
+        // DEFENSE_LABELS values already end in "DC" ("Reflex DC"), so only the
+        // number is appended — this line used to read "Reflex DC DC 29". And a
+        // payload armed before the DC derivation (#1617) carries `dc: null`, so
+        // say that rather than printing "DC null".
+        const saveLabel = persistent
+          ? null
+          : (DEFENSE_LABELS[mapSpellDefense(p.defense)] || `${p.defense} DC`);
+        const saveHint = saveLabel ? `${saveLabel} ${p.dc != null ? p.dc : 'not recorded'}` : null;
         const targets = picked[p.id] || [];
         return (
           <div key={p.id} className="gm-save-req-card">
@@ -169,7 +202,7 @@ const ArmedPayloads = () => {
             </div>
             {p.note && <div className="gm-save-req-dmg-hint">{p.note}</div>}
             <div className="gm-save-req-dmg-hint">
-              {[hint, saveLabel ? `${saveLabel} DC ${p.dc}` : null].filter(Boolean).join(' — ')}
+              {[hint, saveHint].filter(Boolean).join(' — ')}
             </div>
             <div role="group" aria-label={`${p.label} targets`}>
               {enemies.length === 0 && <div className="gm-save-req-dmg-hint">No enemies in the encounter.</div>}
