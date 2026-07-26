@@ -221,6 +221,65 @@ describe('ArmedPayloads', () => {
     });
   });
 
+  describe('a payload that cannot resolve (#1617)', () => {
+    // Fire used to early-return before removeArmedPayload, so a payload that
+    // produced no save request was a permanently dead button on a card that
+    // never cleared. It must now say why, and still spend a one-shot payload.
+    it('says why a payload armed with no DC cannot fire, and spends it', () => {
+      withPayloads([{ ...payload, dc: null }]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+
+      expect(mockAdd).not.toHaveBeenCalled();
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('could not be fired (it was armed without a save DC)'),
+      }));
+      expect(mockRemove).toHaveBeenCalledWith('armed-1');
+    });
+
+    it('does not print "DC null" for a payload armed without one', () => {
+      withPayloads([{ ...payload, dc: null }]);
+      render(<ArmedPayloads />);
+      expect(screen.queryByText(/DC null/)).not.toBeInTheDocument();
+      expect(screen.getByText(/Reflex DC not recorded/)).toBeInTheDocument();
+    });
+
+    it('does not stutter the DC label (DEFENSE_LABELS already ends in "DC")', () => {
+      withPayloads([payload]);
+      render(<ArmedPayloads />);
+      expect(screen.getByText(/Reflex DC 24/)).toBeInTheDocument();
+      expect(screen.queryByText(/DC DC/)).not.toBeInTheDocument();
+    });
+
+    it('says why an unmappable defense cannot fire', () => {
+      // "Acrobatics or Reflex" is authored on Cascading Caltrops' spell; a
+      // payload carrying a defense mapSpellDefense can't parse fires nothing.
+      withPayloads([{ ...payload, defense: 'Acrobatics or Reflex' }]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+
+      expect(mockAdd).not.toHaveBeenCalled();
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('is not a save this app can request'),
+      }));
+      expect(mockRemove).toHaveBeenCalledWith('armed-1');
+    });
+
+    it('leaves a repeatable payload armed but still explains the refusal', () => {
+      withPayloads([{ ...payload, dc: null, repeatable: true }]);
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('could not be fired'),
+      }));
+      expect(mockRemove).not.toHaveBeenCalled();
+    });
+  });
+
   it('Dismiss drops the payload without pushing a save', () => {
     withPayloads([payload]);
     render(<ArmedPayloads />);
