@@ -6,6 +6,7 @@ import { boundariesCrossedBy } from '../utils/expiry';
 import { isEncounterScopedEffect } from '../utils/EffectUtils';
 import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
 import { sweepExpiredOnBoundaries, applyTurnStartFastHealing } from '../utils/turnEffects';
+import { readThrough, readThroughList } from '../utils/syncedRead';
 import {
   defaultEncounter,
   makePcEntry,
@@ -278,13 +279,26 @@ export const useEncounter = () => {
 
   const endEncounter = useCallback(
     () => {
-      // Sustained spells are encounter-bound — clear each PC's ledger so a stale
-      // sustain doesn't re-prompt at the start of the next encounter (#220).
+      // Every per-character read below goes through readThrough (#1671): the
+      // session cache is the authority and localStorage is only the fallback.
+      // These six used to read window.localStorage alone, and a value that
+      // merely ARRIVED on this client never lands there — useSyncedState's
+      // computeInitial takes it from the session store during render, before
+      // the subscribe effect that would writeLocal it. So on a client that only
+      // RECEIVED a sustain, stance, Bystander flag, playing flag, effect or
+      // lingering extension, ending the encounter cleaned up nothing at all and
+      // the state survived the fight. Same defect as #1649, six keys wide.
+      //
+      // The write-backs are unchanged: still a direct setItem plus sendUpdate,
+      // still gated on the same conditions, and the effects pass still FILTERS
+      // rather than clearing.
       for (const entry of encounterRef.current?.order || []) {
         if (entry.kind !== 'pc' || !entry.charId) continue;
+
+        // Sustained spells are encounter-bound — clear each PC's ledger so a
+        // stale sustain doesn't re-prompt at the start of the next one (#220).
         const key = syncKey(APP.SUSTAINS, entry.charId);
-        let cur;
-        try { cur = JSON.parse(window.localStorage.getItem(key)) || []; } catch { cur = []; }
+        const cur = readThroughList(getState, entry.charId, APP.SUSTAINS);
         if (cur.length) {
           window.localStorage.setItem(key, JSON.stringify([]));
           sendUpdate(entry.charId, APP.SUSTAINS, []);
@@ -293,8 +307,7 @@ export const useEncounter = () => {
         // Stances are encounter-bound (#224) — drop any active stance so it
         // doesn't linger into the next encounter or onto the sheet.
         const stanceKey = syncKey(APP.STANCE, entry.charId);
-        let stance;
-        try { stance = JSON.parse(window.localStorage.getItem(stanceKey)); } catch { stance = null; }
+        const stance = readThrough(getState, entry.charId, APP.STANCE);
         if (stance?.active) {
           const idle = { active: false, name: null, ts: 0 };
           window.localStorage.setItem(stanceKey, JSON.stringify(idle));
@@ -304,8 +317,7 @@ export const useEncounter = () => {
         // Harmless Bystander is declared per-encounter (#226 Slice D) — drop the
         // flag so it doesn't carry into the next fight or onto the sheet.
         const bystanderKey = syncKey(APP.BYSTANDER, entry.charId);
-        let bystander;
-        try { bystander = JSON.parse(window.localStorage.getItem(bystanderKey)); } catch { bystander = null; }
+        const bystander = readThrough(getState, entry.charId, APP.BYSTANDER);
         if (bystander?.active) {
           const idle = { active: false, mod: null, ts: 0 };
           window.localStorage.setItem(bystanderKey, JSON.stringify(idle));
@@ -315,8 +327,7 @@ export const useEncounter = () => {
         // The playing state is turn-bound (#935) — no turns outside an
         // encounter, so the performance lapses when the fight ends.
         const playingKey = syncKey(APP.PLAYING, entry.charId);
-        let playing;
-        try { playing = JSON.parse(window.localStorage.getItem(playingKey)); } catch { playing = null; }
+        const playing = readThrough(getState, entry.charId, APP.PLAYING);
         if (playing?.active) {
           const idle = { active: false, ts: 0 };
           window.localStorage.setItem(playingKey, JSON.stringify(idle));
@@ -327,9 +338,8 @@ export const useEncounter = () => {
         // catalog-flagged states like eld-charged so they don't linger past the
         // fight. Manual effects and clock-based immunities are kept.
         const fxKey = syncKey(APP.EFFECTS, entry.charId);
-        let fx;
-        try { fx = JSON.parse(window.localStorage.getItem(fxKey)) || []; } catch { fx = []; }
-        if (Array.isArray(fx) && fx.length) {
+        const fx = readThroughList(getState, entry.charId, APP.EFFECTS);
+        if (fx.length) {
           const keptFx = fx.filter((e) => !isEncounterScopedEffect(e));
           if (keptFx.length !== fx.length) {
             window.localStorage.setItem(fxKey, JSON.stringify(keptFx));
@@ -340,8 +350,7 @@ export const useEncounter = () => {
         // A pending Lingering Composition extension (#226-B) that never got
         // spent on a composition shouldn't survive into the next encounter.
         const lingKey = syncKey(APP.LINGERING, entry.charId);
-        let ling;
-        try { ling = JSON.parse(window.localStorage.getItem(lingKey)); } catch { ling = null; }
+        const ling = readThrough(getState, entry.charId, APP.LINGERING);
         if (ling) {
           window.localStorage.setItem(lingKey, JSON.stringify(null));
           sendUpdate(entry.charId, APP.LINGERING, null);
@@ -357,7 +366,7 @@ export const useEncounter = () => {
       setEnemyFx({});       // enemy conditions + immunity timers die with the encounter (#260)
       setSummons([]);       // GM-added summons die with the encounter (#261)
     },
-    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, setSummons, sendUpdate]
+    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, setSummons, getState, sendUpdate]
   );
 
   const addSaveRequest = useCallback(

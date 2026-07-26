@@ -13,12 +13,21 @@ vi.mock('./useSyncedState', () => {
   };
 });
 
-// Session context — the expiry sweep reads through getState and writes through
-// sendUpdate. `undefined` for every key mirrors the real getState's absent
-// contract (serverState[char]?.[type]), so these tests keep exercising the
-// localStorage fallback the way an unhydrated client does.
+// Session context — the expiry sweep and endEncounter read through getState and
+// write through sendUpdate. `sessionCache` is empty by default, so getState
+// returns `undefined` for every key: the real getState's absent contract
+// (serverState[char]?.[type]), which keeps the existing tests exercising the
+// localStorage fallback the way an unhydrated client does. Tests that want to
+// model a value that ARRIVED over the relay seed sessionCache and leave
+// localStorage empty — the #1671 repro.
+const sessionCache = {};      // `${charId}:${stateType}` → value
+const sentUpdates = [];       // [charId, stateType, value]
+const seedCache = (charId, stateType, value) => { sessionCache[`${charId}:${stateType}`] = value; };
 vi.mock('../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => undefined) }),
+  useSession: () => ({
+    sendUpdate: (charId, stateType, value) => { sentUpdates.push([charId, stateType, value]); },
+    getState: (charId, stateType) => sessionCache[`${charId}:${stateType}`],
+  }),
 }));
 
 // ContentContext — sweep looks up effect names in the DO-backed catalog;
@@ -44,6 +53,11 @@ const setup = () => renderHook(() => useEncounter());
 const pellias = { id: 'Pellias', name: 'Pellias' };
 const ashka = { id: 'AshkaBGosh', name: 'Ashka' };
 const izzy = { id: 'IzzyUncut', name: 'Izzy' };
+
+beforeEach(() => {
+  for (const k of Object.keys(sessionCache)) delete sessionCache[k];
+  sentUpdates.length = 0;
+});
 
 describe('useEncounter', () => {
   it('default state is idle/empty', () => {
@@ -241,6 +255,70 @@ describe('useEncounter', () => {
     expect(log[0]).toMatchObject({ type: 'note', text: 'hi' });
     expect(typeof log[0].id).toBe('string');
     expect(typeof log[0].ts).toBe('number');
+  });
+
+  // #1671 — endEncounter used to read all six of these keys straight out of
+  // window.localStorage. A value that merely ARRIVED over the relay never lands
+  // there (useSyncedState's computeInitial takes it from the session store
+  // during render, before the subscribe effect that would writeLocal it), so on
+  // a client that only RECEIVED the value the cleanup silently did nothing and
+  // the state survived the fight. Each case below seeds ONLY the session cache
+  // and leaves localStorage empty.
+  describe('endEncounter reads the session cache, not localStorage (#1671)', () => {
+    beforeEach(() => localStorage.clear());
+
+    const endWith = (pc, stateType, value) => {
+      seedCache(pc.id, stateType, value);
+      const { result } = setup();
+      act(() => result.current.startEncounter([pc]));
+      act(() => result.current.endEncounter());
+      return sentUpdates.filter(([id, type]) => id === pc.id && type === stateType);
+    };
+
+    it('clears a sustained-spell ledger held only in the session cache', () => {
+      const sent = endWith(pellias, 'sustains', [{ id: 's1', spellName: 'Bless' }]);
+      expect(sent).toEqual([['Pellias', 'sustains', []]]);
+      expect(JSON.parse(localStorage.getItem('cnmh_sustains_Pellias'))).toEqual([]);
+    });
+
+    it('clears a stance held only in the session cache', () => {
+      const sent = endWith(pellias, 'stance', { active: true, name: 'Dragon Stance', ts: 1 });
+      expect(sent[0][2]).toMatchObject({ active: false, name: null });
+      expect(JSON.parse(localStorage.getItem('cnmh_stance_Pellias'))).toMatchObject({ active: false, name: null });
+    });
+
+    it('clears a Harmless Bystander declaration held only in the session cache', () => {
+      const sent = endWith(pellias, 'bystander', { active: true, mod: 'deception', ts: 1 });
+      expect(sent[0][2]).toMatchObject({ active: false, mod: null });
+      expect(JSON.parse(localStorage.getItem('cnmh_bystander_Pellias'))).toMatchObject({ active: false, mod: null });
+    });
+
+    it('clears a playing flag held only in the session cache', () => {
+      const sent = endWith(pellias, 'playing', { active: true, ts: 1 });
+      expect(sent[0][2]).toMatchObject({ active: false });
+      expect(JSON.parse(localStorage.getItem('cnmh_playing_Pellias'))).toMatchObject({ active: false });
+    });
+
+    it('drops encounter-scoped effects held only in the session cache, keeping manual ones', () => {
+      const sent = endWith(izzy, 'effects', [
+        { id: 'c1', effectId: 'eld-charged' }, // catalog-flagged encounterScoped
+        { id: 'm1', effectId: 'mage-armor' },  // manual, kept
+      ]);
+      expect(sent[0][2].map((e) => e.id)).toEqual(['m1']);
+      expect(JSON.parse(localStorage.getItem('cnmh_effects_IzzyUncut')).map((e) => e.id)).toEqual(['m1']);
+    });
+
+    it('clears a pending Lingering Composition held only in the session cache', () => {
+      const sent = endWith(pellias, 'lingering', { spellId: 'inspire-courage', ts: 1 });
+      expect(sent).toEqual([['Pellias', 'lingering', null]]);
+      expect(JSON.parse(localStorage.getItem('cnmh_lingering_Pellias'))).toBeNull();
+    });
+
+    it('leaves a cached-empty ledger alone rather than writing a redundant update', () => {
+      const sent = endWith(pellias, 'sustains', []);
+      expect(sent).toEqual([]);
+      expect(localStorage.getItem('cnmh_sustains_Pellias')).toBeNull();
+    });
   });
 
   describe('expiry sweep — granted actions', () => {

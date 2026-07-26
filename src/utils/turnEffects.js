@@ -9,47 +9,11 @@
 
 import { isExpired } from './expiry';
 import { hymnFastHealingFor, applyHymnFastHealing } from './hymnHealing';
+import { readThrough, readThroughList } from './syncedRead';
 import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
-};
-
-// `undefined` for "no local copy", so an absent entry is distinguishable from a
-// stored `null` — same absent/present contract the session cache uses.
-const readLocal = (key) => {
-  try {
-    const item = window.localStorage.getItem(key);
-    return item === null ? undefined : JSON.parse(item);
-  } catch { return undefined; }
-};
-
-/**
- * Read a synced per-character value the way the rest of the app does (#1649):
- * the session cache is the authority, localStorage is only a fallback.
- *
- * The sweep used to read localStorage alone, and a value that merely ARRIVED on
- * this client never gets there: useSyncedState's computeInitial takes it from
- * the session store during render, and the writeLocal only happens on the
- * subscribe / gap-read path and on sendUpdate. So a client that received a
- * grant, effect or playing flag held it in the session cache and in React state
- * but not in localStorage — and the sweep looked in the one place it wasn't,
- * silently expiring nothing until some client that had WRITTEN the entry
- * advanced a turn.
- *
- * The fallback still matters: with no SessionProvider (NOOP_SESSION) or in the
- * offline sandbox — where sendUpdate returns before touching the cache but a
- * direct writeLocal caller already hit storage — localStorage is all there is.
- */
-const readThrough = (getState, charId, stateType) => {
-  const cached = getState(charId, stateType);
-  if (cached !== undefined) return cached;
-  return readLocal(syncKey(stateType, charId));
-};
-
-const readThroughList = (getState, charId, stateType) => {
-  const value = readThrough(getState, charId, stateType);
-  return Array.isArray(value) ? value : [];
 };
 
 /**
