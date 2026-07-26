@@ -177,16 +177,22 @@ test.describe('GM dock console', () => {
     // Pending work shows on the console toggle badge (2 requests, 0 payloads).
     await expect(page.getByRole('button', { name: 'GM console (2)' })).toBeVisible();
 
+    // Card header names the save once (#1610 — it used to read "Reflex DC DC 1").
+    await expect(gmConsole.locator('.gm-save-req-header').first())
+      .toContainText('E2E Fireball: Reflex DC 1 (basic)');
+    await expect(gmConsole.locator('.gm-requested-saves')).not.toContainText('DC DC');
+
     // Typing the d20 previews the degree inline before anything is committed.
     await gmConsole.getByLabel('E2E Ghoul d20').fill('20');
     await expect(gmConsole.locator('.trr-result-degree')).toContainText('Critical Success');
 
-    // `saveLabel` comes from DEFENSE_LABELS, which speaks in DCs ("Reflex DC")
-    // because it is shared with the defense pickers — hence the doubled "DC".
+    // `saveLabel` comes from DEFENSE_NAMES — the bare save name (#1610), since
+    // every line here writes its own "DC". DEFENSE_LABELS ("Reflex DC") stays
+    // with the defense pickers that name the target number outright.
     const CRIT_SUCCESS_LINE =
-      'E2E Ghoul rolls Reflex DC vs DC 1 (E2E Fireball): 20 → Critical Success';
+      'E2E Ghoul rolls Reflex vs DC 1 (E2E Fireball): 20 → Critical Success';
     const CRIT_FAILURE_LINE =
-      'E2E Zombie rolls Reflex DC vs DC 60 (E2E Fireball): 1 → Critical Failure';
+      'E2E Zombie rolls Reflex vs DC 60 (E2E Fireball): 1 → Critical Failure';
     const combatLog = page.getByRole('region', { name: 'Combat log' });
 
     await gmConsole.getByRole('button', { name: 'Log Results' }).first().click();

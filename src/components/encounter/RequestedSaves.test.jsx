@@ -111,8 +111,9 @@ describe('RequestedSaves', () => {
     render(<RequestedSaves />);
     expect(screen.getByText(/Pellias/)).toBeInTheDocument();
     expect(screen.getByText(/Fireball/)).toBeInTheDocument();
-    expect(screen.getByText(/Reflex DC/)).toBeInTheDocument();
-    expect(screen.getByText(/20/)).toBeInTheDocument();
+    // The header supplies its own "DC" — the save name stays bare (#1610).
+    expect(screen.getByText(/Reflex DC 20/)).toBeInTheDocument();
+    expect(screen.queryByText(/DC DC/)).toBeNull();
   });
 
   test('shows the cast rank when the request carries one (#235)', () => {
@@ -332,7 +333,7 @@ describe('RequestedSaves', () => {
       enterGoblinD20(15); // Success
       fireEvent.click(screen.getByRole('button', { name: /log results/i }));
       expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
-        text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 20 → Success · damage 6 (12 half)',
+        text: 'Goblin rolls Reflex vs DC 20 (Fireball): 20 → Success · damage 6 (12 half)',
       }));
     });
 
@@ -375,7 +376,7 @@ describe('RequestedSaves', () => {
       enterGoblinD20(15);
       fireEvent.click(screen.getByRole('button', { name: /log results/i }));
       expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
-        text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 20 → Success',
+        text: 'Goblin rolls Reflex vs DC 20 (Fireball): 20 → Success',
       }));
     });
   });
@@ -770,10 +771,10 @@ describe('Foundry-rolled saves (#1275)', () => {
     };
     render(<RequestedSaves />);
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
-      text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 18 → Failure',
+      text: 'Goblin rolls Reflex vs DC 20 (Fireball): 18 → Failure',
     }));
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
-      text: expect.stringContaining('Foundry rolled the Reflex DC saves for Fireball'),
+      text: expect.stringContaining('Foundry rolled the Reflex saves for Fireball'),
     }));
     expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
   });
