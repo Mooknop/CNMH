@@ -36,6 +36,15 @@ type SeedCollections = {
   item?: object[];
   spell?: object[];
   effect?: object[];
+  // `rune` is its own content collection (src/data/snapshot/rune.json) and the
+  // worker's seed route already accepts it — COLLECTIONS in worker/CampaignContent.js
+  // lists it — so this entry is purely the type catching up (#1663). Without it a
+  // spec can't seed a rune, so a seeded weapon's socket picker only ever offered
+  // the bundled fallback catalog. Note ContentContext takes the DO's rune list
+  // INSTEAD of the bundle when it is non-empty (armor + fundamental runes still
+  // merge in from code), so seeding runes makes the picker's property options
+  // exactly what the spec asked for.
+  rune?: object[];
 };
 
 // `reset` fixture calls /api/gm/_test/reset to wipe both DOs before a test.
