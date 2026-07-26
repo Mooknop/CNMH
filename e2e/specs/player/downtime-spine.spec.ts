@@ -21,43 +21,14 @@
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { expectOnSheet } from '../../helpers/sheet';
+import { PERIOD, block, lockedPlan, openDowntimeTab, budgetLine } from '../../helpers/downtime';
 
 const CHAR_ID = 'e2e-dt-planner';
 const CHAR_NAME = 'E2E Planner';
 const DOWNTIME_KEY = `cnmh_downtime_${CHAR_ID}`;
 
-// Period identity is compared by VALUE, not reference (downtimeUtils.periodKey
-// JSON-stringifies both sides) because the app's real startedAt is the gameDate
-// object, which is a fresh object on every read. Any stable value works in a
-// seed; `1` is what downtime.spec.ts already uses.
-const STARTED_AT = 1;
-
-const block = (days: number) => ({ active: true, days, startedAt: STARTED_AT });
-
-// The stored shape DowntimeAllocator writes. `plan` is the source of truth —
-// periodState derives selected/ledger from it — so a stamped plan is all a seed
-// needs to stand in for a player who already allocated.
-const period = (plan: Record<string, number>, status: 'planning' | 'ready' = 'planning') => ({
-  periodStartedAt: STARTED_AT,
-  plan,
-  status,
-});
-
 const expectSheet = (page: Page) =>
   expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-
-// The mode-aware play tab. It only carries the Downtime label once
-// cnmh_playmode_global is 'downtime' and no encounter is active, so reaching it
-// doubles as the hydration gate for every assertion below.
-const openDowntimeTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
-
-// `<b>{used}</b> / {blockDays} planned · {free} free` — the allocator's running
-// budget, and the cheapest proof that a write round-tripped into the UI.
-const budgetLine = (page: Page) => page.locator('.dta-budget');
 
 test.describe('Downtime spine (player)', () => {
   test.beforeEach(async ({ reset, seed }) => {
@@ -102,7 +73,7 @@ test.describe('Downtime spine (player)', () => {
 
     const dt = await session.expectSent(DOWNTIME_KEY, (v) => v?.plan?.Research === 3);
     expect(dt.status).toBe('planning');
-    expect(dt.periodStartedAt).toBe(STARTED_AT);
+    expect(dt.periodStartedAt).toBe(PERIOD);
     // selected/ledger are re-derived from the plan on every write (stampPeriod),
     // so the party ledger, the completion prompts and the GM summary all read
     // the same three days without the allocator writing them by hand.
@@ -177,7 +148,7 @@ test.describe('Downtime spine (player)', () => {
       seed: {
         cnmh_playmode_global: 'downtime',
         cnmh_downtimeblock_global: block(5),
-        [DOWNTIME_KEY]: period({ Research: 5 }, 'ready'),
+        [DOWNTIME_KEY]: lockedPlan({ Research: 5 }),
       },
     });
 
@@ -190,7 +161,8 @@ test.describe('Downtime spine (player)', () => {
 
     // The GM presses Update with a smaller number, same period (clock unmoved —
     // Update no longer re-stamps startedAt, so the plans stay in this period).
-    session.push('cnmh_downtimeblock_global', { active: true, days: 2, startedAt: STARTED_AT });
+    // block() always carries the same PERIOD, which is exactly that invariant.
+    session.push('cnmh_downtimeblock_global', block(2));
     await expect(page.getByText('2 days available')).toBeVisible();
 
     // Was "5 / 2 planned · 0 free" before the fix.
@@ -248,7 +220,7 @@ test.describe('Downtime spine (player)', () => {
         // BENCHMARK map (in days, 8h each) — not a bench roster. DowntimeControl
         // is its only writer; see the GM spec.
         cnmh_downtimebench_global: { [CHAR_ID]: { Research: 3 } },
-        [DOWNTIME_KEY]: period({ Research: 2 }, 'ready'),
+        [DOWNTIME_KEY]: lockedPlan({ Research: 2 }),
       },
     });
 
@@ -283,7 +255,7 @@ test.describe('Downtime spine (player)', () => {
       charName: CHAR_NAME,
       topic: 'The Sihedron seals',
       status: 'pending',
-      periodStartedAt: STARTED_AT,
+      periodStartedAt: PERIOD,
     });
 
     // Submitted → the prompt retires itself, so the player can't double-submit
@@ -300,7 +272,7 @@ test.describe('Downtime spine (player)', () => {
         // What DowntimeControl writes when the last PC locks in and the block
         // auto-closes: the period plus each PC's derived ledger.
         cnmh_downtimesummary_global: {
-          period: { days: 3, startedAt: STARTED_AT },
+          period: { days: 3, startedAt: PERIOD },
           chars: [{
             id: CHAR_ID,
             name: CHAR_NAME,

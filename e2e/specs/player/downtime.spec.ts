@@ -8,6 +8,7 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
+import { block, openDowntimeTab } from '../../helpers/downtime';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -22,7 +23,7 @@ test.describe('Downtime', () => {
     await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: { active: true, days: 3, startedAt: 1 },
+        cnmh_downtimeblock_global: block(3),
       },
     });
 
@@ -30,10 +31,7 @@ test.describe('Downtime', () => {
     await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
     // Open the mode-aware play tab (Downtime).
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Downtime', exact: true })
-      .click();
+    await openDowntimeTab(page);
 
     await expect(page.getByText('3 days available')).toBeVisible();
   });

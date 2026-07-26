@@ -26,6 +26,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
+import { block, openDowntimeTab, budgetLine } from '../../helpers/downtime';
 
 const CHAR_ID = 'e2e-crafter';
 const CHAR_NAME = 'E2E Crafter';
@@ -33,11 +34,6 @@ const CHAR_NAME = 'E2E Crafter';
 const CRAFT_KEY = `cnmh_craftprojects_${CHAR_ID}`;
 const GOLD_KEY = `cnmh_gold_${CHAR_ID}`;
 const RESULTS_KEY = 'cnmh_downtimeresults_global';
-
-// Period identity: every per-character downtime write is stamped with the
-// block's `startedAt` and reads as empty when it doesn't match (downtimeUtils).
-const PERIOD = 'e2e-period-1';
-const openBlock = (days = 3) => ({ active: true, days, startedAt: PERIOD });
 
 // A two-grade item: the Moderate grade is level 6 (→ DC 22) at 35 gp, so the
 // up-front half is 17.5 gp and the remainder another 17.5 — every number below
@@ -114,15 +110,6 @@ const augPanel = (page: Page) => page.locator('.cp-wrap').filter({ hasText: 'Aug
 const expectSheet = (page: Page) =>
   expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
-// The mode-aware play tab only offers "Downtime" once cnmh_playmode_global is
-// 'downtime' and no encounter is live — clicking it is therefore also the
-// hydration gate for everything the tab renders.
-const openDowntimeTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
-
 test.describe('Downtime crafting', () => {
   test.beforeEach(async ({ reset }) => {
     await reset();
@@ -137,7 +124,7 @@ test.describe('Downtime crafting', () => {
     const session = await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: openBlock(),
+        cnmh_downtimeblock_global: block(3),
         [GOLD_KEY]: 100,
       },
     });
@@ -244,7 +231,7 @@ test.describe('Downtime crafting', () => {
     const session = await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: openBlock(3),
+        cnmh_downtimeblock_global: block(3),
         [GOLD_KEY]: 100,
         [CRAFT_KEY]: { projects: [antidoteProject()] },
       },
@@ -263,8 +250,8 @@ test.describe('Downtime crafting', () => {
     await page.getByRole('button', { name: 'More Crafting' }).click();
     // The remaining-days readout follows the plan immediately (it derives from
     // the plan, not from a committed ledger).
-    await expect(page.locator('.dta-budget')).toContainText('1 / 3 planned');
-    await expect(page.locator('.dta-budget')).toContainText('2 free');
+    await expect(budgetLine(page)).toContainText('1 / 3 planned');
+    await expect(budgetLine(page)).toContainText('2 free');
 
     // A planned day is 8 un-banked hours; with one project the default split
     // puts all of them on it, which is also what makes the plan lockable.
@@ -298,7 +285,7 @@ test.describe('Downtime crafting', () => {
     const session = await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: openBlock(),
+        cnmh_downtimeblock_global: block(3),
         [GOLD_KEY]: 100,
         // Setup hours already met (16/16) — this box is about what happens AFTER
         // the threshold, and banking two days is the previous test's job.
@@ -363,7 +350,7 @@ test.describe('Downtime crafting', () => {
     const session = await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: openBlock(),
+        cnmh_downtimeblock_global: block(3),
         [GOLD_KEY]: 100,
       },
     });
@@ -419,7 +406,7 @@ test.describe('Downtime crafting', () => {
     await mockSession(page, {
       seed: {
         cnmh_playmode_global: 'downtime',
-        cnmh_downtimeblock_global: openBlock(),
+        cnmh_downtimeblock_global: block(3),
         // 10 gp: short of the Moderate grade's 17.5 up-front, ample for Lesser's 1.5.
         [GOLD_KEY]: 10,
       },
