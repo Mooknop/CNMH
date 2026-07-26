@@ -18,7 +18,7 @@
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { expectOnSheet } from '../../helpers/sheet';
-import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { activeEncounter, budget, deckBody, readyTurnState } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-deckhand';
 const CHAR_NAME = 'E2E Deckhand';
@@ -154,17 +154,9 @@ async function gotoDeck(page: Page) {
 
 const segment = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
 
-/**
- * The segment body. Exclusivity assertions MUST scope to it: the pinned "Right
- * Now" shortlist above the tabs ranks over the WHOLE catalog, so a strike can
- * legitimately appear there while the Spells tab is selected — an unscoped
- * "no strike is visible" would be asserting something the deck never promised.
- */
-const deckBody = (page: Page) => page.locator('.deck-body');
-
-// The self-status bar's action pips (#1502 S3) — role="meter", aria-valuenow =
-// actions REMAINING. A far cleaner turn-budget probe than pip CSS classes.
-const budget = (page: Page) => page.getByRole('meter', { name: /actions left/ });
+// `deckBody` (the only correct scope for the exclusivity assertions below) and
+// `budget` (the self-status action meter) both live in helpers/encounter.ts —
+// see the comments there for the traps each one encodes.
 
 test.describe('Segmented Deck shell', () => {
   test.beforeEach(async ({ reset }) => {
@@ -264,7 +256,7 @@ test.describe('Segmented Deck shell', () => {
     // window — `window.scrollBy` is a silent no-op here — so walk up to whichever
     // ancestor actually overflows rather than hard-coding the shell's class.
     const SCROLL = 200;
-    await page.locator('.deck-body').evaluate((el, dy) => {
+    await deckBody(page).evaluate((el, dy) => {
       let n: HTMLElement | null = el.parentElement;
       while (n) {
         const s = getComputedStyle(n);
