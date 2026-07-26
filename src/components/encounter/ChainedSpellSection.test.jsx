@@ -8,7 +8,8 @@ vi.mock('../../utils/rollResolution', async (importActual) => ({
   resolveActionRoll: vi.fn(),
 }));
 vi.mock('../../utils/defense', () => ({
-  DEFENSE_LABELS: { ac: 'AC', fortitude: 'Fortitude', reflex: 'Reflex', will: 'Will' },
+  DEFENSE_LABELS: { ac: 'AC', fortitude: 'Fortitude DC', reflex: 'Reflex DC', will: 'Will DC' },
+  DEFENSE_NAMES:  { ac: 'AC', fortitude: 'Fortitude', reflex: 'Reflex', will: 'Will' },
   DEFENSE_OPTIONS: [{ value: 'ac', label: 'AC' }],
   defenseDC: vi.fn(() => 15),
 }));
@@ -507,6 +508,15 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
 
   beforeEach(() => {
     resolveActionRoll.mockReturnValue({ mode: 'target-save', bonus: null, dc: 22, defense: 'reflex' });
+  });
+
+  // #1639: the preview writes its own "DC <n>" after the defense, so the
+  // defense must be named bare — DEFENSE_LABELS gave "Reflex DC DC 22".
+  it('names the save bare in the GM preview (no doubled DC)', () => {
+    renderSave([FIREBALL_SAVE]);
+    const preview = screen.getByText(/Save request/).closest('div');
+    expect(preview).toHaveTextContent('Reflex DC 22');
+    expect(preview.textContent).not.toMatch(/DC DC/);
   });
 
   it('renders the save-mode damage panel for a damaging basic-save spell', () => {
