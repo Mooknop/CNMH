@@ -9,6 +9,14 @@ const order = [
 ];
 const turnEnd = { round: 1, entryId: 'e-ashka', boundary: 'turn-end' };
 
+// A client whose session cache holds nothing for the swept keys: the sweep must
+// fall back to localStorage (no SessionProvider / offline sandbox).
+const noCache = () => undefined;
+
+// A session cache seeded from a plain { charId: { stateType: value } } map,
+// mirroring SessionContext's getState (absent ⇒ undefined).
+const cache = (map) => (charId, stateType) => map[charId]?.[stateType];
+
 describe('sweepExpiredOnBoundaries', () => {
   it('drops expired effects, keeps live ones, writes survivors + logs by catalog name', () => {
     localStorage.setItem('cnmh_effects_Ashka', JSON.stringify([
@@ -19,7 +27,7 @@ describe('sweepExpiredOnBoundaries', () => {
     const appendLog = vi.fn();
 
     sweepExpiredOnBoundaries({
-      order, boundaries: [turnEnd], sendUpdate, appendLog,
+      order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog,
       effectCatalog: [{ id: 'inspire-courage', name: 'Inspire Courage' }],
     });
 
@@ -36,7 +44,7 @@ describe('sweepExpiredOnBoundaries', () => {
     ]));
     const sendUpdate = vi.fn();
     const appendLog = vi.fn();
-    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog, effectCatalog: [] });
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog, effectCatalog: [] });
     expect(sendUpdate).not.toHaveBeenCalled();
     expect(appendLog).not.toHaveBeenCalled();
   });
@@ -47,7 +55,7 @@ describe('sweepExpiredOnBoundaries', () => {
     ]));
     const sendUpdate = vi.fn();
     const appendLog = vi.fn();
-    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog, effectCatalog: [] });
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog, effectCatalog: [] });
     expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'grantedactions', []);
     expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Reactive Strike expired for Ashka' }));
   });
@@ -59,7 +67,7 @@ describe('sweepExpiredOnBoundaries', () => {
     const sendUpdate = vi.fn();
     const appendLog = vi.fn();
 
-    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog, effectCatalog: [] });
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog, effectCatalog: [] });
 
     expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'playing', expect.objectContaining({ active: false }));
     expect(JSON.parse(localStorage.getItem('cnmh_playing_Ashka'))).toMatchObject({ active: false });
@@ -72,7 +80,7 @@ describe('sweepExpiredOnBoundaries', () => {
     }));
     const sendUpdate = vi.fn();
 
-    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], sendUpdate, appendLog: vi.fn(), effectCatalog: [] });
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog: vi.fn(), effectCatalog: [] });
 
     expect(sendUpdate).not.toHaveBeenCalled();
     expect(JSON.parse(localStorage.getItem('cnmh_playing_Ashka')).active).toBe(true);
@@ -82,9 +90,78 @@ describe('sweepExpiredOnBoundaries', () => {
     const sendUpdate = vi.fn();
     sweepExpiredOnBoundaries({
       order: [{ kind: 'enemy', entryId: 'e', name: 'G' }],
-      boundaries: [turnEnd], sendUpdate, appendLog: vi.fn(), effectCatalog: [],
+      boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog: vi.fn(), effectCatalog: [],
     });
     expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  // #1649 — a value that only ARRIVED on this client (FULL_STATE / peer UPDATE)
+  // lives in the session cache and in React state, never in localStorage. The
+  // sweep used to read localStorage alone and silently expired nothing.
+  describe('received-only state, absent from localStorage (#1649)', () => {
+    it('expires an effect held only in the session cache', () => {
+      const getState = cache({ Ashka: { effects: [
+        { id: 'a', effectId: 'inspire-courage', expireAt: turnEnd },
+        { id: 'b', effectId: 'bless', expireAt: { round: 9, entryId: 'e-ashka', boundary: 'turn-end' } },
+      ] } });
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({
+        order, boundaries: [turnEnd], getState, sendUpdate, appendLog,
+        effectCatalog: [{ id: 'inspire-courage', name: 'Inspire Courage' }],
+      });
+
+      expect(localStorage.getItem('cnmh_effects_Ashka')).not.toBeNull(); // written only by the sweep
+      expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'effects', [expect.objectContaining({ id: 'b' })]);
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Inspire Courage expired on Ashka' }));
+    });
+
+    it('expires a granted action held only in the session cache', () => {
+      const getState = cache({ Ashka: { grantedactions: [
+        { id: 'g1', source: 'Reactive Strike', expireAt: turnEnd },
+      ] } });
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState, sendUpdate, appendLog, effectCatalog: [] });
+
+      expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'grantedactions', []);
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Reactive Strike expired for Ashka' }));
+    });
+
+    it('lapses a playing flag held only in the session cache', () => {
+      const getState = cache({ Ashka: { playing: { active: true, expireAt: turnEnd, ts: 1 } } });
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState, sendUpdate, appendLog, effectCatalog: [] });
+
+      expect(sendUpdate).toHaveBeenCalledWith('Ashka', 'playing', expect.objectContaining({ active: false }));
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Ashka stops playing' }));
+    });
+  });
+
+  it('prefers the session cache over a stale localStorage copy', () => {
+    // localStorage still holds a grant the server has already dropped; the cache
+    // is the authority, so the sweep sees only the live one and writes nothing.
+    localStorage.setItem('cnmh_grantedactions_Ashka', JSON.stringify([
+      { id: 'stale', source: 'Reactive Strike', expireAt: turnEnd },
+    ]));
+    const getState = cache({ Ashka: { grantedactions: [
+      { id: 'live', source: 'Bon Mot', expireAt: { round: 9, entryId: 'e-ashka', boundary: 'turn-end' } },
+    ] } });
+    const sendUpdate = vi.fn();
+
+    sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState, sendUpdate, appendLog: vi.fn(), effectCatalog: [] });
+
+    expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  it('throws rather than silently degrading when no reader is supplied (#1649)', () => {
+    expect(() => sweepExpiredOnBoundaries({
+      order, boundaries: [turnEnd], sendUpdate: vi.fn(), appendLog: vi.fn(), effectCatalog: [],
+    })).toThrow(/getState/);
   });
 });
 

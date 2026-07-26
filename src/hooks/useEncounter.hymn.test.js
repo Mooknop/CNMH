@@ -20,7 +20,7 @@ const mockSendUpdate = vi.fn((id, key, value) => { if (key === 'hp') hp[id] = va
 const mockGetState = vi.fn((id, key) => {
   if (key === 'sustains') return ledger[id] || [];
   if (key === 'hp') return hp[id];
-  return [];
+  return undefined; // absent from the cache, like the real getState
 });
 vi.mock('../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate, getState: mockGetState }),
