@@ -12,10 +12,12 @@
  *   cnmh_scoutbonus_global      — written by ExplorationTab, READ by
  *                                 encounter/InitiativeEntry.jsx
  *
- * The scout-bonus test is the reason this file exists: picking Scout during
+ * The scout-bonus tests are the reason this file exists: picking Scout during
  * exploration changes what a *different* PC's initiative entry computes once
  * combat starts. That is a cross-mode, cross-character effect, so it needs two
- * pages and a relay between them (see `bridgeKey` below).
+ * pages and a relay between them (see `bridgeKey` below). The scout's OWN entry
+ * gets the same +1 (#1628) — the whole group does — and that half is a
+ * single-page test, since the scout's sheet is the only page involved.
  *
  * Party sizing note: `useExplorationReady` flips the tab from the Activity
  * picker to the Movement pad the moment EVERY party PC has a pick. Every test
@@ -292,6 +294,47 @@ test.describe('Exploration activities', () => {
     await expect(breakdown).not.toContainText('Scout +1');
 
     await scoutPage.close();
+  });
+
+  test('the scout gets the +1 on their own initiative entry too (#1628)', async ({ page }) => {
+    // The scout's own half needs no second seat: `cnmh_scoutbonus_global` already
+    // carries the scout's id by the time combat starts, so seed it directly and
+    // load the scout INTO the encounter. An active encounter makes usePlayMode
+    // report 'encounter', which swaps ExplorationTab out for the encounter
+    // surface — so nothing here can write the null-on-mount scoutbonus that the
+    // two-page test has to work around.
+    await mockSession(page, {
+      seed: {
+        cnmh_playmode_global: 'exploration',
+        cnmh_scoutbonus_global: SCOUT.id,
+        cnmh_encounter_global: {
+          ...encounterState({ phase: 'setup', order: [pcEntry(SCOUT.id, SCOUT.name)] }),
+          foundryCombatId: 'e2e-combat-self-scout',
+        },
+      },
+    });
+
+    await page.goto(`/character/${SCOUT.id}`);
+    await expectSheet(page, SCOUT.name);
+    await page
+      .getByRole('navigation', { name: 'Character sheet sections' })
+      .getByRole('button', { name: 'Encounter', exact: true })
+      .click();
+
+    // The scout is not excluded from their own activity: reminder and bonus both.
+    await expect(page.locator('.initiative-entry-scout')).toContainText(
+      '+1 circumstance bonus to initiative',
+    );
+    const breakdown = page.getByLabel('initiative-breakdown');
+    await expect(breakdown).toContainText('Scout +1');
+
+    const mod = Number(/Perception ([+-]\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
+    expect(Number.isFinite(mod)).toBe(true);
+
+    await page.getByLabel('d20-input').fill('15');
+    await expect(breakdown).toContainText('=');
+    const total = Number(/=\s*(-?\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
+    expect(total).toBe(15 + mod + 1);
   });
 
   test('RollActivityModal grades a check by DC extremes', async ({ page }) => {
