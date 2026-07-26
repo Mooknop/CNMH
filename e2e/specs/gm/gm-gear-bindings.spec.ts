@@ -90,6 +90,55 @@ const CHARACTER = {
   ],
 };
 
+// ── Rune-seeding fixtures (#1663) ────────────────────────────────────────────
+// Their own character so the rune board holds exactly one property socket and
+// nothing here perturbs the binding test above.
+const RUNE_CHAR_ID = 'e2e-rune-ward';
+const RUNE_CHAR_NAME = 'E2E Rune Ward';
+const BLADE_UID = 'uid-gg-blade';
+
+const BLADE = {
+  id: 'e2e-gg-blade',
+  name: 'E2E Warded Blade',
+  weight: 1,
+  price: 2,
+  strikes: {
+    name: 'E2E Warded Blade Strike',
+    type: 'melee',
+    damage: '1d8',
+    damageType: 'slashing',
+    traits: ['Attack', 'Melee'],
+    actionCount: 1,
+  },
+};
+
+// A weapon property rune that exists nowhere in the bundled catalog, so seeing it
+// offered can only mean the seed landed in the `rune` collection.
+const SEEDED_RUNE = {
+  id: 'e2e-gg-keening',
+  name: 'E2E Keening',
+  type: 'property',
+  target: 'weapon',
+  level: 8,
+  price: 500,
+  description: 'E2E-only weapon property rune.',
+};
+
+const RUNE_CHARACTER = {
+  id: RUNE_CHAR_ID,
+  name: RUNE_CHAR_NAME,
+  level: 5,
+  class: 'Fighter',
+  ancestry: 'Human',
+  background: 'Soldier',
+  maxHp: 50,
+  ac: 18,
+  abilities: { strength: 18, dexterity: 12, constitution: 14 },
+  // `runes` on the ENTRY (resolveInventoryItem overlays it onto the catalog base):
+  // +1 potency is what unlocks the single property socket the picker fills.
+  inventory: [{ ref: BLADE.id, quantity: 1, uid: BLADE_UID, runes: { potency: 1 } }],
+};
+
 test.describe('GM Manage Gear bindings', () => {
   test('GM binds a talisman and a shield attachment; the player sheet shows both without reloading', async ({
     page,
@@ -179,5 +228,50 @@ test.describe('GM Manage Gear bindings', () => {
     ).toHaveCount(0);
 
     await playerPage.close();
+  });
+
+  // ── The seed fixture can seed runes (#1663) ────────────────────────────────
+  // The `rune` collection was missing from SeedCollections, so no spec could put
+  // a known rune in front of the socket picker — the picker only ever showed the
+  // bundled fallback catalog, which is exactly the blocker under #943 (shop
+  // Runesmithing) and #1050 (accessory runes). This proves the whole loop:
+  // seeded rune → offered by the picker → etchable onto a seeded weapon.
+  test('a seeded rune is offered by — and etchable from — the GM rune board', async ({
+    page,
+    reset,
+    seed,
+  }) => {
+    await reset();
+    await seed({ item: [BLADE], character: [RUNE_CHARACTER], rune: [SEEDED_RUNE] });
+
+    await page.goto('/gm');
+    await expect(page.getByTestId('sync-status')).toHaveAttribute('data-connected', 'true');
+
+    await page.getByRole('button', { name: 'Manage character gear' }).click();
+    await page.getByLabel('select character').selectOption(RUNE_CHAR_ID);
+
+    // The Runes section renders at all — it is gated on the character owning gear
+    // with at least one socket, which the +1 blade supplies.
+    const runeBoard = page.getByRole('region', { name: 'Runes' });
+    await expect(runeBoard).toBeVisible({ timeout: 10_000 });
+
+    // Matched by pattern, not by name: GmGearModal labels each picker with the
+    // item's DISPLAY name, and a runed item may re-derive it. Only one item here
+    // has a property socket, so the pattern is unambiguous.
+    const propertyPicker = runeBoard.getByLabel(/^property rune for /);
+    await expect(propertyPicker).toBeVisible();
+
+    // The seeded rune is an option…
+    await expect(propertyPicker.getByRole('option', { name: SEEDED_RUNE.name })).toHaveCount(1);
+    // …and the bundled catalog is gone, which is the half that proves the DO's
+    // `rune` collection (not the code fallback) is what the picker read. Flaming
+    // is a bundled weapon property rune, so it would be offered if the seed had
+    // silently no-op'd and ContentContext had fallen back to the snapshot.
+    await expect(propertyPicker.getByRole('option', { name: 'Flaming' })).toHaveCount(0);
+
+    // Etching it commits through applyGearEntry (acquired/removed), the same
+    // spine #943/#1050 will drive — so the socket reports the seeded rune by name.
+    await propertyPicker.selectOption(SEEDED_RUNE.id);
+    await expect(runeBoard).toContainText(SEEDED_RUNE.name);
   });
 });
