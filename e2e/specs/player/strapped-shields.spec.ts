@@ -22,7 +22,13 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import {
+  encounterState,
+  pcEntry,
+  enemyEntry,
+  expectOffTurnLive,
+  readyTurnState,
+} from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -95,12 +101,8 @@ const expectSheet = (page: import('@playwright/test').Page) =>
 const expectMyTurnLive = (page: import('@playwright/test').Page) =>
   expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
 
-// Off-turn equivalent: the stage replaces the action dial when someone else is
-// acting, so its region is the "encounter is hydrated AND it isn't my turn" gate.
-const expectOffTurnLive = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('region', { name: 'Off-turn encounter stage' })).toBeVisible({
-    timeout: 15_000,
-  });
+// Its off-turn twin, `expectOffTurnLive`, lives in helpers/encounter.ts — see
+// there for the two #843 traps the gate exists to solve.
 
 const openItemsSegment = (page: import('@playwright/test').Page) =>
   page.getByRole('tab', { name: 'Items' }).click();
