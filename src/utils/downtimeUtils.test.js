@@ -206,6 +206,7 @@ describe('downtimeUtils', () => {
         expect(periodState(dt, 'P1')).toEqual({
           plan: {},
           status: 'planning',
+          clamped: false,
           paired: {},
           craftApplied: {},
           trainApplied: {},
@@ -216,18 +217,18 @@ describe('downtimeUtils', () => {
 
       it('returns empty for a stale (prior-period) state', () => {
         expect(periodState(dt, 'P2')).toEqual({
-          plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          plan: {}, status: 'planning', clamped: false, paired: {}, craftApplied: {},
           trainApplied: {}, selected: [], ledger: [],
         });
       });
 
       it('returns empty for null/unstamped state', () => {
         expect(periodState(null, 'P1')).toEqual({
-          plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          plan: {}, status: 'planning', clamped: false, paired: {}, craftApplied: {},
           trainApplied: {}, selected: [], ledger: [],
         });
         expect(periodState({ selected: ['X'], ledger: [{ day: 'X', night: null }] }, 'P1'))
-          .toEqual({ plan: {}, status: 'planning', paired: {}, craftApplied: {},
+          .toEqual({ plan: {}, status: 'planning', clamped: false, paired: {}, craftApplied: {},
           trainApplied: {}, selected: [], ledger: [] });
       });
 
@@ -241,6 +242,7 @@ describe('downtimeUtils', () => {
         expect(periodState(planned, 'P1')).toEqual({
           plan: { Research: 2, 'Earn Income': 1 },
           status: 'ready',
+          clamped: false,
           paired: { Research: true },
           craftApplied: {},
           trainApplied: {},
@@ -263,6 +265,56 @@ describe('downtimeUtils', () => {
         const out = periodState(planned, 'P1');
         expect(out.selected).toEqual(['Crafting']);
         expect(out.ledger).toEqual([{ day: 'Crafting', night: null }]);
+      });
+
+      // #1624: the block's day count can shrink under a plan sized against a
+      // bigger one. Readers pass the current budget and get a plan that fits.
+      describe('budget scoping', () => {
+        const locked = (plan) => ({ periodStartedAt: 'P1', plan, status: 'ready' });
+
+        it('leaves a plan that still fits alone, and keeps it locked', () => {
+          const out = periodState(locked({ Research: 2 }), 'P1', 5);
+          expect(out.plan).toEqual({ Research: 2 });
+          expect(out.status).toBe('ready');
+          expect(out.clamped).toBe(false);
+        });
+
+        it('a plan that exactly fills the budget stays locked', () => {
+          const out = periodState(locked({ Research: 3, Crafting: 2 }), 'P1', 5);
+          expect(out.status).toBe('ready');
+          expect(out.clamped).toBe(false);
+        });
+
+        it('clamps an over-budget plan and derives selected/ledger from the clamp', () => {
+          const out = periodState(locked({ Research: 5, Crafting: 4 }), 'P1', 2);
+          expect(out.plan).toEqual({ Research: 2 });
+          expect(out.selected).toEqual(['Research']);
+          expect(out.ledger).toHaveLength(2);
+          expect(out.clamped).toBe(true);
+        });
+
+        it('reopens a clamped plan so its owner re-confirms the shorter week', () => {
+          expect(periodState(locked({ Research: 5 }), 'P1', 2).status).toBe('planning');
+        });
+
+        it('never promotes a planning plan to ready', () => {
+          const planning = { periodStartedAt: 'P1', plan: { Research: 5 }, status: 'planning' };
+          expect(periodState(planning, 'P1', 2).status).toBe('planning');
+        });
+
+        it('treats a numerically-identical stored value as unchanged', () => {
+          // clampPlan normalizes types; only a real reduction reopens the plan.
+          const out = periodState(locked({ Research: '2' }), 'P1', 5);
+          expect(out.status).toBe('ready');
+          expect(out.clamped).toBe(false);
+        });
+
+        it('omitting the budget returns the stored plan verbatim', () => {
+          const out = periodState(locked({ Research: 5 }), 'P1');
+          expect(out.plan).toEqual({ Research: 5 });
+          expect(out.status).toBe('ready');
+          expect(out.clamped).toBe(false);
+        });
       });
     });
 
@@ -334,6 +386,33 @@ describe('downtimeUtils', () => {
         expect(next.plan).toEqual({ Crafting: 2 });
         expect(next.status).toBe('ready');
         expect(next.ledger).toHaveLength(2);
+      });
+
+      // #1624: the budget is applied on both sides of the write.
+      describe('budget scoping', () => {
+        it('clamps a plan carried forward from the base', () => {
+          const planned = { periodStartedAt: 'P1', plan: { Research: 5 }, status: 'ready' };
+          const next = stampPeriod(planned, 'P1', { status: 'ready' }, 2);
+          expect(next.plan).toEqual({ Research: 2 });
+          expect(next.ledger).toHaveLength(2);
+        });
+
+        it('clamps an over-budget plan supplied by the patch', () => {
+          const next = stampPeriod(null, 'P1', { plan: { Research: 9 } }, 3);
+          expect(next.plan).toEqual({ Research: 3 });
+        });
+
+        it('never writes `clamped` into the stored value', () => {
+          const planned = { periodStartedAt: 'P1', plan: { Research: 5 }, status: 'ready' };
+          expect(stampPeriod(planned, 'P1', {}, 2)).not.toHaveProperty('clamped');
+        });
+
+        it('an explicit ready patch re-locks the clamped plan, not the old one', () => {
+          const planned = { periodStartedAt: 'P1', plan: { Research: 5 }, status: 'ready' };
+          const next = stampPeriod(planned, 'P1', { status: 'ready' }, 2);
+          expect(next.status).toBe('ready');
+          expect(next.plan).toEqual({ Research: 2 });
+        });
       });
     });
   });

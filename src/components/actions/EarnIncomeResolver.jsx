@@ -53,7 +53,9 @@ const EarnIncomeResolver = ({ character }) => {
   const [total, setTotal] = useState('');
 
   const startedAt = block?.startedAt;
-  const { ledger } = periodState(downtime, startedAt);
+  // Budget-scoped: a plan left over-sized by a shrunk block must not hand out
+  // extra Earn Income rolls (#1624).
+  const { ledger } = periodState(downtime, startedAt, block?.days);
   const committedRolls = getRollsForActivity(ledger, 'Earn Income');
 
   if (!block?.active || committedRolls === 0) return null;

@@ -91,6 +91,27 @@ describe('useDowntimePartyReady', () => {
     expect(result.current.readyCount).toBe(0);
   });
 
+  // #1624: the GM shrinking an open block must not let the auto-advance close
+  // the period on plans that were sized against the bigger one.
+  it('does not count a lock-in whose plan exceeds the block budget', () => {
+    const { Wrapper } = makeWrapper(chars, {
+      a_downtime: ready({ plan: { Research: 5 } }),
+      b_downtime: ready({ plan: { Research: 2 } }),
+      c_downtime: ready({ plan: { Research: 2 } }),
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(2, PERIOD), { wrapper: Wrapper });
+    expect(result.current.readyCount).toBe(2);
+    expect(result.current.allReady).toBe(false);
+  });
+
+  it('still counts a lock-in that exactly fills the block budget', () => {
+    const { Wrapper } = makeWrapper([{ id: 'a' }], {
+      a_downtime: ready({ plan: { Research: 1, Crafting: 1 } }),
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(2, PERIOD), { wrapper: Wrapper });
+    expect(result.current.readyCount).toBe(1);
+  });
+
   it('handles null state gracefully', () => {
     const { Wrapper } = makeWrapper(chars, { a_downtime: null });
     const { result } = renderHook(() => useDowntimePartyReady(3, PERIOD), { wrapper: Wrapper });

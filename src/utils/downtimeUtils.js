@@ -12,6 +12,18 @@
 // reads as empty (a lazy, declarative reset). All writers must re-stamp via
 // stampPeriod.
 //
+// Budget scoping (#1624): the block's day count can SHRINK under plans that were
+// sized against a bigger one (the GM's Update button, a relay push, a seeded
+// block). periodState/stampPeriod therefore take an optional `budget` — the
+// block's current day count — and every reader that has the block in hand passes
+// it. The plan comes back clamped to that budget, and a plan the clamp actually
+// changed drops out of 'ready' (it is no longer the schedule its owner sealed),
+// which keeps useDowntimePartyReady from auto-advancing a week nobody agreed to.
+// Same lazy, declarative shape as the period reset above: the guard lives where
+// plans are READ, so it holds no matter who wrote the block. The stored value is
+// only rewritten when its owner next touches the plan — and stampPeriod clamps
+// on the way out, so no write can persist an over-budget plan.
+//
 // Allocation model (Party Ledger): `plan` is the source of truth —
 //   { [activityName]: days }, e.g. { Research: 3, 'Earn Income': 2 }.
 // `status` is 'planning' | 'ready' (explicit lock-in); `paired` is a
@@ -74,18 +86,38 @@ export function clampPlan(plan, budget) {
   return out;
 }
 
+// True when two plans allocate the same days to the same activities. Numeric
+// comparison, so a stored "3" matches clampPlan's normalized 3 — only a real
+// reduction counts as a change.
+function samePlan(a, b) {
+  const keys = Object.keys(a || {});
+  if (keys.length !== Object.keys(b || {}).length) return false;
+  return keys.every((name) => (Number(a[name]) || 0) === (Number((b || {})[name]) || 0));
+}
+
 // Period-scoped view of the stored state. For the active period this returns the
-// full allocation view — { plan, status, paired, selected, ledger } — deriving
-// selected/ledger from the plan when one is present, else falling back to the
-// legacy explicit selected/ledger. A stale (prior-period) or unstamped state
-// reads as empty (the prior period is forgotten).
-export function periodState(downtime, startedAt) {
+// full allocation view — { plan, status, paired, selected, ledger, clamped } —
+// deriving selected/ledger from the plan when one is present, else falling back
+// to the legacy explicit selected/ledger. A stale (prior-period) or unstamped
+// state reads as empty (the prior period is forgotten).
+//
+// `budget` (optional) is the block's current day count; pass it wherever the
+// block is in hand. It clamps the plan and reopens a plan the clamp changed —
+// `clamped` reports that, for readers that want to say so out loud. Omitting it
+// returns the stored plan verbatim.
+export function periodState(downtime, startedAt, budget) {
   if (isCurrentPeriod(downtime, startedAt)) {
-    const plan = downtime.plan || {};
+    const stored = downtime.plan || {};
+    const plan = budget == null ? stored : clampPlan(stored, budget);
+    const clamped = budget != null && !samePlan(stored, plan);
     const hasPlan = Object.keys(plan).length > 0;
+    const status = downtime.status || 'planning';
     return {
       plan,
-      status: downtime.status || 'planning',
+      // A trimmed plan is not the one its owner locked in, so it goes back to
+      // 'planning' until they re-confirm the shorter week.
+      status: clamped && status === 'ready' ? 'planning' : status,
+      clamped,
       paired: downtime.paired || {},
       // craftApplied / trainApplied track the hours already banked into each
       // crafting project / training track this period, so re-locking an
@@ -96,7 +128,10 @@ export function periodState(downtime, startedAt) {
       ledger: hasPlan ? planToLedger(plan) : (downtime.ledger || []),
     };
   }
-  return { plan: {}, status: 'planning', paired: {}, craftApplied: {}, trainApplied: {}, selected: [], ledger: [] };
+  return {
+    plan: {}, status: 'planning', clamped: false, paired: {},
+    craftApplied: {}, trainApplied: {}, selected: [], ledger: [],
+  };
 }
 
 // Builds the next stored value for a write, stamping the active period and
@@ -104,10 +139,14 @@ export function periodState(downtime, startedAt) {
 // When the result carries a plan, selected/ledger are re-derived from it so the
 // stored value stays internally consistent for every reader; legacy writes (no
 // plan) keep their explicit selected/ledger.
-export function stampPeriod(downtime, startedAt, patch) {
-  const base = periodState(downtime, startedAt);
+//
+// `budget` (optional, as periodState) is applied on both sides: the base is read
+// through it, and the merged plan is clamped on the way out, so a write can
+// never persist a plan that no longer fits the block.
+export function stampPeriod(downtime, startedAt, patch, budget) {
+  const base = periodState(downtime, startedAt, budget);
   const merged = { ...base, ...patch };
-  const plan = merged.plan || {};
+  const plan = budget == null ? (merged.plan || {}) : clampPlan(merged.plan || {}, budget);
   const hasPlan = Object.keys(plan).length > 0;
   return {
     periodStartedAt: startedAt ?? null,

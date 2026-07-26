@@ -49,7 +49,10 @@ const DowntimeTab = ({ character, characterColor }) => {
   const hasTellFortune = (charData?.feats || []).some((f) => f.name === 'Tell Fortune');
   const hasShield = (charData?.inventory || []).some((e) => e?.shield);
   const days = block?.active ? block?.days : null;
-  const { selected, ledger, status } = periodState(downtime, block?.startedAt);
+  // `days` doubles as the budget: a plan sized against a bigger block reads
+  // trimmed and unlocked here too, so the completion prompts below can't bank a
+  // day the party no longer has (#1624).
+  const { selected, ledger, status } = periodState(downtime, block?.startedAt, days);
   const planLocked = status === 'ready';
 
   // Per-activity progress derived from the committed ledger.
