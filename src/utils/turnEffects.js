@@ -15,12 +15,41 @@ const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
 };
 
+// `undefined` for "no local copy", so an absent entry is distinguishable from a
+// stored `null` — same absent/present contract the session cache uses.
 const readLocal = (key) => {
-  try { return JSON.parse(window.localStorage.getItem(key)) || []; } catch { return []; }
+  try {
+    const item = window.localStorage.getItem(key);
+    return item === null ? undefined : JSON.parse(item);
+  } catch { return undefined; }
 };
 
-const readLocalObj = (key) => {
-  try { return JSON.parse(window.localStorage.getItem(key)); } catch { return null; }
+/**
+ * Read a synced per-character value the way the rest of the app does (#1649):
+ * the session cache is the authority, localStorage is only a fallback.
+ *
+ * The sweep used to read localStorage alone, and a value that merely ARRIVED on
+ * this client never gets there: useSyncedState's computeInitial takes it from
+ * the session store during render, and the writeLocal only happens on the
+ * subscribe / gap-read path and on sendUpdate. So a client that received a
+ * grant, effect or playing flag held it in the session cache and in React state
+ * but not in localStorage — and the sweep looked in the one place it wasn't,
+ * silently expiring nothing until some client that had WRITTEN the entry
+ * advanced a turn.
+ *
+ * The fallback still matters: with no SessionProvider (NOOP_SESSION) or in the
+ * offline sandbox — where sendUpdate returns before touching the cache but a
+ * direct writeLocal caller already hit storage — localStorage is all there is.
+ */
+const readThrough = (getState, charId, stateType) => {
+  const cached = getState(charId, stateType);
+  if (cached !== undefined) return cached;
+  return readLocal(syncKey(stateType, charId));
+};
+
+const readThroughList = (getState, charId, stateType) => {
+  const value = readThrough(getState, charId, stateType);
+  return Array.isArray(value) ? value : [];
 };
 
 /**
@@ -30,16 +59,28 @@ const readLocalObj = (key) => {
  *
  * @param {Array}    order        - encounter.order entries
  * @param {Array}    boundaries   - from boundariesCrossedBy / boundariesBetween
+ * @param {Function} getState     - (charId, key) => value — REQUIRED, see below
  * @param {Function} sendUpdate   - (charId, key, value) => void
  * @param {Function} appendLog    - ({ type, text }) => void
  * @param {Array}    effectCatalog- DO-backed effect catalog (for display names)
  */
-export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, appendLog, effectCatalog }) {
+export function sweepExpiredOnBoundaries({ order, boundaries, getState, sendUpdate, appendLog, effectCatalog }) {
+  // Hard requirement, not an optional upgrade. Falling back to localStorage when
+  // no reader is supplied is precisely bug #1649, and its failure mode is a
+  // silent no-op — the sweep reads an empty list and expires nothing, which no
+  // caller would notice. Throwing makes a caller that forgets `getState` fail
+  // immediately and unmistakably instead of half-working. Both real call sites
+  // already hold it from useSession, alongside the `sendUpdate` they pass, and
+  // applyTurnStartFastHealing below has taken the same pair all along.
+  if (typeof getState !== 'function') {
+    throw new TypeError('sweepExpiredOnBoundaries requires a getState reader (see #1649)');
+  }
+
   for (const entry of order || []) {
     if (entry.kind !== 'pc' || !entry.charId) continue;
 
     // --- effects sweep ---
-    const effects = readLocal(syncKey(APP.EFFECTS, entry.charId));
+    const effects = readThroughList(getState, entry.charId, APP.EFFECTS);
     const keptFx = effects.filter((e) => !isExpired(e.expireAt, boundaries));
     if (keptFx.length !== effects.length) {
       writeLocal(syncKey(APP.EFFECTS, entry.charId), keptFx);
@@ -55,7 +96,7 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
     // --- playing sweep (#935) ---
     // A Composition cast marks the caster playing through the end of their
     // next turn; without a re-up the state lapses on that boundary.
-    const playing = readLocalObj(syncKey(APP.PLAYING, entry.charId));
+    const playing = readThrough(getState, entry.charId, APP.PLAYING);
     if (playing?.active && isExpired(playing.expireAt, boundaries)) {
       const idle = { active: false, ts: Date.now() };
       writeLocal(syncKey(APP.PLAYING, entry.charId), idle);
@@ -64,7 +105,7 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
     }
 
     // --- granted actions sweep ---
-    const grants = readLocal(syncKey(APP.GRANTEDACTIONS, entry.charId));
+    const grants = readThroughList(getState, entry.charId, APP.GRANTEDACTIONS);
     const keptGr = grants.filter((g) => !isExpired(g.expireAt, boundaries));
     if (keptGr.length !== grants.length) {
       writeLocal(syncKey(APP.GRANTEDACTIONS, entry.charId), keptGr);
