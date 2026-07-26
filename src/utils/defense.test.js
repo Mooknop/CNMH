@@ -1,4 +1,4 @@
-import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from './defense';
+import { defenseDC, DEFENSE_LABELS, DEFENSE_NAMES, DEFENSE_OPTIONS } from './defense';
 
 describe('defenseDC', () => {
   const defenses = {
@@ -56,6 +56,20 @@ describe('DEFENSE_LABELS', () => {
     expect(DEFENSE_LABELS.reflex).toBe('Reflex DC');
     expect(DEFENSE_LABELS.will).toBe('Will DC');
     expect(DEFENSE_LABELS.perception).toBe('Perception DC');
+  });
+});
+
+describe('DEFENSE_NAMES', () => {
+  test('names every defense type without the "DC" suffix (#1610)', () => {
+    expect(DEFENSE_NAMES.ac).toBe('AC');
+    expect(DEFENSE_NAMES.fortitude).toBe('Fortitude');
+    expect(DEFENSE_NAMES.reflex).toBe('Reflex');
+    expect(DEFENSE_NAMES.will).toBe('Will');
+    expect(DEFENSE_NAMES.perception).toBe('Perception');
+  });
+
+  test('covers the same keys as DEFENSE_LABELS', () => {
+    expect(Object.keys(DEFENSE_NAMES)).toEqual(Object.keys(DEFENSE_LABELS));
   });
 });
 

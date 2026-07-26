@@ -11,12 +11,24 @@ export const DEFENSE_OPTIONS = [
   { value: 'perception', label: 'Perception DC' },
 ];
 
+// DC-flavoured wording — for pickers and standalone labels that name the
+// target number itself ("Reflex DC 27").
 export const DEFENSE_LABELS = {
   ac:         'AC',
   fortitude:  'Fortitude DC',
   reflex:     'Reflex DC',
   will:       'Will DC',
   perception: 'Perception DC',
+};
+
+// Bare defense names — for prose that supplies its own "DC" (#1610: reusing
+// DEFENSE_LABELS there doubles up, "Reflex DC DC 60").
+export const DEFENSE_NAMES = {
+  ac:         'AC',
+  fortitude:  'Fortitude',
+  reflex:     'Reflex',
+  will:       'Will',
+  perception: 'Perception',
 };
 
 /**
