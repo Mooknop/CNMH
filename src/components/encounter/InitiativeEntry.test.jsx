@@ -128,7 +128,7 @@ describe('InitiativeEntry', () => {
     expect(screen.getByText(/\+1 circumstance bonus to initiative/)).toBeInTheDocument();
   });
 
-  it('does not show Scout reminder when the character is the scout', () => {
+  it('shows the Scout reminder to the scout themselves (#1628)', () => {
     // Mount-only seed of the scout bonus key, as in the previous test.
     const ScoutSetter = ({ value }) => {
       const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
@@ -152,7 +152,7 @@ describe('InitiativeEntry', () => {
         <InitiativeEntry charId="Pellias" />
       </>
     );
-    expect(screen.queryByText(/\+1 circumstance bonus to initiative/)).not.toBeInTheDocument();
+    expect(screen.getByText(/\+1 circumstance bonus to initiative/)).toBeInTheDocument();
   });
 
   it('shows no Harmless Bystander toggle for a character without the feat', () => {
@@ -326,6 +326,17 @@ describe('InitiativeEntry — Foundry-linked', () => {
 
   it('folds the Scout +1 circumstance bonus into the total', () => {
     renderFoundry(<ScoutSetter value="someone-else" />);
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    expect(screen.getByLabelText('initiative-breakdown'))
+      .toHaveTextContent('d20 15 + Perception +7 + Scout +1 = 23');
+
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+    expect(captured.roll).toMatchObject({ mod: 8, total: 23, skill: 'perception' });
+  });
+
+  it('folds the Scout +1 in for the scout themselves too (#1628)', () => {
+    // Same as above, but the id on the key is this entry's own character.
+    renderFoundry(<ScoutSetter value="Vask" />);
     fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 15 + Perception +7 + Scout +1 = 23');

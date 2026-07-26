@@ -50,7 +50,9 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
 
   const hasBystander = !!character && hasFeat(character, 'Harmless Bystander');
   const foundryLinked = !!encounter.foundryCombatId;
-  const scoutActive = !!scoutBonusCharId && scoutBonusCharId !== charId;
+  // Scout gives the *entire group* the +1 circumstance bonus — the scout
+  // included — so the id on the key marks who is scouting, not who to skip. (#1628)
+  const scoutActive = !!scoutBonusCharId;
 
   const scoutReminder = scoutActive ? (
     <div className="initiative-entry-scout">
