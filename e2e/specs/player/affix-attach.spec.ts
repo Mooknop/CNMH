@@ -322,17 +322,16 @@ test.describe('Affix & attach (write side)', () => {
     ).toBeVisible();
   });
 
-  // PRODUCT BUG #1657 — the ruling is "an item carries ONE talisman at a time";
-  // affixing to an occupied host must be refused, and the escape hatch is the
-  // unaffix activity (covered live in the next box). The code does not enforce
-  // it anywhere: `validAffixHosts` (affix.js) filters on "not itself" +
-  // `hostMatchesType` only, `affix()` writes `{ ...overlay, [tUid]: hostUid }`
-  // unconditionally, and `affixedTalismansByHost` returns an ARRAY per host, so
-  // the data model treats a multi-talisman host as ordinary. All three callers
-  // (ItemModal, GmGearModal, take10Activities) take `validAffixHosts` at face
-  // value. Skipped, not deleted: this is the assertion to un-skip once #1657
-  // lands. Do NOT weaken it to match today's behaviour.
-  test.skip('re-affix: a host that already carries a talisman is not offered again (#1657)', async ({
+  // #1657 (FIXED) — the ruling is "an item carries ONE talisman at a time";
+  // affixing to an occupied host is refused, and the escape hatch is the unaffix
+  // activity (covered live in the next box). The rule landed in
+  // `validAffixHosts` (affix.js), which now takes the affix overlay as a third
+  // argument and drops any host already carrying another talisman — so all three
+  // pickers (ItemModal, GmGearModal, take10Activities) inherit it from the one
+  // place. `affix()` re-checks it so the invariant cannot be bypassed
+  // programmatically. This box was shipped as a documented `test.skip` alongside
+  // the bug report and un-skipped unchanged when the fix landed.
+  test('re-affix: a host that already carries a talisman is not offered again (#1657)', async ({
     page,
     seed,
   }) => {
@@ -444,9 +443,13 @@ test.describe('Affix & attach (write side)', () => {
     const panel = attachPanel(page);
     await expect(panel).toBeVisible({ timeout: 10_000 });
     // The occupied shield IS still offered — `validAttachHosts` does not filter
-    // on occupancy either. The difference from the talisman side is what the
-    // writer does with it: `attach()` deletes every binding already pointing at
-    // that shield before adding the new one ("at most ONE attachment per shield").
+    // on occupancy, and deliberately so: the two sibling mechanisms share the
+    // one-per-host cap but resolve a collision differently. An attachment is
+    // reusable and never consumed, so `attach()` DISPLACES the incumbent (it
+    // deletes every binding already pointing at that shield before adding the
+    // new one) and the displaced attachment goes back in the bag. A talisman is
+    // consumed on activation, so the #1657 ruling REFUSES instead — see the
+    // re-affix box above, where the occupied host is not offered at all.
     await hostOption(panel, SHIELD.name).click();
 
     await session.expectSent(
