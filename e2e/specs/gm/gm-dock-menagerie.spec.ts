@@ -13,17 +13,21 @@
  *
  * Hydration gate: never assert dock state before an encounter-only element is
  * on screen. On a PC turn that's the deck's "End turn" button; on an
- * enemy/ally turn there is none, so the gate is the enemy pane itself.
- *
- * The dock-setup helpers at the top of this file are deliberately local —
- * `gm-dock-console.spec.ts` (landing in parallel) grows near-identical ones,
- * and they are a factor-out candidate for `e2e/helpers/` once both have landed.
+ * enemy/ally turn there is none, so the gate is the enemy pane itself — both
+ * live in helpers/dock.ts (#1612), with the reasoning.
  */
 
 import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import { encounterState, pcEntry, enemyEntry } from '../../helpers/encounter';
+import {
+  foeEntry,
+  gotoFoeKitDock,
+  gotoNonPcDock,
+  gotoPcTurnDock,
+  pcTurnSeed,
+} from '../../helpers/dock';
 
 const FIGHTER_ID = 'e2e-fighter';
 const FIGHTER_NAME = 'E2E Fighter';
@@ -51,42 +55,21 @@ const CHARACTERS = [
   { id: ROGUE_ID, name: ROGUE_NAME, level: 5, class: 'Rogue' },
 ];
 
-// Round 1 / index 0 with the fighter acting. The turnToken MUST match that
-// position (#1131): TurnTrackerPanel treats a mismatched token as the start of
-// the PC's turn and sweeps — which resets turnstate and zeroes minion granted
-// -action pools, i.e. exactly the state a menagerie spec is asserting.
-const TURN_TOKEN = '1:0';
-
-const fighterTurn = (extraOrder: Array<Record<string, unknown>> = []) =>
-  encounterState({
-    phase: 'in-progress',
-    round: 1,
-    currentTurnIndex: 0,
+// Round 1 / index 0 with the fighter acting; `extraOrder` appends the extra
+// combatants a given test needs behind the party. The shared builder derives
+// the fighter's turnToken from `round` — which matters here more than most
+// (#1131): a mismatched token makes TurnTrackerPanel treat the mount as the
+// start of the PC's turn and sweep, zeroing exactly the minion granted-action
+// pools a menagerie spec is asserting.
+const fighterTurnSeed = (extraOrder: Array<Record<string, unknown>> = []) =>
+  pcTurnSeed({
+    armedPcIds: [FIGHTER_ID],
     order: [
       pcEntry(FIGHTER_ID, FIGHTER_NAME, 20),
       pcEntry(CLERIC_ID, CLERIC_NAME, 15),
       ...extraOrder,
     ],
   });
-
-const pcTurnSeed = (extra: Record<string, unknown> = {}) => ({
-  cnmh_encounter_global: fighterTurn(),
-  [`cnmh_turnstate_${FIGHTER_ID}`]: readyTurnState(TURN_TOKEN),
-  ...extra,
-});
-
-// Gate on the acting PC's deck: "End turn" only exists once the encounter has
-// hydrated AND resolved to a PC turn.
-const gotoPcTurnDock = async (page: Page) => {
-  await page.goto('/gm/dock');
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
-};
-
-// Gate on the non-PC pane: an enemy/ally turn has no End turn button.
-const gotoNonPcDock = async (page: Page) => {
-  await page.goto('/gm/dock');
-  await expect(page.getByTestId('dock-enemy-pane')).toBeVisible({ timeout: 15_000 });
-};
 
 const orderStrip = (page: Page) => page.getByRole('group', { name: 'Stage a character' });
 const menagerie = (page: Page) => page.getByTestId('dock-menagerie');
@@ -102,9 +85,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
     // A Foundry combatant the bridge couldn't auto-match: kind 'enemy' with a
     // foundryActorId and nothing in cnmh_actormap_global for it.
     const token = { ...enemyEntry('E2E Token 7', 12), foundryActorId: 'a-e2e-token-7' };
-    const session = await mockSession(page, {
-      seed: pcTurnSeed({ cnmh_encounter_global: fighterTurn([token]) }),
-    });
+    const session = await mockSession(page, { seed: fighterTurnSeed([token]) });
     await gotoPcTurnDock(page);
 
     const row = page.getByTestId(`dock-order-${token.entryId}`);
@@ -135,9 +116,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
 
   test('"Not a PC" stores the null sentinel so the actor map never re-matches the slot', async ({ page }) => {
     const token = { ...enemyEntry('E2E Token 8', 11), foundryActorId: 'a-e2e-token-8' };
-    const session = await mockSession(page, {
-      seed: pcTurnSeed({ cnmh_encounter_global: fighterTurn([token]) }),
-    });
+    const session = await mockSession(page, { seed: fighterTurnSeed([token]) });
     await gotoPcTurnDock(page);
 
     const row = page.getByTestId(`dock-order-${token.entryId}`);
@@ -161,7 +140,8 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
   // ── Menagerie: summons (#1552) ──────────────────────────────────────────
   test('the menagerie summons a pool creature onto a sustain, and the order strip grows its row', async ({ page }) => {
     const session = await mockSession(page, {
-      seed: pcTurnSeed({
+      seed: {
+        ...fighterTurnSeed(),
         // The bridge's Foundry "Summons" folder mirror.
         cnmh_summonpool_global: [
           {
@@ -178,7 +158,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
         [`cnmh_sustains_${CLERIC_ID}`]: [
           { id: 'e2e-sustain-1', spellName: 'E2E Summon Animal', castRank: 3 },
         ],
-      }),
+      },
     });
     await gotoPcTurnDock(page);
 
@@ -227,7 +207,8 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
   // ── Menagerie: linked minions (#1552) ───────────────────────────────────
   test('a bridge-linked minion spawns onto the map from the menagerie', async ({ page }) => {
     const session = await mockSession(page, {
-      seed: pcTurnSeed({
+      seed: {
+        ...fighterTurnSeed(),
         // Read-only bridge map: which Foundry actor is whose companion/familiar.
         cnmh_minionactors_global: {
           [`${CLERIC_ID}-familiar`]: {
@@ -238,7 +219,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
             onScene: false,
           },
         },
-      }),
+      },
     });
     await gotoPcTurnDock(page);
 
@@ -270,7 +251,11 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
   // ── Disposition-aware panes (#1552) ─────────────────────────────────────
   test('a FRIENDLY combatant gets the ally pane and the ally-toned strip row; a hostile one does not', async ({ page }) => {
     // Both are kind:'enemy' with no charId — disposition is the ONLY thing
-    // telling a summoned ally from a real foe (bridge protocol 9).
+    // telling a summoned ally from a real foe (bridge protocol 9). Written out
+    // rather than built with helpers/dock.ts's `foeEntry`: the point of the
+    // test is the one field neither of them would get from a foe builder, and
+    // giving them defenses and a full stat block would only add noise the
+    // assertions then have to ignore.
     const wisp = {
       ...enemyEntry('E2E Wisp', 18),
       disposition: 1,
@@ -294,13 +279,13 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
         }),
       },
     });
-    await gotoNonPcDock(page);
+    const pane = await gotoNonPcDock(page);
 
     // Ally tone: the pane says "Ally turn", not "Enemy turn", and the advance
     // control speaks the same language.
     await expect(page.getByRole('region', { name: 'Ally turn: E2E Wisp' })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Enemy turn: E2E Wisp' })).toHaveCount(0);
-    await expect(page.getByTestId('dock-enemy-pane')).toContainText('Ally turn');
+    await expect(pane).toContainText('Ally turn');
     await expect(page.getByRole('button', { name: "End E2E Wisp's turn" })).toBeVisible();
 
     // The strip tones the two rows differently off the same disposition field.
@@ -314,7 +299,8 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
   test('the challenge tracker aggregates player VP contributions live', async ({ page }) => {
     const CHALLENGE_ID = 'e2e-ch-barricade';
     const session = await mockSession(page, {
-      seed: pcTurnSeed({
+      seed: {
+        ...fighterTurnSeed(),
         cnmh_vpchallenge_global: {
           [CHALLENGE_ID]: {
             id: CHALLENGE_ID,
@@ -333,7 +319,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
             { round: 1, skill: 'athletics', d20: 18, total: 27, degree: 'criticalSuccess', vp: 2, at: 1 },
           ],
         },
-      }),
+      },
     });
     await gotoPcTurnDock(page);
 
@@ -371,7 +357,7 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
 
   // ── Free-form trigger console (#1553) ───────────────────────────────────
   test('the free-form trigger console fires an ad-hoc event at one named PC only', async ({ page }) => {
-    const session = await mockSession(page, { seed: pcTurnSeed() });
+    const session = await mockSession(page, { seed: fighterTurnSeed() });
     await gotoPcTurnDock(page);
 
     const console_ = page.getByRole('complementary', { name: 'GM console' });
@@ -406,14 +392,15 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
   // ── Broadcast console (#1567) ───────────────────────────────────────────
   test('a broadcast lands in the shared session log with its kind dot', async ({ page }) => {
     const session = await mockSession(page, {
-      seed: pcTurnSeed({
+      seed: {
+        ...fighterTurnSeed(),
         // Two pre-existing broadcasts of different kinds, to prove the dot is
         // keyed off the entry type rather than being one flat colour.
         cnmh_sessionlog_global: [
           { id: 'slog-e2e-2', ts: Date.parse('2026-07-24T10:05:00Z'), type: 'recall', text: 'E2E recall entry' },
           { id: 'slog-e2e-1', ts: Date.parse('2026-07-24T10:00:00Z'), type: 'gm', text: 'E2E gm entry' },
         ],
-      }),
+      },
     });
     await gotoPcTurnDock(page);
 
@@ -454,13 +441,13 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
     // creatureKey (not entryId) is what rkKeyFor picks, so the reveal is shared
     // by every ghoul in the campaign. Entries WITHOUT a creatureKey fall back
     // to entryId — an ephemeral record that encounter-end pruning drops.
-    const ghoul = {
-      ...enemyEntry('E2E Ghoul', 12),
-      foundryActorId: 'a-e2e-ghoul',
+    const ghoul = foeEntry({
+      name: 'E2E Ghoul',
+      initiative: 12,
+      actorId: 'a-e2e-ghoul',
       creatureKey: 'e2e-ghoul',
-      defenses: { ac: 16, saves: { fortitude: 6, reflex: 8, will: 4 }, immunities: [], resistances: [], weaknesses: [] },
-      bestiary: { hp: { current: 9, max: 20 }, level: 1, traits: ['undead'], img: null, creatureKey: 'e2e-ghoul' },
-    };
+      hpCurrent: 9,
+    });
     const session = await mockSession(page, {
       seed: {
         cnmh_encounter_global: encounterState({
@@ -492,9 +479,10 @@ test.describe('Dock menagerie, actor map, and broadcast console', () => {
         },
       },
     });
-    await gotoNonPcDock(page);
+    // Kit gate, not just the pane: the tab strip renders only once the foekit
+    // for this entryId has landed, and the Abilities tab is one of its tabs.
+    const pane = await gotoFoeKitDock(page);
 
-    const pane = page.getByTestId('dock-enemy-pane');
     await pane.getByRole('tab', { name: /Abilities/ }).click();
     const row = pane.getByTestId('dock-enemy-ability').filter({ hasText: 'E2E Paralysis' });
     await expect(row).toBeVisible();

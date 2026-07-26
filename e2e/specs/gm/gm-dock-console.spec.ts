@@ -28,12 +28,21 @@
  * than derived from a seeded stat block, so the arithmetic can't drift.
  *
  * Hydration gates, as everywhere else on the dock: "End turn" is the
- * encounter-only element on a PC turn, the enemy pane itself on an enemy turn.
+ * encounter-only element on a PC turn, the enemy pane itself on an enemy turn —
+ * both live in helpers/dock.ts, along with the reason no `bridgeHello` is
+ * seeded here (it would arm the strike rail's 'Damage: Jaws' button and make
+ * this file's `Damage` locator ambiguous).
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import { encounterState, pcEntry, enemyEntry } from '../../helpers/encounter';
+import {
+  foeEntry,
+  gotoNonPcDock,
+  gotoPcTurnDock,
+  pcTurnSeed as dockPcTurnSeed,
+} from '../../helpers/dock';
 
 const FIGHTER_ID = 'e2e-fighter';
 const FIGHTER_NAME = 'E2E Fighter';
@@ -47,62 +56,38 @@ const CHARACTERS = [
 
 // The acting foe, in the bridge's enriched order-entry shape (#1531) so the
 // pane has vitals and defenses to render.
-const ghoul = (hpCurrent = 9) => ({
-  ...enemyEntry('E2E Ghoul', 10),
-  foundryActorId: 'a-e2e-ghoul',
-  creatureKey: 'e2e-ghoul',
-  defenses: {
-    ac: 16,
-    saves: { fortitude: 6, reflex: 8, will: 4 },
-    immunities: [],
-    resistances: [],
-    weaknesses: [],
-  },
-  bestiary: {
-    img: null,
-    level: 1,
-    rarity: 'common',
-    traits: ['medium', 'undead'],
-    perception: 7,
-    speed: 30,
-    hp: { current: hpCurrent, max: 20 },
-    description: '',
+const ghoul = (hpCurrent = 9) =>
+  foeEntry({
+    name: 'E2E Ghoul',
+    initiative: 10,
+    actorId: 'a-e2e-ghoul',
     creatureKey: 'e2e-ghoul',
-  },
-});
+    hpCurrent,
+  });
 
 const GHOUL_ENTRY_ID = ghoul().entryId;
 const ZOMBIE = enemyEntry('E2E Zombie', 8);
 
-// ── Local dock-setup helpers ─────────────────────────────────────────────────
-// Deliberately local to this spec: two sibling GM specs are in flight against
-// the shared e2e/helpers this run, so nothing here touches them. Both are
-// factor-out candidates for e2e/helpers/encounter.ts once the dust settles.
-
 // The fighter is acting (index 0); the cleric and two foes sit behind them.
-// `turnToken` matches round:index so TurnTrackerPanel's turn-begin sweep sees
-// a turn already in progress and leaves the seeded turnstate alone.
-const pcTurnSeed = (extra: Record<string, unknown> = {}) => ({
-  cnmh_encounter_global: {
-    ...encounterState({
-      phase: 'in-progress',
-      round: 2,
-      currentTurnIndex: 0,
-      order: [
-        pcEntry(FIGHTER_ID, FIGHTER_NAME, 20),
-        pcEntry(CLERIC_ID, CLERIC_NAME, 15),
-        ghoul(),
-        ZOMBIE,
-      ],
-    }),
-    ...extra,
-  },
-  [`cnmh_turnstate_${FIGHTER_ID}`]: readyTurnState('2:0'),
-  [`cnmh_turnstate_${CLERIC_ID}`]: readyTurnState('2:0'),
-});
+// `encounter` merges into the encounter record (saveRequests); the shared
+// builder derives the turnToken from `round` so the turn-begin sweep leaves the
+// seeded turnstate alone (helpers/dock.ts).
+const pcTurnSeed = (encounter: Record<string, unknown> = {}) =>
+  dockPcTurnSeed({
+    round: 2,
+    armedPcIds: [FIGHTER_ID, CLERIC_ID],
+    order: [
+      pcEntry(FIGHTER_ID, FIGHTER_NAME, 20),
+      pcEntry(CLERIC_ID, CLERIC_NAME, 15),
+      ghoul(),
+      ZOMBIE,
+    ],
+    encounter,
+  });
 
 // The ghoul is acting (index 2) — the enemy pane, with its condition editor
 // and (Foundry-gated, and mockSession reports Foundry present) vitals controls.
+// Not a shared builder: which index is acting is the whole point of the seed.
 const enemyTurnEncounter = (hpCurrent = 9) =>
   encounterState({
     phase: 'in-progress',
@@ -115,17 +100,9 @@ const enemyTurnEncounter = (hpCurrent = 9) =>
     ],
   });
 
-const gotoPcTurn = async (page: import('@playwright/test').Page) => {
-  await page.goto('/gm/dock');
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
-};
-
-const gotoEnemyTurn = async (page: import('@playwright/test').Page) => {
-  await page.goto('/gm/dock');
-  await expect(page.getByTestId('dock-enemy-pane')).toBeVisible({ timeout: 15_000 });
-};
-
 // One pending save request in the shape makeSaveRequest stamps (encounterUtils).
+// Local by design: this spec is the only consumer, so it stays here until a
+// second one turns up (the rule that kept mapBridge.ts out of #1606).
 const saveRequest = (id: string, dc: number, target: { entryId: string; name: string }) => ({
   id,
   ts: Date.now(),
@@ -147,7 +124,7 @@ test.describe('GM dock console', () => {
 
   test('Request Save pushes the player save prompt to every PC in the order', async ({ page }) => {
     const session = await mockSession(page, { seed: pcTurnSeed() });
-    await gotoPcTurn(page);
+    await gotoPcTurnDock(page);
 
     const gmConsole = page.getByRole('complementary', { name: 'GM console' });
     await expect(gmConsole.getByRole('heading', { name: 'Request Save' })).toBeVisible();
@@ -168,7 +145,7 @@ test.describe('GM dock console', () => {
 
   test('Request Save aimed at one PC leaves the other alone', async ({ page }) => {
     const session = await mockSession(page, { seed: pcTurnSeed() });
-    await gotoPcTurn(page);
+    await gotoPcTurnDock(page);
 
     const gmConsole = page.getByRole('complementary', { name: 'GM console' });
     await gmConsole.getByLabel('save DC').fill('18');
@@ -193,7 +170,7 @@ test.describe('GM dock console', () => {
         ],
       }),
     });
-    await gotoPcTurn(page);
+    await gotoPcTurnDock(page);
 
     const gmConsole = page.getByRole('complementary', { name: 'GM console' });
     await expect(gmConsole.getByRole('heading', { name: 'Requested Saves' })).toBeVisible();
@@ -243,9 +220,8 @@ test.describe('GM dock console', () => {
     const session = await mockSession(page, {
       seed: { cnmh_encounter_global: enemyTurnEncounter() },
     });
-    await gotoEnemyTurn(page);
+    const pane = await gotoNonPcDock(page);
 
-    const pane = page.getByTestId('dock-enemy-pane');
     await pane.getByLabel('Add condition').selectOption('frightened');
     // The value input only exists for valued conditions — its appearance is
     // itself the assertion that the catalog lookup fired.
@@ -284,9 +260,8 @@ test.describe('GM dock console', () => {
     const session = await mockSession(page, {
       seed: { cnmh_encounter_global: enemyTurnEncounter(9) },
     });
-    await gotoEnemyTurn(page);
+    const pane = await gotoNonPcDock(page);
 
-    const pane = page.getByTestId('dock-enemy-pane');
     await expect(pane.getByTestId('dock-enemy-hp')).toContainText('9/20');
 
     const vitals = pane.getByTestId('dock-enemy-gmctl');
@@ -334,11 +309,10 @@ test.describe('GM dock console', () => {
         },
       },
     });
-    await gotoEnemyTurn(page);
-
     // Scope to the pane: DockOrderStrip renders its own PersistentChip for the
     // same entry, so an unscoped locator would be ambiguous.
-    const pane = page.getByTestId('dock-enemy-pane');
+    const pane = await gotoNonPcDock(page);
+
     const chip = pane.getByRole('button', { name: 'E2E Ghoul: 1d6 persistent fire' });
     await expect(chip).toBeVisible();
     await chip.click();
@@ -357,9 +331,9 @@ test.describe('GM dock console', () => {
     const session = await mockSession(page, {
       seed: { cnmh_encounter_global: enemyTurnEncounter() },
     });
-    await gotoEnemyTurn(page);
+    const pane = await gotoNonPcDock(page);
 
-    const vitals = page.getByTestId('dock-enemy-pane').getByTestId('dock-enemy-gmctl');
+    const vitals = pane.getByTestId('dock-enemy-gmctl');
     // Exact: "Foe save" would also match the "Foe save DC" input.
     await vitals.getByLabel('Foe save', { exact: true }).selectOption('fortitude');
     await vitals.getByLabel('Foe save DC').fill('60');

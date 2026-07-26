@@ -22,16 +22,15 @@
  *
  * GM surface: `specs/gm/**` runs on the chromium project only.
  *
- * NOTE for whoever factors these files together: `gotoEnemyTurn` + the seed
- * builders below are local on purpose — the two sibling #1589 dock specs were
- * written in parallel under the same "touch no shared file" rule, so a shared
- * `helpers/dock.ts` is a follow-up, not something any one of us could land.
+ * The turn gate and the enriched foe entry now live in `helpers/dock.ts`
+ * (#1612) — read that file's header for why the enemy-turn gate is two
+ * assertions rather than one.
  */
 
-import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { encounterState, pcEntry, enemyEntry } from '../../helpers/encounter';
+import { foeEntry, gotoFoeKitDock } from '../../helpers/dock';
 // The three per-rail protocol floors and the strike deadline — copies of
 // src/utils/{strikeRelay,castRelay,movement}.js, kept in helpers/bridge.ts
 // because e2e/ never imports from src/ (see that file's header).
@@ -58,30 +57,18 @@ const LIVE_PROTOCOL = ENEMY_MOVE_PROTOCOL;
 
 // The ghoul enriched to the bridge's enemy order-entry shape (#1531): vitals and
 // defenses ride the ENCOUNTER payload, the offensive kit rides cnmh_foekit_global.
-// `creatureKey` is what the RK auto-witness on execution keys off.
-const ghoulEntry = (hpCurrent = GHOUL_HP_MAX) => ({
-  ...enemyEntry(GHOUL_NAME, 10),
-  foundryActorId: GHOUL_ACTOR_ID,
-  creatureKey: 'e2e-ghoul',
-  defenses: {
-    ac: 16,
-    saves: { fortitude: 6, reflex: 8, will: 4 },
-    immunities: [],
-    resistances: [],
-    weaknesses: [],
-  },
-  bestiary: {
-    img: null,
-    level: 1,
-    rarity: 'common',
-    traits: ['medium', 'undead'],
-    perception: 7,
-    speed: 25,
-    hp: { current: hpCurrent, max: GHOUL_HP_MAX },
-    description: '',
+// `creatureKey` is what the RK auto-witness on execution keys off. Speed is
+// overridden because the Move tab reads it out ("1 Stride at 25 ft").
+const ghoulEntry = (hpCurrent = GHOUL_HP_MAX) =>
+  foeEntry({
+    name: GHOUL_NAME,
+    initiative: 10,
+    actorId: GHOUL_ACTOR_ID,
     creatureKey: 'e2e-ghoul',
-  },
-});
+    hpCurrent,
+    hpMax: GHOUL_HP_MAX,
+    bestiary: { speed: 25 },
+  });
 
 // The ghoul acts last, so the dock's "End …'s turn" wraps the pointer to the
 // fighter and ticks the round — the anchor the bridge-absent test leans on.
@@ -172,23 +159,6 @@ const dockSeed = ({
   ...extra,
 });
 
-/**
- * Land on the dock with the ghoul acting, gated on hydration.
- *
- * The enemy pane IS the encounter-only element on an enemy turn — there is no
- * "End turn" button to wait for (the acting combatant isn't a PC), so asserting
- * anything about the rails before this resolves would race the FULL_STATE
- * replay. The Strikes tab is the second gate: it renders only once the foe kit
- * matching THIS entryId has arrived, which is what every button below hangs off.
- */
-const gotoEnemyTurn = async (page: Page) => {
-  await page.goto('/gm/dock');
-  const pane = page.getByTestId('dock-enemy-pane');
-  await expect(pane).toBeVisible({ timeout: 15_000 });
-  await expect(pane.getByRole('tab', { name: /Strikes/ })).toBeVisible();
-  return pane;
-};
-
 /** A well-formed strikedone. `mode` is the bridge's read-out label, not input. */
 const strikeAck = (
   id: string,
@@ -210,7 +180,7 @@ test.describe('Dock enemy action rails', () => {
     page,
   }) => {
     const session = await mockSession(page, { seed: dockSeed() });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
 
     // Default target is "Foundry's" — whatever the GM already has targeted on
     // the canvas — so the first request must carry no `targets` override at all.
@@ -268,7 +238,7 @@ test.describe('Dock enemy action rails', () => {
       session.push('cnmh_strikedone_global', { id: req.id, ok: false, ts: Date.now() });
     });
 
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
     const started = Date.now();
     await pane.getByRole('button', { name: 'Damage: Jaws', exact: true }).click();
 
@@ -293,7 +263,7 @@ test.describe('Dock enemy action rails', () => {
     const session = await mockSession(page, {
       seed: dockSeed({ extra: { cnmh_strikedone_global: stale } }),
     });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
 
     // The hydrated ack is on record and reads as a critical hit, yet the pane
     // shows no result at all before anything is asked.
@@ -329,7 +299,7 @@ test.describe('Dock enemy action rails', () => {
     page,
   }) => {
     const session = await mockSession(page, { seed: dockSeed() });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
 
     await pane.getByRole('tab', { name: /Spells/ }).click();
     const castBtn = pane.getByRole('button', { name: 'Cast: E2E Fear' });
@@ -371,7 +341,7 @@ test.describe('Dock enemy action rails', () => {
       session.push('cnmh_castdone_global', { id: req.id, ok: false, ts: Date.now() });
     });
 
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
     await pane.getByRole('tab', { name: /Spells/ }).click();
     await pane.getByRole('button', { name: 'Cast: E2E Fear' }).click();
 
@@ -404,7 +374,7 @@ test.describe('Dock enemy action rails', () => {
         },
       }),
     });
-    await gotoEnemyTurn(page);
+    await gotoFoeKitDock(page);
 
     // The ghoul's Jaws landed on the fighter and PF2e applied it: the GM client
     // mirrors that into the shared log so the table sees "applied in Foundry".
@@ -445,7 +415,7 @@ test.describe('Dock enemy action rails', () => {
     page,
   }) => {
     const session = await mockSession(page, { seed: dockSeed() });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
     await expect(pane.getByTestId('dock-enemy-hp')).toContainText(`${GHOUL_HP_MAX}/${GHOUL_HP_MAX}`);
 
     // Park on a non-default tab first: foe HP rides entry.bestiary.hp inside the
@@ -487,7 +457,7 @@ test.describe('Dock enemy action rails', () => {
       });
     });
 
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
     await pane.getByRole('tab', { name: 'Move' }).click();
     await pane.getByRole('button', { name: `Move ${GHOUL_NAME}` }).click();
 
@@ -546,7 +516,7 @@ test.describe('Dock enemy action rails', () => {
     // so this isolates presence from protocol: `available` needs both, and with
     // no Foundry peer on the relay none of the rails may arm.
     const session = await mockSession(page, { seed: dockSeed(), foundry: false });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
 
     // The pane is still the GM's full reference card — the MAP ladder just goes
     // back to being text, which is exactly the pre-S3 shape.
@@ -584,7 +554,7 @@ test.describe('Dock enemy action rails', () => {
     // it can actually do. Walking the hello up proves they are genuinely
     // independent gates and not one "dock protocol".
     const session = await mockSession(page, { seed: dockSeed({ protocol: STRIKE_PROTOCOL - 1 }) });
-    const pane = await gotoEnemyTurn(page);
+    const pane = await gotoFoeKitDock(page);
 
     await expect(pane).toContainText('+9 / +4 / -1');
     await expect(pane.getByRole('button', { name: /^Strike: Jaws/ })).toHaveCount(0);
