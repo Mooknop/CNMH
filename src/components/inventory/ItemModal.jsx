@@ -182,7 +182,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // type) via a 10-minute activity; affixing/unaffixing logs to the session log.
   const talisman = isTalisman(item);
   const flatInventory = flattenInventory(charData?.inventory);
-  const affixHosts = talisman ? validAffixHosts(flatInventory, item) : [];
+  // An occupied host is not offered (#1657): one talisman per item, and the way
+  // to free a host is the unaffix activity, which returns the talisman to the bag.
+  const affixHosts = talisman ? validAffixHosts(flatInventory, item, affixed) : [];
   const affixedTo = talisman
     ? flatInventory.find((it) => itemUidOf(it) === affixedHostUid(affixed, itemUidOf(item)))
     : null;

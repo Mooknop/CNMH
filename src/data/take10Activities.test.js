@@ -92,6 +92,25 @@ describe('itemTake10Activities', () => {
     expect(list.some((a) => a.kind === 'talisman')).toBe(false);
   });
 
+  it('drops an occupied host from a talisman\'s targets (#1657)', () => {
+    // Two talismans, two weapons: the first is already on the longsword, so the
+    // second may only be offered the dagger. One talisman per item.
+    const crystal2 = {
+      uid: 't2', name: 'Potency Crystal II', traits: ['Consumable', 'Talisman'],
+      talisman: { affixTo: 'weapon' },
+    };
+    const dagger = { id: 'dagger', name: 'Dagger', strikes: [{ name: 'Dagger' }] };
+    const twoHosts = { inventory: [talisman, crystal2, longsword, dagger] };
+
+    // Anchor: with an empty overlay both weapons are on offer.
+    const free = itemTake10Activities(twoHosts).find((a) => a.talismanUid === 't2');
+    expect(free.targets.map((t) => t.uid)).toEqual(['longsword', 'dagger']);
+
+    const list = itemTake10Activities(twoHosts, { affixed: { t1: 'longsword' } });
+    const tAct = list.find((a) => a.talismanUid === 't2');
+    expect(tAct.targets).toEqual([{ uid: 'dagger', name: 'Dagger' }]);
+  });
+
   it('hides a fully-consumed oil', () => {
     const list = itemTake10Activities(model, { consumed: { 'Oil of Weightlessness': 1 } });
     expect(list.some((a) => a.kind === 'oil')).toBe(false);

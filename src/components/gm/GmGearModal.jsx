@@ -400,7 +400,7 @@ const GmGearModal = ({ isOpen, onClose }) => {
                   label={t.name}
                   sub={hostName(affixedHostUid(affixed, itemUidOf(t))) ? `on ${hostName(affixedHostUid(affixed, itemUidOf(t)))}` : 'unaffixed'}
                   currentHostUid={affixedHostUid(affixed, itemUidOf(t))}
-                  hosts={validAffixHosts(flatInventory, t)}
+                  hosts={validAffixHosts(flatInventory, t, affixed)}
                   noneLabel="— unaffixed —"
                   onBind={(hostUid) => bindTalisman(t, hostUid)}
                 />
