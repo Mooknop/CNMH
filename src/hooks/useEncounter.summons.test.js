@@ -18,7 +18,7 @@ vi.mock('./useSyncedState', () => {
   };
 });
 vi.mock('../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => []) }),
+  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => undefined) }),
 }));
 vi.mock('../contexts/ContentContext', () => ({ useContent: () => ({ effects: [] }) }));
 

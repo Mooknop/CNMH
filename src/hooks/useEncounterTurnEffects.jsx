@@ -66,7 +66,7 @@ export function useEncounterTurnEffects() {
           { order: snapshot.order, currentTurnIndex: snapshot.idx, round: snapshot.round },
         );
         sweepExpiredOnBoundaries({
-          order: snapshot.order, boundaries, sendUpdate, appendLog, effectCatalog,
+          order: snapshot.order, boundaries, getState, sendUpdate, appendLog, effectCatalog,
         });
         applyTurnStartFastHealing({
           order: snapshot.order,
