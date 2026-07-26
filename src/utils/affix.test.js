@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import {
   affixedKey, itemUidOf, isTalisman, affixTargetType, hostMatchesType,
   validAffixHosts, affixedHostUid, affix, unaffix, affixedUidSet, affixedTalismansByHost,
-  affixedTalismanItems, deactivateTalisman,
+  affixedTalismanItems, deactivateTalisman, talismanOnHost,
 } from './affix';
 
 const wolfFang = { uid: 't1', name: 'Wolf Fang', traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon' } };
@@ -65,6 +65,54 @@ describe('affix util (#254/#339)', () => {
     expect(validAffixHosts([wolfFang, runedAxe], wolfFang).map((i) => i.uid)).toEqual(['w2']);
   });
 
+  // #1657 — an item carries ONE talisman at a time. The rule lives in
+  // validAffixHosts so all three pickers (ItemModal, GmGearModal,
+  // take10Activities) inherit it, and is re-checked in affix() so it cannot be
+  // bypassed programmatically.
+  describe('one talisman per host (#1657)', () => {
+    const fang2 = { uid: 't3', name: 'Wolf Fang II', traits: ['Talisman'], talisman: { affixTo: 'weapon' } };
+    const axe = { uid: 'w2', name: 'Greataxe', strikes: [{ damage: '1d12' }] };
+
+    it('talismanOnHost reports the occupying talisman, ignoring the one asking', () => {
+      const overlay = { t1: 'w1', t2: 'a1' };
+      expect(talismanOnHost(overlay, 'w1')).toBe('t1');
+      expect(talismanOnHost(overlay, 'w2')).toBeNull();
+      // A talisman does not block ITSELF from its own current host.
+      expect(talismanOnHost(overlay, 'w1', 't1')).toBeNull();
+      expect(talismanOnHost(null, 'w1')).toBeNull();
+    });
+
+    it('validAffixHosts drops a host that already carries another talisman', () => {
+      const items = [wolfFang, fang2, sword, axe];
+      // Both weapons are offered while the overlay is empty…
+      expect(validAffixHosts(items, fang2, {}).map((i) => i.uid)).toEqual(['w1', 'w2']);
+      // …but once the sword carries wolfFang it is no longer a target. The axe
+      // still being offered is the anchor: this is a refusal, not an empty list.
+      expect(validAffixHosts(items, fang2, { t1: 'w1' }).map((i) => i.uid)).toEqual(['w2']);
+    });
+
+    it('validAffixHosts still offers a talisman its OWN current host', () => {
+      // Otherwise a bound talisman's picker/select would lose its current value.
+      expect(validAffixHosts([wolfFang, sword, axe], wolfFang, { t1: 'w1' }).map((i) => i.uid))
+        .toEqual(['w1', 'w2']);
+    });
+
+    it('affix refuses an occupied host and returns the overlay unchanged', () => {
+      const overlay = { t1: 'w1' };
+      expect(affix(overlay, 't3', 'w1')).toBe(overlay); // same reference — no write
+      expect(affix(overlay, 't3', 'w2')).toEqual({ t1: 'w1', t3: 'w2' }); // free host is fine
+    });
+
+    it('affix is idempotent for a talisman already on that host', () => {
+      const overlay = { t1: 'w1' };
+      expect(affix(overlay, 't1', 'w1')).toBe(overlay);
+    });
+
+    it('affix lets a talisman move to a different free host', () => {
+      expect(affix({ t1: 'w1' }, 't1', 'w2')).toEqual({ t1: 'w2' });
+    });
+  });
+
   describe('affix / unaffix / affixedHostUid', () => {
     it('binds and reads back the host uid immutably', () => {
       const o1 = affix({}, 't1', 'w1');
@@ -97,6 +145,15 @@ describe('affix util (#254/#339)', () => {
     it('skips stale talisman uids that no longer resolve', () => {
       const out = affixedTalismansByHost({ gone: 'w1' }, [sword]);
       expect(out).toEqual({});
+    });
+    // #1657 decision: the array shape stays. The overlay is live synced state in
+    // the DO, so a binding written before the cap landed may still double up —
+    // surfacing BOTH keeps the extra reachable (and so unaffixable) rather than
+    // stranding it. Writers can no longer produce this state.
+    it('still surfaces a legacy double binding so the extra can be removed', () => {
+      const fang2 = { uid: 't3', name: 'Wolf Fang II', traits: ['Talisman'] };
+      const out = affixedTalismansByHost({ t1: 'w1', t3: 'w1' }, [wolfFang, fang2, sword]);
+      expect(out.w1.map((t) => t.name)).toEqual(['Wolf Fang', 'Wolf Fang II']);
     });
   });
 
