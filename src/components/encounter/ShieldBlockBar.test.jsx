@@ -264,9 +264,15 @@ describe('ShieldBlockBar', () => {
         targets: [{ entryId: 'e1', name: 'Skeleton', saveMod: 8 }],
         damage: { entered: 9, expression: '4d4', typeLabel: 'force', riders: [] },
       });
+      // #1639: the sentence supplies its own "DC 20" up front, so the save must
+      // be named bare — DEFENSE_LABELS tailed it with a stray "DC".
       expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
-        text: expect.stringContaining('unleashes Retaliation (Lesser) at Skeleton'),
+        text: 'Pellias unleashes Retaliation (Lesser) at Skeleton — 4d4 force, DC 20 basic Reflex save',
       }));
+      const riderLog = mockAppendLog.mock.calls
+        .map(([e]) => e.text)
+        .find((t) => t.includes('unleashes Retaliation'));
+      expect(riderLog).not.toMatch(/DC DC/);
       expect(screen.queryByTestId('shieldblock-rune-followup')).not.toBeInTheDocument();
     });
 

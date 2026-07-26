@@ -9,7 +9,10 @@ import { itemUidOf } from '../../utils/affix';
 import { accessoryRuneOf, runeOnBlock } from '../../utils/accessoryRunes';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
-import { DEFENSE_LABELS } from '../../utils/defense';
+// Bare name, not DEFENSE_LABELS (#1639): the retaliation log leads with its own
+// "DC <n>" and closes on the save, so the DC-flavoured label tails the sentence
+// with a stray "DC" ("DC 20 basic Reflex DC").
+import { DEFENSE_NAMES } from '../../utils/defense';
 import './ShieldBlockBar.css';
 
 /**
@@ -153,7 +156,7 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
       charId,
       text: `${characterName} unleashes ${blockRune.name} at ${target.name} — `
         + `${liveRider.damage.expression} ${liveRider.damage.typeLabel}, `
-        + `DC ${liveRider.dc} ${liveRider.basic ? 'basic ' : ''}${DEFENSE_LABELS[liveRider.save] || liveRider.save}`,
+        + `DC ${liveRider.dc} ${liveRider.basic ? 'basic ' : ''}${DEFENSE_NAMES[liveRider.save] || liveRider.save} save`,
     });
     clearRider();
   };

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useChambers } from './useChambers';
 import { ammoSaveDc } from '../utils/ammunition';
-import { DEFENSE_LABELS } from '../utils/defense';
+// Bare names, not DEFENSE_LABELS (#1639): every string below supplies its own
+// "DC" (or the word "save"), so the DC-flavoured labels double up.
+import { DEFENSE_NAMES } from '../utils/defense';
 import { buildDamageApply } from '../utils/damageRelay';
 import { RELAY } from '../sync/keys';
 
@@ -126,7 +128,7 @@ export const useChamberFireSection = ({
       });
       appendLog({
         type: 'system',
-        text: `${ref.name}: ${DEFENSE_LABELS[save] || save} save DC ${dc} pushed to the GM`
+        text: `${ref.name}: ${DEFENSE_NAMES[save] || save} save DC ${dc} pushed to the GM`
           + (ref.damage ? ` — ${ref.damage.dice} ${ref.damage.type}${entered == null ? ' (roll not entered)' : ''}` : ''),
       });
     } else if (ref.damage) {
@@ -185,7 +187,7 @@ export const useChamberFireSection = ({
         {selectedChamberRef?.damage && (
           <label className="uam-ammo-dmg">
             {selectedChamberRef.name} on-hit damage ({selectedChamberRef.damage.dice} {selectedChamberRef.damage.type})
-            {selectedChamberRef.save ? ` — ${selectedChamberRef.save.basic ? 'basic ' : ''}${DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} DC ${ammoSaveDc(selectedChamberRef.save, ability)}` : ''}
+            {selectedChamberRef.save ? ` — ${selectedChamberRef.save.basic ? 'basic ' : ''}${DEFENSE_NAMES[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} DC ${ammoSaveDc(selectedChamberRef.save, ability)}` : ''}
             <input
               type="number"
               inputMode="numeric"
@@ -198,7 +200,7 @@ export const useChamberFireSection = ({
         )}
         {selectedChamberRef?.save && !selectedChamberRef.damage && (
           <p className="uam-ammo-save-hint">
-            On hit: {DEFENSE_LABELS[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} save
+            On hit: {DEFENSE_NAMES[selectedChamberRef.save.stat] || selectedChamberRef.save.stat} save
             {' '}DC {ammoSaveDc(selectedChamberRef.save, ability)} → GM
           </p>
         )}
