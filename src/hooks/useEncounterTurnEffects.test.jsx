@@ -14,11 +14,13 @@ vi.mock('./useGmAuth', () => ({ useGmAuth: () => ({ isGm: mockIsGm }) }));
 // Session: getState routes sustains/hp; sendUpdate captured.
 const ledger = {};
 const hp = {};
+const fx = {}; // cached effects, as if they arrived over FULL_STATE (#1649)
 const mockSendUpdate = vi.fn((id, key, value) => { if (key === 'hp') hp[id] = value; });
 const mockGetState = vi.fn((id, key) => {
   if (key === 'sustains') return ledger[id] || [];
   if (key === 'hp') return hp[id];
-  return [];
+  if (key === 'effects') return fx[id];
+  return undefined; // absent from the cache, like the real getState
 });
 vi.mock('../contexts/SessionContext', () => ({
   useSession: () => ({ getState: mockGetState, sendUpdate: mockSendUpdate }),
@@ -50,6 +52,7 @@ beforeEach(() => {
   localStorage.clear();
   for (const k of Object.keys(ledger)) delete ledger[k];
   for (const k of Object.keys(hp)) delete hp[k];
+  for (const k of Object.keys(fx)) delete fx[k];
 });
 
 describe('useEncounterTurnEffects (#443)', () => {
@@ -69,6 +72,20 @@ describe('useEncounterTurnEffects (#443)', () => {
     expect(mockSendUpdate).toHaveBeenCalledWith('Izzy', 'effects', []);
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Inspire Courage expired on Izzy' }));
     expect(mockSendUpdate).toHaveBeenCalledWith('Ashka', 'hp', expect.objectContaining({ current: 24 }));
+  });
+
+  // #1649 — the hook must hand the sweep its session reader, or an effect this
+  // client only RECEIVED (session cache, never localStorage) never expires here.
+  it('expires an effect that reached this client only over the wire', () => {
+    fx.Izzy = [{ id: 'fx', effectId: 'inspire-courage', expireAt: { round: 1, entryId: 'e-izzy', boundary: 'turn-end' } }];
+    expect(localStorage.getItem('cnmh_effects_Izzy')).toBeNull();
+
+    const hook = setup();
+    transition(hook, foundry(1, 0));
+    transition(hook, foundry(1, 1));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('Izzy', 'effects', []);
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Inspire Courage expired on Izzy' }));
   });
 
   it('does nothing for a non-GM client', () => {

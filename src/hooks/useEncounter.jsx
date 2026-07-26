@@ -105,10 +105,10 @@ export const useEncounter = () => {
       if (cur.foundryCombatId) return;
       const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
       sweepExpiredOnBoundaries({
-        order: cur.order, boundaries, sendUpdate, appendLog, effectCatalog,
+        order: cur.order, boundaries, getState, sendUpdate, appendLog, effectCatalog,
       });
     },
-    [sendUpdate, appendLog, effectCatalog]
+    [getState, sendUpdate, appendLog, effectCatalog]
   );
 
   // Hymn of Healing fast healing (#226) at the start of the incoming turn.
