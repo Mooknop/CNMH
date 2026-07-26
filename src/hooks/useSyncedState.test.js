@@ -244,6 +244,28 @@ describe('useSyncedState', () => {
     expect(result.current[0]).toBe(42);
   });
 
+  it('holds the new key across later re-renders, leaving a key the snapshot never had', () => {
+    // The focus dossier's shape (#1605): the hook idles on a `<thing>Id ||
+    // 'none'` placeholder the snapshot never holds, then swings onto a real
+    // character. The re-key is a render-phase update, so key and value must
+    // move as ONE state atom — while the "already derived" marker was a
+    // separate ref, a dropped render-phase value update left the marker on the
+    // new key with the OLD value, and no later render ever re-derived.
+    const stored = { Ashka: 42 };
+    mockSession.getState = (c, t) => (t === 'hp' ? stored[c] : undefined);
+    const { result, rerender } = renderHook(
+      ({ key }) => useSyncedState(key, null),
+      { initialProps: { key: 'cnmh_hp_none' } }
+    );
+    expect(result.current[0]).toBe(null);
+    rerender({ key: 'cnmh_hp_Ashka' });
+    expect(result.current[0]).toBe(42);
+    // Still 42 on every subsequent render, with nothing writing the key.
+    rerender({ key: 'cnmh_hp_Ashka' });
+    rerender({ key: 'cnmh_hp_Ashka' });
+    expect(result.current[0]).toBe(42);
+  });
+
   it('falls back to initialValue when the new key has no stored value', () => {
     const { result, rerender } = renderHook(
       ({ key }) => useSyncedState(key, () => ({ current: 0 })),
