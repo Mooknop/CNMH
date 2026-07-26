@@ -313,23 +313,23 @@ test.describe('Signature automations', () => {
   });
 
   /**
-   * PRODUCT BUG (#1647) — "the device is consumed on use" never happens.
+   * REGRESSION BOX for #1652 (filed from #1647, fixed in the same-named PR).
    *
    * `SpellgunAttackModal.handleConfirm` writes `cnmh_consumed_<charId>` with
    * `{ [item.name]: n+1 }`, but the ONLY reader of that overlay is
-   * `InventoryUtils.applyConsumedOverlay`, which gates on
+   * `InventoryUtils.applyConsumedOverlay`, which used to gate on
    * `isConsumable(item) === !!(item.scroll || item.consumable)`. No shipped
-   * spellgun carries a `scroll` or `consumable` block — the six in
+   * spellgun carries a `scroll` or `consumable` block — the five in
    * `src/data/snapshot/item.json` (howl-of-winter, moonlit-, sparking-,
    * torrent-spellgun, verdant-bola) declare only a `spellgun` block plus the
-   * "Consumable" TRAIT, which nothing reads. So the count never decrements and
-   * a fired spellgun stays in the bag at full quantity, ready to fire again.
+   * "Consumable" TRAIT, which nothing read. So the count never decremented and
+   * a fired spellgun stayed in the bag at full quantity, ready to fire again.
    *
-   * Fix is a src change (either teach `isConsumable` about `isSpellgun`, or add
-   * `consumable` metadata to the spellgun content), so this box ships skipped
-   * rather than fixed here.
+   * `isConsumable` now honours the Consumable trait, so the write lands: the
+   * one-shot device leaves the bag. This box shipped skipped with #1647 and is
+   * live as of #1652.
    */
-  test.skip('BUG: firing does not consume the spellgun — it returns to the bag at full quantity', async ({
+  test('firing consumes the spellgun — the one-shot device leaves the bag (#1652)', async ({
     page,
     seed,
   }) => {
@@ -369,7 +369,7 @@ test.describe('Signature automations', () => {
 
     // The consumption write goes out…
     await session.expectSent('cnmh_consumed_' + CHAR_ID, (v) => v?.[SPELLGUN.name] === 1);
-    // …and is then ignored: the one-shot device is back in the bag, intact.
+    // …and is honoured: quantity 1 minus one burn is 0, so the tile is gone.
     await expect(page.getByTestId(`grid-cell-${GUN_UID}`)).toHaveCount(0);
   });
 

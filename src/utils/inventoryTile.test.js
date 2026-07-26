@@ -17,6 +17,15 @@ describe('itemTint', () => {
     expect(itemTint({ name: 'Bag of Holding', container: { contents: [] }, traits: ['Magical'] })).toBe('gold');
   });
 
+  it('tints a trait-only consumable verdant, ahead of magical/arcane (#1652)', () => {
+    // Bombs, talismans and spellguns carry the Consumable trait with no
+    // `consumable` block — they used to fall through to arcane/iron.
+    expect(itemTint({ name: 'Acid Flask', traits: ['Alchemical', 'Bomb', 'Consumable'] })).toBe('verdant');
+    expect(itemTint({ name: 'Wolf Fang', traits: ['Consumable', 'Magical', 'Talisman'] })).toBe('verdant');
+    // Precedence is unchanged: a Strike-bearing consumable still reads as a weapon.
+    expect(itemTint({ name: 'Bomb Launcher', strikes: [{}], traits: ['Consumable'] })).toBe('ember');
+  });
+
   it('treats a magical consumable as a consumable (verdant)', () => {
     expect(itemTint({ name: 'Elixir', consumable: {}, traits: ['Magical'] })).toBe('verdant');
   });
