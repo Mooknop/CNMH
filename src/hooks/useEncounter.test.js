@@ -13,9 +13,12 @@ vi.mock('./useSyncedState', () => {
   };
 });
 
-// Session context — expiry sweep uses sendUpdate; not exercised in these unit tests.
+// Session context — the expiry sweep reads through getState and writes through
+// sendUpdate. `undefined` for every key mirrors the real getState's absent
+// contract (serverState[char]?.[type]), so these tests keep exercising the
+// localStorage fallback the way an unhydrated client does.
 vi.mock('../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => []) }),
+  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => undefined) }),
 }));
 
 // ContentContext — sweep looks up effect names in the DO-backed catalog;
