@@ -32,11 +32,15 @@
  * point of the wave is that the authored vocabulary works — a hand-written stub
  * would prove nothing about production content.
  *
- * Coverage limits found while writing this, both real and worth knowing:
- *   • Targeting Beacon's explosion arms with `dc: null` and therefore cannot be
- *     fired — see the skipped test at the bottom.
- *   • The severity picker (Gruesome Marionettist) never reaches the panel from a
- *     live cast — see the same block.
+ * Two product bugs found while writing this shipped as documented skips and were
+ * fixed in #1617 / #1618; the boxes that pinned them are live below:
+ *   • Targeting Beacon's explosion armed with `dc: null` — its spell has no
+ *     cast-time `defense` at all — so Fire could never build a save request.
+ *     The arming block now derives the payload's DC from the payload's OWN
+ *     defense, and the fire path says why when it still cannot resolve one.
+ *   • `severityFromSave` was dropped by the arming block's fixed field list, so
+ *     Gruesome Marionettist's half/full/double picker never reached the panel
+ *     from a live cast. The authored payload now travels whole.
  */
 
 import { test, expect, type Page } from '../../fixtures/gm';
@@ -70,8 +74,9 @@ const SPELL_IDS = [
 ];
 
 // Level 12 + Cha 16 + expert (proficiency 2) → spell DC 10 + 3 + (12 + 4) = 29.
-// Pinned as a constant so the payload's DC (which is snapshotted from the CAST,
-// not re-derived when it fires) is asserted as an exact number.
+// Pinned as a constant so the payload's DC — captured at ARM time, either from
+// the cast's own save or (#1617) derived from the payload's own defense when the
+// cast called for no save — is asserted as an exact number.
 const SPELL_DC = 29;
 
 // Enemies carry bridge-imported defenses so save requests pick up real saveMods.
@@ -123,9 +128,10 @@ const reqs = (v: any) => (Array.isArray(v?.saveRequests) ? v.saveRequests : []);
 
 /**
  * An armed payload in the shape `UseAbilityModal`'s confirm block stores — the
- * authored payload doc plus the cast-time context (DC, chosen rank, caster).
- * Fields are copied one-for-one from that block, including the fact that
- * `severityFromSave` is NOT among them (see the skipped test at the bottom).
+ * authored payload doc, carried WHOLE, plus the cast-time context (DC, chosen
+ * rank, caster). Mirrors that block exactly, including the spread that #1618
+ * replaced the old fixed field list with: seeding a hand-picked subset here is
+ * how `severityFromSave` went unnoticed in the first place.
  *
  * Seeded rather than cast because mockSession replays its ORIGINAL seed on every
  * connect: a payload armed on the sheet is gone by the time the page navigates
@@ -133,17 +139,14 @@ const reqs = (v: any) => (Array.isArray(v?.saveRequests) ? v.saveRequests : []);
  */
 const armedFrom = (spellId: string, { dc, rank }: { dc: number | null; rank: number }) => {
   const spell = snapshotSpells(spellId)[0] as any;
-  const p = spell.armedPayloads[0];
+  const { id: payloadId, ...authored } = spell.armedPayloads[0];
   return {
-    id: `armed-e2e-${p.id}`,
+    ...authored,
+    id: `armed-e2e-${payloadId}`,
     ts: Date.now(),
-    payloadId: p.id,
-    label: p.label,
-    trigger: p.trigger,
-    note: p.note ?? null,
-    defense: p.defense,
-    damageData: p.damageData,
-    repeatable: !!p.repeatable,
+    payloadId,
+    note: authored.note ?? null,
+    repeatable: !!authored.repeatable,
     dc,
     rank,
     spellLevel: spell.level,
@@ -280,11 +283,13 @@ test.describe('Armed payloads', () => {
     expect(enc.armedPayloads[0].damageData).toMatchObject({ base: '6d6', type: 'fire' });
     expect(enc.armedPayloads[0].trigger).toContain('HITS');
 
-    // …but it arms with NO DC, because Targeting Beacon has no cast-time
-    // `defense` of its own: resolveActionRoll falls through to mode 'none', so
-    // `saveDc` is null and the payload snapshots that null. See the skipped
-    // test at the bottom — this is why the beacon can never actually be fired.
-    expect(enc.armedPayloads[0].dc).toBeNull();
+    // …and it still arms WITH a DC (#1617), even though Targeting Beacon has no
+    // cast-time `defense` of its own: resolveActionRoll falls through to mode
+    // 'none', so there is no cast DC to copy. The arming block derives one from
+    // the payload's OWN defense instead — a spell DC belongs to the caster and
+    // the rank, not to whether this cast happened to call for a save. Copying
+    // the cast's null used to make the explosion unfireable forever.
+    expect(enc.armedPayloads[0].dc).toBe(SPELL_DC);
 
     // The whole reason this spell was deferred: nothing resolves now. The armed
     // entry above is the anchor for the absence assertion — the confirm handler
@@ -564,28 +569,28 @@ test.describe('Armed payloads', () => {
     expect(idsOn('e2e-lad-crit-failure')).toEqual(['off-guard', 'stupefied 4']);
   });
 
-  // ── Known product gaps ─────────────────────────────────────────────────────
-  // Both of these are written the way they should read once fixed; neither is a
-  // limitation of the harness.
+  // ── Regressions: the two bugs this spec originally documented ──────────────
+  // Both shipped as `test.skip` with the diagnosis in the comment; #1617 / #1618
+  // fixed them and these are the boxes that keep them fixed.
 
-  test.skip("PRODUCT BUG: Targeting Beacon's explosion can never be fired (dc: null)", async ({ page }) => {
-    // The beacon has no cast-time `defense` of its own — everything it does
-    // happens later — so `resolveActionRoll` returns mode 'none' with dc null
-    // and `saveDc` is null at confirm. UseAbilityModal snapshots that onto the
-    // payload (asserted live in the arm test above), and ArmedPayloads.fire then
-    // calls buildTargetSaveRequest with `rollProfile.dc === null`, which bails
-    // on its `rollProfile.dc != null` guard and returns null. `fire` early-returns
-    // on `if (!req) return`, BEFORE removeArmedPayload — so pressing Fire does
-    // nothing at all, forever, and the panel shows "Reflex DC null".
+  test("Targeting Beacon's explosion fires like any other save payload (#1617)", async ({ page }) => {
+    // Before #1617 this was impossible. The beacon has no cast-time `defense` of
+    // its own — everything it does happens later — so `resolveActionRoll` returns
+    // mode 'none' with dc null, and the arming block copied that null onto the
+    // payload. `ArmedPayloads.fire` then called buildTargetSaveRequest with
+    // `rollProfile.dc === null`, which bails on its `dc != null` guard, and fire
+    // early-returned BEFORE removeArmedPayload — so pressing Fire did nothing at
+    // all, forever, on a card reading "Reflex DC null". Targeting Beacon's
+    // explosion was the one authored payload whose whole point is a save, and it
+    // was the one that could not produce one.
     //
-    // The fix belongs in src (the arming block should fall back to the caster's
-    // spell DC when the spell itself calls for no save), so this stays skipped:
-    // Targeting Beacon's explosion is the ONE authored payload whose whole point
-    // is a save, and it is the one that cannot produce one.
-    const payload = armedFrom('targeting-beacon', { dc: null, rank: 4 });
+    // The DC is now derived at arm time (asserted live in the arm test above), so
+    // the seeded payload carries the real spell DC and this fires end to end.
+    const payload = armedFrom('targeting-beacon', { dc: SPELL_DC, rank: 4 });
     const mock = await gotoDock(page, { armedPayloads: [payload] });
 
     const card = gmConsole(page).locator('.gm-save-req-card').filter({ hasText: 'Beacon explosion' });
+    await expect(card).toContainText(`Reflex DC ${SPELL_DC}`);
     await card.getByLabel('Frost Troll').check();
     await card.getByLabel('Beacon explosion damage').fill('21');
     await card.getByRole('button', { name: 'Fire' }).click();
@@ -594,29 +599,100 @@ test.describe('Armed payloads', () => {
       reqs(v).some((r: any) => r.abilityName?.includes('Beacon explosion')),
     );
     const req = reqs(enc).find((r: any) => r.abilityName?.includes('Beacon explosion'));
-    expect(req).toMatchObject({ save: 'reflex', basic: true, dc: SPELL_DC });
+    expect(req).toMatchObject({ save: 'reflex', basic: true, dc: SPELL_DC, rank: 4 });
+    expect(req.targets).toEqual([{ entryId: TROLL.entryId, name: 'Frost Troll', saveMod: 9 }]);
+    expect(req.damage).toMatchObject({ entered: 21, typeLabel: 'fire' });
     // One-shot: firing consumes it.
-    expect(enc.armedPayloads).toHaveLength(0);
+    const cleared = await mock.expectSent(
+      'cnmh_encounter_global',
+      (v: any) => (v?.armedPayloads || []).length === 0,
+    );
+    expect(reqs(cleared)).toHaveLength(1);
   });
 
-  test.skip('PRODUCT BUG: a live cast never reaches the severity picker', async ({ page }) => {
+  test('a payload that cannot resolve says so instead of swallowing the press (#1617)', async ({ page }) => {
+    // Payloads parked in a live encounter BEFORE the arm-time derivation still
+    // carry `dc: null`, and buildTargetSaveRequest refuses those. The press used
+    // to vanish silently and the card stayed forever. It must now explain itself
+    // and — the trigger really happened — spend a one-shot payload anyway.
+    const payload = armedFrom('targeting-beacon', { dc: null, rank: 4 });
+    const mock = await gotoDock(page, { armedPayloads: [payload] });
+
+    const card = gmConsole(page).locator('.gm-save-req-card').filter({ hasText: 'Beacon explosion' });
+    // Never "Reflex DC null".
+    await expect(card).not.toContainText('DC null');
+    await expect(card).toContainText('Reflex DC not recorded');
+
+    await card.getByLabel('Frost Troll').check();
+    await card.getByRole('button', { name: 'Fire' }).click();
+
+    await mock.expectSent(
+      'cnmh_encounter_global',
+      logHas('Targeting Beacon: Beacon explosion could not be fired', 'resolve it by hand'),
+    );
+    const enc = await mock.expectSent(
+      'cnmh_encounter_global',
+      (v: any) => (v?.armedPayloads || []).length === 0,
+    );
+    // Explained and cleared — but nothing was fabricated.
+    expect(reqs(enc)).toHaveLength(0);
+  });
+
+  test('a live cast carries severityFromSave through to the picker (#1618)', async ({ page }) => {
     // Gruesome Marionettist authors `severityFromSave: true` (asserted in
     // src/data/armedPayloads.bundled.test.js) and ArmedPayloads gates its
-    // half/full/double picker on `persistent && p.severityFromSave`. But
-    // UseAbilityModal's arming block copies a fixed field list onto the payload
-    // and `severityFromSave` is not in it — so from a real cast the flag is
-    // always undefined, the picker never renders, and the bleed always lands in
-    // full no matter what the cast's Fortitude save actually was.
-    //
-    // `armedFrom` below deliberately mirrors that same field list, so this test
-    // fails exactly the way the product does. Adding one line to the arming
-    // block fixes it.
-    const payload = armedFrom('gruesome-marionettist', { dc: SPELL_DC, rank: 5 });
-    await gotoDock(page, { armedPayloads: [payload] });
+    // half/full/double picker on `persistent && p.severityFromSave`. The arming
+    // block used to copy a fixed field list that omitted it, so from a real cast
+    // the flag was always undefined, the picker never rendered, and the bleed
+    // always landed at FULL no matter what the cast's Fortitude save was.
+    const mock = await gotoCasterTurn(page);
+    await castSpell(page, 'Gruesome Marionettist');
+    await page.getByRole('button', { name: 'Target Frost Troll' }).click();
+    await page.getByRole('button', { name: 'confirm-cast' }).click();
 
+    // The arm side: the authored flag survives the cast.
+    const enc = await mock.expectSent(
+      'cnmh_encounter_global',
+      (v: any) => (v?.armedPayloads || []).length > 0,
+    );
+    expect(enc.armedPayloads[0]).toMatchObject({
+      payloadId: 'gruesome-marionettist-bleed',
+      severityFromSave: true,
+      repeatable: true,
+      dc: SPELL_DC,
+      rank: 5,
+      abilityName: 'Gruesome Marionettist',
+    });
+    // The cast's OWN Fortitude save is what sets the severity picked below.
+    expect(reqs(enc).find((r: any) => r.abilityName === 'Gruesome Marionettist'))
+      .toMatchObject({ save: 'fortitude', dc: SPELL_DC });
+
+    // The fire side: that flag is what makes the panel offer the picker at all,
+    // and picking "success — half" is what finally reaches the persistent map.
+    // Re-seeded rather than carried over (see armedFrom).
+    const dock = await gotoDock(page, {
+      armedPayloads: [armedFrom('gruesome-marionettist', { dc: SPELL_DC, rank: 5 })],
+    });
     const card = gmConsole(page)
       .locator('.gm-save-req-card')
       .filter({ hasText: 'Prohibited-action bleed' });
-    await expect(card.getByLabel('Prohibited-action bleed severity')).toBeVisible();
+    const picker = card.getByLabel('Prohibited-action bleed severity');
+    await expect(picker).toBeVisible();
+    // No save on firing — the cast already rolled it.
+    await expect(card.getByLabel('Prohibited-action bleed damage')).toHaveCount(0);
+
+    await picker.selectOption('half');
+    await card.getByLabel('Frost Troll').check();
+    await card.getByRole('button', { name: 'Fire' }).click();
+
+    const persistent = await dock.expectSent(
+      'cnmh_persistent_global',
+      (v: any) => (v?.[TROLL.entryId] || []).length > 0,
+    );
+    expect(persistent[TROLL.entryId][0]).toMatchObject({ dice: '5d10', type: 'bleed', half: true });
+    await dock.expectSent(
+      'cnmh_encounter_global',
+      logHas('Gruesome Marionettist: Prohibited-action bleed (half) applied to Frost Troll'),
+    );
   });
 });
