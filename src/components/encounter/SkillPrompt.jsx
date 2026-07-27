@@ -4,7 +4,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { skillLabel } from '../../utils/victoryPoints';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -28,11 +28,11 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
   const [prompt] = useSyncedState(syncKey(APP.SKILLPROMPT, charId), null);
   const { appendLog } = useEncounter();
 
-  const [d20Input, setD20Input] = useState('');
-  const [result,   setResult]   = useState(null);
+  const [face,   setFace]   = useState(null); // raw d20 face, 1-20 or null
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
-    setD20Input('');
+    setFace(null);
     setResult(null);
   }, [prompt?.reqId]);
 
@@ -41,8 +41,8 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
   const { skill, dc } = prompt;
 
   const handleSubmit = () => {
-    const d20 = parseInt(d20Input, 10);
-    if (isNaN(d20) || d20 < 1 || d20 > 20) return;
+    const d20 = face;
+    if (d20 == null || d20 < 1 || d20 > 20) return;
     const modifier = skillModifiers[skill] ?? 0;
     const total  = d20 + modifier;
     const degree = computeSaveDegree({ d20, total, dc });
@@ -78,21 +78,20 @@ const SkillPrompt = ({ charId, characterName, skillModifiers = {} }) => {
 
       {!result && (
         <div className="save-prompt-entry">
-          <FoundryDiceInput
-            min="1"
-            max="20"
-            inputClassName="save-prompt-input"
-            placeholder="d20"
-            ariaLabel="d20 roll"
-            value={d20Input}
-            onValue={setD20Input}
+          <RollEntry
+            face={face}
+            onFaceChange={setFace}
+            onCommit={setFace}
+            bonus={skillModifiers[skill] ?? 0}
+            bonusLabel={skillLabel(skill)}
+            dcLine={`nothing rolled yet · DC ${dc}`}
             charId={charId}
             flavor={`${prompt.label || 'Recall Knowledge'}: ${skillLabel(skill)} (DC ${dc})`}
           />
           <button
             className="btn-primary"
             onClick={handleSubmit}
-            disabled={d20Input === '' || parseInt(d20Input, 10) < 1 || parseInt(d20Input, 10) > 20}
+            disabled={face == null}
             aria-label={`Submit ${skillLabel(skill)} check`}
           >
             Submit

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import RecallKnowledgeResolver from './RecallKnowledgeResolver';
 import { useCharacter } from '../../hooks/useCharacter';
 import { SessionContext } from '../../contexts/SessionContext';
@@ -73,6 +73,11 @@ beforeEach(() => {
   useCharacter.mockReturnValue(CHAR_MODEL);
 });
 
+// RollEntry's pad group carries the fixed accessible name "raw d20" (#1684) —
+// face selection is a button tap, not a change event.
+const rollFace = (v) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
+
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
 test('renders the resolver', () => {
@@ -107,8 +112,7 @@ test('Confirm is disabled before entering a d20', () => {
 
 test('entering d20=18 with arcana mod +5 shows total 23 and degree', () => {
   renderResolver();
-  const input = screen.getByLabelText(/raw d20/i);
-  fireEvent.change(input, { target: { value: '18' } });
+  rollFace(18);
   // total 23 vs DC 27 → failure
   expect(screen.getByText('23', { exact: false })).toBeInTheDocument();
   expect(screen.getByText('Failure')).toBeInTheDocument();
@@ -116,16 +120,14 @@ test('entering d20=18 with arcana mod +5 shows total 23 and degree', () => {
 
 test('entering d20=20 shows Critical Success', () => {
   renderResolver();
-  const input = screen.getByLabelText(/raw d20/i);
-  fireEvent.change(input, { target: { value: '20' } });
+  rollFace(20);
   // total 25 vs DC 27 would be failure, but nat-20 shifts up → success
   expect(screen.getByText('Success')).toBeInTheDocument();
 });
 
 test('success shows the choice picker', () => {
   renderResolver();
-  const input = screen.getByLabelText(/raw d20/i);
-  fireEvent.change(input, { target: { value: '20' } });
+  rollFace(20);
   // Confirm still disabled (no choice yet on success)
   expect(screen.getByTestId('rkr-choice-section')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Apply/i })).toBeDisabled();
@@ -133,7 +135,7 @@ test('success shows the choice picker', () => {
 
 test('choice picker has all expected options including AC/Perception/Speed', () => {
   renderResolver();
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  rollFace(20);
   ['Armor Class', 'Perception', 'Speed',
    'Fortitude save', 'Reflex save', 'Will save', 'Lowest save', 'Highest save',
    'Immunities', 'Resistances', 'Weaknesses'].forEach((label) => {
@@ -143,7 +145,7 @@ test('choice picker has all expected options including AC/Perception/Speed', () 
 
 test('selecting choice + valid d20 enables Confirm on success', () => {
   renderResolver();
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  rollFace(20);
   fireEvent.click(screen.getByLabelText('Reflex save'));
   expect(screen.getByRole('button', { name: /Apply/i })).not.toBeDisabled();
 });
@@ -153,7 +155,7 @@ test('selecting choice + valid d20 enables Confirm on success', () => {
 test('Confirm calls resolve with correct args on success', () => {
   const onDone = vi.fn();
   renderResolver({ onDone });
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  rollFace(20);
   fireEvent.click(screen.getByLabelText('Reflex save'));
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({
@@ -170,7 +172,7 @@ test('Confirm calls resolve with correct args on success', () => {
 test('passes outOfCombat to resolve when set (#396)', () => {
   renderResolver({ outOfCombat: true });
   // d20=10 → failure (no choice needed), keeps the assertion degree-agnostic.
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+  rollFace(10);
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: true }));
 });
@@ -182,14 +184,14 @@ test('out-of-combat lowers the DC by 2 (level 10 common: 27 → 25) (#396)', () 
 
 test('passes currentDay through to resolve out of combat (#396)', () => {
   renderResolver({ outOfCombat: true, currentDay: 99 });
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+  rollFace(10);
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ currentDay: 99, outOfCombat: true }));
 });
 
 test('defaults outOfCombat to false (in-combat)', () => {
   renderResolver();
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  rollFace(20);
   fireEvent.click(screen.getByLabelText('Reflex save'));
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: false }));
@@ -212,17 +214,17 @@ test('a held Knowing shield offers a +1 toggle that raises the RK total', () => 
   renderResolver();
   expect(screen.getByTestId('rkr-knowing-section')).toBeInTheDocument();
   // arcana +5, d20 18 → 23
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '18' } });
-  expect(screen.getByText('= 23')).toBeInTheDocument();
+  rollFace(18);
+  expect(screen.getByText('18 + 5 = 23')).toBeInTheDocument();
   // Opt in to Knowing → +1 → 24.
   fireEvent.click(screen.getByRole('button', { name: /Knowing \(shield\)/ }));
-  expect(screen.getByText('= 24')).toBeInTheDocument();
+  expect(screen.getByText('18 + 6 = 24')).toBeInTheDocument();
 });
 
 test('the Knowing bonus is threaded into the resolved total', () => {
   useCharacter.mockReturnValue({ ...CHAR_MODEL, inventory: [knowingShield] });
   renderResolver();
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } }); // 10+5=15 failure
+  rollFace(10); // 10+5=15 failure
   fireEvent.click(screen.getByRole('button', { name: /Knowing \(shield\)/ }));      // → 16
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ total: 16 }));
@@ -247,5 +249,5 @@ test('rail-capable bridge surfaces Roll in Foundry on the RK d20 entry', () => {
       <RecallKnowledgeResolver enemy={dragon} actingCharId="c1" actingCharName="Vex" onDone={vi.fn()} />
     </SessionContext.Provider>
   );
-  expect(screen.getByRole('button', { name: /roll in foundry/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /roll d20 in foundry/i })).toBeInTheDocument();
 });

@@ -157,22 +157,19 @@
 /* Condition flat checks (#262) */
 
 .uam-flatcheck-row {
-  margin: 0.25rem 0;
+  margin: 0.5rem 0;
 }
 
 .uam-flatcheck-head {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: var(--space-2, 8px);
 }
 
 .uam-flatcheck-label {
   font-size: var(--text-sm, 0.85rem);
   font-weight: 600;
-}
-
-.uam-flatcheck-input {
-  width: 3.5rem;
 }
 
 .uam-flatcheck-result {

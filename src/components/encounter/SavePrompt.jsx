@@ -7,7 +7,7 @@ import { degreeLabel, degreeClass } from '../../utils/degreeDisplay';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { saveBonusTalisman } from '../../utils/talismanActivation';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './SavePrompt.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -35,13 +35,13 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
   const [affixed, setAffixed] = useSyncedState(affixedKey(charId), {});
   const [, setConsumed] = useSyncedState(syncKey(APP.CONSUMED, charId), {});
 
-  const [d20Input, setD20Input] = useState('');
-  const [pinOn,    setPinOn]    = useState(false); // Sanitizing Pin toggle
-  const [result,   setResult]   = useState(null); // { degree, total, d20 }
+  const [face,   setFace]    = useState(null); // raw d20 face, 1-20 or null
+  const [pinOn,  setPinOn]   = useState(false); // Sanitizing Pin toggle
+  const [result, setResult]  = useState(null); // { degree, total, d20 }
 
   // Clear local state whenever the prompt reqId changes (new prompt from GM).
   useEffect(() => {
-    setD20Input('');
+    setFace(null);
     setPinOn(false);
     setResult(null);
   }, [prompt?.reqId]);
@@ -59,8 +59,8 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
   const pinCritFailToFail = !!(pinOn && pin && pin.talisman.activation.effect.critFailToFail);
 
   const handleSubmit = () => {
-    const d20 = parseInt(d20Input, 10);
-    if (isNaN(d20) || d20 < 1 || d20 > 20) return;
+    const d20 = face;
+    if (d20 == null || d20 < 1 || d20 > 20) return;
     const total  = d20 + modifier + pinBonus;
     let degree = computeSaveDegree({ d20, total, dc: prompt.dc });
     // Sanitizing Pin also upgrades a critical failure to a failure.
@@ -115,21 +115,20 @@ const SavePrompt = ({ charId, characterName, saves = {}, character = null }) => 
 
       {!result && (
         <div className="save-prompt-entry">
-          <FoundryDiceInput
-            min="1"
-            max="20"
-            inputClassName="save-prompt-input"
-            placeholder="d20"
-            ariaLabel="d20 roll"
-            value={d20Input}
-            onValue={setD20Input}
+          <RollEntry
+            face={face}
+            onFaceChange={setFace}
+            onCommit={setFace}
+            bonus={modifier + pinBonus}
+            bonusLabel={saveName}
+            dcLine={`nothing rolled yet · DC ${prompt.dc}`}
             charId={charId}
             flavor={`${saveName} Save${prompt.effectName ? ` — ${prompt.effectName}` : ''}`}
           />
           <button
             className="btn-primary"
             onClick={handleSubmit}
-            disabled={d20Input === '' || parseInt(d20Input, 10) < 1 || parseInt(d20Input, 10) > 20}
+            disabled={face == null}
             aria-label={`Submit ${saveName} save`}
           >
             Submit

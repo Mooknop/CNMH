@@ -5,7 +5,7 @@
 // the component falls back to the single derived rollBonus/skillLabel.
 
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import OpposedReactionResolver from './OpposedReactionResolver';
 
 // Harness exposing the resolver's imperative getResults() to assertions.
@@ -22,15 +22,19 @@ const skillOptions = [
 ];
 
 const setDc  = (v) => fireEvent.change(screen.getByLabelText('opposed dc'), { target: { value: String(v) } });
-const setD20 = (v) => fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: String(v) } });
+// RollEntry's pad group carries the fixed accessible name "raw d20" (#1684) —
+// face selection is a button tap, not a change event.
+const setD20 = (v) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
 
 describe('OpposedReactionResolver — skill picker (#445)', () => {
   it('renders a skill dropdown defaulting to defaultSkill with its bonus', () => {
     render(<OpposedReactionResolver skillOptions={skillOptions} defaultSkill="performance" />);
     const select = screen.getByLabelText('roll skill');
     expect(select).toHaveValue('performance');
-    // Bonus badge reflects the default option, not the first-by-chance.
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+18');
+    // Bonus reflects the default option, not the first-by-chance — shown in
+    // RollEntry's own heading now that the roll-bonus badge is gone.
+    expect(screen.getByText('your d20 · Performance +18')).toBeInTheDocument();
     // All three skills are offered with their modifiers.
     expect(screen.getByRole('option', { name: 'Deception (+12)' })).toBeInTheDocument();
   });
@@ -40,11 +44,11 @@ describe('OpposedReactionResolver — skill picker (#445)', () => {
     render(<Harness ref={ref} skillOptions={skillOptions} defaultSkill="performance" />);
     setDc(20);
     setD20(10); // 10 + 18 (Performance) = 28
-    expect(screen.getByLabelText('computed total')).toHaveTextContent('= 28');
+    expect(screen.getByText('10 + 18 = 28')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('roll skill'), { target: { value: 'deception' } });
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+12');
-    expect(screen.getByLabelText('computed total')).toHaveTextContent('= 22'); // 10 + 12
+    expect(screen.getByText('your d20 · Deception +12')).toBeInTheDocument();
+    expect(screen.getByText('10 + 12 = 22')).toBeInTheDocument(); // 10 + 12
     expect(ref.current.getResults().skill).toBe('Deception');
     expect(ref.current.getResults().total).toBe(22);
   });
@@ -67,10 +71,10 @@ describe('OpposedReactionResolver — skill picker (#445)', () => {
       render(<Harness ref={ref} rollBonus={10} skillLabel="Performance" />);
       expect(screen.queryByLabelText('roll skill')).toBeNull();
       expect(screen.getByText('Performance')).toBeInTheDocument(); // static label span
-      expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+10');
+      expect(screen.getByText('your d20 · Performance +10')).toBeInTheDocument();
       setDc(15);
       setD20(8); // 8 + 10 = 18
-      expect(screen.getByLabelText('computed total')).toHaveTextContent('= 18');
+      expect(screen.getByText('8 + 10 = 18')).toBeInTheDocument();
       expect(ref.current.getResults().skill).toBeNull();
     });
   });

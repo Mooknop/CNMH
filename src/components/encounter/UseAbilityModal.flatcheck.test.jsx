@@ -5,8 +5,15 @@
 // pass resolves normally.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+
+// RollEntry's pad group carries the fixed accessible name "raw d20" (#1684) —
+// face selection is a button tap, not a change event. Each of these tests
+// only ever has a single flat check active, so the sole "raw d20" group is
+// unambiguous.
+const rollFlatCheckFace = (v) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -95,7 +102,7 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
   it('a failed stupefied check spends the action, logs the lost spell, and skips resolution', () => {
     mockConditions = [{ id: 'stupefied', value: 2 }];
     render(<UseAbilityModal {...props} verb="Cast" ability={spell} />);
-    fireEvent.change(screen.getByLabelText('Stupefied 2 flat check d20'), { target: { value: '4' } });
+    rollFlatCheckFace(4);
     expect(screen.getByText(/Fail — the spell is lost/)).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     // Two-action cast cost still spent.
@@ -108,7 +115,7 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
   it('a passing stupefied check resolves normally (no loss log)', () => {
     mockConditions = [{ id: 'stupefied', value: 2 }];
     render(<UseAbilityModal {...props} verb="Cast" ability={spell} />);
-    fireEvent.change(screen.getByLabelText('Stupefied 2 flat check d20'), { target: { value: '10' } });
+    rollFlatCheckFace(10);
     expect(screen.getByText('Pass')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(lastTexts().some((t) => /flat check failed/.test(t))).toBe(false);
@@ -119,7 +126,7 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
     mockConditions = [{ id: 'grabbed' }];
     render(<UseAbilityModal {...props} verb="Use" ability={manipulateAction} />);
     expect(screen.getByText('Grabbed — DC 5')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Grabbed flat check d20'), { target: { value: '3' } });
+    rollFlatCheckFace(3);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(mockSpendActions).toHaveBeenCalledWith(1, 'Use Administer a Potion');
     expect(lastTexts().some((t) => /Grabbed flat check failed \(DC 5: rolled 3\); the action is disrupted/.test(t))).toBe(true);
@@ -156,7 +163,7 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
     it('a failed concealment check spends the cost, logs the lost attack, and skips resolution', () => {
       render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
       fireEvent.click(screen.getByRole('button', { name: 'Concealed (DC 5)' }));
-      fireEvent.change(screen.getByLabelText('Concealed target flat check d20'), { target: { value: '3' } });
+      rollFlatCheckFace(3);
       expect(screen.getByText(/Fail — the attack is lost/)).toBeInTheDocument();
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       expect(mockSpendActions).toHaveBeenCalledWith(1, 'Use Longsword');
@@ -166,7 +173,7 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
     it('a passing concealment check resolves normally', () => {
       render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
       fireEvent.click(screen.getByRole('button', { name: 'Concealed (DC 5)' }));
-      fireEvent.change(screen.getByLabelText('Concealed target flat check d20'), { target: { value: '12' } });
+      rollFlatCheckFace(12);
       expect(screen.getByText('Pass')).toBeInTheDocument();
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       expect(lastTexts().some((t) => /flat check failed/.test(t))).toBe(false);

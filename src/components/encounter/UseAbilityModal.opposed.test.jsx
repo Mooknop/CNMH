@@ -6,7 +6,7 @@
 // none of the defense/save-request machinery runs.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
 import { applyAbility } from '../../utils/applyAbility';
 
@@ -121,7 +121,10 @@ const upstageChoice = {
 const pickSkill = (skill) => fireEvent.change(screen.getByLabelText('roll skill'), { target: { value: skill } });
 
 const setDc    = (v) => fireEvent.change(screen.getByLabelText('opposed dc'), { target: { value: String(v) } });
-const setD20   = (v) => fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: String(v) } });
+// RollEntry's pad group carries the fixed accessible name "raw d20" (#1684) —
+// face selection is a button tap, not a change event.
+const setD20   = (v) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
 const pickEnemy = (id) => fireEvent.change(screen.getByLabelText('triggering enemy'), { target: { value: id } });
 const confirm  = () => fireEvent.click(screen.getByLabelText('confirm-cast'));
 const lastLog  = () => mockAppendLog.mock.calls.at(-1)[0].text;
@@ -132,14 +135,15 @@ beforeEach(() => {
 });
 
 describe('UseAbilityModal — opposed reactions (#226-C)', () => {
-  it('renders the opposed resolver: DC input, enemy picker, d20 entry + bonus badge', () => {
+  it('renders the opposed resolver: DC input, enemy picker, d20 entry + bonus', () => {
     render(<UseAbilityModal {...props} ability={upstage} />);
     expect(screen.getByLabelText('opposed dc')).toBeInTheDocument();
     expect(screen.getByLabelText('triggering enemy')).toBeInTheDocument();
-    expect(screen.getByLabelText('raw d20')).toBeInTheDocument();
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+10');
-    // Performance label from the roll config's skill.
+    expect(screen.getByRole('group', { name: 'raw d20' })).toBeInTheDocument();
+    // Performance label from the roll config's skill — static span, plus the
+    // bonus in RollEntry's own heading now that the roll-bonus badge is gone.
     expect(screen.getByText('Performance')).toBeInTheDocument();
+    expect(screen.getByText('your d20 · Performance +10')).toBeInTheDocument();
   });
 
   it('success (total ≥ DC) applies the self effect and logs the degree + total', () => {
