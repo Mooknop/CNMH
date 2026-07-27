@@ -139,14 +139,22 @@ describe('UseAbilityModal — variable action cost (#215)', () => {
       ],
     };
     const { container } = render(<UseAbilityModal {...props} ability={staunch} verb="Use" />);
+    // #1689: the save path is a RollSheet too — the request preview and the
+    // action-count picker moved into the edit disclosure, and the strip's
+    // summary line carries the live DC.
     const preview = () => container.querySelector('.ct-save-request-preview');
+    const summary = () => container.querySelector('.rs-summary-line');
+    openEdit();
     // Default 1 action: base DC.
     expect(preview()).toHaveTextContent('DC 25');
+    expect(summary()).toHaveTextContent('Fortitude DC 25');
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('2'));
     expect(preview()).toHaveTextContent('DC 15');
+    expect(summary()).toHaveTextContent('Fortitude DC 15');
     expect(screen.getByText('DC reduced by 10')).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    // No caster die on a save spell — the commit pill is the whole gesture.
+    fireEvent.click(document.querySelector('.rs-pill'));
     expect(mockAddSaveRequest).toHaveBeenCalledWith(expect.objectContaining({ dc: 15 }));
     expect(mockSpendActions).toHaveBeenCalledWith(2, 'Use Staunch Bleeding');
   });

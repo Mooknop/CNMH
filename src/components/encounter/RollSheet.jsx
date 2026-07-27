@@ -117,7 +117,23 @@ const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
  *                                       advances to `result`; later changes are ignored.
  * @param {string}   [waitingCaption]
  * @param {string}   [rollingCaption]
+ * @param {Object}   [closeGuard]    - the ONLY additive prop from G2 (#1689), and the
+ *   answer to F's friction 1 (PR #1700: "no hook to gate RollSheet's own pill").
+ *   `waiting` and `amount` are the two phases that can carry an unmet obligation —
+ *   degrees still in flight, damage rolled but not applied — and Modal chrome
+ *   (overlay / × / Escape) could silently drop either. All three fields optional:
+ *     { blocked?: boolean       - refuse the FIRST close attempt while the phase is
+ *                                 `waiting` or `amount`; the next tap closes, so the
+ *                                 player is never trapped (the locked v1 rule).
+ *       notice?: string         - a gold advisory rendered on the pending and amount
+ *                                 screens whenever present. G2's escape hatches use
+ *                                 it for "the GM dismissed this" / "the encounter
+ *                                 ended" — the sheet stops being a lie without
+ *                                 RollSheet learning anything about save requests.
+ *       blockedNotice?: string  - what a REFUSED close says (default below). }
+ *   Deliberately not a `resultBlocked`: this gates leaving, never advancing.
  *
+
  * RESULT
  * @param {boolean}  [attack]        - Hit/Miss degree labels instead of Success/Failure
  * @param {string}   [headlineMath]  - overrides the frozen `+18 = 31` (saves pass `Reflex DC 27`)
@@ -175,6 +191,7 @@ export default function RollSheet({
   resolvedResults = null,
   waitingCaption = 'Waiting on the GM to roll saves…',
   rollingCaption = 'Rolling in Foundry…',
+  closeGuard = null,
 
   attack = false,
   headlineMath = null,
@@ -202,6 +219,8 @@ export default function RollSheet({
   // (plus the one `waiting → result` results merge) and never recomputed.
   const [committed, setCommitted] = useState(null);
   const [amounts, setAmounts] = useState({});
+  // Close-guard bookkeeping (#1689): one refused attempt per phase.
+  const [closeAsked, setCloseAsked] = useState(false);
 
   // Exactly-once guards — a double tap, a re-render mid-await or a stray
   // keyboard activation can never fire the caller's sequence twice.
@@ -256,6 +275,19 @@ export default function RollSheet({
   const parts = Array.isArray(damageParts) ? damageParts : [];
   const hasAmount = parts.length > 0 && amountTargets.length > 0;
 
+  // Close guard (#1689): only `waiting` and `amount` can hold an obligation, so
+  // the guard never touches phase 1 or the settled receipt. A refused attempt
+  // explains itself and arms the next one; changing phase re-arms the guard.
+  const guardActive = !!closeGuard?.blocked && (phase === 'waiting' || phase === 'amount');
+  useEffect(() => { setCloseAsked(false); }, [phase]);
+  const handleClose = useCallback(() => {
+    if (guardActive && !closeAsked) {
+      setCloseAsked(true);
+      return;
+    }
+    onClose?.();
+  }, [guardActive, closeAsked, onClose]);
+
   const doFinish = useCallback(() => {
     if (finishRef.current) return;
     finishRef.current = true;
@@ -265,10 +297,17 @@ export default function RollSheet({
 
   if (!isOpen) return null;
 
+  // The gold advisory: the caller's standing notice, or — once a close attempt
+  // has been refused — why it was.
+  const guardNotice = (guardActive && closeAsked)
+    ? (closeGuard?.blockedNotice || 'Tap Close again to leave this unresolved.')
+    : (closeGuard?.notice || null);
+  const guardLine = guardNotice ? <p className="rs-guard">{guardNotice}</p> : null;
+
   const shell = (body) => (
     <Modal
       isOpen
-      onClose={onClose}
+      onClose={handleClose}
       title={title}
       themeColor={themeColor}
       maxWidth={maxWidth}
@@ -286,6 +325,7 @@ export default function RollSheet({
       <div className="rs-pending" role="status">
         <div className="rs-pending-ring">{waiting ? 'GM' : '1d20'}</div>
         <p className="rs-pending-caption">{waiting ? waitingCaption : rollingCaption}</p>
+        {guardLine}
       </div>,
     );
   }
@@ -312,7 +352,7 @@ export default function RollSheet({
           ))}
         </div>
         {/* Close only — Undo is a locked no for v1 (#1680). */}
-        <button type="button" className="rs-pill" onClick={onClose}>{closeLabel}</button>
+        <button type="button" className="rs-pill" onClick={handleClose}>{closeLabel}</button>
       </>,
     );
   }
@@ -344,6 +384,7 @@ export default function RollSheet({
         </div>
         {amountExtras}
         {breakdown && <p className="rs-breakdown">{breakdown}</p>}
+        {guardLine}
         <button type="button" className="rs-pill" onClick={doFinish}>{finishLabel}</button>
       </>,
     );

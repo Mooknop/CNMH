@@ -40,6 +40,23 @@ export const commitRoll = async (page: Page, face: number): Promise<void> => {
   await sheetPill(page).click();
 };
 
+/**
+ * Commit a TARGET-SAVE cast (#1689). The caster rolls no die — the targets do —
+ * so `hasD20` is false and the single pill is the whole gesture. The sheet then
+ * parks on `waiting` until the GM's degrees land on the encounter rail.
+ */
+export const commitSave = (page: Page): Promise<void> => sheetPill(page).click();
+
+/** The pulsing "waiting on the GM" caption. */
+export const waitingCaption = (page: Page): Locator =>
+  page.getByText('Waiting on the GM to roll saves…');
+
+/** The gold advisory: a refused close, or a bail (dismissed / encounter ended). */
+export const guardNotice = (page: Page): Locator => page.locator('.rs-guard');
+
+/** The settled receipt lines. */
+export const receipt = (page: Page): Locator => page.locator('.rs-receipt');
+
 /** The caller's edit disclosure: targets, MAP row, situational toggles, gates. */
 export const openEdit = (page: Page): Promise<void> =>
   page.getByRole('button', { name: 'Edit', exact: true }).click();

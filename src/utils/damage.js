@@ -333,7 +333,10 @@ export const computeTargetDamage = ({
   };
 };
 
-const SAVE_DAMAGE_DEGREES     = ['success', 'failure', 'criticalFailure'];
+// The degrees a save-damage total is ever asked for. Exported for RollSheet's
+// `amountDegrees` on the caster-side save round trip (#1689): a critical
+// success takes nothing, so it never reaches the amount step.
+export const SAVE_DAMAGE_DEGREES = ['success', 'failure', 'criticalFailure'];
 const SAVE_PERSISTENT_DEFAULT = ['failure', 'criticalFailure'];
 
 /**

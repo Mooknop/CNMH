@@ -371,15 +371,25 @@ export const useEncounter = () => {
     [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, setSummons, getState, sendUpdate]
   );
 
+  /**
+   * Push a save request and RETURN its id. The id used to be minted inside the
+   * updater, which made it unknowable to the caller; the caster-side round trip
+   * (#1689) joins its resolution record on exactly that id, so the record is
+   * built here and the updater just appends it. Also strictly safer under
+   * StrictMode's double-invoked updaters, which used to mint two ids.
+   */
   const addSaveRequest = useCallback(
-    (req) =>
+    (req) => {
+      const made = makeSaveRequest(req);
       setEncounter((cur) => {
         const base = cur || defaultEncounter();
         return {
           ...base,
-          saveRequests: [...(base.saveRequests || []), makeSaveRequest(req)],
+          saveRequests: [...(base.saveRequests || []), made],
         };
-      }),
+      });
+      return made.id;
+    },
     [setEncounter]
   );
 
@@ -408,9 +418,9 @@ export const useEncounter = () => {
    * SAVE_RESOLUTION_LIMIT (10), oldest evicted first, and is reset wholesale by
    * endEncounter.
    *
-   * Nothing reads `saveResolutions` yet — G2 (#1689) builds the caster-side
-   * consumer. Damage/conditions/fx still apply GM-side at resolution exactly as
-   * before; this rail is purely additive.
+   * The caster-side consumer is `useSaveRollSheet` (#1689); conditions, fx and
+   * the caster effect still apply GM-side at resolution, and only a NEW-style
+   * request's damage moves to the caster (see RequestedSaves).
    */
   const resolveSaveRequest = useCallback(
     (id, resolution) =>
@@ -423,6 +433,25 @@ export const useEncounter = () => {
             base.saveResolutions,
             makeSaveResolution({ ...(resolution || {}), id })
           ),
+        };
+      }),
+    [setEncounter]
+  );
+
+  /**
+   * Drop a consumed resolution record (#1689). The caster's sheet freezes the
+   * degrees into its own state the moment they arrive, so leaving the record on
+   * the rail only eats into SAVE_RESOLUTION_LIMIT and risks evicting a record
+   * another caster has not rendered yet (G1 risk 4). Consume-and-drop keeps the
+   * bounded list holding only genuinely in-flight round trips.
+   */
+  const clearSaveResolution = useCallback(
+    (id) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          saveResolutions: (base.saveResolutions || []).filter((r) => r.id !== id),
         };
       }),
     [setEncounter]
@@ -474,6 +503,7 @@ export const useEncounter = () => {
     addSaveRequest,
     removeSaveRequest,
     resolveSaveRequest,
+    clearSaveResolution,
   };
 };
 

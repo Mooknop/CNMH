@@ -43,6 +43,7 @@ import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useAttackRollSheet } from '../../hooks/useAttackRollSheet';
+import { useSaveRollSheet } from '../../hooks/useSaveRollSheet';
 import { abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS, defenseDC } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
@@ -119,7 +120,8 @@ const UseAbilityModal = ({
   const { getState, sendUpdate } = useSession();
   const { characters, effects: effectCatalog, fxAnimations } = useContent();
   const { gameDate, time } = useGameDate();
-  const { encounter, appendLog, addSaveRequest, addArmedPayload } = useEncounter();
+  const { encounter, appendLog, addSaveRequest, addArmedPayload, clearSaveResolution } =
+    useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
     useTurnState(character?.id || 'nobody');
   const { exploitFor } = useExploitVulnerability();
@@ -137,6 +139,9 @@ const UseAbilityModal = ({
   // makes running them exactly-once — including the abandon path below.
   const deferredRef = useRef(false);
   const finishedRef = useRef(false);
+  // The id of the save request this confirm pushed (#1689) — the join key the
+  // caster's sheet watches `encounter.saveResolutions` for.
+  const saveReqIdRef = useRef(null);
 
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
   // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
@@ -352,6 +357,16 @@ const UseAbilityModal = ({
   // and so runs below, through the returned `derive()`.
   const deriveAttackSheet = useAttackRollSheet();
 
+  // The target-save path's RollSheet state (#1689) — the request this cast is
+  // waiting on, the GM's degrees when they land, the post-degree damage leg and
+  // the two escape hatches. Hoisted above the ability guard like the rest; it
+  // watches both encounter rails, so it takes the encounter directly.
+  const deriveSaveSheet = useSaveRollSheet({
+    encounter,
+    casterId: character?.id || null,
+    clearSaveResolution,
+  });
+
   if (!ability || !character) return null;
 
   const effects     = Array.isArray(ability.effects) ? ability.effects : [];
@@ -484,10 +499,9 @@ const UseAbilityModal = ({
 
   // ── The RollSheet attack path (#1687, Roll Resolution redesign E) ──────────
   // The single-roll actor-roll branch — a Strike or a spell attack — is the one
-  // this workstream moves onto the two-phase sheet. Multi-ray (#1691 J) and the
-  // chained sections keep TargetRollResolver, the target-save branch keeps its
-  // save-request preview until G2 (#1689), and the opposed reaction keeps its
-  // own resolver.
+  // that workstream moved onto the two-phase sheet. Multi-ray (#1691 J) and the
+  // chained sections keep TargetRollResolver, and the opposed reaction keeps
+  // its own resolver.
   const useRollSheet =
     rollProfile.mode === 'actor-roll'
     && !!effectiveDefense
@@ -506,6 +520,37 @@ const UseAbilityModal = ({
         rangeByEntry: hasRangeData ? rangeByEntry : null,
         damageProfile,
         degrees: ability.degrees,
+      })
+    : null;
+
+  // ── The RollSheet save path (#1689, workstream G2) ─────────────────────────
+  // The caster commits, the sheet parks on `waiting`, the GM's degrees come
+  // back on encounter.saveResolutions and the damage is rolled after them.
+  // Chained casts and multi-ray keep their own resolvers (J, #1691); the
+  // secondary zones (#1520) keep their pre-commit entry inside the edit panel.
+  const useSaveSheet =
+    rollProfile.mode === 'target-save'
+    && saveTargets.length > 0
+    && rollProfile.dc != null
+    && !isMultiRay
+    && !hasChainStrike
+    && !hasChainSpell
+    && !isOpposedReaction;
+
+  const saveSheet = useSaveSheet
+    ? deriveSaveSheet({
+        ability,
+        character,
+        order,
+        damageProfile,
+        riderState: saveRiderState,
+        onToggleRider: toggleSaveRider,
+        defense: rollProfile.defense,
+        saveDc,
+        appendLog,
+        sendUpdate,
+        setPersistentMap,
+        revealFiredIwr,
       })
     : null;
 
@@ -694,14 +739,21 @@ const UseAbilityModal = ({
     }
 
     // Push a save request to the GM for target-save abilities (builder
-    // extracted #1317 D3). When a damage profile exists (#270), the caster's
-    // entered total and rider snapshot travel with it — RequestedSaves derives
-    // per-degree totals GM-side.
+    // extracted #1317 D3). The rider snapshot always travels with it; the
+    // caster's entered total does too on the classic path, where RequestedSaves
+    // derives per-degree totals GM-side.
+    //
+    // On the RollSheet save path (#1689) the total does NOT: `deferDamage`
+    // ships `entered: null`, which is both the caster's promise to roll it
+    // after the degrees and the flag that stops RequestedSaves applying damage
+    // itself. `saveDmgInput` is not even collected there — the pre-commit total
+    // input is gone from that flow.
     const saveRequest = buildTargetSaveRequest({
       ...ctx, rollProfile, saveTargets, damageProfile, saveDmgInput,
-      saveRiderState, saveDc, directCastRank,
+      saveRiderState, deferDamage: useSaveSheet, saveDc, directCastRank,
     });
-    if (saveRequest) addSaveRequest(saveRequest);
+    // The id is the join key the caster's sheet watches for its degrees.
+    saveReqIdRef.current = saveRequest ? (addSaveRequest(saveRequest) ?? null) : null;
 
     // Secondary damage zones (#987) — one extra save request per zone that has
     // picked targets (Propagating Arc's splash). Independent of the primary
@@ -900,7 +952,10 @@ const UseAbilityModal = ({
             ))}
           </ul>
         </div>
-        {damageProfile && (
+        {/* The rider checkboxes stay pre-commit on BOTH paths (they ride the
+            request); only the sheet path loses the total input — its damage is
+            rolled after the GM's degrees come back (#1689). */}
+        {useSaveSheet ? saveSheet.ridersRow : (damageProfile && (
           <DamagePanel
             mode="save"
             profile={damageProfile}
@@ -911,7 +966,7 @@ const UseAbilityModal = ({
             riderState={saveRiderState}
             onToggleRider={toggleSaveRider}
           />
-        )}
+        ))}
       </>
     );
   }
@@ -1042,15 +1097,31 @@ const UseAbilityModal = ({
     </>
   );
 
+  // Strip vocabulary shared by both sheet paths (#1687 / #1689). The strip and
+  // the receipt read as prose (`1 action`); the commit pill keeps the footer
+  // button's terse `(1)` so nothing about the cost display changes meaning.
+  const costText = castPlan.costDisplayFinal;
+  const costPhrase = /^\d+$/.test(String(costText))
+    ? `${costText} action${costText === '1' ? '' : 's'}`
+    : costText;
+
+  // Hard blocks (handoff §Hard blocks): the confirmEnabled fold becomes ONE
+  // tinted strip line that also freezes the die entry. The section that
+  // explains each one still renders, unchanged, inside the edit panel. The
+  // gate half is shared; the attack path prepends its own range clause.
+  let gateBlockLine = null;
+  if (!castGateOk) gateBlockLine = 'That casting pool is empty — open Edit to override.';
+  else if (!frequencyGate.gateOk) gateBlockLine = 'Frequency limit reached — open Edit to override.';
+  else if (!immunityGate.gateOk) gateBlockLine = 'A target is already immune — open Edit to override.';
+  else if (!auraGate.gateOk) gateBlockLine = 'Your kinetic aura is down — open Edit.';
+  else if (!shieldGate.gateOk) gateBlockLine = 'Your shield is not raised — open Edit.';
+  else if (!omenGate.gateOk) gateBlockLine = 'No active harrow omen — open Edit.';
+  else if (flatChecks.length > 0 && !allFlatChecksRolled) {
+    gateBlockLine = 'Roll the flat check first — open Edit.';
+  }
+
   // ── The attack path: one two-phase sheet (#1687) ──────────────────────────
   if (useRollSheet) {
-    const costText = castPlan.costDisplayFinal;
-    // The strip and the receipt read as prose (`1 action`); the commit pill
-    // keeps the footer button's terse `(1)` so nothing about the cost display
-    // itself changes meaning.
-    const costPhrase = /^\d+$/.test(String(costText))
-      ? `${costText} action${costText === '1' ? '' : 's'}`
-      : costText;
     const targetNames = resolverTargets.map((e) => e.name).join(' + ');
     const bonusLabel = effectiveDefense === 'ac' ? 'attack' : (rollProfile.skill || 'check');
     const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
@@ -1061,24 +1132,13 @@ const UseAbilityModal = ({
       mapStep ? `MAP ${mapPenaltyFor(ability, mapStep)}` : null,
     ].filter(Boolean).join(' · ');
 
-    // Hard blocks (handoff §Hard blocks): the confirmEnabled fold becomes ONE
-    // tinted strip line that also freezes the die entry. The section that
-    // explains each one still renders, unchanged, inside the edit panel.
     const outOfRangeName = resolverTargets
       .find((e) => rangeByEntry?.[e.entryId]?.beyondMaxRange)?.name;
     let blockLine = null;
     if (needsPicker && targets.length === 0) blockLine = 'Pick a target first.';
     else if (anyTargetOutOfRange) {
       blockLine = `${outOfRangeName || 'A target'} is out of range — open Edit to re-pick.`;
-    } else if (!castGateOk) blockLine = 'That casting pool is empty — open Edit to override.';
-    else if (!frequencyGate.gateOk) blockLine = 'Frequency limit reached — open Edit to override.';
-    else if (!immunityGate.gateOk) blockLine = 'A target is already immune — open Edit to override.';
-    else if (!auraGate.gateOk) blockLine = 'Your kinetic aura is down — open Edit.';
-    else if (!shieldGate.gateOk) blockLine = 'Your shield is not raised — open Edit.';
-    else if (!omenGate.gateOk) blockLine = 'No active harrow omen — open Edit.';
-    else if (flatChecks.length > 0 && !allFlatChecksRolled) {
-      blockLine = 'Roll the flat check first — open Edit.';
-    }
+    } else blockLine = gateBlockLine;
 
     const dcLine = ['nothing rolled yet', ...resolverTargets.map((e) => {
       const dc = defenseDC(e.defenses, effectiveDefense);
@@ -1120,6 +1180,71 @@ const UseAbilityModal = ({
         amountExtras={attackSheet.amountExtras}
         breakdownFor={attackSheet.breakdownFor}
         onFinish={runFinish}
+        costLabel={costPhrase}
+      />
+    );
+  }
+
+  // ── The save path: the full round trip (#1689) ────────────────────────────
+  // Same shell, same skeleton, no die: the caster rolls nothing here. The
+  // commit pushes the save request and parks on `waiting`; the GM's degrees
+  // arrive on the encounter rail and become the result card; the damage step
+  // follows THEM.
+  if (useSaveSheet) {
+    const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
+    const summaryLine = [
+      saveTargets.map((e) => e.name).join(' + '),
+      costPhrase,
+      // DEFENSE_LABELS already ends in "DC" (#1610).
+      `${saveLabel} ${saveDc}`,
+    ].filter(Boolean).join(' · ');
+    const blockLine = (needsPicker && targets.length === 0)
+      ? 'Pick a target first.'
+      : gateBlockLine;
+
+    return (
+      <RollSheet
+        isOpen={isOpen}
+        // Leaving with an obligation outstanding is confirmed by closeGuard
+        // below; `abandon` only records what the table lost, so a caster who
+        // walks away never strands the targets silently.
+        onClose={() => { saveSheet.abandon(); onClose(); }}
+        title={`${verb}: ${ability.name}`}
+        themeColor={themeColor}
+        summaryLine={summaryLine}
+        blockLine={blockLine}
+        editPanel={skeleton}
+        charId={character.id}
+        flavor={rollFlavor}
+        // No caster die on a save spell — the targets roll.
+        hasD20={false}
+        commitLabel={`${verb} ${ability.name} (${costText})`}
+        saveMode
+        // Commit is ONE moment here too: the whole confirm sequence (fx, log,
+        // resource + action spends, the save request itself) fires exactly once
+        // and hands back NO rows — the degrees are the GM's to send.
+        onCommit={() => {
+          const outcome = runConfirm({ face: null, results: null, deferDamage: false });
+          if (outcome === 'done') {
+            saveSheet.noteRequest(saveReqIdRef.current, ability.name);
+          } else {
+            // A failed condition flat check (#262) spends the action and
+            // resolves nothing — there is no request to wait on.
+            saveSheet.noteFizzle();
+          }
+          return null;
+        }}
+        resolvedResults={saveSheet.resolvedResults}
+        headlineMath={saveSheet.headlineMath}
+        damageParts={saveSheet.damageParts}
+        amountDegrees={saveSheet.amountDegrees}
+        amountHeading={saveSheet.amountHeading}
+        breakdownFor={saveSheet.breakdownFor}
+        ctaLabel="Roll damage"
+        finishLabel="Send damage to GM"
+        onFinish={saveSheet.onFinish}
+        receiptFor={saveSheet.receiptFor}
+        closeGuard={saveSheet.closeGuard}
         costLabel={costPhrase}
       />
     );

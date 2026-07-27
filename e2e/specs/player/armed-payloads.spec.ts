@@ -59,6 +59,7 @@ import {
   openSpellsSegment,
   snapshotSpells,
 } from '../../helpers/spellcasting';
+import { commitSave, openEdit, sheetPill } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-caster';
 const CHAR_NAME = 'E2E Caster';
@@ -217,11 +218,11 @@ test.describe('Armed payloads', () => {
     const mock = await gotoCasterTurn(page);
     await castSpell(page, "Winter's Grasp");
     await page.getByRole('button', { name: 'Target Frost Troll' }).click();
-    // A save request only carries a `damage` block when the caster entered a
-    // rolled total (or a rider is on), so type one — the GM derives every
-    // target's per-degree total from it.
-    await page.getByLabel('rolled damage total').fill('14');
-    await page.getByRole('button', { name: 'confirm-cast' }).click();
+    // #1689: picking a target hands the cast to RollSheet's save path. The
+    // caster rolls no die and enters no total here — the payload ships with
+    // `entered: null` and the damage is rolled once the degrees come back.
+    await expect(page.getByLabel('rolled damage total')).toHaveCount(0);
+    await commitSave(page);
 
     // The payload lands on the encounter with the cast-time context it will need
     // when it fires much later: the caster's DC, the rank it was armed at, and
@@ -258,7 +259,9 @@ test.describe('Armed payloads', () => {
     // ONLY save request produced. The ice tick resolves nothing yet.
     const cast = reqs(enc).find((r: any) => r.abilityName === "Winter's Grasp");
     expect(cast).toMatchObject({ save: 'reflex', basic: true, dc: SPELL_DC, rank: 4 });
-    expect(cast.damage).toMatchObject({ expression: '4d6', typeLabel: 'cold', entered: 14 });
+    // The dice + type still travel (the caster needs them to roll from, and
+    // computeSaveDamage needs the rider snapshot); the total does not.
+    expect(cast.damage).toMatchObject({ expression: '4d6', typeLabel: 'cold', entered: null });
     expect(reqs(enc)).toHaveLength(1);
   });
 
@@ -421,18 +424,20 @@ test.describe('Armed payloads', () => {
     const mock = await gotoCasterTurn(page);
     await castSpell(page, 'Propagating Arc');
     await page.getByRole('button', { name: 'Target Frost Troll' }).click();
-    // Fill the primary total while it is the only damage panel on screen — the
-    // zone below grows an identically-labelled one as soon as it has a target.
-    await page.getByLabel('rolled damage total').fill('13');
 
-    // The zone owns its own target picker, independent of the primary's — the
-    // splash hits creatures NEAR the struck target, not the target itself.
+    // #1689: the primary save is a RollSheet, so its sections — including the
+    // secondary zone — live behind the Edit disclosure. Only the PRIMARY damage
+    // inverted; a zone still enters its own total up front (it has no sheet of
+    // its own), which is why the only `rolled damage total` on screen is the
+    // zone's.
+    await openEdit(page);
     const zone = page
       .locator('.ct-section')
       .filter({ hasText: 'Splash — creatures within 10 feet' });
     await zone.getByLabel('Cave Ogre').check();
     await zone.getByLabel('rolled damage total').fill('7');
-    await page.getByRole('button', { name: 'confirm-cast' }).click();
+    await expect(page.getByLabel('rolled damage total')).toHaveCount(1);
+    await commitSave(page);
 
     const enc = await mock.expectSent('cnmh_encounter_global', (v: any) => reqs(v).length >= 2);
     const primary = reqs(enc).find((r: any) => r.abilityName === 'Propagating Arc');
@@ -440,7 +445,7 @@ test.describe('Armed payloads', () => {
 
     // Two independent saves against two independent target sets.
     expect(primary).toMatchObject({ save: 'reflex', basic: true, dc: SPELL_DC });
-    expect(primary.damage).toMatchObject({ expression: '2d12', typeLabel: 'electricity', entered: 13 });
+    expect(primary.damage).toMatchObject({ expression: '2d12', typeLabel: 'electricity', entered: null });
     expect(primary.targets.map((t: any) => t.name)).toEqual(['Frost Troll']);
 
     expect(splash).toMatchObject({
@@ -460,27 +465,29 @@ test.describe('Armed payloads', () => {
     await castSpell(page, 'Crushing Stampede');
     await page.getByRole('button', { name: 'Target Frost Troll' }).click();
 
+    // #1689: the action-count picker and the dice hint live behind Edit now;
+    // the commit pill carries the cost the footer button used to.
+    await openEdit(page);
     const actions = page.getByRole('radiogroup', { name: 'Number of actions' });
     // 1 action: a single creature for 5d6.
     await actions.getByRole('button', { name: '1', exact: true }).click();
     await expect(page.locator('.uam-variant-note')).toContainText('1 creature, 5d6 bludgeoning');
     await expect(page.locator('.dmg-expression')).toHaveText('5d6 bludgeoning');
-    await expect(page.getByRole('button', { name: 'confirm-cast' })).toContainText('(1)');
+    await expect(sheetPill(page)).toContainText('(1)');
 
     // 2 actions: the same spell becomes a 30-foot burst for 10d6.
     await actions.getByRole('button', { name: '2', exact: true }).click();
     await expect(page.locator('.uam-variant-note')).toContainText('30-foot burst, 10d6 bludgeoning');
     await expect(page.locator('.dmg-expression')).toHaveText('10d6 bludgeoning');
-    await expect(page.getByRole('button', { name: 'confirm-cast' })).toContainText('(2)');
+    await expect(sheetPill(page)).toContainText('(2)');
 
-    await page.getByLabel('rolled damage total').fill('35');
-    await page.getByRole('button', { name: 'confirm-cast' }).click();
+    await commitSave(page);
 
     // The chosen variant is what actually spends the turn budget and what the
     // GM's save request carries.
     await mock.expectSent(`cnmh_turnstate_${CHAR_ID}`, (v: any) => v?.actionsSpent === 2);
     const enc = await mock.expectSent('cnmh_encounter_global', (v: any) => reqs(v).length > 0);
-    expect(reqs(enc)[0].damage).toMatchObject({ expression: '10d6', entered: 35 });
+    expect(reqs(enc)[0].damage).toMatchObject({ expression: '10d6', entered: null });
     // The failure/crit-failure riders the same PR wired ride along with it.
     expect(reqs(enc)[0].conditions).toMatchObject({
       failure: [expect.objectContaining({ id: 'off-guard' })],
@@ -494,8 +501,10 @@ test.describe('Armed payloads', () => {
     const mock = await gotoCasterTurn(page);
     await castSpell(page, 'Steal the Show');
     await page.getByRole('button', { name: 'Target Frost Troll' }).click();
+    // The first target hands over to the sheet; the picker moves behind Edit.
+    await openEdit(page);
     await page.getByRole('button', { name: 'Target Cave Ogre' }).click();
-    await page.getByRole('button', { name: 'confirm-cast' }).click();
+    await commitSave(page);
 
     const enc = await mock.expectSent('cnmh_encounter_global', (v: any) => reqs(v).length > 0);
     const req = reqs(enc)[0];
@@ -648,7 +657,7 @@ test.describe('Armed payloads', () => {
     const mock = await gotoCasterTurn(page);
     await castSpell(page, 'Gruesome Marionettist');
     await page.getByRole('button', { name: 'Target Frost Troll' }).click();
-    await page.getByRole('button', { name: 'confirm-cast' }).click();
+    await commitSave(page);
 
     // The arm side: the authored flag survives the cast.
     const enc = await mock.expectSent(
