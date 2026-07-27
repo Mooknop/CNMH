@@ -4,6 +4,12 @@
  * Battle Medicine picks a target, a DC, a Medicine check (deterministic d20),
  * and a healed amount, then writes the target's HP via `cnmh_hp_<targetId>` and
  * spends the action. Seeded via mockSession (#293).
+ *
+ * Migrated onto `RollSheet` (#1688, Roll Resolution redesign workstream F):
+ * target/DC selection lives behind the summary strip's "Edit" disclosure, the
+ * roll is a tap on the "raw d20" pad (no more typed `d20` input), and the
+ * degree only appears after the commit pill — the healed amount is entered on
+ * a separate post-roll screen (`rolled damage total`), not alongside the roll.
  */
 
 import { test, expect } from '../../fixtures/gm';
@@ -57,14 +63,23 @@ test.describe('Battle Medicine', () => {
     await page.getByRole('button', { name: /Battle Medicine/ }).first().click();
     await page.getByRole('button', { name: /^Confirm / }).click();
 
-    // Target self, lowest DC, a natural 20 (with trained Medicine at level 5 this
-    // clears any offered DC → success or better), then a fixed healed amount.
+    // Target self, lowest DC — both live behind the summary strip's Edit
+    // disclosure, collapsed by default.
+    await page.getByRole('button', { name: 'Edit' }).click();
     await page.getByRole('group', { name: 'Select target' }).getByRole('button', { name: CHAR_NAME }).click();
     await page.getByRole('group', { name: 'Select DC' }).getByRole('button').first().click();
-    await page.getByLabel('raw d20').fill('20');
-    await page.getByLabel('hp healed').fill('15');
 
-    await page.locator('.tw-footer').getByRole('button', { name: /Battle Medicine/ }).click();
+    // A natural 20 (with trained Medicine at level 5 this clears any offered
+    // DC → success or better) via the tap pad — no more typed d20 input.
+    await page.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '20', exact: true }).click();
+    await page.locator('.rs').getByRole('button', { name: /Battle Medicine/ }).click();
+
+    // No degree existed on screen before the commit; the result card now
+    // shows it, and the CTA moves on to the healed amount.
+    await expect(page.locator('.rs-row-degree')).toHaveText(/Success/);
+    await page.getByRole('button', { name: 'Roll healing' }).click();
+    await page.getByLabel('rolled damage total').fill('15');
+    await page.getByRole('button', { name: `Heal ${CHAR_NAME}` }).click();
 
     // 10 + 15 = 25 (well under the 50 cap).
     await session.expectSent(`cnmh_hp_${CHAR_ID}`, (v) => v?.current === 25);
