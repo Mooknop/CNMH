@@ -12,13 +12,19 @@
  *
  * Since #1687 the single-roll path is RollSheet's: the face is TAPPED and no
  * degree exists until the commit, so the degree assertions moved after it.
- * Multi-ray still renders MultiRayResolver and keeps the typed idiom.
+ * Since #1691 (workstream J) direct multi-ray moved onto RollSheet too — a
+ * sequential per-ray driver (MultiRayResolver via SequentialAttackSteps,
+ * mounted through RollSheet's `dieSlot`): one ray's d20 pad and commit pill
+ * at a time, not N simultaneous typed inputs. The outer sheet's own commit
+ * pill only enables once every ray has rolled.
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
-import { commitRoll, degrees, openEdit, summaryLine } from '../../helpers/rollSheet';
+import {
+  commitRoll, commitStep, currentStepLabel, degrees, openEdit, sheetPill, summaryLine,
+} from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -181,21 +187,28 @@ test.describe('Attack-roll resolution', () => {
     await page.getByRole('button', { name: /E2E Twin Bolt/ }).first().click();
     await page.getByRole('button', { name: /^Confirm / }).click();
 
-    // Select both enemies → ray 1 defaults to A, ray 2 to B.
+    // Picking the FIRST target hands off to the sheet (#1687); the TargetPicker
+    // for the second one is reached through the edit disclosure from there.
     await page.getByRole('button', { name: 'Target E2E Goblin A' }).click();
+    await openEdit(page);
     await page.getByRole('button', { name: 'Target E2E Goblin B' }).click();
 
-    const rays = page.locator('.mrr-ray');
-    await expect(rays).toHaveCount(2);
+    // Sequential (#1691, LOCKED): ray 1 first, defaulting to Goblin A.
+    await expect(currentStepLabel(page)).toHaveText('Ray 1 of 2');
+    await expect(degrees(page)).toHaveCount(0);
 
-    // Ray 1: 15 + 10 = 25 vs AC 20 → Hit. Ray 2: 10 + 10 = 20 vs AC 25 → Miss
-    // (20 is above AC−10, so a plain failure rather than a critical miss).
-    await page.getByLabel('raw d20').nth(0).fill('15');
-    await page.getByLabel('raw d20').nth(1).fill('10');
-    await expect(rays.nth(0).locator('.trr-result-degree')).toHaveText('Hit');
-    await expect(rays.nth(1).locator('.trr-result-degree')).toHaveText('Miss');
+    // Ray 1: 15 + 10 = 25 vs AC 20 → Hit.
+    await commitStep(page, 15);
+    await expect(currentStepLabel(page)).toHaveText('Ray 2 of 2');
+    // Ray 2: 10 + 10 = 20 vs AC 25 → Miss (20 is above AC−10, so a plain
+    // failure rather than a critical miss).
+    await commitStep(page, 10);
 
-    await page.getByLabel('confirm-cast').click();
+    // Both rays rolled — the outer sheet's own commit pill is now live; it
+    // fires the whole confirm sequence in one moment, same as single-roll.
+    await sheetPill(page).click();
+    await expect(degrees(page)).toHaveText(['Hit', 'Miss']);
+
     await session.expectSent(
       'cnmh_encounter_global',
       (v) =>

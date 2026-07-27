@@ -47,7 +47,8 @@ import { useSaveRollSheet } from '../../hooks/useSaveRollSheet';
 import { abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS, defenseDC } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { buildDamageProfile } from '../../utils/damage';
+import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
+import { DEGREE_LABELS, degreeLabel } from '../../utils/degreeDisplay';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
 import { useSecondaryProfiles } from '../../hooks/useSecondaryProfiles';
 import { useTemplatePlacementSection } from '../../hooks/useTemplatePlacementSection';
@@ -142,6 +143,15 @@ const UseAbilityModal = ({
   // The id of the save request this confirm pushed (#1689) — the join key the
   // caster's sheet watches `encounter.saveResolutions` for.
   const saveReqIdRef = useRef(null);
+
+  // Multi-ray sequential driver (#1691, workstream J): `raysReady` gates the
+  // outer sheet's commit pill until every ray has been rolled (SequentialAttackSteps'
+  // onProgress reports in); `rayResultsRef` snapshots the frozen [{rayIndex,
+  // results}] the instant the pill fires, because MultiRayResolver unmounts
+  // once RollSheet leaves phase 'roll' (dieSlot only renders there) — nothing
+  // downstream (the settled receipt) can read the live ref after that.
+  const [raysReady, setRaysReady] = useState(false);
+  const rayResultsRef = useRef(null);
 
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
   // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
@@ -310,6 +320,22 @@ const UseAbilityModal = ({
     hasChainStrike, hasChainSpell, isMultiRay, rayCount,
     directCastRank, castGateOk,
   } = castPlan;
+
+  // Changing the ray count (the action-count picker, mid-edit) restarts the
+  // sequential multi-ray driver — `key={rayCount}` on MultiRayResolver below
+  // remounts it fresh, and `raysReady` must drop with it or the outer commit
+  // pill would stay enabled from the PREVIOUS count until a ray is rolled
+  // again. This resets IN RENDER (the "adjusting state on a prop change"
+  // pattern), not in an effect: an effect here would race the remounted
+  // MultiRayResolver's own mount-time `onProgress` call — child effects fire
+  // before a same-commit parent effect, so an effect-based reset would
+  // silently clobber the fresh ray count's own readiness right after it
+  // reports in.
+  const prevRayCountRef = useRef(rayCount);
+  if (rayCount !== prevRayCountRef.current) {
+    prevRayCountRef.current = rayCount;
+    if (raysReady) setRaysReady(false);
+  }
 
   // Opposed reaction (#226-C, extracted #1317 D3) — owns the resolver ref, the
   // opposedSection JSX (rendered in both effect branches below) and the entire
@@ -497,21 +523,32 @@ const UseAbilityModal = ({
   const rollFlavor =
     `${verb}: ${ability.name}${mapStep ? ` (MAP ${mapPenaltyFor(ability, mapStep)})` : ''}`;
 
-  // ── The RollSheet attack path (#1687, Roll Resolution redesign E) ──────────
-  // The single-roll actor-roll branch — a Strike or a spell attack — is the one
-  // that workstream moved onto the two-phase sheet. Multi-ray (#1691 J) and the
-  // chained sections keep TargetRollResolver, and the opposed reaction keeps
-  // its own resolver.
+  // ── The RollSheet attack path (#1687/#1691, Roll Resolution redesign E/J) ──
+  // The single-roll actor-roll branch — a Strike or a spell attack — moved onto
+  // the two-phase sheet first (E); direct multi-ray (Scorching Ray, Blazing
+  // Bolt cast un-chained) moved onto it too (J, #1691) via the sequential
+  // per-ray driver below (`!isMultiRay` is gone from this predicate).
+  //
+  // `hasChainStrike`/`hasChainSpell` STAY excluded, on purpose (J's scope
+  // decision — stated in the #1691 PR body): a chain-parent ability (Reach
+  // Spell, Inner Upheaval) authors no roll fields of its own, so real content
+  // never resolves it to 'actor-roll'/'target-save' and this exclusion is
+  // provably a no-op against the live game data — but it is NOT a no-op
+  // against a test (or a future content shape) whose `resolveActionRoll` mock
+  // doesn't honour that convention, so it stays as an explicit guard rather
+  // than relying on the structural fact alone. The chained sections roll
+  // sequentially too (#1691), just inline within their own classic-modal body
+  // — see ChainedStrikeSection/ChainedSpellSection and SequentialAttackSteps.
+  // The opposed reaction keeps its own resolver.
   const useRollSheet =
     rollProfile.mode === 'actor-roll'
     && !!effectiveDefense
     && resolverTargets.length > 0
-    && !isMultiRay
     && !hasChainStrike
     && !hasChainSpell
     && !isOpposedReaction;
 
-  const attackSheet = useRollSheet
+  const attackSheet = (useRollSheet && !isMultiRay)
     ? deriveAttackSheet({
         rollBonus: rollProfile.bonus,
         toggles: attackToggles,
@@ -526,13 +563,16 @@ const UseAbilityModal = ({
   // ── The RollSheet save path (#1689, workstream G2) ─────────────────────────
   // The caster commits, the sheet parks on `waiting`, the GM's degrees come
   // back on encounter.saveResolutions and the damage is rolled after them.
-  // Chained casts and multi-ray keep their own resolvers (J, #1691); the
-  // secondary zones (#1520) keep their pre-commit entry inside the edit panel.
+  // Multi-ray never reaches target-save mode (a ray-rolling ability is always
+  // an actor-roll), so that exclusion is gone here too (it was always a
+  // no-op). `hasChainStrike`/`hasChainSpell` stay excluded — same rationale as
+  // the attack branch above. Chained SAVE spells deliberately stay old-style
+  // (#1691 J decision — see ChainedSpellSection's saveDamageProfile/DamagePanel
+  // block, unchanged): the GM applies their damage exactly as before.
   const useSaveSheet =
     rollProfile.mode === 'target-save'
     && saveTargets.length > 0
     && rollProfile.dc != null
-    && !isMultiRay
     && !hasChainStrike
     && !hasChainSpell
     && !isOpposedReaction;
@@ -907,11 +947,16 @@ const UseAbilityModal = ({
   // useOpposedReactionResolution above.)
   // Multi-ray attack spells render one resolver row per ray instead of a single roll.
   let rollSection = null;
-  if (useRollSheet) {
+  if (useRollSheet && !isMultiRay) {
     // The die entry, DC line, degrees and damage step all live on the sheet
     // itself now; what stays in this slot is the situational-toggle row, which
     // belongs to the edit panel beside the MAP row (handoff Screen 1, item 2).
     rollSection = attackSheet.togglesRow;
+  } else if (useRollSheet && isMultiRay) {
+    // Multi-ray's die entry (the sequential per-ray driver, #1691) lives in
+    // the sheet's `dieSlot` instead of this editPanel slot — per-ray toggles
+    // are owned by SequentialAttackSteps, one active set at a time.
+    rollSection = null;
   } else if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
     rollSection = isMultiRay ? (
       <MultiRayResolver
@@ -1120,8 +1165,104 @@ const UseAbilityModal = ({
     gateBlockLine = 'Roll the flat check first — open Edit.';
   }
 
+  // ── The multi-ray attack path: sequential per-ray driver (#1691) ──────────
+  // LOCKED design: Phase 1 (roll) repeats once per ray inside `dieSlot`
+  // (SequentialAttackSteps, via MultiRayResolver); its own grouped DamageEntry
+  // rows ARE "the amount step, once, after the last ray" — resolved inline,
+  // before the outer commit, so unlike the single-roll path there is no
+  // deferred damage / separate RollSheet amount phase here. The commit pill
+  // stays blocked until every ray reports in.
+  if (useRollSheet && isMultiRay) {
+    const targetNames = resolverTargets.map((e) => e.name).join(' + ');
+    const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
+    const summaryLine = [
+      targetNames,
+      costPhrase,
+      rollProfile.bonus != null ? `attack ${signed(rollProfile.bonus)}` : null,
+      mapStep ? `MAP ${mapPenaltyFor(ability, mapStep)}` : null,
+      rayCount > 1 ? `${raysReady ? rayCount : 0}/${rayCount} rays rolled` : null,
+    ].filter(Boolean).join(' · ');
+
+    let blockLine = null;
+    if (needsPicker && targets.length === 0) blockLine = 'Pick a target first.';
+    else if (!raysReady) blockLine = gateBlockLine || `Roll every ray first (${rayCount} total).`;
+    else blockLine = gateBlockLine;
+
+    // Cosmetic-only row shape for RollSheet's OWN result/settled screens — the
+    // real ray-grouped results (real entryIds) that feed runConfirm live in
+    // `rayResultsRef`, snapshotted at commit time. A target hit by more than
+    // one ray needs a unique React key, so the row's `entryId` is composite —
+    // never read by the appliers, which consume `rayResultsRef` instead.
+    const toRow = (r, rayIndex) => {
+      const note = [
+        rayCount > 1 ? `Ray ${rayIndex + 1}` : null,
+        r.degree == null ? 'no DC available' : null,
+        (r.degree && (ability.degrees?.[DEGREE_LABELS[r.degree]] || null)),
+      ].filter(Boolean).join(' · ');
+      return {
+        entryId: `ray${rayIndex}-${r.entryId}`,
+        name: r.name,
+        dcLabel: r.dc != null ? `${DEFENSE_LABELS[effectiveDefense] || effectiveDefense} ${r.dc}` : '',
+        degree: r.degree,
+        ...(note ? { note } : {}),
+      };
+    };
+
+    return (
+      <RollSheet
+        isOpen={isOpen}
+        onClose={onClose}
+        title={`${verb}: ${ability.name}`}
+        themeColor={themeColor}
+        summaryLine={summaryLine}
+        blockLine={blockLine}
+        editPanel={skeleton}
+        charId={character.id}
+        flavor={rollFlavor}
+        // No single die on this sheet — SequentialAttackSteps owns every ray's
+        // own d20 (and, once every ray reports in, the grouped damage entry).
+        hasD20={false}
+        dieSlot={
+          <MultiRayResolver
+            key={rayCount}
+            ref={resolverRef}
+            rayCount={rayCount}
+            enemyTargets={resolverTargets}
+            targetDefense={effectiveDefense}
+            rollBonus={rollProfile.bonus}
+            damage={damageProfile}
+            degrees={ability.degrees}
+            toggles={attackToggles}
+            charId={character.id}
+            rollFlavor={rollFlavor}
+            onProgress={(done, total) => setRaysReady(done === total && total > 0)}
+          />
+        }
+        commitLabel={`${verb} ${ability.name} (${costText})`}
+        attack={effectiveDefense === 'ac'}
+        // Commit is ONE moment, exactly like the single-roll path — the whole
+        // confirm sequence fires here. Damage is already known (resolved
+        // inline by SequentialAttackSteps), so deferDamage is always false.
+        onCommit={() => {
+          const grouped = resolverRef.current?.getResults() ?? [];
+          rayResultsRef.current = grouped;
+          const outcome = runConfirm({ results: grouped, deferDamage: false });
+          if (outcome !== 'done') return [];
+          return grouped.flatMap((g) => g.results.map((r) => toRow(r, g.rayIndex)));
+        }}
+        damageParts={null}
+        receiptFor={() => (rayResultsRef.current || []).flatMap((g) => g.results.map((r) => {
+          const dmgSuffix = r.damage?.final != null ? ` · damage ${formatDamageBreakdown(r.damage)}` : '';
+          const rayPrefix = rayCount > 1 ? `Ray ${g.rayIndex + 1} — ` : '';
+          return `${rayPrefix}${r.name} — ${degreeLabel(r.degree, { attack: effectiveDefense === 'ac' })}${dmgSuffix}`;
+        }))}
+        costLabel={costPhrase}
+      />
+    );
+  }
+
   // ── The attack path: one two-phase sheet (#1687) ──────────────────────────
-  if (useRollSheet) {
+  if (useRollSheet && !isMultiRay) {
     const targetNames = resolverTargets.map((e) => e.name).join(' + ');
     const bonusLabel = effectiveDefense === 'ac' ? 'attack' : (rollProfile.skill || 'check');
     const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);

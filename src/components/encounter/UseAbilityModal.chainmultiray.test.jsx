@@ -2,10 +2,23 @@
 // A per-action spell cast through a Spellshape fires one ray per chosen action,
 // each its own spell-attack roll + damage entry. The chained log records one
 // "ray N" line per ray and MAP steps once per ray.
+//
+// The Spellshape parent stays on the classic modal (its own rollProfile is
+// always 'none' — #1691 J's PR body explains why); what moved is the roll
+// widget INSIDE ChainedSpellSection, now the sequential per-ray driver
+// (SequentialAttackSteps via MultiRayResolver) instead of N simultaneous
+// TargetRollResolver rows. One d20 tap pad at a time; the grouped damage
+// entry appears once every ray has rolled.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) =>
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
+const sasPill = () => document.querySelector('.sas-pill');
+const rollRay = (face) => { tapFace(face); fireEvent.click(sasPill()); };
 
 const mockAppendLog = vi.fn();
 const mockRecordAttack = vi.fn();
@@ -106,15 +119,16 @@ const loggedLines = () => mockAppendLog.mock.calls.map(([entry]) => entry.text);
 beforeEach(() => vi.clearAllMocks());
 
 describe('UseAbilityModal — chained per-action multi-ray (#581)', () => {
-  it('2-action Blazing Bolt fires two rays, each logged with its own damage, MAP +2', () => {
+  it('2-action Blazing Bolt fires two rays sequentially, each logged with its own damage, MAP +2', () => {
     render(<UseAbilityModal {...props} ability={reachSpell} verb="Use" />);
     // Blazing Bolt is the only spell — pick 2 actions.
-    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    const picker = screen.getByRole('radiogroup', { name: 'Chained spell actions' });
+    fireEvent.click(within(picker).getByRole('button', { name: '2' }));
 
-    const d20s = screen.getAllByLabelText(/raw d20/i);
-    expect(d20s).toHaveLength(2);
-    fireEvent.change(d20s[0], { target: { value: '10' } }); // 18 vs AC 15 → Hit
-    fireEvent.change(d20s[1], { target: { value: '20' } }); // nat 20 → Critical Hit
+    expect(screen.getByText('Ray 1 of 2')).toBeInTheDocument();
+    rollRay(10); // 18 vs AC 15 → Hit
+    expect(screen.getByText('Ray 2 of 2')).toBeInTheDocument();
+    rollRay(20); // nat 20 → Critical Hit
 
     const dmgInputs = screen.getAllByLabelText(/rolled damage total/i);
     expect(dmgInputs).toHaveLength(2);
@@ -137,9 +151,8 @@ describe('UseAbilityModal — chained per-action multi-ray (#581)', () => {
 
   it('1-action default fires a single ray and MAP steps by 1', () => {
     render(<UseAbilityModal {...props} ability={reachSpell} verb="Use" />);
-    const d20s = screen.getAllByLabelText(/raw d20/i);
-    expect(d20s).toHaveLength(1);
-    fireEvent.change(d20s[0], { target: { value: '10' } });
+    expect(screen.getByText('Ray 1')).toBeInTheDocument();
+    rollRay(10);
     fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: '7' } });
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(loggedLines()).toContainEqual(

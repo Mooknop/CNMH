@@ -1,8 +1,10 @@
-﻿// ChainedStrikeSection — unit tests.
-// Mocks useCharacter and resolveActionRoll; stubs TargetRollResolver.
+// ChainedStrikeSection — unit tests.
+// Mocks useCharacter and resolveActionRoll; renders the real SequentialAttackSteps
+// driver (#1691, LOCKED design: sequential — Strike, then Strike 2 for Flurry,
+// one d20 tap pad at a time, grouped damage entry once both have rolled).
 
 import React, { createRef } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ChainedStrikeSection from './ChainedStrikeSection';
 
 vi.mock('../../hooks/useCharacter', () => ({
@@ -14,28 +16,6 @@ vi.mock('../../contexts/ContentContext', () => ({
 vi.mock('../../utils/rollResolution', () => ({
   resolveActionRoll: vi.fn(),
 }));
-vi.mock('./TargetRollResolver', () => {
-  const { forwardRef, useImperativeHandle } = require('react');
-
-  return { default: forwardRef(({ enemyTargets, rollBonus, damage, toggles = [] }, ref) => {
-    useImperativeHandle(ref, () => ({
-      getResults: () => enemyTargets.map((e) => ({
-        entryId: e.entryId,
-        name: e.name,
-        dc: 15,
-        total: (rollBonus || 0) + 10,
-        degree: 'success',
-      })),
-    }));
-    const React = require('react');
-    return React.createElement('div', {
-      'data-testid': `resolver-${enemyTargets.length}`,
-      'data-damage-expression': damage ? damage.expression : '',
-      'data-damage-riders': damage ? damage.riders.map((r) => r.id).join(',') : '',
-      'data-toggles': toggles.map((t) => t.label).join('|'),
-    }, `bonus=${rollBonus}`);
-  }) };
-});
 
 import { useCharacter } from '../../hooks/useCharacter';
 import { useContent } from '../../contexts/ContentContext';
@@ -55,7 +35,7 @@ const character = { id: 'Blu', name: 'Blu-Kakke' };
 const conditions = [];
 const effects = [];
 
-const enemyTargets = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+const enemyTargets = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: 15 } }];
 
 beforeEach(() => {
   useCharacter.mockReturnValue({ strikes: [UNARMED, CLAW] });
@@ -63,6 +43,16 @@ beforeEach(() => {
   resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8 });
 });
 afterEach(() => vi.clearAllMocks());
+
+// Sequential tap idiom (#1691): one pad per step, one commit pill per step.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) =>
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
+const sasPill = () => document.querySelector('.sas-pill');
+const rollStep = (face) => { tapFace(face); fireEvent.click(sasPill()); };
+// The current step's own heading — distinguishes from the mode radiogroup's
+// "Strike" label, which also renders the word "Strike" once flurry is offered.
+const currentStepLabel = () => document.querySelector('.sas-step-label')?.textContent;
 
 const strikeChain = {
   into: 'strike',
@@ -74,7 +64,7 @@ const strikeChain = {
 };
 
 describe('ChainedStrikeSection — damage step (#222)', () => {
-  it('passes a damage profile with the chain-augmented expression to the resolver', () => {
+  it('shows the chain-augmented damage expression once the strike hits', () => {
     render(
       <ChainedStrikeSection
         character={character}
@@ -84,8 +74,8 @@ describe('ChainedStrikeSection — damage step (#222)', () => {
         effects={effects}
       />
     );
-    expect(screen.getByTestId('resolver-1'))
-      .toHaveAttribute('data-damage-expression', '1d6+4 + 1d6');
+    rollStep(15); // 15 + 9 = 24 vs AC 15 → hit
+    expect(document.querySelector('.de-expression')).toHaveTextContent('1d6+4 + 1d6');
   });
 
   it("includes the actor's exploit weakness rider for matching targets", () => {
@@ -101,11 +91,11 @@ describe('ChainedStrikeSection — damage step (#222)', () => {
         order={enemyTargets}
       />
     );
-    expect(screen.getByTestId('resolver-1'))
-      .toHaveAttribute('data-damage-riders', 'exploit-weakness');
+    rollStep(15);
+    expect(screen.getByText(/weakness \(Personal Antithesis 4\)/)).toBeInTheDocument();
   });
 
-  it('flurry passes the same profile to both resolvers', () => {
+  it('flurry rolls two sequential steps sharing the same damage profile', () => {
     const flurryChain = { ...strikeChain, modes: ['strike', 'flurry'] };
     render(
       <ChainedStrikeSection
@@ -117,18 +107,21 @@ describe('ChainedStrikeSection — damage step (#222)', () => {
       />
     );
     fireEvent.click(screen.getByLabelText('Flurry of Blows'));
-    const resolvers = screen.getAllByTestId('resolver-1');
-    expect(resolvers).toHaveLength(2);
-    for (const r of resolvers) {
-      expect(r).toHaveAttribute('data-damage-expression', '1d6+4 + 1d6');
-    }
+    expect(currentStepLabel()).toBe('Strike');
+    rollStep(15); // strike 1 hits
+    expect(currentStepLabel()).toMatch(/Strike 2 \(MAP/);
+    rollStep(15); // strike 2 hits
+    // Both hits → two grouped damage rows, same dice on each.
+    const rows = document.querySelectorAll('.de-expression');
+    expect(rows).toHaveLength(2);
+    rows.forEach((r) => expect(r).toHaveTextContent('1d6+4 + 1d6'));
   });
 });
 
 describe('ChainedStrikeSection — conditional attack toggles (#511)', () => {
   const limnedEffects = [{ effectId: 'limned' }, { effectId: 'marked' }];
 
-  it("passes the selected strike's matching vs-modifier as a toggle (melee → meleeAttack only)", () => {
+  it("offers the selected strike's matching vs-modifier as a toggle (melee → meleeAttack only)", () => {
     render(
       <ChainedStrikeSection
         character={character}
@@ -140,11 +133,11 @@ describe('ChainedStrikeSection — conditional attack toggles (#511)', () => {
     );
     // The melee strike sources meleeAttack conditionals — the ranged 'Marked' one
     // must not leak in.
-    expect(screen.getByTestId('resolver-1'))
-      .toHaveAttribute('data-toggles', 'Limned (vs limned target)');
+    expect(screen.getByRole('button', { name: /Limned \(vs limned target\)/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Marked/ })).not.toBeInTheDocument();
   });
 
-  it('passes the toggles to both resolvers in flurry mode (independent rows)', () => {
+  it('flurry gives each strike independent toggle state', () => {
     render(
       <ChainedStrikeSection
         character={character}
@@ -155,11 +148,11 @@ describe('ChainedStrikeSection — conditional attack toggles (#511)', () => {
       />
     );
     fireEvent.click(screen.getByLabelText('Flurry of Blows'));
-    const resolvers = screen.getAllByTestId('resolver-1');
-    expect(resolvers).toHaveLength(2);
-    for (const r of resolvers) {
-      expect(r).toHaveAttribute('data-toggles', 'Limned (vs limned target)');
-    }
+    fireEvent.click(screen.getByRole('button', { name: /Limned \(vs limned target\)/ }));
+    expect(screen.getByRole('button', { name: /Limned \(vs limned target\)/ })).toHaveAttribute('aria-pressed', 'true');
+    rollStep(15); // strike 1
+    // Strike 2's toggle starts fresh (unpressed) — independent per-step state.
+    expect(screen.getByRole('button', { name: /Limned \(vs limned target\)/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('passes no toggles when the actor has no conditional modifiers', () => {
@@ -172,7 +165,7 @@ describe('ChainedStrikeSection — conditional attack toggles (#511)', () => {
         effects={[]}
       />
     );
-    expect(screen.getByTestId('resolver-1')).toHaveAttribute('data-toggles', '');
+    expect(screen.queryByRole('group', { name: 'situational bonuses' })).not.toBeInTheDocument();
   });
 });
 
@@ -195,7 +188,7 @@ describe('ChainedStrikeSection — optional chain (#228)', () => {
       />
     );
     expect(screen.getByLabelText('Include Elemental Blast')).toBeChecked();
-    expect(screen.getByTestId('resolver-1')).toBeInTheDocument();
+    expect(screen.getByText('Strike')).toBeInTheDocument();
     expect(ref.current.getResults()).not.toBeNull();
   });
 
@@ -212,7 +205,7 @@ describe('ChainedStrikeSection — optional chain (#228)', () => {
       />
     );
     fireEvent.click(screen.getByLabelText('Include Elemental Blast'));
-    expect(screen.queryByTestId('resolver-1')).toBeNull();
+    expect(screen.queryByText('Strike')).toBeNull();
     expect(screen.queryByLabelText('strike picker')).toBeNull();
     expect(ref.current.getResults()).toBeNull();
   });
@@ -244,8 +237,6 @@ describe('ChainedStrikeSection', () => {
     );
     const picker = screen.getByLabelText('strike picker');
     expect(picker.options.length).toBe(2); // Unarmed Strike + Claw (both have Unarmed trait)
-    // No "Claw" without Unarmed — here both pass; check no weapon without the trait
-    // Add a weapon strike WITHOUT the trait to verify filtering
   });
 
   it('shows only strikes matching the strikeTrait', () => {
@@ -282,7 +273,9 @@ describe('ChainedStrikeSection', () => {
         effects={effects}
       />
     );
-    expect(screen.getByText(/\+9/)).toBeInTheDocument();
+    // RollEntry's own heading also shows "+9" (the same bonus) — scope to the
+    // chain's own attack-stat line.
+    expect(document.querySelector('.uam-chain-stat')).toHaveTextContent('+9');
   });
 
   it('shows augmented damage = strike.damage + chain.damageBonus', () => {
@@ -298,7 +291,7 @@ describe('ChainedStrikeSection', () => {
     expect(screen.getByText(/1d6\+4 \+ 1d6/)).toBeInTheDocument();
   });
 
-  it('renders one TargetRollResolver for strike mode', () => {
+  it('renders one sequential step for strike mode', () => {
     render(
       <ChainedStrikeSection
         character={character}
@@ -308,11 +301,11 @@ describe('ChainedStrikeSection', () => {
         effects={effects}
       />
     );
-    // resolvers are named by enemy count
-    expect(screen.getAllByTestId('resolver-1')).toHaveLength(1);
+    expect(screen.getByText('Strike')).toBeInTheDocument();
+    expect(screen.queryByText(/Strike 2/)).toBeNull();
   });
 
-  it('renders two TargetRollResolvers for flurry mode', () => {
+  it('renders the second step only after entering flurry mode', () => {
     render(
       <ChainedStrikeSection
         character={character}
@@ -322,9 +315,10 @@ describe('ChainedStrikeSection', () => {
         effects={effects}
       />
     );
-    // Click Flurry radio
     fireEvent.click(screen.getByLabelText('Flurry of Blows'));
-    expect(screen.getAllByTestId('resolver-1')).toHaveLength(2);
+    expect(currentStepLabel()).toBe('Strike');
+    rollStep(15);
+    expect(currentStepLabel()).toMatch(/Strike 2 \(MAP/);
   });
 
   it('shows mode selector only when multiple modes are configured', () => {
@@ -352,7 +346,7 @@ describe('ChainedStrikeSection', () => {
     expect(screen.getByLabelText('Flurry of Blows')).toBeInTheDocument();
   });
 
-  it('getResults returns mode, strikeName, attackBonus, damage, and rolls', () => {
+  it('getResults returns mode, strikeName, attackBonus, damage, and rolls — once rolled', () => {
     const ref = createRef();
     render(
       <ChainedStrikeSection
@@ -364,6 +358,8 @@ describe('ChainedStrikeSection', () => {
         effects={effects}
       />
     );
+    expect(ref.current.getResults().rolls).toHaveLength(0); // nothing committed yet
+    rollStep(15);
     const res = ref.current.getResults();
     expect(res.mode).toBe('strike');
     expect(res.strikeName).toBe('Unarmed Strike');
@@ -373,7 +369,7 @@ describe('ChainedStrikeSection', () => {
     expect(res.rolls[0][0]).toMatchObject({ name: 'Goblin', degree: 'success' });
   });
 
-  it('getResults for flurry returns two roll sets', () => {
+  it('getResults for flurry returns two roll sets, sequentially', () => {
     const ref = createRef();
     render(
       <ChainedStrikeSection
@@ -386,6 +382,9 @@ describe('ChainedStrikeSection', () => {
       />
     );
     fireEvent.click(screen.getByLabelText('Flurry of Blows'));
+    rollStep(15);
+    expect(ref.current.getResults().rolls).toHaveLength(1);
+    rollStep(15);
     const res = ref.current.getResults();
     expect(res.mode).toBe('flurry');
     expect(res.rolls).toHaveLength(2);
@@ -416,7 +415,7 @@ describe('ChainedStrikeSection', () => {
       }));
     });
 
-    it('flurry strike 2 resolver gets the next MAP step bonus', () => {
+    it('flurry strike 2 gets the next MAP step bonus', () => {
       render(
         <ChainedStrikeSection
           character={character}
@@ -428,9 +427,9 @@ describe('ChainedStrikeSection', () => {
         />
       );
       // strike 1: 8 + 1 chain bonus = 9; strike 2: (8−5) + 1 = 4
-      const resolvers = screen.getAllByTestId('resolver-1');
-      expect(resolvers[0]).toHaveTextContent('bonus=9');
-      expect(resolvers[1]).toHaveTextContent('bonus=4');
+      expect(document.querySelector('.uam-chain-stat')).toHaveTextContent('+9');
+      rollStep(15);
+      expect(currentStepLabel()).toMatch(/Strike 2 \(MAP -5\)/);
     });
 
     it('labels strike 2 with the applied penalty (−5 non-agile)', () => {
@@ -444,8 +443,8 @@ describe('ChainedStrikeSection', () => {
           mapStep={0}
         />
       );
-      expect(screen.getByText('Strike 2 (MAP -5):')).toBeInTheDocument();
-      expect(screen.queryByText(/MAP not applied/)).not.toBeInTheDocument();
+      rollStep(15);
+      expect(screen.getByText('Strike 2 (MAP -5)')).toBeInTheDocument();
     });
 
     it('labels strike 2 with −4 for an agile strike', () => {
@@ -460,7 +459,8 @@ describe('ChainedStrikeSection', () => {
         />
       );
       fireEvent.change(screen.getByLabelText('strike picker'), { target: { value: 'Claw' } });
-      expect(screen.getByText('Strike 2 (MAP -4):')).toBeInTheDocument();
+      rollStep(15);
+      expect(screen.getByText('Strike 2 (MAP -4)')).toBeInTheDocument();
     });
 
     it('passes the incoming mapStep through and clamps strike 2 at step 2', () => {

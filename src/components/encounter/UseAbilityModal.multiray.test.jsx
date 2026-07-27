@@ -1,11 +1,16 @@
 // UseAbilityModal — multi-ray attack spell integration (issue #234, Blazing Bolt).
 // Mocks targeting + roll resolution + MultiRayResolver so we can drive the ray-count
 // picker and assert the cast cost, per-ray log lines, and MAP increment.
+//
+// Direct multi-ray moved onto RollSheet (#1691, workstream J): the sequential
+// per-ray driver (MultiRayResolver, mocked here) reports its own progress via
+// `onProgress`, which gates the outer sheet's commit pill exactly like a
+// single-roll cast's `face` gates its own.
 
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
-import { commitRoll } from '../../test/rollSheet';
+import { commitRoll, sheetPill } from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -74,19 +79,23 @@ vi.mock('../shared/Modal', () => ({
   default: ({ isOpen, children }) => (isOpen ? <div data-testid="modal">{children}</div> : null),
 }));
 
-// Stub MultiRayResolver: echoes the rayCount it received and returns canned per-ray
-// results so the modal's logging path can be asserted.
+// Stub MultiRayResolver: echoes the rayCount it received, reports itself
+// "ready" (every ray rolled) as soon as it mounts — exactly what the real
+// sequential driver reports once its last ray commits — and returns canned
+// per-ray results so the modal's logging path can be asserted.
 vi.mock('./MultiRayResolver', () => {
-  const { forwardRef, useImperativeHandle, createElement } = require('react');
+  const { forwardRef, useImperativeHandle, useEffect, createElement } = require('react');
   return {
-    default: forwardRef(({ rayCount }, ref) => {
+    default: forwardRef(({ rayCount, onProgress }, ref) => {
       useImperativeHandle(ref, () => ({
         getResults: () => [
           { rayIndex: 0, results: [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 22, degree: 'success' }] },
           { rayIndex: 1, results: [{ entryId: 'e-orc', name: 'Orc', dc: 18, total: 12, degree: 'failure' }] },
           { rayIndex: 2, results: [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 30, degree: 'criticalSuccess' }] },
         ],
+        isComplete: () => true,
       }));
+      useEffect(() => { onProgress?.(rayCount, rayCount); }, [rayCount, onProgress]);
       return createElement('div', { 'data-testid': 'multi-ray-resolver' }, `rays=${rayCount}`);
     }),
   };
@@ -109,11 +118,13 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
   it('defaults to 1 ray / 1 action', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
     expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=1');
-    expect(screen.getByLabelText('confirm-cast')).toHaveTextContent('Cast (1)');
+    expect(sheetPill()).toHaveTextContent('Cast Blazing Bolt (1)');
   });
 
   it('shows an action-count picker for the 1–3 range', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
+    // The picker lives in the sheet's collapsed edit panel now (#1687/#1691).
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     expect(within(group).getByText('1')).toBeInTheDocument();
     expect(within(group).getByText('2')).toBeInTheDocument();
@@ -122,15 +133,16 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
 
   it('choosing 3 actions renders three ray rows and sets the cast cost to 3', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('3'));
     expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=3');
-    expect(screen.getByLabelText('confirm-cast')).toHaveTextContent('Cast (3)');
+    expect(sheetPill()).toHaveTextContent('Cast Blazing Bolt (3)');
   });
 
-  it('logs one line per ray with degree per target on confirm', () => {
+  it('logs one line per ray with degree per target on commit', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    fireEvent.click(sheetPill());
     const texts = mockAppendLog.mock.calls.map((c) => c[0].text);
     expect(texts).toContain('Jade cast Blazing Bolt — ray 1 vs Goblin (AC 15): 22 → Hit');
     expect(texts).toContain('Jade cast Blazing Bolt — ray 2 vs Orc (AC 18): 12 → Miss');
@@ -139,9 +151,11 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
 
   it('spends the chosen action count and raises MAP by the ray count', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('3'));
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    fireEvent.click(sheetPill());
     expect(mockSpendActions).toHaveBeenCalledWith(3, 'Cast Blazing Bolt');
     expect(mockRecordAttack).toHaveBeenCalledWith(3);
   });
@@ -151,10 +165,12 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
     // as the explicit cost; the cast must still spend what the picker says.
     render(<UseAbilityModal {...props} ability={blazingBolt} cost={3} />);
     expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=3');
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('1'));
     expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=1');
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    fireEvent.click(sheetPill());
     expect(mockSpendActions).toHaveBeenCalledWith(1, 'Cast Blazing Bolt');
     expect(mockRecordAttack).toHaveBeenCalledWith(1);
   });
@@ -163,6 +179,7 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
     const scorchingRay = { id: 'sr', name: 'Scorching Ray', actions: 'Two Actions', traits: ['Attack', 'Fire'] };
     render(<UseAbilityModal {...props} ability={scorchingRay} />);
     expect(screen.queryByTestId('multi-ray-resolver')).not.toBeInTheDocument();
+    // No multi-ray dieSlot on this path — a single RollEntry, no ray picker.
     expect(screen.queryByRole('radiogroup', { name: 'Number of actions' })).not.toBeInTheDocument();
     // Single-roll attacks are RollSheet's since #1687 — tap a face and commit.
     commitRoll(10);

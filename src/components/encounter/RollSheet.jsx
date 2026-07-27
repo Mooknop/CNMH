@@ -95,6 +95,14 @@ const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
  * PHASE 1 — DIE
  * @param {boolean}  [hasD20=true]   - false skips RollEntry entirely (no-die abilities);
  *                                     the commit button is then always live
+ * @param {ReactNode}[dieSlot]       - additive (#1691, workstream J): replaces RollEntry
+ *                                     entirely when present, `hasD20` or not — the
+ *                                     sequential multi-ray driver owns its own die
+ *                                     entry (one pad per ray) and its own grouped
+ *                                     damage entry, so this sheet has nothing left to
+ *                                     roll itself. The caller is expected to pass
+ *                                     `hasD20={false}` alongside it and gate readiness
+ *                                     with `blockLine` instead of a `face` value.
  * @param {string}   [charId]        - forwarded to RollEntry (chat-speaker attribution)
  * @param {string}   [flavor]        - forwarded to RollEntry + DamageEntry
  * @param {number}   [bonus]         - forwarded to RollEntry; also builds the frozen headline
@@ -177,6 +185,7 @@ export default function RollSheet({
   editStatusLine = '',
 
   hasD20 = true,
+  dieSlot = null,
   charId = null,
   flavor = '',
   bonus = null,
@@ -461,7 +470,7 @@ export default function RollSheet({
         </div>
       )}
 
-      {hasD20 && (
+      {dieSlot ? dieSlot : hasD20 && (
         <RollEntry
           face={face}
           onFaceChange={setFace}

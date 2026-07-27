@@ -1,10 +1,18 @@
 // UseAbilityModal — Split Shot confirm (#227). The chained single-target
 // attack spell gains a second target: one roll is compared to both ACs, and
 // the designated second target's log line carries the half-damage note.
+//
+// The chain's roll widget is the sequential SequentialAttackSteps driver now
+// (#1691) — one d20 tap pad, not a typed `raw d20` input.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) =>
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
+const rollStep = (face) => { tapFace(face); fireEvent.click(document.querySelector('.sas-pill')); };
 
 const mockAppendLog = vi.fn();
 const mockSendUpdate = vi.fn();
@@ -116,7 +124,7 @@ describe('UseAbilityModal — Split Shot confirm', () => {
     render(<UseAbilityModal {...props} ability={splitShot} />);
 
     // 16 beats Goblin's AC 15, misses Orc's AC 17 — one roll, two outcomes.
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '16' } });
+    rollStep(16);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
 
     const texts = mockAppendLog.mock.calls.map((c) => c[0].text);
@@ -131,7 +139,7 @@ describe('UseAbilityModal — Split Shot confirm', () => {
   it('re-designating the second target moves the half-damage note', () => {
     render(<UseAbilityModal {...props} ability={splitShot} />);
     fireEvent.click(screen.getByLabelText('second-target-Goblin'));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '18' } });
+    rollStep(18);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
 
     const texts = mockAppendLog.mock.calls.map((c) => c[0].text);
@@ -145,7 +153,7 @@ describe('UseAbilityModal — Split Shot confirm', () => {
 
   it('counts the split cast as a single attack for MAP', () => {
     render(<UseAbilityModal {...props} ability={splitShot} />);
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '16' } });
+    rollStep(16);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(mockRecordAttack).toHaveBeenCalledTimes(1);
     expect(mockRecordAttack).toHaveBeenCalledWith(1);
