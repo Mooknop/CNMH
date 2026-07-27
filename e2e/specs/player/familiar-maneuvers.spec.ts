@@ -25,7 +25,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
-import { tapFace } from '../../helpers/rollSheet';
+import { degrees, openEdit, tapFace } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-witch';
 const CHAR_NAME = 'E2E Witch';
@@ -133,15 +133,18 @@ test.describe('Familiar maneuvers', () => {
       page.getByRole('heading', { name: `${FAMILIAR_NAME} — Trip`, level: 2 }),
     ).toBeVisible();
 
-    // Target → the resolver surfaces the derived Reflex DC (10 + 5).
+    // RollSheet migration (successor arc to #1680): the target pick lives in
+    // the sheet's edit disclosure, and no degree exists before the commit —
+    // "Log Trip" IS the commit pill.
+    await openEdit(page);
     await page.locator('.fmm-target-picks').getByRole('button', { name: ENEMY_NAME }).click();
-    await expect(page.locator('.trr-dc-badge')).toHaveText(`${ENEMY_NAME}: 15`);
+    // The pre-roll math line surfaces the derived Reflex DC (10 + 5).
+    await expect(page.locator('.rollentry-math')).toContainText(`${ENEMY_NAME} Reflex DC 15`);
 
     // d20 12 + Acrobatics 8 = 20 vs DC 15 → Success.
     await tapFace(page, 12);
-    await expect(page.locator('.trr-result-degree')).toHaveText('Success');
-
     await page.getByRole('button', { name: 'Log Trip' }).click();
+    await expect(degrees(page)).toHaveText('Success');
 
     // Outcome goes to the GM via the combat log; the maneuver costs the
     // familiar 1 granted action.

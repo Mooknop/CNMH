@@ -8,6 +8,11 @@ import { useEncounter } from '../../hooks/useEncounter';
 const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
 const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
+// The RollSheet migration (Roll Resolution redesign successor arc): the target
+// picker, Acrobatics override and off-guard toggle live in the sheet's edit
+// disclosure now, and the commit pill IS the "Log <maneuver>" moment.
+const openEdit = () => fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
 // Dummy modal — render children inline so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
   default: function DummyModal({ isOpen, title, children }) {
@@ -21,8 +26,8 @@ const mockSpendActions = vi.fn();
 vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({ turnState: { actionsGranted: 0, actionsSpent: 0 }, spendActions: mockSpendActions }),
 }));
-// useTargeting, TargetRollResolver, minionUtils all run for real so the test
-// exercises the actual bonus + Reflex-DC pipeline.
+// useTargeting, useAttackRollSheet, RollSheet, minionUtils all run for real so
+// the test exercises the actual bonus + Reflex-DC pipeline.
 
 // Lazarus — Squox trained in Acrobatics; at owner level 4 that's +7.
 const lazarus = { name: 'Lazarus', skills: ['Acrobatics', 'Stealth', 'Perception'] };
@@ -56,25 +61,35 @@ beforeEach(() => { appendLog = vi.fn(); mockSpendActions.mockClear(); });
 describe('FamiliarManeuverModal', () => {
   it('lists only enemy targets (owner PC excluded)', () => {
     renderModal();
+    openEdit();
     expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Jade' })).not.toBeInTheDocument();
   });
 
   it('seeds the Acrobatics modifier from the familiar-skill convention (+7 at level 4)', () => {
     renderModal();
+    openEdit();
     expect(screen.getByLabelText('Acrobatics modifier')).toHaveValue(7);
   });
 
   it('rolls at the Acrobatics modifier, and +2 more when the target is off-guard', () => {
     renderModal();
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.getByText('your d20 · check +7')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Target off-guard +2' }));
     expect(screen.getByText('your d20 · check +9')).toBeInTheDocument();
   });
 
-  it('logs the maneuver result vs the Reflex DC on confirm', () => {
+  it('blocks the commit until a target is picked', () => {
+    renderModal();
+    expect(screen.getByText('Pick a target first — open Edit.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /log trip/i })).toBeDisabled();
+  });
+
+  it('logs the maneuver result vs the Reflex DC on commit', () => {
     renderModal({ id: 'trip', name: 'Trip' });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     // d20 10 + 7 = 17 vs Reflex DC 14 → Success
     tapFace(10);
@@ -85,10 +100,14 @@ describe('FamiliarManeuverModal', () => {
       charId: 'Ashka',
       text: expect.stringContaining('Lazarus Trip vs Goblin (Reflex DC 14): 17 → Success — Goblin knocked prone'),
     });
+    // The frozen result card carries the degree and the outcome note.
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('knocked prone')).toBeInTheDocument();
   });
 
-  it('spends 1 granted action on confirm during an encounter (#391)', () => {
+  it('spends 1 granted action on commit during an encounter (#391)', () => {
     renderModal({ id: 'trip', name: 'Trip' }, { active: true });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
@@ -97,6 +116,7 @@ describe('FamiliarManeuverModal', () => {
 
   it('does not spend an action out of encounter', () => {
     renderModal({ id: 'trip', name: 'Trip' });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
@@ -105,6 +125,7 @@ describe('FamiliarManeuverModal', () => {
 
   it('notes the off-guard bonus in the log when toggled', () => {
     renderModal({ id: 'disarm', name: 'Disarm' });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     fireEvent.click(screen.getByRole('button', { name: 'Target off-guard +2' }));
     tapFace(10); // 10 + 9 = 19 → Success
