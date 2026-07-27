@@ -5,18 +5,26 @@ import { resolveSaveRequestFx } from './fxPlay';
 
 /**
  * Confirm-time save-request payload for a target-save ability (#270,
- * extracted #1317 D3). When a damage profile exists, the caster's entered
- * total and rider snapshot travel with the request — RequestedSaves derives
- * per-degree totals GM-side. A save-outcome-gated caster-side buff (#274 —
- * Shining Guidance's Limned bonus) resolves its ally targets now and rides
- * along; RequestedSaves applies the effect on the matching save degrees.
+ * extracted #1317 D3). The rider snapshot always travels with the request; the
+ * caster's entered TOTAL does too on the classic path, where RequestedSaves
+ * derives per-degree totals GM-side. A save-outcome-gated caster-side buff
+ * (#274 — Shining Guidance's Limned bonus) resolves its ally targets now and
+ * rides along; RequestedSaves applies the effect on the matching save degrees.
+ *
+ * `deferDamage` (#1689 — the caster save round trip) inverts that half: the
+ * caster rolls damage AFTER the GM's degrees come back, so the payload ships
+ * with `entered: null` and is always present when a damage profile exists —
+ * the rider choices, the expression and the per-degree overrides are exactly
+ * what the caster's amount step needs to reproduce, and an absent payload
+ * would leave it nothing to work from. `entered: null` is also what tells
+ * RequestedSaves not to apply damage itself.
  *
  * Pure builder: returns the addSaveRequest payload, or null when the ability
  * isn't a resolvable target-save (wrong mode, no enemy targets, no DC).
  *
  * @param {Object} ctx - { rollProfile, saveTargets, damageProfile,
- *   saveDmgInput, saveRiderState, ability, character, casterEntryId, order,
- *   saveDc, directCastRank }
+ *   saveDmgInput, saveRiderState, deferDamage, ability, character,
+ *   casterEntryId, order, saveDc, directCastRank }
  */
 export const buildTargetSaveRequest = ({
   rollProfile,
@@ -24,6 +32,7 @@ export const buildTargetSaveRequest = ({
   damageProfile,
   saveDmgInput,
   saveRiderState,
+  deferDamage = false,
   ability,
   character,
   casterEntryId,
@@ -44,9 +53,9 @@ export const buildTargetSaveRequest = ({
   if (damageProfile) {
     const enteredNum = parseInt(saveDmgInput, 10);
     const savedRiders = serializeRidersForSave(damageProfile.riders, saveRiderState);
-    if (!Number.isNaN(enteredNum) || savedRiders.length > 0) {
+    if (deferDamage || !Number.isNaN(enteredNum) || savedRiders.length > 0) {
       damage = {
-        entered: Number.isNaN(enteredNum) ? null : enteredNum,
+        entered: deferDamage || Number.isNaN(enteredNum) ? null : enteredNum,
         expression: damageProfile.expression ?? null,
         typeLabel: damageProfile.typeLabel ?? null,
         riders: savedRiders,

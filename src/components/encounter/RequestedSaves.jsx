@@ -4,10 +4,10 @@ import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
-import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
+import { formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
 import { DEFENSE_NAMES } from '../../utils/defense';
-import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
-import { buildDamageApply } from '../../utils/damageRelay';
+import { PERSISTENT_KEY } from '../../utils/persistentDamage';
+import { saveDamageFor, applySaveDamageOutcome } from '../../utils/saveDamage';
 import { emitSaveFxPlay } from '../../utils/fxPlay';
 import { SAVEDONE_KEY, SAVEDONE_FRESH_MS, buildSaveRoll } from '../../utils/saveRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
@@ -31,27 +31,25 @@ import { RELAY, APP } from '../../sync/keys';
  * Degrees write-back (#1683): both resolution paths finish through
  * `resolveSaveRequest`, which records the resolved degrees on
  * `encounter.saveResolutions` and removes the request in one write, so the
- * caster's client can read its own outcome. Nothing consumes the record yet —
- * damage/conditions/fx still apply here, unchanged, until G2 (#1689) inverts
- * the flow.
+ * caster's client can read its own outcome.
+ *
+ * Damage inversion (#1689 — G2). The caster now rolls damage AFTER seeing the
+ * degrees, so a NEW-style request arrives with no entered total and this panel
+ * must NOT apply damage for it: the caster's own sheet runs the persistent
+ * rail (#272), the typed relay (#1016) and the IWR reveal (#1014) once the
+ * total exists. Applying in both places would double-apply (G1 risk 1).
+ *
+ * The split is deliberately backward compatible and reads off the payload
+ * itself — `req.damage?.entered == null` means "the caster owns this":
+ *
+ *   entered is a number → OLD-style (a client still on the pre-#1689 build, or
+ *                         an ArmedPayloads / secondaryProfiles request, which
+ *                         both still enter their total up front) → unchanged.
+ *   entered is null     → NEW-style → conditions, fx, the caster effect and
+ *                         every log line still resolve here; only the
+ *                         HP-affecting appliers move to the caster.
  */
-const damageFor = (req, degree, entryId, defenses = null) => {
-  if (!req.damage || !degree) return null;
-  if (degree === 'criticalSuccess') return { none: true };
-  const dmg = computeSaveDamage({
-    entered: req.damage.entered,
-    degree,
-    riders: req.damage.riders,
-    entryId,
-    // Monster IWR (#1014): the target's own defenses net into the displayed
-    // final (the relay below stays raw via rawFinal).
-    typeLabel: req.damage.typeLabel,
-    defenses,
-    // Per-degree multiplier overrides (#987 — Boulder Crush's full-on-crit-fail).
-    degrees: req.damage.degrees ?? null,
-  });
-  return dmg ? { dmg } : null;
-};
+const casterRollsDamage = (req) => req?.damage?.entered == null;
 
 const RequestedSaves = () => {
   const { encounter, appendLog, resolveSaveRequest } = useEncounter();
@@ -102,9 +100,13 @@ const RequestedSaves = () => {
   const finishResolve = (req, results) => {
     // Bare name (#1610): every line below writes its own "DC ${req.dc}".
     const saveLabel = DEFENSE_NAMES[req.save] || req.save;
+    // #1689: a request with no entered total is one the CASTER will roll for.
+    const casterOwnsDamage = casterRollsDamage(req);
     results.forEach((r) => {
       const degreeLabel = DEGREE_LABELS[r.degree] || r.degree;
-      const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
+      const d = casterOwnsDamage
+        ? null
+        : saveDamageFor(req.damage, r.degree, r.entryId, defensesFor(r.entryId));
       const dmgSuffix = d
         ? (d.none ? ' · no damage' : ` · damage ${formatDamageBreakdown(d.dmg)}`)
         : '';
@@ -115,55 +117,26 @@ const RequestedSaves = () => {
       });
     });
 
-    // Persistent-damage tracking (#272): computeSaveDamage already gated the
-    // entries by degree (and doubled/halved their dice) — record what's left.
-    const persistentHits = results
-      .map((r) => {
-        const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
-        return d?.dmg?.persistent?.length
-          ? { entryId: r.entryId, persistent: d.dmg.persistent }
-          : null;
-      })
-      .filter(Boolean);
-    if (persistentHits.length) {
-      setPersistentMap((m) => persistentHits.reduce(
-        (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, req.abilityName)),
-        m || {}
-      ));
-    }
-
-    // Typed damage relay (#1016): push each enemy target's RAW typed total to
-    // the bridge — Foundry's applyDamage nets the monster's IWR (the logged
-    // number above stays raw/informational). Enemies only, same as UseAbilityModal.
-    const enemyEntryIds = new Set(
-      (encounter?.order || []).filter((e) => e.kind === 'enemy').map((e) => e.entryId)
-    );
-    const relayHits = results
-      .map((r) => {
-        const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
-        // Raw pre-IWR amount (#1014): Foundry's applyDamage nets IWR itself —
-        // an app-netted 0 (immune) still relays raw and Foundry decides.
-        const raw = d?.dmg?.rawFinal ?? d?.dmg?.final;
-        return raw > 0 && enemyEntryIds.has(r.entryId)
-          ? { entryId: r.entryId, name: r.name, amount: raw, type: req.damage?.typeLabel || '' }
-          : null;
-      })
-      .filter(Boolean);
-    if (relayHits.length) {
-      sendUpdate('global', RELAY.DMGAPPLY, buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
+    // Persistent tracking (#272) + the typed relay (#1016) + reveal-on-trigger
+    // (#1014) — the three HP-affecting appliers, now shared with the caster's
+    // sheet (utils/saveDamage). Skipped wholesale for a new-style request:
+    // the caster runs this exact function once the total is rolled (#1689).
+    if (!casterOwnsDamage) {
+      applySaveDamageOutcome({
+        damage:      req.damage,
+        results,
+        order:       encounter?.order || [],
+        abilityName: req.abilityName,
+        setPersistentMap,
+        sendUpdate,
+        revealFiredIwr,
+      });
     }
 
     // Canvas animation (#1414 A4): the recipe resolved on the caster's client
     // rode the request — fire it now that the saves are in. Every resolved
     // target animates (the fireball engulfs the square either way).
     if (req.fx) emitSaveFxPlay({ sendUpdate, fx: req.fx, results });
-
-    // Reveal-on-trigger (#1014): monster IWR that just modified a target's
-    // save damage becomes table knowledge.
-    revealFiredIwr(results.map((r) => {
-      const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
-      return { entryId: r.entryId, damage: d?.dmg || null };
-    }));
 
     // Per-degree target conditions (#1216 — Chroma Kaleidoscope's dazzle/blind
     // ladder, Reactive Flash's off-guard). Applied to the enemy-conditions rail;
@@ -346,6 +319,9 @@ const RequestedSaves = () => {
                   [req.damage.expression, hintTypeLabel(req.damage.expression, req.damage.typeLabel)]
                     .filter(Boolean).join(' '),
                   req.damage.entered != null ? `rolled ${req.damage.entered}` : null,
+                  // #1689: say WHY there is no total to preview against — the
+                  // caster rolls it once these degrees reach their sheet.
+                  casterRollsDamage(req) ? 'the caster rolls damage after these degrees' : null,
                 ].filter(Boolean).join(' — ')}
               </div>
             )}
@@ -381,7 +357,11 @@ const RequestedSaves = () => {
                     </span>
                   )}
                   {(() => {
-                    const d = damageFor(req, degree, t.entryId, defensesFor(t.entryId));
+                    // No preview for a caster-rolled payload (#1689): there is
+                    // no total yet, and the persistent riders it WOULD show are
+                    // not this panel's to apply any more.
+                    if (casterRollsDamage(req)) return null;
+                    const d = saveDamageFor(req.damage, degree, t.entryId, defensesFor(t.entryId));
                     if (!d) return null;
                     return (
                       <span className="gm-save-req-dmg">

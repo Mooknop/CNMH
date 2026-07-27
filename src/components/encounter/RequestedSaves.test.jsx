@@ -421,6 +421,78 @@ describe('RequestedSaves', () => {
       });
     };
 
+    // ── The damage inversion compat split (#1689 — G2) ───────────────────────
+    // A request whose payload carries no entered total is one the CASTER will
+    // roll for: the HP-affecting appliers move to their sheet, everything else
+    // stays here. `entered` is the discriminator, so an old client's request
+    // (or ArmedPayloads / secondaryProfiles, which still enter up front) keeps
+    // the pre-#1689 behaviour exactly.
+    describe('caster-rolled damage (#1689)', () => {
+      const deferred = { entered: null, expression: '6d6', typeLabel: 'fire', riders: [] };
+
+      test('the card says the caster rolls it, and previews no per-target total', () => {
+        withDamageAndOrder(deferred);
+        render(<RequestedSaves />);
+        expect(screen.getByText('6d6 fire — the caster rolls damage after these degrees'))
+          .toBeInTheDocument();
+        enterGoblinD20(10); // Failure — but there is no total to halve or double
+        expect(document.querySelector('.gm-save-req-dmg')).toBeNull();
+      });
+
+      test('resolving relays no damage and logs the degree with no suffix', () => {
+        withDamageAndOrder(deferred);
+        render(<RequestedSaves />);
+        enterGoblinD20(10);
+        fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+        expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
+        expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+          text: 'Goblin rolls Reflex vs DC 20 (Fireball): 15 → Failure',
+        }));
+      });
+
+      test('persistent riders are the caster\'s to apply too', () => {
+        withDamageAndOrder({
+          ...deferred,
+          riders: [{ id: 'p', label: 'Persistent electricity', persistent: { dice: '1d4', type: 'electricity' } }],
+        });
+        render(<RequestedSaves />);
+        enterGoblinD20(1); // Critical Failure — the degree the rider fires on
+        fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+        expect(syncedMock.persistentSetter).not.toHaveBeenCalled();
+      });
+
+      test('the degrees still reach the caster, and conditions still land here', () => {
+        withDamageAndOrder(deferred, {
+          conditions: { failure: [{ id: 'off-guard' }] },
+        });
+        render(<RequestedSaves />);
+        enterGoblinD20(10);
+        fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+        // The write-back is the whole point — without it the caster's sheet
+        // waits forever.
+        expect(resolutionRecord()).toMatchObject({
+          casterId: 'char-a',
+          abilityName: 'Fireball',
+          results: [expect.objectContaining({ entryId: 'e-goblin', degree: 'failure' })],
+          damage: deferred,
+        });
+        // Conditions, fx and the caster effect never moved.
+        expect(syncedMock.enemyFxSetter).toHaveBeenCalled();
+      });
+
+      test('an old-style request is untouched — damage still applies here', () => {
+        withDamageAndOrder(dmgFixture);
+        render(<RequestedSaves />);
+        enterGoblinD20(10);
+        fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+        expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'dmgapply', expect.objectContaining({
+          hits: [{ entryId: 'e-goblin', name: 'Goblin', amount: 12, type: 'fire' }],
+        }));
+      });
+    });
+
     test('resolving sends the RAW typed per-target totals to the bridge', () => {
       withDamageAndOrder(dmgFixture, { targets: [goblinTarget, trollTarget] });
       render(<RequestedSaves />);

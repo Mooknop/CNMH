@@ -128,7 +128,14 @@ const marionettist = {
   }],
 };
 
-const cast = () => fireEvent.click(screen.getByLabelText('confirm-cast'));
+// Commit, whichever shell this ability lands on: a cast that calls for no save
+// of its own (Targeting Beacon, mode 'none') keeps the classic footer button,
+// while a target-save cast is a RollSheet whose single pill is the commit
+// (#1689 — no caster die, so there is nothing to tap first).
+const cast = () => {
+  const classic = screen.queryByLabelText('confirm-cast');
+  fireEvent.click(classic || document.querySelector('.rs-pill'));
+};
 
 beforeEach(() => { vi.clearAllMocks(); });
 

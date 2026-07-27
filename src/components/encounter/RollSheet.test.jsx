@@ -306,6 +306,86 @@ describe('RollSheet', () => {
     });
   });
 
+  // The one additive prop from G2 (#1689), and F's friction 1 (#1700).
+  describe('closeGuard', () => {
+    beforeEach(() => setDevicePref(TABLE_DICE_PREF, true));
+
+    const chromeClose = () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    const guardProps = (over = {}) => ({
+      title: 'Cast: Electric Arc',
+      commitLabel: 'Cast Electric Arc (2 actions)',
+      bonus: null,
+      charId: 'Ezren',
+      saveMode: true,
+      onCommit: () => null,
+      onFinish: () => {},
+      ...over,
+    });
+
+    it('refuses the first close on waiting, explains, then lets the second through', () => {
+      const onClose = vi.fn();
+      renderWithProviders(
+        <RollSheet {...guardProps()} onClose={onClose} closeGuard={{ blocked: true }} />,
+        { session: { state: RAIL_STATE } },
+      );
+      tapFace(11);
+      fireEvent.click(pill('Cast Electric Arc (2 actions)'));
+
+      chromeClose();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByText('Tap Close again to leave this unresolved.')).toBeInTheDocument();
+
+      chromeClose();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('renders a standing notice with no refusal, and closes on the first tap', () => {
+      const onClose = vi.fn();
+      renderWithProviders(
+        <RollSheet
+          {...guardProps()}
+          onClose={onClose}
+          closeGuard={{ blocked: false, notice: 'The GM dismissed this save.' }}
+        />,
+        { session: { state: RAIL_STATE } },
+      );
+      tapFace(11);
+      fireEvent.click(pill('Cast Electric Arc (2 actions)'));
+
+      // The bail message stands on its own — nothing has to be attempted first.
+      expect(screen.getByText('The GM dismissed this save.')).toBeInTheDocument();
+      chromeClose();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('never guards phase 1 or the settled receipt', () => {
+      const onClose = vi.fn();
+      renderWithProviders(
+        <RollSheet
+          {...attackProps()}
+          damageParts={null}
+          onClose={onClose}
+          onCommit={() => ATTACK_ROWS}
+          onFinish={() => {}}
+          closeGuard={{ blocked: true }}
+        />,
+        { session: { state: RAIL_STATE } },
+      );
+      // Phase 1: nothing has been committed, so there is nothing to owe.
+      chromeClose();
+      expect(onClose).toHaveBeenCalledTimes(1);
+
+      tapFace(15);
+      fireEvent.click(pill('Resolve strike (1 action)'));
+      // Nothing to roll → result → done; the settled Close is never refused.
+      fireEvent.click(pill('Close'));
+      fireEvent.click(pill('Close'));
+      expect(onClose).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('async commit', () => {
     beforeEach(() => setDevicePref(TABLE_DICE_PREF, true));
 

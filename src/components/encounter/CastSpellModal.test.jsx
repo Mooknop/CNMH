@@ -642,8 +642,10 @@ describe('CastSpellModal', () => {
       };
       render(<CastSpellModal {...defaultProps} character={casterChar} spell={sigSaveSpell} castSource="slot" />);
       fireEvent.click(screen.getByRole('radio', { name: /rank 2 slot/i }));
+      // Picking the first target hands the cast over to RollSheet's save path
+      // (#1689); with no caster die its single pill IS the commit.
       fireEvent.click(screen.getByRole('button', { name: 'Target Goblin' }));
-      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      fireEvent.click(document.querySelector('.rs-pill'));
       expect(mockAddSaveRequest).toHaveBeenCalledWith(
         expect.objectContaining({ abilityName: 'Fear', rank: 2 })
       );
@@ -655,7 +657,7 @@ describe('CastSpellModal', () => {
       };
       render(<CastSpellModal {...defaultProps} character={casterChar} spell={cantripSave} castSource="slot" />);
       fireEvent.click(screen.getByRole('button', { name: 'Target Goblin' }));
-      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      fireEvent.click(document.querySelector('.rs-pill'));
       // Level-5 caster → cantrips auto-heighten to rank ceil(5/2) = 3.
       expect(mockAddSaveRequest).toHaveBeenCalledWith(
         expect.objectContaining({ abilityName: 'Daze', rank: 3 })

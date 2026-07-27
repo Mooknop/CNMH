@@ -164,6 +164,23 @@
   color: var(--shell-text-secondary);
 }
 
+/* Close guard / bail advisory (#1689) — the gold notice treatment
+   RollEntry.css already uses for its nack line, so an "something did not come
+   back" message reads the same wherever the redesign puts it. */
+.rs-guard {
+  margin: 0;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--gold-mid);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent);
+  color: var(--gold-light);
+  font-size: .8rem;
+  line-height: 1.35;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 /* ── Screen 3 — result ────────────────────────────────────────────────── */
 
 .rs-result {
