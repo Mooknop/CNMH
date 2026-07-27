@@ -82,6 +82,14 @@
   opacity: 0.8;
 }
 
+/* Degree chip under the RollEntry roll (#1684) — RollEntry itself shows the
+   face/bonus/total; the pass/fail-style degree label stays resolver-owned. */
+.rkr-degree-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 .rkr-choice-list {
   display: flex;
   flex-direction: column;

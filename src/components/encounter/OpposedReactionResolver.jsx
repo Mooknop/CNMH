@@ -2,7 +2,7 @@ import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { DEGREE_LABELS_SAVE } from './TargetRollResolver';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './TargetRollResolver.css';
 
 /**
@@ -47,7 +47,7 @@ const OpposedReactionResolver = forwardRef(({
   const hasPicker = Array.isArray(skillOptions) && skillOptions.length > 0;
 
   const [dcInput,      setDcInput]      = useState('');
-  const [d20Input,     setD20Input]     = useState('');
+  const [face,         setFace]         = useState(null); // raw d20 face, 1-20 or null
   const [enemyEntryId, setEnemyEntryId] = useState('');
   const [selectedSkill, setSelectedSkill] = useState(
     () => (hasPicker
@@ -65,10 +65,12 @@ const OpposedReactionResolver = forwardRef(({
 
   const dc     = parseInt(dcInput, 10);
   const hasDc  = !isNaN(dc);
-  const d20    = parseInt(d20Input, 10);
-  const hasD20 = !isNaN(d20);
+  const d20    = face;
+  const hasD20 = d20 != null;
 
-  // d20 + bonus when a derivable bonus exists; otherwise the input is the raw total.
+  // d20 + bonus when a derivable bonus exists; a bonus-less opposed check (no
+  // real caller today — every authored opposed reaction is a skill roll) nets
+  // to the raw face, same as any other bonus-less RollEntry site.
   const total   = hasD20 ? (effectiveBonus !== null ? d20 + effectiveBonus : d20) : NaN;
   const d20face = hasD20 ? d20 : 10; // neutral face → no nat-1/20 shift
 
@@ -92,8 +94,6 @@ const OpposedReactionResolver = forwardRef(({
     }),
   }));
 
-  const bonusDisplay = effectiveBonus !== null ? formatModifier(effectiveBonus) : null;
-  const totalDisplay = hasD20 && effectiveBonus !== null ? total : null;
   const info         = degree ? DEGREE_LABELS_SAVE[degree] : null;
   const succeeded    = degree === 'success' || degree === 'criticalSuccess';
 
@@ -124,39 +124,38 @@ const OpposedReactionResolver = forwardRef(({
         )}
       </div>
 
-      <div className="trr-entry-row">
-        {hasPicker ? (
-          <select
-            className="trr-defense-select"
-            aria-label="roll skill"
-            value={selectedSkill}
-            onChange={(e) => setSelectedSkill(e.target.value)}
-          >
-            {skillOptions.map((o) => (
-              <option key={o.skill} value={o.skill}>
-                {o.label} ({formatModifier(o.bonus)})
-              </option>
-            ))}
-          </select>
-        ) : (
-          effectiveLabel && <span className="trr-defense-label">{effectiveLabel}</span>
-        )}
-        <FoundryDiceInput
-          inputClassName="trr-roll-input"
-          placeholder={rollBonus !== null ? 'd20' : 'total'}
-          ariaLabel="raw d20"
-          value={d20Input}
-          onValue={setD20Input}
-          // Manual-total mode (no derivable bonus) can't use a raw face.
-          charId={effectiveBonus !== null ? charId : null}
+      {(hasPicker || effectiveLabel) && (
+        <div className="trr-entry-row">
+          {hasPicker ? (
+            <select
+              className="trr-defense-select"
+              aria-label="roll skill"
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+            >
+              {skillOptions.map((o) => (
+                <option key={o.skill} value={o.skill}>
+                  {o.label} ({formatModifier(o.bonus)})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="trr-defense-label">{effectiveLabel}</span>
+          )}
+        </div>
+      )}
+
+      <div className="trr-rollentry-wrap">
+        <RollEntry
+          face={face}
+          onFaceChange={setFace}
+          onCommit={setFace}
+          bonus={effectiveBonus}
+          bonusLabel={effectiveLabel || ''}
+          dcLine={hasDc ? `nothing rolled yet · DC ${dc}` : ''}
+          charId={charId}
           flavor={`${rollFlavor || 'Opposed check'}${effectiveLabel ? `: ${effectiveLabel}` : ''}`}
         />
-        {bonusDisplay && (
-          <span className="trr-bonus-badge" aria-label="roll bonus">{bonusDisplay}</span>
-        )}
-        {totalDisplay !== null && (
-          <span className="trr-total-badge" aria-label="computed total">= {totalDisplay}</span>
-        )}
       </div>
 
       {info && (

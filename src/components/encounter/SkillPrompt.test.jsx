@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 
 vi.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
@@ -35,6 +35,8 @@ const PromptDriver = ({ charId }) => {
   return null;
 };
 
+const rollFace = (v) => fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
+
 function setup(charId = 'thorn') {
   render(
     <>
@@ -58,8 +60,8 @@ describe('SkillPrompt', () => {
     expect(screen.getByLabelText('Arcana skill prompt')).toBeInTheDocument();
     expect(screen.getByText('Recall Knowledge: Dragon')).toBeInTheDocument();
     expect(screen.getByText('DC 22')).toBeInTheDocument();
-    expect(screen.getByText(/\+7/)).toBeInTheDocument();
-    expect(screen.getByLabelText('d20 roll')).toBeInTheDocument();
+    expect(screen.getByText('Your modifier: +7')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'raw d20' })).toBeInTheDocument();
   });
 
   it('shows skill label when no label string provided', () => {
@@ -79,7 +81,7 @@ describe('SkillPrompt', () => {
     setup();
     act(() => setPrompt({ reqId: 'r1', skill: 'occultism', dc: 20, label: 'Recall: Demon' }));
     // d20=14, mod=9, total=23 ≥ DC 20 → success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Occultism check'));
 
     expect(screen.getByText('23')).toBeInTheDocument();
@@ -94,7 +96,7 @@ describe('SkillPrompt', () => {
     setup();
     // d20=20, arcana mod=7, total=27, DC=22: 27≥22 → success; nat20 shifts up → crit success
     act(() => setPrompt({ reqId: 'r2', skill: 'arcana', dc: 22 }));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '20' } });
+    rollFace(20);
     fireEvent.click(screen.getByLabelText('Submit Arcana check'));
     expect(screen.getByText('Critical Success')).toBeInTheDocument();
   });
@@ -114,7 +116,7 @@ describe('SkillPrompt', () => {
     );
     // d20=1, mod=19, total=20, DC=20: base success; nat1 → failure
     act(() => setPrompt2({ reqId: 'r3', skill: 'society', dc: 20 }));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    rollFace(1);
     fireEvent.click(screen.getByLabelText('Submit Society check'));
     expect(screen.getByText('Failure')).toBeInTheDocument();
   });
@@ -122,17 +124,17 @@ describe('SkillPrompt', () => {
   it('dismiss button clears the result', () => {
     setup();
     act(() => setPrompt({ reqId: 'r1', skill: 'arcana', dc: 22 }));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Arcana check'));
     fireEvent.click(screen.getByLabelText('Dismiss skill result'));
     expect(screen.queryByText('Success')).toBeNull();
-    expect(screen.getByLabelText('d20 roll')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'raw d20' })).toBeInTheDocument();
   });
 
   it('a new prompt clears the previous result', () => {
     setup();
     act(() => setPrompt({ reqId: 'r1', skill: 'arcana', dc: 22 }));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Arcana check'));
     act(() => setPrompt({ reqId: 'r2', skill: 'nature', dc: 18, label: 'Recall: Wolf' }));
     expect(screen.queryByText('Success')).toBeNull();

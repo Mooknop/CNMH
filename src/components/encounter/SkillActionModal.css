@@ -121,10 +121,16 @@
   color: var(--shell-text-tertiary);
 }
 
-/* d20 + DC inputs */
+/* d20 + DC inputs — stacked (#1684): RollEntry's ring/pad is far taller than
+   the old inline field, so the DC field sits below it rather than beside it. */
 .sam-inputs {
   display: flex;
+  flex-direction: column;
   gap: var(--space-4);
+}
+
+.sam-inputs .sam-field {
+  align-items: center;
 }
 
 .sam-input {

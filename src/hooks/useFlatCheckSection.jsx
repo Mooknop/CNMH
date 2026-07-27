@@ -5,7 +5,7 @@ import {
   concealmentFlatCheck,
   CONCEALMENT_LEVELS,
 } from '../utils/flatChecks';
-import FoundryDiceInput from '../components/shared/FoundryDiceInput';
+import RollEntry from '../components/shared/RollEntry';
 
 /**
  * Condition flat checks + target concealment (#262, extracted #1317 D2):
@@ -24,7 +24,7 @@ import FoundryDiceInput from '../components/shared/FoundryDiceInput';
  */
 export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effectiveVerb, charId = null }) => {
   // Condition flat checks (#262): raw d20 per required check (keyed by condition id).
-  const [flatCheckRolls, setFlatCheckRolls] = useState({});
+  const [flatCheckRolls, setFlatCheckRolls] = useState({}); // { [fc.id]: face|null }
   // Manually-flagged target concealment (#262) — 'none' | 'concealed' | 'hidden'.
   const [concealment, setConcealment] = useState('none');
 
@@ -34,8 +34,7 @@ export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effec
     ...(concealmentCheck ? [concealmentCheck] : []),
   ];
   const flatCheckResults = flatChecks.map((fc) => {
-    const raw = flatCheckRolls[fc.id];
-    const d20 = /^\d+$/.test(raw || '') ? parseInt(raw, 10) : null;
+    const d20 = flatCheckRolls[fc.id] ?? null;
     return { ...fc, d20, passed: d20 != null && flatCheckPasses(d20, fc.dc) };
   });
   const allFlatChecksRolled = flatCheckResults.every((r) => r.d20 != null);
@@ -84,26 +83,21 @@ export const useFlatCheckSection = ({ ability, activeConditions, isAttack, effec
               <div key={fc.id} className="uam-flatcheck-row">
                 <div className="uam-flatcheck-head">
                   <span className="uam-flatcheck-label">{fc.label} — DC {fc.dc}</span>
-                  <FoundryDiceInput
-                    min="1"
-                    max="20"
-                    inputClassName="uam-flatcheck-input"
-                    ariaLabel={`${fc.label} flat check d20`}
-                    value={flatCheckRolls[fc.id] ?? ''}
-                    onValue={(v) => {
-                      if (v === '' || (/^\d+$/.test(v) && +v >= 1 && +v <= 20)) {
-                        setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: v }));
-                      }
-                    }}
-                    charId={charId}
-                    flavor={`${fc.label} flat check (DC ${fc.dc})`}
-                  />
                   {fc.d20 != null && (
                     <span className={`uam-flatcheck-result uam-flatcheck-result--${fc.passed ? 'pass' : 'fail'}`}>
                       {fc.passed ? 'Pass' : `Fail — ${fc.fail}`}
                     </span>
                   )}
                 </div>
+                <RollEntry
+                  face={flatCheckRolls[fc.id] ?? null}
+                  onFaceChange={(f) => setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: f }))}
+                  onCommit={(f) => setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: f }))}
+                  bonus={null}
+                  dcLine={`nothing rolled yet · DC ${fc.dc}`}
+                  charId={charId}
+                  flavor={`${fc.label} flat check (DC ${fc.dc})`}
+                />
                 <p className="uam-flatcheck-hint">{fc.reason}</p>
               </div>
             ))}

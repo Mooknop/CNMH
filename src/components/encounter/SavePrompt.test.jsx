@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 
 vi.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
@@ -42,6 +42,8 @@ const PromptDriver = ({ charId }) => {
   return null;
 };
 
+const rollFace = (v) => fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
+
 function setup(charId = 'Pellias') {
   render(<><PromptDriver charId={charId} /><SavePrompt charId={charId} characterName="Pellias" saves={saves} /></>);
 }
@@ -60,8 +62,8 @@ describe('SavePrompt', () => {
     expect(screen.getByLabelText(/Reflex save prompt/)).toBeInTheDocument();
     expect(screen.getByText('Fireball')).toBeInTheDocument();
     expect(screen.getByText('DC 18')).toBeInTheDocument();
-    expect(screen.getByText(/\+8/)).toBeInTheDocument(); // modifier
-    expect(screen.getByLabelText('d20 roll')).toBeInTheDocument();
+    expect(screen.getByText('Your modifier: +8')).toBeInTheDocument(); // modifier
+    expect(screen.getByRole('group', { name: 'raw d20' })).toBeInTheDocument();
   });
 
   it('Submit button disabled when d20 input is empty', () => {
@@ -74,7 +76,7 @@ describe('SavePrompt', () => {
     setup();
     act(() => setPrompt(prompt));
     // Roll 14: total = 14 + 8 = 22 ≥ DC 18 → success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Reflex save'));
 
     expect(screen.getByText('22')).toBeInTheDocument();
@@ -90,7 +92,7 @@ describe('SavePrompt', () => {
     setup();
     act(() => setPrompt({ reqId: 'r2', save: 'reflex', dc: 18 }));
     // d20=20, total=20+8=28 ≥ DC+10=28 → crit success already; natural 20 keeps it there
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '20' } });
+    rollFace(20);
     fireEvent.click(screen.getByLabelText('Submit Reflex save'));
     expect(screen.getByText('Critical Success')).toBeInTheDocument();
   });
@@ -108,7 +110,7 @@ describe('SavePrompt', () => {
     );
     // d20=1, modifier=17, total=18 → base success (meets DC); nat 1 → failure
     act(() => setPrompt2({ reqId: 'r3', save: 'reflex', dc: 18 }));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    rollFace(1);
     fireEvent.click(screen.getByLabelText('Submit Reflex save'));
     expect(screen.getByText('Failure')).toBeInTheDocument();
   });
@@ -116,17 +118,17 @@ describe('SavePrompt', () => {
   it('dismiss button clears the result', () => {
     setup();
     act(() => setPrompt(prompt));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Reflex save'));
     fireEvent.click(screen.getByLabelText('Dismiss save result'));
     expect(screen.queryByText('Success')).toBeNull();
-    expect(screen.getByLabelText('d20 roll')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'raw d20' })).toBeInTheDocument();
   });
 
   it('a new prompt clears the previous result', () => {
     setup();
     act(() => setPrompt(prompt));
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '14' } });
+    rollFace(14);
     fireEvent.click(screen.getByLabelText('Submit Reflex save'));
     // New prompt arrives.
     act(() => setPrompt({ reqId: 'r-new', save: 'will', dc: 20, effectName: 'Mind Crush' }));
@@ -171,7 +173,7 @@ describe('SavePrompt — Sanitizing Pin (#254/#339)', () => {
     setupPin('fortitude');
     fireEvent.click(screen.getByLabelText(/Sanitizing Pin/));
     // d20 11 + 5 + 2 = 18 ≥ DC 18 → success (would be 16 → failure without the pin).
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '11' } });
+    rollFace(11);
     fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
     expect(screen.getByText('18')).toBeInTheDocument();
     expect(screen.getByText('Success')).toBeInTheDocument();
@@ -186,7 +188,7 @@ describe('SavePrompt — Sanitizing Pin (#254/#339)', () => {
     setupPin('fortitude');
     fireEvent.click(screen.getByLabelText(/Sanitizing Pin/));
     // d20 1 + 5 + 2 = 8 = DC-10 → critical failure, upgraded to Failure by the pin.
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    rollFace(1);
     fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
     expect(screen.getByText('Failure')).toBeInTheDocument();
     expect(screen.queryByText('Critical Failure')).toBeNull();
@@ -194,7 +196,7 @@ describe('SavePrompt — Sanitizing Pin (#254/#339)', () => {
 
   it('does not consume the pin when the toggle is left off', () => {
     setupPin('fortitude');
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '11' } });
+    rollFace(11);
     fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
     expect(conVal).toEqual({});
     expect(affVal).toEqual({ pin1: 'a1' });

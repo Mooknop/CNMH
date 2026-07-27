@@ -62,6 +62,13 @@
   text-align: center;
 }
 
+/* RollEntry wrapper (#1684) — the ring/pad primitive replaces the old inline
+   input + badge row; give it its own breathing room instead of squeezing it
+   into a flex row alongside a select/label. */
+.trr-rollentry-wrap {
+  margin-bottom: var(--space-3);
+}
+
 .trr-nat-toggle {
   display: flex;
   gap: var(--space-2);

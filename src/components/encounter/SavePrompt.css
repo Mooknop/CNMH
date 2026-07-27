@@ -62,11 +62,12 @@
   color: var(--shell-text-tertiary);
 }
 
-/* Roll input row */
+/* Roll entry — RollEntry ring/pad stacked above the Submit button (#1684) */
 .save-prompt-entry {
   display: flex;
-  gap: var(--space-2);
-  align-items: center;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: stretch;
 }
 
 .save-prompt-input {
