@@ -298,7 +298,7 @@ test.describe('Combat item state', () => {
     // Baseline: resolve this prompt WITHOUT the pin. Its own total is whatever
     // the character's Fortitude modifier happens to be — the assertion below is
     // the DIFFERENCE, so the spec never has to restate the save math.
-    await prompt.getByLabel('d20 roll').fill('10');
+    await prompt.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '10', exact: true }).click();
     await prompt.getByRole('button', { name: 'Submit Fortitude save' }).click();
     const plain = Number(await page.getByRole('status', { name: 'Save result' }).locator('.save-result-total').innerText());
 
@@ -306,10 +306,10 @@ test.describe('Combat item state', () => {
     await session.push(SAVEPROMPT_KEY, {
       reqId: 's2', save: 'fortitude', dc: 20, effectName: 'E2E Blight', basic: false,
     });
-    await expect(prompt.getByLabel('d20 roll')).toBeVisible();
+    await expect(prompt.getByRole('group', { name: 'raw d20' })).toBeVisible();
 
     await prompt.getByRole('checkbox', { name: 'E2E Sanitizing Pin (+2)' }).check();
-    await prompt.getByLabel('d20 roll').fill('10');
+    await prompt.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '10', exact: true }).click();
     await prompt.getByRole('button', { name: 'Submit Fortitude save' }).click();
 
     // The combat consequence: same d20, same DC, +2 on the total.
@@ -321,13 +321,13 @@ test.describe('Combat item state', () => {
     await session.expectSent(CONSUMED_KEY, (v) => v?.[PIN_UID] === 1);
     await session.expectSent(AFFIXED_KEY, (v) => v && !(PIN_UID in v));
 
-    // One use, then gone: a third prompt no longer offers it. The d20 field is
+    // One use, then gone: a third prompt no longer offers it. The d20 pad is
     // the anchor — it only reappears once the new prompt has rendered, so the
     // absence below is a real absence rather than a not-yet.
     await session.push(SAVEPROMPT_KEY, {
       reqId: 's3', save: 'fortitude', dc: 20, effectName: 'E2E Blight', basic: false,
     });
-    await expect(prompt.getByLabel('d20 roll')).toBeVisible();
+    await expect(prompt.getByRole('group', { name: 'raw d20' })).toBeVisible();
     await expect(prompt.getByRole('checkbox', { name: /E2E Sanitizing Pin/ })).toHaveCount(0);
   });
 

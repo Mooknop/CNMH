@@ -7,7 +7,7 @@ import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS, rkKeyFor } 
 import { formatModifier } from '../../utils/CharacterUtils';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './RecallKnowledgeResolver.css';
 
 const SKILL_LABELS = {
@@ -56,7 +56,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
   const recommended = recallKnowledgeSkills(traits);
 
   const [selectedSkill, setSelectedSkill] = useState(recommended[0] || 'arcana');
-  const [d20Input, setD20Input]           = useState('');
+  const [face, setFace]                   = useState(null); // raw d20 face, 1-20 or null
   const [choices, setChoices]             = useState([]);
   const [knowingOn, setKnowingOn]         = useState(false);
 
@@ -72,8 +72,8 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
   // Out of combat the party studies at leisure: DC is 2 lower (#396).
   const dc        = baseDc != null ? baseDc - (outOfCombat ? 2 : 0) : null;
 
-  const d20    = parseInt(d20Input, 10);
-  const hasD20 = !isNaN(d20) && d20 >= 1 && d20 <= 20;
+  const d20    = face;
+  const hasD20 = d20 != null;
   const total  = hasD20 ? d20 + effectiveMod : NaN;
 
   const degree = (hasD20 && dc != null)
@@ -168,30 +168,23 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
       {/* Roll input */}
       <section className="ct-section">
         <h3 className="ct-section-title">Roll</h3>
-        <div className="trr-entry-row">
-          <FoundryDiceInput
-            inputClassName="trr-roll-input"
-            placeholder="d20"
-            min="1"
-            max="20"
-            ariaLabel="raw d20"
-            value={d20Input}
-            onValue={(v) => { setD20Input(v); setChoices([]); }}
-            charId={actingCharId}
-            flavor={`Recall Knowledge: ${SKILL_LABELS[selectedSkill] || selectedSkill}`}
-          />
-          <span className="trr-bonus-badge" aria-label="skill modifier">
-            {formatModifier(effectiveMod)}
-          </span>
-          {hasD20 && (
-            <span className="trr-total-badge">= {total}</span>
-          )}
-          {degreeInfo && (
+        <RollEntry
+          face={face}
+          onFaceChange={(f) => { setFace(f); setChoices([]); }}
+          onCommit={(f) => { setFace(f); setChoices([]); }}
+          bonus={effectiveMod}
+          bonusLabel={SKILL_LABELS[selectedSkill] || selectedSkill}
+          dcLine={dc != null ? `nothing rolled yet · DC ${dc}` : ''}
+          charId={actingCharId}
+          flavor={`Recall Knowledge: ${SKILL_LABELS[selectedSkill] || selectedSkill}`}
+        />
+        {degreeInfo && (
+          <div className="rkr-degree-row">
             <span className={`tw-degree-chip ${degreeInfo.cls}`}>
               {degreeInfo.label}
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* Choice picker (success: pick 1; crit success: pick 2) */}

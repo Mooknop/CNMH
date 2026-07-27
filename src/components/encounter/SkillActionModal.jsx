@@ -25,7 +25,7 @@ import { flattenInventory } from '../../utils/InventoryUtils';
 import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
 import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
 import { heldShieldRollBonus } from '../../utils/shieldRuneEffects';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './SkillActionModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
 
@@ -89,7 +89,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [pickedId, setPickedId] = useState(
     () => (!selfTarget && focusEnemy?.entryId) || null
   );
-  const [d20, setD20] = useState('');
+  const [d20, setD20] = useState(null); // raw d20 face, 1-20 or null
   const [dcInput, setDcInput] = useState('');
   const [pickedSkill, setPickedSkill] = useState(null);
   const [toggledIds, setToggledIds] = useState([]); // declared circumstance toggles, active
@@ -167,10 +167,9 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const prefilledDC = target?.defenses ? defenseDC(target.defenses, action?.defense) : null;
   const dcVal = dcInput !== '' ? parseInt(dcInput, 10) : prefilledDC;
 
-  const d20Val = parseInt(d20, 10);
-  const total = !isNaN(d20Val) && netMod != null ? d20Val + netMod : null;
+  const total = d20 != null && netMod != null ? d20 + netMod : null;
   const degree = total != null && dcVal != null && !isNaN(dcVal)
-    ? computeSaveDegree({ d20: d20Val, total, dc: dcVal })
+    ? computeSaveDegree({ d20, total, dc: dcVal })
     : null;
 
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
@@ -220,11 +219,6 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
   const canConfirm =
     !resolved && (selfTarget || (!!target && !targetImmune)) && total != null && degree != null;
-
-  const handleD20 = (e) => {
-    const v = e.target.value;
-    if (v === '' || (/^\d+$/.test(v) && parseInt(v, 10) <= 20)) setD20(v);
-  };
 
   const handleDc = (e) => {
     const v = e.target.value;
@@ -313,7 +307,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
   const handleClose = () => {
     setPickedId(null);
-    setD20('');
+    setD20(null);
     setDcInput('');
     setPickedSkill(null);
     setMapOverride(null);
@@ -488,18 +482,14 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
             {/* d20 + DC */}
             <div className="sam-inputs">
               <div className="sam-field">
-                <label className="sam-label" htmlFor="sam-d20">d20 roll</label>
-                <FoundryDiceInput
-                  id="sam-d20"
-                  inputClassName="sam-input"
-                  // the <label htmlFor="sam-d20"> above names this input — an
-                  // aria-label would override it (null omits the attribute)
-                  ariaLabel={null}
-                  min="1"
-                  max="20"
-                  placeholder="1–20"
-                  value={d20}
-                  onValue={(v) => handleD20({ target: { value: v } })}
+                <label className="sam-label">d20 roll</label>
+                <RollEntry
+                  face={d20}
+                  onFaceChange={setD20}
+                  onCommit={setD20}
+                  bonus={netMod}
+                  bonusLabel={action.name}
+                  dcLine={dcVal != null ? `nothing rolled yet · ${defenseLabel} ${dcVal}` : ''}
                   disabled={!!resolved}
                   charId={character?.id}
                   flavor={action.name}

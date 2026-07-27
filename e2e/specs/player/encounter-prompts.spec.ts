@@ -51,7 +51,7 @@ test.describe('Encounter prompts', () => {
     await expect(prompt).toBeVisible();
     await expect(prompt).toContainText('DC 20');
 
-    await prompt.getByLabel('d20 roll').fill('15');
+    await prompt.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '15', exact: true }).click();
     await prompt.getByRole('button', { name: 'Submit Reflex save' }).click();
 
     await expect(page.getByRole('status', { name: 'Save result' })).toBeVisible();
@@ -76,7 +76,7 @@ test.describe('Encounter prompts', () => {
     await expect(prompt).toBeVisible();
     await expect(prompt).toContainText('DC 18');
 
-    await prompt.getByLabel('d20 roll').fill('12');
+    await prompt.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '12', exact: true }).click();
     await prompt.getByRole('button', { name: 'Submit Arcana check' }).click();
 
     await expect(page.getByRole('status', { name: 'Skill check result' })).toBeVisible();

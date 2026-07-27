@@ -410,7 +410,7 @@ test.describe('Ability economy — granted actions, frequency, consumed uses', (
     await expect(optIn).toBeVisible();
     await optIn.check();
 
-    await prompt.getByLabel('d20 roll').fill('12');
+    await prompt.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '12', exact: true }).click();
     await prompt.getByRole('button', { name: 'Submit Fortitude save' }).click();
 
     // Burned: one use recorded by item NAME, and the affix binding dropped.
@@ -424,7 +424,7 @@ test.describe('Ability economy — granted actions, frequency, consumed uses', (
     session.push(`cnmh_saveprompt_${CHAR_ID}`, {
       reqId: 'econ-2', save: 'fortitude', dc: 18, effectName: 'E2E Blight',
     });
-    await expect(prompt.getByLabel('d20 roll')).toBeVisible();
+    await expect(prompt.getByRole('group', { name: 'raw d20' })).toBeVisible();
     await expect(prompt.getByRole('checkbox', { name: `${PIN_ITEM.name} (+2)` })).toHaveCount(0);
   });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import SkillActionModal from './SkillActionModal';
 import { getSkillAction, augmentSkillAction } from '../../data/skillActions';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -87,6 +87,10 @@ beforeEach(() => {
 });
 
 const pickGoblin = () => fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+// RollEntry's pad group carries the fixed accessible name "raw d20" (#1684) —
+// face selection is a button tap, not a change event.
+const rollD20 = (v) =>
+  fireEvent.click(within(screen.getByRole('group', { name: 'raw d20' })).getByRole('button', { name: String(v) }));
 
 describe('SkillActionModal (Demoralize)', () => {
   it('renders nothing when closed', () => {
@@ -107,7 +111,7 @@ describe('SkillActionModal (Demoralize)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin();
     // DC prefilled to 14 (10 + 4); d20 19 + 5 = 24 ≥ 24 → critical success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    rollD20(19);
     expect(screen.getByText('Critical Success — Frightened 2')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
@@ -121,7 +125,7 @@ describe('SkillActionModal (Demoralize)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin();
     // d20 10 + 5 = 15 ≥ 14 → success (not crit)
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
     expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'frightened', value: 1 }));
@@ -131,7 +135,7 @@ describe('SkillActionModal (Demoralize)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin();
     // d20 5 + 5 = 10; DC 14 → failure (10 > 14-10=4, < 14)
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '5' } });
+    rollD20(5);
     expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
     expect(applyCondition).not.toHaveBeenCalled();
@@ -142,7 +146,7 @@ describe('SkillActionModal (Demoralize)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     fireEvent.click(screen.getByRole('button', { name: 'Orc' }));
     fireEvent.change(screen.getByLabelText('Will DC'), { target: { value: '14' } });
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
   });
 
@@ -150,7 +154,7 @@ describe('SkillActionModal (Demoralize)', () => {
     isImmuneFn.mockReturnValue(true);
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    rollD20(19);
     const btn = screen.getByRole('button', { name: 'Target is immune' });
     expect(btn).toBeDisabled();
     fireEvent.click(btn);
@@ -162,7 +166,7 @@ describe('SkillActionModal (Demoralize)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin();
     expect(screen.queryByText('Multiple attack penalty')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    rollD20(19);
     fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
     expect(recordAttack).not.toHaveBeenCalled();
   });
@@ -177,7 +181,7 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={trip} character={character} />);
     pickGoblin();
     // Reflex DC 14; d20 10 + 5 = 15 → success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Success — Prone')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
     expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'prone' }));
@@ -189,7 +193,7 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={grapple} character={character} />);
     pickGoblin();
     // Fortitude DC 14; d20 19 + 5 = 24 ≥ 24 → critical success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    rollD20(19);
     expect(screen.getByText('Critical Success — Restrained')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Grapple/ }));
     expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'restrained' }));
@@ -198,7 +202,7 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
   it('Shove success logs a note and applies no enemy condition', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={shove} character={character} />);
     pickGoblin();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Success — Pushed back 5 ft')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Shove/ }));
     expect(applyCondition).not.toHaveBeenCalled();
@@ -210,7 +214,7 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={trip} character={character} />);
     pickGoblin();
     // d20 1 + 5 = 6 vs DC 14 → failure, nat-1 shifts to critical failure
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    rollD20(1);
     fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
     expect(applyCondition).not.toHaveBeenCalled();
     expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', [{ id: 'prone', value: null }]);
@@ -237,7 +241,7 @@ describe('SkillActionModal (Tumble Through, #349)', () => {
     pickGoblin(); // Reflex DC 14
     expect(screen.queryByText('Multiple attack penalty')).not.toBeInTheDocument();
     // d20 10 + 5 = 15 ≥ 14 → success
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText(/Success — Move through the creature's space/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Tumble Through/ }));
     expect(applyCondition).not.toHaveBeenCalled();
@@ -255,7 +259,7 @@ describe('SkillActionModal (Feint)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
     pickGoblin(); // Goblin has no perception → GM enters the DC
     fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '14' } });
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     // Scoped outcome reads "to your attacks" (#348).
     expect(screen.getByText('Success — Off-Guard to your attacks')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
@@ -272,7 +276,7 @@ describe('SkillActionModal (Feint)', () => {
     pickGoblin();
     fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '14' } });
     // d20 1 + 5 = 6 vs DC 14 → failure, nat-1 shifts to critical failure
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    rollD20(1);
     fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
     expect(applyCondition).not.toHaveBeenCalled();
     expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', [{ id: 'off-guard', value: null }]);
@@ -291,7 +295,7 @@ describe('SkillActionModal (Feint)', () => {
     pickGoblin();
     fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '16' } });
     // d20 10 + 5 = 15 vs DC 16 → Failure
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
     // Opt in to Glamourous → 16 → Success.
     fireEvent.click(screen.getByRole('button', { name: /Glamourous \(shield\) \+1/ }));
@@ -346,7 +350,7 @@ describe('SkillActionModal (Escape)', () => {
     mockGetState.mockReturnValue([{ id: 'grabbed', value: null }]);
     render(<SkillActionModal isOpen onClose={() => {}} action={escape} character={character} />);
     fireEvent.change(screen.getByLabelText('DC'), { target: { value: '14' } });
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     expect(screen.getByText('Success — you are no longer Grabbed')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Escape/ }));
     expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', []);
@@ -360,7 +364,7 @@ describe('SkillActionModal (circumstance bonuses, AC4)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
     pickGoblin(); // Will DC 14
     // d20 8 + 5 = 13 → Failure
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '8' } });
+    rollD20(8);
     expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
     // +2 circumstance → 15 → Success
     fireEvent.change(screen.getByLabelText(/Other circumstance/), { target: { value: '2' } });
@@ -375,7 +379,7 @@ describe('SkillActionModal (circumstance bonuses, AC4)', () => {
     const aidDemo = { ...getSkillAction('demoralize'), toggles: [{ id: 'aid', label: 'Aid', bonus: 2 }] };
     render(<SkillActionModal isOpen onClose={() => {}} action={aidDemo} character={character} />);
     pickGoblin();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '8' } }); // 13 → Failure
+    rollD20(8); // 13 → Failure
     expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Aid +2' })); // 15 → Success
     expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
@@ -434,7 +438,7 @@ describe('SkillActionModal (Wolf Fang on Trip, #254/#339)', () => {
   it('offers Wolf Fang activation on a successful Trip and consumes it on click', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
     pickGoblin(); // Reflex DC 14
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } }); // 15 → success
+    rollD20(10); // 15 → success
     fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
 
     const btn = screen.getByRole('button', { name: /Activate Wolf Fang/ });
@@ -450,7 +454,7 @@ describe('SkillActionModal (Wolf Fang on Trip, #254/#339)', () => {
   it('does not offer activation on a failed Trip', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
     pickGoblin();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '2' } }); // 7 → failure
+    rollD20(2); // 7 → failure
     fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
     expect(screen.queryByRole('button', { name: /Activate Wolf Fang/ })).not.toBeInTheDocument();
   });
@@ -459,7 +463,7 @@ describe('SkillActionModal (Wolf Fang on Trip, #254/#339)', () => {
     affixed = {}; // nothing affixed
     render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
     pickGoblin();
-    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    rollD20(10);
     fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
     expect(screen.queryByRole('button', { name: /Activate Wolf Fang/ })).not.toBeInTheDocument();
   });
