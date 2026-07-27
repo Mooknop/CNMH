@@ -54,6 +54,18 @@ const activityRow = (page: Page, name: string) =>
 
 const banner = (page: Page) => page.locator('.exploration-active-banner');
 
+/**
+ * RollEntry's 1-20 tap pad (#1686 — replaced InitiativeEntry's `d20-input`
+ * text field). Scoped inside the initiative region so it can't collide with
+ * any other RollEntry/FoundryDiceInput control elsewhere on the sheet. Face
+ * names need `exact: true` — non-exact '1' also matches 10-19.
+ */
+const d20Pad = (page: Page) =>
+  page.getByRole('region', { name: 'Initiative entry' }).getByRole('group', { name: 'raw d20' });
+
+const tapD20Face = (page: Page, face: number) =>
+  d20Pad(page).getByRole('button', { name: String(face), exact: true }).click();
+
 // Pick an activity through the detail modal (the only path for a plain activity —
 // Follow the Expert and Treat Wounds intercept the row click with their own modal).
 async function pickActivity(page: Page, name: string) {
@@ -279,7 +291,7 @@ test.describe('Exploration activities', () => {
 
     // The bonus is arithmetic, not decoration: the computed total is d20 +
     // Perception + 1.
-    await lookoutPage.getByLabel('d20-input').fill('15');
+    await tapD20Face(lookoutPage, 15);
     await expect(breakdown).toContainText('=');
     const after = (await breakdown.textContent()) || '';
     const total = Number(/=\s*(-?\d+)/.exec(after)?.[1]);
@@ -331,7 +343,7 @@ test.describe('Exploration activities', () => {
     const mod = Number(/Perception ([+-]\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
     expect(Number.isFinite(mod)).toBe(true);
 
-    await page.getByLabel('d20-input').fill('15');
+    await tapD20Face(page, 15);
     await expect(breakdown).toContainText('=');
     const total = Number(/=\s*(-?\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
     expect(total).toBe(15 + mod + 1);

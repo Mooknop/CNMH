@@ -5,7 +5,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useBystander } from '../../hooks/useBystander';
 import { useInitiativeRoll } from '../../hooks/useInitiativeRoll';
 import { hasFeat } from '../../utils/CharacterUtils';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import './InitiativeEntry.css';
 import { APP, globalKey } from '../../sync/keys';
 
@@ -78,6 +78,12 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
 
     const submitted = !!roll && !editing;
 
+    // RollEntry records the face only — its own onCommit fires on a Foundry
+    // ack (roll+commit are one tap there), but committing THIS banner's entry
+    // stays gated on the explicit Submit button below, unchanged from before
+    // the RollEntry swap (#1686).
+    const handleFaceChange = (face) => setD20(face == null ? '' : String(face));
+
     const handleBystanderToggle = (on) => {
       if (on) declare('deception');
       else clear();
@@ -145,16 +151,19 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
                   ))}
                 </select>
               </label>
-              <label className="initiative-entry-field">
-                <span>Your d20 roll</span>
-                <FoundryDiceInput
-                  ariaLabel="d20-input"
-                  value={d20}
-                  onValue={setD20}
+              <div className="initiative-entry-rollentry">
+                <span className="initiative-entry-rollentry-label">Your d20 roll</span>
+                <RollEntry
+                  face={d20Num}
+                  onFaceChange={handleFaceChange}
+                  onCommit={handleFaceChange}
+                  bonus={totalMod}
+                  bonusLabel={skillLabel(effectiveSkill)}
+                  dcLine="tap your die to roll for initiative"
                   charId={charId}
                   flavor={`Initiative: ${skillLabel(effectiveSkill)}`}
                 />
-              </label>
+              </div>
               <div className="initiative-entry-breakdown" aria-label="initiative-breakdown">
                 {d20 === ''
                   ? `${skillLabel(effectiveSkill)} ${fmtMod(skillMod)}${scoutBonus ? ' + Scout +1' : ''}`
@@ -196,6 +205,12 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
     setInitiative(entry.entryId, value === '' ? null : Number(value) + deceptionMod);
   };
 
+  // No separate commit stage on this app-only path (unlike the Foundry-linked
+  // banner above) — a d20 value, typed or rolled, has always written straight
+  // into the order via handleD20, so RollEntry's onFaceChange/onCommit both
+  // just forward here, matching FoundryDiceInput's prior onValue behavior.
+  const handleD20Face = (face) => handleD20(face == null ? '' : String(face));
+
   return (
     <div className="initiative-entry" role="region" aria-label="Initiative entry">
       {scoutReminder}
@@ -219,16 +234,19 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
 
         {bystanderActive ? (
           <>
-            <label className="initiative-entry-field">
-              <span>Your d20 roll</span>
-              <FoundryDiceInput
-                ariaLabel="d20-input"
-                value={d20}
-                onValue={handleD20}
+            <div className="initiative-entry-rollentry">
+              <span className="initiative-entry-rollentry-label">Your d20 roll</span>
+              <RollEntry
+                face={d20 === '' ? null : Number(d20)}
+                onFaceChange={handleD20Face}
+                onCommit={handleD20Face}
+                bonus={deceptionMod}
+                bonusLabel="Deception"
+                dcLine="tap your die to roll for initiative"
                 charId={charId}
                 flavor="Initiative: Deception (Bystander)"
               />
-            </label>
+            </div>
             <div className="initiative-entry-breakdown" aria-label="initiative-breakdown">
               {d20 === ''
                 ? `Deception ${fmtMod(deceptionMod)}`

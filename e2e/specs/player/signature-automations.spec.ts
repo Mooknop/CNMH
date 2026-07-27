@@ -166,6 +166,18 @@ const initiativeEntry = (page: Page) =>
   page.getByRole('region', { name: 'Initiative entry' });
 
 /**
+ * RollEntry's 1-20 tap pad (#1686 — replaced InitiativeEntry's `d20-input`
+ * text field). Scoped inside the initiative region so it can't collide with
+ * any other RollEntry/FoundryDiceInput control elsewhere on the sheet. Face
+ * names need `exact: true` — non-exact '1' also matches 10-19.
+ */
+const d20Pad = (page: Page) =>
+  initiativeEntry(page).getByRole('group', { name: 'raw d20' });
+
+const tapD20Face = (page: Page, face: number) =>
+  d20Pad(page).getByRole('button', { name: String(face), exact: true }).click();
+
+/**
  * The derived Blade Byrnie dagger's Strike tile. `deriveBladeDagger` names the
  * weapon "Dagger" and `resolveItemStrikes` prefixes the resolved runes, so the
  * tile reads "+1 Striking Dagger Melee Strike" — the armor's own potency (1)
@@ -597,7 +609,7 @@ test.describe('Signature automations', () => {
     await expect(page.getByLabel('initiative-breakdown')).toContainText('Deception +13');
 
     // The submitted roll carries Deception, not the stealth pick: d20 12 + 13.
-    await page.getByLabel('d20-input').fill('12');
+    await tapD20Face(page, 12);
     await page.getByLabel('submit-initiative').click();
     const roll = await session.expectSent(INITROLL_KEY, (v) => v?.d20 === 12);
     expect(roll.skill).toBe('deception');
@@ -637,7 +649,7 @@ test.describe('Signature automations', () => {
 
     // The entry swaps to "roll a d20, we add Deception".
     await expect(page.getByLabel('initiative-breakdown')).toContainText('Deception +13');
-    await page.getByLabel('d20-input').fill('9');
+    await tapD20Face(page, 9);
     await expect(page.getByLabel('initiative-breakdown')).toContainText('= 22');
     await session.expectSent(
       'cnmh_encounter_global',
