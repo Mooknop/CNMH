@@ -27,6 +27,13 @@ import { RELAY, APP } from '../../sync/keys';
  * Requests carrying a `damage` payload (#270 — the caster's entered total and
  * rider snapshot) derive per-target damage from each degree as the d20s are
  * typed (none/half/full/double) and append it to the log lines.
+ *
+ * Degrees write-back (#1683): both resolution paths finish through
+ * `resolveSaveRequest`, which records the resolved degrees on
+ * `encounter.saveResolutions` and removes the request in one write, so the
+ * caster's client can read its own outcome. Nothing consumes the record yet —
+ * damage/conditions/fx still apply here, unchanged, until G2 (#1689) inverts
+ * the flow.
  */
 const damageFor = (req, degree, entryId, defenses = null) => {
   if (!req.damage || !degree) return null;
@@ -47,7 +54,7 @@ const damageFor = (req, degree, entryId, defenses = null) => {
 };
 
 const RequestedSaves = () => {
-  const { encounter, appendLog, removeSaveRequest } = useEncounter();
+  const { encounter, appendLog, resolveSaveRequest } = useEncounter();
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
   const { revealFiredIwr } = useIwrReveal();
@@ -67,6 +74,18 @@ const RequestedSaves = () => {
   // the defenses live on the encounter order entries.
   const defensesFor = (entryId) =>
     (encounter?.order || []).find((e) => e.entryId === entryId)?.defenses ?? null;
+
+  // Degrees write-back (#1683): the request itself carries no top-level
+  // casterEntryId (only the #274 casterEffect rider and the #1414 fx recipe's
+  // `source` do). Prefer the live order entry — it's the authority and survives
+  // requests built without either rider — then fall back to the riders, then
+  // null (a manual/off-order caster; G2 keys off casterId, entryId is only for
+  // token-level rendering).
+  const casterEntryIdFor = (req) =>
+    (encounter?.order || []).find((e) => e.kind === 'pc' && e.charId === req.casterId)?.entryId
+      ?? req.casterEffect?.casterEntryId
+      ?? req.fx?.source
+      ?? null;
 
   const setD20 = (reqId, entryId, val) =>
     setD20Inputs((prev) => ({
@@ -204,7 +223,23 @@ const RequestedSaves = () => {
 
     const names = results.map((r) => r.name).join(', ');
     appendEvent({ type: 'save', text: `${saveLabel} DC ${req.dc} (${req.abilityName}) resolved — ${names}` });
-    removeSaveRequest(req.id);
+    // Degrees write-back (#1683): record the outcome on the encounter so the
+    // CASTER's client can read it, and drop the request — one atomic write.
+    // Nothing consumes it yet; G2 (#1689) builds the caster-side result card.
+    resolveSaveRequest(req.id, {
+      casterId:      req.casterId ?? null,
+      casterEntryId: casterEntryIdFor(req),
+      casterName:    req.casterName ?? null,
+      abilityName:   req.abilityName ?? null,
+      rank:          req.rank ?? null,
+      save:          req.save ?? null,
+      dc:            req.dc ?? null,
+      basic:         !!req.basic,
+      results:       results.map(({ entryId, name, d20, total, degree }) => ({
+        entryId, name, d20, total, degree,
+      })),
+      damage:        req.damage ?? null,
+    });
     // Clean up local input state.
     setD20Inputs((prev) => {
       const next = { ...prev };
