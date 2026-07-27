@@ -17,6 +17,8 @@ function Host({
   dcLine = 'nothing rolled yet · Ghoul AC 24',
   initialFace = null,
   disabled = false,
+  charId = 'Amiri',
+  flavor = 'Strike: Longsword',
   onFaceChange,
   onCommit,
 }) {
@@ -30,6 +32,8 @@ function Host({
       bonusLabel={bonusLabel}
       dcLine={dcLine}
       disabled={disabled}
+      charId={charId}
+      flavor={flavor}
     />
   );
 }
@@ -71,16 +75,27 @@ describe('RollEntry', () => {
 
     await act(async () => { fireEvent.click(pill()); });
     const req = sentReq(session);
-    expect(req.value).toEqual(expect.objectContaining({ formula: '1d20' }));
+    expect(req.value).toEqual(expect.objectContaining({
+      formula: '1d20', charId: 'Amiri', flavor: 'Strike: Longsword',
+    }));
 
     await act(async () => {
       session.push('global', RELAY.ROLLDONE, {
-        id: req.value.id, charId: null, ok: true, total: 14, faces: [[20, 14]], ts: Date.now(),
+        id: req.value.id, charId: 'Amiri', ok: true, total: 14, faces: [[20, 14]], ts: Date.now(),
       });
     });
 
     expect(onFaceChange).toHaveBeenCalledWith(14);
     expect(onCommit).toHaveBeenCalledWith(14);
+  });
+
+  test('with no charId, the Foundry pill never renders (mirrors FoundryDiceInput\'s gate) — falls back to the pad', () => {
+    renderWithProviders(<Host charId={null} />, { session: { state: RAIL_STATE } });
+
+    expect(pill()).toBeNull();
+    expect(within(pad()).getAllByRole('button')).toHaveLength(20);
+    // Silent fallback — this is availability gating, not a nack/timeout, so no notice.
+    expect(screen.queryByText(/foundry isn.t answering/i)).toBeNull();
   });
 
   test('a null ack (nack) falls back to the pad plus a gold notice', async () => {

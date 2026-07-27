@@ -34,6 +34,16 @@ const FACES = Array.from({ length: 20 }, (_, i) => i + 1);
  *                                       is set, e.g. "nothing rolled yet ·
  *                                       Ghoul AC 24"
  * @param {boolean}     [disabled]    - disables every interactive control
+ * @param {string}      [charId]      - app character id for chat-speaker
+ *                                       attribution, forwarded to
+ *                                       useFoundryDice().roll(). Mirrors
+ *                                       FoundryDiceInput's gating: with no
+ *                                       charId the Foundry pill NEVER
+ *                                       renders (even in Foundry mode /
+ *                                       available === true) — falls back to
+ *                                       the pad instead, silently, no notice.
+ * @param {string}      [flavor]      - app-composed chat label ("Strike:
+ *                                       Longsword (MAP -5)"), forwarded to roll()
  */
 export default function RollEntry({
   face,
@@ -43,6 +53,8 @@ export default function RollEntry({
   bonusLabel = '',
   dcLine = '',
   disabled = false,
+  charId = null,
+  flavor = '',
 }) {
   const [tabledice, setTabledice] = useDevicePref(TABLE_DICE_PREF, false);
   const { roll, rolling, available } = useFoundryDice();
@@ -56,7 +68,7 @@ export default function RollEntry({
   }, [tabledice]);
 
   const handleRoll = useCallback(async () => {
-    const ack = await roll({ formula: '1d20' });
+    const ack = await roll({ formula: '1d20', flavor, charId });
     const rolledFace = ack ? d20FaceFrom(ack) : null;
     if (rolledFace != null) {
       setFoundryFailed(false);
@@ -65,7 +77,7 @@ export default function RollEntry({
     } else {
       setFoundryFailed(true);
     }
-  }, [roll, onFaceChange, onCommit]);
+  }, [roll, flavor, charId, onFaceChange, onCommit]);
 
   const signedBonus = bonus == null ? null : (bonus >= 0 ? `+${bonus}` : `${bonus}`);
   const heading = bonus == null
@@ -85,10 +97,11 @@ export default function RollEntry({
   }
   const ringContent = rolling ? '1d20' : (face != null ? face : '—');
 
-  // Table mode, an unreachable bridge, and a fallen-back Foundry mode all
-  // land on the pad; only the last of those also shows the notice.
-  const showPad = tabledice || !available || foundryFailed;
-  const showNotice = !tabledice && available && foundryFailed;
+  // Table mode, an unreachable bridge, no charId (chat-speaker attribution
+  // gate — mirrors FoundryDiceInput's showRoll), and a fallen-back Foundry
+  // mode all land on the pad; only the last of those also shows the notice.
+  const showPad = tabledice || !available || !charId || foundryFailed;
+  const showNotice = !tabledice && available && !!charId && foundryFailed;
 
   return (
     <div className="rollentry">
