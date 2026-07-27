@@ -143,6 +143,12 @@ const UseAbilityModal = ({
   // The id of the save request this confirm pushed (#1689) — the join key the
   // caster's sheet watches `encounter.saveResolutions` for.
   const saveReqIdRef = useRef(null);
+  // The commit records the attack, which bumps attacksMade and would shift the
+  // cast plan's auto MAP step — and with it the bonus `runFinish`'s re-resolve
+  // computes degrees from — while the sheet still shows the frozen result card.
+  // Pin the committed step so the deferred log/damage steps keep the committed
+  // math (MinionStrikeModal's commitMapRef pattern).
+  const commitMapRef = useRef(null);
 
   // Multi-ray sequential driver (#1691, workstream J): `raysReady` gates the
   // outer sheet's commit pill until every ray has been rolled (SequentialAttackSteps'
@@ -316,10 +322,14 @@ const UseAbilityModal = ({
     fireExtra,
   });
   const {
-    resources, mapStep, effectiveCost, castCost, variant,
+    resources, mapStep: liveMapStep, effectiveCost, castCost, variant,
     hasChainStrike, hasChainSpell, isMultiRay, rayCount,
     directCastRank, castGateOk,
   } = castPlan;
+  // Once committed, the pinned step wins over the live derivation (see
+  // commitMapRef above): rollProfile, the sheet's bonus and the summary strip
+  // all keep the committed MAP for the rest of the sheet's life.
+  const mapStep = commitMapRef.current ?? liveMapStep;
 
   // Changing the ray count (the action-count picker, mid-edit) restarts the
   // sequential multi-ray driver — `key={rayCount}` on MultiRayResolver below
@@ -1246,6 +1256,10 @@ const UseAbilityModal = ({
         onCommit={() => {
           const grouped = resolverRef.current?.getResults() ?? [];
           rayResultsRef.current = grouped;
+          // Damage resolved inline here, so no re-resolve is at stake — the pin
+          // only keeps the settled strip's MAP at the committed step after
+          // recordAttack(rayCount) lands.
+          commitMapRef.current = mapStep;
           const outcome = runConfirm({ results: grouped, deferDamage: false });
           if (outcome !== 'done') return [];
           return grouped.flatMap((g) => g.results.map((r) => toRow(r, g.rayIndex)));
@@ -1311,6 +1325,7 @@ const UseAbilityModal = ({
         // rows it hands back are frozen for the rest of the sheet's life.
         onCommit={(face) => {
           const results = attackSheet.commit(face);
+          commitMapRef.current = mapStep;
           const hits = results.some((r) => r.degree === 'success' || r.degree === 'criticalSuccess');
           const willAskAmount = !!attackSheet.damageParts && hits;
           const outcome = runConfirm({ face, results, deferDamage: willAskAmount });
