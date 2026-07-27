@@ -126,3 +126,29 @@
   justify-content: flex-end;
   margin-top: 1rem;
 }
+
+/* Exploit Vulnerability's degree-gated effect choice + apply (#1688) — lives
+   in RollSheet's `resultExtras` slot, so it needs its own pill rather than
+   reusing `.rs-pill` (that one stays reserved for the shell's own CTA/Close). */
+.rkr-apply-effect-btn {
+  width: 100%;
+  min-height: var(--tap-target-min, 44px);
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--accent-outline, var(--ember-base));
+  background: transparent;
+  color: var(--accent-text, var(--ember-mid));
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.rkr-apply-effect-btn:hover:not(:disabled) {
+  background: var(--accent-tint, rgba(192, 68, 14, .14));
+}
+
+.rkr-apply-effect-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}

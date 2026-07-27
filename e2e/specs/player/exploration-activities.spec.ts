@@ -54,6 +54,18 @@ const activityRow = (page: Page, name: string) =>
 
 const banner = (page: Page) => page.locator('.exploration-active-banner');
 
+/**
+ * RollEntry's 1-20 tap pad (#1686 — replaced InitiativeEntry's `d20-input`
+ * text field). Scoped inside the initiative region so it can't collide with
+ * any other RollEntry/FoundryDiceInput control elsewhere on the sheet. Face
+ * names need `exact: true` — non-exact '1' also matches 10-19.
+ */
+const d20Pad = (page: Page) =>
+  page.getByRole('region', { name: 'Initiative entry' }).getByRole('group', { name: 'raw d20' });
+
+const tapD20Face = (page: Page, face: number) =>
+  d20Pad(page).getByRole('button', { name: String(face), exact: true }).click();
+
 // Pick an activity through the detail modal (the only path for a plain activity —
 // Follow the Expert and Treat Wounds intercept the row click with their own modal).
 async function pickActivity(page: Page, name: string) {
@@ -171,7 +183,9 @@ test.describe('Exploration activities', () => {
 
     // …and the pairing is not cosmetic: RollActivityModal folds the +2 into any
     // check on that same skill. Avoid Notice is the Stealth-keyed activity, so
-    // open its Roll Check and read the bonus row.
+    // open its Roll Check and read the Edit panel's circumstance note (#1690 —
+    // RollActivityModal now renders RollSheet; the bonus note moved into the
+    // Edit disclosure, so it takes an Edit tap to reveal).
     await activityRow(page, 'Avoid Notice').click();
     const detail = page.getByRole('dialog', { name: 'Avoid Notice' });
     await detail.getByRole('button', { name: 'Roll Check' }).click();
@@ -179,7 +193,10 @@ test.describe('Exploration activities', () => {
     // Scope by body class, not dialog name: the detail modal and the roll modal
     // share the activity's title, so `getByRole('dialog', …)` is ambiguous while
     // the first one is still unmounting.
-    await expect(page.locator('.ram-body .ram-bonus-note')).toContainText('+2 Follow the Expert');
+    const roll = page.locator('.rs');
+    await expect(roll).toBeVisible();
+    await roll.getByRole('button', { name: 'Edit' }).click();
+    await expect(roll.locator('.rs-edit-status')).toContainText('+2 Follow the Expert');
   });
 
   test('the pairing picker refuses self-pairing and experts without a followable activity', async ({ page }) => {
@@ -279,7 +296,7 @@ test.describe('Exploration activities', () => {
 
     // The bonus is arithmetic, not decoration: the computed total is d20 +
     // Perception + 1.
-    await lookoutPage.getByLabel('d20-input').fill('15');
+    await tapD20Face(lookoutPage, 15);
     await expect(breakdown).toContainText('=');
     const after = (await breakdown.textContent()) || '';
     const total = Number(/=\s*(-?\d+)/.exec(after)?.[1]);
@@ -331,7 +348,7 @@ test.describe('Exploration activities', () => {
     const mod = Number(/Perception ([+-]\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
     expect(Number.isFinite(mod)).toBe(true);
 
-    await page.getByLabel('d20-input').fill('15');
+    await tapD20Face(page, 15);
     await expect(breakdown).toContainText('=');
     const total = Number(/=\s*(-?\d+)/.exec((await breakdown.textContent()) || '')?.[1]);
     expect(total).toBe(15 + mod + 1);
@@ -345,26 +362,48 @@ test.describe('Exploration activities', () => {
     await openExplorationTab(page);
 
     // Make an Impression is a plain (non-secret, non-targeted) Diplomacy check.
+    // RollActivityModal now renders RollSheet (#1690): the DC lives in the Edit
+    // panel, the d20 is a tap-pad face rather than a typed total, and no degree
+    // renders until commit — read it from the result card's row after.
     await pickActivity(page, 'Make an Impression');
     await banner(page).getByRole('button', { name: 'Roll Check' }).click();
 
-    const roll = page.getByRole('dialog', { name: 'Make an Impression' });
+    let roll = page.locator('.rs');
     await expect(roll).toBeVisible();
-    await expect(roll.locator('.ram-bonus-label')).toHaveText('Diplomacy');
-    const bonus = Number((await roll.locator('.ram-bonus-value').textContent())?.replace('+', ''));
+    const summary = (await roll.locator('.rs-summary-line').textContent()) || '';
+    expect(summary).toContain('Diplomacy');
+    const bonus = Number(/([+-]\d+)\s*$/.exec(summary)?.[1]);
     expect(Number.isFinite(bonus)).toBe(true);
 
     // Degrees pinned by DC extremes rather than by the seeded build: a nat 20
     // against DC 1 beats it by 10+ no matter what the modifier is.
-    await roll.getByLabel('d20 roll').fill('20');
+    await roll.getByRole('button', { name: 'Edit' }).click();
     await roll.getByLabel('DC').fill('1');
-    await expect(roll.locator('.ram-total-row')).toContainText(String(20 + bonus));
-    await expect(roll.locator('.ram-degree')).toHaveText('Critical Success');
+    await roll.getByRole('button', { name: 'Done' }).click();
+    await roll.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '20', exact: true }).click();
+    await roll.getByRole('button', { name: 'Resolve Make an Impression' }).click();
+
+    await expect(roll.locator('.rs-headline-math')).toContainText(String(20 + bonus));
+    await expect(roll.locator('.rs-row-degree')).toHaveText('Critical Success');
+
+    // Close all the way out (result's CTA settles the sheet, settled's Close
+    // actually closes it — this surface has no damage step) and reopen fresh:
+    // RollSheet only ever commits once per mount.
+    await roll.getByRole('button', { name: 'Close' }).click();
+    await roll.getByRole('button', { name: 'Close' }).click();
+    await expect(roll).toBeHidden();
 
     // …and a nat 1 against DC 60 misses by 10+ just as unconditionally.
-    await roll.getByLabel('d20 roll').fill('1');
+    await banner(page).getByRole('button', { name: 'Roll Check' }).click();
+    roll = page.locator('.rs');
+    await expect(roll).toBeVisible();
+    await roll.getByRole('button', { name: 'Edit' }).click();
     await roll.getByLabel('DC').fill('60');
-    await expect(roll.locator('.ram-total-row')).toContainText(String(1 + bonus));
-    await expect(roll.locator('.ram-degree')).toHaveText('Critical Failure');
+    await roll.getByRole('button', { name: 'Done' }).click();
+    await roll.getByRole('group', { name: 'raw d20' }).getByRole('button', { name: '1', exact: true }).click();
+    await roll.getByRole('button', { name: 'Resolve Make an Impression' }).click();
+
+    await expect(roll.locator('.rs-headline-math')).toContainText(String(1 + bonus));
+    await expect(roll.locator('.rs-row-degree')).toHaveText('Critical Failure');
   });
 });
