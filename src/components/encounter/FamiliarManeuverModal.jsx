@@ -1,11 +1,12 @@
-import React, { useMemo, useRef, useState } from 'react';
-import Modal from '../shared/Modal';
-import TargetRollResolver from './TargetRollResolver';
+import React, { useMemo, useState } from 'react';
+import RollSheet from './RollSheet';
+import { useAttackRollSheet } from '../../hooks/useAttackRollSheet';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useTurnState } from '../../hooks/useTurnState';
 import { familiarSkillBonus, minionTurnId, MINION_FAMILIAR } from '../../utils/minionUtils';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
+import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import './FamiliarManeuverModal.css';
 
 // Outcome phrasing per maneuver, logged for the GM. No enemy-state mutation —
@@ -21,18 +22,27 @@ const OUTCOMES = {
   },
 };
 
+const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
+
 /**
- * A Squox familiar's Disarm/Trip via Acrobatics (#223). Squox Tricks lets the
- * familiar use Acrobatics for these two maneuvers and grants a +2 circumstance
- * bonus against an off-guard target. The familiar is its own actor: the check
- * resolves against the target's Reflex DC and the result is logged for the GM —
- * no enemy-state mutation, mirroring MinionStrikeModal.
+ * A Squox familiar's Disarm/Trip via Acrobatics (#223), on the two-phase
+ * RollSheet (Roll Resolution redesign successor arc — off TargetRollResolver).
+ * Squox Tricks lets the familiar use Acrobatics for these two maneuvers and
+ * grants a +2 circumstance bonus against an off-guard target. The familiar is
+ * its own actor: the check resolves against the target's Reflex DC and the
+ * result is logged for the GM at the commit — no enemy-state mutation,
+ * mirroring MinionStrikeModal. No damage profile, so the sheet has no amount
+ * phase: commit → result card → settled receipt.
+ *
+ * The target picker, the GM-overridable Acrobatics modifier and the off-guard
+ * toggle live in the sheet's edit disclosure, exactly like UseAbilityModal's
+ * target picker + MAP row (#1687).
  *
  * @param {Object} maneuver     - { id: 'disarm'|'trip', name }
  * @param {Object} familiarData - character.familiar (name, skills)
  * @param {Object} character    - the owner PC (level, id)
  */
-const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, character, themeColor }) => {
+const FamiliarManeuverSheet = ({ onClose, maneuver, familiarData, character, themeColor }) => {
   const { encounter, appendLog } = useEncounter();
   const ownerId = character?.id;
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
@@ -49,8 +59,7 @@ const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, charac
   const [acroMod, setAcroMod] = useState(String(baseAcro));
   const [offGuard, setOffGuard] = useState(false);
   const [pickedId, setPickedId] = useState(null);
-  const [resolved, setResolved] = useState(null);
-  const resolverRef = useRef(null);
+  const deriveAttackSheet = useAttackRollSheet();
 
   const acroNum = /^-?\d+$/.test(acroMod) ? parseInt(acroMod, 10) : baseAcro;
   const netBonus = acroNum + (offGuard ? 2 : 0);
@@ -61,120 +70,143 @@ const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, charac
   );
   const resolverTargets = useMemo(() => (target ? [target] : []), [target]);
 
-  const handleConfirm = () => {
-    const results = resolverRef.current?.getResults();
-    if (!results || results.length === 0) return;
+  // The maneuver's outcome text keyed the way `rowsFor` reads authored degree
+  // maps (rulebook headings, same shape as ability.degrees) — it becomes the
+  // result rows' note ("knocked prone").
+  const outcomeNotes = useMemo(
+    () => Object.fromEntries(
+      Object.entries(OUTCOMES[maneuver?.id] || {}).map(([degree, text]) => [DEGREE_LABELS[degree], text]),
+    ),
+    [maneuver?.id]
+  );
 
-    results.forEach((r) => {
-      const degreeLabel = r.degree ? DEGREE_LABELS[r.degree] : null;
-      const outcome = (r.degree && OUTCOMES[maneuver?.id]?.[r.degree]) || null;
-      const dcSuffix = r.dc != null ? ` (Reflex DC ${r.dc})` : '';
-      const tail = degreeLabel
-        ? `: ${r.total} → ${degreeLabel}${outcome ? ` — ${r.name} ${outcome}` : ''}`
-        : `: ${r.total}`;
-      appendLog({
-        type: 'action',
-        charId: ownerId,
-        text: `${familiarData?.name || 'Familiar'} ${maneuver?.name} vs ${r.name}${dcSuffix}${tail}${offGuard ? ' [off-guard +2]' : ''}`,
-      });
-    });
+  const attackSheet = deriveAttackSheet({
+    rollBonus: netBonus,
+    enemyTargets: resolverTargets,
+    defense: 'reflex',
+    degrees: outcomeNotes,
+  });
 
-    if (encounterMode) spendActions(1, maneuver?.name || 'Maneuver');
-    setResolved(true);
-  };
+  const rollFlavor =
+    `${familiarData?.name ? `${familiarData.name} — ` : ''}${maneuver?.name ?? 'Familiar maneuver'}`;
 
-  const handleClose = () => {
-    setAcroMod(String(baseAcro));
-    setOffGuard(false);
-    setPickedId(null);
-    setResolved(null);
-    onClose();
-  };
+  const summaryLine = [
+    target ? target.name : null,
+    attackSheet.bonus != null ? `Acrobatics ${signed(attackSheet.bonus)}` : null,
+  ].filter(Boolean).join(' · ');
 
-  if (!isOpen || !maneuver) return null;
+  const dcLine = ['nothing rolled yet', ...resolverTargets.map((e) => {
+    const dc = defenseDC(e.defenses, 'reflex');
+    return dc != null ? `${e.name} ${DEFENSE_LABELS.reflex} ${dc}` : null;
+  }).filter(Boolean)].join(' · ');
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={`${familiarData?.name || 'Familiar'} — ${maneuver.name}`}
-      themeColor={themeColor}
-      maxWidth="420px"
-    >
-      <div className="fmm-body">
-        {/* Target picker */}
-        <div className="fmm-field">
-          <label className="fmm-label">Target</label>
-          <div className="fmm-target-picks">
-            {enemyTargets.length === 0 ? (
-              <span className="fmm-empty">No enemies in the encounter.</span>
-            ) : (
-              enemyTargets.map((e) => (
-                <button
-                  key={e.entryId}
-                  className={`fmm-target-btn${pickedId === e.entryId ? ' fmm-target-btn--active' : ''}`}
-                  onClick={() => { setPickedId(e.entryId); setResolved(null); }}
-                  disabled={!!resolved}
-                >
-                  {e.name}
-                </button>
-              ))
-            )}
-          </div>
+  const editPanel = (
+    <div className="fmm-body">
+      {/* Target picker */}
+      <div className="fmm-field">
+        <label className="fmm-label">Target</label>
+        <div className="fmm-target-picks">
+          {enemyTargets.length === 0 ? (
+            <span className="fmm-empty">No enemies in the encounter.</span>
+          ) : (
+            enemyTargets.map((e) => (
+              <button
+                key={e.entryId}
+                className={`fmm-target-btn${pickedId === e.entryId ? ' fmm-target-btn--active' : ''}`}
+                onClick={() => setPickedId(e.entryId)}
+              >
+                {e.name}
+              </button>
+            ))
+          )}
         </div>
+      </div>
 
-        {/* Acrobatics modifier — Squox Tricks uses Acrobatics; GM-overridable */}
-        <div className="fmm-field">
-          <label className="fmm-label" htmlFor="fmm-acro">Acrobatics modifier</label>
-          <input
-            id="fmm-acro"
-            className="fmm-input"
-            type="number"
-            value={acroMod}
-            onChange={(e) => setAcroMod(e.target.value)}
-            disabled={!!resolved}
-          />
-        </div>
+      {/* Acrobatics modifier — Squox Tricks uses Acrobatics; GM-overridable */}
+      <div className="fmm-field">
+        <label className="fmm-label" htmlFor="fmm-acro">Acrobatics modifier</label>
+        <input
+          id="fmm-acro"
+          className="fmm-input"
+          type="number"
+          value={acroMod}
+          onChange={(e) => setAcroMod(e.target.value)}
+        />
+      </div>
 
-        {/* Squox Tricks — +2 circumstance against an off-guard target */}
-        <div className="fmm-field">
-          <label className="fmm-label">Circumstance</label>
-          <div className="fmm-target-picks">
-            <button
-              type="button"
-              className={`fmm-target-btn${offGuard ? ' fmm-target-btn--active' : ''}`}
-              onClick={() => setOffGuard((v) => !v)}
-              disabled={!!resolved}
-            >
-              Target off-guard +2
-            </button>
-          </div>
-        </div>
-
-        {/* Roll vs the target's Reflex DC */}
-        {target && (
-          <TargetRollResolver
-            ref={resolverRef}
-            enemyTargets={resolverTargets}
-            targetDefense="reflex"
-            rollBonus={netBonus}
-            charId={ownerId}
-            rollFlavor={`${familiarData?.name ? `${familiarData.name} — ` : ''}${maneuver?.name ?? 'Familiar maneuver'}`}
-          />
-        )}
-
-        <div className="fmm-actions">
+      {/* Squox Tricks — +2 circumstance against an off-guard target */}
+      <div className="fmm-field">
+        <label className="fmm-label">Circumstance</label>
+        <div className="fmm-target-picks">
           <button
             type="button"
-            className="btn-primary fmm-confirm"
-            onClick={handleConfirm}
-            disabled={!target || !!resolved}
+            className={`fmm-target-btn${offGuard ? ' fmm-target-btn--active' : ''}`}
+            aria-pressed={offGuard}
+            onClick={() => setOffGuard((v) => !v)}
           >
-            {resolved ? 'Resolved' : `Log ${maneuver.name}`}
+            Target off-guard +2
           </button>
         </div>
       </div>
-    </Modal>
+
+      {attackSheet.togglesRow}
+    </div>
+  );
+
+  return (
+    <RollSheet
+      onClose={onClose}
+      title={`${familiarData?.name || 'Familiar'} — ${maneuver.name}`}
+      themeColor={themeColor}
+      maxWidth="420px"
+      summaryLine={summaryLine}
+      blockLine={target ? null : 'Pick a target first — open Edit.'}
+      editPanel={editPanel}
+      charId={ownerId}
+      flavor={rollFlavor}
+      bonus={attackSheet.bonus}
+      bonusLabel="check"
+      dcLine={dcLine}
+      commitLabel={`Log ${maneuver.name}`}
+      // Commit is ONE moment: the log lines and the granted-action spend fire
+      // here, and the rows it hands back are frozen for the rest of the sheet.
+      onCommit={(face) => {
+        const results = attackSheet.commit(face);
+        results.forEach((r) => {
+          const degreeLabel = r.degree ? DEGREE_LABELS[r.degree] : null;
+          const outcome = (r.degree && OUTCOMES[maneuver?.id]?.[r.degree]) || null;
+          const dcSuffix = r.dc != null ? ` (Reflex DC ${r.dc})` : '';
+          const tail = degreeLabel
+            ? `: ${r.total} → ${degreeLabel}${outcome ? ` — ${r.name} ${outcome}` : ''}`
+            : `: ${r.total}`;
+          appendLog({
+            type: 'action',
+            charId: ownerId,
+            text: `${familiarData?.name || 'Familiar'} ${maneuver?.name} vs ${r.name}${dcSuffix}${tail}${offGuard ? ' [off-guard +2]' : ''}`,
+          });
+        });
+        if (encounterMode) spendActions(1, maneuver?.name || 'Maneuver');
+        return attackSheet.rowsFor(results);
+      }}
+      damageParts={null}
+      costLabel={encounterMode ? '1 action' : ''}
+    />
+  );
+};
+
+// Open gate stays out here so a close UNMOUNTS the sheet — RollSheet's frozen
+// commit and the picker/off-guard state all reset for free on the next open
+// (the parents keep this component mounted with isOpen=false).
+const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, character, themeColor }) => {
+  if (!isOpen || !maneuver) return null;
+  return (
+    <FamiliarManeuverSheet
+      onClose={onClose}
+      maneuver={maneuver}
+      familiarData={familiarData}
+      character={character}
+      themeColor={themeColor}
+    />
   );
 };
 

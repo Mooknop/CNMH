@@ -10,6 +10,13 @@ import { SessionContext } from '../../contexts/SessionContext';
 const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
 const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
+// The RollSheet migration (Roll Resolution redesign successor arc): target and
+// MAP picks live in the sheet's edit disclosure; "Log strike" is the commit
+// pill; on a hit the log line waits for the amount step (Roll damage → Apply
+// damage), exactly like UseAbilityModal's attack path (#1687).
+const openEdit = () => fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+const commitPill = () => screen.getByRole('button', { name: /log strike/i });
+
 // Dummy modal — render children inline so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
   default: function DummyModal({ isOpen, title, children }) {
@@ -20,8 +27,9 @@ vi.mock('../shared/Modal', () => ({
 
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../hooks/useTurnState', () => ({ useTurnState: vi.fn() }));
-// useTargeting, resolveActionRoll, buildDamageProfile, minionUtils, TargetRollResolver
-// all run for real so the test verifies the actual MAP + bonus pipeline.
+// useTargeting, resolveActionRoll, buildDamageProfile, minionUtils, RollSheet,
+// useAttackRollSheet all run for real so the test verifies the actual MAP +
+// bonus pipeline.
 
 // Zevira — best mod Dex 16 (+3), Bite trained (rank 1); at owner level 5 the
 // proficiency bonus is 2 + 5 = 7, so attackMod = +10.
@@ -71,6 +79,7 @@ beforeEach(() => {
 describe('MinionStrikeModal', () => {
   it('lists only enemy targets (owner PC excluded)', () => {
     renderModal();
+    openEdit();
     expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Jade' })).not.toBeInTheDocument();
   });
@@ -82,52 +91,74 @@ describe('MinionStrikeModal', () => {
 
   it('shows the minion attack bonus with no MAP on the first attack', () => {
     renderModal(0);
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.getByText('your d20 · attack +10')).toBeInTheDocument();
   });
 
   it("applies the minion's own MAP (−5) on a second attack", () => {
     renderModal(1); // one attack already made this turn → MAP step 1
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.getByText('your d20 · attack +5')).toBeInTheDocument();
   });
 
-  it('logs the strike result and advances the minion MAP on confirm', () => {
+  it('logs the strike result (with the entered damage) and advances the minion MAP', () => {
     renderModal(0);
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10); // 10 + 10 = 20 vs AC 18 → Hit
-    fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
+    fireEvent.click(commitPill());
 
+    // MAP advances at the commit; the log waits for the damage total.
     expect(recordAttack).toHaveBeenCalledTimes(1);
     expect(recordAttack).toHaveBeenCalledWith(1);
+    expect(appendLog).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Roll damage' }));
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply damage' }));
+
     expect(appendLog).toHaveBeenCalledTimes(1);
     expect(appendLog.mock.calls[0][0]).toMatchObject({
       type: 'action',
       charId: 'Ashka',
-      text: expect.stringContaining('Zevira Bite vs Goblin (AC 18): 20 → Hit'),
+      text: expect.stringContaining('Zevira Bite vs Goblin (AC 18): 20 → Hit · damage 6'),
     });
   });
 
-  it('spends 1 granted action on confirm during an encounter (#391)', () => {
+  it('logs a miss at the commit — no damage step follows', () => {
+    renderModal(0);
+    openEdit();
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    tapFace(5); // 5 + 10 = 15 vs AC 18 → Miss
+    fireEvent.click(commitPill());
+    expect(appendLog).toHaveBeenCalledTimes(1);
+    expect(appendLog.mock.calls[0][0].text).toContain('Zevira Bite vs Goblin (AC 18): 15 → Miss');
+  });
+
+  it('spends 1 granted action on commit during an encounter (#391)', () => {
     renderModal(0, { active: true, actionsGranted: 2, actionsSpent: 0 });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
-    fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
+    fireEvent.click(commitPill());
     expect(spendActions).toHaveBeenCalledWith(1, 'Bite');
   });
 
   it('does not spend an action out of encounter', () => {
     renderModal(0); // inactive encounter
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
-    fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
+    fireEvent.click(commitPill());
     expect(spendActions).not.toHaveBeenCalled();
   });
 
   it('hard-blocks the strike when no granted actions remain (#391)', () => {
     renderModal(0, { active: true, actionsGranted: 0, actionsSpent: 0 });
-    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    const confirm = screen.getByRole('button', { name: /no actions left/i });
+    expect(screen.getByText('No granted actions left — Command an Animal first.')).toBeInTheDocument();
+    const confirm = commitPill();
     expect(confirm).toBeDisabled();
     fireEvent.click(confirm);
     expect(spendActions).not.toHaveBeenCalled();
@@ -158,12 +189,14 @@ describe('MinionStrikeModal', () => {
 
   it('shows the off-guard cue when the companion flanks the picked target', () => {
     renderWithFlanked({ 'e-a': { byCharIds: ['Ashka-companion'] } });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
   });
 
   it('shows no off-guard cue when the companion is not among the flankers', () => {
     renderWithFlanked({ 'e-a': { byCharIds: ['Ashka'] } });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.queryByLabelText('Goblin is flanked')).not.toBeInTheDocument();
   });
@@ -208,9 +241,10 @@ describe('MinionStrikeModal', () => {
       positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 40, row: 0 } } },
       huntprey: null,
     });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    const confirm = screen.getByRole('button', { name: /out of range/i });
-    expect(confirm).toBeDisabled();
+    expect(screen.getByText('Goblin is out of range.')).toBeInTheDocument();
+    expect(commitPill()).toBeDisabled();
   });
 
   it('waives the 2nd increment for the companion against the owner’s prey', () => {
@@ -219,8 +253,11 @@ describe('MinionStrikeModal', () => {
       positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 9, row: 0 } } },
       huntprey: { targetKey: 'e-a', targetName: 'Goblin' },
     });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
+    fireEvent.click(commitPill());
+    // The waived-increment note rides the frozen result row.
     expect(screen.getByText(/Hunt Prey: 2nd increment ignored/)).toBeInTheDocument();
   });
 
@@ -229,8 +266,10 @@ describe('MinionStrikeModal', () => {
       positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 9, row: 0 } } },
       huntprey: null,
     });
+    openEdit();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     tapFace(10);
+    fireEvent.click(commitPill());
     expect(screen.getByText(/2nd increment -2/)).toBeInTheDocument();
     expect(screen.queryByText(/Hunt Prey/)).not.toBeInTheDocument();
   });
