@@ -17,6 +17,9 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import {
+  applyDamage, breakdown, commitRoll, damageRow, degrees, rollDamage,
+} from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -91,15 +94,16 @@ test.describe('Attacker damage step', () => {
       damage: '2d8+4', damageType: 'piercing', description: 'A melee strike.',
     }, enemy('E2E Goblin', { ac: 20 }));
 
-    // d20 15 + 10 = 25 vs AC 20 → Hit; the typed damage hint appears.
-    await page.getByLabel('raw d20').fill('15');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Hit');
-    await expect(page.locator('.dmg-expression')).toHaveText('2d8+4 piercing');
+    // d20 15 + 10 = 25 vs AC 20 → Hit; the amount step is only offered after.
+    await commitRoll(page, 15);
+    await expect(degrees(page)).toHaveText('Hit');
+    await rollDamage(page);
+    await expect(page.locator('.de-expression')).toHaveText('2d8+4 piercing');
 
     await page.getByLabel('rolled damage total').fill('13');
-    await expect(page.locator('.dmg-result-line')).toContainText('13');
+    await expect(breakdown(page)).toContainText('13');
 
-    await page.getByLabel('confirm-cast').click();
+    await applyDamage(page);
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('E2E Slash', 'vs E2E Goblin (AC 20)', '→ Hit', '· damage 13'),
@@ -122,13 +126,14 @@ test.describe('Attacker damage step', () => {
     }, enemy('E2E Goblin', { ac: 20 }));
 
     // Nat 20: 30 vs AC 20 → Critical Hit; the built-in Crit ×2 toggle is on.
-    await page.getByLabel('raw d20').fill('20');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Critical Hit');
+    await commitRoll(page, 20);
+    await expect(degrees(page)).toHaveText('Critical Hit');
 
+    await rollDamage(page);
     await page.getByLabel('rolled damage total').fill('13');
-    await expect(page.locator('.dmg-result-line')).toContainText('26 (13 ×2)');
+    await expect(breakdown(page)).toContainText('26 (13 ×2)');
 
-    await page.getByLabel('confirm-cast').click();
+    await applyDamage(page);
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('→ Critical Hit', 'damage 26 (13 ×2)'),
@@ -149,14 +154,15 @@ test.describe('Attacker damage step', () => {
       weaknesses: [{ type: 'fire', value: 5 }],
     }));
 
-    await page.getByLabel('raw d20').fill('15');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Hit');
+    await commitRoll(page, 15);
+    await expect(degrees(page)).toHaveText('Hit');
 
     // Entered 4 + weakness 5 → displayed 9, named now that it fired.
+    await rollDamage(page);
     await page.getByLabel('rolled damage total').fill('4');
-    await expect(page.locator('.dmg-result-line')).toContainText('9 (4 +5 weakness (fire))');
+    await expect(breakdown(page)).toContainText('9 (4 +5 weakness (fire))');
 
-    await page.getByLabel('confirm-cast').click();
+    await applyDamage(page);
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('E2E Fire Lash', 'damage 9 (4 +5 weakness (fire))'),
@@ -189,17 +195,19 @@ test.describe('Attacker damage step', () => {
       resistances: [{ type: 'fire', value: 2 }],
     }));
 
-    await page.getByLabel('raw d20').fill('15');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Hit');
+    await commitRoll(page, 15);
+    await expect(degrees(page)).toHaveText('Hit');
 
-    // One input per typed part, base first.
-    await page.getByLabel('rolled piercing total').fill('10');
-    await page.getByLabel('rolled fire total').fill('3');
+    // One DamageEntry row per typed part, base first. They share the
+    // `rolled damage total` name, so each is reached through its own row.
+    await rollDamage(page);
+    await damageRow(page, '2d8+4 piercing').getByLabel('rolled damage total').fill('10');
+    await damageRow(page, '1d6 fire').getByLabel('rolled damage total').fill('3');
 
     // Fire instance nets 3−2=1 → 10+1=11 shown; the resistance is named.
-    await expect(page.locator('.dmg-result-line')).toContainText('11 (13 -2 resistance (fire))');
+    await expect(breakdown(page)).toContainText('11 (13 -2 resistance (fire))');
 
-    await page.getByLabel('confirm-cast').click();
+    await applyDamage(page);
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('E2E Flaming Slash', 'damage 11 (13 -2 resistance (fire))'),

@@ -9,11 +9,16 @@
  * encounter + enemy targets (with AC) and the actor's turn state. Degree math is
  * unit-tested — here we assert the player-visible degree chip and the synced
  * combat-log line, with deterministic d20 faces so each outcome is fixed.
+ *
+ * Since #1687 the single-roll path is RollSheet's: the face is TAPPED and no
+ * degree exists until the commit, so the degree assertions moved after it.
+ * Multi-ray still renders MultiRayResolver and keeps the typed idiom.
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { commitRoll, degrees, openEdit, summaryLine } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -76,14 +81,17 @@ test.describe('Attack-roll resolution', () => {
     await page.getByRole('button', { name: /E2E Slash/ }).first().click();
     await page.getByRole('button', { name: /^Confirm / }).click();
 
-    // Pick the target → the inline resolver appears.
+    // Pick the target → the roll sheet takes over.
     await page.getByRole('button', { name: 'Target E2E Goblin' }).click();
 
-    // d20 15 + attackMod 10 = 25 vs AC 20 → Hit (non-nat, no degree shift).
-    await page.getByLabel('raw d20').fill('15');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Hit');
+    // No degree may exist before the commit — that is friction F2's fix.
+    await expect(degrees(page)).toHaveCount(0);
 
-    await page.getByLabel('confirm-cast').click();
+    // d20 15 + attackMod 10 = 25 vs AC 20 → Hit (non-nat, no degree shift).
+    // The commit is what logs, spends and toasts, all in one moment.
+    await commitRoll(page, 15);
+    await expect(degrees(page)).toHaveText('Hit');
+
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('E2E Slash', 'vs E2E Goblin (AC 20)', '25', '→ Hit'),
@@ -126,18 +134,20 @@ test.describe('Attack-roll resolution', () => {
     await page.getByRole('button', { name: /^Confirm / }).click();
     await page.getByRole('button', { name: 'Target E2E Goblin' }).click();
 
-    // d20 8 + 10 = 18 vs AC 20 → Miss until the +2 toggle is flipped.
-    await page.getByLabel('raw d20').fill('8');
-    await expect(page.locator('.trr-result-degree')).toHaveText('Miss');
-
+    // The toggle lives in the sheet's edit disclosure now, and its bonus folds
+    // into the ONE number the sheet rolls against (the pre-commit summary line
+    // is where that is visible — there is no degree to preview any more).
+    await expect(summaryLine(page)).toContainText('attack +10');
+    await openEdit(page);
     const toggle = page.getByRole('group', { name: 'situational bonuses' }).getByRole('button');
     await expect(toggle).toContainText('prone target');
     await toggle.click();
+    await expect(summaryLine(page)).toContainText('attack +12');
 
-    // 18 + 2 = 20 == AC 20 → Hit.
-    await expect(page.locator('.trr-result-degree')).toHaveText('Hit');
+    // d20 8 + 10 = 18 would have missed; + the flipped 2 = 20 == AC 20 → Hit.
+    await commitRoll(page, 8);
+    await expect(degrees(page)).toHaveText('Hit');
 
-    await page.getByLabel('confirm-cast').click();
     await session.expectSent(
       'cnmh_encounter_global',
       logHas('vs E2E Goblin (AC 20)', '20', '→ Hit', 'incl. +2'),

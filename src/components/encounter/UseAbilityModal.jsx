@@ -5,6 +5,7 @@ import OutOfTurnNotice from './OutOfTurnNotice';
 import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
+import RollSheet from './RollSheet';
 import {
   AbilitySummarySection,
   StaticEffectsList,
@@ -41,8 +42,9 @@ import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useAttackRollSheet } from '../../hooks/useAttackRollSheet';
 import { abilityNeedsPicker } from '../../utils/applyAbility';
-import { DEFENSE_LABELS } from '../../utils/defense';
+import { DEFENSE_LABELS, defenseDC } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
@@ -130,6 +132,11 @@ const UseAbilityModal = ({
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
+  // RollSheet finish bookkeeping (#1687): `deferredRef` marks a commit that
+  // parked its damage-dependent steps for the amount screen, `finishedRef`
+  // makes running them exactly-once — including the abandon path below.
+  const deferredRef = useRef(false);
+  const finishedRef = useRef(false);
 
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
   // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
@@ -339,6 +346,12 @@ const UseAbilityModal = ({
     adoptTargets: adoptTargetIds,
   });
 
+  // The attack path's RollSheet state (#1687) — situational toggles, damage
+  // riders, crit doubling and the one frozen commit. Hoisted above the ability
+  // guard like the hooks above it; the derivation itself needs the roll profile
+  // and so runs below, through the returned `derive()`.
+  const deriveAttackSheet = useAttackRollSheet();
+
   if (!ability || !character) return null;
 
   const effects     = Array.isArray(ability.effects) ? ability.effects : [];
@@ -469,7 +482,54 @@ const UseAbilityModal = ({
   const rollFlavor =
     `${verb}: ${ability.name}${mapStep ? ` (MAP ${mapPenaltyFor(ability, mapStep)})` : ''}`;
 
-  const handleConfirm = () => {
+  // ── The RollSheet attack path (#1687, Roll Resolution redesign E) ──────────
+  // The single-roll actor-roll branch — a Strike or a spell attack — is the one
+  // this workstream moves onto the two-phase sheet. Multi-ray (#1691 J) and the
+  // chained sections keep TargetRollResolver, the target-save branch keeps its
+  // save-request preview until G2 (#1689), and the opposed reaction keeps its
+  // own resolver.
+  const useRollSheet =
+    rollProfile.mode === 'actor-roll'
+    && !!effectiveDefense
+    && resolverTargets.length > 0
+    && !isMultiRay
+    && !hasChainStrike
+    && !hasChainSpell
+    && !isOpposedReaction;
+
+  const attackSheet = useRollSheet
+    ? deriveAttackSheet({
+        rollBonus: rollProfile.bonus,
+        toggles: attackToggles,
+        enemyTargets: resolverTargets,
+        defense: effectiveDefense,
+        rangeByEntry: hasRangeData ? rangeByEntry : null,
+        damageProfile,
+        degrees: ability.degrees,
+      })
+    : null;
+
+  // Shared applier context (#1317 D4) — every confirm-time applier
+  // destructures the keys it needs from this bag plus call-specific extras;
+  // unused keys are harmless. Hoisted out of the confirm so the deferred
+  // damage step (#1687) rebuilds nothing.
+  const ctx = {
+    ability, character, caster: character, casterEntryId, order, encounter,
+    characters, getState, sendUpdate, appendLog, effectiveVerb, nowSecs,
+    fxAnimations,
+  };
+
+  /**
+   * The confirm sequence, unchanged in order and content. `face` / `results`
+   * arrive from RollSheet's commit; the classic (non-sheet) paths still read
+   * them off the resolver ref. `deferDamage` holds back the two steps that need
+   * the entered totals — they run again from `runFinish` at the amount step.
+   *
+   * @returns {'done'|'opposed'|'lost'} which path it took — `opposed` already
+   *   closed the modal itself, `lost` is the failed condition flat check (the
+   *   action is spent but nothing resolves), `done` is the full sequence.
+   */
+  const runConfirm = ({ face = null, results = null, deferDamage = false } = {}) => {
     // Juice (#1346): every path through this handler is a committed use, so the
     // one emit here covers all of them — early returns, catalysts, action-folds.
     // Fire-and-forget: nothing downstream gates on it. Signature moments carry
@@ -483,9 +543,9 @@ const UseAbilityModal = ({
     // resolver, so multi-ray/chained casts emit the plain event (their toast
     // is a later slice); getResults is pure, so this pre-read is free.
     const rollFx = buildRollFx({
-      d20: resolverRef.current?.getD20Face?.() ?? null,
+      d20: face ?? resolverRef.current?.getD20Face?.() ?? null,
       flavor: rollFlavor,
-      results: resolverRef.current?.getResults?.() ?? null,
+      results: results ?? resolverRef.current?.getResults?.() ?? null,
       attack: effectiveDefense === 'ac',
     });
     emitFx({
@@ -509,15 +569,6 @@ const UseAbilityModal = ({
     const bridgePresent = (getState('global', RELAY.ROSTER) || []).length > 0;
     const foundryAuthoritative = !!ability.foundryEffect?.authoritative && bridgePresent;
 
-    // Shared applier context (#1317 D4) — every confirm-time applier
-    // destructures the keys it needs from this bag plus call-specific extras;
-    // unused keys are harmless.
-    const ctx = {
-      ability, character, caster: character, casterEntryId, order, encounter,
-      characters, getState, sendUpdate, appendLog, effectiveVerb, nowSecs,
-      fxAnimations,
-    };
-
     // Opposed reaction (#226-C, extracted #1317 D3) — its own resolution path
     // (useOpposedReactionResolution.resolve). The actor's skill roll is
     // compared to the GM-called DC; the authored self effect and any per-enemy
@@ -535,10 +586,10 @@ const UseAbilityModal = ({
         spendReaction,
         onClose,
       });
-      return;
+      return 'opposed';
     }
 
-    const rawResults   = resolverRef.current?.getResults() ?? null;
+    const rawResults   = results ?? resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
 
     // Normalise resolver output into ray groups so single-roll and multi-ray
@@ -584,8 +635,7 @@ const UseAbilityModal = ({
       }
       // The bolt is spent even on a lost flat check; no on-hit (the attack missed).
       chamberFireSection.commit([]);
-      onClose();
-      return;
+      return 'lost';
     }
 
     // Catalysts (#1209): consume each added catalyst (by name, like potions) and
@@ -615,7 +665,18 @@ const UseAbilityModal = ({
 
     // Per-target rolled results (#222, #274; extracted #1317 D4) — one log
     // line per resolved degree, with damage totals and toggle reasons.
-    logRayGroupResults({ ...ctx, rayGroups, effectiveDefense });
+    // Post-roll effect riders (extracted #1317 D4): persistent-damage tracking
+    // (#272), the typed damage relay + IWR reveal-on-trigger (#1016/#1014),
+    // whetstone on-hit riders (#1215) and triggered whetstone saves (#1216).
+    //
+    // Both read the ENTERED damage totals, which under RollSheet do not exist
+    // until the amount step — so when an amount step is coming they are held
+    // back and re-run verbatim from `runFinish` with the same frozen degrees
+    // (handoff §Damage relay). A 0-hit or damage-free commit has no amount
+    // step and runs them here, exactly as before.
+    if (!deferDamage) {
+      logRayGroupResults({ ...ctx, rayGroups, effectiveDefense });
+    }
 
     // Log chained strike results (Inner Upheaval and similar; extracted #1317
     // D3): per-target totals (#222) with the static dice string as fallback,
@@ -624,14 +685,13 @@ const UseAbilityModal = ({
       applyChainStrikeResults(chainResults, ctx);
     }
 
-    // Post-roll effect riders (extracted #1317 D4): persistent-damage tracking
-    // (#272), the typed damage relay + IWR reveal-on-trigger (#1016/#1014),
-    // whetstone on-hit riders (#1215) and triggered whetstone saves (#1216).
-    applyPostRollEffects({
-      ...ctx, castCost, rayGroups, chainResults, hasChainStrike, damageProfile,
-      setPersistentMap, addSaveRequest, applyEnemyCondition, revealFiredIwr,
-      recordFor, mergeRecord,
-    });
+    if (!deferDamage) {
+      applyPostRollEffects({
+        ...ctx, castCost, rayGroups, chainResults, hasChainStrike, damageProfile,
+        setPersistentMap, addSaveRequest, applyEnemyCondition, revealFiredIwr,
+        recordFor, mergeRecord,
+      });
+    }
 
     // Push a save request to the GM for target-save abilities (builder
     // extracted #1317 D3). When a damage profile exists (#270), the caster's
@@ -756,7 +816,30 @@ const UseAbilityModal = ({
     // it back to hand. The Blade Byrnie dagger has its own return path above.
     logThrownWeaponResolution({ ability, character, dropThrownWeapon, appendLog });
 
-    onClose();
+    return 'done';
+  };
+
+  // The classic (non-RollSheet) confirm button: run the sequence, then close.
+  // The opposed-reaction path closes itself from inside `resolve`.
+  const handleConfirm = () => {
+    if (runConfirm() !== 'opposed') onClose();
+  };
+
+  // RollSheet's finish transition (#1687): the SAME frozen face and degrees,
+  // now carrying the entered totals. Only the two damage-dependent steps run
+  // here — nothing else about the confirm sequence is repeated.
+  const runFinish = (amounts) => {
+    if (!attackSheet || finishedRef.current) return;
+    finishedRef.current = true;
+    const results = attackSheet.resolveWithAmounts(amounts);
+    if (!results.length) return;
+    const rayGroups = buildRayGroups(results, false);
+    logRayGroupResults({ ...ctx, rayGroups, effectiveDefense });
+    applyPostRollEffects({
+      ...ctx, castCost, rayGroups, chainResults: null, hasChainStrike: false, damageProfile,
+      setPersistentMap, addSaveRequest, applyEnemyCondition, revealFiredIwr,
+      recordFor, mergeRecord,
+    });
   };
 
   // MAP toggle — shown for Attack-trait abilities with an inline resolver, and for
@@ -772,7 +855,12 @@ const UseAbilityModal = ({
   // useOpposedReactionResolution above.)
   // Multi-ray attack spells render one resolver row per ray instead of a single roll.
   let rollSection = null;
-  if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
+  if (useRollSheet) {
+    // The die entry, DC line, degrees and damage step all live on the sheet
+    // itself now; what stays in this slot is the situational-toggle row, which
+    // belongs to the edit panel beside the MAP row (handoff Screen 1, item 2).
+    rollSection = attackSheet.togglesRow;
+  } else if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
     rollSection = isMultiRay ? (
       <MultiRayResolver
         ref={resolverRef}
@@ -828,16 +916,12 @@ const UseAbilityModal = ({
     );
   }
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`${verb}: ${ability.name}`}
-      themeColor={themeColor}
-      maxWidth="560px"
-      placement="bottom"
-      highZ
-    >
+  // The render skeleton, unchanged (#1687): every gate section, every mechanic
+  // section and the target picker keep their fixed slot and their owner. On the
+  // attack path this whole block simply moves inside RollSheet's `editPanel`
+  // disclosure instead of stacking above a footer button.
+  const skeleton = (
+    <>
       {/* Warn-not-hide (#1575 D1): the backstop for launch paths that bypass
           the deck's confirm sheet (prompts, stage bars, spell lists). The
           notice self-hides on-turn and for reaction-cost uses. */}
@@ -955,7 +1039,103 @@ const UseAbilityModal = ({
           </section>
         </>
       )}
+    </>
+  );
 
+  // ── The attack path: one two-phase sheet (#1687) ──────────────────────────
+  if (useRollSheet) {
+    const costText = castPlan.costDisplayFinal;
+    // The strip and the receipt read as prose (`1 action`); the commit pill
+    // keeps the footer button's terse `(1)` so nothing about the cost display
+    // itself changes meaning.
+    const costPhrase = /^\d+$/.test(String(costText))
+      ? `${costText} action${costText === '1' ? '' : 's'}`
+      : costText;
+    const targetNames = resolverTargets.map((e) => e.name).join(' + ');
+    const bonusLabel = effectiveDefense === 'ac' ? 'attack' : (rollProfile.skill || 'check');
+    const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
+    const summaryLine = [
+      targetNames,
+      costPhrase,
+      attackSheet.bonus != null ? `${bonusLabel} ${signed(attackSheet.bonus)}` : null,
+      mapStep ? `MAP ${mapPenaltyFor(ability, mapStep)}` : null,
+    ].filter(Boolean).join(' · ');
+
+    // Hard blocks (handoff §Hard blocks): the confirmEnabled fold becomes ONE
+    // tinted strip line that also freezes the die entry. The section that
+    // explains each one still renders, unchanged, inside the edit panel.
+    const outOfRangeName = resolverTargets
+      .find((e) => rangeByEntry?.[e.entryId]?.beyondMaxRange)?.name;
+    let blockLine = null;
+    if (needsPicker && targets.length === 0) blockLine = 'Pick a target first.';
+    else if (anyTargetOutOfRange) {
+      blockLine = `${outOfRangeName || 'A target'} is out of range — open Edit to re-pick.`;
+    } else if (!castGateOk) blockLine = 'That casting pool is empty — open Edit to override.';
+    else if (!frequencyGate.gateOk) blockLine = 'Frequency limit reached — open Edit to override.';
+    else if (!immunityGate.gateOk) blockLine = 'A target is already immune — open Edit to override.';
+    else if (!auraGate.gateOk) blockLine = 'Your kinetic aura is down — open Edit.';
+    else if (!shieldGate.gateOk) blockLine = 'Your shield is not raised — open Edit.';
+    else if (!omenGate.gateOk) blockLine = 'No active harrow omen — open Edit.';
+    else if (flatChecks.length > 0 && !allFlatChecksRolled) {
+      blockLine = 'Roll the flat check first — open Edit.';
+    }
+
+    const dcLine = ['nothing rolled yet', ...resolverTargets.map((e) => {
+      const dc = defenseDC(e.defenses, effectiveDefense);
+      return dc != null ? `${e.name} ${DEFENSE_LABELS[effectiveDefense] || effectiveDefense} ${dc}` : null;
+    }).filter(Boolean)].join(' · ');
+
+    return (
+      <RollSheet
+        isOpen={isOpen}
+        // Modal chrome (overlay / × / Escape) can leave a committed sheet at the
+        // amount screen. The commit already spent the action, so swallowing the
+        // roll line too would lose it outright — flush the deferred steps with
+        // no totals instead. `runFinish` is ref-guarded, so a normal finish
+        // followed by the settled Close never runs them twice.
+        onClose={() => { if (deferredRef.current) runFinish({}); onClose(); }}
+        title={`${verb}: ${ability.name}`}
+        themeColor={themeColor}
+        summaryLine={summaryLine}
+        blockLine={blockLine}
+        editPanel={skeleton}
+        charId={character.id}
+        flavor={rollFlavor}
+        bonus={attackSheet.bonus}
+        bonusLabel={bonusLabel}
+        dcLine={dcLine}
+        commitLabel={`${verb} ${ability.name} (${costText})`}
+        attack={effectiveDefense === 'ac'}
+        // Commit is ONE moment: the whole confirm sequence fires here, and the
+        // rows it hands back are frozen for the rest of the sheet's life.
+        onCommit={(face) => {
+          const results = attackSheet.commit(face);
+          const hits = results.some((r) => r.degree === 'success' || r.degree === 'criticalSuccess');
+          const willAskAmount = !!attackSheet.damageParts && hits;
+          const outcome = runConfirm({ face, results, deferDamage: willAskAmount });
+          deferredRef.current = willAskAmount && outcome === 'done';
+          return outcome === 'done' ? attackSheet.rowsFor(results) : [];
+        }}
+        damageParts={attackSheet.damageParts}
+        amountExtras={attackSheet.amountExtras}
+        breakdownFor={attackSheet.breakdownFor}
+        onFinish={runFinish}
+        costLabel={costPhrase}
+      />
+    );
+  }
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${verb}: ${ability.name}`}
+      themeColor={themeColor}
+      maxWidth="560px"
+      placement="bottom"
+      highZ
+    >
+      {skeleton}
       <div className="uam-footer">
         <button className="btn-secondary" onClick={onClose}>Cancel</button>
         <button

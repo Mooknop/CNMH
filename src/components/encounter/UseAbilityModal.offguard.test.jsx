@@ -6,6 +6,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import { openEdit } from '../../test/rollSheet';
 
 // Per-test enemy effect record for the goblin target — reassigned before render.
 let mockGoblinRecord = { conditions: [], effects: [] };
@@ -68,12 +69,14 @@ describe('UseAbilityModal — off-guard attack toggle (#348)', () => {
   it('offers the toggle when the target is off-guard to this attacker', () => {
     mockGoblinRecord = { conditions: [{ id: 'off-guard', scopedTo: 'char-a', scopedToName: 'Ashka' }], effects: [] };
     render(<UseAbilityModal {...props} ability={maceStrike} />);
+    openEdit(); // #1687: situational toggles live in the sheet's edit disclosure
     expect(toggle()).toBeInTheDocument();
   });
 
   it('offers the toggle for a generic (unscoped) off-guard', () => {
     mockGoblinRecord = { conditions: [{ id: 'off-guard', scopedTo: null }], effects: [] };
     render(<UseAbilityModal {...props} ability={maceStrike} />);
+    openEdit();
     expect(toggle()).toBeInTheDocument();
   });
 

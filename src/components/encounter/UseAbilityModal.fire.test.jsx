@@ -7,6 +7,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import { commitRoll, openEdit, sheetPill } from '../../test/rollSheet';
 
 const enemyOrder = [
   { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', defenses: { ac: 15, saves: { fortitude: 8, reflex: 7, will: 5 } } },
@@ -33,19 +34,11 @@ vi.mock('../../hooks/useEnemyEffects', () => ({
   offGuardAppliesTo: () => false,
 }));
 
-// Resolver stub — getResults returns a mutable result set (default: a hit on the
-// goblin) so tests can flip the degree per case.
-let resolverResults = [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 22, degree: 'success' }];
-vi.mock('./TargetRollResolver', () => {
-  const React2 = require('react');
-  const Stub = React2.forwardRef((props, ref) => {
-    React2.useImperativeHandle(ref, () => ({
-      getResults: () => resolverResults,
-    }));
-    return React2.createElement('div', { 'data-testid': 'resolver' });
-  });
-  return { __esModule: true, default: Stub, DEGREE_LABELS_SAVE: {} };
-});
+// Degrees come from the real RollSheet math since #1687 (the resolver stub this
+// suite used to carry is gone): attack +9 vs the goblin's AC 15, so a face of 6
+// is a hit and a natural 1 is a miss.
+const HIT_FACE = 6;
+const MISS_FACE = 1;
 
 const spendActions = vi.fn();
 const sendUpdateSpy = vi.fn();
@@ -99,23 +92,26 @@ beforeEach(() => {
   vi.clearAllMocks();
   for (const k of Object.keys(setters)) delete setters[k];
   chamberState = { chambers: [bolt, beacon, null], pointer: 0 };
-  resolverResults = [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 22, degree: 'success' }];
 });
 
-const confirm = () => fireEvent.click(screen.getByRole('button', { name: 'confirm-cast' }));
+// The chamber selector and the ammo-damage entry moved into RollSheet's edit
+// disclosure (#1687); the confirm is the commit tap on the sheet.
+const confirm = (face = HIT_FACE) => commitRoll(face);
 
 describe('UseAbilityModal — chambered fire (#676)', () => {
   it('lists the loaded chambers with the special-ammo Activate hint', () => {
     render(<UseAbilityModal {...props} ability={crescentBolt} cost={1} />);
+    openEdit();
     expect(screen.getByRole('radio', { name: /Chamber 1: Crescent Cross Bolt/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Chamber 2: Beacon Shot \(\+1 to fire\)/ })).toBeInTheDocument();
   });
 
   it('shows the plain Strike cost by default and the combined cost for special ammo', () => {
     render(<UseAbilityModal {...props} ability={crescentBolt} cost={1} />);
-    expect(screen.getByRole('button', { name: 'confirm-cast' })).toHaveTextContent('Use (1)');
+    expect(sheetPill()).toHaveTextContent('Use Crescent Cross Bolt (1)');
+    openEdit();
     fireEvent.click(screen.getByRole('radio', { name: /Beacon Shot/ }));
-    expect(screen.getByRole('button', { name: 'confirm-cast' })).toHaveTextContent('Use (2)');
+    expect(sheetPill()).toHaveTextContent('Use Crescent Cross Bolt (2)');
   });
 
   it('firing the plain bolt discharges the chamber, spends 1, and does not consume ammo', () => {
@@ -129,6 +125,7 @@ describe('UseAbilityModal — chambered fire (#676)', () => {
 
   it('firing Beacon Shot spends 1+1, decrements ammo, and applies the on-hit effect to the hit enemy', () => {
     render(<UseAbilityModal {...props} ability={crescentBolt} cost={1} />);
+    openEdit();
     fireEvent.click(screen.getByRole('radio', { name: /Beacon Shot/ }));
     confirm();
     expect(fireSpy).toHaveBeenCalledWith('e-crescent', 1, 3);
@@ -153,8 +150,10 @@ const acidBolt = {
   damage: { dice: '2d6', type: 'acid' },
 };
 
-const enterAmmoDamage = (value) =>
+const enterAmmoDamage = (value) => {
+  openEdit();
   fireEvent.change(screen.getByLabelText('ammo damage roll'), { target: { value } });
+};
 
 describe('UseAbilityModal — ammo on-hit payloads (#1271)', () => {
   it('a damage+save payload pushes a save request carrying the entered roll', () => {
@@ -221,11 +220,10 @@ describe('UseAbilityModal — ammo on-hit payloads (#1271)', () => {
   });
 
   it('a miss fires the chamber but applies no payload', () => {
-    resolverResults = [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 9, degree: 'failure' }];
     chamberState = { chambers: [stormArrow, null, null], pointer: 0 };
     render(<UseAbilityModal {...props} ability={crescentBolt} cost={1} />);
     enterAmmoDamage('21');
-    confirm();
+    confirm(MISS_FACE);
     expect(fireSpy).toHaveBeenCalledWith('e-crescent', 0, 3);
     expect(setters['cnmh_consumed_char-a']).toHaveBeenCalled();
     expect(addSaveRequestSpy).not.toHaveBeenCalled();

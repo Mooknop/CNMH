@@ -3,8 +3,11 @@
 // per-target instances into cnmh_persistent_global; misses record nothing.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import {
+  commitRoll, rollDamage, finishAmount, enterDamage as typeDamage,
+} from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 
@@ -101,11 +104,11 @@ const character = { id: 'char-a', name: 'Ashka', abilities: { constitution: 16 }
 
 const props = { isOpen: true, onClose: vi.fn(), verb: 'Use', character, themeColor: '#a0f' };
 
-const enterD20 = (v) =>
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: String(v) } });
-const enterDamage = (v) =>
-  fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: String(v) } });
-const confirm = () => fireEvent.click(screen.getByLabelText('confirm-cast'));
+// The same three gestures on the RollSheet attack path (#1687): tap + commit,
+// then the total, then the finish tap that runs the persistent-damage applier.
+const enterD20 = (v) => commitRoll(v);
+const enterDamage = (v) => { rollDamage(); typeDamage(v); };
+const confirm = () => finishAmount();
 
 // The setter receives a functional updater — apply it to the prior map.
 const recordedMap = (prior = {}) => {

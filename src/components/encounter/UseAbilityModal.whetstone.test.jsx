@@ -5,8 +5,11 @@
 // weakness/resistance, Limning Gem applies the limned marker + note.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import {
+  commitRoll, rollDamage, finishAmount, enterDamage as typeDamage,
+} from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 const mockAddSaveRequest = vi.fn();
@@ -116,11 +119,12 @@ const strikeWith = (whetstoneOnHit) => ({
 const character = { id: 'char-a', name: 'Ashka', maxHp: 50, abilities: { strength: 16 } };
 const props = { isOpen: true, onClose: vi.fn(), verb: 'Use', character, themeColor: '#a0f' };
 
-const enterD20 = (v) =>
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: String(v) } });
-const enterDamage = (v) =>
-  fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: String(v) } });
-const confirm = () => fireEvent.click(screen.getByLabelText('confirm-cast'));
+// The same three gestures on the RollSheet attack path (#1687): the die is a
+// tap pad and its commit is one moment, the total is asked for afterwards, and
+// the whetstone appliers now run at the finish tap (they need the total).
+const enterD20 = (v) => commitRoll(v);
+const enterDamage = (v) => { rollDamage(); typeDamage(v); };
+const confirm = () => finishAmount();
 
 const applied = (setter, prior = {}) =>
   (setter?.mock.calls || []).reduce((acc, [updater]) =>
