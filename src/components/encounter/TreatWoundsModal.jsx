@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Modal from '../shared/Modal';
+import RollSheet from './RollSheet';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
@@ -20,23 +20,31 @@ import {
   applyTreatWounds,
   applyStaunchBleeding,
 } from '../../utils/treatWounds';
-import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
 import './TreatWoundsModal.css';
 import { APP } from '../../sync/keys';
 
 const GODLESS_HEALING_BONUS = 2;
 const STAUNCH_TWO_ACTION_DC_REDUCTION = 10;
-
-const DEGREE_INFO = {
-  criticalSuccess: { label: DEGREE_LABELS.criticalSuccess, cls: DEGREE_CLASS.criticalSuccess },
-  success:         { label: DEGREE_LABELS.success,         cls: DEGREE_CLASS.success         },
-  failure:         { label: DEGREE_LABELS.failure,         cls: DEGREE_CLASS.failure         },
-  criticalFailure: { label: DEGREE_LABELS.criticalFailure, cls: DEGREE_CLASS.criticalFailure },
-};
+// Every degree Treat Wounds / Battle Medicine needs a rolled amount for — a
+// critical failure deals damage rather than healing, but it still needs one.
+const AMOUNT_DEGREES = ['success', 'criticalSuccess', 'criticalFailure'];
 
 /**
- * Resolution modal for Treat Wounds, Battle Medicine, and Staunch Bleeding.
+ * Resolution modal for Treat Wounds, Battle Medicine, and Staunch Bleeding —
+ * a `RollSheet` configuration (#1688, Roll Resolution redesign workstream F).
+ * The roll math, DC table, and the Mortal Healing / Godless Healing riders are
+ * unchanged; only the presentation moved into the shell.
+ *
+ * RollSheet shows no degree before commit, so Mortal Healing — which used to
+ * gate on a live `degree === 'success'` — is now a pre-declared intent
+ * (checked ahead of the roll, applied inside `onCommit` once the degree is
+ * known). Godless Healing stays fully automatic.
+ *
+ * The flow inverts from the pre-RollSheet shape: `onCommit` now fires the
+ * log/spend for degrees with nothing further to enter (failure — and, for
+ * Staunch Bleeding, every degree) immediately; degrees that need a rolled
+ * amount (success / critical success / critical failure) defer the actual
+ * `applyTreatWounds` call to `onFinish`, once the player has entered it.
  *
  * @param {boolean} isOpen
  * @param {Function} onClose
@@ -58,10 +66,13 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   // lets the healer change it.
   const [selectedTargetId, setSelectedTargetId] = useState(defaultTargetId);
   const [selectedDc, setSelectedDc] = useState(null);
-  const [d20Input, setD20Input] = useState('');
-  const [amountInput, setAmountInput] = useState('');
-  const [mortalChecked, setMortalChecked] = useState(false);
   const [staunchActions, setStaunchActions] = useState(1);
+  const [mortalChecked, setMortalChecked] = useState(false);
+  // Echoed out of `onCommit` once the roll lands — the amount/finish phases
+  // read only this frozen mirror, never live selection state (mirrors
+  // RollSheet's own "committed" rule, since RollSheet only hands `onFinish`
+  // the entered amounts, nothing else).
+  const [resolved, setResolved] = useState(null);
 
   const staunch = mode === 'staunch-bleeding';
   const actionName = staunch
@@ -75,7 +86,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
 
   const selectedTarget = characters.find((c) => c.id === selectedTargetId) || null;
   const targetEffects  = selectedTarget ? (getState(selectedTarget.id, APP.EFFECTS) || []) : [];
-  const isImmune       = selectedTarget && hasImmunityFrom(targetEffects, healer?.id);
+  const isImmune       = !!selectedTarget && hasImmunityFrom(targetEffects, healer?.id);
 
   // Staunch Bleeding (#224) — the two-action variant lowers the DC by 10, and
   // success clears the target's tracked persistent bleed. Bleeds live in the
@@ -90,81 +101,33 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
     ? selectedDc - (staunch && staunchActions === 2 ? STAUNCH_TWO_ACTION_DC_REDUCTION : 0)
     : null;
 
-  const d20     = parseInt(d20Input, 10);
-  const hasD20  = !isNaN(d20);
-  const total   = hasD20 ? d20 + medicineModifier : NaN;
-
-  const degree = (hasD20 && effectiveDc != null)
-    ? computeSaveDegree({ d20, total, dc: effectiveDc })
-    : null;
-
-  // Mortal Healing (Blu) — on a Treat Wounds success against a creature that
-  // hasn't had divine healing in 24h, upgrade to a critical success. The 24h
-  // condition can't be tracked, so it's a player-confirmed checkbox; offered
-  // only on a raw success (you can't upgrade a crit or a failure).
-  const canMortalHeal = mode === 'treat-wounds'
-    && hasFeat(healer, 'Mortal Healing')
-    && degree === 'success';
-  const effectiveDegree = (canMortalHeal && mortalChecked) ? 'criticalSuccess' : degree;
-
-  // Godless Healing (Blu) — +2 HP from healing-only effects received by the
-  // target. Applies on any delivered healing (success / critical success); not
-  // to Staunch Bleeding, which restores no HP.
+  // Mortal Healing (Blu) — pre-declared, since no degree exists on screen
+  // before commit: offered whenever the feat applies to this mode, not only
+  // on an already-known success.
+  const canMortalHeal = mode === 'treat-wounds' && hasFeat(healer, 'Mortal Healing');
   const targetGodless = !staunch && !!selectedTarget && hasGodlessHealing(selectedTarget);
-  const godlessApplies = targetGodless
-    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
 
-  const staunchSuccess = staunch
-    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
+  const blockLine = (() => {
+    if (dcs.length === 0) return 'Medicine training required (rank ≥ 1).';
+    if (!selectedTarget) return 'Select a target to treat.';
+    if (isImmune) return `${selectedTarget.name} is immune to your ${actionName}.`;
+    if (selectedDc == null) return 'Select a DC.';
+    return null;
+  })();
 
-  const hint       = !staunch && effectiveDegree && effectiveDegree !== 'failure' && selectedDc != null
-    ? healHint(selectedDc, effectiveDegree)
-    : null;
-  // Staunch Bleeding restores/deals no HP — it clears bleed on success, nothing
-  // on failure — so it never needs a rolled amount.
-  const needsAmount = !staunch
-    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess' || effectiveDegree === 'criticalFailure');
-
-  const amount    = parseInt(amountInput, 10);
-  const hasAmount = !isNaN(amount) && amount > 0;
-
-  const confirmEnabled =
-    selectedTarget != null &&
-    selectedDc != null &&
-    hasD20 &&
-    degree != null &&
-    (!needsAmount || hasAmount) &&
-    !isImmune;
-
-  const handleTargetSelect = (id) => {
-    setSelectedTargetId((prev) => (prev === id ? null : id));
-    setAmountInput('');
-    setMortalChecked(false);
-  };
-
-  const handleDcSelect = (dc) => {
-    setSelectedDc(dc);
-    setAmountInput('');
-    setMortalChecked(false);
-  };
-
-  const handleD20Change = (val) => {
-    setD20Input(val);
-    setAmountInput('');
-    setMortalChecked(false);
-  };
-
-  const handleConfirm = () => {
-    if (!confirmEnabled || !selectedTarget) return;
+  const handleCommit = (face) => {
+    const total = face + medicineModifier;
+    const rawDegree = computeSaveDegree({ d20: face, total, dc: effectiveDc });
     const nowSecs = toGameSeconds({ ...gameDate, ...time });
+    const target = { id: selectedTarget.id, name: selectedTarget.name, maxHp: selectedTarget.maxHp };
 
     if (staunch) {
       applyStaunchBleeding({
         healer:  { id: healer.id, name: healer.name },
-        target:  { id: selectedTarget.id, name: selectedTarget.name },
+        target,
         entryId: targetEntryId,
         dc:      effectiveDc,
-        degree:  effectiveDegree,
+        degree:  rawDegree,
         bleeds:  targetBleeds,
         nowSecs,
         getState,
@@ -173,45 +136,81 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
         appendLog,
       });
       if (encounterMode) spendActions(staunchActions, actionName);
-      onClose();
-      return;
+      return [{ entryId: selectedTarget.id, name: selectedTarget.name, dcLabel: `DC ${effectiveDc}`, degree: rawDegree }];
     }
 
-    const healAmount = needsAmount
-      ? amount + (godlessApplies ? GODLESS_HEALING_BONUS : 0)
-      : 0;
+    const effectiveDegree = (canMortalHeal && mortalChecked && rawDegree === 'success')
+      ? 'criticalSuccess'
+      : rawDegree;
+    const godlessApplies = targetGodless
+      && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
+
+    if (encounterMode && actionCost > 0) spendActions(actionCost, actionName);
+
+    if (effectiveDegree === 'failure') {
+      // Nothing to enter — the whole confirm sequence fires here.
+      applyTreatWounds({
+        healer: { id: healer.id, name: healer.name },
+        target,
+        dc: selectedDc,
+        degree: 'failure',
+        amount: 0,
+        actionName,
+        nowSecs,
+        getState,
+        sendUpdate,
+        appendLog,
+      });
+    } else {
+      setResolved({ degree: effectiveDegree, dc: selectedDc, target, godlessApplies, nowSecs });
+    }
+
+    return [{ entryId: selectedTarget.id, name: selectedTarget.name, dcLabel: `DC ${selectedDc}`, degree: effectiveDegree }];
+  };
+
+  const handleFinish = (amounts) => {
+    if (!resolved) return;
+    const parsed = parseInt(amounts.heal, 10);
+    const entered = Number.isNaN(parsed) ? 0 : parsed;
+    const amount = resolved.degree === 'criticalFailure'
+      ? entered
+      : entered + (resolved.godlessApplies ? GODLESS_HEALING_BONUS : 0);
     applyTreatWounds({
-      healer:     { id: healer.id, name: healer.name },
-      target:     { id: selectedTarget.id, name: selectedTarget.name, maxHp: selectedTarget.maxHp },
-      dc:         selectedDc,
-      degree:     effectiveDegree,
-      amount:     healAmount,
+      healer: { id: healer.id, name: healer.name },
+      target: resolved.target,
+      dc: resolved.dc,
+      degree: resolved.degree,
+      amount,
       actionName,
-      nowSecs,
+      nowSecs: resolved.nowSecs,
       getState,
       sendUpdate,
       appendLog,
     });
-    if (encounterMode && actionCost > 0) {
-      spendActions(actionCost, actionName);
-    }
-    onClose();
   };
 
   if (!isOpen || !healer) return null;
 
-  const degreeInfo = effectiveDegree ? DEGREE_INFO[effectiveDegree] : null;
+  const isCritFailAmount = resolved?.degree === 'criticalFailure';
+  const hint = resolved ? healHint(resolved.dc, resolved.degree) : null;
+  // healHint's critical-failure string ("1d8 damage") is display prose, not a
+  // rollable expression — the dice part itself is the plain "1d8" the old
+  // FoundryDiceInput `formula` override used.
+  const dice = isCritFailAmount ? '1d8' : hint;
+  const damageParts = (resolved && hint)
+    ? [{ key: 'heal', dice, type: isCritFailAmount ? 'damage' : undefined }]
+    : null;
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={actionName}
-      themeColor={themeColor}
-      maxWidth="460px"
-      placement="bottom"
-    >
-      {/* ── Target ─────────────────────────────────────────────────────── */}
+  const costLabel = staunch
+    ? `${staunchActions} action${staunchActions > 1 ? 's' : ''}`
+    : (mode === 'battle-medicine' ? '1 action' : '10 minutes');
+
+  const commitLabel = staunch
+    ? `${actionName}${encounterMode ? ` (${staunchActions} act)` : ''}`
+    : `${actionName}${actionCost > 0 ? ` (${actionCost} act)` : ''}`;
+
+  const editPanel = (
+    <>
       <section className="ct-section">
         <h3 className="ct-section-title">Target</h3>
         <div className="tw-target-list" role="group" aria-label="Select target">
@@ -224,7 +223,10 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
                 selectedTargetId === c.id ? 'ttp-target-chip--on' : '',
               ].filter(Boolean).join(' ')}
               aria-pressed={selectedTargetId === c.id}
-              onClick={() => handleTargetSelect(c.id)}
+              onClick={() => {
+                setSelectedTargetId((prev) => (prev === c.id ? null : c.id));
+                setMortalChecked(false);
+              }}
             >
               {c.name}
             </button>
@@ -232,33 +234,26 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
         </div>
       </section>
 
-      <hr className="ct-divider" />
-
-      {/* ── Action cost (Staunch Bleeding only) ──────────────────────────── */}
       {staunch && (
-        <>
-          <section className="ct-section">
-            <h3 className="ct-section-title">Actions</h3>
-            <div className="tw-dc-row" role="group" aria-label="Select action cost">
-              {[1, 2].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={['tw-dc-btn', staunchActions === n ? 'tw-dc-btn--on' : ''].filter(Boolean).join(' ')}
-                  style={staunchActions === n ? { '--color-theme': themeColor, borderColor: themeColor } : {}}
-                  onClick={() => setStaunchActions(n)}
-                >
-                  <span className="tw-dc-value">{n} action{n > 1 ? 's' : ''}</span>
-                  <span className="tw-dc-hint">{n === 2 ? 'DC −10' : 'normal DC'}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-          <hr className="ct-divider" />
-        </>
+        <section className="ct-section">
+          <h3 className="ct-section-title">Actions</h3>
+          <div className="tw-dc-row" role="group" aria-label="Select action cost">
+            {[1, 2].map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={['tw-dc-btn', staunchActions === n ? 'tw-dc-btn--on' : ''].filter(Boolean).join(' ')}
+                style={staunchActions === n ? { '--color-theme': themeColor, borderColor: themeColor } : {}}
+                onClick={() => setStaunchActions(n)}
+              >
+                <span className="tw-dc-value">{n} action{n > 1 ? 's' : ''}</span>
+                <span className="tw-dc-hint">{n === 2 ? 'DC −10' : 'normal DC'}</span>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* ── DC ─────────────────────────────────────────────────────────── */}
       <section className="ct-section">
         <h3 className="ct-section-title">DC</h3>
         {dcs.length === 0 ? (
@@ -271,7 +266,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
                 type="button"
                 className={['tw-dc-btn', selectedDc === dc ? 'tw-dc-btn--on' : ''].filter(Boolean).join(' ')}
                 style={selectedDc === dc ? { '--color-theme': themeColor, borderColor: themeColor } : {}}
-                onClick={() => handleDcSelect(dc)}
+                onClick={() => setSelectedDc(dc)}
               >
                 <span className="tw-dc-value">DC {dc}</span>
                 <span className="tw-dc-hint">
@@ -285,130 +280,79 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
         )}
       </section>
 
-      <hr className="ct-divider" />
-
-      {/* ── Medicine check ──────────────────────────────────────────────── */}
-      <section className="ct-section">
-        <h3 className="ct-section-title">Medicine Check</h3>
-        <div className="trr-entry-row">
-          <FoundryDiceInput
-            inputClassName="trr-roll-input"
-            placeholder="d20"
-            ariaLabel="raw d20"
-            value={d20Input}
-            onValue={handleD20Change}
-            charId={healer?.id}
-            flavor={`${actionName} (Medicine)`}
+      {/* Mortal Healing (#224) — pre-declared: applied inside onCommit if the
+          check turns out to be a success. */}
+      {canMortalHeal && (
+        <label className="tw-feat-toggle">
+          <input
+            type="checkbox"
+            checked={mortalChecked}
+            onChange={(e) => setMortalChecked(e.target.checked)}
           />
-          <span className="trr-bonus-badge" aria-label="medicine modifier">
-            {formatModifier(medicineModifier)}
+          <span>
+            <strong>Mortal Healing:</strong> if this check is a success, upgrade it to a
+            critical success (target hasn&apos;t regained HP from divine magic in 24h).
           </span>
-          {hasD20 && (
-            <span className="trr-total-badge">= {total}</span>
-          )}
-          {degreeInfo && (
-            <span className={`tw-degree-chip ${degreeInfo.cls}`}>
-              {degreeInfo.label}
-            </span>
-          )}
-        </div>
-
-        {/* Mortal Healing (#224) — upgrade a Treat Wounds success to a crit when
-            the target hasn't had divine healing in 24h (player-confirmed). */}
-        {canMortalHeal && (
-          <label className="tw-feat-toggle">
-            <input
-              type="checkbox"
-              checked={mortalChecked}
-              onChange={(e) => setMortalChecked(e.target.checked)}
-            />
-            <span>
-              <strong>Mortal Healing:</strong> target hasn't regained HP from
-              divine magic in 24h — upgrade to a critical success.
-            </span>
-          </label>
-        )}
-      </section>
-
-      {/* ── Amount (healing or damage) ───────────────────────────────────── */}
-      {needsAmount && hint && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">
-              {degree === 'criticalFailure' ? 'Damage Dealt' : 'HP Healed'}
-            </h3>
-            <div className="trr-entry-row">
-              <span className="tw-hint-label">{hint}</span>
-              <FoundryDiceInput
-                inputClassName="trr-roll-input"
-                placeholder="total"
-                ariaLabel={effectiveDegree === 'criticalFailure' ? 'damage total' : 'hp healed'}
-                value={amountInput}
-                onValue={setAmountInput}
-                charId={healer?.id}
-                // '1d8 damage' prose isn't parseable — the crit-fail roll is 1d8.
-                formula={effectiveDegree === 'criticalFailure' ? '1d8' : (hint || '')}
-                flavor={`${actionName} — ${effectiveDegree === 'criticalFailure' ? 'damage' : 'healing'}`}
-              />
-            </div>
-            {godlessApplies && (
-              <p className="tw-feat-note">
-                <strong>Godless Healing:</strong> +{GODLESS_HEALING_BONUS} HP (healing-only)
-                applied on top of the rolled total.
-              </p>
-            )}
-          </section>
-        </>
+        </label>
       )}
 
-      {/* ── Bleeding (Staunch Bleeding only) ─────────────────────────────── */}
       {staunch && selectedTarget && (
-        <>
-          <hr className="ct-divider" />
-          <section className="ct-section">
-            <h3 className="ct-section-title">Bleeding</h3>
-            {targetBleeds.length === 0 ? (
-              <p className="tw-locked-notice">No tracked bleeding on {selectedTarget.name}.</p>
-            ) : (
-              <ul className="tw-bleed-list">
-                {targetBleeds.map((b) => (
-                  <li key={b.id} className="tw-bleed-row">
-                    {b.dice} persistent {b.type || 'bleed'}
-                    {b.sourceName && <span className="tw-bleed-source"> · {b.sourceName}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {staunchSuccess && targetBleeds.length > 0 && (
-              <p className="tw-feat-note">Cleared on confirm.</p>
-            )}
-          </section>
-        </>
+        <section className="ct-section">
+          <h3 className="ct-section-title">Bleeding</h3>
+          {targetBleeds.length === 0 ? (
+            <p className="tw-locked-notice">No tracked bleeding on {selectedTarget.name}.</p>
+          ) : (
+            <ul className="tw-bleed-list">
+              {targetBleeds.map((b) => (
+                <li key={b.id} className="tw-bleed-row">
+                  {b.dice} persistent {b.type || 'bleed'}
+                  {b.sourceName && <span className="tw-bleed-source"> · {b.sourceName}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
+    </>
+  );
 
-      {/* ── Immunity block ────────────────────────────────────────────────── */}
-      {isImmune && (
-        <div className="tw-immunity-notice">
-          <strong>{selectedTarget?.name}</strong> is immune to your {actionName}.
-          Ask the GM to remove the "Treat Wounds Immunity" effect before treating again.
-        </div>
-      )}
+  return (
+    <RollSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={actionName}
+      themeColor={themeColor}
 
-      <div className="tw-footer">
-        <button className="btn-secondary" onClick={onClose}>Cancel</button>
-        <button
-          className="btn-primary"
-          onClick={handleConfirm}
-          disabled={!confirmEnabled}
-        >
-          {actionName}
-          {staunch
-            ? (encounterMode ? ` (${staunchActions} act)` : '')
-            : (actionCost > 0 ? ` (${actionCost} act)` : '')}
-        </button>
-      </div>
-    </Modal>
+      summaryLine={`${selectedTarget?.name ?? 'No target'} · ${costLabel} · Medicine ${formatModifier(medicineModifier)}`}
+      blockLine={blockLine}
+      editPanel={editPanel}
+      editStatusLine={!blockLine ? 'Target, DC and options set — roll when ready.' : ''}
+
+      hasD20
+      charId={healer?.id}
+      flavor={`${actionName} (Medicine)`}
+      bonus={medicineModifier}
+      bonusLabel="Medicine"
+      dcLine={selectedDc != null ? `nothing rolled yet · DC ${selectedDc}` : 'nothing rolled yet'}
+      commitLabel={commitLabel}
+
+      onCommit={handleCommit}
+
+      damageParts={damageParts}
+      amountDegrees={AMOUNT_DEGREES}
+      amountHeading={isCritFailAmount ? `Damage dealt · ${dice || ''}` : `HP healed · ${hint || ''}`}
+      amountExtras={resolved?.godlessApplies ? (
+        <p className="tw-feat-note">
+          <strong>Godless Healing:</strong> +{GODLESS_HEALING_BONUS} HP (healing-only) applied
+          on top of the rolled total.
+        </p>
+      ) : null}
+      ctaLabel={isCritFailAmount ? 'Roll damage' : 'Roll healing'}
+      finishLabel={isCritFailAmount ? 'Apply damage' : `Heal ${resolved?.target?.name || ''}`}
+      onFinish={handleFinish}
+
+      costLabel={costLabel}
+    />
   );
 };
 
