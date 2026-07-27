@@ -9,7 +9,8 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import SequentialAttackSteps from './SequentialAttackSteps';
 import MultiRayResolver from './MultiRayResolver';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
+import DamageEntry from '../shared/DamageEntry';
 import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll, mapSpellDefense, isBasicDefense } from '../../utils/rollResolution';
@@ -166,14 +167,13 @@ const ChainedSpellSection = forwardRef(({
   const isHarrow = chain.harrow === true;
   const { suit: omenSuit } = useOmen(character?.id);
   const [drawnSuit, setDrawnSuit] = useState(null);
-  const [flatD20, setFlatD20] = useState('');
+  const [flatD20, setFlatD20] = useState(null); // raw d20 face, 1-20 or null
   const [healEntered, setHealEntered] = useState('');
   const omenMatch = !!drawnSuit && drawnSuit === omenSuit;
   const harrowEffect = isHarrow && drawnSuit
     ? harrowCastEffect(drawnSuit, { spellRank: castRank, match: omenMatch })
     : null;
-  const flatNum = parseInt(flatD20, 10);
-  const flatPassed = Number.isNaN(flatNum) ? null : flatNum >= HARROW_CAST_DC;
+  const flatPassed = flatD20 == null ? null : flatD20 >= HARROW_CAST_DC;
   const healNum = parseInt(healEntered, 10);
 
   // Split Shot (#227): one roll vs both ACs (the resolver already compares a
@@ -313,7 +313,7 @@ const ChainedSpellSection = forwardRef(({
           drawnSuit,
           omenSuit,
           match: omenMatch,
-          flatD20: Number.isNaN(flatNum) ? null : flatNum,
+          flatD20,
           flatPassed,
           effect: harrowEffect,
           healEntered: Number.isNaN(healNum) ? null : healNum,
@@ -397,40 +397,39 @@ const ChainedSpellSection = forwardRef(({
               </label>
             ))}
           </div>
-          <label className="uam-chain-field">
-            Flat check (DC {HARROW_CAST_DC}) — d20:{' '}
-            <FoundryDiceInput
-              inputClassName="trr-roll-input"
-              ariaLabel="harrow flat check d20"
-              value={flatD20}
-              onValue={setFlatD20}
-              charId={character?.id}
-              flavor={`Harrow cast flat check (DC ${HARROW_CAST_DC})`}
-            />
+          <div className="uam-chain-field">
+            <span>Flat check (DC {HARROW_CAST_DC})</span>
             {flatPassed != null && (
               <strong className={`uam-chain-flat-result ${flatPassed ? 'uam-flatcheck-result--pass' : 'uam-flatcheck-result--fail'}`}>
                 {flatPassed ? 'passed' : 'failed — omen lost at end of turn'}
               </strong>
             )}
-          </label>
+            <RollEntry
+              face={flatD20}
+              onFaceChange={setFlatD20}
+              onCommit={setFlatD20}
+              bonus={null}
+              dcLine={`nothing rolled yet · DC ${HARROW_CAST_DC}`}
+              charId={character?.id}
+              flavor={`Harrow cast flat check (DC ${HARROW_CAST_DC})`}
+            />
+          </div>
           {harrowEffect && (
             <div className="uam-variant-note">
               {drawnSuit}{omenMatch ? ' (omen match)' : ''}: {harrowEffect.note}
             </div>
           )}
           {(harrowEffect?.kind === 'self-heal' || harrowEffect?.kind === 'target-heal') && (
-            <label className="uam-chain-field uam-chain-field--after">
-              Healing rolled ({harrowEffect.dice}):{' '}
-              <FoundryDiceInput
-                inputClassName="trr-roll-input"
-                ariaLabel="harrow healing rolled"
+            <div className="uam-chain-field uam-chain-field--after">
+              <span>Healing rolled:</span>
+              <DamageEntry
+                part={{ key: 'harrow-heal', dice: harrowEffect.dice, formula: harrowEffect.dice || '' }}
                 value={healEntered}
-                onValue={setHealEntered}
+                onChange={setHealEntered}
                 charId={character?.id}
-                formula={harrowEffect.dice || ''}
                 flavor={`Harrow ${drawnSuit ?? ''} — healing`}
               />
-            </label>
+            </div>
           )}
         </div>
       )}

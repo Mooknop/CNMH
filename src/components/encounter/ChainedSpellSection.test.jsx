@@ -399,13 +399,12 @@ describe('ChainedSpellSection — Harrow Cast (#227)', () => {
   it('computes the DC 11 flat check from the entered d20', () => {
     const ref = createRef();
     renderHarrow(ref);
-    const input = screen.getByLabelText('harrow flat check d20');
 
-    fireEvent.change(input, { target: { value: '10' } });
+    tapFace(10);
     expect(screen.getByText(/failed — omen lost at end of turn/)).toBeInTheDocument();
     expect(ref.current.getResults().harrow.flatPassed).toBe(false);
 
-    fireEvent.change(input, { target: { value: '11' } });
+    tapFace(11);
     expect(screen.getByText('passed')).toBeInTheDocument();
     expect(ref.current.getResults().harrow).toMatchObject({ flatD20: 11, flatPassed: true });
   });
@@ -413,10 +412,10 @@ describe('ChainedSpellSection — Harrow Cast (#227)', () => {
   it('shows the healing input for Shields and carries the entered total', () => {
     const ref = createRef();
     renderHarrow(ref);
-    expect(screen.queryByLabelText('harrow healing rolled')).toBeNull();
+    expect(screen.queryByLabelText('rolled damage total')).toBeNull();
 
     fireEvent.click(screen.getByLabelText('drawn-Shields'));
-    fireEvent.change(screen.getByLabelText('harrow healing rolled'), { target: { value: '9' } });
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '9' } });
     const harrow = ref.current.getResults().harrow;
     expect(harrow.effect.kind).toBe('self-heal');
     expect(harrow.healEntered).toBe(9);
@@ -514,7 +513,8 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
   it('renders the save-mode damage panel for a damaging basic-save spell', () => {
     renderSave([FIREBALL_SAVE]);
     expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
-    expect(screen.getByText(/6d6/)).toBeInTheDocument(); // hint expression at cast rank
+    // "6d6 fire" appears on both the hint line and DamageEntry's own row (#1692).
+    expect(screen.getAllByText(/6d6/).length).toBeGreaterThan(0); // hint expression at cast rank
   });
 
   it('getResults carries the entered total, expression, type, and basic flag', () => {

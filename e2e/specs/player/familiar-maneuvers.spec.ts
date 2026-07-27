@@ -25,6 +25,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { tapFace } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-witch';
 const CHAR_NAME = 'E2E Witch';
@@ -137,7 +138,7 @@ test.describe('Familiar maneuvers', () => {
     await expect(page.locator('.trr-dc-badge')).toHaveText(`${ENEMY_NAME}: 15`);
 
     // d20 12 + Acrobatics 8 = 20 vs DC 15 → Success.
-    await page.getByLabel('raw d20').fill('12');
+    await tapFace(page, 12);
     await expect(page.locator('.trr-result-degree')).toHaveText('Success');
 
     await page.getByRole('button', { name: 'Log Trip' }).click();

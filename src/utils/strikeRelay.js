@@ -15,8 +15,8 @@ export const STRIKEREQ_KEY = globalKey(RELAY.STRIKEREQ);
 export const STRIKEDONE_KEY = globalKey(RELAY.STRIKEDONE);
 
 // Bridges older than this wire protocol don't answer strikereq. Feature-gated
-// on the announced protocol (FoundryDiceInput precedent) instead of raising
-// the app-wide MIN_BRIDGE_PROTOCOL.
+// on the announced protocol (RollEntry/DamageEntry precedent) instead of
+// raising the app-wide MIN_BRIDGE_PROTOCOL.
 export const STRIKE_PROTOCOL = 6;
 
 // Round-trip budget before the pane falls back to "roll it in Foundry".

@@ -26,6 +26,7 @@
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { expectOnSheet } from '../../helpers/sheet';
+import { rollPad, tapFace } from '../../helpers/rollSheet';
 import {
   deckBody,
   encounterState,
@@ -306,7 +307,7 @@ test.describe('Signature automations', () => {
 
     // Pick the target, roll, fire.
     await page.getByRole('button', { name: 'E2E Goblin', exact: true }).click();
-    await page.getByLabel('raw d20').fill('15');
+    await tapFace(page, 15);
     const fire = page.getByTestId('sgm-fire');
     await expect(fire).toBeEnabled();
     await fire.click();
@@ -377,7 +378,7 @@ test.describe('Signature automations', () => {
     await page.getByTestId(`grid-cell-${GLOVE_UID}`).click();
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
     await page.getByRole('button', { name: 'E2E Goblin', exact: true }).click();
-    await page.getByLabel('raw d20').fill('15');
+    await tapFace(page, 15);
     await page.getByTestId('sgm-fire').click();
 
     // The consumption write goes out — keyed by the inventory entry's uid since
@@ -428,7 +429,7 @@ test.describe('Signature automations', () => {
     // No target ⇒ the Fire button is inert, and there is no resolver to roll in.
     const fire = page.getByTestId('sgm-fire');
     await expect(fire).toBeDisabled();
-    await expect(page.getByLabel('raw d20')).toHaveCount(0);
+    await expect(rollPad(page)).toHaveCount(0);
 
     // Anchored absence: the proficiency pick DOES write, so waiting for that
     // write proves the app processed a click after the modal opened — and the

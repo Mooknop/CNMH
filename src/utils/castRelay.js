@@ -11,7 +11,7 @@ export const CASTREQ_KEY = globalKey(RELAY.CASTREQ);
 export const CASTDONE_KEY = globalKey(RELAY.CASTDONE);
 
 // Bridges older than this wire protocol don't answer castreq. Feature-gated
-// on the announced protocol (FoundryDiceInput precedent).
+// on the announced protocol (RollEntry/DamageEntry precedent).
 export const CAST_PROTOCOL = 7;
 
 // Round-trip budget before the pane falls back to "cast it in Foundry".

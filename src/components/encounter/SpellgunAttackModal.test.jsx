@@ -1,11 +1,16 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import SpellgunAttackModal from './SpellgunAttackModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { SessionContext } from '../../contexts/SessionContext';
+
+// RollEntry's 1-20 tap pad (#1692 — replaces FoundryDiceInput's d20-input text
+// field). `exact: true` matters: a loose '1' also matches 10-19.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
 // Inline dummy modal so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
@@ -101,16 +106,16 @@ describe('SpellgunAttackModal', () => {
     renderModal();
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
     // default spell +21
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+21');
+    expect(screen.getByText('your d20 · attack +21')).toBeInTheDocument();
     // switch to firearm → +16
     fireEvent.click(screen.getByRole('button', { name: /Firearm attack/ }));
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+16');
+    expect(screen.getByText('your d20 · attack +16')).toBeInTheDocument();
   });
 
   it('logs the hit + Speed-penalty rider, consumes the gun, and spends 2 actions', () => {
     renderModal();
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } }); // 10 + 21 = 31 vs AC 25 → Hit
+    tapFace(10); // 10 + 21 = 31 vs AC 25 → Hit
     fireEvent.click(screen.getByTestId('sgm-fire'));
 
     expect(appendLog).toHaveBeenCalledTimes(1);
@@ -128,7 +133,7 @@ describe('SpellgunAttackModal', () => {
   it('relays raw typed damage to the bridge when a total is entered', () => {
     renderModal();
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '40' } });
     fireEvent.click(screen.getByTestId('sgm-fire'));
 
@@ -141,7 +146,7 @@ describe('SpellgunAttackModal', () => {
   it('resolves the Verdant Bola vs Reflex DC and logs grabbed on a success (no damage relay)', () => {
     renderModal(bola);
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } }); // 10 + 21 = 31 vs Reflex DC 25 → Success
+    tapFace(10); // 10 + 21 = 31 vs Reflex DC 25 → Success
     fireEvent.click(screen.getByTestId('sgm-fire'));
 
     const bolaText = appendLog.mock.calls[0][0].text;
@@ -172,7 +177,7 @@ describe('SpellgunAttackModal', () => {
       </SessionContext.Provider>
     );
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByTestId('sgm-fire'));
 
     const absorbedCall = sendUpdate.mock.calls.find(([id, type]) => id === 'petra' && type === 'absorbed');
@@ -183,7 +188,7 @@ describe('SpellgunAttackModal', () => {
   it('does not spend actions out of encounter (logs to the session log instead)', () => {
     renderModal(howlGreater, { active: false });
     fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByTestId('sgm-fire'));
 
     expect(spendActions).not.toHaveBeenCalled();

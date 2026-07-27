@@ -289,10 +289,12 @@ test.describe('Harrow omens', () => {
     // Knowledge) — the flat check is what's under test, not the suit mechanics.
     await harrowGroup.getByLabel('drawn-Books').check();
 
-    // Pin the DC 11 flat check deterministically: the resolver takes the raw d20
-    // face as its own input, so a 1 is an unambiguous failure with no seeded
-    // modifier in the loop.
-    await harrowGroup.getByLabel('harrow flat check d20').fill('1');
+    // Pin the DC 11 flat check deterministically: RollEntry's tap pad face IS
+    // the raw d20 (bonus-less, #1692), so tapping 1 is an unambiguous failure
+    // with no seeded modifier in the loop. Scoped to this group — the flat
+    // check's own pad, distinct from any other RollEntry on the sheet.
+    await harrowGroup.getByRole('group', { name: 'raw d20' })
+      .getByRole('button', { name: '1', exact: true }).click();
     await expect(harrowGroup).toContainText('failed — omen lost at end of turn');
 
     await modal.getByRole('button', { name: 'confirm-cast' }).click();

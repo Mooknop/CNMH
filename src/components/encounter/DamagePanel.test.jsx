@@ -35,7 +35,8 @@ const renderPanel = (props = {}) => render(
 describe('DamagePanel extra-dice rider', () => {
   it('shows only the base dice while the hidden rider is off', () => {
     renderPanel();
-    expect(screen.getByText('6d6 void')).toBeInTheDocument();
+    // "6d6 void" appears both on the hint line and DamageEntry's own row (#1692).
+    expect(screen.getAllByText('6d6 void').length).toBeGreaterThan(0);
   });
 
   it('folds the precision dice into the hint once the rider is toggled on', () => {
@@ -98,32 +99,34 @@ describe('DamagePanel multi-instance entry', () => {
 
   it('renders one labeled input per typed part instead of the single total', () => {
     renderMulti();
-    expect(screen.queryByLabelText('rolled damage total')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('rolled piercing total')).toBeInTheDocument();
-    expect(screen.getByLabelText('rolled fire total')).toBeInTheDocument();
+    // DamageEntry gives every row the SAME accessible name — rows are
+    // disambiguated by their own dice-expression text, not the label (#1692).
+    expect(screen.getAllByLabelText('rolled damage total')).toHaveLength(2);
     expect(screen.getByText('2d8+4 piercing')).toBeInTheDocument();
-    // the fire dice appear both as the part label and on the rider toggle line
+    // the fire dice appear both as the part expression and on the rider toggle line
     expect(screen.getAllByText(/1d6 fire/).length).toBeGreaterThan(0);
   });
 
   it('reports per-part entry through onEnteredPart with the part key', () => {
     const onEnteredPart = vi.fn();
     renderMulti({ onEnteredPart });
-    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    // base (piercing) first, then the typed rider (fire) — damageEntryParts order.
+    const [, fireInput] = screen.getAllByLabelText('rolled damage total');
+    fireEvent.change(fireInput, { target: { value: '4' } });
     expect(onEnteredPart).toHaveBeenCalledWith('rune-flaming-dice', '4');
   });
 
   it('falls back to the single total once the typed rider is toggled off', () => {
     renderMulti({ riderState: { 'rune-flaming-dice': false } });
-    expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
-    expect(screen.queryByLabelText('rolled fire total')).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText('rolled damage total')).toHaveLength(1);
   });
 });
 
 // ── dice-tower rail (#1490 S5) ───────────────────────────────────────────────
-// FoundryDiceInput behavior is covered in its own suite; these pin the panel's
-// wiring: folded base formula, per-part formulas, and the ack filling the
-// entry. The plain renders above run session-less and never grow buttons.
+// DamageEntry's own delegated-roll behavior is covered in DamageEntry.test.jsx;
+// these pin the panel's wiring: folded base formula, per-part formulas, and the
+// ack filling the entry. The plain renders above run session-less and never
+// grow buttons.
 describe('DamagePanel dice-tower rail', () => {
   const railBus = () => makeSessionBus({ state: { global: { bridgehello: { protocol: 3 } } } });
 

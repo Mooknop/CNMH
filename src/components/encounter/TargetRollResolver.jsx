@@ -1,10 +1,9 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import DamagePanel from './DamagePanel';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import RollEntry from '../shared/RollEntry';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS, ATTACK_DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
-import { formatModifier } from '../../utils/CharacterUtils';
 import { computeTargetDamage, damageEntryParts } from '../../utils/damage';
 import './TargetRollResolver.css';
 
@@ -36,10 +35,15 @@ function ordinalSuffix(n) {
 }
 
 /**
- * Inline roll-resolver for the UseAbilityModal. The player enters a RAW d20 face;
- * the component adds `rollBonus` to compute the total and auto-detects nat 20 / nat 1
- * from the entered face. When `rollBonus` is null the input behaves as a manual total
- * (backward-compatible with actions that have no derivable bonus).
+ * Inline roll-resolver for the UseAbilityModal. The player enters a RAW d20 face
+ * (RollEntry, #1692); the component adds `rollBonus` to compute the total and
+ * auto-detects nat 20 / nat 1 from the entered face. `rollBonus === null` (no
+ * derivable bonus) nets to the raw face — same bonus-less RollEntry convention
+ * as OpposedReactionResolver (#1684) and useFlatCheckSection (#1684): every
+ * audited real caller (FamiliarManeuverModal, MinionStrikeModal,
+ * SpellgunAttackModal, UseAbilityModal) always supplies a numeric bonus, so
+ * this is dead-branch parity, not a live manual-total mode — the old
+ * FoundryDiceInput "the input IS the total" semantics are gone.
  *
  * Exposes `getResults()` via ref so the parent can read the latest results at
  * confirm time — avoids lifting state and the associated useEffect stale-closure
@@ -47,7 +51,8 @@ function ordinalSuffix(n) {
  *
  * @param {Array}       enemyTargets  - encounter entries (kind:'enemy', with defenses)
  * @param {string}      targetDefense - 'ac'|'fortitude'|'reflex'|'will'|'' ('' = show override)
- * @param {number|null} rollBonus     - actor's net bonus to add to the raw d20; null = manual-total mode
+ * @param {number|null} rollBonus     - actor's net bonus to add to the raw d20; null nets to
+ *                                      the raw face (no real caller reaches this today, #1692)
  * @param {Object}      [damage]      - damage profile (buildDamageProfile, #222); shows the
  *                                      damage entry panel after a hit/crit when present
  * @param {Object}      [degrees]     - authored degree-of-success text map (ability.degrees)
@@ -76,7 +81,7 @@ const TargetRollResolver = forwardRef(({
   charId = null,
   rollFlavor = '',
 }, ref) => {
-  const [d20Input,       setD20Input]       = useState('');
+  const [face,            setFace]            = useState(null); // raw d20 face, 1-20 or null
   const [defenseOverride, setDefenseOverride] = useState('ac');
 
   // Situational bonus toggles (#274) — declared conditional-effect toggles the
@@ -96,8 +101,8 @@ const TargetRollResolver = forwardRef(({
 
   const effectiveDefense = targetDefense || defenseOverride;
 
-  const d20 = parseInt(d20Input, 10);
-  const hasD20 = !isNaN(d20);
+  const d20 = face;
+  const hasD20 = d20 != null;
 
   // Active toggles + free-form entry adjust the roll before the degree is computed.
   const activeToggles = toggles.filter((t) => toggledIds.includes(t.id));
@@ -109,10 +114,9 @@ const TargetRollResolver = forwardRef(({
     ...(Number.isNaN(freeform) || freeform === 0 ? [] : [`${freeform > 0 ? '+' : ''}${freeform} circumstance`]),
   ];
 
-  // When rollBonus is provided, derive total from d20 + bonus (and nat 20/1 from face).
-  // When rollBonus is null (no derivable bonus), treat the input as the raw total instead —
-  // nat 20 / nat 1 are detected from the value directly. The situational `adjust` (#274)
-  // is added on top in both modes.
+  // d20 + bonus when a derivable bonus exists; a bonus-less roll (no real caller
+  // today, per the #1692 audit) nets to the raw face, same as any other
+  // bonus-less RollEntry site. The situational `adjust` (#274) is added on top.
   const total   = hasD20 ? (rollBonus !== null ? d20 + rollBonus : d20) + adjust : NaN;
   const d20face = hasD20 ? d20 : 10; // 10 is the neutral face (no degree shift)
 
@@ -170,7 +174,7 @@ const TargetRollResolver = forwardRef(({
   useImperativeHandle(ref, () => ({
     getResults: computeResults,
     // Roll toast (#1490 S3): the raw face at confirm time, however it arrived
-    // (typed or Foundry-rolled). Null in manual-total mode's empty state too.
+    // (typed or Foundry-rolled). Null before a face is set.
     getD20Face: () => (hasD20 ? d20 : null),
   }));
 
@@ -178,8 +182,13 @@ const TargetRollResolver = forwardRef(({
 
   const labels = degreeLabels(effectiveDefense);
 
-  const bonusDisplay = rollBonus !== null ? formatModifier(rollBonus) : null;
-  const totalDisplay = hasD20 && rollBonus !== null ? total : null;
+  // RollEntry's pre-roll math line — mirrors the sheet's multi-target dcLine
+  // (UseAbilityModal's attack path, #1687): "nothing rolled yet · Name DC n"
+  // per target that has a resolvable DC.
+  const dcLine = ['nothing rolled yet', ...enemyTargets.map((entry) => {
+    const dc = defenseDC(entry.defenses, effectiveDefense);
+    return dc != null ? `${entry.name} ${DEFENSE_LABELS[effectiveDefense] || effectiveDefense} ${dc}` : null;
+  }).filter(Boolean)].join(' · ');
 
   return (
     <div className="trr-section">
@@ -226,17 +235,6 @@ const TargetRollResolver = forwardRef(({
       )}
 
       <div className="trr-entry-row">
-        <FoundryDiceInput
-          inputClassName="trr-roll-input"
-          placeholder={rollBonus !== null ? 'd20' : 'total'}
-          ariaLabel="raw d20"
-          value={d20Input}
-          onValue={setD20Input}
-          // Manual-total mode (rollBonus null) can't use a raw Foundry face —
-          // the player folds their own bonus in — so the button stays hidden.
-          charId={rollBonus !== null ? charId : null}
-          flavor={rollFlavor}
-        />
         <input
           type="number"
           className="trr-circ-input"
@@ -245,21 +243,27 @@ const TargetRollResolver = forwardRef(({
           value={circumstance}
           onChange={(e) => setCircumstance(e.target.value)}
         />
-        {bonusDisplay && (
-          <span className="trr-bonus-badge" aria-label="roll bonus">
-            {bonusDisplay}
-          </span>
-        )}
-        {totalDisplay !== null && (
-          <span className="trr-total-badge" aria-label="computed total">
-            = {totalDisplay}
-          </span>
-        )}
         {adjust !== 0 && (
           <span className="trr-adjust-note" aria-label="applied circumstance">
             incl. {adjust > 0 ? '+' : ''}{adjust} ({adjustSources.join(', ')})
           </span>
         )}
+      </div>
+
+      <div className="trr-rollentry-wrap">
+        <RollEntry
+          face={face}
+          onFaceChange={setFace}
+          onCommit={setFace}
+          // Toggles/circumstance fold in here too — otherwise RollEntry's own
+          // math line would disagree with the degree it drives (same fix as
+          // useAttackRollSheet's `bonus = rollBonus + adjust`, #1687).
+          bonus={rollBonus === null ? null : rollBonus + adjust}
+          bonusLabel={effectiveDefense === 'ac' ? 'attack' : 'check'}
+          dcLine={dcLine}
+          charId={charId}
+          flavor={rollFlavor}
+        />
       </div>
 
       {results && (
@@ -305,7 +309,7 @@ const TargetRollResolver = forwardRef(({
       {damage && results && (
         <DamagePanel
           profile={damage}
-          // Damage dice delegate regardless of manual-total mode — the roll is
+          // Damage dice delegate independently of the d20 bonus — the roll is
           // the profile's own formula, not the d20 (#1490 S5).
           charId={charId}
           flavor={rollFlavor}
