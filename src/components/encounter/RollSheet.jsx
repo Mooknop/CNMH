@@ -122,6 +122,11 @@ const signed = (n) => (n >= 0 ? `+${n}` : `${n}`);
  * @param {boolean}  [attack]        - Hit/Miss degree labels instead of Success/Failure
  * @param {string}   [headlineMath]  - overrides the frozen `+18 = 31` (saves pass `Reflex DC 27`)
  * @param {string}   [resultNote]    - overrides the derived note line
+ * @param {ReactNode}[resultExtras]  - caller-owned slot rendered between the result rows
+ *                                     (after the note) and the CTA/Close pill. For
+ *                                     degree-gated post-roll choices with no other home
+ *                                     (Exploit Vulnerability's effect radios, #1688) — a
+ *                                     slot only, no logic. Absent = nothing renders.
  * @param {string}   [ctaLabel='Roll damage']
  * @param {string}   [closeLabel='Close']
  *
@@ -174,6 +179,7 @@ export default function RollSheet({
   attack = false,
   headlineMath = null,
   resultNote,
+  resultExtras = null,
   ctaLabel = 'Roll damage',
   closeLabel = 'Close',
 
@@ -373,6 +379,7 @@ export default function RollSheet({
           ))}
         </div>
         {note && <p className="rs-note">{note}</p>}
+        {resultExtras}
         <button
           type="button"
           className="rs-pill"
