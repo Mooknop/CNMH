@@ -1,81 +1,48 @@
 import React from 'react';
-import { riderEnabled, formatDamageBreakdown, damageHintParts, damageEntryParts, damageRollFormulas } from '../../utils/damage';
+import { riderEnabled, damageHintParts, damageRollFormulas } from '../../utils/damage';
 import DamageEntry from '../shared/DamageEntry';
 import './DamagePanel.css';
 
 /**
- * Damage entry step (#222) — shown by TargetRollResolver after a hit/crit.
- * Presentational: the resolver owns all state and the per-target math
- * (computeTargetDamage), so getResults() stays synchronous.
+ * Pre-commit save-damage entry (#270) — the caster's rolled total + rider
+ * snapshot for a target-save ability, captured BEFORE any degree exists; they
+ * travel with the save request and the GM derives per-target damage.
  *
- * Save mode (#270, `mode="save"`): rendered in UseAbilityModal before the
- * degrees exist — no hitResults, no crit toggle; the entered total and rider
- * snapshot travel with the save request and the GM derives per-target damage.
+ * This is the panel's surviving shape after the Roll Resolution redesign
+ * (#1680 successor arc): the attack mode — per-hit results, multi-instance
+ * entry (#1019), the crit ×2 toggle — died with TargetRollResolver; RollSheet's
+ * amount phase + DamageEntry (+ useAttackRollSheet's amountExtras) own that
+ * flow now. The three consumers are all save-shaped by design:
+ *   - UseAbilityModal's classic save fallback (chain contexts / no derivable DC
+ *     — shapes the save SHEET's gate refuses)
+ *   - ChainedSpellSection's chained saves (deliberately old-style GM-applied,
+ *     the #1691 workstream-J decision)
+ *   - useSecondaryProfiles' extra zones (each request carries its own total)
  *
- * Multi-instance entry (#1019, attack mode only): when damageEntryParts finds
- * more than one typed part (a piercing sword with a flaming rune's fire dice),
- * the single total is replaced by one input per part — the resolver keys its
- * per-part state by part key and feeds computeTargetDamage `instances`.
- *
- * @param {string}   mode        - 'attack' (default) | 'save'
  * @param {Object}   profile     - { expression, typeLabel, riders } from buildDamageProfile
- * @param {Array}    hitResults  - resolver results with degree success/criticalSuccess,
- *                                 each already carrying its computed `damage` (or null)
- * @param {string}   entered     - raw rolled-total input value (single-part entry)
+ * @param {string}   entered     - raw rolled-total input value
  * @param {Function} onEntered
- * @param {Object}   enteredParts  - { [partKey]: string } per-part input values (#1019)
- * @param {Function} onEnteredPart - (partKey, value) — presence enables multi-part entry
  * @param {Object}   riderState  - { [riderId]: bool } overrides of each rider's defaultOn
  * @param {Function} onToggleRider
- * @param {boolean}  critDouble  - the built-in "crit ×2" toggle (off when the table
- *                                 rolls doubled dice and enters the doubled total)
- * @param {Function} onCritDouble
- * @param {string}   [charId]    - dice-tower rail (#1490 S5, DamageEntry #1682/#1692):
- *                                 with a rail-capable bridge, each row gets a
- *                                 "Roll in Foundry" pill that delegates the part's
- *                                 formula (damageRollFormulas) and fills the row with
- *                                 the rolled TOTAL — un-doubled, so the crit ×2 toggle
- *                                 stays honest. Every DamageEntry row shares the same
- *                                 "rolled damage total" accessible name; rows are
- *                                 disambiguated by their dice-expression text.
+ * @param {string}   [charId]    - dice-tower rail (#1490 S5): with a rail-capable
+ *                                 bridge the row grows a "Roll in Foundry" pill that
+ *                                 delegates the folded formula (damageRollFormulas)
+ *                                 and fills the row with the rolled TOTAL
  * @param {string}   [flavor]    - chat-label prefix for delegated damage rolls
  */
 const DamagePanel = ({
-  mode = 'attack',
   profile,
-  hitResults = [],
   entered,
   onEntered,
-  enteredParts,
-  onEnteredPart,
   riderState,
   onToggleRider,
-  critDouble,
-  onCritDouble,
   charId = null,
   flavor = '',
 }) => {
-  const isSave = mode === 'save';
-  if (!profile || (!isSave && hitResults.length === 0)) return null;
+  if (!profile) return null;
 
-  const anyCrit = hitResults.some((r) => r.degree === 'criticalSuccess');
   const hintParts = damageHintParts(profile, riderState);
-  const entryParts = damageEntryParts(profile, riderState);
-  const multiPart = !isSave && !!onEnteredPart && entryParts.length > 1;
   const rollFormulas = damageRollFormulas(profile, riderState);
-  const damageFlavor = (type) =>
-    `${flavor ? `${flavor} — ` : ''}${type ? `${type} ` : ''}damage`;
-
-  const critToggle = anyCrit && (
-    <label className="dmg-rider-toggle">
-      <input
-        type="checkbox"
-        checked={critDouble}
-        onChange={(e) => onCritDouble(e.target.checked)}
-      />
-      <span>Crit ×2</span>
-    </label>
-  );
 
   return (
     <div className="dmg-panel">
@@ -89,38 +56,19 @@ const DamagePanel = ({
           </span>
         )}
         <span className="dmg-hint-note">
-          {isSave
-            ? 'enter your rolled total — each target halves/doubles by its save'
-            : multiPart
-              ? 'enter each rolled total (un-doubled) by damage type'
-              : 'enter your rolled total (un-doubled)'}
+          enter your rolled total — each target halves/doubles by its save
         </span>
       </div>
 
-      {multiPart ? (
-        <div className="dmg-entry-row">
-          {entryParts.map((p) => (
-            <DamageEntry
-              key={p.key}
-              part={{ ...p, formula: rollFormulas[p.key] ?? '' }}
-              value={enteredParts?.[p.key] ?? ''}
-              onChange={(v) => onEnteredPart(p.key, v)}
-              charId={charId}
-              flavor={damageFlavor(p.type)}
-            />
-          ))}
-          {critToggle}
-        </div>
-      ) : (!isSave || profile.expression) && (
+      {profile.expression && (
         <div className="dmg-entry-row">
           <DamageEntry
             part={{ key: 'base', dice: profile.expression, type: profile.typeLabel, formula: rollFormulas.base ?? '' }}
             value={entered}
             onChange={onEntered}
             charId={charId}
-            flavor={damageFlavor(null)}
+            flavor={`${flavor ? `${flavor} — ` : ''}damage`}
           />
-          {critToggle}
         </div>
       )}
 
@@ -148,17 +96,6 @@ const DamagePanel = ({
               </span>
               {rider.note && <span className="dmg-rider-note">{rider.note}</span>}
             </label>
-          ))}
-        </div>
-      )}
-
-      {hitResults.some((r) => r.damage) && (
-        <div className="dmg-results">
-          {hitResults.map((r) => r.damage && (
-            <div key={r.entryId} className="dmg-result-line">
-              <span className="dmg-result-name">{r.name}</span>
-              <span className="dmg-result-total">{formatDamageBreakdown(r.damage)}</span>
-            </div>
           ))}
         </div>
       )}

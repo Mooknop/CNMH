@@ -29,6 +29,16 @@ export const DEGREE_CLASS = {
   criticalFailure: 'save-crit-failure',
 };
 
+// {label, cls} rows for the save flavor, assembled from the two maps above so
+// no degree string or class lives at a call site. Historically exported from
+// TargetRollResolver (deleted in the #1680 successor arc); the opposed-reaction
+// pair (OpposedReactionResolver / useOpposedReactionResolution) consume it.
+export const DEGREE_LABELS_SAVE = Object.fromEntries(
+  Object.entries(DEGREE_LABELS).map(([degree, label]) => [
+    degree, { label, cls: DEGREE_CLASS[degree] },
+  ]),
+);
+
 // Label for a degree key; `attack: true` selects the Hit/Miss flavor.
 // Unknown degrees fall back to the raw key so a new degree never renders blank.
 export const degreeLabel = (degree, { attack = false } = {}) =>

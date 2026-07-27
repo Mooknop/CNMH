@@ -3,12 +3,11 @@ import { defenseDC } from './defense';
 import { computeTargetDamage } from './damage';
 
 // Per-target attack resolution for the RollSheet path (#1687, Roll Resolution
-// redesign workstream E). This is the arithmetic `TargetRollResolver` runs in
-// its `computeResults()` closure, lifted out unchanged so the two-phase sheet
-// can run it TWICE from the same frozen face: once at the commit (degrees, no
-// damage yet) and once at the finish (the same degrees, now with the entered
-// totals). TargetRollResolver itself is untouched — MultiRayResolver and
-// FamiliarManeuverModal still consume it until workstream J.
+// redesign workstream E). This is the arithmetic the old `TargetRollResolver`
+// ran in its `computeResults()` closure (the resolver itself is gone — #1680
+// successor arc), lifted out unchanged so the two-phase sheet can run it TWICE
+// from the same frozen face: once at the commit (degrees, no damage yet) and
+// once at the finish (the same degrees, now with the entered totals).
 
 // 1→st, 2→nd, 3→rd, 4→th — for "2nd increment" notes (#530).
 const ordinalSuffix = (n) => {
@@ -23,8 +22,8 @@ const ordinalSuffix = (n) => {
 };
 
 /**
- * The range-increment note for one result row (#530) — the same text
- * `TargetRollResolver` renders in its `trr-range-note` span.
+ * The range-increment note for one result row (#530) — the same text the old
+ * `TargetRollResolver` rendered in its range-note span.
  *
  * @param {Object|null} range      - { feet, increments, penalty, beyondMaxRange, waived }
  * @param {boolean}     outOfRange

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import OpposedReactionResolver from '../components/encounter/OpposedReactionResolver';
-import { DEGREE_LABELS_SAVE } from '../components/encounter/TargetRollResolver';
+import { DEGREE_LABELS_SAVE } from '../utils/degreeDisplay';
 import { applyAbility } from '../utils/applyAbility';
 import { markPlayingOnCast } from '../utils/playing';
 import { resolveActionRoll } from '../utils/rollResolution';

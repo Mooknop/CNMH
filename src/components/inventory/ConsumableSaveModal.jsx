@@ -10,6 +10,8 @@ import { DEFENSE_LABELS } from '../../utils/defense';
 import { recordConsumed } from '../../utils/consumedLedger';
 import { APP, syncKey } from '../../sync/keys';
 import './UseConsumableModal.css';
+// The roll-input row speaks the shared trr-* vocabulary.
+import '../encounter/rollResolution.css';
 
 // Save-forcing consumable resolution (#1085 — Devil's Breath Incense and future
 // alchemical area consumables). A consumable whose `consumable` block is

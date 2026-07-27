@@ -8,13 +8,14 @@ import './DamageEntry.css';
 /**
  * One damage-part row for the RollSheet redesign's Phase-2 "amount" step
  * (#1682, sibling to the RollEntry d20 primitive #1681). This is an
- * extraction/reshape of what `DamagePanel` already does per-part — the
- * `dmg-total-input` treatment and the `damageRollFormulas` Foundry
+ * extraction/reshape of what the old `DamagePanel` attack mode did per-part —
+ * the `dmg-total-input` treatment and the `damageRollFormulas` Foundry
  * delegation — not a new model. Unlike `FoundryDiceInput` (input + inline
  * "Roll" button shown together), the handoff's Screen 4 spec wants a single
  * control per row: a full pill button in Foundry mode that resolves to
  * static "rolled N" text once the ack lands, or the numeric total input in
- * table mode. Rider toggles and the `Crit ×2` checkbox stay on `DamagePanel`
+ * table mode. Rider toggles and the `Crit ×2` checkbox are the caller's
+ * (useAttackRollSheet's `amountExtras`; DamagePanel keeps save-mode riders)
  * — out of scope here.
  *
  * Mode is never a prop: like `FoundryDiceInput`, this reads

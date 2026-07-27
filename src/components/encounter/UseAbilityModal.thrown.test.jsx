@@ -23,18 +23,6 @@ vi.mock('../../hooks/useEnemyEffects', () => ({
   offGuardAppliesTo: () => false,
 }));
 
-// Resolver stub — a miss: the throw drops the weapon hit or miss.
-vi.mock('./TargetRollResolver', () => {
-  const React2 = require('react');
-  const Stub = React2.forwardRef((props, ref) => {
-    React2.useImperativeHandle(ref, () => ({
-      getResults: () => [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 12, degree: 'failure' }],
-    }));
-    return React2.createElement('div', { 'data-testid': 'resolver' });
-  });
-  return { __esModule: true, default: Stub, DEGREE_LABELS_SAVE: {} };
-});
-
 vi.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ getState: vi.fn(() => []), sendUpdate: vi.fn(), subscribe: () => () => {} }),
 }));

@@ -22,6 +22,8 @@ import { applyItemEffect, itemKeyOf } from '../../utils/itemEffects';
 import { durabilityFor } from '../../utils/itemDurability';
 import { recordConsumed } from '../../utils/consumedLedger';
 import './UseConsumableModal.css';
+// The roll-input rows speak the shared trr-* vocabulary.
+import '../encounter/rollResolution.css';
 import { APP, syncKey } from '../../sync/keys';
 
 /**

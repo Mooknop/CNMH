@@ -587,7 +587,6 @@ const ChainedSpellSection = forwardRef(({
 
       {saveDamageProfile && (
         <DamagePanel
-          mode="save"
           profile={saveDamageProfile}
           charId={character?.id}
           flavor={`Cast: ${selectedSpell?.name ?? ''}`}

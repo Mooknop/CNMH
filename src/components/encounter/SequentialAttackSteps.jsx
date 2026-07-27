@@ -39,6 +39,8 @@ import {
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { DEGREE_LABELS, degreeLabel } from '../../utils/degreeDisplay';
 import './SequentialAttackSteps.css';
+// The per-step toggles/circumstance markup speaks the shared trr-* vocabulary.
+import './rollResolution.css';
 
 const parseTotal = (v) => {
   const n = parseInt(v, 10);
