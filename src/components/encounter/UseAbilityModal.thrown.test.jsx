@@ -4,8 +4,9 @@
 // returning-effect rune (Returning / Throwing) flies it back to hand.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import { commitRoll, finishAmount } from '../../test/rollSheet';
 
 const enemyOrder = [
   { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', defenses: { ac: 15, saves: { fortitude: 8 } } },
@@ -87,7 +88,9 @@ beforeEach(() => {
   for (const k of Object.keys(setters)) delete setters[k];
 });
 
-const confirm = () => fireEvent.click(screen.getByRole('button', { name: 'confirm-cast' }));
+// #1687: the attack path commits from RollSheet. The drop fires on hit OR miss,
+// so a nat 1 keeps the arc to a single commit tap with no amount step.
+const confirm = () => { commitRoll(1); finishAmount(); };
 const loadoutWrites = () => setters['cnmh_loadout_char-a'];
 // The setter spy is created on render (useLoadout always mounts) — "no drop"
 // means it was never invoked, not that it doesn't exist.

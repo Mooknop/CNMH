@@ -17,12 +17,25 @@
  * hydrated at mount inert, and the ROLL_PROTOCOL=3 gate that hides the button
  * for older bridges. Then the two device-local follow-ups (pending-roll card,
  * table-dice mode) and the damage-formula delegation of S5.
+ *
+ * #1687 moved the attack path onto RollSheet, which changes the SHAPE of the
+ * surface but not one byte of the relay contract:
+ *   - the d20 button is named `Roll d20 in Foundry` (DamageEntry's damage pill
+ *     keeps the original `Roll in Foundry`);
+ *   - in Foundry mode there is no manual input at all, and the ack both fills
+ *     the face AND commits — so a delegated roll lands on the result card;
+ *   - a nack / an older bridge / the table-dice pref all fall back to the 1–20
+ *     tap pad, which is the manual base path this suite guards.
+ * The ROLL_PROTOCOL gate itself is untouched: it still lives in useFoundryDice.
  */
 
 import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import {
+  breakdown, commitRoll, degrees, dieRing, resultFace, rollDamage, rollPad,
+} from '../../helpers/rollSheet';
 // The roll gate + deadline and the hello payload the gate reads its protocol
 // off — copies of src/utils/diceRelay.js, kept in helpers/bridge.ts because
 // e2e/ never imports from src/ (see that file's header).
@@ -51,10 +64,10 @@ const enemyEntry = {
   defenses: { ac: ENEMY_AC },
 };
 
-// A plain MAP-bearing strike: attackMod → actor-roll vs AC, so the resolver
-// renders the d20 entry row the dice tower hangs off. `damage` is optional —
-// omitted, no DamagePanel appears and the d20 input is the only dice input on
-// screen, which keeps the "Roll in Foundry" locator unambiguous.
+// A plain MAP-bearing strike: attackMod → actor-roll vs AC, so the sheet
+// renders the d20 entry the dice tower hangs off. `damage` is optional —
+// omitted, there is no amount step and the d20 pill is the only dice control on
+// screen, which keeps the delegation locators unambiguous.
 const strike = (extra: Record<string, unknown> = {}) => ({
   name: 'E2E Slash',
   actions: '1',
@@ -65,10 +78,15 @@ const strike = (extra: Record<string, unknown> = {}) => ({
 });
 
 // The roll button gates on the announced hello protocol being >= ROLL_PROTOCOL,
-// deliberately not on the app-wide MIN_BRIDGE_PROTOCOL.
-const rollBtn = (page: Page) => page.getByRole('button', { name: 'Roll in Foundry' });
-const d20Input = (page: Page) => page.getByLabel('raw d20');
-const degree = (page: Page) => page.locator('.trr-result-degree');
+// deliberately not on the app-wide MIN_BRIDGE_PROTOCOL. Located by class rather
+// than name because RollEntry's pill carries no aria-label — its accessible
+// name IS its label text, which flips to `Rolling…` while a request is in
+// flight (the happy path asserts the resting name explicitly).
+const rollBtn = (page: Page) => page.locator('.rollentry-pill');
+// DamageEntry's own pill keeps the pre-redesign name.
+const dmgRollBtn = (page: Page) =>
+  page.locator('.de-row').getByRole('button', { name: 'Roll in Foundry' });
+const degree = (page: Page) => degrees(page);
 
 // Seed content + synced state and land on the encounter tab. `protocol` is the
 // bridge's announced wire protocol; `seedAck` pre-loads cnmh_rolldone_global as
@@ -116,7 +134,7 @@ const setup = async (
 };
 
 // Actions tab → the strike → Confirm → pick the target, which is what puts the
-// inline TargetRollResolver (and its dice-tower input) on screen.
+// roll sheet (and its dice-tower control) on screen.
 const openResolver = async (page: Page, actionName = 'E2E Slash') => {
   await page.getByRole('tab', { name: 'Actions' }).click();
   await page.getByRole('button', { name: new RegExp(actionName) }).first().click();
@@ -147,8 +165,10 @@ test.describe('Foundry dice tower', () => {
     const session = await setup(page, seed);
     await openResolver(page);
 
-    await expect(rollBtn(page)).toBeVisible();
-    await expect(d20Input(page)).toHaveValue('');
+    await expect(rollBtn(page)).toHaveText('Roll d20 in Foundry');
+    // Foundry mode offers no manual entry at all: one pill, empty ring.
+    await expect(rollPad(page)).toHaveCount(0);
+    await expect(dieRing(page)).toHaveText('—');
     await rollBtn(page).click();
 
     // The request carries the app's formula, the speaker charId, and a unique
@@ -164,8 +184,10 @@ test.describe('Foundry dice tower', () => {
     // the face — every modifier and the degree stay app-side.
     session.push('cnmh_rolldone_global', ack(req.id, { total: 15, faces: [[20, 15]] }));
 
-    await expect(d20Input(page)).toHaveValue('15');
-    // 15 + attackMod 10 = 25 vs AC 20 → Hit, exactly as if 15 had been typed.
+    // Rolling IS committing in Foundry mode — the physical die is already cast,
+    // so the ack lands the face AND the frozen result in one tap.
+    await expect(resultFace(page)).toHaveText('15');
+    // 15 + attackMod 10 = 25 vs AC 20 → Hit, exactly as if 15 had been tapped.
     await expect(degree(page)).toHaveText('Hit');
   });
 
@@ -183,15 +205,20 @@ test.describe('Foundry dice tower', () => {
     await rollBtn(page).click();
     await session.expectSent('cnmh_rollreq_global');
 
-    // Back to "Roll" (not "Rolling…") well inside ROLL_TIMEOUT_MS — the point of
-    // the nack is that it settles NOW rather than on the deadline, so the
-    // assertion deliberately expires before the deadline could have fired.
-    await expect(rollBtn(page)).toHaveText('Roll', { timeout: ROLL_TIMEOUT_MS / 2 });
-    await expect(rollBtn(page)).toBeEnabled();
-    await expect(d20Input(page)).toHaveValue('');
+    // The nack falls back to the tap pad with its gold notice, well inside
+    // ROLL_TIMEOUT_MS — the point of the nack is that it settles NOW rather
+    // than on the deadline, so the assertion deliberately expires before the
+    // deadline could have fired.
+    await expect(page.getByText(/foundry isn.t answering/i)).toBeVisible({
+      timeout: ROLL_TIMEOUT_MS / 2,
+    });
+    await expect(rollPad(page)).toBeVisible();
+    await expect(dieRing(page)).toHaveText('—');
+    // Nothing was committed by the failed round trip.
+    await expect(degree(page)).toHaveCount(0);
 
-    // And the manual path is untouched: type the die, get the degree.
-    await d20Input(page).fill('15');
+    // And the manual path is untouched: tap the die, commit, get the degree.
+    await commitRoll(page, 15);
     await expect(degree(page)).toHaveText('Hit');
   });
 
@@ -212,15 +239,15 @@ test.describe('Foundry dice tower', () => {
     expect(req.id).not.toBe('roll-stale-from-a-previous-session');
 
     // Give the hydrated ack every chance to be mistaken for the answer: the
-    // request must still be in flight and the input untouched by the stale 20.
+    // request must still be in flight and nothing committed by the stale 20.
     await page.waitForTimeout(1_500);
     await expect(rollBtn(page)).toHaveText('Rolling…');
-    await expect(d20Input(page)).toHaveValue('');
+    await expect(degree(page)).toHaveCount(0);
 
     // The id-matched ack does settle it — proving the wait above was the id
     // check doing its job, not the rail being dead.
     session.push('cnmh_rolldone_global', ack(req.id, { total: 7, faces: [[20, 7]] }));
-    await expect(d20Input(page)).toHaveValue('7');
+    await expect(resultFace(page)).toHaveText('7');
     // 7 + 10 = 17 vs AC 20 → Miss, i.e. the stale 20's degree, not reused.
     await expect(degree(page)).toHaveText('Miss');
   });
@@ -232,12 +259,12 @@ test.describe('Foundry dice tower', () => {
     const session = await setup(page, seed, { protocol: ROLL_PROTOCOL - 1 });
     await openResolver(page);
 
-    // Manual entry is the base path and is unaffected — the older module keeps
+    // The tap pad is the base path and is unaffected — the older module keeps
     // every other rail working and simply never surfaces the delegation.
-    await expect(d20Input(page)).toBeVisible();
+    await expect(rollPad(page)).toBeVisible();
     await expect(rollBtn(page)).toHaveCount(0);
 
-    await d20Input(page).fill('15');
+    await commitRoll(page, 15);
     await expect(degree(page)).toHaveText('Hit');
     // Nothing was ever delegated.
     expect(session.sent.some((m) => m.stateType === 'rollreq')).toBe(false);
@@ -265,8 +292,10 @@ test.describe('Foundry dice tower', () => {
     session.push('cnmh_rolldone_global', ack(req.id, { total: 18, faces: [[20, 18]] }));
 
     // The pending card converts into a normal result toast carrying the face.
+    // Since #1687 the ack also COMMITS the strike, so the confirm-time ability
+    // toast lands beside it — both carry the face; the delegation's own is first.
     await expect(pending).toHaveCount(0);
-    await expect(page.getByTestId('roll-toast')).toContainText('18');
+    await expect(page.getByTestId('roll-toast').first()).toContainText('18');
   });
 
   test('table-dice mode: the device pref hides delegation without writing shared state', async ({
@@ -279,19 +308,20 @@ test.describe('Foundry dice tower', () => {
     await openResolver(page);
     await expect(rollBtn(page)).toBeVisible();
 
-    // Close the modal so the navbar toggle is reachable, then flip the pref.
-    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    // Close the sheet so the navbar toggle is reachable, then flip the pref.
+    // (RollSheet has no Cancel footer — the Modal chrome's × is the way out.)
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
     const toggle = page.getByRole('button', { name: 'Physical dice mode' });
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 
-    // #1575 D3: this DEVICE rolls physical dice, so every FoundryDiceInput hides
-    // its button; manual typing (the universal base path) is unchanged.
+    // #1575 D3: this DEVICE rolls physical dice, so every delegation control
+    // hides; the tap pad (the universal base path) is unchanged.
     await openResolver(page);
-    await expect(d20Input(page)).toBeVisible();
+    await expect(rollPad(page)).toBeVisible();
     await expect(rollBtn(page)).toHaveCount(0);
-    await d20Input(page).fill('15');
+    await commitRoll(page, 15);
     await expect(degree(page)).toHaveText('Hit');
 
     // It is device-local: a localStorage pref (useDevicePref), never a synced
@@ -312,13 +342,18 @@ test.describe('Foundry dice tower', () => {
     });
     await openResolver(page);
 
-    // Resolve the attack manually so the DamagePanel appears — this test is
-    // about the SECOND dice input, so scope every locator to its panel.
-    await d20Input(page).fill('15');
+    // Resolve the attack through the d20 rail so the amount step appears —
+    // this test is about the SECOND delegation, on DamageEntry's own pill.
+    await rollBtn(page).click();
+    const d20Req = await session.expectSent(
+      'cnmh_rollreq_global',
+      (v) => v?.formula === '1d20',
+    );
+    session.push('cnmh_rolldone_global', ack(d20Req.id, { total: 15, faces: [[20, 15]] }));
     await expect(degree(page)).toHaveText('Hit');
+    await rollDamage(page);
 
-    const dmgPanel = page.locator('.dmg-panel');
-    const dmgRoll = dmgPanel.getByRole('button', { name: 'Roll in Foundry' });
+    const dmgRoll = dmgRollBtn(page);
     await expect(dmgRoll).toBeVisible();
     await dmgRoll.click();
 
@@ -332,9 +367,10 @@ test.describe('Foundry dice tower', () => {
       ack(req.id, { total: 13, faces: [[8, 5], [8, 4]] }),
     );
 
-    // Off-d20 formulas fill the TOTAL (there is no face to type here).
-    await expect(page.getByLabel('rolled damage total')).toHaveValue('13');
-    await expect(page.locator('.dmg-result-line')).toContainText('13');
+    // Off-d20 formulas fill the TOTAL (there is no face to tap here); once the
+    // ack lands the row reads back as static text rather than re-offering it.
+    await expect(page.locator('.de-rolled-text')).toHaveText('rolled 13');
+    await expect(breakdown(page)).toContainText('13');
   });
 
   test('damage delegation: a prose damage expression shows no Roll button', async ({
@@ -343,21 +379,24 @@ test.describe('Foundry dice tower', () => {
   }) => {
     // isRollableExpression rejects hand-authored prose ('1d6 cold splash') that
     // Foundry's Roll parser would nack — the app hides the button rather than
-    // round-trip a guaranteed failure. The d20 input above it is unaffected.
-    await setup(page, seed, {
+    // round-trip a guaranteed failure. The d20 pill above it is unaffected.
+    const session = await setup(page, seed, {
       action: strike({ damage: '1d6 cold splash', damageType: 'cold' }),
     });
     await openResolver(page);
 
-    await expect(page.locator('.trr-entry-row').getByRole('button', { name: 'Roll in Foundry' }))
-      .toBeVisible();
-
-    await d20Input(page).fill('15');
+    await expect(rollBtn(page)).toBeVisible();
+    await rollBtn(page).click();
+    const d20Req = await session.expectSent(
+      'cnmh_rollreq_global',
+      (v) => v?.formula === '1d20',
+    );
+    session.push('cnmh_rolldone_global', ack(d20Req.id, { total: 15, faces: [[20, 15]] }));
     await expect(degree(page)).toHaveText('Hit');
 
-    const dmgPanel = page.locator('.dmg-panel');
-    await expect(dmgPanel).toBeVisible();
-    await expect(dmgPanel.getByRole('button', { name: 'Roll in Foundry' })).toHaveCount(0);
+    await rollDamage(page);
+    await expect(page.locator('.de-row')).toBeVisible();
+    await expect(dmgRollBtn(page)).toHaveCount(0);
     await expect(page.getByLabel('rolled damage total')).toBeVisible();
   });
 });

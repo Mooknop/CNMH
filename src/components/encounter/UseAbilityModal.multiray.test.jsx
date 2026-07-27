@@ -5,6 +5,7 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import { commitRoll } from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -163,7 +164,8 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
     render(<UseAbilityModal {...props} ability={scorchingRay} />);
     expect(screen.queryByTestId('multi-ray-resolver')).not.toBeInTheDocument();
     expect(screen.queryByRole('radiogroup', { name: 'Number of actions' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    // Single-roll attacks are RollSheet's since #1687 — tap a face and commit.
+    commitRoll(10);
     expect(mockRecordAttack).toHaveBeenCalledWith(1);
   });
 });

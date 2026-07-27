@@ -19,6 +19,7 @@ import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { expectOnSheet } from '../../helpers/sheet';
 import { activeEncounter, budget, deckBody, readyTurnState } from '../../helpers/encounter';
+import { applyDamage, commitRoll, openEdit, rollDamage } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-deckhand';
 const CHAR_NAME = 'E2E Deckhand';
@@ -380,16 +381,19 @@ test.describe('Segmented Deck shell', () => {
     await expect(card.getByRole('button', { name: 'E2E Cross Bolt', exact: true })).toContainText('spends 1 chamber');
     await expect(card.getByRole('button', { name: 'E2E Cross Blade', exact: true })).toContainText('no chamber');
 
-    // Fire it: tile → confirm sheet → target → resolver → confirm.
+    // Fire it: tile → confirm sheet → target → roll sheet → commit.
     await card.getByRole('button', { name: 'E2E Cross Bolt', exact: true }).click();
     await page.getByRole('button', { name: 'Confirm E2E Cross Bolt' }).click();
     await page.getByRole('button', { name: 'Target E2E Goblin' }).click();
     // The chamber picker only renders for a chambered fire — proof the deck
-    // handed the resolver the weaponUid + capacity off the card's strike.
+    // handed the resolver the weaponUid + capacity off the card's strike. It
+    // lives in RollSheet's edit disclosure since #1687.
+    await openEdit(page);
     await expect(page.getByRole('radiogroup', { name: 'Chamber to fire' })).toContainText('Chamber 1');
-    await page.getByLabel('raw d20').fill('15');
+    await commitRoll(page, 15);
+    await rollDamage(page);
     await page.getByLabel('rolled damage total').fill('6');
-    await page.getByLabel('confirm-cast').click();
+    await applyDamage(page);
 
     // The discharge empties chamber 1 and auto-advances the pointer.
     await session.expectSent(

@@ -6,6 +6,7 @@
 import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import { commitRoll, openEdit } from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -166,10 +167,13 @@ describe('UseAbilityModal — variable action cost (#215)', () => {
       ],
     };
     render(<UseAbilityModal {...props} ability={metalBlast} verb="Use" cost={1} />);
+    // #1687: on the attack path the ability summary (and its action-count
+    // picker) moves into RollSheet's edit disclosure; the commit is a face tap.
+    openEdit();
     const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('2'));
     expect(screen.getByText('+Con status bonus to damage')).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    commitRoll(10);
     expect(mockSpendActions).toHaveBeenCalledWith(2, 'Use Melee Metal Blast');
     expect(mockRecordAttack).toHaveBeenCalledWith(1);
   });

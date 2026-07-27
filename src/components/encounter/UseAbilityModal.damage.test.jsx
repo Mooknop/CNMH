@@ -2,10 +2,18 @@
 // Drives the single-roll AC attack path end to end: dice hint + rolled-total
 // entry after a hit, rider toggles, crit doubling, the exploit-weakness
 // auto-add, and the per-target damage breakdown in the combat log.
+//
+// Since #1687 that path is RollSheet's: tap a face → commit → Roll damage →
+// total → Apply damage. The assertions are unchanged; only the gestures moved,
+// and anything that used to be a live preview is now asserted after the commit.
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+import {
+  commitRoll, rollDamage, applyDamage, resolveAttack,
+  enterDamage as enterSheetDamage,
+} from '../../test/rollSheet';
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -129,10 +137,9 @@ const character = {
 
 const props = { isOpen: true, onClose: vi.fn(), verb: 'Use', character, themeColor: '#a0f' };
 
-const enterD20 = (v) =>
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: String(v) } });
-const enterDamage = (v) =>
-  fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: String(v) } });
+// Multi-ray and chained-strike abilities keep the pre-redesign resolvers
+// (workstream J / the chain sections), so those tests keep the typed idiom and
+// the footer confirm button.
 const confirm = () => fireEvent.click(screen.getByLabelText('confirm-cast'));
 const loggedLines = () => mockAppendLog.mock.calls.map(([entry]) => entry.text);
 
@@ -147,29 +154,29 @@ beforeEach(() => {
 describe('UseAbilityModal — damage step (#222)', () => {
   it('hit → damage entry with the dice hint; the total lands in the log with the rider', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(10); // 10 + 5 = 15 vs AC 15 → Hit
+    commitRoll(10); // 10 + 5 = 15 vs AC 15 → Hit
+    expect(screen.getByText('Hit')).toBeInTheDocument();
+    rollDamage();
     expect(screen.getByText('2d6+4 bludgeoning')).toBeInTheDocument();
-    enterDamage(9);
-    confirm();
+    enterSheetDamage(9);
+    applyDamage();
     // 9 + 4 (Implement's Empowerment, 2 × 2 weapon dice)
     expect(loggedLines()).toContainEqual(
       expect.stringContaining("damage 13 (9 +4 Implement's Empowerment)")
     );
   });
 
-  it('miss → no damage panel and no damage in the log', () => {
-    const { container } = render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(5); // 10 < AC 15 → Miss
-    expect(container.querySelector('.dmg-panel')).toBeNull();
-    confirm();
+  it('miss → no damage step and no damage in the log', () => {
+    render(<UseAbilityModal {...props} ability={maceStrike} />);
+    commitRoll(5); // 10 < AC 15 → Miss
+    expect(screen.getByText('Miss')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Roll damage' })).toBeNull();
     expect(loggedLines().join('\n')).not.toContain('damage');
   });
 
   it('crit doubles base + riders before the log', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(20); // nat 20 → Critical Hit
-    enterDamage(9);
-    confirm();
+    resolveAttack(20, 9); // nat 20 → Critical Hit
     // (9 + 4) × 2 = 26
     expect(loggedLines()).toContainEqual(expect.stringContaining('damage 26 (9 +4'));
     expect(loggedLines()).toContainEqual(expect.stringContaining('×2'));
@@ -177,10 +184,11 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
   it('unticking the rider drops it from the logged total', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(10);
-    enterDamage(9);
+    commitRoll(10);
+    rollDamage();
+    enterSheetDamage(9);
     fireEvent.click(screen.getByRole('checkbox', { name: /Implement's Empowerment/i }));
-    confirm();
+    applyDamage();
     expect(loggedLines()).toContainEqual(expect.stringContaining('damage 9'));
   });
 
@@ -190,10 +198,11 @@ describe('UseAbilityModal — damage step (#222)', () => {
       type: 'mortal', weaknessType: 'fire', value: 5, magical: true,
     };
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(10);
+    commitRoll(10);
+    rollDamage();
     expect(screen.getByRole('checkbox', { name: /weakness \(fire 5\)/i })).toBeChecked();
-    enterDamage(9);
-    confirm();
+    enterSheetDamage(9);
+    applyDamage();
     // 9 + 4 rider + 5 weakness = 18
     expect(loggedLines()).toContainEqual(
       expect.stringContaining('damage 18 (9 +4 Implement\'s Empowerment +5 weakness (fire 5))')
@@ -206,10 +215,11 @@ describe('UseAbilityModal — damage step (#222)', () => {
       type: 'antithesis', value: 4,
     };
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(10);
+    commitRoll(10);
+    rollDamage();
     expect(screen.queryByRole('checkbox', { name: /weakness/i })).toBeNull();
-    enterDamage(9);
-    confirm();
+    enterSheetDamage(9);
+    applyDamage();
     expect(loggedLines()).toContainEqual(expect.stringContaining('damage 13'));
   });
 
@@ -223,9 +233,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
       }],
     };
     render(<UseAbilityModal {...props} ability={shardStrike} />);
-    enterD20(10);
-    enterDamage(9);
-    confirm();
+    resolveAttack(10, 9);
     expect(loggedLines()).toContainEqual(
       expect.stringContaining('1d6 persistent bleed (DC 15 flat to end)')
     );
@@ -250,11 +258,12 @@ describe('UseAbilityModal — damage step (#222)', () => {
       },
     };
     render(<UseAbilityModal {...props} ability={shockingGrasp} verb="Cast" />);
-    enterD20(10); // hit
+    commitRoll(10); // hit
+    rollDamage();
     // 2 steps above native: 2d12 + 2×1d12 = 4d12; persistent 1d4 + 2
     expect(screen.getByText(/4d12 electricity/)).toBeInTheDocument();
-    enterDamage(20);
-    confirm();
+    enterSheetDamage(20);
+    applyDamage();
     expect(loggedLines()).toContainEqual(
       expect.stringContaining('1d4+2 persistent electricity (DC 15 flat to end)')
     );
@@ -404,8 +413,10 @@ describe('UseAbilityModal — damage step (#222)', () => {
       },
     };
     render(<UseAbilityModal {...props} ability={fear} />);
-    enterD20(10);
-    expect(screen.getByText('The target is frightened 1.')).toBeInTheDocument();
+    // The authored degree text is a RESULT, so it only exists after the commit.
+    expect(screen.queryByText(/frightened 1/)).toBeNull();
+    commitRoll(10);
+    expect(screen.getByText(/The target is frightened 1\./)).toBeInTheDocument();
   });
 
   // ── typed damage relay to Foundry (#1016) ─────────────────────────────────
@@ -417,9 +428,8 @@ describe('UseAbilityModal — damage step (#222)', () => {
       damageData: { base: '2d6+4', type: 'fire' },
     };
     render(<UseAbilityModal {...props} ability={fireStrike} />);
-    enterD20(10);    // 15 vs AC 15 → hit
-    enterDamage(9);  // + 4 Implement's Empowerment (2 dice × 2) = 13
-    confirm();
+    // 15 vs AC 15 → hit; 9 + 4 Implement's Empowerment (2 dice × 2) = 13
+    resolveAttack(10, 9);
 
     expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'dmgapply', expect.objectContaining({
       sourceName: 'Flame Strike',
@@ -429,8 +439,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
   it('confirm relays nothing on a miss / when no total was entered', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(2); // 7 vs AC 15 → miss
-    confirm();
+    commitRoll(2); // 7 vs AC 15 → miss
 
     expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
   });
@@ -439,9 +448,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
   it('confirm relays the catalog-resolved fxplay recipe for a hit', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(10);   // 15 vs AC 15 → hit
-    enterDamage(9);
-    confirm();
+    resolveAttack(10, 9); // 15 vs AC 15 → hit
 
     expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'fxplay', expect.objectContaining({
       shape: 'melee',
@@ -453,8 +460,7 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
   it('confirm relays no fxplay on a miss', () => {
     render(<UseAbilityModal {...props} ability={maceStrike} />);
-    enterD20(2); // 7 vs AC 15 → miss
-    confirm();
+    commitRoll(2); // 7 vs AC 15 → miss
 
     expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'fxplay', expect.anything());
   });
@@ -472,9 +478,8 @@ describe('UseAbilityModal — damage step (#222)', () => {
         damageData: { base: '2d6+4', type: 'fire' },
       };
       render(<UseAbilityModal {...props} ability={fireStrike} />);
-      enterD20(10);   // 15 vs AC 15 → hit
-      enterDamage(9); // + 4 rider = 13 raw; + weakness 5 = 18 netted
-      confirm();
+      // 15 vs AC 15 → hit; 9 + 4 rider = 13 raw; + weakness 5 = 18 netted
+      resolveAttack(10, 9);
 
       expect(loggedLines()).toContainEqual(
         expect.stringContaining("damage 18 (9 +4 Implement's Empowerment +5 weakness (fire))")
