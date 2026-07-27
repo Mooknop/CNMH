@@ -12,6 +12,8 @@ import {
   makePcEntry,
   makeEnemyEntry,
   makeSaveRequest,
+  makeSaveResolution,
+  appendSaveResolution,
   makeArmedPayload,
   sortByInitiative,
   nextTurnIndex,
@@ -393,6 +395,39 @@ export const useEncounter = () => {
     [setEncounter]
   );
 
+  /**
+   * Save-resolution write-back (#1683 — Roll Resolution redesign, G1). The GM
+   * side resolves a save request and then calls this INSTEAD of
+   * removeSaveRequest: the resolution record is appended and the request is
+   * dropped in the SAME functional update, so the two never race as separate
+   * writes to the shared encounter object (last-write-wins would otherwise let
+   * a concurrent client resurrect the request or lose the record).
+   *
+   * `resolution` is the record minus `id`/`ts` — see makeSaveResolution in
+   * encounterUtils for the full shape (the G2 contract). The list is bounded at
+   * SAVE_RESOLUTION_LIMIT (10), oldest evicted first, and is reset wholesale by
+   * endEncounter.
+   *
+   * Nothing reads `saveResolutions` yet — G2 (#1689) builds the caster-side
+   * consumer. Damage/conditions/fx still apply GM-side at resolution exactly as
+   * before; this rail is purely additive.
+   */
+  const resolveSaveRequest = useCallback(
+    (id, resolution) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          saveRequests: (base.saveRequests || []).filter((r) => r.id !== id),
+          saveResolutions: appendSaveResolution(
+            base.saveResolutions,
+            makeSaveResolution({ ...(resolution || {}), id })
+          ),
+        };
+      }),
+    [setEncounter]
+  );
+
   // Armed payloads (#987) — a cast stores its deferred damage/save here; the GM
   // fires it when the authored trigger actually happens. `repeatable` payloads
   // (an area that damages everyone ending a turn in it) stay armed after firing;
@@ -438,6 +473,7 @@ export const useEncounter = () => {
     appendLog,
     addSaveRequest,
     removeSaveRequest,
+    resolveSaveRequest,
   };
 };
 

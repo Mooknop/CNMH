@@ -47,6 +47,7 @@ vi.mock('../utils/expiry', () => ({
 
 import { useEncounter } from './useEncounter';
 import { isExpired } from '../utils/expiry';
+import { SAVE_RESOLUTION_LIMIT } from '../utils/encounterUtils';
 
 const setup = () => renderHook(() => useEncounter());
 
@@ -418,6 +419,111 @@ describe('useEncounter', () => {
       const beforeSpy = JSON.stringify(JSON.parse(localStorage.getItem(key)));
       act(() => result.current.advanceTurn());
       expect(localStorage.getItem(key)).toBe(beforeSpy);
+    });
+  });
+
+  // ── save-degrees write-back (#1683 — Roll Resolution G1) ──────────────────
+  //
+  // resolveSaveRequest replaces the GM panel's removeSaveRequest exit: the
+  // resolution record lands on `saveResolutions` and the request is dropped in
+  // the SAME functional update, so a concurrent client can never resurrect the
+  // request or lose the record. Nothing reads the list yet (G2 = #1689).
+  describe('resolveSaveRequest (#1683)', () => {
+    const pendingReq = {
+      casterId: 'Pellias',
+      casterName: 'Pellias',
+      abilityName: 'Fireball',
+      save: 'reflex',
+      dc: 20,
+      targets: [{ entryId: 'e-goblin', name: 'Goblin', saveMod: 5 }],
+    };
+    const resolution = (over = {}) => ({
+      casterId: 'Pellias',
+      casterEntryId: 'pc-a',
+      casterName: 'Pellias',
+      abilityName: 'Fireball',
+      rank: null,
+      save: 'reflex',
+      dc: 20,
+      basic: false,
+      results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 15, total: 20, degree: 'success' }],
+      damage: null,
+      ...over,
+    });
+
+    it('starts with an empty saveResolutions list', () => {
+      const { result } = setup();
+      expect(result.current.encounter.saveResolutions).toEqual([]);
+    });
+
+    it('appends the record and drops the request in one write', () => {
+      const { result } = setup();
+      act(() => result.current.addSaveRequest(pendingReq));
+      act(() => result.current.addSaveRequest({ ...pendingReq, abilityName: 'Sleep' }));
+      const [first, second] = result.current.encounter.saveRequests;
+
+      act(() => result.current.resolveSaveRequest(first.id, resolution()));
+
+      // Request gone…
+      expect(result.current.encounter.saveRequests.map((r) => r.id)).toEqual([second.id]);
+      // …and the record is there, stamped with the request id + a timestamp.
+      expect(result.current.encounter.saveResolutions).toHaveLength(1);
+      expect(result.current.encounter.saveResolutions[0]).toMatchObject({
+        id: first.id,
+        casterId: 'Pellias',
+        casterEntryId: 'pc-a',
+        abilityName: 'Fireball',
+        save: 'reflex',
+        dc: 20,
+        results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 15, total: 20, degree: 'success' }],
+      });
+      expect(typeof result.current.encounter.saveResolutions[0].ts).toBe('number');
+    });
+
+    it('defaults the optional fields a caller omits', () => {
+      const { result } = setup();
+      act(() => result.current.resolveSaveRequest('savereq-x', { results: [] }));
+      expect(result.current.encounter.saveResolutions[0]).toMatchObject({
+        id: 'savereq-x',
+        rank: null,
+        basic: false,
+        damage: null,
+        casterEntryId: null,
+      });
+    });
+
+    it('carries the damage snapshot through verbatim (G2 inverts the damage roll)', () => {
+      const damage = { entered: 12, expression: '6d6', typeLabel: 'fire', riders: [], degrees: { criticalFailure: 'full' } };
+      const { result } = setup();
+      act(() => result.current.resolveSaveRequest('savereq-x', resolution({ damage })));
+      expect(result.current.encounter.saveResolutions[0].damage).toEqual(damage);
+    });
+
+    it(`bounds the list at ${SAVE_RESOLUTION_LIMIT} — the next resolution evicts the oldest`, () => {
+      const { result } = setup();
+      for (let i = 0; i < SAVE_RESOLUTION_LIMIT; i++) {
+        act(() => result.current.resolveSaveRequest(`savereq-${i}`, resolution()));
+      }
+      expect(result.current.encounter.saveResolutions).toHaveLength(SAVE_RESOLUTION_LIMIT);
+      expect(result.current.encounter.saveResolutions[0].id).toBe('savereq-0');
+
+      act(() => result.current.resolveSaveRequest('savereq-overflow', resolution()));
+
+      const ids = result.current.encounter.saveResolutions.map((r) => r.id);
+      expect(ids).toHaveLength(SAVE_RESOLUTION_LIMIT);
+      expect(ids).not.toContain('savereq-0');   // oldest evicted
+      expect(ids[0]).toBe('savereq-1');
+      expect(ids[ids.length - 1]).toBe('savereq-overflow');
+    });
+
+    it('endEncounter clears the resolutions with the rest of the encounter', () => {
+      const { result } = setup();
+      act(() => result.current.startEncounter([pellias]));
+      act(() => result.current.resolveSaveRequest('savereq-x', resolution()));
+      expect(result.current.encounter.saveResolutions).toHaveLength(1);
+
+      act(() => result.current.endEncounter());
+      expect(result.current.encounter.saveResolutions).toEqual([]);
     });
   });
 });

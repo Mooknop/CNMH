@@ -2,8 +2,16 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import RequestedSaves from './RequestedSaves';
 
-const mockAppendLog     = vi.fn();
-const mockRemoveSaveReq = vi.fn();
+const mockAppendLog      = vi.fn();
+const mockRemoveSaveReq  = vi.fn();
+// Degrees write-back (#1683): both resolution paths now finish through
+// resolveSaveRequest(id, record) — the record lands on encounter.saveResolutions
+// and the request is dropped in the same write, so removeSaveRequest is no
+// longer called from the panel (it stays on the mock: still part of the hook's
+// surface, just not this component's exit).
+const mockResolveSaveReq = vi.fn();
+// The resolution record from the Nth resolveSaveRequest call.
+const resolutionRecord = (n = 0) => mockResolveSaveReq.mock.calls[n]?.[1];
 
 const goblinTarget = { entryId: 'e-goblin', name: 'Goblin',  saveMod: 5  };
 const trollTarget  = { entryId: 'e-troll',  name: 'Troll',   saveMod: 8  };
@@ -83,6 +91,7 @@ beforeEach(() => {
     encounter: makeEncounter([baseRequest]),
     appendLog: mockAppendLog,
     removeSaveRequest: mockRemoveSaveReq,
+    resolveSaveRequest: mockResolveSaveReq,
   });
 });
 
@@ -92,6 +101,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     const { container } = render(<RequestedSaves />);
     expect(container.firstChild).toBeNull();
@@ -102,6 +112,7 @@ describe('RequestedSaves', () => {
       encounter: null,
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     const { container } = render(<RequestedSaves />);
     expect(container.firstChild).toBeNull();
@@ -121,6 +132,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, rank: 4 }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     expect(screen.getByText(/\(rank 4\)/)).toBeInTheDocument();
@@ -136,6 +148,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, basic: true }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     expect(screen.getByText(/basic/i)).toBeInTheDocument();
@@ -151,6 +164,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, targets: [goblinTarget, trollTarget] }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     expect(screen.getByText('Goblin')).toBeInTheDocument();
@@ -167,6 +181,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, targets: [noModTarget] }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     expect(screen.queryByText(/mod/)).not.toBeInTheDocument();
@@ -223,11 +238,11 @@ describe('RequestedSaves', () => {
     );
   });
 
-  test('clicking "Log Results" calls removeSaveRequest with the request id', () => {
+  test('clicking "Log Results" resolves the request (id + resolution record) in one write', () => {
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '15' } });
     fireEvent.click(screen.getByRole('button', { name: /log results/i }));
-    expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
+    expect(mockResolveSaveReq).toHaveBeenCalledWith('savereq-1', expect.any(Object));
   });
 
   test('two-target request: button disabled until both filled', () => {
@@ -235,6 +250,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, id: 'req-2', targets: [goblinTarget, trollTarget] }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     const btn = screen.getByRole('button', { name: /log results/i });
@@ -251,6 +267,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, id: 'req-2', targets: [goblinTarget, trollTarget] }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
@@ -258,7 +275,7 @@ describe('RequestedSaves', () => {
     fireEvent.click(screen.getByRole('button', { name: /log results/i }));
 
     expect(mockAppendLog).toHaveBeenCalledTimes(2);
-    expect(mockRemoveSaveReq).toHaveBeenCalledWith('req-2');
+    expect(mockResolveSaveReq).toHaveBeenCalledWith('req-2', expect.any(Object));
   });
 
   test('target with null saveMod resolves with mod treated as 0', () => {
@@ -266,6 +283,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, targets: [noModTarget] }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     // d20 = 20 + null saveMod (→ 0) = total 20 vs DC 20 → Success; nat-20 → Critical Success
@@ -284,6 +302,7 @@ describe('RequestedSaves', () => {
       ]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     // Only one "Log Results" button (for the pending one)
@@ -297,6 +316,7 @@ describe('RequestedSaves', () => {
       encounter: makeEncounter([{ ...baseRequest, basic: true, damage, ...extra }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
   };
   const dmgFixture = { entered: 12, expression: '6d6', typeLabel: 'fire', riders: [] };
@@ -397,6 +417,7 @@ describe('RequestedSaves', () => {
         },
         appendLog: mockAppendLog,
         removeSaveRequest: mockRemoveSaveReq,
+        resolveSaveRequest: mockResolveSaveReq,
       });
     };
 
@@ -442,6 +463,7 @@ describe('RequestedSaves', () => {
         encounter: makeEncounter([{ ...baseRequest, fx }]),
         appendLog: mockAppendLog,
         removeSaveRequest: mockRemoveSaveReq,
+        resolveSaveRequest: mockResolveSaveReq,
       });
       render(<RequestedSaves />);
       enterGoblinD20(20); // crit success — saved, but the fireball still engulfs
@@ -541,6 +563,7 @@ describe('RequestedSaves', () => {
         encounter: makeEncounter([{ ...limnReq, ...extra }]),
         appendLog: mockAppendLog,
         removeSaveRequest: mockRemoveSaveReq,
+        resolveSaveRequest: mockResolveSaveReq,
       });
 
     test('applies the effect to every ally on a gating degree (Failure)', () => {
@@ -592,6 +615,7 @@ describe('RequestedSaves', () => {
         encounter: { ...makeEncounter([fireRequest]), order: [trollEntry] },
         appendLog: mockAppendLog,
         removeSaveRequest: mockRemoveSaveReq,
+        resolveSaveRequest: mockResolveSaveReq,
       });
     });
 
@@ -646,6 +670,7 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
       encounter: makeEncounter([conditionRequest]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } }); // 15 < 20 → failure
@@ -663,6 +688,7 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
       encounter: makeEncounter([conditionRequest]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '1' } }); // nat 1 + fail by 10+
@@ -681,6 +707,7 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
       }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
@@ -696,6 +723,7 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
       encounter: makeEncounter([conditionRequest]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '20' } }); // 25 ≥ 20, nat 20 → crit success
@@ -721,6 +749,7 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
       }]),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
     render(<RequestedSaves />);
     fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '20' } }); // nat 20 → crit success
@@ -745,6 +774,7 @@ describe('Foundry-rolled saves (#1275)', () => {
       encounter: makeEncounter(saveRequests),
       appendLog: mockAppendLog,
       removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
     });
 
   test('"Roll in Foundry" pushes the request to the saveroll relay', () => {
@@ -776,7 +806,7 @@ describe('Foundry-rolled saves (#1275)', () => {
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('Foundry rolled the Reflex saves for Fireball'),
     }));
-    expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
+    expect(mockResolveSaveReq).toHaveBeenCalledWith('savereq-1', expect.any(Object));
   });
 
   test('auto-resolution runs the shared tail — condition ladders apply', () => {
@@ -797,7 +827,7 @@ describe('Foundry-rolled saves (#1275)', () => {
     const fx = (syncedMock.enemyFxSetter?.mock.calls || []).reduce(
       (acc, [u]) => (typeof u === 'function' ? u(acc) : u), {});
     expect(fx['e-goblin'].conditions[0]).toMatchObject({ id: 'unconscious', source: 'Sleep Arrow' });
-    expect(mockRemoveSaveReq).toHaveBeenCalledWith('savereq-1');
+    expect(mockResolveSaveReq).toHaveBeenCalledWith('savereq-1', expect.any(Object));
   });
 
   test('a partial savedone fills the rolled d20s and keeps the request pending', () => {
@@ -811,7 +841,7 @@ describe('Foundry-rolled saves (#1275)', () => {
     render(<RequestedSaves />);
     expect(screen.getByLabelText(/Goblin d20/i)).toHaveValue(12);
     expect(screen.getByLabelText(/Troll d20/i)).toHaveValue(null);
-    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockResolveSaveReq).not.toHaveBeenCalled();
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('could not roll for Troll'),
     }));
@@ -826,7 +856,7 @@ describe('Foundry-rolled saves (#1275)', () => {
       ts: Date.now() - 60_000,
     };
     render(<RequestedSaves />);
-    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockResolveSaveReq).not.toHaveBeenCalled();
     expect(mockAppendLog).not.toHaveBeenCalled();
   });
 
@@ -839,7 +869,171 @@ describe('Foundry-rolled saves (#1275)', () => {
       ts: Date.now(),
     };
     render(<RequestedSaves />);
-    expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    expect(mockResolveSaveReq).not.toHaveBeenCalled();
     expect(mockAppendLog).not.toHaveBeenCalled();
+  });
+});
+
+// ── save-degrees write-back (#1683 — Roll Resolution G1) ─────────────────────
+//
+// Both resolution paths record the resolved degrees on the encounter so the
+// CASTER can read its own outcome, and drop the request in the SAME write.
+// Nothing consumes the record yet (G2 = #1689) — these tests pin the contract.
+
+describe('save-degrees write-back (#1683)', () => {
+  const dmg = { entered: 12, expression: '6d6', typeLabel: 'fire', riders: [] };
+  const casterEntry = { entryId: 'pc-pellias', kind: 'pc', charId: 'char-a', name: 'Pellias' };
+
+  const withEncounter = (encounter) =>
+    useEncounter.mockReturnValue({
+      encounter,
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
+    });
+
+  describe('manual resolution (typed d20s)', () => {
+    test('writes one record carrying the request identity and the resolved degrees', () => {
+      withEncounter({
+        ...makeEncounter([{ ...baseRequest, rank: 3, basic: true, targets: [goblinTarget, trollTarget] }]),
+        order: [casterEntry],
+      });
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '15' } }); // 20 → Success
+      fireEvent.change(screen.getByLabelText(/Troll d20/i),  { target: { value: '1'  } }); // nat 1 → Critical Failure
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(mockResolveSaveReq).toHaveBeenCalledTimes(1);
+      expect(mockResolveSaveReq.mock.calls[0][0]).toBe('savereq-1');
+      expect(resolutionRecord()).toEqual({
+        casterId:      'char-a',
+        casterEntryId: 'pc-pellias',
+        casterName:    'Pellias',
+        abilityName:   'Fireball',
+        rank:          3,
+        save:          'reflex',
+        dc:            20,
+        basic:         true,
+        results: [
+          { entryId: 'e-goblin', name: 'Goblin', d20: 15, total: 20, degree: 'success' },
+          { entryId: 'e-troll',  name: 'Troll',  d20: 1,  total: 9,  degree: 'criticalFailure' },
+        ],
+        damage: null,
+      });
+    });
+
+    test('removes the request through the same write — no separate removeSaveRequest', () => {
+      render(<RequestedSaves />); // beforeEach default: baseRequest
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '15' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(mockResolveSaveReq).toHaveBeenCalledWith('savereq-1', expect.any(Object));
+      expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    });
+
+    test("carries the request's damage snapshot so G2 can invert the damage roll", () => {
+      withEncounter(makeEncounter([{ ...baseRequest, basic: true, damage: dmg }]));
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(resolutionRecord().damage).toEqual(dmg);
+    });
+
+    test('carries per-degree multiplier overrides and rider choices verbatim', () => {
+      const riderDmg = {
+        ...dmg,
+        riders: [{ id: 'p', label: 'Persistent electricity', persistent: { dice: '1d4', type: 'electricity' } }],
+        degrees: { criticalFailure: 'full' },
+      };
+      withEncounter(makeEncounter([{ ...baseRequest, basic: true, damage: riderDmg }]));
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(resolutionRecord().damage).toEqual(riderDmg);
+    });
+
+    test('casterEntryId falls back to the casterEffect rider when the caster is off the order', () => {
+      withEncounter(makeEncounter([{
+        ...baseRequest,
+        casterEffect: {
+          def: { effectId: 'x', onDegrees: [] },
+          targets: [],
+          casterId: 'char-a',
+          casterName: 'Pellias',
+          casterEntryId: 'pc-rider',
+        },
+      }]));
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '15' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(resolutionRecord().casterEntryId).toBe('pc-rider');
+    });
+
+    test('casterEntryId is null when neither the order nor a rider resolves it', () => {
+      render(<RequestedSaves />); // default encounter has an empty order
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '15' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(resolutionRecord().casterEntryId).toBeNull();
+    });
+  });
+
+  describe('Foundry-rolled resolution (savedone tail)', () => {
+    test('records the FOUNDRY totals and the degrees recomputed from them', () => {
+      withEncounter({
+        ...makeEncounter([{ ...baseRequest, damage: dmg }]),
+        order: [casterEntry],
+      });
+      // saveMod is +5, but the live-modified Foundry total is 18 (not 10+5) —
+      // total 18 vs DC 20 → Failure. The record must carry the bridge's number.
+      syncedMock.saveDone = {
+        id: 'savereq-1',
+        results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 10, total: 18 }],
+        failed: [],
+        ts: Date.now(),
+      };
+      render(<RequestedSaves />);
+
+      expect(mockResolveSaveReq).toHaveBeenCalledTimes(1);
+      expect(mockResolveSaveReq.mock.calls[0][0]).toBe('savereq-1');
+      expect(resolutionRecord()).toMatchObject({
+        casterId:      'char-a',
+        casterEntryId: 'pc-pellias',
+        abilityName:   'Fireball',
+        save:          'reflex',
+        dc:            20,
+        results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 10, total: 18, degree: 'failure' }],
+        damage: dmg,
+      });
+      expect(mockRemoveSaveReq).not.toHaveBeenCalled();
+    });
+
+    test('a nat-20 ack records the shifted degree (computeSaveDegree stays authoritative)', () => {
+      withEncounter(makeEncounter([baseRequest]));
+      // total 20 alone is a Success vs DC 20; the nat 20 shifts it up.
+      syncedMock.saveDone = {
+        id: 'savereq-1',
+        results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 20, total: 20 }],
+        failed: [],
+        ts: Date.now(),
+      };
+      render(<RequestedSaves />);
+      expect(resolutionRecord().results[0].degree).toBe('criticalSuccess');
+    });
+
+    test('a partial ack records nothing — the request stays pending', () => {
+      withEncounter(makeEncounter([{ ...baseRequest, targets: [goblinTarget, trollTarget] }]));
+      syncedMock.saveDone = {
+        id: 'savereq-1',
+        results: [{ entryId: 'e-goblin', name: 'Goblin', d20: 12, total: 17 }],
+        failed: [{ entryId: 'e-troll', name: 'Troll' }],
+        ts: Date.now(),
+      };
+      render(<RequestedSaves />);
+      expect(mockResolveSaveReq).not.toHaveBeenCalled();
+    });
   });
 });
