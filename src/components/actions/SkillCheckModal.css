@@ -1,10 +1,8 @@
-/* SkillCheckModal — out-of-encounter skill action resolver (#407) */
-
-.scm-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
+/* SkillCheckModal — out-of-encounter skill action resolver (#407).
+   Renders as configuration inside RollSheet (#1690) — only the Edit-panel
+   field styling (hints, skill/circumstance pickers, the talisman opt-in, the
+   DC entry) lives here now; the summary strip, die entry, result card and
+   settled receipt are RollSheet's. */
 
 .scm-field {
   display: flex;
@@ -82,40 +80,6 @@
   line-height: var(--leading-snug);
 }
 
-/* Net modifier */
-.scm-bonus-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-}
-
-.scm-bonus-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--shell-text-secondary);
-}
-
-.scm-bonus-value {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--shell-text-primary);
-}
-
-.scm-bonus-note {
-  font-size: var(--text-xs);
-  color: var(--shell-text-tertiary);
-}
-
-/* d20 + DC inputs */
-.scm-inputs {
-  display: flex;
-  gap: var(--space-4);
-}
-
 .scm-input {
   width: 4.5rem;
   padding: var(--space-2) var(--space-3);
@@ -132,52 +96,4 @@
 .scm-input:focus {
   outline: none;
   border-color: var(--accent-outline);
-}
-
-/* Running total */
-.scm-total-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-}
-
-.scm-total-label {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--shell-text-tertiary);
-}
-
-.scm-total-value {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--shell-text-primary);
-}
-
-/* Degree of success */
-.scm-degree {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  text-align: center;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.scm-degree--criticalSuccess { background: var(--d-crit-bg); color: var(--d-crit-fg); }
-.scm-degree--success         { background: var(--d-succ-bg); color: var(--d-succ-fg); }
-.scm-degree--failure         { background: var(--d-fail-bg); color: var(--d-fail-fg); }
-.scm-degree--criticalFailure { background: var(--d-cf-bg);   color: var(--d-cf-fg);   }
-
-/* Footer */
-.scm-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--shell-border);
 }
