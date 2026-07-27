@@ -1,0 +1,153 @@
+/* RollEntry (#1681, Roll Resolution redesign — workstream A). The shared d20
+   entry primitive: a ring readout, then a 1-20 tap pad (table-dice devices,
+   or a Foundry roll that couldn't be delegated) or a single Foundry roll
+   pill. Mode comes from the TABLE_DICE_PREF device pref + useFoundryDice(),
+   never a prop — see design_handoff_roll_resolution/README.md, Screen 1. */
+
+.rollentry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rollentry-heading {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  text-align: center;
+}
+
+.rollentry-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 104px;
+  height: 104px;
+  border-radius: var(--radius-full);
+  border: 2px solid rgba(255, 255, 255, .18);
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .3);
+}
+
+.rollentry-ring--filled {
+  border-color: var(--accent-outline);
+  background: rgba(192, 68, 14, .08);
+  color: var(--shell-text-primary);
+}
+
+.rollentry-ring--nat20 { color: var(--d-crit-fg); }
+.rollentry-ring--nat1  { color: var(--d-cf-fg); }
+
+.rollentry-ring--pending {
+  border-style: dashed;
+  border-color: rgba(192, 68, 14, .6);
+  background: transparent;
+  font-size: 16px;
+  color: var(--accent-text);
+  animation: rollentry-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes rollentry-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rollentry-ring--pending { animation: none; }
+}
+
+.rollentry-math {
+  margin: 0;
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--shell-text-secondary);
+  text-align: center;
+}
+
+.rollentry-notice {
+  margin: 0;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--gold-mid);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent);
+  color: var(--gold-light);
+  font-size: .8rem;
+  line-height: 1.35;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.rollentry-pad-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  text-align: center;
+}
+
+.rollentry-pad {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  box-sizing: border-box;
+}
+
+.rollentry-pad-cell {
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--shell-text-secondary);
+}
+
+.rollentry-pad-cell--selected {
+  border-color: var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+.rollentry-pill {
+  width: 100%;
+  min-height: 52px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.rollentry-pill:hover:not(:disabled) {
+  background: var(--accent-tint-hover);
+}
+
+.rollentry-switch {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  text-decoration: underline;
+  color: var(--shell-text-tertiary);
+}
+
+.rollentry-pad-cell:disabled,
+.rollentry-pill:disabled,
+.rollentry-switch:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
