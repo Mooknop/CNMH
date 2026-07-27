@@ -26,7 +26,7 @@
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { expectOnSheet } from '../../helpers/sheet';
-import { rollPad, tapFace } from '../../helpers/rollSheet';
+import { applyDamage, blockLine, openEdit, rollDamage, tapFace } from '../../helpers/rollSheet';
 import {
   deckBody,
   encounterState,
@@ -298,19 +298,28 @@ test.describe('Signature automations', () => {
     await expect(page.getByTestId('absorbed-spellguns')).toContainText(SPELLGUN.name);
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
 
-    // The attack modal. Both proficiency options are offered (RAW: the wielder
-    // chooses spell attack or firearm attack); picking one persists it.
+    // The attack sheet (RollSheet migration, successor arc to #1680): the
+    // proficiency options live in the edit disclosure now. Both are offered
+    // (RAW: the wielder chooses spell attack or firearm attack); picking one
+    // persists it.
+    await openEdit(page);
     const profs = page.getByRole('radiogroup', { name: 'Attack roll type' });
     await expect(profs).toBeVisible({ timeout: 10_000 });
     await profs.getByRole('button', { name: /Firearm attack/ }).click();
     await session.expectSent(SPELLGUNATK_KEY, (v) => v === 'firearm');
 
-    // Pick the target, roll, fire.
+    // Pick the target, roll, fire — the commit pill; the consume + action
+    // spend fire here, the log waits for the amount step.
     await page.getByRole('button', { name: 'E2E Goblin', exact: true }).click();
     await tapFace(page, 15);
-    const fire = page.getByTestId('sgm-fire');
+    const fire = page.getByRole('button', { name: /^Fire \(/ });
     await expect(fire).toBeEnabled();
     await fire.click();
+
+    // A hit with a damage profile defers the log line to the finish — walk the
+    // amount step with no total so the text matches the pre-redesign line.
+    await rollDamage(page);
+    await applyDamage(page);
 
     // The attack lands in the encounter log with the spellgun's own phrasing.
     await session.expectSent(
@@ -321,8 +330,8 @@ test.describe('Signature automations', () => {
     // Firing frees the glove slot: the binding is dropped from the overlay.
     await session.expectSent(ABSORBED_KEY, (v) => v && v[GUN_UID] === undefined);
 
-    // The button retires so the same charge can't be spent twice.
-    await expect(fire).toHaveText('Fired');
+    // The sheet settles into the receipt — the same charge can't be spent twice.
+    await expect(page.getByText('Resolved ✓')).toBeVisible();
   });
 
   /**
@@ -377,9 +386,12 @@ test.describe('Signature automations', () => {
     await openTab(page, 'Inventory');
     await page.getByTestId(`grid-cell-${GLOVE_UID}`).click();
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
+    await openEdit(page);
     await page.getByRole('button', { name: 'E2E Goblin', exact: true }).click();
     await tapFace(page, 15);
-    await page.getByTestId('sgm-fire').click();
+    // The commit pill — the consume write is commit-time, so the deferred
+    // amount step never gates this box's asserts.
+    await page.getByRole('button', { name: /^Fire \(/ }).click();
 
     // The consumption write goes out — keyed by the inventory entry's uid since
     // #1659, so a second spellgun of the same name keeps its own charge…
@@ -422,14 +434,17 @@ test.describe('Signature automations', () => {
     await page.getByTestId(`grid-cell-${GLOVE_UID}`).click();
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
 
-    // The modal is up and says so — the anchor for the absence assertions.
-    await expect(page.getByLabel('remaining count')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('.sgm-empty')).toContainText('No enemies in the encounter.');
+    // The sheet is up and hard-blocked — the anchor for the absence assertions.
+    // No target ⇒ the block line freezes the die entry and the Fire pill.
+    await expect(blockLine(page)).toHaveText('Pick a target first — open Edit.', {
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('button', { name: /^Fire \(/ })).toBeDisabled();
 
-    // No target ⇒ the Fire button is inert, and there is no resolver to roll in.
-    const fire = page.getByTestId('sgm-fire');
-    await expect(fire).toBeDisabled();
-    await expect(rollPad(page)).toHaveCount(0);
+    // The remaining count + empty-target note live in the edit disclosure.
+    await openEdit(page);
+    await expect(page.getByLabel('remaining count')).toBeVisible();
+    await expect(page.locator('.sgm-empty')).toContainText('No enemies in the encounter.');
 
     // Anchored absence: the proficiency pick DOES write, so waiting for that
     // write proves the app processed a click after the modal opened — and the
