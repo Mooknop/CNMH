@@ -161,7 +161,6 @@ export const useSecondaryProfiles = ({
               </div>
               {targets.length > 0 && dmg && (
                 <DamagePanel
-                  mode="save"
                   profile={dmg}
                   charId={character?.id}
                   flavor={`${ability?.name || ''} — ${p.label}`}

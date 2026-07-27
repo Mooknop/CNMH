@@ -15,6 +15,8 @@ import { useSessionLog } from '../../hooks/useSessionLog';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { RELAY, APP } from '../../sync/keys';
+// The GM save cards' roll input + degree label speak the shared trr-* vocabulary.
+import './rollResolution.css';
 
 /**
  * GM panel that lists pending save requests from players.

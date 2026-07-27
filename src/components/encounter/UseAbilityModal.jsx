@@ -2,7 +2,6 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import OutOfTurnNotice from './OutOfTurnNotice';
-import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
 import RollSheet from './RollSheet';
@@ -952,10 +951,16 @@ const UseAbilityModal = ({
     (isAttack && rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) || hasChainStrike;
   const mapSection = showMapToggle ? castPlan.mapRow : null;
 
-  // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
-  // (The opposed-reaction resolver, #226-C, is `opposedSection` from
-  // useOpposedReactionResolution above.)
-  // Multi-ray attack spells render one resolver row per ray instead of a single roll.
+  // The roll resolution section: the sheet's situational-toggle row (actor-roll)
+  // or save-request info (target-save). (The opposed-reaction resolver, #226-C,
+  // is `opposedSection` from useOpposedReactionResolution above.)
+  //
+  // There is deliberately NO classic actor-roll branch left: `useRollSheet`
+  // subsumes every reachable actor-roll shape (workstream K's audit, #1692/PR
+  // #1704 — chain parents author no roll fields of their own, so real content
+  // never resolves them to 'actor-roll', and the opposed reaction never renders
+  // this slot). An actor-roll ability that somehow misses the sheet's gate now
+  // simply has no inline resolver, the same as any other unresolvable shape.
   let rollSection = null;
   if (useRollSheet && !isMultiRay) {
     // The die entry, DC line, degrees and damage step all live on the sheet
@@ -967,34 +972,6 @@ const UseAbilityModal = ({
     // the sheet's `dieSlot` instead of this editPanel slot — per-ray toggles
     // are owned by SequentialAttackSteps, one active set at a time.
     rollSection = null;
-  } else if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
-    rollSection = isMultiRay ? (
-      <MultiRayResolver
-        ref={resolverRef}
-        rayCount={rayCount}
-        enemyTargets={resolverTargets}
-        targetDefense={effectiveDefense}
-        rollBonus={rollProfile.bonus}
-        damage={damageProfile}
-        degrees={ability.degrees}
-        toggles={attackToggles}
-        charId={character.id}
-        rollFlavor={rollFlavor}
-      />
-    ) : (
-      <TargetRollResolver
-        ref={resolverRef}
-        enemyTargets={resolverTargets}
-        targetDefense={effectiveDefense}
-        rollBonus={rollProfile.bonus}
-        damage={damageProfile}
-        degrees={ability.degrees}
-        toggles={attackToggles}
-        rangeByEntry={hasRangeData ? rangeByEntry : null}
-        charId={character.id}
-        rollFlavor={rollFlavor}
-      />
-    );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
     const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
     rollSection = (
@@ -1012,7 +989,6 @@ const UseAbilityModal = ({
             rolled after the GM's degrees come back (#1689). */}
         {useSaveSheet ? saveSheet.ridersRow : (damageProfile && (
           <DamagePanel
-            mode="save"
             profile={damageProfile}
             charId={character.id}
             flavor={rollFlavor}

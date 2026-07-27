@@ -1,5 +1,7 @@
-// DamagePanel — unit tests for the damage hint + extra-dice rider toggle
-// (Gloaming Backstab's hidden precision, #269).
+// DamagePanel — unit tests for the pre-commit save-damage entry: the hint +
+// extra-dice rider toggle (Gloaming Backstab's hidden precision, #269) and the
+// dice-tower rail. The attack mode died with TargetRollResolver (#1680
+// successor arc) — RollSheet's amount phase owns per-hit entry now.
 
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
@@ -17,18 +19,13 @@ const gloamingProfile = {
   }],
 };
 
-const hit = [{ entryId: 'e1', name: 'Goblin', degree: 'success', damage: null }];
-
 const renderPanel = (props = {}) => render(
   <DamagePanel
     profile={gloamingProfile}
-    hitResults={hit}
     entered=""
     onEntered={() => {}}
     riderState={props.riderState ?? {}}
     onToggleRider={props.onToggleRider ?? (() => {})}
-    critDouble={false}
-    onCritDouble={() => {}}
   />
 );
 
@@ -52,107 +49,33 @@ describe('DamagePanel extra-dice rider', () => {
     expect(onToggleRider).toHaveBeenCalledWith('gloaming-hidden-precision', true);
   });
 
-  it('precision keeps the single-total entry — it folds into the parent instance', () => {
-    render(
-      <DamagePanel
-        profile={gloamingProfile}
-        hitResults={hit}
-        entered=""
-        onEntered={() => {}}
-        enteredParts={{}}
-        onEnteredPart={() => {}}
-        riderState={{ 'gloaming-hidden-precision': true }}
-        onToggleRider={() => {}}
-        critDouble={false}
-        onCritDouble={() => {}}
-      />
-    );
+  it('keeps the single-total entry with the rider on — the caster enters one number', () => {
+    renderPanel({ riderState: { 'gloaming-hidden-precision': true } });
     expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
-  });
-});
-
-// Multi-instance entry (#1019) — a mixed-type profile takes one total per part.
-describe('DamagePanel multi-instance entry', () => {
-  const flamingProfile = {
-    expression: '2d8+4',
-    typeLabel: 'piercing',
-    riders: [{
-      id: 'rune-flaming-dice', label: 'Flaming',
-      dice: '1d6', type: 'fire', defaultOn: true,
-    }],
-  };
-
-  const renderMulti = (props = {}) => render(
-    <DamagePanel
-      profile={flamingProfile}
-      hitResults={hit}
-      entered=""
-      onEntered={() => {}}
-      enteredParts={props.enteredParts ?? {}}
-      onEnteredPart={props.onEnteredPart ?? (() => {})}
-      riderState={props.riderState ?? {}}
-      onToggleRider={() => {}}
-      critDouble={false}
-      onCritDouble={() => {}}
-    />
-  );
-
-  it('renders one labeled input per typed part instead of the single total', () => {
-    renderMulti();
-    // DamageEntry gives every row the SAME accessible name — rows are
-    // disambiguated by their own dice-expression text, not the label (#1692).
-    expect(screen.getAllByLabelText('rolled damage total')).toHaveLength(2);
-    expect(screen.getByText('2d8+4 piercing')).toBeInTheDocument();
-    // the fire dice appear both as the part expression and on the rider toggle line
-    expect(screen.getAllByText(/1d6 fire/).length).toBeGreaterThan(0);
-  });
-
-  it('reports per-part entry through onEnteredPart with the part key', () => {
-    const onEnteredPart = vi.fn();
-    renderMulti({ onEnteredPart });
-    // base (piercing) first, then the typed rider (fire) — damageEntryParts order.
-    const [, fireInput] = screen.getAllByLabelText('rolled damage total');
-    fireEvent.change(fireInput, { target: { value: '4' } });
-    expect(onEnteredPart).toHaveBeenCalledWith('rune-flaming-dice', '4');
-  });
-
-  it('falls back to the single total once the typed rider is toggled off', () => {
-    renderMulti({ riderState: { 'rune-flaming-dice': false } });
-    expect(screen.getAllByLabelText('rolled damage total')).toHaveLength(1);
   });
 });
 
 // ── dice-tower rail (#1490 S5) ───────────────────────────────────────────────
 // DamageEntry's own delegated-roll behavior is covered in DamageEntry.test.jsx;
-// these pin the panel's wiring: folded base formula, per-part formulas, and the
-// ack filling the entry. The plain renders above run session-less and never
-// grow buttons.
+// this pins the panel's wiring: the FOLDED base formula and the ack filling the
+// entry. The plain renders above run session-less and never grow buttons.
 describe('DamagePanel dice-tower rail', () => {
-  const railBus = () => makeSessionBus({ state: { global: { bridgehello: { protocol: 3 } } } });
-
-  const renderRail = (bus, props = {}) => render(
-    <SessionContext.Provider value={bus}>
-      <DamagePanel
-        profile={props.profile ?? gloamingProfile}
-        hitResults={hit}
-        entered=""
-        onEntered={props.onEntered ?? (() => {})}
-        enteredParts={props.enteredParts}
-        onEnteredPart={props.onEnteredPart}
-        riderState={props.riderState ?? {}}
-        onToggleRider={() => {}}
-        critDouble={false}
-        onCritDouble={() => {}}
-        charId="pc-1"
-        flavor="Strike: Scythe"
-      />
-    </SessionContext.Provider>
-  );
-
   it('delegates the FOLDED base formula and fills the total from the ack', async () => {
-    const bus = railBus();
+    const bus = makeSessionBus({ state: { global: { bridgehello: { protocol: 3 } } } });
     const onEntered = vi.fn();
-    renderRail(bus, { onEntered, riderState: { 'gloaming-hidden-precision': true } });
+    render(
+      <SessionContext.Provider value={bus}>
+        <DamagePanel
+          profile={gloamingProfile}
+          entered=""
+          onEntered={onEntered}
+          riderState={{ 'gloaming-hidden-precision': true }}
+          onToggleRider={() => {}}
+          charId="pc-1"
+          flavor="Strike: Scythe"
+        />
+      </SessionContext.Provider>
+    );
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /roll in foundry/i }));
@@ -168,31 +91,5 @@ describe('DamagePanel dice-tower rail', () => {
       });
     });
     expect(onEntered).toHaveBeenCalledWith('31');
-  });
-
-  it('multi-part entry rolls each split part with its own formula and flavor', async () => {
-    const bus = railBus();
-    const flaming = {
-      expression: '2d8', typeLabel: 'piercing',
-      riders: [{ id: 'flaming', label: 'Flaming', dice: '1d6', type: 'fire', defaultOn: true }],
-    };
-    const onEnteredPart = vi.fn();
-    renderRail(bus, { profile: flaming, enteredParts: {}, onEnteredPart });
-
-    const buttons = screen.getAllByRole('button', { name: /roll in foundry/i });
-    expect(buttons).toHaveLength(2);
-
-    await act(async () => { fireEvent.click(buttons[1]); });
-    const req = bus.sent.find((s) => s.stateType === RELAY.ROLLREQ);
-    expect(req.value).toEqual(expect.objectContaining({
-      formula: '1d6', flavor: 'Strike: Scythe — fire damage',
-    }));
-
-    await act(async () => {
-      bus.push('global', RELAY.ROLLDONE, {
-        id: req.value.id, charId: 'pc-1', ok: true, total: 4, faces: [[6, 4]], ts: Date.now(),
-      });
-    });
-    expect(onEnteredPart).toHaveBeenCalledWith('flaming', '4');
   });
 });

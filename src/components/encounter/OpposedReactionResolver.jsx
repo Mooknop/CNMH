@@ -1,9 +1,9 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { formatModifier } from '../../utils/CharacterUtils';
-import { DEGREE_LABELS_SAVE } from './TargetRollResolver';
+import { DEGREE_LABELS_SAVE } from '../../utils/degreeDisplay';
 import RollEntry from '../shared/RollEntry';
-import './TargetRollResolver.css';
+import './rollResolution.css';
 
 /**
  * Inline resolver for opposed reactions (#226-C) — reaction-cost abilities that

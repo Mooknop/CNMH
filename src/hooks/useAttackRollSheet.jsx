@@ -8,6 +8,8 @@ import {
 import { DEFENSE_LABELS } from '../utils/defense';
 import { DEGREE_LABELS } from '../utils/degreeDisplay';
 import { buildAttackResults, rangeNoteFor } from '../utils/attackResults';
+// The togglesRow markup below speaks the shared trr-* vocabulary.
+import '../components/encounter/rollResolution.css';
 
 // UseAbilityModal's attack path on RollSheet (#1687, Roll Resolution redesign
 // workstream E). RollSheet owns `phase` / `face` / `amounts`; everything the
