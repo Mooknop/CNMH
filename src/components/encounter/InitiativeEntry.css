@@ -48,6 +48,25 @@
   font-size: 1rem;
 }
 
+/* Houses RollEntry (#1686) — a fixed-width vertical widget (104px ring + a
+   full 1-20 pad grid), not the 5rem inline number input it replaced. It gets
+   its own flex-wrap basis in the row rather than sharing the inline
+   label+control shape of .initiative-entry-field. See the PR body for the
+   layout-tension note flagged for the design owner. */
+.initiative-entry-rollentry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 1 260px;
+}
+
+.initiative-entry-rollentry-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--gold-light, var(--gold-light));
+}
+
 .initiative-entry-bystander {
   flex: 1 1 100%;
   display: flex;

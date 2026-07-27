@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 
 // Shared synced-state store so InitiativeEntry's useEncounter and a sibling
 // "control" useEncounter (acting as the GM panel) read/write the same record.
@@ -41,6 +41,13 @@ vi.mock('../../hooks/useCharacter', () => ({
 import { __reset, useSyncedState } from '../../hooks/useSyncedState';
 import InitiativeEntry from './InitiativeEntry';
 import { useEncounter } from '../../hooks/useEncounter';
+
+// RollEntry's pad (#1686 — replaces FoundryDiceInput's d20-input text field).
+// No SessionContext provider is mounted in this file, so useFoundryDice()
+// always reports unavailable and RollEntry always falls back to the pad —
+// picking a face is a button tap, never a fireEvent.change.
+const pad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) => fireEvent.click(within(pad()).getByRole('button', { name: String(n) }));
 
 const izzy = {
   id: 'IzzyUncut',
@@ -186,13 +193,13 @@ describe('InitiativeEntry', () => {
     startWith(drv, [{ id: 'IzzyUncut', name: 'Izzy' }]);
     rerender(renderTree());
 
-    // Toggle on → the total field is replaced by a d20 field.
+    // Toggle on → the total field is replaced by the RollEntry pad.
     fireEvent.click(screen.getByLabelText('harmless-bystander-toggle'));
-    expect(screen.getByLabelText('d20-input')).toBeInTheDocument();
+    expect(pad()).toBeInTheDocument();
     expect(screen.queryByLabelText('initiative-input')).toBeNull();
 
-    // Entering a d20 writes d20 + Deception(11) as the order initiative.
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '14' } });
+    // Tapping a d20 face writes d20 + Deception(11) as the order initiative.
+    tapFace(14);
     expect(drv.encounter.order[0].initiative).toBe(25);
     expect(screen.getByLabelText('initiative-breakdown')).toHaveTextContent('d20 14 + Deception +11 = 25');
 
@@ -296,14 +303,14 @@ describe('InitiativeEntry — Foundry-linked', () => {
 
   it('shows the d20 + skill entry (not the app-only total field)', () => {
     renderFoundry();
-    expect(screen.getByLabelText('d20-input')).toBeInTheDocument();
+    expect(pad()).toBeInTheDocument();
     expect(screen.getByLabelText('initiative-skill-select')).toBeInTheDocument();
     expect(screen.queryByLabelText('initiative-input')).toBeNull();
   });
 
   it('d20 + default Perception writes the total to cnmh_initroll_<charId>, not the order', () => {
     renderFoundry();
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    tapFace(15);
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 15 + Perception +7 = 22');
 
@@ -316,7 +323,7 @@ describe('InitiativeEntry — Foundry-linked', () => {
   it('skill selection changes the modifier used', () => {
     renderFoundry();
     fireEvent.change(screen.getByLabelText('initiative-skill-select'), { target: { value: 'stealth' } });
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    tapFace(15);
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 15 + Stealth +10 = 25');
 
@@ -326,7 +333,7 @@ describe('InitiativeEntry — Foundry-linked', () => {
 
   it('folds the Scout +1 circumstance bonus into the total', () => {
     renderFoundry(<ScoutSetter value="someone-else" />);
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    tapFace(15);
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 15 + Perception +7 + Scout +1 = 23');
 
@@ -337,7 +344,7 @@ describe('InitiativeEntry — Foundry-linked', () => {
   it('folds the Scout +1 in for the scout themselves too (#1628)', () => {
     // Same as above, but the id on the key is this entry's own character.
     renderFoundry(<ScoutSetter value="Vask" />);
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    tapFace(15);
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 15 + Perception +7 + Scout +1 = 23');
 
@@ -367,7 +374,7 @@ describe('InitiativeEntry — Foundry-linked', () => {
     expect(screen.getByLabelText('initiative-skill-select')).toHaveValue('deception');
     expect(screen.getByLabelText('initiative-skill-select')).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '14' } });
+    tapFace(14);
     expect(screen.getByLabelText('initiative-breakdown'))
       .toHaveTextContent('d20 14 + Deception +11 = 25');
     fireEvent.click(screen.getByLabelText('submit-initiative'));
@@ -376,15 +383,15 @@ describe('InitiativeEntry — Foundry-linked', () => {
 
   it('shows a submitted state and allows re-entry until combat starts', () => {
     renderFoundry();
-    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    tapFace(15);
     fireEvent.click(screen.getByLabelText('submit-initiative'));
 
-    // Submitted view replaces the input with a confirmation + breakdown.
+    // Submitted view replaces the pad with a confirmation + breakdown.
     expect(screen.getByLabelText('initiative-submitted')).toBeInTheDocument();
-    expect(screen.queryByLabelText('d20-input')).toBeNull();
+    expect(screen.queryByRole('group', { name: 'raw d20' })).toBeNull();
 
-    // Re-enter restores the input, seeded with the prior d20.
+    // Re-enter restores the pad, seeded with the prior d20 face selected.
     fireEvent.click(screen.getByText('Re-enter'));
-    expect(screen.getByLabelText('d20-input')).toHaveValue(15);
+    expect(within(pad()).getByRole('button', { name: '15' })).toHaveAttribute('aria-pressed', 'true');
   });
 });
