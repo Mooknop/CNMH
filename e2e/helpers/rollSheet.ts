@@ -91,3 +91,33 @@ export const damageRow = (page: Page, expression: string): Locator =>
 
 /** The per-target damage breakdown line on the amount screen. */
 export const breakdown = (page: Page): Locator => page.locator('.rs-breakdown');
+
+/**
+ * Sequential per-ray/per-member driver (#1691, SequentialAttackSteps) — the
+ * multi-ray attack path (MultiRayResolver, mounted through RollSheet's
+ * `dieSlot`) and the chained-strike/chained-spell sections' own inline roll
+ * widget both render this. One d20 tap pad + one commit pill PER STEP; a
+ * compact receipt chip appears for each step already committed, and a
+ * grouped `DamageEntry` row per hit step once every step has rolled.
+ */
+
+/** The current step's own d20 pad + commit pill container. */
+export const currentStep = (page: Page): Locator => page.locator('.sas-step');
+
+/** The current step's heading ("Ray 2 of 3", "Strike 2 (MAP -5)", …). */
+export const currentStepLabel = (page: Page): Locator => page.locator('.sas-step-label');
+
+/** One receipt chip per already-committed step. */
+export const stepReceipts = (page: Page): Locator => page.locator('.sas-receipt');
+
+/** The current step's own commit pill (distinct from the sheet's outer `.rs-pill`). */
+export const stepPill = (page: Page): Locator => page.locator('.sas-pill');
+
+/** Tap a face and commit the CURRENT sequential step (one ray / chain member). */
+export const commitStep = async (page: Page, face: number): Promise<void> => {
+  await tapFace(page, face);
+  await stepPill(page).click();
+};
+
+/** The grouped damage-entry rows, shown once every step has rolled. */
+export const stepAmount = (page: Page): Locator => page.locator('.sas-amount');

@@ -411,6 +411,58 @@ describe('RollSheet', () => {
     });
   });
 
+  // dieSlot (#1691, workstream J): the ONLY additive prop this workstream needs
+  // — the sequential multi-ray driver owns its own die entry (one pad per ray)
+  // and its own grouped damage entry, so it replaces RollEntry entirely rather
+  // than composing beside it.
+  describe('dieSlot', () => {
+    beforeEach(() => setDevicePref(TABLE_DICE_PREF, true));
+
+    it('renders in place of RollEntry, whether or not hasD20 is set', () => {
+      renderWithProviders(
+        <RollSheet
+          {...attackProps({ hasD20: false, damageParts: null })}
+          dieSlot={<div data-testid="custom-die-slot">sequential driver</div>}
+          onCommit={() => null}
+          onFinish={() => {}}
+        />,
+        { session: { state: RAIL_STATE } },
+      );
+
+      expect(screen.getByTestId('custom-die-slot')).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'raw d20' })).toBeNull();
+    });
+
+    it('the commit pill is gated by blockLine, not a face — dieSlot owns its own readiness', () => {
+      const onCommit = vi.fn(() => ATTACK_ROWS);
+      const { rerender } = renderWithProviders(
+        <RollSheet
+          {...attackProps({ hasD20: false, damageParts: null, blockLine: 'Roll every ray first (2 total).' })}
+          dieSlot={<div data-testid="custom-die-slot" />}
+          onCommit={onCommit}
+          onFinish={() => {}}
+        />,
+        { session: { state: RAIL_STATE } },
+      );
+
+      const commit = pill('Resolve strike (1 action)');
+      expect(commit).toBeDisabled();
+      expect(screen.getByText('Roll every ray first (2 total).')).toBeInTheDocument();
+
+      rerender(
+        <RollSheet
+          {...attackProps({ hasD20: false, damageParts: null, blockLine: null })}
+          dieSlot={<div data-testid="custom-die-slot" />}
+          onCommit={onCommit}
+          onFinish={() => {}}
+        />,
+      );
+      expect(pill('Resolve strike (1 action)')).toBeEnabled();
+      fireEvent.click(pill('Resolve strike (1 action)'));
+      expect(onCommit).toHaveBeenCalledWith(null);
+    });
+  });
+
   describe('Foundry one-tap', () => {
     it('hides the commit pill and commits straight off the ack', async () => {
       const onCommit = vi.fn(() => ATTACK_ROWS);

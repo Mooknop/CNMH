@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ChainedSpellSection from './ChainedSpellSection';
 import { resolveActionRoll } from '../../utils/rollResolution';
 
@@ -13,25 +13,15 @@ vi.mock('../../utils/defense', () => ({
   DEFENSE_OPTIONS: [{ value: 'ac', label: 'AC' }],
   defenseDC: vi.fn(() => 15),
 }));
-vi.mock('./TargetRollResolver', () => {
-  const { forwardRef, useImperativeHandle } = require('react');
-
-  return { default: forwardRef(({ enemyTargets, rollBonus, damage }, ref) => {
-    useImperativeHandle(ref, () => ({
-      getResults: () => enemyTargets.map((e) => ({
-        entryId: e.entryId, name: e.name, dc: 15, total: (rollBonus || 0) + 10, degree: 'success',
-      })),
-    }));
-    const React = require('react');
-    // Echo the damage prop (#571) so tests can assert the section builds and
-    // forwards a profile for damaging attack spells.
-    return React.createElement(
-      'div',
-      { 'data-testid': 'spell-resolver', 'data-damage': damage ? damage.expression : 'none' },
-      `bonus=${rollBonus}`
-    );
-  }) };
-});
+// Sequential per-step rolling (#1691, LOCKED design): the section's attack-mode
+// roll widget is the real SequentialAttackSteps now — one d20 tap pad per step
+// (single-target chains have one step; per-action multi-ray chains have one
+// per ray), advancing on commit. These tests drive it with the shared idiom.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) =>
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
+const sasPill = () => document.querySelector('.sas-pill');
+const rollStep = (face) => { tapFace(face); fireEvent.click(sasPill()); };
 
 
 const FIREBALL = { id: 'fireball', name: 'Fireball', actions: 'Two Actions', range: '500 feet', defense: 'Reflex' };
@@ -47,7 +37,7 @@ const character = {
 const reachChain = { into: 'spell', cost: 'added', spellFilter: 'has-range', modifier: 'Range increased by 30 feet' };
 const harrowChain = { into: 'spell', cost: 'added', spellFilter: 'any', modifier: 'Draw a Harrow card' };
 
-const enemyTargets = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+const enemyTargets = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: 15 } }];
 
 beforeEach(() => {
   resolveActionRoll.mockReturnValue({ mode: 'none', bonus: null, dc: null, defense: null });
@@ -157,7 +147,7 @@ describe('ChainedSpellSection', () => {
     expect(onCostChange).toHaveBeenCalledWith(3); // after change: 1+2
   });
 
-  it('shows TargetRollResolver when spell resolves to actor-roll mode', () => {
+  it('shows the sequential roll widget when spell resolves to actor-roll mode', () => {
     resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
     render(
       <ChainedSpellSection
@@ -169,10 +159,10 @@ describe('ChainedSpellSection', () => {
         effects={[]}
       />
     );
-    expect(screen.getByTestId('spell-resolver')).toBeInTheDocument();
+    expect(rollPad()).toBeInTheDocument();
   });
 
-  it('getResults returns spellId, spellName, totalCost, and roll results', () => {
+  it('getResults returns spellId, spellName, totalCost, and roll results once rolled', () => {
     resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
     const ref = createRef();
     render(
@@ -186,6 +176,8 @@ describe('ChainedSpellSection', () => {
         effects={[]}
       />
     );
+    expect(ref.current.getResults().rollResults).toBeNull(); // nothing committed yet
+    rollStep(10); // 10 + 8 = 18 vs (mocked) AC 15 → hit
     const res = ref.current.getResults();
     expect(res.spellName).toBe('Light');
     expect(res.totalCost).toBe(3); // 1+2
@@ -652,7 +644,7 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
     level: 1, traits: ['Attack'], targetDefense: 'ac',
     damageData: { base: '2d6', type: 'fire' }, // variable single-roll: profile via #572 picker
   };
-  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: 15 } }];
 
   const renderAttack = (spells) => render(
     <ChainedSpellSection
@@ -669,26 +661,28 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
     resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, dc: null, defense: 'ac' });
   });
 
-  it('forwards a damage profile to the resolver for a damaging attack spell', () => {
+  it('shows the damage entry dice for a damaging attack spell once it hits', () => {
     renderAttack([SCORCH]);
-    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', '6d6');
+    rollStep(10); // 10 + 8 = 18 vs (mocked) AC 15 → hit
+    expect(document.querySelector('.de-expression')).toHaveTextContent('6d6');
   });
 
-  it('forwards no profile for a non-damaging attack spell', () => {
+  it('shows no damage entry for a non-damaging attack spell', () => {
     renderAttack([PLAIN_ATTACK]);
-    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
+    rollStep(10);
+    expect(document.querySelector('.de-expression')).toBeNull();
   });
 
-  it('variable-action attack spell now forwards a profile at the chosen tier (#572)', () => {
+  it('variable-action attack spell now shows the profile at the chosen tier (#572)', () => {
     renderAttack([VAR_ATTACK]);
-    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', '2d6');
+    rollStep(10);
+    expect(document.querySelector('.de-expression')).toHaveTextContent('2d6');
   });
 });
 
-// Per-action multi-ray chained spells (#581, Blazing Bolt): one resolver row per
-// ray at the chosen action count, each carrying the variant damage tier. The
-// real MultiRayResolver renders here (only TargetRollResolver is mocked), so a
-// 3-action cast yields three mocked resolver rows.
+// Per-action multi-ray chained spells (#581, Blazing Bolt): one sequential ray
+// step per chosen action, each carrying the variant damage tier (#1691 —
+// sequential, real MultiRayResolver + SequentialAttackSteps render here).
 describe('ChainedSpellSection — per-action multi-ray (#581)', () => {
   const BLAZING_BOLT = {
     id: 'bb', name: 'Blazing Bolt', actions: 'One to Three Actions', range: '60 feet',
@@ -699,7 +693,7 @@ describe('ChainedSpellSection — per-action multi-ray (#581)', () => {
       { actions: 3, note: '3 rays, 4d6 fire each', damage: { base: '4d6', type: 'fire' } },
     ],
   };
-  const enemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+  const enemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: 15 } }];
 
   const renderBolt = (ref) => render(
     <ChainedSpellSection
@@ -719,23 +713,35 @@ describe('ChainedSpellSection — per-action multi-ray (#581)', () => {
 
   it('renders one ray (1-action default) carrying the 1-action damage tier', () => {
     renderBolt();
-    const rays = screen.getAllByTestId('spell-resolver');
-    expect(rays).toHaveLength(1);
-    expect(rays[0]).toHaveAttribute('data-damage', '2d6');
+    expect(screen.getByText('Ray 1')).toBeInTheDocument();
+    rollStep(10); // 10 + 8 = 18 vs (mocked) AC 15 → hit
+    expect(document.querySelector('.de-expression')).toHaveTextContent('2d6');
   });
 
-  it('renders one ray per chosen action, at the higher damage tier', () => {
+  it('renders one ray per chosen action, sequentially, at the higher damage tier', () => {
     renderBolt();
-    fireEvent.click(screen.getByRole('button', { name: '3' }));
-    const rays = screen.getAllByTestId('spell-resolver');
-    expect(rays).toHaveLength(3);
-    rays.forEach((row) => expect(row).toHaveAttribute('data-damage', '4d6')); // 3-action variant
+    const picker = screen.getByRole('radiogroup', { name: 'Chained spell actions' });
+    fireEvent.click(within(picker).getByRole('button', { name: '3' }));
+    expect(screen.getByText('Ray 1 of 3')).toBeInTheDocument();
+    rollStep(10);
+    expect(screen.getByText('Ray 2 of 3')).toBeInTheDocument();
+    rollStep(10);
+    expect(screen.getByText('Ray 3 of 3')).toBeInTheDocument();
+    rollStep(10);
+    // All three hit → three grouped damage rows, all at the 3-action tier.
+    const rows = document.querySelectorAll('.de-expression');
+    expect(rows).toHaveLength(3);
+    rows.forEach((row) => expect(row).toHaveTextContent('4d6'));
   });
 
-  it('getResults flags multiRay and returns grouped per-ray results', () => {
+  it('getResults flags multiRay and returns grouped per-ray results, sequentially', () => {
     const ref = createRef();
     renderBolt(ref);
-    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    const picker = screen.getByRole('radiogroup', { name: 'Chained spell actions' });
+    fireEvent.click(within(picker).getByRole('button', { name: '2' }));
+    expect(ref.current.getResults().rollResults).toHaveLength(0);
+    rollStep(10);
+    rollStep(10);
     const res = ref.current.getResults();
     expect(res.multiRay).toBe(true);
     expect(res.chosenActions).toBe(2);
@@ -892,7 +898,7 @@ describe('ChainedSpellSection — Heighten numeric rank (#1001 S3)', () => {
   };
   const heightenChain = { into: 'spell', modifier: 'Numeric effects +2 ranks', transform: { rankDelta: 2 } };
   const plainChain = { into: 'spell', modifier: 'none' };
-  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: 15 } }];
 
   const renderChain = (chain) => render(
     <ChainedSpellSection
@@ -911,12 +917,14 @@ describe('ChainedSpellSection — Heighten numeric rank (#1001 S3)', () => {
 
   it('scales the damage profile up by the rankDelta (cast rank 1 → numeric rank 3)', () => {
     const { unmount } = renderChain(plainChain);
-    const plainDmg = screen.getByTestId('spell-resolver').getAttribute('data-damage');
-    expect(plainDmg).toBe('2d6'); // cast at native rank 1
+    rollStep(10); // 10 + 8 = 18 vs (mocked) AC 15 → hit
+    const plainDmg = document.querySelector('.de-expression').textContent;
+    expect(plainDmg).toContain('2d6'); // cast at native rank 1
     unmount();
 
     renderChain(heightenChain);
-    const heightenedDmg = screen.getByTestId('spell-resolver').getAttribute('data-damage');
+    rollStep(10);
+    const heightenedDmg = document.querySelector('.de-expression').textContent;
     // rank 3 → base 2d6 + 2×1d6; different from (and larger than) the rank-1 base.
     expect(heightenedDmg).not.toBe(plainDmg);
     expect(heightenedDmg).toContain('d6');

@@ -8,12 +8,17 @@
 // and anything that used to be a live preview is now asserted after the commit.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
 import {
   commitRoll, rollDamage, applyDamage, resolveAttack,
-  enterDamage as enterSheetDamage,
+  enterDamage as enterSheetDamage, tapFace,
 } from '../../test/rollSheet';
+
+// Direct multi-ray (#1691): each ray gets its own d20 tap pad + commit pill
+// (SequentialAttackSteps, mounted via RollSheet's dieSlot); the outer sheet's
+// own commit pill (`.rs-pill`) only enables once every ray has rolled.
+const rollRay = (face) => { tapFace(face); fireEvent.click(document.querySelector('.sas-pill')); };
 
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
@@ -280,15 +285,13 @@ describe('UseAbilityModal — damage step (#222)', () => {
       damageData: { base: '2d6', type: 'fire' },
     };
     render(<UseAbilityModal {...props} ability={scorchingRays} verb="Cast" />);
-    const d20s = screen.getAllByLabelText(/raw d20/i);
-    expect(d20s).toHaveLength(2);
-    fireEvent.change(d20s[0], { target: { value: '10' } }); // hit
-    fireEvent.change(d20s[1], { target: { value: '20' } }); // crit
+    rollRay(10); // hit
+    rollRay(20); // crit
     const dmgInputs = screen.getAllByLabelText(/rolled damage total/i);
     expect(dmgInputs).toHaveLength(2);
     fireEvent.change(dmgInputs[0], { target: { value: '7' } });
     fireEvent.change(dmgInputs[1], { target: { value: '9' } });
-    confirm();
+    fireEvent.click(document.querySelector('.rs-pill'));
     expect(loggedLines()).toContainEqual(
       expect.stringMatching(/ray 1 .*damage 7/)
     );
@@ -388,16 +391,28 @@ describe('UseAbilityModal — damage step (#222)', () => {
       ],
     };
     render(<UseAbilityModal {...props} ability={blazingBolt} verb="Cast" />);
+    // The action-count picker lives in the sheet's collapsed edit panel now
+    // (#1687/#1691); the ray sequence itself is the sheet's `dieSlot`.
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     // 1 action at rank 3 (native 2): 2d6 + 1d6 = 3d6 per ray.
-    fireEvent.click(screen.getByRole('button', { name: '1' }));
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } }); // hit
+    let picker = screen.getByRole('radiogroup', { name: 'Number of actions' });
+    fireEvent.click(within(picker).getByText('1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    rollRay(10); // hit
     expect(screen.getByText(/3d6 fire/)).toBeInTheDocument();
-    // 3 actions: 4d6 + 2d6 = 6d6 per ray.
-    fireEvent.click(screen.getByRole('button', { name: '3' }));
-    const d20s = screen.getAllByLabelText(/raw d20/i);
-    expect(d20s).toHaveLength(3);
-    fireEvent.change(d20s[0], { target: { value: '10' } });
-    expect(screen.getByText(/6d6 fire/)).toBeInTheDocument();
+    // 3 actions: 4d6 + 2d6 = 6d6 per ray — changing the count mid-edit resets
+    // the ray sequence (a fresh MultiRayResolver mount, #1691).
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    picker = screen.getByRole('radiogroup', { name: 'Number of actions' });
+    fireEvent.click(within(picker).getByText('3'));
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByText('Ray 1 of 3')).toBeInTheDocument();
+    // The grouped damage entry (and its dice hint) only appears once every
+    // ray has rolled (#1691 — "the amount step, once, after the last ray").
+    rollRay(10);
+    rollRay(10);
+    rollRay(10);
+    expect(screen.getAllByText(/6d6 fire/).length).toBeGreaterThan(0);
   });
 
   it('degree text from the ability data renders inline with the result', () => {

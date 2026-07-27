@@ -7,9 +7,9 @@
 // the chosen spell, roll results, and total cost at confirm time.
 
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
-import TargetRollResolver from './TargetRollResolver';
-import FoundryDiceInput from '../shared/FoundryDiceInput';
+import SequentialAttackSteps from './SequentialAttackSteps';
 import MultiRayResolver from './MultiRayResolver';
+import FoundryDiceInput from '../shared/FoundryDiceInput';
 import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll, mapSpellDefense, isBasicDefense } from '../../utils/rollResolution';
@@ -296,9 +296,14 @@ const ChainedSpellSection = forwardRef(({
         castOption:    selectedCastOption,
         castRank,
         isAttackSpell: isAttackAbility(selectedSpell),
-        rollResults: resolverRef.current?.getResults() ?? null,
-        // Multi-ray casts (#581) return grouped results [{rayIndex, results}];
-        // the flag tells the parent to normalise + ray-prefix the log.
+        // Single-target attack chains (#571) run through SequentialAttackSteps
+        // with ONE step (#1691) — flatten its [{rayIndex,results}] shape back to
+        // the flat resolver-row array the appliers expect. Multi-ray casts
+        // (#581) keep the grouped shape; the flag tells the parent to
+        // normalise + ray-prefix the log.
+        rollResults: isMultiRayCast
+          ? (resolverRef.current?.getResults() ?? null)
+          : (resolverRef.current?.getResults()?.[0]?.results ?? null),
         multiRay: isMultiRayCast,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
         rollProfile,
@@ -551,15 +556,23 @@ const ChainedSpellSection = forwardRef(({
             rollFlavor={`Cast: ${selectedSpell?.name ?? ''}`}
           />
         ) : (
-          <TargetRollResolver
+          // Sequential per-member rolling (#1691, LOCKED): a single-step
+          // SequentialAttackSteps stands in for the old inline TargetRollResolver.
+          // Keyed on the spell so switching the chained spell resets any
+          // in-progress roll rather than carrying it over to the new pick.
+          <SequentialAttackSteps
+            key={selectedSpellId}
             ref={resolverRef}
-            enemyTargets={resolverTargets}
-            targetDefense={rollProfile.defense || 'ac'}
-            rollBonus={rollProfile.bonus}
+            defense={rollProfile.defense || 'ac'}
             damage={attackDamageProfile}
             degrees={selectedSpell?.degrees}
             charId={character?.id}
-            rollFlavor={`Cast: ${selectedSpell?.name ?? ''}`}
+            steps={[{
+              label: 'Roll',
+              enemyTargets: resolverTargets,
+              rollBonus: rollProfile.bonus,
+              rollFlavor: `Cast: ${selectedSpell?.name ?? ''}`,
+            }]}
           />
         )
       )}

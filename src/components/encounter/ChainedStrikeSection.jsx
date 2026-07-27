@@ -5,7 +5,7 @@
 // can read the chosen strike + roll results at confirm time.
 
 import React, { useState, useImperativeHandle, forwardRef, useRef } from 'react';
-import TargetRollResolver from './TargetRollResolver';
+import SequentialAttackSteps from './SequentialAttackSteps';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useContent } from '../../contexts/ContentContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
@@ -44,8 +44,7 @@ const ChainedStrikeSection = forwardRef(({
   const optional = chain.optional === true;
   const strikeIncluded = !optional || included;
 
-  const resolver1Ref = useRef(null);
-  const resolver2Ref = useRef(null);
+  const sequentialRef = useRef(null);
 
   const selectedStrike = filteredStrikes.find((s) => s.name === selectedStrikeName) ?? filteredStrikes[0] ?? null;
 
@@ -100,16 +99,13 @@ const ChainedStrikeSection = forwardRef(({
   useImperativeHandle(ref, () => ({
     getResults: () => {
       if (!selectedStrike || !strikeIncluded) return null;
-      const rolls = [resolver1Ref.current?.getResults() ?? null];
-      if (selectedMode === 'flurry') {
-        rolls.push(resolver2Ref.current?.getResults() ?? null);
-      }
+      const stepResults = sequentialRef.current?.getResults() ?? [];
       return {
         mode: selectedMode,
         strikeName: selectedStrike.name,
         attackBonus: augmentedBonus,
         damage: augmentedDamage,
-        rolls: rolls.filter(Boolean),
+        rolls: stepResults.map((s) => s.results),
       };
     },
   }));
@@ -180,34 +176,33 @@ const ChainedStrikeSection = forwardRef(({
         </div>
       )}
 
-      <TargetRollResolver
-        ref={resolver1Ref}
-        enemyTargets={enemyTargets}
-        targetDefense="ac"
-        rollBonus={augmentedBonus}
+      <SequentialAttackSteps
+        // Sequential per-member rolling (#1691, LOCKED): switching strikes or
+        // mode starts the sequence over — a fresh SequentialAttackSteps mount
+        // resets its committed rays and toggle state, mirroring the RollSheet
+        // key-remount convention used elsewhere in the redesign.
+        key={`${selectedStrike?.name ?? ''}-${selectedMode}`}
+        ref={sequentialRef}
+        defense="ac"
         damage={damageProfile}
-        toggles={attackToggles}
         charId={character?.id}
-        rollFlavor={`Strike: ${selectedStrike?.name ?? ''}`}
+        steps={[
+          {
+            label: 'Strike',
+            enemyTargets,
+            rollBonus: augmentedBonus,
+            toggles: attackToggles,
+            rollFlavor: `Strike: ${selectedStrike?.name ?? ''}`,
+          },
+          ...(selectedMode === 'flurry' ? [{
+            label: `Strike 2 (MAP ${formatModifier(strike2Penalty)})`,
+            enemyTargets,
+            rollBonus: strike2Bonus,
+            toggles: attackToggles,
+            rollFlavor: `Strike: ${selectedStrike?.name ?? ''} (MAP ${formatModifier(strike2Penalty)})`,
+          }] : []),
+        ]}
       />
-
-      {selectedMode === 'flurry' && (
-        <div className="uam-chain-sub">
-          <div className="uam-chain-subnote">
-            Strike 2 (MAP {formatModifier(strike2Penalty)}):
-          </div>
-          <TargetRollResolver
-            ref={resolver2Ref}
-            enemyTargets={enemyTargets}
-            targetDefense="ac"
-            rollBonus={strike2Bonus}
-            damage={damageProfile}
-            toggles={attackToggles}
-            charId={character?.id}
-            rollFlavor={`Strike: ${selectedStrike?.name ?? ''} (MAP ${formatModifier(strike2Penalty)})`}
-          />
-        </div>
-      )}
       </>)}
     </div>
   );

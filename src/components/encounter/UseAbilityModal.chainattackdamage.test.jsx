@@ -3,10 +3,20 @@
 // profile inside ChainedSpellSection and forwards it to the resolver, which owns
 // the damage panel + per-target math. The hit line logs the real total, the same
 // way a direct attack cast does.
+//
+// The Spellshape parent stays on the classic modal (#1691 J — its own
+// rollProfile is always 'none'); the roll widget inside ChainedSpellSection is
+// the sequential per-step driver (SequentialAttackSteps, one step here) —
+// tap-pad idiom, grouped damage entry once the step has rolled.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) =>
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
+const rollStep = (face) => { tapFace(face); fireEvent.click(document.querySelector('.sas-pill')); };
 
 const mockAppendLog = vi.fn();
 
@@ -105,11 +115,11 @@ const loggedLines = () => mockAppendLog.mock.calls.map(([entry]) => entry.text);
 beforeEach(() => vi.clearAllMocks());
 
 describe('UseAbilityModal — chained attack damage panel (#571)', () => {
-  it('hit on a chained attack spell → damage panel, and the total lands in the log', () => {
+  it('hit on a chained attack spell → grouped damage entry, and the total lands in the log', () => {
     const { container } = render(<UseAbilityModal {...props} ability={reachSpell} verb="Use" />);
     fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'scorch' } });
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } }); // 10 + 8 = 18 vs AC 15 → Hit
-    expect(container.querySelector('.dmg-panel')).not.toBeNull();
+    rollStep(10); // 10 + 8 = 18 vs AC 15 → Hit
+    expect(container.querySelector('.sas-amount')).not.toBeNull();
     expect(screen.getByText(/6d6/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: '21' } });
     fireEvent.click(screen.getByLabelText('confirm-cast'));
@@ -121,17 +131,17 @@ describe('UseAbilityModal — chained attack damage panel (#571)', () => {
   it('crit doubles the entered total in the chained hit line', () => {
     render(<UseAbilityModal {...props} ability={reachSpell} verb="Use" />);
     fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'scorch' } });
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } }); // nat 20 → Critical Hit
+    rollStep(20); // nat 20 → Critical Hit
     fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: '21' } });
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(loggedLines()).toContainEqual(expect.stringContaining('Critical Hit · damage 42 (21 ×2)'));
   });
 
-  it('miss → no damage panel and no damage suffix in the log', () => {
+  it('miss → no damage entry and no damage suffix in the log', () => {
     const { container } = render(<UseAbilityModal {...props} ability={reachSpell} verb="Use" />);
     fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'scorch' } });
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '3' } }); // 3 + 8 = 11 vs AC 15 → Miss
-    expect(container.querySelector('.dmg-panel')).toBeNull();
+    rollStep(3); // 3 + 8 = 11 vs AC 15 → Miss
+    expect(container.querySelector('.sas-amount')).toBeNull();
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(loggedLines().join('\n')).not.toContain('· damage');
   });
