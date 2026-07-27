@@ -4,8 +4,13 @@
 // flags the omen for end-of-turn loss.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import UseAbilityModal from './UseAbilityModal';
+
+// RollEntry's 1-20 tap pad (#1692 — replaces FoundryDiceInput's d20-input text
+// field). `exact: true` matters: a loose '1' also matches 10-19.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
 const mockAppendLog = vi.fn();
 const mockSendUpdate = vi.fn();
@@ -120,7 +125,7 @@ describe('UseAbilityModal — Harrow Casting confirm', () => {
     mockOmenState = { suit: 'Stars', ts: 1 };
     render(<UseAbilityModal {...props} ability={harrowCasting} />);
     fireEvent.click(screen.getByLabelText('drawn-Books'));
-    fireEvent.change(screen.getByLabelText('harrow flat check d20'), { target: { value: '5' } });
+    tapFace(5);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
 
     expect(mockSetOmen).toHaveBeenCalledTimes(1);
@@ -136,7 +141,7 @@ describe('UseAbilityModal — Harrow Casting confirm', () => {
     mockOmenState = { suit: 'Stars', ts: 1 };
     render(<UseAbilityModal {...props} ability={harrowCasting} />);
     fireEvent.click(screen.getByLabelText('drawn-Books'));
-    fireEvent.change(screen.getByLabelText('harrow flat check d20'), { target: { value: '17' } });
+    tapFace(17);
     fireEvent.click(screen.getByLabelText('confirm-cast'));
 
     expect(mockSetOmen).not.toHaveBeenCalled();
@@ -147,7 +152,7 @@ describe('UseAbilityModal — Harrow Casting confirm', () => {
   it('Shields applies the entered healing to the caster', () => {
     render(<UseAbilityModal {...props} ability={harrowCasting} />);
     fireEvent.click(screen.getByLabelText('drawn-Shields'));
-    fireEvent.change(screen.getByLabelText('harrow healing rolled'), { target: { value: '9' } });
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '9' } });
     fireEvent.click(screen.getByLabelText('confirm-cast'));
 
     const hpWrites = mockSendUpdate.mock.calls.filter(([, key]) => key === 'hp');

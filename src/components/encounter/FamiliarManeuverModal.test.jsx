@@ -1,7 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import FamiliarManeuverModal from './FamiliarManeuverModal';
 import { useEncounter } from '../../hooks/useEncounter';
+
+// RollEntry's 1-20 tap pad (#1692 — replaces FoundryDiceInput's d20-input text
+// field). `exact: true` matters: a loose '1' also matches 10-19.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
 // Dummy modal — render children inline so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
@@ -63,16 +68,16 @@ describe('FamiliarManeuverModal', () => {
   it('rolls at the Acrobatics modifier, and +2 more when the target is off-guard', () => {
     renderModal();
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+7');
+    expect(screen.getByText('your d20 · check +7')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Target off-guard +2' }));
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+9');
+    expect(screen.getByText('your d20 · check +9')).toBeInTheDocument();
   });
 
   it('logs the maneuver result vs the Reflex DC on confirm', () => {
     renderModal({ id: 'trip', name: 'Trip' });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     // d20 10 + 7 = 17 vs Reflex DC 14 → Success
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
     expect(appendLog).toHaveBeenCalledTimes(1);
     expect(appendLog.mock.calls[0][0]).toMatchObject({
@@ -85,7 +90,7 @@ describe('FamiliarManeuverModal', () => {
   it('spends 1 granted action on confirm during an encounter (#391)', () => {
     renderModal({ id: 'trip', name: 'Trip' }, { active: true });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
     expect(mockSpendActions).toHaveBeenCalledWith(1, 'Trip');
   });
@@ -93,7 +98,7 @@ describe('FamiliarManeuverModal', () => {
   it('does not spend an action out of encounter', () => {
     renderModal({ id: 'trip', name: 'Trip' });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
     expect(mockSpendActions).not.toHaveBeenCalled();
   });
@@ -102,7 +107,7 @@ describe('FamiliarManeuverModal', () => {
     renderModal({ id: 'disarm', name: 'Disarm' });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     fireEvent.click(screen.getByRole('button', { name: 'Target off-guard +2' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } }); // 10 + 9 = 19 → Success
+    tapFace(10); // 10 + 9 = 19 → Success
     fireEvent.click(screen.getByRole('button', { name: /log disarm/i }));
     expect(appendLog.mock.calls[0][0].text).toContain('disarmed');
     expect(appendLog.mock.calls[0][0].text).toContain('[off-guard +2]');

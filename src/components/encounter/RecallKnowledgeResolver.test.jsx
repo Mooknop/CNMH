@@ -239,9 +239,9 @@ test('Cancel calls onDone without resolving', () => {
 });
 
 // ── dice-tower rail (#1490 S4) ────────────────────────────────────────────────
-// Full delegated-roll behavior lives in FoundryDiceInput.test.jsx; this pins
-// the host wiring — a rail-capable bridge surfaces the Roll button here (the
-// bare renders above run session-less and never grow one).
+// Full delegated-roll behavior lives in RollEntry.test.jsx; this pins the host
+// wiring — a rail-capable bridge surfaces the Roll button here (the bare
+// renders above run session-less and never grow one).
 test('rail-capable bridge surfaces Roll in Foundry on the RK d20 entry', () => {
   const bus = makeSessionBus({ state: { global: { bridgehello: { protocol: 3 } } } });
   render(

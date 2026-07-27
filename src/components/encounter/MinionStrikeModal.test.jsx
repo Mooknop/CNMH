@@ -1,9 +1,14 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import MinionStrikeModal from './MinionStrikeModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { SessionContext } from '../../contexts/SessionContext';
+
+// RollEntry's 1-20 tap pad (#1692 — replaces FoundryDiceInput's d20-input text
+// field). `exact: true` matters: a loose '1' also matches 10-19.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
+const tapFace = (n) => fireEvent.click(within(rollPad()).getByRole('button', { name: String(n), exact: true }));
 
 // Dummy modal — render children inline so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
@@ -78,19 +83,19 @@ describe('MinionStrikeModal', () => {
   it('shows the minion attack bonus with no MAP on the first attack', () => {
     renderModal(0);
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+10');
+    expect(screen.getByText('your d20 · attack +10')).toBeInTheDocument();
   });
 
   it("applies the minion's own MAP (−5) on a second attack", () => {
     renderModal(1); // one attack already made this turn → MAP step 1
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    expect(screen.getByLabelText('roll bonus')).toHaveTextContent('+5');
+    expect(screen.getByText('your d20 · attack +5')).toBeInTheDocument();
   });
 
   it('logs the strike result and advances the minion MAP on confirm', () => {
     renderModal(0);
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } }); // 10 + 10 = 20 vs AC 18 → Hit
+    tapFace(10); // 10 + 10 = 20 vs AC 18 → Hit
     fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
 
     expect(recordAttack).toHaveBeenCalledTimes(1);
@@ -106,7 +111,7 @@ describe('MinionStrikeModal', () => {
   it('spends 1 granted action on confirm during an encounter (#391)', () => {
     renderModal(0, { active: true, actionsGranted: 2, actionsSpent: 0 });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
     expect(spendActions).toHaveBeenCalledWith(1, 'Bite');
   });
@@ -114,7 +119,7 @@ describe('MinionStrikeModal', () => {
   it('does not spend an action out of encounter', () => {
     renderModal(0); // inactive encounter
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    tapFace(10);
     fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
     expect(spendActions).not.toHaveBeenCalled();
   });
@@ -215,7 +220,7 @@ describe('MinionStrikeModal', () => {
       huntprey: { targetKey: 'e-a', targetName: 'Goblin' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+    tapFace(10);
     expect(screen.getByText(/Hunt Prey: 2nd increment ignored/)).toBeInTheDocument();
   });
 
@@ -225,7 +230,7 @@ describe('MinionStrikeModal', () => {
       huntprey: null,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
-    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+    tapFace(10);
     expect(screen.getByText(/2nd increment -2/)).toBeInTheDocument();
     expect(screen.queryByText(/Hunt Prey/)).not.toBeInTheDocument();
   });

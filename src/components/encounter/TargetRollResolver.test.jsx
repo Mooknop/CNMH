@@ -1,5 +1,5 @@
 import React, { createRef } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import TargetRollResolver from './TargetRollResolver';
 
@@ -23,8 +23,11 @@ const noDefenseEntry = {
   defenses: null,
 };
 
+// RollEntry's 1-20 tap pad (#1692 — replaces FoundryDiceInput's d20-input text
+// field). `exact: true` matters: a loose '1' also matches 10-19.
+const rollPad = () => screen.getByRole('group', { name: 'raw d20' });
 function enterD20(value) {
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: String(value) } });
+  fireEvent.click(within(rollPad()).getByRole('button', { name: String(value), exact: true }));
 }
 
 describe('TargetRollResolver', () => {
@@ -55,11 +58,11 @@ describe('TargetRollResolver', () => {
 
   // ── rollBonus mode ─────────────────────────────────────────────────────────
 
-  test('shows bonus badge and computed total when rollBonus is provided', () => {
+  test('shows the bonus and computed total on RollEntry\'s heading + math line', () => {
     render(<TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5} />);
     enterD20(10);
-    expect(screen.getByLabelText(/roll bonus/i)).toHaveTextContent('+5');
-    expect(screen.getByLabelText(/computed total/i)).toHaveTextContent('= 15');
+    expect(screen.getByText('your d20 · attack +5')).toBeInTheDocument();
+    expect(screen.getByText('10 + 5 = 15')).toBeInTheDocument();
   });
 
   test('shows Critical Hit when d20 + bonus beats AC by 10+ (rollBonus mode)', () => {
@@ -97,25 +100,28 @@ describe('TargetRollResolver', () => {
     expect(screen.getByText('Miss')).toBeInTheDocument();
   });
 
-  // ── manual-total (null bonus) mode ────────────────────────────────────────
+  // ── bonus-less roll (rollBonus null) ──────────────────────────────────────
+  // No real caller reaches this today (#1692 audit: FamiliarManeuverModal,
+  // MinionStrikeModal, SpellgunAttackModal and UseAbilityModal all supply a
+  // numeric bonus) — this is dead-branch parity with any other bonus-less
+  // RollEntry site, NOT the old FoundryDiceInput manual-total mode. The tapped
+  // face is always the raw d20; a null bonus just means nothing is added to it.
 
-  test('manual-total mode when rollBonus is null: input treated as full total', () => {
+  test('bonus-less roll: the tapped face is the total (nothing to add)', () => {
     render(<TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null} />);
-    // Enter 15 as total → Hit vs AC 15
     enterD20(15);
     expect(screen.getByText('Hit')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/roll bonus/i)).toBeNull();
-    expect(screen.queryByLabelText(/computed total/i)).toBeNull();
+    expect(screen.getByText('your d20 · —')).toBeInTheDocument();
   });
 
-  test('manual-total mode: entering 20 still shifts degree up', () => {
+  test('bonus-less roll: entering 20 still shifts degree up', () => {
     render(<TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null} />);
     enterD20(20);
     // 20 vs AC 15 = Hit, nat-20 → Critical Hit
     expect(screen.getByText('Critical Hit')).toBeInTheDocument();
   });
 
-  test('manual-total mode: entering 1 still shifts degree down', () => {
+  test('bonus-less roll: entering 1 still shifts degree down', () => {
     render(<TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null} />);
     enterD20(1);
     // 1 vs AC 15 = Critical Miss (already lowest), stays Critical Miss
@@ -246,7 +252,8 @@ describe('TargetRollResolver', () => {
     expect(container.querySelector('.dmg-panel')).toBeNull();
     enterD20(10); // hit
     expect(container.querySelector('.dmg-panel')).not.toBeNull();
-    expect(screen.getByText('2d6+4')).toBeInTheDocument();
+    // "2d6+4" appears both on the hint line and DamageEntry's own row (#1692).
+    expect(screen.getAllByText('2d6+4').length).toBeGreaterThan(0);
   });
 
   test('hit: entered total + toggled riders + weakness flow into getResults()', () => {
@@ -327,10 +334,12 @@ describe('TargetRollResolver', () => {
       />
     );
     enterD20(10); // hit
-    fireEvent.change(screen.getByLabelText('rolled piercing total'), { target: { value: '9' } });
+    // base (piercing) first, then the typed rider (fire) — damageEntryParts order.
+    const [piercingInput, fireInput] = screen.getAllByLabelText('rolled damage total');
+    fireEvent.change(piercingInput, { target: { value: '9' } });
     // fire part still empty → damage stays null
     expect(ref.current.getResults()[0].damage).toBeNull();
-    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    fireEvent.change(fireInput, { target: { value: '4' } });
     const dmg = ref.current.getResults()[0].damage;
     // base 9 + 4 rider = 13 piercing, 4 fire
     expect(dmg.final).toBe(17);
@@ -349,8 +358,9 @@ describe('TargetRollResolver', () => {
       />
     );
     enterD20(20); // crit
-    fireEvent.change(screen.getByLabelText('rolled piercing total'), { target: { value: '9' } });
-    fireEvent.change(screen.getByLabelText('rolled fire total'), { target: { value: '4' } });
+    const [piercingInput, fireInput] = screen.getAllByLabelText('rolled damage total');
+    fireEvent.change(piercingInput, { target: { value: '9' } });
+    fireEvent.change(fireInput, { target: { value: '4' } });
     const dmg = ref.current.getResults()[0].damage;
     expect(dmg.instances).toEqual([
       { amount: 26, type: 'piercing' },
@@ -463,9 +473,10 @@ describe('TargetRollResolver', () => {
     enterD20(10); // 14 < AC 15 → Miss
     expect(screen.getByText('Miss')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Limned \(vs limned target\)/ }));
-    // 14 + 1 = 15 = AC → Hit
+    // 14 + 1 = 15 = AC → Hit; the toggle folds into RollEntry's own bonus too,
+    // so its math line agrees with the degree it drives (10 + 5 = 15).
     expect(screen.getByText('Hit')).toBeInTheDocument();
-    expect(screen.getByLabelText(/computed total/i)).toHaveTextContent('= 15');
+    expect(screen.getByText('10 + 5 = 15')).toBeInTheDocument();
     expect(screen.getByLabelText(/applied circumstance/i)).toHaveTextContent('incl. +1');
   });
 
@@ -555,16 +566,18 @@ describe('TargetRollResolver', () => {
   });
 });
 
-// ── dice-tower rail (#1490 S2) ───────────────────────────────────────────────
-// The full delegated-roll flow is covered in FoundryDiceInput.test.jsx; here we
-// pin the resolver's wiring: the button surfaces only with a charId AND a
-// derivable bonus (manual-total mode can't use a raw face), and the plain
-// renders above — no SessionProvider → no bridge — never grow one.
+// ── dice-tower rail (#1490 S2) ─────────────────────────────────────────────
+// The full delegated-roll flow is covered in RollEntry.test.jsx; here we pin
+// the resolver's wiring: the pill surfaces only with a charId (RollEntry's own
+// gate), and the plain renders above — no SessionProvider → no bridge — never
+// grow one. Unlike the old FoundryDiceInput manual-total mode, a null rollBonus
+// no longer hides the button — the tapped/rolled value is always a raw face
+// now, so delegating it to Foundry is always semantically correct (#1692).
 describe('TargetRollResolver dice-tower wiring', () => {
   const railSession = { state: { global: { bridgehello: { protocol: 3 } } } };
-  const rollButton = () => screen.queryByRole('button', { name: /roll in foundry/i });
+  const rollButton = () => screen.queryByRole('button', { name: /roll d20 in foundry/i });
 
-  test('charId + rollBonus + rail-capable bridge → Roll in Foundry button', () => {
+  test('charId + rail-capable bridge → Roll d20 in Foundry pill', () => {
     renderWithProviders(
       <TargetRollResolver
         enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
@@ -575,7 +588,7 @@ describe('TargetRollResolver dice-tower wiring', () => {
     expect(rollButton()).toBeInTheDocument();
   });
 
-  test('manual-total mode (rollBonus null) hides the button even with a charId', () => {
+  test('a bonus-less roll (rollBonus null) still shows the pill — no total-mode gating', () => {
     renderWithProviders(
       <TargetRollResolver
         enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null}
@@ -583,7 +596,7 @@ describe('TargetRollResolver dice-tower wiring', () => {
       />,
       { session: railSession },
     );
-    expect(rollButton()).toBeNull();
+    expect(rollButton()).toBeInTheDocument();
   });
 
   test('no charId → no button', () => {
