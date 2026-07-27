@@ -1,0 +1,65 @@
+/* Damage-part entry row (#1682) — RollSheet redesign, Screen 4 "Amount"
+   phase. Reshapes DamagePanel's per-part entry (dmg-entry-row / dmg-part-entry
+   + dmg-total-input) into a standalone row-per-part primitive. */
+
+.de-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.de-expression {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+/* Table-dice mode: the existing dmg-total-input treatment, replicated here
+   at the handoff's 84px (DamagePanel's own instance stays 80px). */
+.de-total-input {
+  width: 84px;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--shell-text-primary);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Foundry mode: a full pill, not the inline input+button FoundryDiceInput
+   uses — this row shows one control at a time. */
+.de-roll-pill {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent-outline);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--accent-outline);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.de-roll-pill:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.de-rolled-text {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
