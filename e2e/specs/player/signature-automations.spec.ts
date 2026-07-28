@@ -19,8 +19,12 @@
  * likely to have rotted, so each gets both a positive box AND a negative one
  * proving it does *not* fire at the wrong boundary.
  *
- * Everything is seeded through mockSession (#293); content is bespoke rather
- * than the shipped catalog so the spec owns its own numbers.
+ * Everything is seeded through mockSession (#293); the spellgun content is
+ * bespoke so the spec owns its own numbers, but the Blade Byrnie boxes run the
+ * REAL shipped catalog doc (#1672): seeding no items leaves the item collection
+ * empty, so ContentContext falls back to the bundled snapshot and the
+ * character's `ref: 'blade-byrnie'` resolves against the doc players actually
+ * get. Seeding around missing content is exactly how a dead feature stays green.
  */
 
 import { test, expect, type Page } from '../../fixtures/gm';
@@ -87,33 +91,13 @@ const GLOVES = {
   description: 'Gloves that absorb a spellgun.',
 };
 
-// Blade Byrnie: the `bladeByrnie` block is what utils/bladeByrnie.findBladeByrnie
-// keys off, and `controller: 'blade-byrnie'` on the action is what ActionsList
-// branches on. `noHandRequired` keeps the item action ACTIVE while the armor is
-// merely worn — without it buildActionCatalog marks the tile `inactive` and the
-// confirm sheet refuses.
-const BYRNIE = {
-  id: 'e2e-sig-byrnie',
-  name: 'E2E Blade Byrnie',
-  level: 6,
-  price: 1,
-  weight: 1,
-  traits: ['Invested', 'Magical'],
-  noHandRequired: true,
-  armor: { category: 'light', acBonus: 2, dexCap: 3, strength: 12, group: 'chain' },
-  bladeByrnie: { striking: 'striking' },
-  runes: { potency: 1 },
-  actions: [
-    {
-      name: 'Draw a Blade',
-      actionCount: 1,
-      traits: ['Manipulate'],
-      controller: 'blade-byrnie',
-      requiresTarget: false,
-      description: 'Pull a link from the armor; it becomes a +1 striking dagger.',
-    },
-  ],
-};
+// Blade Byrnie: the SHIPPED catalog doc (src/data/snapshot/item.json). The
+// `bladeByrnie` block is what utils/bladeByrnie.findBladeByrnie keys off,
+// `controller: 'blade-byrnie'` on its action is what ActionsList branches on,
+// and `noHandRequired` keeps the item action ACTIVE while the armor is merely
+// worn — all three shipped inert-free as of #1672, so these boxes reference the
+// real doc by id instead of seeding a stand-in.
+const BYRNIE_ID = 'blade-byrnie';
 
 const BYSTANDER_FEAT = {
   name: 'Harmless Bystander',
@@ -464,9 +448,10 @@ test.describe('Signature automations', () => {
     page,
     seed,
   }) => {
+    // No `item` seeding: an empty item collection makes ContentContext fall
+    // back to the bundled snapshot, so the ref resolves the shipped doc.
     await seed({
-      item: [BYRNIE],
-      character: [signatory({ inventory: [{ ref: BYRNIE.id, quantity: 1, uid: BYRNIE_UID }] })],
+      character: [signatory({ inventory: [{ ref: BYRNIE_ID, quantity: 1, uid: BYRNIE_UID }] })],
     });
 
     const session = await mockSession(page, {
@@ -506,9 +491,10 @@ test.describe('Signature automations', () => {
     page,
     seed,
   }) => {
+    // No `item` seeding: an empty item collection makes ContentContext fall
+    // back to the bundled snapshot, so the ref resolves the shipped doc.
     await seed({
-      item: [BYRNIE],
-      character: [signatory({ inventory: [{ ref: BYRNIE.id, quantity: 1, uid: BYRNIE_UID }] })],
+      character: [signatory({ inventory: [{ ref: BYRNIE_ID, quantity: 1, uid: BYRNIE_UID }] })],
     });
 
     const session = await mockSession(page, {
@@ -543,9 +529,10 @@ test.describe('Signature automations', () => {
     page,
     seed,
   }) => {
+    // No `item` seeding: an empty item collection makes ContentContext fall
+    // back to the bundled snapshot, so the ref resolves the shipped doc.
     await seed({
-      item: [BYRNIE],
-      character: [signatory({ inventory: [{ ref: BYRNIE.id, quantity: 1, uid: BYRNIE_UID }] })],
+      character: [signatory({ inventory: [{ ref: BYRNIE_ID, quantity: 1, uid: BYRNIE_UID }] })],
     });
 
     const session = await mockSession(page, {
