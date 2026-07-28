@@ -17,14 +17,13 @@ import { test, expect } from '../../fixtures/gm';
 import { testId, testTitle } from '../../helpers/ids';
 
 // New browser contexts created via browser.newContext() do NOT inherit the
-// per-project `use.extraHTTPHeaders`; pass them explicitly so CF Access lets
-// the page + WS handshake through.
-const ctxOptions = () => {
-  const base: Record<string, unknown> = {
-    // Mirror playwright.config.ts: staging when E2E_BASE_URL is set, otherwise
-    // the local wrangler-dev stack on :8788 (manual contexts don't inherit it).
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:8788',
-  };
+// per-project `use.baseURL` or `use.extraHTTPHeaders`; pass both explicitly —
+// baseURL so relative goto() works, headers so CF Access lets the page + WS
+// handshake through. baseURL comes off testInfo.project.use (never hardcode a
+// port here) so throwaway configs on alternate ports — the parallel-local-stack
+// pattern — run this spec like any other.
+const ctxOptions = (baseURL: string | undefined) => {
+  const base: Record<string, unknown> = { baseURL };
   if (process.env.CF_ACCESS_CLIENT_ID) {
     base.extraHTTPHeaders = {
       'CF-Access-Client-Id': process.env.CF_ACCESS_CLIENT_ID,
@@ -35,14 +34,16 @@ const ctxOptions = () => {
 };
 
 test.describe('GM live-sync', () => {
-  test('quest created in one GM tab broadcasts to another GM tab', async ({
-    browser,
-  }) => {
+  test('quest created in one GM tab broadcasts to another GM tab', async (
+    { browser },
+    testInfo,
+  ) => {
     const id = testId('live');
     const title = testTitle('live', id);
 
-    const contextA = await browser.newContext(ctxOptions());
-    const contextB = await browser.newContext(ctxOptions());
+    const { baseURL } = testInfo.project.use;
+    const contextA = await browser.newContext(ctxOptions(baseURL));
+    const contextB = await browser.newContext(ctxOptions(baseURL));
     const pageA = await contextA.newPage();
     const pageB = await contextB.newPage();
 
