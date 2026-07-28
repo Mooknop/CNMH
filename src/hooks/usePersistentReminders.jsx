@@ -24,7 +24,8 @@ import { RELAY, APP } from '../sync/keys';
 // GM-only writer, mirroring useEncounterClock: one client owns the log
 // appends and map writes. Also prunes entries whose combatant left the order
 // and clears the map when the encounter ends (covers Foundry-driven ends
-// where endEncounter never runs). Mounted once app-wide via PersistentSync.
+// where the GM's end-encounter sweep — performEncounterGlobalSweep in
+// utils/partySweep.js — never runs). Mounted once app-wide via PersistentSync.
 
 export function usePersistentReminders() {
   const { encounter, appendLog } = useEncounter();

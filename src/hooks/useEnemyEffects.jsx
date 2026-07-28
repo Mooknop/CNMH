@@ -20,8 +20,9 @@ import { APP, globalKey } from '../sync/keys';
 //   }
 //
 // Immunity entries self-expire on read (hasAbilityImmunity ignores past entries),
-// so no turn-sweep is needed; the whole map is wiped when the encounter ends
-// (useEncounter.endEncounter), the same way knowledge is.
+// so no turn-sweep is needed; the whole map is wiped by the GM's end-encounter
+// sweep (performEncounterGlobalSweep in utils/partySweep.js), the same way
+// knowledge is pruned.
 
 const ENEMY_FX_KEY = globalKey(APP.ENEMYFX);
 

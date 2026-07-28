@@ -47,11 +47,6 @@ describe('useEncounter — summon merge (#261)', () => {
     expect(__store['cnmh_encounter_global'].order.some((e) => e.kind === 'summon')).toBe(false);
   });
 
-  it('endEncounter clears the summons key', () => {
-    __store['cnmh_summons_global'] = [summon];
-    const { result } = renderHook(() => useEncounter());
-    act(() => result.current.endEncounter());
-    expect(__store['cnmh_summons_global']).toEqual([]);
-    expect(result.current.encounter.order).toEqual([]);
-  });
+  // Summons dying with the encounter (#261) is covered by
+  // performEncounterGlobalSweep in utils/partySweep.test.js (#1677).
 });

@@ -168,7 +168,8 @@ const EffectsPanel = ({ charId, themeColor }) => {
           </li>
         ))}
         {/* Active stance (#224) — the voluntary-leave path; auto-clears at
-            encounter end via the cnmh_stance_<charId> sweep in endEncounter. */}
+            encounter end via the cnmh_stance_<charId> reset in the GM's
+            end-encounter sweep (utils/partySweep.js). */}
         {stanceActive && (
           <li className="effects-panel-item effects-panel-item--stance">
             <span className="effects-panel-name">{stanceName || 'Stance'}</span>

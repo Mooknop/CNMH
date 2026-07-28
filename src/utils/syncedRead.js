@@ -1,9 +1,11 @@
 // Reading a synced per-character value outside React (#1649, #1671).
 //
-// Lifted verbatim out of turnEffects.js, which was its first home: endEncounter
-// needs the identical read and is not a turn-boundary concern, and the pattern
-// already had three hand-rolled copies elsewhere (useReconciliation.jsx,
-// usePartyGold.jsx, applyEarnIncome.js). One primitive, one place.
+// Lifted verbatim out of turnEffects.js, which was its first home: the
+// encounter-end cleanup (then useEncounter's endEncounter, now the GM sweep in
+// partySweep.js) needed the identical read and is not a turn-boundary concern,
+// and the pattern already had three hand-rolled copies elsewhere
+// (useReconciliation.jsx, usePartyGold.jsx, applyEarnIncome.js). One
+// primitive, one place.
 
 import { syncKey } from '../sync/keys';
 

@@ -12,7 +12,7 @@ import { formatSpeedBreakdown } from '../../utils/speed';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { formatLiveValue, getLiveStateDescriptor } from '../../utils/liveStateRegistry';
 import { collectCooldowns, collectImmunities } from '../../utils/partyCooldowns';
-import { performEncounterSweep } from '../../utils/partySweep';
+import { performEncounterSweep, performEncounterGlobalSweep } from '../../utils/partySweep';
 import { clearUse } from '../../utils/frequency';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
 import { getCharacterColor } from '../../utils/CharacterUtils';
@@ -352,6 +352,10 @@ const PartyPanel = () => {
     roster.forEach((c) => {
       changed += performEncounterSweep({ character: c, getState, sendUpdate }).changed;
     });
+    // Once per sweep, not per character: reset the shared encounter record,
+    // prune Recall Knowledge, and clear the persistent / enemy-fx / summons
+    // globals (#1677 — the cleanup endEncounter used to own).
+    changed += performEncounterGlobalSweep({ getState, sendUpdate }).changed;
     appendEvent({
       type: 'gm',
       text: changed
@@ -395,7 +399,7 @@ const PartyPanel = () => {
       <ConfirmDialog
         isOpen={sweeping}
         title="End-encounter sweep"
-        message="Clear every party member's turn economy, raised shield, stance, aura, Hunt Prey and sustained spells, and expire encounter-scoped effects. Conditions, daily resources and clock-based immunities are left untouched."
+        message="Clear every party member's turn economy, raised shield, stance, aura, Hunt Prey, sustained spells, Harmless Bystander, playing state and pending Lingering Composition, and expire encounter-scoped effects. Also resets the encounter itself (initiative order, log, pending saves), tracked persistent damage, enemy conditions and summons, and prunes this fight's Recall Knowledge locks. Conditions, daily resources and clock-based immunities are left untouched."
         confirmLabel="Sweep party"
         danger={false}
         onConfirm={runSweep}

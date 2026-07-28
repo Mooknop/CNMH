@@ -18,7 +18,8 @@ export const defaultEncounter = () => ({
   saveRequests: [], // pending save requests from players to the GM
   // Resolved save degrees flowing BACK to the caster (#1683). See
   // makeSaveResolution below for the record shape and SAVE_RESOLUTION_LIMIT
-  // for the bound. Dies with the encounter (endEncounter resets to this).
+  // for the bound. Dies with the encounter (the GM's end-encounter sweep in
+  // partySweep.js resets to this).
   saveResolutions: [],
   // Armed payloads (#987) — damage/save an ability stores at cast that only
   // fires when a LATER trigger happens (Targeting Beacon's beacon exploding on
@@ -90,8 +91,9 @@ export const makeSaveResolution = (resolution) => ({
 // without limit over a long fight. Ten is comfortably more than the handful a
 // caster can have in flight at once (a save request resolves within a turn or
 // two of being raised) while staying small enough to ride every encounter
-// write. The whole list is also dropped by endEncounter, which resets the
-// encounter to defaultEncounter().
+// write. The whole list is also dropped by the GM's end-encounter sweep
+// (performEncounterGlobalSweep in partySweep.js), which resets the encounter
+// to defaultEncounter().
 export const SAVE_RESOLUTION_LIMIT = 10;
 
 // Append a resolution and evict the oldest beyond the bound.

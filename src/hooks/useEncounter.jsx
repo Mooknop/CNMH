@@ -3,10 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { boundariesCrossedBy } from '../utils/expiry';
-import { isEncounterScopedEffect } from '../utils/EffectUtils';
-import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
 import { sweepExpiredOnBoundaries, applyTurnStartFastHealing } from '../utils/turnEffects';
-import { readThrough, readThroughList } from '../utils/syncedRead';
 import {
   defaultEncounter,
   makePcEntry,
@@ -19,7 +16,7 @@ import {
   nextTurnIndex,
   everyEntryHasInitiative,
 } from '../utils/encounterUtils';
-import { RELAY, APP, syncKey, globalKey } from '../sync/keys';
+import { RELAY, APP, globalKey } from '../sync/keys';
 
 // Shared live encounter state. Lives at cnmh_encounter_global on the campaign
 // session DO via useSyncedState (the key regex `cnmh_<type>_<id>` accepts
@@ -35,9 +32,6 @@ import { RELAY, APP, syncKey, globalKey } from '../sync/keys';
 
 const ENCOUNTER_KEY  = globalKey(RELAY.ENCOUNTER);
 const ACTORMAP_KEY   = globalKey(RELAY.ACTORMAP);
-const KNOWLEDGE_KEY  = globalKey(APP.KNOWLEDGE);
-const PERSISTENT_KEY = globalKey(APP.PERSISTENT);
-const ENEMY_FX_KEY   = globalKey(APP.ENEMYFX);
 const SUMMONS_KEY    = globalKey(APP.SUMMONS);
 
 let logCounter = 0;
@@ -50,10 +44,7 @@ const makeLogEntry = (entry) => ({
 export const useEncounter = () => {
   const [encounter, setEncounter]   = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
   const [actorMap, setActorMap]     = useSyncedState(ACTORMAP_KEY, {});
-  const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
-  const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
-  const [, setEnemyFx]              = useSyncedState(ENEMY_FX_KEY, {});
-  const [summons, setSummons]       = useSyncedState(SUMMONS_KEY, []);
+  const [summons]                   = useSyncedState(SUMMONS_KEY, []);
   const { getState, sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
 
@@ -279,97 +270,12 @@ export const useEncounter = () => {
     [runExpirySweep, runFastHealingTick, setEncounter]
   );
 
-  const endEncounter = useCallback(
-    () => {
-      // Every per-character read below goes through readThrough (#1671): the
-      // session cache is the authority and localStorage is only the fallback.
-      // These six used to read window.localStorage alone, and a value that
-      // merely ARRIVED on this client never lands there — useSyncedState's
-      // computeInitial takes it from the session store during render, before
-      // the subscribe effect that would writeLocal it. So on a client that only
-      // RECEIVED a sustain, stance, Bystander flag, playing flag, effect or
-      // lingering extension, ending the encounter cleaned up nothing at all and
-      // the state survived the fight. Same defect as #1649, six keys wide.
-      //
-      // The write-backs are unchanged: still a direct setItem plus sendUpdate,
-      // still gated on the same conditions, and the effects pass still FILTERS
-      // rather than clearing.
-      for (const entry of encounterRef.current?.order || []) {
-        if (entry.kind !== 'pc' || !entry.charId) continue;
-
-        // Sustained spells are encounter-bound — clear each PC's ledger so a
-        // stale sustain doesn't re-prompt at the start of the next one (#220).
-        const key = syncKey(APP.SUSTAINS, entry.charId);
-        const cur = readThroughList(getState, entry.charId, APP.SUSTAINS);
-        if (cur.length) {
-          window.localStorage.setItem(key, JSON.stringify([]));
-          sendUpdate(entry.charId, APP.SUSTAINS, []);
-        }
-
-        // Stances are encounter-bound (#224) — drop any active stance so it
-        // doesn't linger into the next encounter or onto the sheet.
-        const stanceKey = syncKey(APP.STANCE, entry.charId);
-        const stance = readThrough(getState, entry.charId, APP.STANCE);
-        if (stance?.active) {
-          const idle = { active: false, name: null, ts: 0 };
-          window.localStorage.setItem(stanceKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, APP.STANCE, idle);
-        }
-
-        // Harmless Bystander is declared per-encounter (#226 Slice D) — drop the
-        // flag so it doesn't carry into the next fight or onto the sheet.
-        const bystanderKey = syncKey(APP.BYSTANDER, entry.charId);
-        const bystander = readThrough(getState, entry.charId, APP.BYSTANDER);
-        if (bystander?.active) {
-          const idle = { active: false, mod: null, ts: 0 };
-          window.localStorage.setItem(bystanderKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, APP.BYSTANDER, idle);
-        }
-
-        // The playing state is turn-bound (#935) — no turns outside an
-        // encounter, so the performance lapses when the fight ends.
-        const playingKey = syncKey(APP.PLAYING, entry.charId);
-        const playing = readThrough(getState, entry.charId, APP.PLAYING);
-        if (playing?.active) {
-          const idle = { active: false, ts: 0 };
-          window.localStorage.setItem(playingKey, JSON.stringify(idle));
-          sendUpdate(entry.charId, APP.PLAYING, idle);
-        }
-
-        // Encounter-scoped effects (#275) — drop turn/round-bound leftovers and
-        // catalog-flagged states like eld-charged so they don't linger past the
-        // fight. Manual effects and clock-based immunities are kept.
-        const fxKey = syncKey(APP.EFFECTS, entry.charId);
-        const fx = readThroughList(getState, entry.charId, APP.EFFECTS);
-        if (fx.length) {
-          const keptFx = fx.filter((e) => !isEncounterScopedEffect(e));
-          if (keptFx.length !== fx.length) {
-            window.localStorage.setItem(fxKey, JSON.stringify(keptFx));
-            sendUpdate(entry.charId, APP.EFFECTS, keptFx);
-          }
-        }
-
-        // A pending Lingering Composition extension (#226-B) that never got
-        // spent on a composition shouldn't survive into the next encounter.
-        const lingKey = syncKey(APP.LINGERING, entry.charId);
-        const ling = readThrough(getState, entry.charId, APP.LINGERING);
-        if (ling) {
-          window.localStorage.setItem(lingKey, JSON.stringify(null));
-          sendUpdate(entry.charId, APP.LINGERING, null);
-        }
-      }
-      setEncounter(() => defaultEncounter());
-      // Recall Knowledge persists across encounters by creatureKey (#333) — only
-      // this fight's ephemeral entryId-keyed records are pruned, not the lot.
-      setKnowledge((cur) =>
-        pruneEncounterKnowledge(cur, encounterRef.current?.order || [])
-      );
-      setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
-      setEnemyFx({});       // enemy conditions + immunity timers die with the encounter (#260)
-      setSummons([]);       // GM-added summons die with the encounter (#261)
-    },
-    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, setSummons, getState, sendUpdate]
-  );
+  // NOTE: this hook deliberately has no endEncounter (#1677). The dock-format
+  // migration (#1556) retired the surface that called it, so the encounter-end
+  // cleanup lives in utils/partySweep.js — performEncounterSweep (per PC) +
+  // performEncounterGlobalSweep (encounter record, Recall Knowledge pruning,
+  // persistent / enemy-fx / summons globals) — driven by the GM's
+  // "End-encounter sweep" button in components/gm/PartyPanel.jsx.
 
   /**
    * Push a save request and RETURN its id. The id used to be minted inside the
@@ -415,8 +321,9 @@ export const useEncounter = () => {
    *
    * `resolution` is the record minus `id`/`ts` — see makeSaveResolution in
    * encounterUtils for the full shape (the G2 contract). The list is bounded at
-   * SAVE_RESOLUTION_LIMIT (10), oldest evicted first, and is reset wholesale by
-   * endEncounter.
+   * SAVE_RESOLUTION_LIMIT (10), oldest evicted first, and is reset wholesale
+   * with the rest of the encounter record by the GM's end-encounter sweep
+   * (performEncounterGlobalSweep in utils/partySweep.js).
    *
    * The caster-side consumer is `useSaveRollSheet` (#1689); conditions, fx and
    * the caster effect still apply GM-side at resolution, and only a NEW-style
@@ -498,7 +405,6 @@ export const useEncounter = () => {
     beginRound1,
     advanceTurn,
     beginNextRound,
-    endEncounter,
     appendLog,
     addSaveRequest,
     removeSaveRequest,
