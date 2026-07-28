@@ -62,6 +62,43 @@ describe('wornResistanceFor (#922 S3)', () => {
     expect(wornResistanceFor([robe()], yes, '')).toBe(0);
   });
 
+  // Plain-type fallback (#1679): a persistent-<type> query also matches a
+  // plain-type resistance (PF2e: resistance to X covers persistent X). The
+  // Pearly White Spindle's resonant resistance authors plain `void` via the
+  // structured field; the persistent-tick surfaces query `persistent-void`.
+  describe('plain-type fallback for persistent queries (#1679)', () => {
+    it('a plain-type resistance covers its persistent flavour', () => {
+      const spindle = { uid: 'pws', traits: ['Invested'], resistance: { amount: 1, type: 'void' } };
+      expect(wornResistanceFor([spindle], yes, 'persistent-void')).toBe(1);
+    });
+
+    it('one-directional: a persistent-only resistance never covers direct damage', () => {
+      const stone = robe({ uid: 's', modifiers: [{ stat: 'resistance', amount: 3, vs: 'persistent-bleed' }] });
+      expect(wornResistanceFor([stone], yes, 'bleed')).toBe(0);
+    });
+
+    it('plain + persistent both matching take the max, never the sum', () => {
+      const items = [
+        robe({ uid: 'a', modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] }),
+        robe({ uid: 'b', modifiers: [{ stat: 'resistance', amount: 3, vs: 'persistent-fire' }] }),
+      ];
+      expect(wornResistanceFor(items, yes, 'persistent-fire')).toBe(5);
+      const bigger = [
+        robe({ uid: 'a', modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] }),
+        robe({ uid: 'b', modifiers: [{ stat: 'resistance', amount: 8, vs: 'persistent-fire' }] }),
+      ];
+      expect(wornResistanceFor(bigger, yes, 'persistent-fire')).toBe(8);
+    });
+
+    it('applies to worn weakness and immunity too', () => {
+      const vuln = robe({ uid: 'v', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] });
+      expect(wornWeaknessFor([vuln], yes, 'persistent-fire')).toBe(5);
+      const ward = robe({ uid: 'wd', modifiers: [{ stat: 'immunity', vs: 'fire' }] });
+      expect(wornImmuneTo([ward], yes, 'persistent-fire')).toBe(true);
+      expect(wornImmuneTo([ward], yes, 'persistent-cold')).toBe(false);
+    });
+  });
+
   // The structured `resistance: { amount, type }` field (#911), as merged from a
   // variant override, is bridged into a resistance modifier.
   describe('structured resistance field bridge (#911)', () => {

@@ -200,7 +200,9 @@ export function dexCapFor(activeEffects, catalog = PF2E_EFFECTS) {
  * never net through computeEffectBonuses (`!buckets[stat]` drops them, like
  * `dexCap`), and per PF2e do NOT stack — the single highest matching amount
  * wins. A modifier's `vs` is a comma-separated descriptor list (e.g.
- * `'persistent-bleed,persistent-poison'`) matched exactly against `vsType`.
+ * `'persistent-bleed,persistent-poison'`) matched against `vsType` via
+ * vsMatches (exact token, plus the plain-type fallback for a
+ * `persistent-<type>` query, #1679).
  *
  * Shared core of resistanceFor/weaknessFor (#900/#918), generic over the
  * descriptor so the persistent-tick path (`persistent-bleed`) and the general
@@ -219,14 +221,35 @@ function modifiersOf(entry, catalog) {
   ];
 }
 
+/**
+ * Whether a modifier's comma-separated `vs` descriptor list matches a queried
+ * damage descriptor. Exact token match first; a `persistent-<type>` query ALSO
+ * matches the plain `<type>` token — per PF2e, resistance (or weakness/
+ * immunity) to X applies to persistent X too (#1679: the Pearly White
+ * Spindle's resonant resistance authors plain `void`, while the persistent
+ * surfaces query `persistent-void`). One-directional: a persistent-only
+ * descriptor (`persistent-bleed`) still never matches a plain `bleed` query.
+ * Both descriptors matching at once can't double-count — every reader scans
+ * one modifier list and keeps the single highest match.
+ *
+ * Shared by the effect readers below and the worn-gear readers
+ * (utils/wornGear) so all apply sites agree.
+ */
+export function vsMatches(vsList, vsType) {
+  if (!vsType) return false;
+  const types = String(vsList).split(',').map((t) => t.trim());
+  if (types.includes(vsType)) return true;
+  const base = vsType.startsWith('persistent-') ? vsType.slice('persistent-'.length) : '';
+  return !!base && types.includes(base);
+}
+
 function highestSpecialFor(activeEffects, stat, vsType, catalog) {
   if (!activeEffects || activeEffects.length === 0 || !vsType) return 0;
   let best = 0;
   for (const entry of activeEffects) {
     for (const mod of modifiersOf(entry, catalog)) {
       if (mod.stat !== stat || !mod.vs) continue;
-      const types = String(mod.vs).split(',').map((t) => t.trim());
-      if (!types.includes(vsType)) continue;
+      if (!vsMatches(mod.vs, vsType)) continue;
       const amount = typeof mod.amount === 'number' ? mod.amount : 0;
       if (amount > best) best = amount;
     }
@@ -280,8 +303,7 @@ export function isImmuneTo(activeEffects, vsType, catalog = PF2E_EFFECTS) {
   for (const entry of activeEffects) {
     for (const mod of modifiersOf(entry, catalog)) {
       if (mod.stat !== 'immunity' || !mod.vs) continue;
-      const types = String(mod.vs).split(',').map((t) => t.trim());
-      if (types.includes(vsType)) return true;
+      if (vsMatches(mod.vs, vsType)) return true;
     }
   }
   return false;
@@ -304,8 +326,7 @@ export function flatCheckEasedFor(activeEffects, vsType, catalog = PF2E_EFFECTS)
   for (const entry of activeEffects) {
     for (const mod of modifiersOf(entry, catalog)) {
       if (mod.stat !== 'resistance' || !mod.flatCheckEase || !mod.vs) continue;
-      const types = String(mod.vs).split(',').map((t) => t.trim());
-      if (types.includes(vsType)) return true;
+      if (vsMatches(mod.vs, vsType)) return true;
     }
   }
   return false;
