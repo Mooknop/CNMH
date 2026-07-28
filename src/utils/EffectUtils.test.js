@@ -10,6 +10,7 @@ import {
   flatCheckEasedFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
+  vsMatches,
 } from './EffectUtils';
 
 const catalog = [
@@ -455,6 +456,8 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
       { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
     ] },
     { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] },
+    { id: 'pfire-ward', name: 'Ember Ward', modifiers: [{ stat: 'resistance', amount: 4, vs: 'persistent-fire' }] },
+    { id: 'pfire-big', name: 'Greater Ember Ward', modifiers: [{ stat: 'resistance', amount: 15, vs: 'persistent-fire' }] },
     { id: 'no-vs', name: 'Bad Resistance', modifiers: [{ stat: 'resistance', amount: 99 }] },
     { id: 'bonus', name: 'Bless', modifiers: [{ stat: 'meleeAttack', kind: 'status', amount: 1 }] },
   ];
@@ -468,10 +471,24 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     expect(resistanceFor([entry('bb-lesser'), entry('bb-greater')], 'persistent-bleed', cat)).toBe(20);
   });
 
-  it('distinguishes persistent from direct damage of the same type', () => {
+  // Plain-type fallback (#1679): resistance to X applies to persistent X too
+  // (PF2e), so a `persistent-<type>` query also matches the plain `<type>`
+  // descriptor. One-directional — a persistent-only resistance still never
+  // covers direct damage of the base type.
+  it('a plain-type resistance also covers its persistent flavour (#1679)', () => {
     expect(resistanceFor([entry('fire-ward')], 'fire', cat)).toBe(10);
-    expect(resistanceFor([entry('fire-ward')], 'persistent-fire', cat)).toBe(0);
+    expect(resistanceFor([entry('fire-ward')], 'persistent-fire', cat)).toBe(10);
+  });
+
+  it('a persistent-only resistance never covers direct damage of the base type', () => {
     expect(resistanceFor([entry('bb-lesser')], 'bleed', cat)).toBe(0);
+  });
+
+  it('plain + persistent descriptors both matching take the max, never the sum', () => {
+    // plain 10 vs persistent-specific 4 → 10, not 14
+    expect(resistanceFor([entry('fire-ward'), entry('pfire-ward')], 'persistent-fire', cat)).toBe(10);
+    // persistent-specific 15 beats the plain 10 fallback
+    expect(resistanceFor([entry('fire-ward'), entry('pfire-big')], 'persistent-fire', cat)).toBe(15);
   });
 
   it('returns 0 for non-matching, vs-less, empty, null, or unknown effects', () => {
@@ -563,6 +580,34 @@ describe('weaknessFor (#918)', () => {
     expect(weaknessFor([entry('nope')], 'fire', cat)).toBe(0);
     expect(weaknessFor([entry('fire-vuln')], '', cat)).toBe(0);
   });
+
+  it('a plain-type weakness also covers its persistent flavour (#1679)', () => {
+    expect(weaknessFor([entry('fire-vuln')], 'persistent-fire', cat)).toBe(5);
+  });
+});
+
+// The shared descriptor matcher behind every resistance-family reader (#1679).
+describe('vsMatches', () => {
+  it('matches an exact token of a comma-separated list', () => {
+    expect(vsMatches('fire', 'fire')).toBe(true);
+    expect(vsMatches('persistent-bleed,persistent-poison', 'persistent-poison')).toBe(true);
+    expect(vsMatches('fire', 'cold')).toBe(false);
+  });
+
+  it('falls back from persistent-<type> to the plain type', () => {
+    expect(vsMatches('void', 'persistent-void')).toBe(true);
+    expect(vsMatches('fire,cold', 'persistent-cold')).toBe(true);
+  });
+
+  it('is one-directional — a persistent descriptor never matches a plain query', () => {
+    expect(vsMatches('persistent-void', 'void')).toBe(false);
+  });
+
+  it('never cross-matches unrelated types and rejects falsy queries', () => {
+    expect(vsMatches('persistent-fire', 'persistent-cold')).toBe(false);
+    expect(vsMatches('fire', '')).toBe(false);
+    expect(vsMatches('fire', 'persistent-')).toBe(false);
+  });
 });
 
 describe('isImmuneTo (#919)', () => {
@@ -579,8 +624,13 @@ describe('isImmuneTo (#919)', () => {
     expect(isImmuneTo([entry('multi-immune')], 'persistent-poison', cat)).toBe(true);
   });
 
-  it('distinguishes persistent from direct damage of the same type', () => {
-    expect(isImmuneTo([entry('fire-immune')], 'persistent-fire', cat)).toBe(false);
+  it('a plain-type immunity also covers its persistent flavour (#1679)', () => {
+    expect(isImmuneTo([entry('fire-immune')], 'persistent-fire', cat)).toBe(true);
+  });
+
+  it('a persistent-only immunity never covers direct damage of the base type', () => {
+    const e = { id: 'uid-p', effectId: 'x', modifiers: [{ stat: 'immunity', vs: 'persistent-fire' }] };
+    expect(isImmuneTo([e], 'fire', cat)).toBe(false);
   });
 
   it('reads immunity only — a resistance modifier is not immunity', () => {

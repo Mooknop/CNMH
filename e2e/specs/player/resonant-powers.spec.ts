@@ -84,7 +84,7 @@ const TURNSTATE_KEY = `cnmh_turnstate_${CHAR_ID}`;
 const WF_UID = 'uid-reso-wayfinder';
 const AGATE_UID = 'uid-reso-agate';
 const AZURE_UID = 'uid-reso-azure';
-const EMBER_UID = 'uid-reso-ember';
+const SPINDLE_UID = 'uid-reso-spindle';
 
 // Real bundled content, pulled from the seed by id so the resonant blocks under
 // test are exactly the ones production ships (#928 modelled every stone):
@@ -96,28 +96,22 @@ const EMBER_UID = 'uid-reso-ember';
 //                                  "the card stopped rendering spells".
 //   aeon-stone-azure-briolette   — `resonant.grantedSpells` (void warp): an
 //                                  innate spell that exists ONLY while resonant.
-const [WAYFINDER, AGATE, AZURE] = snapshotItems(
+//   aeon-stone-pearly-white-spindle — `resonant.resistance` (plain `void`): the
+//                                  one bundled stone with a resonant resistance,
+//                                  proving the hoist reaches the DEFENSE
+//                                  readers. The persistent surfaces query
+//                                  `persistent-void`, which reaches the stone's
+//                                  plain `void` descriptor through the
+//                                  plain-type fallback in vsMatches (#1679) —
+//                                  this used to need a hand-authored fixture
+//                                  stone with a `persistent-*` descriptor.
+const [WAYFINDER, AGATE, AZURE, SPINDLE] = snapshotItems(
   'wayfinder',
   'aeon-stone-agate-ellipsoid',
   'aeon-stone-azure-briolette',
+  'aeon-stone-pearly-white-spindle',
 );
 const AGATE_NOTE = (AGATE as any).resonant.note as string;
-
-// The one hand-authored stone. No bundled aeon stone carries a resonant
-// resistance whose `vs` descriptor is a PERSISTENT one — the Pearly White
-// Spindle's is plain `void`, and `persistentVsType` asks for `persistent-void`
-// — so the only stone that can prove the hoist reaches the DEFENSE readers is
-// written here. `isAeonStone` keys off an `aeon-stone` id prefix (or an "aeon
-// stone" name prefix), hence the id.
-const EMBER = {
-  id: 'aeon-stone-e2e-emberdrop',
-  name: 'E2E Emberdrop Spindle',
-  traits: ['Invested', 'Magical'],
-  weight: 0,
-  price: 100,
-  description: 'E2E-only aeon stone. Resonant Power You gain resistance 3 to persistent fire damage.',
-  resonant: { resistance: { amount: 3, type: 'persistent-fire' } },
-};
 
 const STONEBEARER = {
   id: CHAR_ID,
@@ -133,7 +127,7 @@ const STONEBEARER = {
     { ref: WAYFINDER.id, quantity: 1, uid: WF_UID },
     { ref: AGATE.id, quantity: 1, uid: AGATE_UID },
     { ref: AZURE.id, quantity: 1, uid: AZURE_UID },
-    { ref: EMBER.id, quantity: 1, uid: EMBER_UID },
+    { ref: SPINDLE.id, quantity: 1, uid: SPINDLE_UID },
   ],
 };
 
@@ -143,7 +137,7 @@ const ALL_INVESTED = {
   [WF_UID]: true,
   [AGATE_UID]: true,
   [AZURE_UID]: true,
-  [EMBER_UID]: true,
+  [SPINDLE_UID]: true,
 };
 
 const PC_ENTRY_ID = `e2e-${CHAR_ID}`; // matches activeEncounter()'s pc entryId
@@ -206,7 +200,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     await reset();
     await seed({
       spell: snapshotSpells('augury', 'void-warp'),
-      item: [WAYFINDER, AGATE, AZURE, EMBER],
+      item: [WAYFINDER, AGATE, AZURE, SPINDLE],
       character: [STONEBEARER],
     });
   });
@@ -333,7 +327,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
         [INVESTED_KEY]: ALL_INVESTED,
         cnmh_encounter_global: activeEncounter(CHAR_ID, CHAR_NAME),
         [TURNSTATE_KEY]: readyTurnState('1:0'),
-        cnmh_persistent_global: { [PC_ENTRY_ID]: [{ id: 'p1', dice: '1d6', type: 'fire' }] },
+        cnmh_persistent_global: { [PC_ENTRY_ID]: [{ id: 'p1', dice: '1d6', type: 'void' }] },
       },
     });
 
@@ -345,20 +339,22 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     // block would already be reducing here — that is exactly the bug #928's
     // resonant gate exists to prevent.)
     const chip = page.locator('.pdc-badge');
-    await expect(chip).toHaveAttribute('aria-label', `${CHAR_NAME}: 1d6 persistent fire`);
+    await expect(chip).toHaveAttribute('aria-label', `${CHAR_NAME}: 1d6 persistent void`);
 
     await openTab(page, 'Inventory');
-    await slotFromCard(page, EMBER_UID);
-    await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === EMBER_UID);
+    await slotFromCard(page, SPINDLE_UID);
+    await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === SPINDLE_UID);
 
     // Now the chip reduces. Nothing about the effect list, the encounter or the
     // instance changed — only the socket — and the number arrives through
     // applyResonant → useWornGear → useResolvedEffects → resistanceFor, a chain
-    // that touches four files the ItemModal never renders.
+    // that touches four files the ItemModal never renders. The chip queries
+    // `persistent-void`; the spindle authors plain `void` — the plain-type
+    // fallback (#1679) is what connects them.
     await openTab(page, 'Encounter');
     await expect(chip).toHaveAttribute(
       'aria-label',
-      `${CHAR_NAME}: 1d6 persistent fire − resistance 3`,
+      `${CHAR_NAME}: 1d6 persistent void − resistance 1`,
     );
   });
 
@@ -377,7 +373,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
         [INVESTED_KEY]: ALL_INVESTED,
         cnmh_encounter_global: at(1, 0),
         [TURNSTATE_KEY]: readyTurnState('1:0'),
-        cnmh_persistent_global: { [REMINDER_ENTRY_ID]: [{ id: 'p1', dice: '1d6', type: 'fire' }] },
+        cnmh_persistent_global: { [REMINDER_ENTRY_ID]: [{ id: 'p1', dice: '1d6', type: 'void' }] },
       },
     });
 
@@ -399,13 +395,13 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     // "resistance" below is a real absence.
     await session.push('cnmh_encounter_global', at(1, 1));
     await expect
-      .poll(() => logLines().filter((t) => t.includes(`${CHAR_NAME}: 1d6 persistent fire`)))
-      .toEqual([`${CHAR_NAME}: 1d6 persistent fire — DC 15 flat check to end`]);
+      .poll(() => logLines().filter((t) => t.includes(`${CHAR_NAME}: 1d6 persistent void`)))
+      .toEqual([`${CHAR_NAME}: 1d6 persistent void — DC 15 flat check to end`]);
 
     // Slot the stone, then run the turn back around to the PC and off again.
     await openTab(page, 'Inventory');
-    await slotFromCard(page, EMBER_UID);
-    await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === EMBER_UID);
+    await slotFromCard(page, SPINDLE_UID);
+    await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === SPINDLE_UID);
     await openTab(page, 'Encounter');
     await expect(page.locator('.pdc-badge')).toBeVisible();
 
@@ -422,10 +418,10 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     // The imperative path rebuilds the effective inventory off SessionContext and
     // calls applyResonant itself, so the same socket now shows up in the log line.
     await expect
-      .poll(() => logLines().filter((t) => t.includes(`${CHAR_NAME}: 1d6 persistent fire`)))
+      .poll(() => logLines().filter((t) => t.includes(`${CHAR_NAME}: 1d6 persistent void`)))
       .toEqual([
-        `${CHAR_NAME}: 1d6 persistent fire — DC 15 flat check to end`,
-        `${CHAR_NAME}: 1d6 persistent fire, resistance 3 (reduce, min 0) — DC 15 flat check to end`,
+        `${CHAR_NAME}: 1d6 persistent void — DC 15 flat check to end`,
+        `${CHAR_NAME}: 1d6 persistent void, resistance 1 (reduce, min 0) — DC 15 flat check to end`,
       ]);
   });
 });
