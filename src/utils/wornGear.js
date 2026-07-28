@@ -6,6 +6,7 @@ import { DEFAULT_ITEM_STATE } from './itemState';
 import { isInvestable } from './InventoryUtils';
 import { hasArmorRuneBlock, resolveArmorItem } from './armorRunes';
 import { accessoryRuneOf } from './accessoryRunes';
+import { vsMatches } from './EffectUtils';
 
 // Damage resistance/weakness/immunity (#900/#918/#919) are special, non-bonus
 // modifiers — `{ stat: 'resistance'|'weakness'|'immunity', vs, amount? }`. They
@@ -61,8 +62,11 @@ export const contributes = (e, isInvested) =>
 
 // Highest worn-gear amount of a special stat (`resistance` / `weakness`) to a
 // damage descriptor across a character's effective inventory — doesn't stack, so
-// the single highest matching amount wins. `vsType` is matched exactly against
-// one of the comma-separated tokens in each modifier's `vs`.
+// the single highest matching amount wins. `vsType` is matched against the
+// comma-separated tokens in each modifier's `vs` via vsMatches (EffectUtils):
+// exact token, plus the plain-type fallback for a `persistent-<type>` query
+// (#1679 — e.g. the Pearly White Spindle's plain `void` resonant resistance
+// applies to a persistent-void tick too).
 const highestWornSpecial = (inventory, isInvested, stat, vsType) => {
   if (!vsType) return 0;
   let best = 0;
@@ -70,8 +74,7 @@ const highestWornSpecial = (inventory, isInvested, stat, vsType) => {
     if (!contributes(e, isInvested)) continue;
     for (const m of specialModifiers(itemModifiers(e))) {
       if (m.stat !== stat) continue;
-      const types = String(m.vs).split(',').map((t) => t.trim());
-      if (types.includes(vsType) && typeof m.amount === 'number' && m.amount > best) {
+      if (vsMatches(m.vs, vsType) && typeof m.amount === 'number' && m.amount > best) {
         best = m.amount;
       }
     }
@@ -224,8 +227,7 @@ export const wornImmuneTo = (inventory, isInvested, vsType) => {
     if (!contributes(e, isInvested)) continue;
     for (const m of specialModifiers(itemModifiers(e))) {
       if (m.stat !== 'immunity') continue;
-      const types = String(m.vs).split(',').map((t) => t.trim());
-      if (types.includes(vsType)) return true;
+      if (vsMatches(m.vs, vsType)) return true;
     }
   }
   return false;
