@@ -385,6 +385,22 @@ describe('PartyPanel', () => {
       );
     });
 
+    it('runs the once-per-sweep global cleanup — resets a live encounter record (#1677)', () => {
+      getState.mockImplementation((id, type) =>
+        id === 'global' && type === 'encounter'
+          ? { active: true, phase: 'in-progress', round: 2, order: [{ entryId: 'pc-1', kind: 'pc', charId: 'thorn' }], log: [{ id: 'l1' }] }
+          : undefined,
+      );
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByRole('button', { name: 'End-encounter sweep' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Sweep party' }));
+
+      expect(sendUpdate).toHaveBeenCalledWith(
+        'global', 'encounter',
+        expect.objectContaining({ active: false, phase: 'idle', round: 0, order: [], log: [] }),
+      );
+    });
+
     it('hides the sweep button when the roster is empty', () => {
       useContent.mockReturnValue({ characters: [] });
       render(<PartyPanel />);

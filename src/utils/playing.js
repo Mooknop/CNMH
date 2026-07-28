@@ -9,8 +9,8 @@
 //
 // Detection keys on the Composition trait, not a spell list, so future
 // compositions count automatically. Out of an encounter there are no turns, so
-// nothing is written — "while playing" stays a GM call there — and endEncounter
-// clears any leftover flag.
+// nothing is written — "while playing" stays a GM call there — and the GM's
+// end-encounter sweep (utils/partySweep.js) clears any leftover flag.
 
 import { resolveExpireAt } from './expiry';
 import { APP, syncKey } from '../sync/keys';

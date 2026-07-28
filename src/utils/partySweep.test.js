@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { performEncounterSweep } from './partySweep';
+import { performEncounterSweep, performEncounterGlobalSweep } from './partySweep';
+import { defaultEncounter } from './encounterUtils';
 
 // In-memory synced state keyed "id:type", with getState/sendUpdate shims.
 let store;
@@ -81,5 +82,121 @@ describe('performEncounterSweep', () => {
     store['thorn:turnstate'] = { actionsSpent: 0, attacksMade: 0, reactionSpent: false, hasStartedFirstTurn: false, actionsLog: [] };
     const { changed } = performEncounterSweep({ character: CHAR, getState, sendUpdate });
     expect(changed).toBe(0);
+  });
+
+  // Keys folded in from useEncounter's deleted endEncounter (#1677). The store
+  // above IS the session cache, so these also pin the #1671 contract: the sweep
+  // reads purely through getState — a value that only ever ARRIVED over the
+  // relay (never landed in localStorage) still gets cleared.
+  it('clears a Harmless Bystander declaration (#226)', () => {
+    store['thorn:bystander'] = { active: true, mod: 'deception', ts: 1 };
+    const { summary } = performEncounterSweep({ character: CHAR, getState, sendUpdate });
+    expect(store['thorn:bystander']).toEqual({ active: false, mod: null, ts: 0 });
+    expect(summary).toContain('Harmless Bystander');
+  });
+
+  it('clears the playing state (#935)', () => {
+    store['thorn:playing'] = { active: true, expireAt: { round: 2, entryId: 'e1', boundary: 'turn-end' }, ts: 1 };
+    performEncounterSweep({ character: CHAR, getState, sendUpdate });
+    expect(store['thorn:playing']).toEqual({ active: false, ts: 0 });
+  });
+
+  it('clears a pending Lingering Composition (#226-B)', () => {
+    store['thorn:lingering'] = { spellId: 'inspire-courage', ts: 1 };
+    performEncounterSweep({ character: CHAR, getState, sendUpdate });
+    expect(store['thorn:lingering']).toBeNull();
+    expect(sendUpdate).toHaveBeenCalledWith('thorn', 'lingering', null);
+  });
+
+  it('skips inactive bystander/playing and absent lingering', () => {
+    store['thorn:bystander'] = { active: false, mod: null, ts: 0 };
+    store['thorn:playing'] = { active: false, ts: 0 };
+    const { changed } = performEncounterSweep({ character: CHAR, getState, sendUpdate });
+    expect(changed).toBe(0);
+    expect(sendUpdate).not.toHaveBeenCalled();
+  });
+});
+
+// Once-per-sweep globals folded in from endEncounter (#1677): the encounter
+// record itself, Recall Knowledge pruning, and the persistent / enemy-fx /
+// summons maps.
+describe('performEncounterGlobalSweep', () => {
+  it('does nothing when every global is absent or already idle', () => {
+    const { summary, changed } = performEncounterGlobalSweep({ getState, sendUpdate });
+    expect(changed).toBe(0);
+    expect(summary).toBe('nothing to clear');
+    expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  it('leaves an already-default encounter record alone', () => {
+    store['global:encounter'] = defaultEncounter();
+    const { changed } = performEncounterGlobalSweep({ getState, sendUpdate });
+    expect(changed).toBe(0);
+  });
+
+  it('resets a live encounter record — order, log, saves, resolutions, payloads — to default', () => {
+    store['global:encounter'] = {
+      ...defaultEncounter(),
+      active: true,
+      phase: 'in-progress',
+      round: 3,
+      order: [{ entryId: 'pc-1', kind: 'pc', charId: 'thorn' }],
+      log: [{ id: 'l1', text: 'Round 3 begins' }],
+      saveRequests: [{ id: 'sr-1' }],
+      saveResolutions: [{ id: 'sr-0' }],
+      armedPayloads: [{ id: 'ap-1' }],
+    };
+    performEncounterGlobalSweep({ getState, sendUpdate });
+    expect(store['global:encounter']).toEqual(defaultEncounter());
+    expect(sendUpdate).toHaveBeenCalledWith('global', 'encounter', defaultEncounter());
+    expect(globalThis.localStorage.setItem).toHaveBeenCalledWith(
+      'cnmh_encounter_global', JSON.stringify(defaultEncounter()),
+    );
+  });
+
+  it('prunes Recall Knowledge: ephemeral entryId records drop, creatureKey records persist with crit-fail locks reset (#333)', () => {
+    store['global:encounter'] = {
+      ...defaultEncounter(),
+      active: true,
+      order: [
+        { entryId: 'e-manual', kind: 'enemy', name: 'Bandit' },              // no creatureKey → ephemeral
+        { entryId: 'e-ghoul', kind: 'enemy', creatureKey: 'ghoul' },         // campaign-persistent
+        { entryId: 'pc-1', kind: 'pc', charId: 'thorn' },
+      ],
+    };
+    store['global:knowledge'] = {
+      'e-manual': { identity: true, lockedOut: {} },
+      ghoul: { identity: true, lockedOut: { thorn: true } },
+    };
+    performEncounterGlobalSweep({ getState, sendUpdate });
+    expect(store['global:knowledge']).toEqual({
+      ghoul: { identity: true, lockedOut: {} },
+    });
+  });
+
+  it('clears dirty persistent / enemy-fx / summons globals and reports them', () => {
+    store['global:persistent'] = { 'e-1': [{ id: 'pd-1', dice: '1d4', type: 'bleed' }] };
+    store['global:enemyfx'] = { 'e-1': { conditions: [{ id: 'frightened', value: 1 }], effects: [] } };
+    store['global:summons'] = [{ entryId: 'sum-1', kind: 'summon', name: 'Skeletal Champion' }];
+
+    const { summary, changed } = performEncounterGlobalSweep({ getState, sendUpdate });
+
+    expect(changed).toBe(3);
+    expect(store['global:persistent']).toEqual({});
+    expect(store['global:enemyfx']).toEqual({});
+    expect(store['global:summons']).toEqual([]);
+    expect(summary).toContain('persistent damage');
+    expect(summary).toContain('enemy conditions');
+    expect(summary).toContain('summons');
+  });
+
+  it('skips already-empty maps rather than writing redundant updates', () => {
+    store['global:persistent'] = {};
+    store['global:enemyfx'] = {};
+    store['global:summons'] = [];
+    store['global:knowledge'] = {};
+    const { changed } = performEncounterGlobalSweep({ getState, sendUpdate });
+    expect(changed).toBe(0);
+    expect(sendUpdate).not.toHaveBeenCalled();
   });
 });
