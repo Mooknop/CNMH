@@ -17,6 +17,13 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: () => [{}, mockSetPersistent],
 }));
 
+// Reveal-on-fire (#1015): a record-time immunity negation stamps the immunity
+// into the RK record — mocked so the knowledge write path stays out of scope.
+const mockReveal = vi.fn();
+vi.mock('../../hooks/useIwrReveal', () => ({
+  useIwrReveal: () => ({ revealFiredIwr: mockReveal }),
+}));
+
 const payload = {
   id: 'armed-1',
   payloadId: 'targeting-beacon-explosion',
@@ -192,6 +199,38 @@ describe('ArmedPayloads', () => {
       const next = mockSetPersistent.mock.calls[0][0]({});
       expect(next['e-gob']).toHaveLength(1);
       expect(next['e-gob'][0]).toMatchObject({ dice: '5d10', type: 'bleed' });
+    });
+
+    it('skips an immune target at record time, logs it, and reveals the immunity (#1015)', () => {
+      const skeleton = {
+        entryId: 'e-skel', kind: 'enemy', name: 'Skeleton',
+        defenses: { immunities: ['bleed'], saves: { reflex: 8 } },
+      };
+      useEncounter.mockReturnValue({
+        encounter: { order: [...order, skeleton], armedPayloads: [bleed] },
+        appendLog: mockLog,
+        addSaveRequest: mockAdd,
+        removeArmedPayload: mockRemove,
+      });
+      render(<ArmedPayloads />);
+      fireEvent.click(screen.getByLabelText('Skeleton'));
+      fireEvent.click(screen.getByLabelText('Goblin'));
+      fireEvent.click(screen.getByRole('button', { name: 'Fire' }));
+      // Only the non-immune Goblin records; the Skeleton's skip is logged + revealed.
+      const next = mockSetPersistent.mock.calls[0][0]({});
+      expect(next['e-skel']).toBeUndefined();
+      expect(next['e-gob']).toHaveLength(1);
+      expect(mockLog).toHaveBeenCalledWith({
+        type: 'system',
+        text: 'Skeleton: immune to persistent bleed — not tracked',
+      });
+      expect(mockReveal).toHaveBeenCalledWith([
+        { entryId: 'e-skel', damage: { iwr: [{ kind: 'immunity', type: 'bleed', amount: 0 }] } },
+      ]);
+      // The applied line names only who actually took something.
+      expect(mockLog.mock.calls.map(([e]) => e.text)).toContain(
+        'Gruesome Marionettist: Prohibited-action bleed (full) applied to Goblin'
+      );
     });
 
     it('a critical-failure severity doubles the dice; a success halves', () => {

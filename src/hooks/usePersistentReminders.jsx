@@ -4,7 +4,15 @@ import { useGmAuth } from './useGmAuth';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
-import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
+import { useIwrReveal } from './useIwrReveal';
+import {
+  PERSISTENT_KEY,
+  pruneOrphans,
+  formatReminder,
+  persistentVsType,
+  enemyPersistentIwr,
+  enemyPersistentFired,
+} from '../utils/persistentDamage';
 import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { wornImmuneTo, wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
@@ -36,6 +44,10 @@ export function usePersistentReminders() {
   // `characters` supplies authored inventory for the worn-gear read (#922 S3).
   const { effects: catalog, characters } = useContent();
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
+  // Reveal-on-fire (#1015): an enemy tick whose reminder just stated an IWR
+  // made it table knowledge — stamp it into the RK record, same as the
+  // direct-damage trigger (#1014).
+  const { revealFiredIwr } = useIwrReveal();
 
   // { token, entry } for the combatant whose turn is underway.
   const prevTurnRef = useRef({ token: null, entry: null });
@@ -47,9 +59,10 @@ export function usePersistentReminders() {
   // buffs (Blood Booster lives there); worn modifiers come from the authored
   // inventory stamped with the live loadout/investment overlays. All read
   // synchronously off the session cache at turn-end — no reactive subscription
-  // needed for a one-shot log line. Enemies (no charId) resolve to nothing.
+  // needed for a one-shot log line. Enemies (no charId) resolve from their
+  // Foundry-imported `defenses` (#1015); manual enemies resolve to nothing.
   const resolveResistance = useCallback((entry, inst) => {
-    if (!entry?.charId) return null;
+    if (!entry?.charId) return enemyPersistentIwr(entry?.defenses, inst);
     const effects = [
       ...(getState(entry.charId, APP.EFFECTS) || []),
       ...(getState(entry.charId, RELAY.FOUNDRYEFFECTS) || []),
@@ -119,18 +132,36 @@ export function usePersistentReminders() {
       // A turn just ended (not a fresh mount/round 1 start): remind for the
       // outgoing combatant's tracked instances.
       if (isGm && prev.token !== null && prev.entry) {
-        (map[prev.entry.entryId] || []).forEach((inst) =>
+        const insts = map[prev.entry.entryId] || [];
+        insts.forEach((inst) =>
           appendLog({
             type: 'system',
             text: formatReminder(prev.entry.name, inst, resolveResistance(prev.entry, inst)),
           })
         );
+        // Reveal-on-fire (#1015): the reminder lines above just stated an
+        // enemy's IWR — merge the fired types into its RK record (idempotent;
+        // revealFiredIwr announces only first reveals, and only for enemies).
+        if (insts.length && !prev.entry.charId && prev.entry.defenses) {
+          const fired = insts.flatMap((inst) => enemyPersistentFired(prev.entry.defenses, inst));
+          if (fired.length) {
+            revealFiredIwr([{ entryId: prev.entry.entryId, damage: { iwr: fired } }]);
+          }
+        }
       }
       const current = order[encounter.currentTurnIndex || 0] || null;
       prevTurnRef.current = {
         token,
         entry: current
-          ? { entryId: current.entryId, name: current.name, charId: current.charId }
+          ? {
+            entryId: current.entryId,
+            name: current.name,
+            charId: current.charId,
+            // Enemy IWR annotation (#1015): the stash is read at the NEXT
+            // transition, when the combatant may already be gone from a
+            // bridge-rewritten order — so the defenses ride along too.
+            defenses: current.defenses || null,
+          }
           : null,
       };
     }
@@ -145,6 +176,7 @@ export function usePersistentReminders() {
     appendLog,
     setPersistentMap,
     resolveResistance,
+    revealFiredIwr,
   ]);
 }
 
