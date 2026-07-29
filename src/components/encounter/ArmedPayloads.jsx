@@ -5,7 +5,8 @@ import { buildDamageProfile, doubleDice } from '../../utils/damage';
 import { buildTargetSaveRequest } from '../../utils/saveRequest';
 import { mapSpellDefense } from '../../utils/rollResolution';
 import { DEFENSE_LABELS } from '../../utils/defense';
-import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
+import { PERSISTENT_KEY, recordPersistentHits } from '../../utils/persistentDamage';
+import { useIwrReveal } from '../../hooks/useIwrReveal';
 
 /**
  * Armed payloads (#987) — GM panel for damage/saves a cast STORED for a later
@@ -33,6 +34,9 @@ const ArmedPayloads = () => {
   const enemies = order.filter((e) => e.kind === 'enemy');
 
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
+  // Reveal-on-fire (#1015): an immunity that negates a persistent record
+  // becomes table knowledge, same as the direct-damage trigger (#1014).
+  const { revealFiredIwr } = useIwrReveal();
 
   const [picked, setPicked] = useState({});     // { [payloadId]: entryId[] }
   const [entered, setEntered] = useState({});   // { [payloadId]: string }
@@ -89,14 +93,24 @@ const ArmedPayloads = () => {
       ...(sev === 'half' ? { half: true } : {}),
     }));
     if (!scaled.length) return false;
-    setPersistentMap((m) => targets.reduce(
-      (acc, t) => addPersistent(acc, t.entryId, makeInstances(scaled, p.abilityName)),
-      m || {}
-    ));
-    appendLog({
-      type: 'system',
-      text: `${p.abilityName}: ${p.label} (${sev}) applied to ${targets.map((t) => t.name).join(', ')}`,
+    // Record-time immunity negation (#1015): an immune target's instances are
+    // skipped (recordPersistentHits logs the skip and reveals the immunity),
+    // so the applied line names only who actually took something.
+    const { recordedEntryIds } = recordPersistentHits({
+      hits: targets.map((t) => ({ entryId: t.entryId, persistent: scaled })),
+      order,
+      abilityName: p.abilityName,
+      setPersistentMap,
+      appendLog,
+      revealFiredIwr,
     });
+    const applied = targets.filter((t) => recordedEntryIds.has(t.entryId));
+    if (applied.length) {
+      appendLog({
+        type: 'system',
+        text: `${p.abilityName}: ${p.label} (${sev}) applied to ${applied.map((t) => t.name).join(', ')}`,
+      });
+    }
     return true;
   };
 

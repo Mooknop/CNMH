@@ -165,6 +165,45 @@ describe('PersistentChip (#272)', () => {
     expect(screen.getByText(/1d6 persistent bleed/).textContent).not.toMatch(/immune/);
   });
 
+  describe("enemy annotation from Foundry-imported defenses (#1015)", () => {
+    const troll = {
+      entryId: 'e-troll', kind: 'enemy', name: 'Troll',
+      defenses: {
+        immunities: ['poison'],
+        weaknesses: [{ type: 'fire', value: 5 }],
+        resistances: [{ type: 'acid', value: 7 }],
+      },
+    };
+
+    it("annotates the enemy's weakness per row", () => {
+      seed({
+        'e-troll': [
+          { id: 'pd-1', dice: '1d6', type: 'fire', sourceName: 'Torch' },
+          { id: 'pd-2', dice: '1d6', type: 'bleed', sourceName: 'Wound' },
+        ],
+      });
+      render(<PersistentChip entry={troll} />);
+      fireEvent.click(screen.getByRole('button', { name: /Troll/ }));
+      expect(screen.getByText(/1d6 persistent fire \+ weakness 5/)).toBeInTheDocument();
+      // bleed is not covered — no annotation
+      expect(screen.getByText(/1d6 persistent bleed/).textContent).not.toMatch(/weakness/);
+    });
+
+    it("annotates the enemy's resistance per row", () => {
+      seed({ 'e-troll': [{ id: 'pd-1', dice: '1d6', type: 'acid', sourceName: 'Spit' }] });
+      render(<PersistentChip entry={troll} />);
+      fireEvent.click(screen.getByRole('button', { name: /Troll/ }));
+      expect(screen.getByText(/1d6 persistent acid − resistance 7/)).toBeInTheDocument();
+    });
+
+    it("marks an immune row, superseding everything else", () => {
+      seed({ 'e-troll': [{ id: 'pd-1', dice: '1d6', type: 'poison', sourceName: 'Venom' }] });
+      render(<PersistentChip entry={troll} />);
+      fireEvent.click(screen.getByRole('button', { name: /Troll/ }));
+      expect(screen.getByText(/1d6 persistent poison — immune \(no damage\)/)).toBeInTheDocument();
+    });
+  });
+
   it('keeps the DC-15 footer and no annotation for an enemy with no effects (#900)', () => {
     seed({ 'e-gob': [{ id: 'pd-1', dice: '1d4', type: 'bleed', sourceName: 'x' }] });
     render(<PersistentChip entry={goblin} />);

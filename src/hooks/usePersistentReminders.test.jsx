@@ -13,6 +13,13 @@ vi.mock('./useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
+// Reveal-on-fire (#1015): an enemy tick that states an IWR stamps it into the
+// RK record — mocked so the knowledge write path stays out of this test.
+const mockRevealFiredIwr = vi.fn();
+vi.mock('./useIwrReveal', () => ({
+  useIwrReveal: () => ({ revealFiredIwr: mockRevealFiredIwr }),
+}));
+
 // useSession: getState backs the per-combatant effect lookup (#900). Default
 // returns nothing (no resistance); tests override mockEffects to inject buffs.
 let mockEffects = {}; // { [charId]: { effects?: [], foundryeffects?: [] } }
@@ -244,6 +251,68 @@ describe('usePersistentReminders (#272)', () => {
     seedMap(hook, { 'e-gob': [{ id: 'pd-1', dice: '1d4', type: 'bleed' }] });
     setEncounter(hook, inProgress(2, 0));
     expect(reminderTexts()).toContain('Goblin: 1d4 persistent bleed — DC 15 flat check to end');
+    // Manual enemy (no defenses) — nothing to reveal.
+    expect(mockRevealFiredIwr).not.toHaveBeenCalled();
+  });
+
+  describe("enemy IWR annotation from Foundry-imported defenses (#1015)", () => {
+    const troll = {
+      entryId: 'e-troll', kind: 'enemy', name: 'Troll',
+      defenses: {
+        immunities: ['poison'],
+        weaknesses: [{ type: 'fire', value: 5 }],
+        resistances: [{ type: 'acid', value: 7 }],
+      },
+    };
+    const trollOrder = [pc, troll];
+
+    it("annotates the enemy's weakness on the tick and reveals it", () => {
+      const hook = setup();
+      setEncounter(hook, inProgress(1, 1, { order: trollOrder })); // Troll's turn underway
+      seedMap(hook, { 'e-troll': [{ id: 'pd-1', dice: '1d6', type: 'fire', sourceName: 'Torch' }] });
+      setEncounter(hook, inProgress(2, 0, { order: trollOrder })); // Troll's turn ends
+      expect(reminderTexts()).toContain(
+        'Troll: 1d6 persistent fire, weakness 5 (add) — DC 15 flat check to end'
+      );
+      expect(mockRevealFiredIwr).toHaveBeenCalledWith([
+        { entryId: 'e-troll', damage: { iwr: [{ kind: 'weakness', type: 'fire', amount: 5 }] } },
+      ]);
+    });
+
+    it("annotates the enemy's resistance (reduce, min 0) and reveals it", () => {
+      const hook = setup();
+      setEncounter(hook, inProgress(1, 1, { order: trollOrder }));
+      seedMap(hook, { 'e-troll': [{ id: 'pd-1', dice: '1d6', type: 'acid' }] });
+      setEncounter(hook, inProgress(2, 0, { order: trollOrder }));
+      expect(reminderTexts()).toContain(
+        'Troll: 1d6 persistent acid, resistance 7 (reduce, min 0) — DC 15 flat check to end'
+      );
+      expect(mockRevealFiredIwr).toHaveBeenCalledWith([
+        { entryId: 'e-troll', damage: { iwr: [{ kind: 'resistance', type: 'acid', amount: -7 }] } },
+      ]);
+    });
+
+    it("marks the tick immune (no damage) and reveals the immunity", () => {
+      const hook = setup();
+      setEncounter(hook, inProgress(1, 1, { order: trollOrder }));
+      seedMap(hook, { 'e-troll': [{ id: 'pd-1', dice: '1d6', type: 'poison' }] });
+      setEncounter(hook, inProgress(2, 0, { order: trollOrder }));
+      expect(reminderTexts()).toContain(
+        'Troll: 1d6 persistent poison — immune (no damage) — DC 15 flat check to end'
+      );
+      expect(mockRevealFiredIwr).toHaveBeenCalledWith([
+        { entryId: 'e-troll', damage: { iwr: [{ kind: 'immunity', type: 'poison', amount: 0 }] } },
+      ]);
+    });
+
+    it('reveals nothing when the defenses do not cover the tracked type', () => {
+      const hook = setup();
+      setEncounter(hook, inProgress(1, 1, { order: trollOrder }));
+      seedMap(hook, { 'e-troll': [{ id: 'pd-1', dice: '1d4', type: 'bleed' }] });
+      setEncounter(hook, inProgress(2, 0, { order: trollOrder }));
+      expect(reminderTexts()).toContain('Troll: 1d4 persistent bleed — DC 15 flat check to end');
+      expect(mockRevealFiredIwr).not.toHaveBeenCalled();
+    });
   });
 
   it('does not remind on first observation of an in-progress encounter (mid-combat mount)', () => {

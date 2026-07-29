@@ -216,6 +216,7 @@ export function useSaveRollSheet({ encounter, casterId, clearSaveResolution }) {
         setPersistentMap,
         sendUpdate,
         revealFiredIwr,
+        appendLog,
       });
       // The GM's degree lines carry no damage suffix any more, so the totals
       // get their own lines here — one per target that took something.

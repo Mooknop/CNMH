@@ -1,5 +1,5 @@
 import { computeSaveDamage } from './damage';
-import { addPersistent, makeInstances } from './persistentDamage';
+import { recordPersistentHits } from './persistentDamage';
 import { buildDamageApply } from './damageRelay';
 import { RELAY } from '../sync/keys';
 
@@ -65,6 +65,8 @@ export const saveDamageFor = (damage, degree, entryId, defenses = null) => {
  * @param {Function} [setPersistentMap]
  * @param {Function} [sendUpdate]
  * @param {Function} [revealFiredIwr]
+ * @param {Function} [appendLog]     - for the immunity-skip line when a target's
+ *                                     defenses negate a persistent record (#1015)
  * @returns {Array<{ result, damage }>} one entry per result, `damage` as saveDamageFor returns it
  */
 export const applySaveDamageOutcome = ({
@@ -75,6 +77,7 @@ export const applySaveDamageOutcome = ({
   setPersistentMap,
   sendUpdate,
   revealFiredIwr,
+  appendLog,
 }) => {
   const defensesFor = (entryId) =>
     (order || []).find((e) => e.entryId === entryId)?.defenses ?? null;
@@ -86,14 +89,20 @@ export const applySaveDamageOutcome = ({
 
   // Persistent-damage tracking (#272): computeSaveDamage already gated the
   // entries by degree (and doubled/halved their dice) — record what's left.
+  // A target whose defenses.immunities cover the type negates the record
+  // outright, logged and revealed (#1015).
   const persistentHits = perTarget
     .filter((p) => p.damage?.dmg?.persistent?.length)
     .map((p) => ({ entryId: p.result.entryId, persistent: p.damage.dmg.persistent }));
   if (persistentHits.length && setPersistentMap) {
-    setPersistentMap((m) => persistentHits.reduce(
-      (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, abilityName)),
-      m || {},
-    ));
+    recordPersistentHits({
+      hits: persistentHits,
+      order,
+      abilityName,
+      setPersistentMap,
+      appendLog,
+      revealFiredIwr,
+    });
   }
 
   // Typed damage relay (#1016): push each enemy target's RAW typed total to
