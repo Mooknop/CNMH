@@ -15,20 +15,15 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
 
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
 const gotoSheet = async (page: import('@playwright/test').Page) => {
   await page.goto(`/character/${CHAR_ID}`);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-  await openEncounterTab(page);
+  await expectSheet(page, CHAR_NAME);
+  await openPlayTab(page, 'Encounter');
 };
 
 test.describe('Encounter prompts', () => {

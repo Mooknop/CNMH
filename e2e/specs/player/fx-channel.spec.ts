@@ -33,6 +33,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, expectOffTurnLive, pcEntry, readyTurnState } from '../../helpers/encounter';
+import { expectMyTurnLive, expectSheet, openPlayTab } from '../../helpers/sheet';
 
 // Copies of src/hooks/useFxChannel.js + src/hooks/useValueFlash.js — e2e/ never
 // imports from src/ (see helpers/bridge.ts's header for the rationale). Local to
@@ -134,15 +135,6 @@ const bloomCount = async (page: Page) => (await fxRec(page)).blooms;
 
 const litPortrait = (page: Page) => page.locator('.stage-portrait[data-fx="bloom"]');
 
-const openEncounterTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: Page, name: string) =>
-  expect(page.getByRole('heading', { name, level: 1 })).toBeVisible({ timeout: 15_000 });
-
 /**
  * Land on VIEWER's sheet with ACTOR holding the turn: EncounterSkeleton mounts
  * RollToast (delivery probe) and EncounterStage puts ACTOR's portrait — the one
@@ -171,7 +163,7 @@ const receiverSetup = async (
   await installFxRecorder(page);
   await page.goto(`/character/${VIEWER_ID}`);
   await expectSheet(page, VIEWER_NAME);
-  await openEncounterTab(page);
+  await openPlayTab(page, 'Encounter');
   // Encounter-hydration gate: nothing below may be sampled before the off-turn
   // stage exists, or the probe watches a page with no portrait on it.
   // Encounter-hydration gate: nothing below may be sampled before the off-turn
@@ -202,11 +194,11 @@ const emitterSetup = async (
 
   await page.goto(`/character/${ACTOR_ID}`);
   await expectSheet(page, ACTOR_NAME);
-  await openEncounterTab(page);
+  await openPlayTab(page, 'Encounter');
   // Own-turn hydration gate ("End turn" only exists once cnmh_encounter_global
   // has landed) — and, because FULL_STATE is one message, the barrier for a
   // seeded fx buffer too: the emit below must not race the buffer it appends to.
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await expectMyTurnLive(page);
   return session;
 };
 

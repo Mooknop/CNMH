@@ -33,6 +33,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 import {
   breakdown, commitRoll, degrees, dieRing, resultFace, rollDamage, rollPad,
 } from '../../helpers/rollSheet';
@@ -119,17 +120,12 @@ const setup = async (
   });
 
   await page.goto(`/character/${CHAR_ID}`);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expectSheet(page, CHAR_NAME);
   // Encounter-hydration gate: the mode-aware play tab only reads "Encounter"
   // once cnmh_encounter_global has hydrated into usePlayMode. Clicking it (with
   // Playwright's auto-wait) is therefore the barrier — asserting on resolver
   // state before this lands is the classic flake in this suite.
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
+  await openPlayTab(page, 'Encounter');
   return session;
 };
 

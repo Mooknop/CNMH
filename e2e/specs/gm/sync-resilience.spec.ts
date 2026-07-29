@@ -36,6 +36,7 @@
 import { test, expect } from '../../fixtures/gm';
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 import { bridgeHello, TEMPLATE_PROTOCOL } from '../../helpers/bridge';
 
 const CHAR_ID = 'e2e-fighter';
@@ -162,15 +163,6 @@ async function resilientRelay(
 
 const syncStatus = (page: Page) => page.getByTestId('sync-status');
 
-const expectSheet = (page: Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-
-const openEncounterTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
 // Stance-trait actions render as tiles in the deck's Actions segment; handleUse
 // routes the Stance trait straight to enter (confirm sheet, no roll).
 const stanceAction = (name: string) => ({
@@ -228,8 +220,8 @@ test.describe('Sync resilience', () => {
       const relay = await resilientRelay(page, { snapshots: [ENCOUNTER_SEED] });
 
       await page.goto(`/character/${CHAR_ID}`);
-      await expectSheet(page);
-      await openEncounterTab(page);
+      await expectSheet(page, CHAR_NAME);
+      await openPlayTab(page, 'Encounter');
       await page.getByRole('tab', { name: 'Actions' }).click();
       await expect(syncStatus(page)).toHaveAttribute('data-state', 'live');
 
@@ -262,8 +254,8 @@ test.describe('Sync resilience', () => {
       const relay = await resilientRelay(page, { snapshots: [ENCOUNTER_SEED] });
 
       await page.goto(`/character/${CHAR_ID}`);
-      await expectSheet(page);
-      await openEncounterTab(page);
+      await expectSheet(page, CHAR_NAME);
+      await openPlayTab(page, 'Encounter');
       await page.getByRole('tab', { name: 'Actions' }).click();
       await expect(syncStatus(page)).toHaveAttribute('data-state', 'live');
 
@@ -300,8 +292,8 @@ test.describe('Sync resilience', () => {
       const relay = await resilientRelay(page, { snapshots: [ENCOUNTER_SEED, ENCOUNTER_SEED] });
 
       await page.goto(`/character/${CHAR_ID}`);
-      await expectSheet(page);
-      await openEncounterTab(page);
+      await expectSheet(page, CHAR_NAME);
+      await openPlayTab(page, 'Encounter');
       await page.getByRole('tab', { name: 'Actions' }).click();
       await expect(syncStatus(page)).toHaveAttribute('data-state', 'live');
 
@@ -319,10 +311,7 @@ test.describe('Sync resilience', () => {
       // The stance survives the snapshot that omitted it. The EffectsPanel's
       // voluntary-leave button is the rendered proof — it exists only while the
       // stance is active, so a reverted write makes it disappear.
-      await page
-        .getByRole('navigation', { name: 'Character sheet sections' })
-        .getByRole('button', { name: 'Stats', exact: true })
-        .click();
+      await openPlayTab(page, 'Stats');
       await expect(page.getByRole('button', { name: 'Leave E2E Dragon Stance' })).toBeVisible();
     });
 
@@ -335,8 +324,8 @@ test.describe('Sync resilience', () => {
       const relay = await resilientRelay(page, { snapshots: [ENCOUNTER_SEED] });
 
       await page.goto(`/character/${CHAR_ID}`);
-      await expectSheet(page);
-      await openEncounterTab(page);
+      await expectSheet(page, CHAR_NAME);
+      await openPlayTab(page, 'Encounter');
       await page.getByRole('tab', { name: 'Actions' }).click();
       await expect(syncStatus(page)).toHaveAttribute('data-state', 'live');
 
@@ -384,7 +373,7 @@ test.describe('Sync resilience', () => {
       });
 
       await page.goto(`/character/${CHAR_ID}`);
-      await expectSheet(page);
+      await expectSheet(page, CHAR_NAME);
 
       const rail = page.getByRole('navigation', { name: 'Character sheet sections' });
       await expect(rail.getByRole('button', { name: 'Downtime', exact: true })).toBeVisible();

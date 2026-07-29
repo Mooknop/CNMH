@@ -15,29 +15,21 @@
  */
 
 import { test, expect } from '../../fixtures/gm';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet } from '../../helpers/sheet';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter } from '../../helpers/encounter';
+// Spells are accessed via the MagicModal, opened from the "Cast a Spell"
+// launcher in the Segmented Deck's Spells segment — which renders in the
+// encounter surface: openMagic switches to the play tab (Encounter, via the
+// seeded active encounter) and selects the Spells tab before opening it.
+import { openMagic } from '../../helpers/spellcasting';
 
 const CHAR_ID = 'e2e-spellcaster';
 
 /** Wait for the character sheet h1 — fails fast via expectOnSheet first. */
 async function waitForSheet(page: import('@playwright/test').Page, charId: string, charName: string) {
   await expectOnSheet(page, charId);
-  await expect(page.getByRole('heading', { name: charName, level: 1 })).toBeVisible({ timeout: 15_000 });
-}
-
-// Spells are accessed via the MagicModal, opened from the "Cast a Spell"
-// launcher in the Segmented Deck's Spells segment — which renders in the
-// encounter surface. So switch to the play tab (Encounter, via the seeded active
-// encounter) and select the Spells tab before opening it.
-async function openMagic(page: import('@playwright/test').Page) {
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-  await page.getByRole('tab', { name: 'Spells' }).click();
-  await page.getByRole('button', { name: 'Cast a Spell' }).click();
+  await expectSheet(page, charName);
 }
 
 // MagicModal level 1 is a category grid (.magic-category-btn); selecting one

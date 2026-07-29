@@ -29,6 +29,7 @@ import { test, expect } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
 import { snapshotSpells, snapshotItems, casterCharacter, gotoSheet } from '../../helpers/spellcasting';
+import { openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-caster';
 const CHAR_NAME = 'E2E Caster';
@@ -84,10 +85,7 @@ async function openScepter(
     },
   });
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
+  await openPlayTab(page, 'Encounter');
   // Spellshape actions live in the deck's Actions segment.
   await page.getByRole('tab', { name: 'Actions' }).click();
   await page.getByRole('button', { name: actionName, exact: true }).first().click();

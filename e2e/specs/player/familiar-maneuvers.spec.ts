@@ -25,6 +25,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 import { degrees, openEdit, tapFace } from '../../helpers/rollSheet';
 
 const CHAR_ID = 'e2e-witch';
@@ -82,13 +83,8 @@ test.describe('Familiar maneuvers', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-      timeout: 15_000,
-    });
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Encounter', exact: true })
-      .click();
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     // Gate on encounter hydration before the pool assertion. `cnmh_encounter_global`
     // is a GLOBAL key shared across the shard, so the seed can land a beat late; if

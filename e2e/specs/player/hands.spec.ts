@@ -14,7 +14,7 @@
  */
 
 import { test, expect } from '../../fixtures/gm';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter } from '../../helpers/encounter';
 
@@ -23,7 +23,7 @@ const LONGSWORD_UID = 'uid-longsword-1';
 
 async function waitForSheet(page: import('@playwright/test').Page) {
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: 'E2E Fighter', level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, 'E2E Fighter');
 }
 
 test.describe('Hand management + InventoryTab', () => {
@@ -63,10 +63,7 @@ test.describe('Hand management + InventoryTab', () => {
     await waitForSheet(page);
 
     // Default tab is Stats; switch to the mode-aware play tab (Encounter).
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Encounter', exact: true })
-      .click();
+    await openPlayTab(page, 'Encounter');
 
     // --- Swap flow: deck Items segment → hand-setter → Confirm ---
     await page.getByRole('tab', { name: 'Items' }).click();
@@ -79,10 +76,7 @@ test.describe('Hand management + InventoryTab', () => {
     await expect(page.getByTestId('hands-glance-slot-1')).toContainText('E2E Longsword');
 
     // --- Inventory tab: held indicator ---
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
+    await openPlayTab(page, 'Inventory');
     // The held weapon now lives in the Hands strip (read-only in encounter), in
     // Hand 1 — not in the Worn bag.
     await expect(page.getByTestId('hands-strip-slot-1')).toContainText('E2E Longsword', {

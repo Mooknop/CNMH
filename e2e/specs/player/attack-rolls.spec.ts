@@ -25,6 +25,7 @@ import { activeEncounter, readyTurnState } from '../../helpers/encounter';
 import {
   commitRoll, commitStep, currentStepLabel, degrees, openEdit, sheetPill, summaryLine,
 } from '../../helpers/rollSheet';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -40,15 +41,6 @@ const enemy = (name: string, ac: number) => ({
   initiative: 10,
   defenses: { ac },
 });
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 // Find a log line on the synced encounter record matching every needle.
 const logHas = (...needles: string[]) => (v: any) =>
@@ -80,8 +72,8 @@ test.describe('Attack-roll resolution', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Slash/ }).first().click();
@@ -132,8 +124,8 @@ test.describe('Attack-roll resolution', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Slash/ }).first().click();
@@ -180,8 +172,8 @@ test.describe('Attack-roll resolution', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /E2E Twin Bolt/ }).first().click();

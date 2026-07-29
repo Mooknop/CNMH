@@ -15,18 +15,10 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-medic';
 const CHAR_NAME = 'E2E Medic';
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Battle Medicine', () => {
   test.beforeEach(async ({ reset, seed }) => {
@@ -55,8 +47,8 @@ test.describe('Battle Medicine', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     // Battle Medicine is a character action → the deck's Actions segment.
     await page.getByRole('tab', { name: 'Actions' }).click();

@@ -20,7 +20,7 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-shopper';
 const CHAR_NAME = 'E2E Shopper';
@@ -54,14 +54,11 @@ const shopLore = (id: string, title: string, parent = LOC_ID) => ({
 
 async function waitForSheet(page: import('@playwright/test').Page) {
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
 }
 
 async function openDowntimeShop(page: import('@playwright/test').Page) {
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
+  await openPlayTab(page, 'Downtime');
   await page.getByRole('button', { name: /Shop/ }).click();
   await expect(page.getByTestId('shop-storefront')).toBeVisible();
 }
@@ -155,10 +152,7 @@ test.describe('Player shop storefront', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await waitForSheet(page);
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Downtime', exact: true })
-      .click();
+    await openPlayTab(page, 'Downtime');
 
     // Only the open (but closed-for-trading) shop counts — hidden and
     // zero-ware shops never register as a shop at all (isShop/isShopRevealed).
@@ -211,10 +205,7 @@ test.describe('Player shop storefront', () => {
     // back out (Escape) so the bottom rail's Inventory tab is clickable again.
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
+    await openPlayTab(page, 'Inventory');
     await expect(page.getByText('E2E Antidote')).toBeVisible();
   });
 
