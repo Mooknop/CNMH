@@ -33,6 +33,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
+import { snapshotItems } from '../../helpers/spellcasting';
 import { mockSession } from '../../fixtures/session';
 
 const CHAR_ID = 'e2e-sceptrist';
@@ -41,6 +42,10 @@ const SCEPTER_REF = 'e2e-scepter-of-overload';
 const UID_A = 'uid-scepter-a';
 const UID_B = 'uid-scepter-b';
 const BROKEN_KEY = `cnmh_itembroken_${CHAR_ID}`;
+// The shared spell-slot ledger (#957): { [rank]: spent }. A slot sacrifice
+// (#998) and a cast draw from the same pool, so the actuated activation and
+// the Overload below must each land here too (#1046).
+const SLOTS_KEY = `cnmh_slots_${CHAR_ID}`;
 
 // A scepter-shaped catalog item: an `actuated` block with a `minRank` and NO
 // `cost: 'none'`, which is what opens the slot-sacrifice + Overload surface
@@ -127,6 +132,10 @@ test.describe('Item Overload lifecycle (cnmh_itembroken)', () => {
     await page.getByTestId('actuated-activate-rank-1').click();
     await expect(page.getByTestId('item-actuated')).toBeHidden();
 
+    // BOX (#998): the sacrifice consumed a slot — the shared slot ledger
+    // records 1 rank-1 slot spent, the same pool a cast would draw from.
+    await session.expectSent(SLOTS_KEY, (v) => v?.['1'] === 1);
+
     // --- Daily use spent → Overload is the only way to fire it again ---
     await openItem(page, UID_A);
     // Anchor for the absence assertion: Overload appearing proves the freq gate
@@ -136,6 +145,9 @@ test.describe('Item Overload lifecycle (cnmh_itembroken)', () => {
 
     await page.getByTestId('actuated-overload-rank-1').click();
     await expect(page.getByTestId('item-actuated')).toBeHidden();
+
+    // The Overload's slot cost is paid up front (#998): second spent slot.
+    await session.expectSent(SLOTS_KEY, (v) => v?.['1'] === 2);
 
     // BOX: the Overload writes the uid into cnmh_itembroken_<charId>, locked.
     // The DC 10 flat check breaks the item on a success AND on a failure, so
@@ -217,5 +229,69 @@ test.describe('Item Overload lifecycle (cnmh_itembroken)', () => {
     await openItem(page, UID_A);
     await expect(page.getByTestId('actuated-activate-rank-1')).toBeVisible();
     await expect(page.getByTestId('item-actuated-broken')).toHaveCount(0);
+  });
+});
+
+/**
+ * Catalog wiring (#1000, e2e per #1046): the tests above prove the actuated
+ * MACHINERY on a synthetic doc; this proves a REAL shipped scepter's authored
+ * `actuated` block drives it. `snapshotItems` seeds the production doc from
+ * src/data/snapshot/item.json, so if the catalog block ever drifts (renamed
+ * ability, changed minRank) this spec sees exactly what production sees.
+ */
+test.describe('Catalog scepter actuation (#1000)', () => {
+  const CAT_REF = 'scepter-of-energy-ablation'; // actuated: "Energy Abjection", minRank 2
+  const CAT_UID = 'uid-scepter-energy';
+
+  const CATALOG_CHAR = {
+    id: CHAR_ID,
+    name: CHAR_NAME,
+    level: 6,
+    class: 'Wizard',
+    ancestry: 'Human',
+    background: 'Scholar',
+    maxHp: 60,
+    ac: 20,
+    // Rank-2 slots only: minRank is 2, so these are the sole eligible pool —
+    // the activation surface offers exactly one rank button.
+    spellcasting: { spell_slots: { 2: 2 } },
+    inventory: [{ ref: CAT_REF, quantity: 1, uid: CAT_UID }],
+  };
+
+  test.beforeEach(async ({ reset }) => {
+    await reset();
+  });
+
+  test("a wired scepter's actuated ability appears and consumes a rank-2 slot", async ({
+    page,
+    seed,
+  }) => {
+    await seed({ item: snapshotItems(CAT_REF), character: [CATALOG_CHAR] });
+
+    const session = await mockSession(page);
+    await page.goto(`/character/${CHAR_ID}`);
+    await waitForSheet(page);
+    await openPlayTab(page, 'Inventory');
+    await expect(page.getByTestId(`grid-cell-${CAT_UID}`)).toBeVisible({ timeout: 10_000 });
+    await openItem(page, CAT_UID);
+
+    // The authored block surfaces: ability name and the minRank-2 slot cost.
+    const card = page.getByTestId('item-actuated');
+    await expect(card).toContainText('Energy Abjection');
+    await expect(card).toContainText('Cost: sacrifice a spell slot of rank 2+ · once per day');
+
+    // One eligible pool → one activate button, showing the pool's remaining.
+    const activate = page.getByTestId('actuated-activate-rank-2');
+    await expect(activate).toHaveText('Rank 2 (2)');
+    await activate.click();
+    await expect(card).toBeHidden();
+
+    // The activation consumed a rank-2 slot on the shared ledger…
+    expect(await session.expectSent(SLOTS_KEY, (v) => v?.['2'] === 1)).toMatchObject({ '2': 1 });
+
+    // …and closed the once/day gate: Overload is now the only path.
+    await openItem(page, CAT_UID);
+    await expect(page.getByTestId('actuated-overload-rank-2')).toBeVisible();
+    await expect(page.getByTestId('actuated-activate-rank-2')).toHaveCount(0);
   });
 });
