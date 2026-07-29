@@ -584,6 +584,10 @@
   {
     "name": "Aeon Stone (Preserving)",
     "description": "This translucent stone orbits your head. You gain resistance 3 to persistent damage. At the end of any turn when persistent damage you're taking can't overcome this resistance, that persistent damage ends. Resonant Power You can cast stabilize as a divine innate spell.",
+    "resistance": {
+      "amount": 3,
+      "type": "persistent"
+    },
     "resonant": {
       "grantedSpells": [
         {

@@ -227,10 +227,14 @@ function modifiersOf(entry, catalog) {
  * matches the plain `<type>` token — per PF2e, resistance (or weakness/
  * immunity) to X applies to persistent X too (#1679: the Pearly White
  * Spindle's resonant resistance authors plain `void`, while the persistent
- * surfaces query `persistent-void`). One-directional: a persistent-only
- * descriptor (`persistent-bleed`) still never matches a plain `bleed` query.
- * Both descriptors matching at once can't double-count — every reader scans
- * one modifier list and keeps the single highest match.
+ * surfaces query `persistent-void`) — AND the bare `persistent` wildcard
+ * token, which covers ALL persistent damage regardless of type (#927: the
+ * Preserving Aeon Stone's "resistance 3 to persistent damage"). Both rules
+ * are one-directional: a persistent-only descriptor (`persistent-bleed`)
+ * still never matches a plain `bleed` query, and the `persistent` wildcard
+ * never matches a plain-type query (`fire`). Several descriptors matching at
+ * once can't double-count — every reader scans one modifier list and keeps
+ * the single highest match.
  *
  * Shared by the effect readers below and the worn-gear readers
  * (utils/wornGear) so all apply sites agree.
@@ -240,7 +244,8 @@ export function vsMatches(vsList, vsType) {
   const types = String(vsList).split(',').map((t) => t.trim());
   if (types.includes(vsType)) return true;
   const base = vsType.startsWith('persistent-') ? vsType.slice('persistent-'.length) : '';
-  return !!base && types.includes(base);
+  if (!base) return false;
+  return types.includes(base) || types.includes('persistent');
 }
 
 function highestSpecialFor(activeEffects, stat, vsType, catalog) {
