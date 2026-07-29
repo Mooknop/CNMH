@@ -27,7 +27,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { activeEncounter, deckBody, readyTurnState } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-ledger-keeper';
@@ -132,14 +132,6 @@ const CATALOG = {
 };
 
 // ── Navigation ──────────────────────────────────────────────────────────────
-// Local helpers, deliberately kept in-file: sibling agents are editing
-// `e2e/helpers/**` in parallel. `openSection` / `gotoSheet` / `wornCells` are
-// factor-out candidates once this lands (see the PR body).
-
-const section = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true });
 
 /**
  * Wait out a sheet mount. `expectOnSheet` catches the CharacterSheet redirect to
@@ -150,9 +142,7 @@ const section = (page: Page, name: string) =>
  */
 async function awaitSheet(page: Page) {
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expectSheet(page, CHAR_NAME);
 }
 
 async function gotoSheet(page: Page) {
@@ -168,7 +158,7 @@ async function gotoSheet(page: Page) {
  * rendered yet.
  */
 async function openInventory(page: Page) {
-  await section(page, 'Inventory').click();
+  await openPlayTab(page, 'Inventory');
   await expect(page.getByTestId('bag-tab-worn')).toBeVisible({ timeout: 15_000 });
 }
 
@@ -206,8 +196,8 @@ test.describe('Item removal overlay (cnmh_removed)', () => {
     await gotoSheet(page);
 
     // ── Surface 1: the encounter deck ──────────────────────────────────────
-    await section(page, 'Encounter').click();
-    await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+    await openPlayTab(page, 'Encounter');
+    await expectMyTurnLive(page);
     await page.getByRole('tab', { name: 'Strikes', exact: true }).click();
 
     const body = deckBody(page);

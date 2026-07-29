@@ -22,6 +22,7 @@
  */
 
 import { test, expect } from '../../fixtures/gm';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-gear-ward';
 const CHAR_NAME = 'E2E Gear Ward';
@@ -154,13 +155,8 @@ test.describe('GM Manage Gear bindings', () => {
     // browser.newContext() would not — see live-sync.spec.ts.)
     const playerPage = await page.context().newPage();
     await playerPage.goto(`/character/${CHAR_ID}`);
-    await expect(playerPage.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-      timeout: 15_000,
-    });
-    await playerPage
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
+    await expectSheet(playerPage, CHAR_NAME);
+    await openPlayTab(playerPage, 'Inventory');
 
     // Baseline: unbound, so both the talisman and the attachment have their own
     // tiles and neither host is marked. This is the anchor the changes below are

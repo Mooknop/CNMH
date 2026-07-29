@@ -18,6 +18,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-tracker';
 const CHAR_NAME = 'E2E Tracker';
@@ -47,12 +48,6 @@ const track = (over: Record<string, unknown> = {}) => ({
 const challenges = (...docs: Array<{ id: string }>) =>
   Object.fromEntries(docs.map((d) => [d.id, d]));
 
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
 /**
  * Navigate, open the Encounter tab, and gate on encounter hydration.
  *
@@ -66,10 +61,8 @@ const openEncounterTab = (page: import('@playwright/test').Page) =>
  */
 const gotoEncounter = async (page: import('@playwright/test').Page) => {
   await page.goto(`/character/${CHAR_ID}`);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
-  await openEncounterTab(page);
+  await expectSheet(page, CHAR_NAME);
+  await openPlayTab(page, 'Encounter');
   await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible();
 };
 

@@ -21,7 +21,8 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { PERIOD, block, lockedPlan, openDowntimeTab } from '../../helpers/downtime';
+import { PERIOD, block, lockedPlan } from '../../helpers/downtime';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const EARNER_ID = 'e2e-earner';
 const EARNER_NAME = 'E2E Earner';
@@ -49,9 +50,6 @@ const shieldBlockTrack = (hours: number) => ({
   status: 'in-progress',
   startedAt: PERIOD,
 });
-
-const expectSheet = (page: Page, name: string) =>
-  expect(page.getByRole('heading', { name, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Earn Income', () => {
   test.beforeEach(async ({ reset, seed }) => {
@@ -82,7 +80,7 @@ test.describe('Earn Income', () => {
     await seedEarner(page);
     await page.goto(`/character/${EARNER_ID}`);
     await expectSheet(page, EARNER_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     // The header carries the task the GM published, flagged as an override
     // (without one the resolver would use the freelance job's own level, 4).
@@ -96,7 +94,7 @@ test.describe('Earn Income', () => {
     const session = await seedEarner(page);
     await page.goto(`/character/${EARNER_ID}`);
     await expectSheet(page, EARNER_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     await page.getByLabel('Earn Income skill').selectOption('crafting');
     // total ≥ DC + 10 is a critical success outright — the d20 face only matters
@@ -137,7 +135,7 @@ test.describe('Earn Income', () => {
     const session = await seedEarner(page);
     await page.goto(`/character/${EARNER_ID}`);
     await expectSheet(page, EARNER_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     // Roll 1 — inside the failure band (below the DC, but not by 11+).
     await page.getByLabel('Earn Income skill').selectOption('crafting');
@@ -191,7 +189,7 @@ test.describe('Training', () => {
 
     await page.goto(`/character/${TRAINEE_ID}`);
     await expectSheet(page, TRAINEE_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     // Only Shield Block is eligible: the three Specialized tiers require it first.
     await page.getByRole('button', { name: '+ New' }).click();
@@ -226,7 +224,7 @@ test.describe('Training', () => {
 
     await page.goto(`/character/${TRAINEE_ID}`);
     await expectSheet(page, TRAINEE_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     // Plan both days into Training, then lock in — hours bank only on lock-in.
     await page.getByRole('button', { name: 'More Training' }).click();
@@ -256,7 +254,7 @@ test.describe('Training', () => {
 
     await page.goto(`/character/${TRAINEE_ID}`);
     await expectSheet(page, TRAINEE_NAME);
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     await page.getByRole('button', { name: 'More Training' }).click();
     await expect(page.getByText('8 / 8h allocated')).toBeVisible();

@@ -8,12 +8,10 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
+import { expectSheet } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Player character sheet', () => {
   test.beforeEach(async ({ reset }) => {
@@ -34,7 +32,7 @@ test.describe('Player character sheet', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
+    await expectSheet(page, CHAR_NAME);
 
     // Always-visible sheet header (cs-info column).
     const vitals = page.getByRole('region', { name: 'Character vitals' });
@@ -64,7 +62,7 @@ test.describe('Player character sheet', () => {
     await seed({ character: [{ id: CHAR_ID, name: CHAR_NAME, level: 5 }] });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
+    await expectSheet(page, CHAR_NAME);
 
     await page.getByRole('button', { name: /Daily Preparations/ }).click();
     await expect(page.locator('.dp-body')).toBeVisible();
@@ -80,7 +78,7 @@ test.describe('Player character sheet', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
+    await expectSheet(page, CHAR_NAME);
 
     const rail = page.getByRole('navigation', { name: 'Character sheet sections' });
     await expect(rail.getByRole('button', { name: 'Exploration' })).toBeVisible();

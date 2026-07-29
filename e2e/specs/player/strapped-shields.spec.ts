@@ -29,6 +29,7 @@ import {
   expectOffTurnLive,
   readyTurnState,
 } from '../../helpers/encounter';
+import { expectMyTurnLive, expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -84,25 +85,10 @@ const character = (inventory: Array<{ ref: string; quantity: number; uid: string
   inventory,
 });
 
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-
-// Encounter-hydration gate for a PC turn: the self-status bar's End turn button
-// exists only once an ACTIVE, in-progress encounter has landed on this device
-// and it's this character's turn. Interacting before that races the mount —
-// the deck's Items segment is briefly the out-of-encounter one, and the turn
-// tools row (Raise) isn't there at all.
-const expectMyTurnLive = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
-
-// Its off-turn twin, `expectOffTurnLive`, lives in helpers/encounter.ts — see
-// there for the two #843 traps the gate exists to solve.
+// `expectMyTurnLive` (helpers/sheet.ts) is the gate before touching anything
+// here: interacting pre-hydration races the mount — the deck's Items segment is
+// briefly the out-of-encounter one, and the turn tools row (Raise) isn't there
+// at all. Its off-turn twin, `expectOffTurnLive`, lives in helpers/encounter.ts.
 
 const openItemsSegment = (page: import('@playwright/test').Page) =>
   page.getByRole('tab', { name: 'Items' }).click();
@@ -146,8 +132,8 @@ test.describe('Strapped shields', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     // --- Strap (1 Interact, its own flow — Swap never offers a buckler) ---
@@ -213,8 +199,8 @@ test.describe('Strapped shields', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     // The Raise chip is present but refuses — and says why.
@@ -273,8 +259,8 @@ test.describe('Strapped shields', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     // Both badges show, one blocked and one not.
@@ -315,8 +301,8 @@ test.describe('Strapped shields', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     await page.getByRole('button', { name: 'Raise a Shield' }).click();
@@ -376,8 +362,8 @@ test.describe('Strapped shields', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
     // #843: the existing shield-block spec fills this field with a bare `.fill`
     // that races the off-turn stage mount. Gate on the stage, then on the field
     // itself, before typing.
@@ -422,11 +408,8 @@ test.describe('Strapped shields', () => {
     const session = await mockSession(page);
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Inventory');
 
     const tile = page.getByTestId(`grid-cell-${BUCKLER_UID}`);
     await expect(tile).toBeVisible();
