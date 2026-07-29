@@ -2527,24 +2527,24 @@
         "description": "Frequency once per day; Effect You gain a +10-foot status bonus to your Speed for 1 minute."
       }
     ],
-    "name": "Bracelet of Dashing",
-    "description": "This jangling, silvery bracelet makes you lighter on your feet, giving you a +1 item bonus to Acrobatics checks.",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "weight": 0.1,
-    "price": 58,
     "bonus": [
       "acrobatics",
       1
     ],
-    "id": "bracelet-of-dashing",
+    "name": "Bracelet of Dashing",
+    "description": "This jangling, silvery bracelet makes you lighter on your feet, giving you a +1 item bonus to Acrobatics checks.",
     "image": "img_704c5241-0064-490f-a19a-6bcd585c31ef.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 58,
+    "weight": 0.1,
+    "id": "bracelet-of-dashing"
   },
   {
     "name": "Bracers of Missile Deflection",
@@ -2861,9 +2861,13 @@
     }
   },
   {
-    "id": "chain-shirt",
     "name": "Chain Shirt",
     "description": "Sometimes called a hauberk, this is a long shirt constructed of the same metal rings as chainmail. However, it is much lighter than chainmail and protects only the torso, upper arms, and upper legs of its wearer.",
+    "image": "img_c98edf1b-1f03-4acb-9568-3043bf68931d.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Flexible",
       "Noisy"
@@ -2877,11 +2881,7 @@
       "strength": 12,
       "group": "chain"
     },
-    "image": "img_c98edf1b-1f03-4acb-9568-3043bf68931d.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "chain-shirt"
   },
   {
     "name": "Chalk",
@@ -2898,19 +2898,19 @@
   {
     "name": "Channel Protection Amulet",
     "description": "This nugget of polished tektite is trapped in a cage of braided wire and hangs from a silken cord. When wearing this amulet, you gain resistance 5 against damage from harm spells if you're living, or against heal spells if you're undead.",
+    "image": "img_a5bff5a7-b072-4ebb-b52b-42c1ac617b20.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
       "Magical"
     ],
-    "weight": 0,
     "price": 56,
-    "id": "channel-protection-amulet",
-    "image": "img_a5bff5a7-b072-4ebb-b52b-42c1ac617b20.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "weight": 0,
+    "id": "channel-protection-amulet"
   },
   {
     "id": "charm-of-acid-resistance-greater",
@@ -3064,15 +3064,6 @@
     "id": "circlet-of-persuasion"
   },
   {
-    "id": "clandestine-cloak",
-    "name": "Clandestine Cloak",
-    "description": "When you pull up the hood of this nondescript gray cloak (an Interact action), you become drab and uninteresting: you gain a +1 item bonus to Stealth checks and to Deception checks to Impersonate a forgettable background character, but take a -1 item penalty to Diplomacy and Intimidation checks. Toggle the hood mode to apply these while the hood is up.\n\nActivate—Cloak Identity (two actions, concentrate, manipulate; once per day): You pull the hood up and gain the benefits of veil of privacy for 1 hour or until you pull the hood back down.",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "price": 230,
-    "weight": 0.1,
     "modes": {
       "label": "Hood",
       "default": "down",
@@ -3118,26 +3109,35 @@
         }
       ]
     },
+    "name": "Clandestine Cloak",
+    "description": "When you pull up the hood of this nondescript gray cloak (an Interact action), you become drab and uninteresting: you gain a +1 item bonus to Stealth checks and to Deception checks to Impersonate a forgettable background character, but take a -1 item penalty to Diplomacy and Intimidation checks. Toggle the hood mode to apply these while the hood is up.\n\nActivate—Cloak Identity (two actions, concentrate, manipulate; once per day): You pull the hood up and gain the benefits of veil of privacy for 1 hour or until you pull the hood back down.",
     "image": "img_e9751b06-6848-425f-b7b9-0c5397eb8aa2.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 230,
+    "weight": 0.1,
+    "id": "clandestine-cloak"
   },
   {
-    "id": "cloak",
-    "name": "Cloak",
-    "price": 0.5,
-    "weight": 0.1,
     "accessoryTags": [
       "cloak"
     ],
+    "name": "Cloak",
     "description": "A warm hooded traveler's cloak.",
     "image": "img_73343c04-35f8-4999-a9df-f526f5d002dd.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 0.5,
+    "weight": 0.1,
+    "id": "cloak"
   },
   {
     "name": "Cloak of Elvenkind",
@@ -3173,6 +3173,11 @@
   {
     "name": "Cloak of Feline Rest",
     "description": "This black velvet cloak is featureless and very soft to the touch. Upon wearing it for the first time, you're momentarily overwhelmed with a sense of comfort and coziness. While wearing this cloak you can comfortably rest in any space, so long as it's not wet or particularly hazardous. While sleeping in this cloak you only take a –2 status penalty to auditory Perception checks, rather than a –4 status penalty.",
+    "image": "img_4722b5d6-d2bb-4a6e-bb0e-a7c2cfc3b2bf.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Enchantment",
       "Invested",
@@ -3180,12 +3185,7 @@
     ],
     "price": 20,
     "weight": 0.1,
-    "id": "cloak-of-feline-rest",
-    "image": "img_4722b5d6-d2bb-4a6e-bb0e-a7c2cfc3b2bf.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "cloak-of-feline-rest"
   },
   {
     "name": "Cloak of Repute",
@@ -3253,22 +3253,22 @@
     }
   },
   {
+    "usage": "worn cloak",
     "name": "Cloak of the Bat",
     "description": "A supple, leathery cloak. While wearing it you gain a +2 item bonus to Stealth checks and to Acrobatics checks to Maneuver in Flight, and you can hang upside down from any surface that supports your weight without a check. Activate (two actions, command, Interact; once per day) to either transform the cloak into membranous wings that grant you a fly Speed of 30 feet for 10 minutes, or turn yourself into a bat as a 4th-rank pest form spell. A draconic monk can flavor the wings as scaled dragon wings.",
+    "image": "img_b5c64dd8-ffab-45b1-a2c8-cc1a43b53087.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Invested",
       "Magical"
     ],
-    "usage": "worn cloak",
     "price": 950,
     "weight": 1,
-    "id": "cloak-of-the-bat",
-    "image": "img_b5c64dd8-ffab-45b1-a2c8-cc1a43b53087.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "cloak-of-the-bat"
   },
   {
     "id": "clockwork-goggles-major",
@@ -3462,16 +3462,6 @@
     "description": "This bow is made from horn, wood, and sinew laminated together for extra power. It deals 1d6 piercing damage, has a range increment of 60 feet, and has the deadly d10 and propulsive traits."
   },
   {
-    "name": "Corpseward Pendant",
-    "description": "This worn amulet is usually shaped like a humanoid skull or small animal skull, warding its wearer from the notice of the restless dead.",
-    "traits": [
-      "Uncommon",
-      "Abjuration",
-      "Invested",
-      "Magical"
-    ],
-    "price": 150,
-    "weight": 0,
     "actions": [
       {
         "name": "Hide from the Dead",
@@ -3482,12 +3472,22 @@
         "description": "Activate Interact; Frequency three times per day; Effect You become undetectable to undead creatures for 10 minutes. Undead can't see, hear, or smell you, nor detect you with senses such as scent or tremorsense. A creature can attempt a single DC 18 Will save to ignore this effect. If an undead has reason to believe an undetected opponent is present, it can still attempt to Seek or Strike you."
       }
     ],
-    "id": "corpseward-pendant",
+    "name": "Corpseward Pendant",
+    "description": "This worn amulet is usually shaped like a humanoid skull or small animal skull, warding its wearer from the notice of the restless dead.",
     "image": "img_b759fd29-fd4a-4d46-85c1-60ae1df9e2ce.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Abjuration",
+      "Invested",
+      "Magical"
+    ],
+    "price": 150,
+    "weight": 0,
+    "id": "corpseward-pendant"
   },
   {
     "bonus": [
@@ -3605,8 +3605,17 @@
         "description": "Frequency once per day; Effect You bow to an ally within 30 feet, casting shield other targeting the ally; the link remains even if you later move more than 30 feet away. At the end of the spell's duration, your ally recovers 4d8 Hit Points and you recover half of what they recover."
       }
     ],
+    "bonus": [
+      "diplomacy",
+      1
+    ],
     "name": "Crown of the Companion",
     "description": "This regal crown links you to an ally you protect. While wearing it, you gain a +1 item bonus to Diplomacy checks.",
+    "image": "img_dd326dff-e36b-4e23-ae54-4be64b780f72.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Healing",
@@ -3615,18 +3624,9 @@
       "Necromancy",
       "Vitality"
     ],
-    "weight": 0.1,
     "price": 250,
-    "bonus": [
-      "diplomacy",
-      1
-    ],
-    "id": "crown-of-the-companion",
-    "image": "img_dd326dff-e36b-4e23-ae54-4be64b780f72.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "weight": 0.1,
+    "id": "crown-of-the-companion"
   },
   {
     "id": "cultist-cowl",
@@ -3964,24 +3964,24 @@
         "description": "Frequency once per day; Effect Attempt a DC 20 check to Recall Knowledge about people of a human ethnicity, a non-human ancestry, or some other type of creature (the GM determines your options). If you succeed, the badge's bonus increases to +2 for Diplomacy checks with creatures of that group for the rest of the day."
       }
     ],
-    "name": "Diplomat's Badge",
-    "description": "When displayed prominently, this brass badge makes creatures find you more agreeable. You gain a +1 item bonus to Diplomacy checks.",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "weight": 0,
-    "price": 125,
     "bonus": [
       "diplomacy",
       1
     ],
-    "id": "diplomats-badge",
+    "name": "Diplomat's Badge",
+    "description": "When displayed prominently, this brass badge makes creatures find you more agreeable. You gain a +1 item bonus to Diplomacy checks.",
     "image": "img_677434f5-62b6-487d-bfd7-2bb94caa439d.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 125,
+    "weight": 0,
+    "id": "diplomats-badge"
   },
   {
     "name": "Dischoran Rubble",
@@ -4003,17 +4003,10 @@
     "id": "dischoran-rubble"
   },
   {
-    "id": "dog-bone-knife",
     "name": "Dog-Bone Knife",
-    "description": "The blade of this +1 striking dagger is made from the thigh bone of a canine that died protecting its master. A willing polymorphed creature or werecreature that takes damage from the knife must succeed at a DC 19 Will save or immediately revert to its natural form; on a success it is temporarily immune for 1 minute. Creatures vulnerable to canines (such as kushtakas) take a -2 circumstance penalty to the save, and the knife ignores their resistance to physical damage. Unwilling polymorph victims are unaffected.",
-    "traits": [
-      "Uncommon",
-      "Magical"
-    ],
-    "price": 150,
-    "weight": 0.1,
     "strikes": [
       {
+        "damageType": "piercing",
         "name": "Dog-Bone Knife",
         "proficiency": "simple",
         "type": "melee",
@@ -4025,10 +4018,10 @@
           "Versatile S",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "piercing"
+        "actionCount": 1
       },
       {
+        "damageType": "piercing",
         "name": "Dog-Bone Knife (Thrown)",
         "proficiency": "simple",
         "type": "ranged",
@@ -4040,19 +4033,26 @@
           "Thrown",
           "Versatile S"
         ],
-        "actionCount": 1,
-        "damageType": "piercing"
+        "actionCount": 1
       }
     ],
     "runes": {
       "potency": 1,
       "striking": "striking"
     },
+    "description": "The blade of this +1 striking dagger is made from the thigh bone of a canine that died protecting its master. A willing polymorphed creature or werecreature that takes damage from the knife must succeed at a DC 19 Will save or immediately revert to its natural form; on a success it is temporarily immune for 1 minute. Creatures vulnerable to canines (such as kushtakas) take a -2 circumstance penalty to the save, and the knife ignores their resistance to physical damage. Unwilling polymorph victims are unaffected.",
     "image": "img_f75f3ef7-4901-4a40-a51e-afba2b549c52.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Magical"
+    ],
+    "price": 150,
+    "weight": 0.1,
+    "id": "dog-bone-knife"
   },
   {
     "name": "Doubling Rings",
@@ -5121,9 +5121,16 @@
     "id": "everyneed-pack"
   },
   {
-    "id": "explorers-clothing",
+    "accessoryTags": [
+      "clothing"
+    ],
     "name": "Explorer's Clothing",
     "description": "Adventurers who don't wear armor travel in durable clothing. Though it's not armor and uses your unarmored defense proficiency, it still has a Dex cap and can be etched with runes.",
+    "image": "img_6dc5e3c6-235b-4235-b260-16d9cd6740c2.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Comfort"
     ],
@@ -5136,14 +5143,7 @@
       "strength": 10,
       "group": "cloth"
     },
-    "accessoryTags": [
-      "clothing"
-    ],
-    "image": "img_6dc5e3c6-235b-4235-b260-16d9cd6740c2.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "explorers-clothing"
   },
   {
     "name": "Eye Garnets",
@@ -5281,19 +5281,19 @@
     "id": "featherlight-fletching"
   },
   {
-    "id": "fine-clothing",
-    "name": "Clothing (Fine)",
-    "price": 2,
-    "weight": 0.1,
     "accessoryTags": [
       "clothing"
     ],
+    "name": "Clothing (Fine)",
     "description": "Fine clothing appropriate for a noble court or formal occasion.",
     "image": "img_e6de0b45-d346-4a98-8bc1-92131c5f7a4b.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 2,
+    "weight": 0.1,
+    "id": "fine-clothing"
   },
   {
     "name": "Fist Shield",
@@ -6295,6 +6295,11 @@
     ],
     "name": "Grim Ring",
     "description": "While wearing this ring, you can detect the presence of undead during exploration (without pinpointing locations). The ring can't detect undead whose appearance is masked by an illusion spell of 2nd rank or higher. If an undead is hiding or disguised, the GM rolls a secret Perception check for you against the undead's Stealth or Deception DC, with a +2 item bonus.",
+    "image": "img_817f9a16-aab6-4d25-9c15-9901f7a22a29.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Detection",
@@ -6302,14 +6307,9 @@
       "Divine",
       "Invested"
     ],
-    "weight": 0,
     "price": 150,
-    "id": "grim-ring",
-    "image": "img_817f9a16-aab6-4d25-9c15-9901f7a22a29.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "weight": 0,
+    "id": "grim-ring"
   },
   {
     "id": "guisarme",
@@ -6417,6 +6417,7 @@
     "id": "hand-of-mercy"
   },
   {
+    "usage": "worn gloves",
     "name": "Handwraps of Mighty Blows",
     "strikes": {
       "damageType": "bludgeoning",
@@ -6438,19 +6439,18 @@
       "striking": "striking"
     },
     "description": "These strips of cloth wrap around your hands and wrists. They can have fundamental and property runes etched onto them just like a weapon, and those runes apply to all of your unarmed attacks — your monk's unarmed Strikes included, not only the fist shown here. Upgrade, add, or transfer runes exactly as you would for a weapon; property runes apply only when appropriate to the unarmed attack you're using. Etched here at +1 striking; add a Shock rune later for the electricity theme.",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "usage": "worn gloves",
-    "price": 0,
-    "weight": 0,
-    "id": "handwraps-of-mighty-blows",
     "image": "img_85e3ce4a-9e00-4699-8a07-1c2616ac1aa1.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 0,
+    "weight": 0,
+    "id": "handwraps-of-mighty-blows"
   },
   {
     "name": "Healer's Gel (Greater)",
@@ -7201,19 +7201,10 @@
     "id": "juggernaut-mutagen"
   },
   {
-    "id": "katana",
     "name": "Katana",
-    "description": "A curved, single-edged sword known for its wickedly sharp blade.",
-    "traits": [
-      "Uncommon",
-      "Deadly d8",
-      "Two-Hand d10",
-      "Versatile P"
-    ],
-    "price": 2,
-    "weight": 1,
     "strikes": [
       {
+        "damageType": "slashing",
         "name": "Katana",
         "proficiency": "martial",
         "type": "melee",
@@ -7225,15 +7216,24 @@
           "Versatile P",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "slashing"
+        "actionCount": 1
       }
     ],
+    "description": "A curved, single-edged sword known for its wickedly sharp blade.",
     "image": "img_cb4f5a4b-eb92-4221-b7ed-ef0b9b00b0a8.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Deadly d8",
+      "Two-Hand d10",
+      "Versatile P"
+    ],
+    "price": 2,
+    "weight": 1,
+    "id": "katana"
   },
   {
     "name": "Key of Unwinding",
@@ -7394,9 +7394,13 @@
     ]
   },
   {
-    "id": "leather-armor",
     "name": "Leather Armor",
     "description": "A mix of flexible and molded boiled leather, a suit of this type of armor provides some protection with maximum flexibility.",
+    "image": "img_0181e19e-347e-47d2-9191-12bbb98c0309.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "price": 2,
     "weight": 1,
     "armor": {
@@ -7406,11 +7410,7 @@
       "strength": 10,
       "group": "leather"
     },
-    "image": "img_0181e19e-347e-47d2-9191-12bbb98c0309.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "leather-armor"
   },
   {
     "name": "Leeching Fangs",
@@ -8689,21 +8689,21 @@
     "id": "noxious-incense-greater"
   },
   {
-    "id": "obsidian-goggles",
+    "usage": "worn",
     "name": "Obsidian Goggles",
     "description": "These sleek goggles have black lenses that make everything seem more brightly lit, granting a +1 item bonus to Perception checks involving sight. Activate them (single action, manipulate; once per day) to gain darkvision for 1 hour. (Greater, item 11, gives a +2 bonus and unlimited use; major, item 18, gives +3 and greater darkvision.)",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "usage": "worn",
-    "price": 150,
-    "weight": 0,
     "image": "img_142f054a-98e9-4956-ac9d-d466ece502ba.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 150,
+    "weight": 0,
+    "id": "obsidian-goggles"
   },
   {
     "id": "octopus-bottle",
@@ -8774,19 +8774,19 @@
     "level": 7
   },
   {
-    "id": "ordinary-clothing",
-    "name": "Clothing (Ordinary)",
-    "price": 0.1,
-    "weight": 0,
     "accessoryTags": [
       "clothing"
     ],
+    "name": "Clothing (Ordinary)",
     "description": "Ordinary, everyday clothing.",
     "image": "img_ad29206b-7cd3-4cde-8434-5ab803dc7fc5.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 0.1,
+    "weight": 0,
+    "id": "ordinary-clothing"
   },
   {
     "name": "Padded Armor",
@@ -9423,20 +9423,20 @@
     }
   },
   {
-    "id": "pocketed-vest",
-    "name": "Pocketed Vest",
-    "price": 0.5,
-    "weight": 0.1,
     "accessoryTags": [
       "clothing",
       "pocketed"
     ],
+    "name": "Pocketed Vest",
     "description": "A sturdy vest lined with pockets. Paired runes need one pocketed garment for each rune of the pair.",
     "image": "img_7d04f948-4235-4408-a9d9-86c58528a05b.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 0.5,
+    "weight": 0.1,
+    "id": "pocketed-vest"
   },
   {
     "id": "poison-concentrator-moderate",
@@ -10449,15 +10449,7 @@
     }
   },
   {
-    "id": "ring-of-wizardry-type-i",
-    "name": "Ring of Wizardry (Type I)",
     "level": 7,
-    "traits": [
-      "Arcane",
-      "Invested"
-    ],
-    "price": 360,
-    "weight": 0,
     "bonus": [
       "arcana",
       1
@@ -10468,12 +10460,20 @@
         "1": 2
       }
     },
+    "name": "Ring of Wizardry (Type I)",
     "description": "This ring is made from the purest platinum and is covered in esoteric arcane symbols. It does nothing unless you have a spellcasting class feature with the arcane tradition. While wearing the ring, you gain a +1 item bonus to Arcana checks and have two additional 1st-rank arcane spell slots each day, which you can prepare or cast spontaneously as you normally cast your spells. If you take off the ring, you lose the additional spell slots. You can't gain spell slots from more than one ring of wizardry per day.",
     "image": "img_5b38db1e-a9ca-4ce4-b707-1fedd2d187bd.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Arcane",
+      "Invested"
+    ],
+    "price": 360,
+    "weight": 0,
+    "id": "ring-of-wizardry-type-i"
   },
   {
     "id": "rod-of-wonder",
@@ -10726,15 +10726,6 @@
     "description": "A long woven scarf."
   },
   {
-    "name": "Scepter of Energy Ablation",
-    "description": "Scepters of this type are often made of heavy iron and have large hand guards similar to some swords.",
-    "traits": [
-      "Invested",
-      "Magical",
-      "Scepter"
-    ],
-    "price": 80,
-    "weight": 0.1,
     "level": 4,
     "actions": [
       {
@@ -10785,23 +10776,23 @@
       ],
       "description": "You grant resistance to one energy damage type of your choosing to all allies within 30 feet, equal to double the rank of the spell you expended. This lasts for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-energy-ablation",
+    "name": "Scepter of Energy Ablation",
+    "description": "Scepters of this type are often made of heavy iron and have large hand guards similar to some swords.",
     "image": "img_4d427bbe-71aa-43ab-808b-3c4082179905.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
-  },
-  {
-    "name": "Scepter of Greater Distances",
-    "description": "Sometimes mistaken for small staves, these scepters are made of bamboo or other fast-growing plants.",
+    },
     "traits": [
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 70,
+    "price": 80,
     "weight": 0.1,
+    "id": "scepter-of-energy-ablation"
+  },
+  {
     "level": 4,
     "actions": [
       {
@@ -10824,24 +10815,23 @@
       ],
       "description": "You grant all allies within 30 feet a +10-foot status bonus to Speed and a +1 status bonus to DCs and checks against effects that would impart immobilized, grabbed, or restrained for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-greater-distances",
+    "name": "Scepter of Greater Distances",
+    "description": "Sometimes mistaken for small staves, these scepters are made of bamboo or other fast-growing plants.",
     "image": "img_7a9dfbff-a20b-4602-82b9-59bf6ec8614a.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
-  },
-  {
-    "name": "Scepter of Heightening",
-    "description": "Often made of polished burled wood, this scepter allows the user to reach new heights of power, using the energy from one spell to temporarily make many of their spells more powerful.",
+    },
     "traits": [
-      "Uncommon",
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 2000,
+    "price": 70,
     "weight": 0.1,
+    "id": "scepter-of-greater-distances"
+  },
+  {
     "level": 12,
     "actions": [
       {
@@ -10873,24 +10863,24 @@
       ],
       "description": "For the duration, you can use the Heighten spellshape from this scepter as if it had a frequency of once per round instead of once per hour. This effect lasts for a number of rounds equal to the rank of the spell you expended."
     },
-    "id": "scepter-of-heightening",
     "image": "img_0a278e4d-ede5-4e46-b027-1a654c569ec9.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
-  },
-  {
-    "name": "Scepter of Purifying",
-    "description": "You can tell this scepter by its effervescent-smelling handle.",
+    },
+    "name": "Scepter of Heightening",
+    "description": "Often made of polished burled wood, this scepter allows the user to reach new heights of power, using the energy from one spell to temporarily make many of their spells more powerful.",
     "traits": [
-      "Healing",
+      "Uncommon",
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 340,
+    "price": 2000,
     "weight": 0.1,
+    "id": "scepter-of-heightening"
+  },
+  {
     "level": 7,
     "actions": [
       {
@@ -10913,23 +10903,24 @@
       ],
       "description": "You restore 1d8 Hit Points per rank of the spell to all creatures within a 30-foot cone. You can attempt to counteract the sickened condition of all creatures in the area, or a disease or poison affecting a single target in the area, using the rank of the spell you expended as the spell rank for your counteract modifier."
     },
-    "id": "scepter-of-purifying",
+    "name": "Scepter of Purifying",
+    "description": "You can tell this scepter by its effervescent-smelling handle.",
     "image": "img_a8cda3f9-02e0-42d7-9205-57f7105a3f44.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
-  },
-  {
-    "name": "Scepter of Quickening",
-    "description": "Scepters of this type are almost always made from stabilized quicksilver, polished so that it glistens in the faintest light. Despite this, they always appear slightly out of focus, as if they are moving too fast to be seen in one glance.",
+    },
     "traits": [
+      "Healing",
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 25000,
+    "price": 340,
     "weight": 0.1,
+    "id": "scepter-of-purifying"
+  },
+  {
     "level": 18,
     "actions": [
       {
@@ -10960,24 +10951,23 @@
       ],
       "description": "You and all allies within 30 feet are quickened for 1 minute and can use the extra action each round only to Strike and Stride."
     },
-    "id": "scepter-of-quickening",
     "image": "img_3f590015-8d40-4eba-b36b-2ebfc1873eb0.jpg",
     "imagePosition": {
       "x": 76,
       "y": 10
-    }
-  },
-  {
-    "name": "Scepter of Second Chances",
-    "description": "The birch these scepters are made from sheds its paper-like bark as if it were still a living tree. The bark disappears quickly, leading some wielders to write secret desires on it and watch them vanish, in hopes that they will come back in reality.",
+    },
+    "name": "Scepter of Quickening",
+    "description": "Scepters of this type are almost always made from stabilized quicksilver, polished so that it glistens in the faintest light. Despite this, they always appear slightly out of focus, as if they are moving too fast to be seen in one glance.",
     "traits": [
-      "Fortune",
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 1000,
+    "price": 25000,
     "weight": 0.1,
+    "id": "scepter-of-quickening"
+  },
+  {
     "level": 10,
     "actions": [
       {
@@ -11000,23 +10990,24 @@
       ],
       "description": "You and allies within 30 feet can manifest a better reality for yourselves for a number of rounds equal to the rank of the spell you expended. For the duration, affected creatures can choose to reroll a single attack roll, saving throw, or skill check. They must take the new result even if it is worse. This is a fortune effect."
     },
-    "id": "scepter-of-second-chances",
+    "name": "Scepter of Second Chances",
+    "description": "The birch these scepters are made from sheds its paper-like bark as if it were still a living tree. The bark disappears quickly, leading some wielders to write secret desires on it and watch them vanish, in hopes that they will come back in reality.",
     "image": "img_dc9a08ad-6817-4cfc-ba40-b7d46b649d2a.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
-  },
-  {
-    "name": "Scepter of Sickening",
-    "description": "These scepters are often green and brown, have an unpleasant, greasy feeling when touched, or carry a faint yet repulsive odor. Using the scepter to enhance a spell adds a bit of disgusting magic to it, leaving targets of the magic feeling sick.",
+    },
     "traits": [
+      "Fortune",
       "Invested",
       "Magical",
       "Scepter"
     ],
-    "price": 1400,
+    "price": 1000,
     "weight": 0.1,
+    "id": "scepter-of-second-chances"
+  },
+  {
     "level": 11,
     "actions": [
       {
@@ -11066,12 +11057,21 @@
       ],
       "description": "You exude a putrid aura in a 20-foot emanation. The aura lasts a number of rounds equal to the rank of the expended spell. Creatures that end their turn within the area become sickened 1 or increase the value of their sickened condition by 1, to a maximum of sickened 4. Creatures in the area cannot reduce their sickened condition below 1."
     },
-    "id": "scepter-of-sickening",
+    "name": "Scepter of Sickening",
+    "description": "These scepters are often green and brown, have an unpleasant, greasy feeling when touched, or carry a faint yet repulsive odor. Using the scepter to enhance a spell adds a bit of disgusting magic to it, leaving targets of the magic feeling sick.",
     "image": "img_1af70354-db90-455c-8bfa-f407984c6614.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical",
+      "Scepter"
+    ],
+    "price": 1400,
+    "weight": 0.1,
+    "id": "scepter-of-sickening"
   },
   {
     "id": "scimitar",
@@ -11103,20 +11103,10 @@
     "description": "This curved single-handed sword deals 1d6 slashing damage and has the forceful and sweep traits."
   },
   {
-    "id": "scorpion-whip",
     "name": "Scorpion Whip",
-    "description": "A whip with a series of razor-sharp blades set along its tip. Unlike a normal whip it lacks the nonlethal trait, making it deadlier but less suited to taking foes alive.",
-    "traits": [
-      "Uncommon",
-      "Disarm",
-      "Finesse",
-      "Reach",
-      "Trip"
-    ],
-    "price": 0.5,
-    "weight": 0.1,
     "strikes": [
       {
+        "damageType": "slashing",
         "name": "Scorpion Whip",
         "proficiency": "martial",
         "type": "melee",
@@ -11129,15 +11119,25 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "slashing"
+        "actionCount": 1
       }
     ],
+    "description": "A whip with a series of razor-sharp blades set along its tip. Unlike a normal whip it lacks the nonlethal trait, making it deadlier but less suited to taking foes alive.",
     "image": "img_02753f4c-78fa-45c5-8d35-9ea4ffa7f1be.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Disarm",
+      "Finesse",
+      "Reach",
+      "Trip"
+    ],
+    "price": 0.5,
+    "weight": 0.1,
+    "id": "scorpion-whip"
   },
   {
     "id": "scroll-of-banishment",
@@ -12334,13 +12334,13 @@
     "id": "soulspeaker"
   },
   {
-    "name": "Spacious Pouch",
-    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
     "image": "img_ac3cc5da-bd2c-44b9-9259-ffbeb8fc21f9.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
     },
+    "name": "Spacious Pouch",
+    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
     "traits": [
       "Extradimensional",
       "Magical"
@@ -12354,9 +12354,14 @@
     "id": "spacious-pouch"
   },
   {
-    "id": "spacious-pouch-type-ii",
-    "name": "Spacious Pouch (Type II)",
     "level": 7,
+    "name": "Spacious Pouch (Type II)",
+    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag does not change the Bulk of the pouch itself. You can Interact with the pouch to stow items in it or remove them just like a mundane sack, though an object still needs to fit through the opening. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. A living creature placed inside has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13.",
+    "image": "img_ac3cc5da-bd2c-44b9-9259-ffbeb8fc21f9.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Extradimensional",
       "Magical"
@@ -12367,12 +12372,7 @@
       "capacity": 50,
       "ignored": 50
     },
-    "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag does not change the Bulk of the pouch itself. You can Interact with the pouch to stow items in it or remove them just like a mundane sack, though an object still needs to fit through the opening. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. A living creature placed inside has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13.",
-    "image": "img_ac3cc5da-bd2c-44b9-9259-ffbeb8fc21f9.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "spacious-pouch-type-ii"
   },
   {
     "id": "sparkblade",
@@ -12607,19 +12607,10 @@
     "id": "spellslasher"
   },
   {
-    "id": "spiked-chain",
     "name": "Spiked Chain",
-    "description": "A 4-foot length of chain covered with barbs and spikes, sometimes fitted with metal hoops as handgrips.",
-    "traits": [
-      "Uncommon",
-      "Disarm",
-      "Finesse",
-      "Trip"
-    ],
-    "price": 3,
-    "weight": 1,
     "strikes": [
       {
+        "damageType": "slashing",
         "name": "Spiked Chain",
         "proficiency": "advanced",
         "type": "melee",
@@ -12631,15 +12622,24 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "slashing"
+        "actionCount": 1
       }
     ],
+    "description": "A 4-foot length of chain covered with barbs and spikes, sometimes fitted with metal hoops as handgrips.",
     "image": "img_a7dc1c2a-3354-40a0-b896-e970359c9d16.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Disarm",
+      "Finesse",
+      "Trip"
+    ],
+    "price": 3,
+    "weight": 1,
+    "id": "spiked-chain"
   },
   {
     "id": "spiked-steel-shield",
@@ -13177,22 +13177,22 @@
     "id": "star-grenade"
   },
   {
-    "id": "steel-shield",
-    "name": "Steel Shield",
-    "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
-    "price": 2,
-    "weight": 1,
     "shield": {
       "health": 20,
       "breakThreshold": 10,
       "hardness": 5,
       "bonus": 2
     },
+    "name": "Steel Shield",
+    "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
     "image": "img_49c629aa-869a-4ed4-bc13-544437e84c7e.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 2,
+    "weight": 1,
+    "id": "steel-shield"
   },
   {
     "id": "sterling-artisans-tools-talismans",
@@ -14885,25 +14885,25 @@
     ]
   },
   {
-    "id": "ventriloquists-ring",
-    "name": "Ventriloquist's Ring",
     "level": 3,
+    "bonus": [
+      "deception",
+      1
+    ],
+    "name": "Ventriloquist's Ring",
+    "description": "This elegant copper ring has miniature images of songbirds engraved around its circumference. You gain a +1 item bonus to Deception checks.\n\nActivate—Throw Voice (two actions, manipulate; once per day): Twisting the ring around your finger lets you magically throw your voice, with the effects of a ventriloquism spell.",
+    "image": "img_2262e7f8-1ed3-4f9c-9055-d54eaf0021b7.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Invested",
       "Magical"
     ],
     "price": 60,
     "weight": 0,
-    "bonus": [
-      "deception",
-      1
-    ],
-    "description": "This elegant copper ring has miniature images of songbirds engraved around its circumference. You gain a +1 item bonus to Deception checks.\n\nActivate—Throw Voice (two actions, manipulate; once per day): Twisting the ring around your finger lets you magically throw your voice, with the effects of a ventriloquism spell.",
-    "image": "img_2262e7f8-1ed3-4f9c-9055-d54eaf0021b7.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "ventriloquists-ring"
   },
   {
     "name": "Verdant Bola",
@@ -15344,19 +15344,19 @@
     ],
     "name": "Warrior's Training Ring",
     "description": "This ring is utilitarian in design, indicating its martial use, with a simple, sharp-edged sculpture at the band's center. While wearing this ring, you add your level to your attack rolls with all weapons in which you're untrained.",
+    "image": "img_adcbdd8e-5624-4406-b298-2154008b4aa0.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Uncommon",
       "Divination",
       "Invested"
     ],
-    "weight": 0,
     "price": 160,
-    "id": "warriors-training-ring",
-    "image": "img_adcbdd8e-5624-4406-b298-2154008b4aa0.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "weight": 0,
+    "id": "warriors-training-ring"
   },
   {
     "name": "Water Bomb",
@@ -15512,21 +15512,21 @@
     "id": "waterskin"
   },
   {
+    "usage": "worn",
     "name": "Wayfinder",
     "description": "A compact bronze compass-like device favored by the Pathfinder Society. Activate (single action, concentrate) to make it shed light like a torch. A wayfinder has a socket that can hold a single aeon stone; a stone slotted into a wayfinder still grants its normal benefits and also grants its resonant power. Removing or slotting a stone takes an Interact action.",
-    "traits": [
-      "Invested",
-      "Magical"
-    ],
-    "usage": "worn",
-    "price": 28,
-    "weight": 0,
-    "id": "wayfinder",
     "image": "img_7b6cdea6-0fcf-45fd-9853-79ef481680d7.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Invested",
+      "Magical"
+    ],
+    "price": 28,
+    "weight": 0,
+    "id": "wayfinder"
   },
   {
     "id": "weapon-harness",
@@ -15621,9 +15621,14 @@
     }
   },
   {
-    "id": "wind-ocarina",
-    "name": "Wind Ocarina",
     "level": 6,
+    "name": "Wind Ocarina",
+    "description": "A blue finish decorates the ceramic body of a wind ocarina. Activate (Interact): When you play a note, for 1 minute strong gusts sweep into a 15-foot emanation around you. Ammunition from physical ranged attacks can't pass through the area, and larger thrown weapons take a –2 circumstance penalty to attack rolls if their path crosses it. The area is difficult terrain, and gases—including creatures in gaseous form—can't pass through the emanation.",
+    "image": "img_ce3ebf8a-79ba-42aa-ab3d-bed596af5819.jpg",
+    "imagePosition": {
+      "x": 50,
+      "y": 50
+    },
     "traits": [
       "Air",
       "Aura",
@@ -15632,12 +15637,7 @@
     ],
     "price": 50,
     "weight": 0.1,
-    "description": "A blue finish decorates the ceramic body of a wind ocarina. Activate (Interact): When you play a note, for 1 minute strong gusts sweep into a 15-foot emanation around you. Ammunition from physical ranged attacks can't pass through the area, and larger thrown weapons take a –2 circumstance penalty to attack rolls if their path crosses it. The area is difficult terrain, and gases—including creatures in gaseous form—can't pass through the emanation.",
-    "image": "img_ce3ebf8a-79ba-42aa-ab3d-bed596af5819.jpg",
-    "imagePosition": {
-      "x": 50,
-      "y": 50
-    }
+    "id": "wind-ocarina"
   },
   {
     "name": "Windstep Sheath",
@@ -15749,14 +15749,6 @@
     "id": "wolf-fang"
   },
   {
-    "id": "wondrous-figurine-jade-serpent",
-    "name": "Wondrous Figurine (Jade Serpent)",
-    "description": "This 1-inch statuette is carved from jade in the shape of a coiled serpent. When activated it transforms into a living creature with the minion trait that understands your language and obeys your commands. If slain in animal form it reverts to a statue and cannot be activated again for 1 week; if destroyed in statue form its magic is lost. (Minion automation arrives with #1099.)",
-    "traits": [
-      "Magical"
-    ],
-    "price": 340,
-    "weight": 0,
     "actions": [
       {
         "name": "Activate Figurine",
@@ -15768,44 +15760,54 @@
         "description": "Activate (two actions, command, Interact); Frequency once per day; Effect You place the statue on solid ground and speak its name, transforming it into a Giant Viper (minion trait) for 8 hours or until reduced to 0 HP."
       }
     ],
+    "name": "Wondrous Figurine (Jade Serpent)",
+    "description": "This 1-inch statuette is carved from jade in the shape of a coiled serpent. When activated it transforms into a living creature with the minion trait that understands your language and obeys your commands. If slain in animal form it reverts to a statue and cannot be activated again for 1 week; if destroyed in statue form its magic is lost. (Minion automation arrives with #1099.)",
     "image": "img_123ec24e-b25a-4189-b2f4-4c7b15bde078.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Magical"
+    ],
+    "price": 340,
+    "weight": 0,
+    "id": "wondrous-figurine-jade-serpent"
   },
   {
-    "id": "wooden-shield",
-    "name": "Wooden Shield",
-    "description": "Though they come in a variety of shapes and sizes, the protection offered by wooden shields comes from the stoutness of their materials. While wooden shields are less expensive than steel shields, they break more easily.",
-    "price": 1,
-    "weight": 1,
     "shield": {
       "health": 12,
       "breakThreshold": 6,
       "hardness": 3,
       "bonus": 2
     },
+    "name": "Wooden Shield",
+    "description": "Though they come in a variety of shapes and sizes, the protection offered by wooden shields comes from the stoutness of their materials. While wooden shields are less expensive than steel shields, they break more easily.",
     "image": "img_c2220b24-91e3-426a-b5a9-7cd737b3628e.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "price": 1,
+    "weight": 1,
+    "id": "wooden-shield"
   },
   {
-    "id": "wordreaper",
-    "name": "Wordreaper",
-    "description": "This +1 sickle's blade is engraved to look like the curving feather of an elaborate quill, with a pen nib at the base of its wooden handle. You can use the handle as an ink pen, and it never runs out of ink.",
-    "traits": [
-      "Uncommon",
-      "Divination",
-      "Magical"
-    ],
     "usage": "held in one hand",
-    "price": 55,
-    "weight": 0.1,
+    "actions": [
+      {
+        "name": "Read By",
+        "actionCount": 3,
+        "traits": [
+          "Interact"
+        ],
+        "description": "Frequency once per day; Effect You inscribe the words \"read by\" and your name inside a nonmagical literary work such as a book, scroll, or play, immediately gaining cursory knowledge of the work as though you had skimmed it for 5 minutes."
+      }
+    ],
+    "name": "Wordreaper",
     "strikes": [
       {
+        "damageType": "slashing",
         "name": "Wordreaper",
         "proficiency": "simple",
         "type": "melee",
@@ -15817,28 +15819,26 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1,
-        "damageType": "slashing"
+        "actionCount": 1
       }
     ],
     "runes": {
       "potency": 1
     },
-    "actions": [
-      {
-        "name": "Read By",
-        "actionCount": 3,
-        "traits": [
-          "Interact"
-        ],
-        "description": "Frequency once per day; Effect You inscribe the words \"read by\" and your name inside a nonmagical literary work such as a book, scroll, or play, immediately gaining cursory knowledge of the work as though you had skimmed it for 5 minutes."
-      }
-    ],
+    "description": "This +1 sickle's blade is engraved to look like the curving feather of an elaborate quill, with a pen nib at the base of its wooden handle. You can use the handle as an ink pen, and it never runs out of ink.",
     "image": "img_84a27220-9198-4b02-a9ef-0e174991f60a.jpg",
     "imagePosition": {
       "x": 50,
       "y": 50
-    }
+    },
+    "traits": [
+      "Uncommon",
+      "Divination",
+      "Magical"
+    ],
+    "price": 55,
+    "weight": 0.1,
+    "id": "wordreaper"
   },
   {
     "reactions": [
