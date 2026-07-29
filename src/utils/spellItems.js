@@ -191,12 +191,17 @@ export const spellItemDisplayName = (item) => {
  * `{ spellRef, rank? }` block against the spell catalog. An authored name wins
  * (author override), and non-spell items just use their stored `name`. A
  * dangling ref still yields a "(unknown spell)" stub rather than undefined, so
- * callers can sort/key/display without guarding.
- * @param {Object} item   - A raw catalog item ({ scroll|wand: { spellRef, rank? } } | named item)
- * @param {Array}  spells - The spell catalog ({ id, name, level, ... }[])
+ * callers can sort/key/display without guarding. Pass `stubUnknown: false` to
+ * opt out of the stub: a missing/dangling spellRef then falls back to the
+ * stored `item.name` (usually undefined for spellRef-only entries) — the GM
+ * master list uses this so a dangling ref shows the raw entry, not a stub.
+ * @param {Object}  item   - A raw catalog item ({ scroll|wand: { spellRef, rank? } } | named item)
+ * @param {Array}   spells - The spell catalog ({ id, name, level, ... }[])
+ * @param {Object}  [opts]
+ * @param {boolean} [opts.stubUnknown=true] - false: unresolved spellRef returns `item.name` instead of the stub
  * @returns {string|undefined}
  */
-export const catalogItemName = (item, spells) => {
+export const catalogItemName = (item, spells, { stubUnknown = true } = {}) => {
   if (!item || typeof item !== 'object') return item?.name;
   if (item.name) return item.name;
   const kind = item.scroll ? 'scroll' : item.wand ? 'wand' : null;
@@ -206,5 +211,6 @@ export const catalogItemName = (item, spells) => {
   const spell = ref
     ? (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref)
     : null;
+  if (!spell && !stubUnknown) return item.name;
   return (kind === 'scroll' ? resolveScroll : resolveWand)(spell, block).name;
 };

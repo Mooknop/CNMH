@@ -17,7 +17,7 @@ import { toList } from '../../utils/traitRefs';
 import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
 import { resolveArmor } from '../../utils/armorRunes';
 import { resolveShield, REINFORCING, REINFORCING_TIERS } from '../../utils/shieldRunes';
-import { resolveScroll, resolveWand, castRank } from '../../utils/spellItems';
+import { resolveScroll, resolveWand, castRank, catalogItemName } from '../../utils/spellItems';
 import { ARMOR_CATEGORIES } from '../../utils/InventoryUtils';
 import './gm.css';
 
@@ -350,18 +350,13 @@ const derivedItemName = (e, spells) => {
   return preview ? preview.name : null;
 };
 
-// Display name for a RAW catalog item in the master list / search. Scroll/wand
-// entries no longer author a `name` (#812 S5 — it's derived from the spell), so
-// derive it from the raw `{ spellRef, rank? }` block; everything else uses its
-// authored name.
-const catalogDisplayName = (it, spells) => {
-  if (it && (it.scroll || it.wand)) {
-    const kind = it.scroll ? 'scroll' : 'wand';
-    const preview = spellPreview(kind, it[kind] || {}, spells);
-    if (preview) return preview.name;
-  }
-  return it ? it.name : undefined;
-};
+// Display name for a RAW catalog item in the master list / search: the shared
+// catalogItemName resolver (#896), with `stubUnknown: false` so a dangling
+// spellRef falls through to the stored `it.name` (usually undefined → the row
+// shows its id) instead of a "(unknown spell)" stub — the GM can spot and
+// repoint the broken ref.
+const catalogDisplayName = (it, spells) =>
+  catalogItemName(it, spells, { stubUnknown: false });
 
 const SpellSubform = ({ kind, spell, spells, onChange }) => {
   const ref = (spell.spellRef || '').trim();

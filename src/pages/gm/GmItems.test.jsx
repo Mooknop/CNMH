@@ -346,6 +346,19 @@ describe('GmItems', () => {
     expect(screen.getByRole('button', { name: 'Scroll of Sleep' })).toBeInTheDocument();
   });
 
+  it('falls back to the item id (not an "(unknown spell)" stub) for a dangling spellRef (#896)', () => {
+    useContent.mockReturnValue({
+      items: [{ id: 'scroll-of-gone', scroll: { spellRef: 'gone' } }],
+      spells,
+      images: [],
+    });
+    render(<GmItems />);
+    // No catalog spell matches and the entry authors no `name`: the master list
+    // shows the raw id so the GM can spot and repoint the broken ref.
+    expect(screen.getByRole('button', { name: 'scroll-of-gone' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /unknown spell/i })).not.toBeInTheDocument();
+  });
+
   it('shows the derived item preview (level/price/bulk/traits) for a selected scroll', async () => {
     setContent();
     render(<GmItems />);
