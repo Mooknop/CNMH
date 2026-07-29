@@ -27,6 +27,7 @@ import { expectOnSheet, expectSheet, openPlayTab } from './sheet';
 
 const SNAPSHOT_SPELLS = path.resolve(__dirname, '../../src/data/snapshot/spell.json');
 const SNAPSHOT_ITEMS = path.resolve(__dirname, '../../src/data/snapshot/item.json');
+const SNAPSHOT_CHARACTERS = path.resolve(__dirname, '../../src/data/snapshot/character.json');
 
 // Pull real spell docs out of the bundled seed by id. Seeding these (instead of
 // hand-written stubs) keeps id-routed flows honest: if the catalog doc a modal
@@ -56,6 +57,43 @@ export function snapshotItems(...ids: string[]): Array<Record<string, unknown> &
     if (!doc) throw new Error(`snapshotItems: "${id}" not found in src/data/snapshot/item.json`);
     return doc;
   });
+}
+
+/**
+ * Pull a real character's feats out of the bundled seed — the character-doc
+ * analogue of snapshotSpells/snapshotItems (the `snapshotCharacterFeats`
+ * sibling harrow-omens.spec.ts promised). Lifting authored feats verbatim
+ * keeps feat-driven flows honest: the `requiresOmen`/`clearsOmen`/`chain`
+ * blocks a spec's gates ride on are exactly what production ships.
+ */
+export function snapshotCharacterFeats(charId: string): Array<Record<string, unknown>> {
+  const all = JSON.parse(fs.readFileSync(SNAPSHOT_CHARACTERS, 'utf8')) as Array<
+    Record<string, unknown> & { id: string; feats?: Array<Record<string, unknown>> }
+  >;
+  const doc = all.find((c) => c.id === charId);
+  if (!doc) throw new Error(`snapshotCharacterFeats: "${charId}" not found in src/data/snapshot/character.json`);
+  return doc.feats || [];
+}
+
+/**
+ * Jade Inferno's two omen-bearing feats out of the bundled seed (#1667/#1674):
+ *   - "Harrower Dedication" — carries the Avoid Dire Fate reaction
+ *     (requiresOmen + clearsOmen). Its NAME is also what `useCharacter` keys
+ *     `hasHarrowing` off, which is what surfaces the Harrowing panel at all.
+ *   - "Harrow Casting" — the metamagic action (requiresOmen + chain.harrow).
+ * The length assertion makes content drift loud here instead of surfacing as a
+ * mystery "tile never rendered" three tests later. Shared by
+ * harrow-omens.spec.ts and harrow-cast-suits.spec.ts.
+ */
+export function harrowerFeats(): Array<Record<string, unknown>> {
+  const feats = snapshotCharacterFeats('JadeInferno').filter((f) =>
+    JSON.stringify(f).includes('requiresOmen'),
+  );
+  const names = feats.map((f) => f.name);
+  if (feats.length !== 2 || !names.includes('Harrower Dedication') || !names.includes('Harrow Casting')) {
+    throw new Error(`harrowerFeats: expected the two authored harrower feats, got ${JSON.stringify(names)}`);
+  }
+  return feats;
 }
 
 export type CasterOptions = {

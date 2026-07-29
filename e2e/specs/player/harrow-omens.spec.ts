@@ -24,18 +24,14 @@
  *      through the turn boundary untouched. An omen is not a per-turn resource.
  *
  * The harrower's feats are lifted verbatim out of the bundled seed
- * (`harrowerFeats()` below) rather than hand-stubbed, so the authored
- * `requiresOmen` / `clearsOmen` / `chain.harrow` blocks that drive every gate are
- * exactly what production ships. That reader is a factor-out candidate for
- * `helpers/spellcasting.ts` (a `snapshotCharacterFeats` sibling to
- * `snapshotSpells`/`snapshotItems`) — kept local here because sibling agents are
- * editing the helpers in parallel.
+ * (`harrowerFeats()`, now shared via helpers/spellcasting.ts with
+ * harrow-cast-suits.spec.ts — the factor-out this header used to promise), so
+ * the authored `requiresOmen` / `clearsOmen` / `chain.harrow` blocks that drive
+ * every gate are exactly what production ships.
  *
  * Runs on chromium + mobile-chromium (player surface).
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import {
@@ -44,7 +40,7 @@ import {
   expectOffTurnLive,
   readyTurnState,
 } from '../../helpers/encounter';
-import { casterCharacter, gotoSheet, openMagic, openMagicCategory } from '../../helpers/spellcasting';
+import { casterCharacter, gotoSheet, harrowerFeats, openMagic, openMagicCategory } from '../../helpers/spellcasting';
 import { expectMyTurnLive, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-harrower';
@@ -63,31 +59,9 @@ const CHAIN_SPELL = {
 };
 
 // ── Authored harrower content ────────────────────────────────────────────────
-
-const SNAPSHOT_CHARACTERS = path.resolve(__dirname, '../../../src/data/snapshot/character.json');
-
-/**
- * Jade Inferno's two omen-bearing feats out of the bundled seed:
- *   - "Harrower Dedication" — carries the Avoid Dire Fate reaction
- *     (requiresOmen + clearsOmen). Its NAME is also what `useCharacter` keys
- *     `hasHarrowing` off, which is what surfaces the Harrowing panel at all.
- *   - "Harrow Casting" — the metamagic action (requiresOmen + chain.harrow).
- * The length assertion makes content drift loud here instead of surfacing as a
- * mystery "tile never rendered" three tests later.
- */
-function harrowerFeats(): Array<Record<string, unknown>> {
-  const all = JSON.parse(fs.readFileSync(SNAPSHOT_CHARACTERS, 'utf8')) as Array<
-    Record<string, unknown> & { id: string; feats?: Array<Record<string, unknown>> }
-  >;
-  const jade = all.find((c) => c.id === 'JadeInferno');
-  if (!jade) throw new Error('harrowerFeats: JadeInferno not found in src/data/snapshot/character.json');
-  const feats = (jade.feats || []).filter((f) => JSON.stringify(f).includes('requiresOmen'));
-  const names = feats.map((f) => f.name);
-  if (feats.length !== 2 || !names.includes('Harrower Dedication') || !names.includes('Harrow Casting')) {
-    throw new Error(`harrowerFeats: expected the two authored harrower feats, got ${JSON.stringify(names)}`);
-  }
-  return feats;
-}
+// `harrowerFeats()` lives in helpers/spellcasting.ts (shared with
+// harrow-cast-suits.spec.ts); it lifts Jade Inferno's two omen-bearing feats
+// verbatim out of the bundled seed, with a loud drift assertion.
 
 const harrower = () =>
   casterCharacter({
