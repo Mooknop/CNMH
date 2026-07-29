@@ -19,19 +19,11 @@ import {
   readyTurnState,
   expectOffTurnLive,
 } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
 const ENTRY_ID = `e2e-${CHAR_ID}`; // matches activeEncounter()'s pc entryId
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Damage result surface', () => {
   test.beforeEach(async ({ reset }) => {
@@ -45,7 +37,7 @@ test.describe('Damage result surface', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
+    await expectSheet(page, CHAR_NAME);
 
     // HP is read-only here (applied by the GM/bridge) — the masthead vitals
     // strip is the visible surface; Dying/Wounded chip in the Stats status strip.
@@ -69,8 +61,8 @@ test.describe('Damage result surface', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     const chip = page.getByRole('button', { name: `${CHAR_NAME}: 1d6 persistent fire` });
     await expect(chip).toBeVisible();
@@ -112,8 +104,8 @@ test.describe('Damage result surface', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     // #843: the Shield Block bar lives on the off-turn stage, and the stage
     // mounts only once the encounter has hydrated on this device. Without this

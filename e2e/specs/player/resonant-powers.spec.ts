@@ -56,7 +56,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { activeEncounter, encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
 import { casterCharacter, snapshotItems, snapshotSpells } from '../../helpers/spellcasting';
 
@@ -143,15 +143,9 @@ const ALL_INVESTED = {
 const PC_ENTRY_ID = `e2e-${CHAR_ID}`; // matches activeEncounter()'s pc entryId
 
 // ── Navigation / local locators ──────────────────────────────────────────────
-// FACTOR-OUT CANDIDATES: `openTab` and `openCard` are copied verbatim from
+// FACTOR-OUT CANDIDATE: `openCard` is copied verbatim from
 // affix-attach.spec.ts / combat-item-state.spec.ts; an `e2e/helpers/inventory.ts`
-// would own both (plus the attuned-vs-bag disjunction below).
-
-const openTab = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true })
-    .click();
+// would own it (plus the attuned-vs-bag disjunction below).
 
 /**
  * Open an item's card by inventory uid. An INVESTED item leaves the bag grid
@@ -187,12 +181,12 @@ const castChip = (page: Page, spellName: string) =>
 async function gotoSheet(page: Page) {
   await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
 }
 
 async function gotoInventory(page: Page) {
   await gotoSheet(page);
-  await openTab(page, 'Inventory');
+  await openPlayTab(page, 'Inventory');
 }
 
 test.describe('Resonant powers — wayfinder aeon stones', () => {
@@ -332,7 +326,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     });
 
     await gotoSheet(page);
-    await openTab(page, 'Encounter');
+    await openPlayTab(page, 'Encounter');
 
     // Baseline: the stone is INVESTED but unslotted, so nothing is hoisted and
     // the persistent chip states the bare instance. (An always-on `resistance`
@@ -341,7 +335,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     const chip = page.locator('.pdc-badge');
     await expect(chip).toHaveAttribute('aria-label', `${CHAR_NAME}: 1d6 persistent void`);
 
-    await openTab(page, 'Inventory');
+    await openPlayTab(page, 'Inventory');
     await slotFromCard(page, SPINDLE_UID);
     await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === SPINDLE_UID);
 
@@ -351,7 +345,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     // that touches four files the ItemModal never renders. The chip queries
     // `persistent-void`; the spindle authors plain `void` — the plain-type
     // fallback (#1679) is what connects them.
-    await openTab(page, 'Encounter');
+    await openPlayTab(page, 'Encounter');
     await expect(chip).toHaveAttribute(
       'aria-label',
       `${CHAR_NAME}: 1d6 persistent void − resistance 1`,
@@ -378,7 +372,7 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
     });
 
     await gotoSheet(page);
-    await openTab(page, 'Encounter');
+    await openPlayTab(page, 'Encounter');
     // The chip proves the encounter has hydrated on this device before any turn
     // is pushed — otherwise the first transition races the mount.
     await expect(page.locator('.pdc-badge')).toBeVisible();
@@ -399,10 +393,10 @@ test.describe('Resonant powers — wayfinder aeon stones', () => {
       .toEqual([`${CHAR_NAME}: 1d6 persistent void — DC 15 flat check to end`]);
 
     // Slot the stone, then run the turn back around to the PC and off again.
-    await openTab(page, 'Inventory');
+    await openPlayTab(page, 'Inventory');
     await slotFromCard(page, SPINDLE_UID);
     await session.expectSent(WAYFINDER_KEY, (v) => v?.[WF_UID] === SPINDLE_UID);
-    await openTab(page, 'Encounter');
+    await openPlayTab(page, 'Encounter');
     await expect(page.locator('.pdc-badge')).toBeVisible();
 
     // Each transition needs its own commit: the watcher tracks ONE outgoing
@@ -507,7 +501,7 @@ test.describe('Resonant powers — Power Ring Veracious Spell', () => {
     await expect(page.getByRole('heading', { name: CASTER_NAME, level: 1 })).toBeVisible({
       timeout: 15_000,
     });
-    await openTab(page, 'Spells');
+    await openPlayTab(page, 'Spells');
 
     // The ring is in the bag but not attuned: `useVeracious` finds no ring, so
     // itemBonus is 0 and the control does not exist. The Atk stat is the anchor
@@ -564,8 +558,8 @@ test.describe('Resonant powers — Power Ring Veracious Spell', () => {
     await expect(page.getByRole('heading', { name: CASTER_NAME, level: 1 })).toBeVisible({
       timeout: 15_000,
     });
-    await openTab(page, 'Encounter');
-    await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+    await openPlayTab(page, 'Encounter');
+    await expectMyTurnLive(page);
 
     // The spellbook hosts the same SpellsHeader the sheet's Spells tab does, so
     // the armed state is readable from inside the encounter. It lives in the

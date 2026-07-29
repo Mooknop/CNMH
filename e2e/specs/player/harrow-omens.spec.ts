@@ -45,6 +45,7 @@ import {
   readyTurnState,
 } from '../../helpers/encounter';
 import { casterCharacter, gotoSheet, openMagic, openMagicCategory } from '../../helpers/spellcasting';
+import { expectMyTurnLive, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-harrower';
 const CHAR_NAME = 'E2E Harrower';
@@ -114,17 +115,11 @@ const omenChip = (page: Page) => page.locator('.cmd-init .ttp-omen-chip');
 const omenPanel = (page: Page) => page.getByRole('group', { name: 'Active Harrow Omen' });
 const suitPicker = (page: Page) => page.getByRole('radiogroup', { name: 'Drawn suit' });
 
-const openEncounterTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
 /** Sheet → Encounter tab, gated on "End turn" (the deck has hydrated AND it's our turn). */
 async function gotoDeck(page: Page) {
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await openEncounterTab(page);
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await openPlayTab(page, 'Encounter');
+  await expectMyTurnLive(page);
 }
 
 /** Seed an active encounter (optionally with a starting omen) and land on the deck. */

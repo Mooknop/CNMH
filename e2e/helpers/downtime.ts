@@ -84,24 +84,9 @@ export const lockedPlan = (plan: Record<string, number>) => ({
   status: 'ready',
 });
 
-/**
- * The mode-aware play tab.
- *
- * The sheet's nav carries ONE tab whose label follows `usePlayMode`, and it only
- * reads "Downtime" once `cnmh_playmode_global` is 'downtime' with no active
- * encounter. Clicking it therefore doubles as the hydration gate (#1366) for
- * everything the tab renders: if the synced state hasn't landed yet the button
- * still says Exploration and the click retries until it does, instead of the
- * spec racing ahead to assert on an unmounted surface.
- *
- * (A later pass unifies the mode-aware opener across the 25+ specs that carry
- * their own — this one is scoped to the downtime specs.)
- */
-export const openDowntimeTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
+// The mode-aware play-tab opener lives in helpers/sheet.ts now
+// (`openPlayTab(page, 'Downtime')`) — including the reasoning for why clicking
+// it doubles as the hydration gate (#1366).
 
 /**
  * The allocator's running budget line — `<b>{used}</b> / {blockDays} planned ·

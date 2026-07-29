@@ -31,7 +31,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import {
   activeEncounter,
   deckBody,
@@ -220,31 +220,20 @@ const character = (inventory: Array<{ ref: string; quantity: number; uid: string
   inventory,
 });
 
-const openTab = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true })
-    .click();
-
 const segment = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });
 
 /** Sheet loaded. Nothing encounter-specific — the investiture box has no combat. */
 async function gotoSheet(page: Page) {
   await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
 }
 
-/**
- * Sheet → Encounter tab → the PC's own turn has hydrated. `End turn` only
- * renders once an ACTIVE in-progress encounter has landed AND it is this
- * character's turn, so it is the cheapest gate against the pre-hydration render
- * where the deck exists but its tiles do not.
- */
+/** Sheet → Encounter tab → the PC's own turn has hydrated (`expectMyTurnLive`). */
 async function gotoDeck(page: Page) {
   await gotoSheet(page);
-  await openTab(page, 'Encounter');
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await openPlayTab(page, 'Encounter');
+  await expectMyTurnLive(page);
 }
 
 // Strikes-segment sections. A strike whose `active` is false (broken, or a
@@ -471,7 +460,7 @@ test.describe('Combat item state', () => {
     // Switch modes from the item card. Hand changes are frozen in encounter but
     // the mode toggle is not, so the held blade's tile in the Inventory hands
     // strip is the way in.
-    await openTab(page, 'Inventory');
+    await openPlayTab(page, 'Inventory');
     await page.getByTestId(`hands-tile-${BLADE_UID}`).click();
     await page.getByTestId('item-mode-bright').click();
     await session.expectSent(ITEMMODE_KEY, (v) => v?.[BLADE_UID] === 'bright');
@@ -479,8 +468,8 @@ test.describe('Combat item state', () => {
 
     // Back in combat the Strike has re-derived off the new mode's overrides:
     // +1 potency in the derived name and a second damage die from Striking.
-    await openTab(page, 'Encounter');
-    await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+    await openPlayTab(page, 'Encounter');
+    await expectMyTurnLive(page);
     await segment(page, 'Strikes').click();
     // The focus survives the tab round-trip (it is per-character synced state),
     // so the stat line is still the tile's sub-line rather than the target cue.
@@ -527,7 +516,7 @@ test.describe('Combat item state', () => {
     });
 
     await gotoSheet(page);
-    await openTab(page, 'Inventory');
+    await openPlayTab(page, 'Inventory');
 
     // Stamped onto the item (stampItemEffects → IconTile's ✨ badge).
     const badge = page.getByTestId(`grid-cell-${ARMOR_UID}`).getByLabel('Active effect');
@@ -568,7 +557,7 @@ test.describe('Combat item state', () => {
     });
 
     await gotoSheet(page);
-    await openTab(page, 'Inventory');
+    await openPlayTab(page, 'Inventory');
 
     const attuned = page.getByTestId('attuned-area');
     await expect(attuned).toContainText('10 / 10 invested');

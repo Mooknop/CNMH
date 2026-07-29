@@ -8,7 +8,8 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { block, openDowntimeTab } from '../../helpers/downtime';
+import { block } from '../../helpers/downtime';
+import { openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -31,7 +32,7 @@ test.describe('Downtime', () => {
     await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
     // Open the mode-aware play tab (Downtime).
-    await openDowntimeTab(page);
+    await openPlayTab(page, 'Downtime');
 
     await expect(page.getByText('3 days available')).toBeVisible();
   });
