@@ -11590,6 +11590,20 @@
     "augTarget": [
       "shield"
     ],
+    "traitChoice": {
+      "pickOne": [
+        "Backswing",
+        "Forceful"
+      ],
+      "orTwoOf": [
+        "Disarm",
+        "Nonlethal",
+        "Shove",
+        "Thrown 10 ft",
+        "Trip",
+        "Versatile S"
+      ]
+    },
     "name": "Shield Augmentation",
     "level": 0,
     "price": 0.8,
