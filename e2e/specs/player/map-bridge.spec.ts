@@ -43,6 +43,7 @@ import {
   openSpellsSegment,
   castSpell,
 } from '../../helpers/spellcasting';
+import { openPlayTab } from '../../helpers/sheet';
 // The three independent protocol floors, the capture deadline, and the hello
 // payload they are read off — copies of src/utils/snapshotRelay.js, kept in
 // helpers/bridge.ts because e2e/ never imports from src/ (see that file's
@@ -225,10 +226,7 @@ async function tapSnapshot(page: Page, nx: number, ny: number) {
 /** Sheet → Encounter tab, gated on encounter hydration before anything else. */
 async function openEncounterTab(page: Page) {
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
+  await openPlayTab(page, 'Encounter');
   // `cnmh_encounter_global` is a global key and can land a beat late; the
   // self-status bar's End turn button renders only for an active, in-progress
   // encounter on this PC's turn, so its visibility proves encounterMode is live

@@ -11,6 +11,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-ranger';
 const CHAR_NAME = 'E2E Ranger';
@@ -18,15 +19,6 @@ const PREY_KEY = `cnmh_huntprey_${CHAR_ID}`;
 
 // A "Hunt Prey" action tile routes (by exact name) to the Hunt Prey modal.
 const huntPreyAction = { name: 'Hunt Prey', actions: '1', description: 'Designate your prey.' };
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 // The prey list inside the modal (scoped so enemy chips don't collide with the
 // turn-tracker order strip, which also lists enemy names).
@@ -52,8 +44,8 @@ test.describe('Hunt Prey', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     // Hunt Prey is a class action → the deck's Actions segment. The tile opens
     // the modal; only the enemy in the order is offered as prey.
@@ -86,8 +78,8 @@ test.describe('Hunt Prey', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     await page.getByRole('tab', { name: 'Actions' }).click();
     await page.getByRole('button', { name: /Hunt Prey/ }).click();

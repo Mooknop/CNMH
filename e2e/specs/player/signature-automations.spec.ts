@@ -29,7 +29,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { applyDamage, blockLine, openEdit, rollDamage, tapFace } from '../../helpers/rollSheet';
 import {
   deckBody,
@@ -125,22 +125,12 @@ const signatory = (extra: Record<string, unknown> = {}) => ({
 
 // ── Navigation / gates ───────────────────────────────────────────────────────
 
-const nav = (page: Page) =>
-  page.getByRole('navigation', { name: 'Character sheet sections' });
-
-const openTab = (page: Page, name: string) =>
-  nav(page).getByRole('button', { name, exact: true }).click();
-
-const expectSheet = async (page: Page) => {
+/** Sheet mounted, failing fast on the redirect-to-'/' mode. */
+const gotoSheet = async (page: Page) => {
+  await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expectSheet(page, CHAR_NAME);
 };
-
-/** Own-turn hydration gate — the deck's tiles do not exist before this. */
-const expectMyTurnLive = (page: Page) =>
-  expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
 
 /**
  * Setup-phase gate. Neither `End turn` nor the off-turn stage exists during
@@ -211,9 +201,8 @@ test.describe('Signature automations', () => {
     // No encounter: absorbing is a 10-minute activity, done out of combat.
     const session = await mockSession(page);
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Inventory');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Inventory');
 
     // The spellgun's own card offers the host gloves.
     await page.getByTestId(`grid-cell-${GUN_UID}`).click();
@@ -272,9 +261,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Inventory');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Inventory');
 
     // Fire it off the glove card — the designed launch surface for an absorbed
     // spellgun (it has no tile of its own while bound).
@@ -365,9 +353,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Inventory');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Inventory');
     await page.getByTestId(`grid-cell-${GLOVE_UID}`).click();
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
     await openEdit(page);
@@ -412,9 +399,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Inventory');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Inventory');
     await page.getByTestId(`grid-cell-${GLOVE_UID}`).click();
     await page.getByTestId(`absorbed-fire-${GUN_UID}`).click();
 
@@ -461,9 +447,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Encounter');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     // No dagger before the draw — the armor alone grants nothing.
@@ -506,9 +491,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Encounter');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Encounter');
     await expectMyTurnLive(page);
 
     await page.getByRole('tab', { name: 'Strikes' }).click();
@@ -550,9 +534,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Encounter');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Encounter');
     await expectOffTurnLive(page);
 
     // Round 2 begins with the wearer: the goblin's turn ended, not theirs.
@@ -590,9 +573,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Encounter');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Encounter');
     await expect(initiativeEntry(page)).toBeVisible({ timeout: 15_000 });
 
     // Pick a NON-Deception skill first, so "instead of the selected skill" is a
@@ -639,9 +621,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Encounter');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Encounter');
     await expect(initiativeEntry(page)).toBeVisible({ timeout: 15_000 });
 
     // Undeclared: a plain manual-total field, no d20 breakdown.
@@ -678,9 +659,8 @@ test.describe('Signature automations', () => {
       },
     });
 
-    await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openTab(page, 'Stats');
+    await gotoSheet(page);
+    await openPlayTab(page, 'Stats');
 
     await page.getByRole('button', { name: /Daily Preparations/ }).click();
     const modal = page.getByRole('dialog', { name: 'Daily Preparations' });

@@ -13,15 +13,10 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { pcEntry, enemyEntry, encounterState, idleEncounter } from '../../helpers/encounter';
+import { openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
 
 test.describe('Encounter lifecycle & turn tracker', () => {
   test.beforeEach(async ({ reset, seed }) => {
@@ -42,7 +37,7 @@ test.describe('Encounter lifecycle & turn tracker', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-    await openEncounterTab(page);
+    await openPlayTab(page, 'Encounter');
 
     // Active encounter → the play tab is Encounter, and setup-phase UI shows.
     await expect(page.getByRole('region', { name: 'Initiative entry' })).toBeVisible();
@@ -71,7 +66,7 @@ test.describe('Encounter lifecycle & turn tracker', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-    await openEncounterTab(page);
+    await openPlayTab(page, 'Encounter');
 
     const tracker = page.getByRole('region', { name: 'Encounter tracker' });
     const bar = page.getByRole('region', { name: 'Self status' });

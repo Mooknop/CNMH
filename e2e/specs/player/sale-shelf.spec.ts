@@ -15,7 +15,7 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-sale-shopper';
 const CHAR_NAME = 'E2E Sale Shopper';
@@ -38,13 +38,10 @@ const PACK_NAME = 'Scroll Pack (Rank 1)';
 
 async function waitForSheet(page: import('@playwright/test').Page) {
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
 }
 async function openDowntimeShop(page: import('@playwright/test').Page) {
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Downtime', exact: true })
-    .click();
+  await openPlayTab(page, 'Downtime');
   await page.getByRole('button', { name: /Shop/ }).click();
   await expect(page.getByTestId('shop-storefront')).toBeVisible();
 }
@@ -131,10 +128,7 @@ test.describe('Sale Shelf purchase', () => {
     // and the pack as loose "Scroll of E2E Heal" entries.
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Inventory', exact: true })
-      .click();
+    await openPlayTab(page, 'Inventory');
     const weaponCell = page.getByRole('button', { name: /E2E Longsword/ }).first();
     await expect(weaponCell).toBeVisible();
     await expect(page.getByText(/Scroll of E2E Heal/i).first()).toBeVisible();

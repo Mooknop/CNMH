@@ -32,7 +32,7 @@
  */
 
 import { test, expect, type Page } from '../../fixtures/gm';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { mockSession } from '../../fixtures/session';
 
 const CHAR_ID = 'e2e-sceptrist';
@@ -81,18 +81,11 @@ const CHARACTER_DOC = {
 
 async function waitForSheet(page: Page) {
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expectSheet(page, CHAR_NAME);
 }
 
-const railTab = (page: Page, label: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: label, exact: true });
-
 async function openInventory(page: Page) {
-  await railTab(page, 'Inventory').click();
+  await openPlayTab(page, 'Inventory');
   await expect(page.getByTestId(`grid-cell-${UID_A}`)).toBeVisible({ timeout: 10_000 });
 }
 

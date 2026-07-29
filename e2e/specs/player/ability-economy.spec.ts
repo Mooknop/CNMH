@@ -35,7 +35,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { activeEncounter, budget, deckBody, readyTurnState } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-econ';
@@ -126,23 +126,17 @@ const character = (extra: Record<string, unknown> = {}) => ({
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 
-const openTab = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true })
-    .click();
-
 const gotoSheet = async (page: Page) => {
   await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
 };
 
-/** Sheet → Encounter tab → own-turn surface hydrated (`End turn` is the gate). */
+/** Sheet → Encounter tab → own-turn surface hydrated (`expectMyTurnLive`). */
 const gotoEncounter = async (page: Page) => {
   await gotoSheet(page);
-  await openTab(page, 'Encounter');
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await openPlayTab(page, 'Encounter');
+  await expectMyTurnLive(page);
 };
 
 /**

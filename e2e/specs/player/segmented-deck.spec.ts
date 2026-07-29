@@ -17,7 +17,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectMyTurnLive, expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 import { activeEncounter, budget, deckBody, readyTurnState } from '../../helpers/encounter';
 import { applyDamage, commitRoll, openEdit, rollDamage } from '../../helpers/rollSheet';
 
@@ -134,23 +134,18 @@ const deckCharacter = (extra: Record<string, unknown> = {}) => ({
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 
-const openEncounterTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
 /**
- * Sheet → Encounter tab → deck ready. "End turn" only renders once the encounter
- * has hydrated AND it is this PC's turn, so it is the cheapest gate against the
- * pre-hydration render where the deck exists but its tiles do not.
+ * Sheet → Encounter tab → deck ready ("End turn" via `expectMyTurnLive` — the
+ * gate against the pre-hydration render where the deck exists but its tiles do
+ * not). Stays local: it closes over this spec's CHAR_ID/CHAR_NAME and is just
+ * four shared-helper calls in a row.
  */
 async function gotoDeck(page: Page) {
   await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-  await openEncounterTab(page);
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await expectSheet(page, CHAR_NAME);
+  await openPlayTab(page, 'Encounter');
+  await expectMyTurnLive(page);
 }
 
 const segment = (page: Page, name: string) => page.getByRole('tab', { name, exact: true });

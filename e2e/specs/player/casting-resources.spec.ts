@@ -28,6 +28,7 @@ import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
 import { snapshotSpells, casterCharacter, gotoSheet } from '../../helpers/spellcasting';
+import { expectMyTurnLive, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-caster';
 const CHAR_NAME = 'E2E Caster';
@@ -97,23 +98,11 @@ const caster = () =>
 // chip at all. Both items held, always.
 const HELD = { [STAFF_UID]: { state: 'held1' }, [WAND_UID]: { state: 'held1' } };
 
-const openEncounterTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const openSheetTab = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true })
-    .click();
-
 /** Sheet → Encounter tab → deck hydrated on this PC's turn. */
 async function gotoEncounter(page: Page) {
   await gotoSheet(page, CHAR_ID, CHAR_NAME);
-  await openEncounterTab(page);
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
+  await openPlayTab(page, 'Encounter');
+  await expectMyTurnLive(page);
 }
 
 /**
@@ -258,7 +247,7 @@ test.describe('Casting resources — staff charges', () => {
     expect(await mock.expectSent(STAFF_KEY)).toBe(0);
 
     // The staff view now reflects the prepared total.
-    await openSheetTab(page, 'Spells');
+    await openPlayTab(page, 'Spells');
     await page.getByRole('button', { name: STAFF_NAME, exact: true }).click();
     await expect(staffChargesLeft(page)).toHaveCount(2);
     await expect(page.locator('.ability-inactive-hint')).toHaveCount(0);
@@ -269,7 +258,7 @@ test.describe('Casting resources — staff charges', () => {
     // cnmh_staffprep_*: staves hold no charges on their own.
     await mockSession(page, { seed: { [LOADOUT_KEY]: HELD } });
     await gotoSheet(page, CHAR_ID, CHAR_NAME);
-    await openSheetTab(page, 'Spells');
+    await openPlayTab(page, 'Spells');
     await page.getByRole('button', { name: STAFF_NAME, exact: true }).click();
 
     await expect(page.locator('.ability-inactive-hint')).toHaveText(
@@ -364,7 +353,7 @@ test.describe('Casting resources — spell counters', () => {
     });
 
     // EffectsPanel (Stats tab) is the counter's live surface.
-    await openSheetTab(page, 'Stats');
+    await openPlayTab(page, 'Stats');
     const counterRow = page.locator('.effects-panel-item--counter');
     await expect(counterRow).toContainText('Bless');
     await expect(counterRow).toContainText('15 ft');
@@ -436,7 +425,7 @@ test.describe('Casting resources — daily prep resets', () => {
     expect(await mock.expectSent(STAFFPREP_KEY)).toEqual({ staffId: STAFF_UID, charges: 1 });
 
     // The restored pools are what the sheet now shows.
-    await openSheetTab(page, 'Spells');
+    await openPlayTab(page, 'Spells');
     await page.getByRole('button', { name: 'Wands', exact: true }).click();
     await expect(
       page.locator('.wand-control').getByRole('button', { name: 'Available charge' }),

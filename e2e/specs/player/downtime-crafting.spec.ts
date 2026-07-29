@@ -26,7 +26,8 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { block, openDowntimeTab, budgetLine } from '../../helpers/downtime';
+import { block, budgetLine } from '../../helpers/downtime';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-crafter';
 const CHAR_NAME = 'E2E Crafter';
@@ -107,9 +108,6 @@ const antidoteProject = (over: Record<string, unknown> = {}) => ({
 const craftPanel = (page: Page) => page.locator('.cp-wrap').filter({ hasText: 'Crafting Projects' });
 const augPanel = (page: Page) => page.locator('.cp-wrap').filter({ hasText: 'Augment Gear' });
 
-const expectSheet = (page: Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-
 test.describe('Downtime crafting', () => {
   test.beforeEach(async ({ reset }) => {
     await reset();
@@ -130,8 +128,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     const craft = craftPanel(page);
     await expect(craft).toBeVisible();
@@ -195,8 +193,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     await expect(page.getByText('Not started')).toBeVisible();
     await expect(page.getByText('The GM hasn’t started a downtime period yet.')).toBeVisible();
@@ -238,8 +236,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     await expect(page.getByText('3 days available')).toBeVisible();
     const craft = craftPanel(page);
@@ -294,8 +292,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     const craft = craftPanel(page);
     // At threshold the progress bar is replaced by the check prompt, carrying the
@@ -356,8 +354,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     const aug = augPanel(page);
     await expect(aug).toBeVisible();
@@ -413,8 +411,8 @@ test.describe('Downtime crafting', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     const craft = craftPanel(page);
     await craft.getByRole('button', { name: '+ New' }).click();
