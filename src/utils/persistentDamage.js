@@ -87,18 +87,57 @@ export const collectFromResults = (rayGroups, chainResults) => {
   return hits;
 };
 
+// Shared record-time writer (#1015): mint each hit's instances, drop the ones
+// the target's own immunities block (with a log line and an immunity reveal —
+// the players just watched the damage not stick), and fold the survivors into
+// the map. `order` supplies names + defenses; a hit whose entry is absent or
+// carries no `defenses` (manual enemies) records everything, as before — the
+// optional `appendLog`/`revealFiredIwr` legs are skipped when not passed.
+// Returns { recordedEntryIds } so callers can name who actually took something.
+export const recordPersistentHits = ({
+  hits, order, abilityName, setPersistentMap, appendLog, revealFiredIwr,
+}) => {
+  const recorded = [];
+  const reveals = [];
+  (hits || []).forEach((h) => {
+    const entry = (order || []).find((e) => e.entryId === h.entryId) || null;
+    const { kept, blocked } = partitionByImmunity(
+      makeInstances(h.persistent, abilityName),
+      entry?.defenses,
+    );
+    if (kept.length) recorded.push({ entryId: h.entryId, instances: kept });
+    blocked.forEach(({ inst, immunity }) => {
+      appendLog?.({ type: 'system', text: formatImmuneSkip(entry?.name || 'Target', inst) });
+      reveals.push({
+        entryId: h.entryId,
+        damage: { iwr: [{ kind: 'immunity', type: immunity, amount: 0 }] },
+      });
+    });
+  });
+  if (recorded.length && setPersistentMap) {
+    setPersistentMap((m) => recorded.reduce(
+      (acc, r) => addPersistent(acc, r.entryId, r.instances),
+      m || {}
+    ));
+  }
+  if (reveals.length) revealFiredIwr?.(reveals);
+  return { recordedEntryIds: new Set(recorded.map((r) => r.entryId)) };
+};
+
 // Confirm-time applier (#272): record each target's persistent entries
 // (already crit-doubled by computeTargetDamage) through the caller's synced
 // map setter so the turn tracker chips them and the watcher reminds at their
 // turn end. Callers pass chainResults only for strike chains (null otherwise).
-export const applyPersistentFromResults = ({ rayGroups, chainResults, abilityName, setPersistentMap }) => {
-  const persistentHits = collectFromResults(rayGroups, chainResults);
-  if (persistentHits.length) {
-    setPersistentMap((m) => persistentHits.reduce(
-      (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, abilityName)),
-      m || {}
-    ));
-  }
+// With `order` the target's immunities negate matching instances at record
+// time (#1015); without it every instance records, as before.
+export const applyPersistentFromResults = ({
+  rayGroups, chainResults, abilityName, setPersistentMap,
+  order = null, appendLog = null, revealFiredIwr = null,
+}) => {
+  recordPersistentHits({
+    hits: collectFromResults(rayGroups, chainResults),
+    order, abilityName, setPersistentMap, appendLog, revealFiredIwr,
+  });
 };
 
 const describe = (inst) =>
@@ -114,6 +153,92 @@ export const EASED_RECOVERY_DC = 10;
 // lists use these tokens so persistent and direct damage of the same type are
 // distinguishable.
 export const persistentVsType = (inst) => `persistent-${inst?.type || ''}`;
+
+// ── Enemy IWR from Foundry-imported defenses (#1015) ────────────────────────
+//
+// Enemy order entries imported off Foundry actors carry `defenses`
+// ({ immunities: [type], weaknesses/resistances: [{ type, value }] }, #932).
+// Foundry types are bare (`fire`) while the app's persistent descriptors are
+// `persistent-<type>`, so every matcher here accepts both tokens — the same
+// one-way fallback as EffectUtils.vsMatches (#1679). Manual enemies have no
+// `defenses` and resolve to nothing, exactly as before.
+
+const persistentDefenseTokens = (type) => {
+  const t = String(type || '').toLowerCase();
+  return t ? [t, `persistent-${t}`] : [];
+};
+
+// The matching token off `defenses.immunities`, or null. Returns the token
+// (not a boolean) so the reveal-on-fire write keys the bestiary record by the
+// monster's own type string, the way applyIwr's fired list does (#1014).
+export const persistentImmunityMatch = (defenses, type) => {
+  const tokens = persistentDefenseTokens(type);
+  if (!tokens.length) return null;
+  return (defenses?.immunities || [])
+    .map((x) => String(x).toLowerCase())
+    .find((x) => tokens.includes(x)) || null;
+};
+
+// Highest matching entry off a weaknesses/resistances list, as
+// { type, value } with the monster's own token carried for the reveal.
+const bestDefenseValue = (list, type) => {
+  const tokens = persistentDefenseTokens(type);
+  let best = null;
+  for (const e of list || []) {
+    if (typeof e?.value !== 'number' || e.value <= 0) continue;
+    const et = String(e.type || '').toLowerCase();
+    if (!tokens.includes(et)) continue;
+    if (!best || e.value > best.value) best = { type: et, value: e.value };
+  }
+  return best;
+};
+
+// IWR context for one enemy instance, in the same shape resolveResistance
+// builds for PCs ({ immune, weakness, amount, easeFlatCheck }) so
+// formatReminder and the chip annotate enemies identically. Null when the
+// entry has no defenses (manual enemy) — callers fall back to the bare line.
+export const enemyPersistentIwr = (defenses, inst) => {
+  if (!defenses) return null;
+  return {
+    immune: !!persistentImmunityMatch(defenses, inst?.type),
+    weakness: bestDefenseValue(defenses.weaknesses, inst?.type)?.value || 0,
+    amount: bestDefenseValue(defenses.resistances, inst?.type)?.value || 0,
+    easeFlatCheck: false,
+  };
+};
+
+// The IWR a tick of `inst` fires against `defenses`, in applyIwr's fired
+// shape ([{ kind, type, amount }]) so useIwrReveal.revealFiredIwr consumes it
+// unchanged. Immunity supersedes the others (PF2e order); the app never rolls
+// the tick's dice, so any positive weakness/resistance counts as fired — a
+// damaging tick always engages them.
+export const enemyPersistentFired = (defenses, inst) => {
+  if (!defenses) return [];
+  const immunity = persistentImmunityMatch(defenses, inst?.type);
+  if (immunity) return [{ kind: 'immunity', type: immunity, amount: 0 }];
+  const fired = [];
+  const weak = bestDefenseValue(defenses.weaknesses, inst?.type);
+  if (weak) fired.push({ kind: 'weakness', type: weak.type, amount: weak.value });
+  const res = bestDefenseValue(defenses.resistances, inst?.type);
+  if (res) fired.push({ kind: 'resistance', type: res.type, amount: -res.value });
+  return fired;
+};
+
+// Record-time immunity negation (#1015): split freshly-minted instances into
+// the trackable ones and the ones the target's immunities block outright.
+export const partitionByImmunity = (instances, defenses) => {
+  const kept = [];
+  const blocked = [];
+  for (const inst of instances || []) {
+    const immunity = persistentImmunityMatch(defenses, inst?.type);
+    if (immunity) blocked.push({ inst, immunity });
+    else kept.push(inst);
+  }
+  return { kept, blocked };
+};
+
+export const formatImmuneSkip = (name, inst) =>
+  `${name}: immune to persistent ${inst?.type || 'damage'} — not tracked`;
 
 // Immunity/weakness/resistance context for one instance, as resolved by the
 // caller from the target's active effects (isImmuneTo / weaknessFor /

@@ -132,6 +132,7 @@ const RequestedSaves = () => {
         setPersistentMap,
         sendUpdate,
         revealFiredIwr,
+        appendLog,
       });
     }
 
