@@ -73,6 +73,37 @@ export const augmentationId = (host) => {
   return a ? (a.ref ?? a.id ?? null) : null;
 };
 
+// ── Multi-trait choice (#1428) ─────────────────────────────────────────────────
+// Shield Augmentation's etch-time pick is not a single value: "add the backswing
+// or forceful trait, OR two of disarm / nonlethal / shove / thrown 10 ft / trip /
+// versatile S". A doc authors this as `traitChoice: { pickOne: [...], orTwoOf:
+// [...] }`; the binding then stores the picked traits as an ARRAY on
+// `augmentation.choice`. The single-string `choices` model (Ancestral Predator's
+// creature type) is untouched — a string choice still flows as before.
+
+/** The `{ pickOne, orTwoOf }` trait-choice block on an augmentation doc, or null. */
+export const traitChoiceOf = (augDoc) =>
+  (augDoc && typeof augDoc.traitChoice === 'object' && augDoc.traitChoice !== null
+    ? augDoc.traitChoice
+    : null);
+
+/**
+ * Whether `choice` is a legal pick for a traitChoice doc: exactly ONE trait from
+ * `pickOne`, or exactly TWO distinct traits from `orTwoOf`. Mixes across the two
+ * groups, duplicates, unknown traits, wrong counts, and non-arrays all fail —
+ * this is the single gate that keeps an invalid pick unstorable.
+ */
+export const isValidTraitChoice = (augDoc, choice) => {
+  const tc = traitChoiceOf(augDoc);
+  if (!tc || !Array.isArray(choice) || choice.length === 0) return false;
+  const norm = choice.map((t) => String(t).toLowerCase());
+  if (new Set(norm).size !== norm.length) return false; // duplicates
+  const from = (list) => (x) => (Array.isArray(list) ? list : []).some((t) => String(t).toLowerCase() === x);
+  if (norm.length === 1) return norm.every(from(tc.pickOne));
+  if (norm.length === 2) return norm.every(from(tc.orTwoOf));
+  return false;
+};
+
 /**
  * Whether `augDoc` fits `host` by target + size gate, IGNORING slot occupancy.
  * The picker predicate for both the GM swap menu and shop staging — a swap must
@@ -103,14 +134,20 @@ export const canAugment = (host, augDoc) =>
  * (a GM instant-apply) or, for a shop-staged augmentation, its baked
  * `etchConfig.choice` (#1059 carrier) — so a player's pick survives fulfillment,
  * where the work-order applies the doc through applyRune WITHOUT opts.
+ *
+ * A traitChoice doc (#1428, Shield Augmentation) takes an ARRAY choice, which
+ * must be VALID (one from pickOne or two from orTwoOf) — an invalid mix rejects
+ * the whole apply (null) so it can never store. Applying with NO choice stays
+ * legal: the binding lands choiceless and the traits simply aren't granted.
  */
 export const applyAugmentation = (host, augDoc, opts = {}) => {
   if (!host || !isAugmentation(augDoc) || !augmentationFits(host, augDoc)) return null;
   const choice = opts.choice != null
     ? opts.choice
     : (augDoc.etchConfig && augDoc.etchConfig.choice != null ? augDoc.etchConfig.choice : undefined);
+  if (choice != null && traitChoiceOf(augDoc) && !isValidTraitChoice(augDoc, choice)) return null;
   const binding = { ref: augDoc.id };
-  if (choice != null) binding.choice = choice;
+  if (choice != null) binding.choice = Array.isArray(choice) ? [...choice] : choice;
   const { state, hand, ...rest } = host;
   return { ...rest, uid: newEntryUid(), augmentation: binding };
 };

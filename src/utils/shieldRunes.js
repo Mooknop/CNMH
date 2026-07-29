@@ -236,9 +236,12 @@ export const AUGMENTATION_GRANTED_TRAITS = {
 
 /**
  * A shield's effective traits: its authored base traits plus any granted by its
- * property runes (Feather → Finesse, Throwing → Thrown) or its augmentation
- * (Throwing Shield → Thrown). Case-insensitive de-dupe, base traits first, granted
- * appended in slot order. Never mutates the item.
+ * property runes (Feather → Finesse, Throwing → Thrown) or its augmentation —
+ * a fixed grant (Throwing Shield → Thrown) or the CHOSEN traits of a traitChoice
+ * augmentation (#1428, Shield Augmentation), which the binding stores as an
+ * ARRAY on `augmentation.choice`. (A STRING choice — Ancestral Predator's
+ * creature type — is not a trait and grants nothing.) Case-insensitive de-dupe,
+ * base traits first, granted appended in slot order. Never mutates the item.
  * @param {Object} item
  * @returns {string[]}
  */
@@ -254,6 +257,7 @@ export const shieldEffectiveTraits = (item) => {
   const aug = item?.augmentation;
   const augId = aug && (aug.ref ?? aug.id);
   if (augId) grant(AUGMENTATION_GRANTED_TRAITS[augId]);
+  if (aug && Array.isArray(aug.choice)) grant(aug.choice.filter((t) => typeof t === 'string'));
   return [...base, ...granted];
 };
 
