@@ -251,4 +251,16 @@ describe('catalogItemName', () => {
     expect(catalogItemName(null)).toBeUndefined();
     expect(catalogItemName({ name: 'Torch' })).toBe('Torch');
   });
+
+  // #896: the GM master list opts out of the stub — a dangling/missing spellRef
+  // falls back to the stored name (usually undefined) instead.
+  test('stubUnknown: false falls back to the stored name on an unresolved spellRef', () => {
+    expect(catalogItemName({ scroll: { spellRef: 'gone' } }, spells, { stubUnknown: false }))
+      .toBeUndefined();
+    expect(catalogItemName({ wand: {} }, spells, { stubUnknown: false }))
+      .toBeUndefined();
+    // A resolved ref is unaffected by the flag.
+    expect(catalogItemName({ scroll: { spellRef: 'sleep' } }, spells, { stubUnknown: false }))
+      .toBe('Scroll of Sleep');
+  });
 });
