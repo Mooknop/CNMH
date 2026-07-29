@@ -99,6 +99,32 @@ describe('wornResistanceFor (#922 S3)', () => {
     });
   });
 
+  // The bare `persistent` wildcard (#927): the Preserving Aeon Stone authors
+  // `resistance: { amount: 3, type: 'persistent' }` — resistance 3 to ALL
+  // persistent damage, and nothing else.
+  describe("bare 'persistent' wildcard token (#927)", () => {
+    const stone = () => ({ uid: 'pas', traits: ['Invested'], resistance: { amount: 3, type: 'persistent' } });
+
+    it('a wildcard resistance covers any persistent tick', () => {
+      expect(wornResistanceFor([stone()], yes, 'persistent-bleed')).toBe(3);
+      expect(wornResistanceFor([stone()], yes, 'persistent-fire')).toBe(3);
+    });
+
+    it('never covers direct damage of any type', () => {
+      expect(wornResistanceFor([stone()], yes, 'fire')).toBe(0);
+      expect(wornResistanceFor([stone()], yes, 'bleed')).toBe(0);
+    });
+
+    it('wildcard + plain-type fallback both matching take the max, never the sum', () => {
+      // plain fire 10 (via #1679 fallback) vs wildcard 3 → 10, not 13
+      const items = [stone(), robe({ uid: 'a', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] })];
+      expect(wornResistanceFor(items, yes, 'persistent-fire')).toBe(10);
+      // wildcard 3 vs a smaller plain fire 2 → 3, not 5
+      const smaller = [stone(), robe({ uid: 'a', modifiers: [{ stat: 'resistance', amount: 2, vs: 'fire' }] })];
+      expect(wornResistanceFor(smaller, yes, 'persistent-fire')).toBe(3);
+    });
+  });
+
   // The structured `resistance: { amount, type }` field (#911), as merged from a
   // variant override, is bridged into a resistance modifier.
   describe('structured resistance field bridge (#911)', () => {

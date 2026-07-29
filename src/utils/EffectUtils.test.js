@@ -460,6 +460,7 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     { id: 'pfire-big', name: 'Greater Ember Ward', modifiers: [{ stat: 'resistance', amount: 15, vs: 'persistent-fire' }] },
     { id: 'no-vs', name: 'Bad Resistance', modifiers: [{ stat: 'resistance', amount: 99 }] },
     { id: 'bonus', name: 'Bless', modifiers: [{ stat: 'meleeAttack', kind: 'status', amount: 1 }] },
+    { id: 'preserving', name: 'Preserving Ward', modifiers: [{ stat: 'resistance', amount: 3, vs: 'persistent' }] },
   ];
 
   it('returns the matching resistance amount for a descriptor in the vs list', () => {
@@ -489,6 +490,22 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     expect(resistanceFor([entry('fire-ward'), entry('pfire-ward')], 'persistent-fire', cat)).toBe(10);
     // persistent-specific 15 beats the plain 10 fallback
     expect(resistanceFor([entry('fire-ward'), entry('pfire-big')], 'persistent-fire', cat)).toBe(15);
+  });
+
+  // The bare `persistent` wildcard (#927): the Preserving Aeon Stone's
+  // "resistance 3 to persistent damage" covers every persistent type.
+  it("a 'persistent' wildcard resistance covers any persistent tick but no direct damage (#927)", () => {
+    expect(resistanceFor([entry('preserving')], 'persistent-bleed', cat)).toBe(3);
+    expect(resistanceFor([entry('preserving')], 'persistent-fire', cat)).toBe(3);
+    expect(resistanceFor([entry('preserving')], 'fire', cat)).toBe(0);
+    expect(resistanceFor([entry('preserving')], 'bleed', cat)).toBe(0);
+  });
+
+  it('wildcard + plain-type fallback both matching take the max, never the sum (#927)', () => {
+    // plain fire 10 (via #1679 fallback) vs wildcard 3 → 10, not 13
+    expect(resistanceFor([entry('fire-ward'), entry('preserving')], 'persistent-fire', cat)).toBe(10);
+    // persistent-specific 4 vs wildcard 3 → 4, not 7
+    expect(resistanceFor([entry('pfire-ward'), entry('preserving')], 'persistent-fire', cat)).toBe(4);
   });
 
   it('returns 0 for non-matching, vs-less, empty, null, or unknown effects', () => {
@@ -607,6 +624,29 @@ describe('vsMatches', () => {
     expect(vsMatches('persistent-fire', 'persistent-cold')).toBe(false);
     expect(vsMatches('fire', '')).toBe(false);
     expect(vsMatches('fire', 'persistent-')).toBe(false);
+  });
+
+  // The bare `persistent` wildcard (#927): resistance to ALL persistent damage
+  // (the Preserving Aeon Stone), matching any persistent-<type> query.
+  describe("the bare 'persistent' wildcard token (#927)", () => {
+    it('matches any persistent-<type> query', () => {
+      expect(vsMatches('persistent', 'persistent-bleed')).toBe(true);
+      expect(vsMatches('persistent', 'persistent-fire')).toBe(true);
+      expect(vsMatches('fire,persistent', 'persistent-poison')).toBe(true);
+    });
+
+    it('never matches a plain-type query or a bare/empty persistent query', () => {
+      expect(vsMatches('persistent', 'fire')).toBe(false);
+      expect(vsMatches('persistent', 'bleed')).toBe(false);
+      expect(vsMatches('persistent', 'persistent-')).toBe(false);
+    });
+
+    it('composes with the plain-type fallback (#1679) without widening it', () => {
+      // A persistent-<type> query still reaches its plain type alongside the
+      // wildcard; a plain query still reaches neither persistent form.
+      expect(vsMatches('fire,persistent', 'persistent-fire')).toBe(true);
+      expect(vsMatches('persistent,persistent-bleed', 'bleed')).toBe(false);
+    });
   });
 });
 
