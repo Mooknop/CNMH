@@ -18,6 +18,7 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { encounterState, pcEntry, enemyEntry, readyTurnState } from '../../helpers/encounter';
+import { foeEntry, gotoFoeKitDock, gotoPcTurnDock, pcTurnSeed } from '../../helpers/dock';
 
 const FIGHTER_ID = 'e2e-fighter';
 const FIGHTER_NAME = 'E2E Fighter';
@@ -41,12 +42,14 @@ const CHARACTERS = [
   },
 ];
 
-// Fighter acting at index 0; cleric + an enemy behind them.
-const dockEncounter = () =>
-  encounterState({
-    phase: 'in-progress',
+// Fighter acting at index 0; cleric + an enemy behind them. The cleric's
+// reaction must be armed (defaultTurnState has it unavailable until a first
+// turn); pcTurnSeed derives the matching turnToken from the round, so the
+// #1131 turn-begin sweep can't wipe the armed state mid-test.
+const sessionSeed = () =>
+  pcTurnSeed({
     round: 2,
-    currentTurnIndex: 0,
+    armedPcIds: [CLERIC_ID],
     order: [
       pcEntry(FIGHTER_ID, FIGHTER_NAME, 20),
       pcEntry(CLERIC_ID, CLERIC_NAME, 15),
@@ -54,44 +57,17 @@ const dockEncounter = () =>
     ],
   });
 
-const sessionSeed = () => ({
-  cnmh_encounter_global: dockEncounter(),
-  // The cleric's reaction must be armed (defaultTurnState has it unavailable
-  // until a first turn).
-  [`cnmh_turnstate_${CLERIC_ID}`]: readyTurnState(),
-});
-
-const gotoDock = async (page: import('@playwright/test').Page) => {
-  await page.goto('/gm/dock');
-  await expect(page.getByRole('button', { name: 'End turn' })).toBeVisible({ timeout: 15_000 });
-};
-
 // The ghoul enriched to the bridge's enemy order-entry shape (#1531): the
 // defensive block renders from the encounter entry, the offensive kit from
-// the persisted foekit key.
-const GHOUL = {
-  ...enemyEntry('E2E Ghoul', 10),
-  foundryActorId: 'a-e2e-ghoul',
+// the persisted foekit key. foeEntry's defaults ARE this ghoul; only its
+// identity and current HP are spelled out here.
+const GHOUL = foeEntry({
+  name: 'E2E Ghoul',
+  initiative: 10,
+  actorId: 'a-e2e-ghoul',
   creatureKey: 'e2e-ghoul',
-  defenses: {
-    ac: 16,
-    saves: { fortitude: 6, reflex: 8, will: 4 },
-    immunities: [],
-    resistances: [],
-    weaknesses: [],
-  },
-  bestiary: {
-    img: null,
-    level: 1,
-    rarity: 'common',
-    traits: ['medium', 'undead'],
-    perception: 7,
-    speed: 30,
-    hp: { current: 9, max: 20 },
-    description: '',
-    creatureKey: 'e2e-ghoul',
-  },
-};
+  hpCurrent: 9,
+});
 
 const ghoulTurnSeed = () => ({
   cnmh_encounter_global: encounterState({
@@ -133,7 +109,7 @@ test.describe('GM Command Dock', () => {
 
   test('follows the turn, lists other PCs in the rail, and End turn advances the shared encounter', async ({ page }) => {
     const session = await mockSession(page, { seed: sessionSeed() });
-    await gotoDock(page);
+    await gotoPcTurnDock(page);
 
     // Acting pane = the active PC's real deck.
     await expect(page.getByRole('region', { name: `Acting as ${FIGHTER_NAME}` })).toBeVisible();
@@ -157,7 +133,7 @@ test.describe('GM Command Dock', () => {
 
   test('Prompt on a rail reaction fires the matching trigger event at that PC', async ({ page }) => {
     const session = await mockSession(page, { seed: sessionSeed() });
-    await gotoDock(page);
+    await gotoPcTurnDock(page);
 
     await page.getByRole('button', { name: 'Prompt E2E Riposte' }).click();
 
@@ -169,12 +145,11 @@ test.describe('GM Command Dock', () => {
 
   test('an enemy turn renders the foe pane from the persisted kit, read-only, with every PC in the rail', async ({ page }) => {
     const session = await mockSession(page, { seed: ghoulTurnSeed() });
-    await page.goto('/gm/dock');
 
     // Hydration gate: the enemy pane is the encounter-only element on an
-    // enemy turn (there is no End turn button to wait for).
-    const pane = page.getByTestId('dock-enemy-pane');
-    await expect(pane).toBeVisible({ timeout: 15_000 });
+    // enemy turn (there is no End turn button to wait for); this test drives
+    // the kit's tab strip, so the helper's second gate (Strikes tab) applies.
+    const pane = await gotoFoeKitDock(page);
     await expect(page.getByRole('region', { name: 'Enemy turn: E2E Ghoul' })).toBeVisible();
 
     // Vitals + defenses straight off the encounter entry — unredacted.
@@ -214,7 +189,7 @@ test.describe('GM Command Dock', () => {
 
   test('pin stages an off-turn PC and Follow turn returns to the pointer', async ({ page }) => {
     await mockSession(page, { seed: sessionSeed() });
-    await gotoDock(page);
+    await gotoPcTurnDock(page);
 
     const pins = page.getByRole('group', { name: 'Stage a character' });
     await pins.getByRole('button', { name: CLERIC_NAME }).click();
