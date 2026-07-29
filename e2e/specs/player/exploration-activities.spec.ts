@@ -28,6 +28,7 @@
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { pcEntry, encounterState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const SCOUT = { id: 'e2e-scout', name: 'E2E Scout' };
 const EXPERT = { id: 'e2e-expert', name: 'E2E Expert' };
@@ -35,15 +36,6 @@ const TAGALONG = { id: 'e2e-tagalong', name: 'E2E Tagalong' };
 
 // ── Local helpers (factor-out candidates once a second exploration spec wants
 // them — kept in-file so this PR touches nothing shared). ────────────────────
-
-const openExplorationTab = (page: Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Exploration', exact: true })
-    .click();
-
-const expectSheet = (page: Page, name: string) =>
-  expect(page.getByRole('heading', { name, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 // An ExplorationList row. `getByRole(name)` is substring matching and the row's
 // accessible name carries the glyph + skill chip, so match the name span exactly.
@@ -104,7 +96,7 @@ test.describe('Exploration activities', () => {
 
     await page.goto(`/character/${SCOUT.id}`);
     await expectSheet(page, SCOUT.name);
-    await openExplorationTab(page);
+    await openPlayTab(page, 'Exploration');
 
     // Nothing picked yet: no banner, and the party board says so.
     await expect(banner(page)).toHaveCount(0);
@@ -154,7 +146,7 @@ test.describe('Exploration activities', () => {
 
     await page.goto(`/character/${TAGALONG.id}`);
     await expectSheet(page, TAGALONG.name);
-    await openExplorationTab(page);
+    await openPlayTab(page, 'Exploration');
 
     // The row opens the party picker directly (not the generic detail modal).
     await activityRow(page, 'Follow the Expert').click();
@@ -214,7 +206,7 @@ test.describe('Exploration activities', () => {
 
     await page.goto(`/character/${TAGALONG.id}`);
     await expectSheet(page, TAGALONG.name);
-    await openExplorationTab(page);
+    await openPlayTab(page, 'Exploration');
 
     // Anchor the absence assertions: wait for the picker's own empty-state copy
     // (which only renders once the eligibility pass has run over the roster)
@@ -248,7 +240,7 @@ test.describe('Exploration activities', () => {
     const scout = await mockSession(scoutPage, { seed: { cnmh_playmode_global: 'exploration' } });
     await scoutPage.goto(`/character/${SCOUT.id}`);
     await expectSheet(scoutPage, SCOUT.name);
-    await openExplorationTab(scoutPage);
+    await openPlayTab(scoutPage, 'Exploration');
 
     const lookoutPage = page;
     const lookout = await mockSession(lookoutPage, {
@@ -263,10 +255,7 @@ test.describe('Exploration activities', () => {
 
     await lookoutPage.goto(`/character/${TAGALONG.id}`);
     await expectSheet(lookoutPage, TAGALONG.name);
-    await lookoutPage
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Encounter', exact: true })
-      .click();
+    await openPlayTab(lookoutPage, 'Encounter');
 
     const breakdown = lookoutPage.getByLabel('initiative-breakdown');
     await expect(breakdown).toBeVisible();
@@ -333,10 +322,7 @@ test.describe('Exploration activities', () => {
 
     await page.goto(`/character/${SCOUT.id}`);
     await expectSheet(page, SCOUT.name);
-    await page
-      .getByRole('navigation', { name: 'Character sheet sections' })
-      .getByRole('button', { name: 'Encounter', exact: true })
-      .click();
+    await openPlayTab(page, 'Encounter');
 
     // The scout is not excluded from their own activity: reminder and bonus both.
     await expect(page.locator('.initiative-entry-scout')).toContainText(
@@ -359,7 +345,7 @@ test.describe('Exploration activities', () => {
 
     await page.goto(`/character/${SCOUT.id}`);
     await expectSheet(page, SCOUT.name);
-    await openExplorationTab(page);
+    await openPlayTab(page, 'Exploration');
 
     // Make an Impression is a plain (non-secret, non-targeted) Diplomacy check.
     // RollActivityModal now renders RollSheet (#1690): the DC lives in the Edit

@@ -20,15 +20,12 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
-import { PERIOD, block, lockedPlan, openDowntimeTab, budgetLine } from '../../helpers/downtime';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
+import { PERIOD, block, lockedPlan, budgetLine } from '../../helpers/downtime';
 
 const CHAR_ID = 'e2e-dt-planner';
 const CHAR_NAME = 'E2E Planner';
 const DOWNTIME_KEY = `cnmh_downtime_${CHAR_ID}`;
-
-const expectSheet = (page: Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Downtime spine (player)', () => {
   test.beforeEach(async ({ reset, seed }) => {
@@ -56,8 +53,8 @@ test.describe('Downtime spine (player)', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expectOnSheet(page, CHAR_ID);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     await expect(page.getByText('5 days available')).toBeVisible();
 
@@ -99,8 +96,8 @@ test.describe('Downtime spine (player)', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expectOnSheet(page, CHAR_ID);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     await page.getByRole('button', { name: 'More Research' }).click();
     await page.getByRole('button', { name: 'More Research' }).click();
@@ -154,8 +151,8 @@ test.describe('Downtime spine (player)', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expectOnSheet(page, CHAR_ID);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
     await expect(budgetLine(page)).toHaveText('5 / 5 planned · 0 free');
     await expect(page.getByRole('button', { name: 'Plan locked — tap to edit' })).toBeVisible();
 
@@ -190,8 +187,8 @@ test.describe('Downtime spine (player)', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expectOnSheet(page, CHAR_ID);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     await page.getByRole('button', { name: 'More Research' }).click();
     await page.getByRole('button', { name: 'More Research' }).click();
@@ -226,8 +223,8 @@ test.describe('Downtime spine (player)', () => {
 
     await page.goto(`/character/${CHAR_ID}`);
     await expectOnSheet(page, CHAR_ID);
-    await expectSheet(page);
-    await openDowntimeTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Downtime');
 
     // 2 days = 16h banked against a 3-day (24h) benchmark: not there yet. The
     // seeded lock is the anchor proving the surface hydrated before we assert

@@ -10,18 +10,10 @@
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
-
-const openEncounterTab = (page: import('@playwright/test').Page) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
-
-const expectSheet = (page: import('@playwright/test').Page) =>
-  expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
 
 test.describe('Abilities, sustains, auras & conditions', () => {
   test.beforeEach(async ({ reset }) => {
@@ -45,8 +37,8 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     // Character abilities live in the deck's Actions segment; tapping the tile
     // opens the confirm sheet, and confirming opens the resolver.
@@ -75,8 +67,8 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     await page.getByRole('button', { name: 'Sustain E2E Bless' }).click();
     await session.expectSent(
@@ -102,8 +94,8 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     });
 
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
-    await openEncounterTab(page);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
 
     const chip = page.getByLabel(`${CHAR_NAME}'s kinetic aura is active`);
     await expect(chip).toBeVisible();
@@ -117,7 +109,7 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     await seed({ character: [{ id: CHAR_ID, name: CHAR_NAME, level: 5 }] });
     // Conditions are local to the sheet (useLocalStorage) — assert the UI round-trip.
     await page.goto(`/character/${CHAR_ID}`);
-    await expectSheet(page);
+    await expectSheet(page, CHAR_NAME);
 
     // The tracker lives in the dial core's Conditions view; the browser
     // opens from its Add Condition chip.

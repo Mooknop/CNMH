@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { expect, type Page } from '@playwright/test';
-import { expectOnSheet } from './sheet';
+import { type Page } from '@playwright/test';
+import { expectOnSheet, expectSheet, openPlayTab } from './sheet';
 
 /**
  * Spell cast-flow harness (#1133). Everything a spec needs to drive the Magic
@@ -121,9 +121,7 @@ export function casterCharacter({
 export async function gotoSheet(page: Page, charId: string, charName: string) {
   await page.goto(`/character/${charId}`);
   await expectOnSheet(page, charId);
-  await expect(page.getByRole('heading', { name: charName, level: 1 })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expectSheet(page, charName);
 }
 
 /**
@@ -133,10 +131,7 @@ export async function gotoSheet(page: Page, charId: string, charName: string) {
  * encounter exposes it.
  */
 export async function openMagic(page: Page) {
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
+  await openPlayTab(page, 'Encounter');
   await page.getByRole('tab', { name: 'Spells' }).click();
   await page.getByRole('button', { name: 'Cast a Spell' }).click();
 }
@@ -148,10 +143,7 @@ export async function openMagic(page: Page) {
  * modal) and trip Playwright's strict mode.
  */
 export async function openSpellsSegment(page: Page) {
-  await page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name: 'Encounter', exact: true })
-    .click();
+  await openPlayTab(page, 'Encounter');
   await page.getByRole('tab', { name: 'Spells' }).click();
 }
 

@@ -32,7 +32,7 @@
 
 import { test, expect, type Page } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { expectOnSheet } from '../../helpers/sheet';
+import { expectOnSheet, expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-affixer';
 const CHAR_NAME = 'E2E Affixer';
@@ -165,12 +165,6 @@ const FULL_KIT: Slot[] = [
   { ref: BOSS.id, quantity: 1, uid: BOSS_UID },
 ];
 
-const openTab = (page: Page, name: string) =>
-  page
-    .getByRole('navigation', { name: 'Character sheet sections' })
-    .getByRole('button', { name, exact: true })
-    .click();
-
 /**
  * Sheet → Inventory. Every box here is a 10-minute activity, so none of them
  * wants an encounter: the ItemModal binding cards are the whole surface.
@@ -178,8 +172,8 @@ const openTab = (page: Page, name: string) =>
 async function gotoInventory(page: Page) {
   await page.goto(`/character/${CHAR_ID}`);
   await expectOnSheet(page, CHAR_ID);
-  await expect(page.getByRole('heading', { name: CHAR_NAME, level: 1 })).toBeVisible({ timeout: 15_000 });
-  await openTab(page, 'Inventory');
+  await expectSheet(page, CHAR_NAME);
+  await openPlayTab(page, 'Inventory');
 }
 
 /** Open an item's card by its inventory uid. */
