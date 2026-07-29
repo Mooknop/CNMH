@@ -232,9 +232,17 @@ function modifiersOf(entry, catalog) {
  * Preserving Aeon Stone's "resistance 3 to persistent damage"). Both rules
  * are one-directional: a persistent-only descriptor (`persistent-bleed`)
  * still never matches a plain `bleed` query, and the `persistent` wildcard
- * never matches a plain-type query (`fire`). Several descriptors matching at
- * once can't double-count — every reader scans one modifier list and keeps
- * the single highest match.
+ * never matches a plain-type query (`fire`).
+ *
+ * A `splash-<type>` query works the same way (#929): a splash-flagged fire
+ * hit IS fire damage carrying the splash descriptor, so it matches both the
+ * plain `<type>` token (fire resistance still applies) and the bare `splash`
+ * token (the Backfire Mantle's "resistance 3 to splash damage", #911). Also
+ * one-directional — a `splash` descriptor never matches an unflagged plain
+ * `fire` query, and an untyped splash hit queries bare `splash` (exact
+ * token). Several descriptors matching at once can't double-count — every
+ * reader scans one modifier list and keeps the single highest match, so
+ * fire resistance vs splash resistance is max, never sum.
  *
  * Shared by the effect readers below and the worn-gear readers
  * (utils/wornGear) so all apply sites agree.
@@ -243,9 +251,13 @@ export function vsMatches(vsList, vsType) {
   if (!vsType) return false;
   const types = String(vsList).split(',').map((t) => t.trim());
   if (types.includes(vsType)) return true;
-  const base = vsType.startsWith('persistent-') ? vsType.slice('persistent-'.length) : '';
-  if (!base) return false;
-  return types.includes(base) || types.includes('persistent');
+  for (const prefix of ['persistent', 'splash']) {
+    if (vsType.startsWith(`${prefix}-`)) {
+      const base = vsType.slice(prefix.length + 1);
+      return !!base && (types.includes(base) || types.includes(prefix));
+    }
+  }
+  return false;
 }
 
 function highestSpecialFor(activeEffects, stat, vsType, catalog) {
