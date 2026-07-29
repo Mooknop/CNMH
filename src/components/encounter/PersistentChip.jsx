@@ -11,6 +11,7 @@ import {
   formatClearance,
   persistentVsType,
   recoveryDc,
+  enemyPersistentIwr,
 } from '../../utils/persistentDamage';
 import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../../utils/EffectUtils';
 import './PersistentChip.css';
@@ -49,19 +50,28 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
     appendLog({ type: 'system', text: formatClearance(entry.name, inst, how) });
   };
 
-  const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst), catalog);
-  const weaknessOf = (inst) => weaknessFor(effects, persistentVsType(inst), catalog);
+  // Per-instance IWR: PCs resolve from their active effects + worn gear
+  // (#900/#918/#919/#922); enemies from their Foundry-imported `defenses`
+  // (#1015). Manual enemies (no defenses) resolve to nothing, as before.
+  const iwrOf = (inst) => {
+    if (entry.charId) {
+      return {
+        immune: isImmuneTo(effects, persistentVsType(inst), catalog),
+        weakness: weaknessFor(effects, persistentVsType(inst), catalog),
+        resistance: resistanceFor(effects, persistentVsType(inst), catalog),
+      };
+    }
+    const ctx = enemyPersistentIwr(entry.defenses, inst);
+    return { immune: !!ctx?.immune, weakness: ctx?.weakness || 0, resistance: ctx?.amount || 0 };
+  };
   const describe = (inst) => {
     const base = `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`;
+    const { immune, weakness, resistance } = iwrOf(inst);
     // Immunity (#919) zeroes the tick outright and supersedes weakness/resistance.
-    if (isImmuneTo(effects, persistentVsType(inst), catalog)) {
-      return `${base} — immune (no damage)`;
-    }
-    const weak = weaknessOf(inst);
-    const res = resistanceOf(inst);
+    if (immune) return `${base} — immune (no damage)`;
     return `${base}${
-      weak ? ` + weakness ${weak}` : ''
-    }${res ? ` − resistance ${res}` : ''}`;
+      weakness ? ` + weakness ${weakness}` : ''
+    }${resistance ? ` − resistance ${resistance}` : ''}`;
   };
   const summary = instances.map(describe).join(', ');
 

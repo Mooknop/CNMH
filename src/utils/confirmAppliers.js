@@ -255,12 +255,17 @@ export const applyPostRollEffects = ({
 
   // Persistent-damage tracking (#272): record each target's persistent
   // entries (already crit-doubled by computeTargetDamage) so the turn
-  // tracker chips them and the watcher reminds at their turn end.
+  // tracker chips them and the watcher reminds at their turn end. The order
+  // supplies each target's defenses so a matching immunity negates the
+  // record outright, logged and revealed into the RK record (#1015).
   applyPersistentFromResults({
     rayGroups,
     chainResults: strikeChainResults,
     abilityName: ability.name,
     setPersistentMap,
+    order,
+    appendLog,
+    revealFiredIwr,
   });
 
   // Typed damage relay (#1016) + reveal-on-trigger (#1014): push each enemy
