@@ -12,6 +12,16 @@
 //   { ref: 'runestone', runeRef?: <rune id>, uid?, quantity?, id? }
 // A missing `runeRef` is a blank stone; a dangling one yields a visible,
 // weightless-safe "unknown rune" marker so bulk math never breaks.
+//
+// Fundamental runestones (#832): potency/striking runes are not catalog docs —
+// they live as fixed tier tables (utils/weaponRunes.js, surfaced as rune docs by
+// data/fundamentalRunes.js). A fundamental descriptor replaces `runeRef`:
+//   { ref: 'runestone', fundamental: 'potency', tier: 1|2|3 }
+//   { ref: 'runestone', fundamental: 'striking', key: 'striking'|'greater'|'major' }
+// resolveRunestone reads name/price/level from those tables when `fundamental`
+// is set (no runeMap lookup).
+
+import { weaponFundamentalFor } from '../data/fundamentalRunes';
 
 export const RUNESTONE_BASE = {
   id: 'runestone',
@@ -45,14 +55,28 @@ const dedupe = (arr) => [...new Set(arr.filter(Boolean))];
 // that image unless it authored its own.
 export const resolveRunestone = (entry, runeMap, catalogMap) => {
   const quantity = entry && entry.quantity != null ? entry.quantity : 1;
-  const runeRef = entry ? entry.runeRef : null;
-  const rune = runeRef != null && runeMap ? runeMap.get(String(runeRef)) : null;
+  const fundamental = entry && entry.fundamental ? entry.fundamental : null;
+  const runeRef = !fundamental && entry ? entry.runeRef : null;
+  // A fundamental descriptor resolves against the fixed potency/striking tables
+  // (#832) — never the property-rune catalog.
+  const rune = fundamental
+    ? weaponFundamentalFor(entry)
+    : runeRef != null && runeMap ? runeMap.get(String(runeRef)) : null;
 
   const resolved = {
     ...RUNESTONE_BASE,
     quantity,
-    id: (entry && entry.id) || (runeRef != null ? `runestone-${runeRef}` : RUNESTONE_BASE.id),
-    runestone: { runeRef: runeRef != null ? runeRef : null, rune: rune || null },
+    id: (entry && entry.id)
+      || (fundamental && rune ? `runestone-${rune.id}` : null)
+      || (runeRef != null ? `runestone-${runeRef}` : RUNESTONE_BASE.id),
+    runestone: fundamental
+      ? {
+        runeRef: null,
+        fundamental,
+        ...(fundamental === 'potency' ? { tier: entry.tier } : { key: entry.key }),
+        rune: rune || null,
+      }
+      : { runeRef: runeRef != null ? runeRef : null, rune: rune || null },
   };
   if (entry && entry.uid != null) resolved.uid = entry.uid;
 
@@ -69,6 +93,10 @@ export const resolveRunestone = (entry, runeMap, catalogMap) => {
       ...RUNESTONE_BASE.traits,
       ...(Array.isArray(rune.traits) ? rune.traits : []),
     ]);
+  } else if (fundamental) {
+    // Unknown fundamental/tier: visible marker, weightless-safe (mirrors the
+    // dangling-runeRef case).
+    resolved.name = `Runestone (unknown ${fundamental} rune)`;
   } else if (runeRef != null) {
     resolved.name = `Runestone (unknown rune: ${runeRef})`;
   }

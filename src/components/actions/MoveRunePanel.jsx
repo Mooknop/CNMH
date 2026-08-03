@@ -3,16 +3,20 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useMoveRune } from '../../hooks/useMoveRune';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { flattenInventory } from '../../utils/InventoryUtils';
-import { moveRuneDc, moveRuneCost, weaponMovableRunes, MOVE_RUNE_HOURS } from '../../utils/moveRune';
 import {
-  propertySlotCapacity, freePropertySlots, usedPropertySlots, weaponPropertyRunes,
+  moveRuneDc, moveRuneCost, weaponMovableRunes, weaponMovableFundamentals, MOVE_RUNE_HOURS,
+} from '../../utils/moveRune';
+import { canFoldFundamental } from '../../utils/runeWorkOrder';
+import {
+  propertySlotCapacity, freePropertySlots, usedPropertySlots, weaponPropertyRunes, runeTierSummary,
 } from '../../utils/weaponRunes';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import './MoveRunePanel.css';
 
-// Move a rune (#803) — a 1-hour Crafting activity that relocates a property rune
-// between a weapon and a runestone. Pick what to move (a rune on a weapon, or a
-// filled runestone), choose a target weapon when applying a runestone, enter the
+// Move a rune (#803; fundamentals #832) — a 1-hour Crafting activity that
+// relocates a property or fundamental (potency/striking) rune between a weapon
+// and a runestone. Pick what to move (a rune on a weapon, or a filled
+// runestone), choose a target weapon when applying a runestone, enter the
 // Crafting check, and resolve it by degree of success. Requires trained
 // Crafting; renders nothing when the player has no movable runes.
 const MoveRunePanel = ({ character }) => {
@@ -29,22 +33,31 @@ const MoveRunePanel = ({ character }) => {
 
   const flat = useMemo(() => flattenInventory(charData?.inventory), [charData?.inventory]);
 
-  // Movable sources: each property rune on a weapon (→ runestone), and each
-  // filled runestone (→ weapon).
+  // Movable sources: each fundamental and property rune on a weapon
+  // (→ runestone), and each filled runestone (→ weapon). Potency never appears
+  // while property runes are etched — moving it off would strand them (#832).
   const options = useMemo(() => {
     const fromWeapons = flat
       .filter((it) => it && it.strikes && it.uid != null)
-      .flatMap((it) =>
-        weaponMovableRunes(it).map((r) => ({
+      .flatMap((it) => [
+        ...weaponMovableFundamentals(it).map((r) => ({
           key: `w:${it.uid}:${r.id}`,
           kind: 'fromWeapon',
           weapon: it,
           rune: r,
           label: `${r.name} — remove from ${it.name}`,
         })),
-      );
+        ...weaponMovableRunes(it).map((r) => ({
+          key: `w:${it.uid}:${r.id}`,
+          kind: 'fromWeapon',
+          weapon: it,
+          rune: r,
+          label: `${r.name} — remove from ${it.name}`,
+        })),
+      ]);
     const fromRunestones = flat
-      .filter((it) => it && it.runestone && it.runestone.runeRef && it.uid != null)
+      .filter((it) => it && it.runestone && it.uid != null
+        && (it.runestone.runeRef || (it.runestone.fundamental && it.runestone.rune)))
       .map((it) => {
         const r = it.runestone.rune || { id: it.runestone.runeRef, name: it.runestone.runeRef };
         return {
@@ -58,18 +71,24 @@ const MoveRunePanel = ({ character }) => {
     return [...fromWeapons, ...fromRunestones];
   }, [flat]);
 
-  // Target weapons for applying a runestone: a weapon can hold property runes
-  // only up to its potency (#607), so a potency-0 weapon is never a target. A
-  // full weapon stays selectable — applying then displaces one of its runes.
-  const targets = useMemo(
-    () => flat.filter((it) => it && it.strikes && it.uid != null && propertySlotCapacity(it.runes) >= 1),
-    [flat],
-  );
+  const selected = options.find((o) => o.key === selectedKey) || null;
+  const rune = selected?.rune || null;
+  // A fundamental (potency/striking) runestone moves replace-in-place (#832),
+  // not into a property slot.
+  const isFundamental = !!rune?.fundamental;
+
+  // Target weapons for applying a runestone. A property rune needs a property
+  // slot, so a potency-0 weapon is never a target — but a full weapon stays
+  // selectable (applying then displaces one of its runes). A fundamental
+  // targets any weapon it strictly upgrades (same/lower tier is blocked).
+  const targets = useMemo(() => {
+    const weapons = flat.filter((it) => it && it.strikes && it.uid != null);
+    if (isFundamental) return weapons.filter((it) => canFoldFundamental(it, rune));
+    return weapons.filter((it) => propertySlotCapacity(it.runes) >= 1);
+  }, [flat, rune, isFundamental]);
 
   if (!options.length) return null;
 
-  const selected = options.find((o) => o.key === selectedKey) || null;
-  const rune = selected?.rune || null;
   const dc = rune ? moveRuneDc(rune.level) : null;
   const upkeep = rune ? moveRuneCost(rune.price) : 0;
 
@@ -79,7 +98,10 @@ const MoveRunePanel = ({ character }) => {
   const needsTarget = selected?.kind === 'fromRunestone';
   const target = needsTarget ? targets.find((t) => t.uid === targetUid) : null;
   // A full target (no free slot) must displace one of its property runes.
-  const needsReplace = !!target && freePropertySlots(target) === 0;
+  // Fundamentals never displace — they overwrite their own tier in place.
+  const needsReplace = !isFundamental && !!target && freePropertySlots(target) === 0;
+  // The lower tier a fundamental overwrites (destroyed on apply), if any.
+  const fundReplaced = (isFundamental && target && target.runes?.[rune.fundamental]) || null;
   const replaceableRunes = target ? weaponPropertyRunes(target) : [];
   const replaceChosen = !needsReplace || !!replaceRuneId;
   const canMove =
@@ -154,6 +176,14 @@ const MoveRunePanel = ({ character }) => {
               >
                 <option value="">Select a weapon…</option>
                 {targets.map((t) => {
+                  if (isFundamental) {
+                    const tier = runeTierSummary(t.runes);
+                    return (
+                      <option key={t.uid} value={t.uid}>
+                        {t.name}{tier ? ` (${tier})` : ''}
+                      </option>
+                    );
+                  }
                   const free = freePropertySlots(t);
                   const cap = propertySlotCapacity(t.runes);
                   return (
@@ -167,7 +197,11 @@ const MoveRunePanel = ({ character }) => {
           )}
 
           {needsTarget && targets.length === 0 && (
-            <p className="mr-hint">No weapon with a potency rune to hold a property rune.</p>
+            <p className="mr-hint">
+              {isFundamental
+                ? 'No weapon this rune would upgrade — every weapon already has an equal or better tier.'
+                : 'No weapon with a potency rune to hold a property rune.'}
+            </p>
           )}
 
           {needsReplace && (
@@ -192,6 +226,7 @@ const MoveRunePanel = ({ character }) => {
               Crafting vs <strong>DC {dc}</strong>. On a success you expend{' '}
               <strong>{upkeep} gp</strong>; on a critical failure the rune is destroyed.
               {needsReplace && ' The displaced rune is moved to a new runestone.'}
+              {fundReplaced != null && ' The lower-tier rune it overwrites is destroyed.'}
             </p>
           )}
 

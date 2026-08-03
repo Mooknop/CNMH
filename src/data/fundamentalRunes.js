@@ -68,4 +68,26 @@ export const FUNDAMENTAL_RUNES = [
 export const fundamentalRuneMap = () =>
   new Map(FUNDAMENTAL_RUNES.map((r) => [String(r.id), r]));
 
+/**
+ * Resolve a WEAPON fundamental descriptor (#832) to its rune doc: potency by
+ * numeric `tier` (1–3), striking by `key` (striking|greater|major — the entry
+ * form; the doc's own field is `tierKey`). This is what a fundamental runestone
+ * entry (`{ ref: 'runestone', fundamental, tier|key }`) resolves through — no
+ * catalog/runeMap lookup, the tables here are the source of truth. Returns null
+ * for an unknown fundamental or tier.
+ */
+export const weaponFundamentalFor = ({ fundamental, tier, key } = {}) => {
+  if (fundamental === 'potency') {
+    return FUNDAMENTAL_RUNES.find(
+      (r) => r.target === 'weapon' && r.fundamental === 'potency' && r.tier === Number(tier),
+    ) || null;
+  }
+  if (fundamental === 'striking') {
+    return FUNDAMENTAL_RUNES.find(
+      (r) => r.target === 'weapon' && r.fundamental === 'striking' && r.tierKey === key,
+    ) || null;
+  }
+  return null;
+};
+
 export default FUNDAMENTAL_RUNES;

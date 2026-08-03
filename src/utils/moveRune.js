@@ -9,11 +9,16 @@
 //   critical failure — the rune is destroyed
 //
 // Pure helpers only; useMoveRune wires these to the synced overlays, gold, and
-// session log. Property runes only for now (matches R3's foldRuneIntoWeapon);
-// potency/striking moves + slot validation come with R5 (#804).
+// session log. Covers property runes (R4 #803) and — per #832 — weapon
+// fundamentals (potency/striking), which move as replace-in-place tiers rather
+// than slot entries. Moving potency OFF a weapon is blocked while property
+// runes are etched: losing the +N closes the property slots they ride in
+// (mirrors R5's capacity rule, #804).
 
 import { getLevelBasedDc } from './InventoryUtils';
 import { newEntryUid } from './uid';
+import { usedPropertySlots } from './weaponRunes';
+import { weaponFundamentalFor } from '../data/fundamentalRunes';
 
 export const MOVE_RUNE_HOURS = 1;
 
@@ -78,4 +83,61 @@ export const weaponMovableRunes = (weapon) => {
     .map((p) => (typeof p === 'string' ? { id: p, name: p } : p))
     .filter((p) => p && p.id != null)
     .map((p) => ({ id: p.id, name: p.name || p.id, level: p.level, price: p.price }));
+};
+
+// ── Fundamental moves (#832) ─────────────────────────────────────────────────
+
+// A fresh runestone entry holding a WEAPON fundamental — the descriptor form
+// resolveRunestone reads (fundamental + tier|key), from a fundamental rune doc
+// or a bare descriptor.
+export const fundamentalRunestoneEntryFor = (descriptor) => ({
+  ref: 'runestone',
+  fundamental: descriptor.fundamental,
+  ...(descriptor.fundamental === 'potency'
+    ? { tier: Number(descriptor.tier) }
+    : { key: descriptor.key || descriptor.tierKey }),
+  uid: newEntryUid(),
+  quantity: 1,
+});
+
+// Strip a fundamental (potency/striking) off a weapon snapshot, returning a
+// fresh-uid inline entry — the inverse of foldFundamentalIntoWeapon. Returns
+// null when the weapon doesn't carry that fundamental, or when removing potency
+// would strand etched property runes (their slots ride on the +N; the rune must
+// be moved off first).
+export const removeFundamentalFromWeapon = (weapon, fundamental) => {
+  const base = weapon && typeof weapon === 'object' ? weapon : {};
+  const runes = base.runes && typeof base.runes === 'object' ? base.runes : {};
+  if (fundamental === 'potency') {
+    if (!runes.potency) return null;
+    if (usedPropertySlots(base) > 0) return null; // slots would drop below use
+  } else if (fundamental === 'striking') {
+    if (!runes.striking) return null;
+  } else {
+    return null;
+  }
+  const nextRunes = { ...runes };
+  delete nextRunes[fundamental];
+  const { state, hand, ...rest } = base;
+  return { ...rest, uid: newEntryUid(), runes: nextRunes };
+};
+
+// The fundamentals currently etched on a weapon, as movable candidates: the
+// fundamental rune doc (id/name/level/price + fundamental/tier|tierKey) so the
+// panel and the DC/upkeep math treat them like any rune. Potency is excluded
+// while property runes are etched (its removal is blocked — see
+// removeFundamentalFromWeapon).
+export const weaponMovableFundamentals = (weapon) => {
+  const runes = weapon?.runes;
+  if (!runes || typeof runes !== 'object') return [];
+  const out = [];
+  if (runes.potency && usedPropertySlots(weapon) === 0) {
+    const doc = weaponFundamentalFor({ fundamental: 'potency', tier: runes.potency });
+    if (doc) out.push(doc);
+  }
+  if (runes.striking) {
+    const doc = weaponFundamentalFor({ fundamental: 'striking', key: runes.striking });
+    if (doc) out.push(doc);
+  }
+  return out;
 };

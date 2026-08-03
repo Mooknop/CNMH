@@ -129,6 +129,73 @@ describe('toWeapon (runestone → weapon)', () => {
   });
 });
 
+describe('fundamental moves (#832)', () => {
+  // Striking is level 4 ⇒ DC 19; +1 potency is level 2 ⇒ DC 16.
+  const strikingDoc = { id: 'striking', name: 'Striking', fundamental: 'striking', tierKey: 'striking', level: 4, price: 65 };
+  const potencyDoc = { id: 'weapon-potency-1', name: '+1 Weapon Potency', fundamental: 'potency', tier: 1, level: 2, price: 35 };
+  const strikingStone = { uid: 'fs1', name: 'Striking Runestone', runestone: { runeRef: null, fundamental: 'striking', key: 'striking', rune: strikingDoc } };
+
+  it('round-trips striking weapon → runestone → weapon', () => {
+    const armed = { uid: 'w5', name: 'Falchion', strikes: { damage: '1d10' }, runes: { striking: 'striking' } };
+    const { result } = renderHook(() => useMoveRune('a'));
+
+    // Off the weapon: striking cleared, a fundamental-descriptor stone minted.
+    let res = result.current.move({ direction: 'toRunestone', weapon: armed, rune: strikingDoc, d20: 18, total: 40 });
+    expect(res.outcome.moved).toBe(true);
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Falchion', runes: {} }),
+      expect.objectContaining({ ref: 'runestone', fundamental: 'striking', key: 'striking' }),
+    ]);
+
+    // Back onto a bare weapon: replace-in-place set, the stone cracks.
+    setAcquired.mockClear();
+    res = result.current.move({ direction: 'toWeapon', weapon: bareWeapon, runestone: strikingStone, rune: strikingDoc, d20: 18, total: 40 });
+    expect(res.outcome.moved).toBe(true);
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Dagger', runes: { striking: 'striking' } }),
+    ]);
+    expect(removed).toContain('fs1');
+  });
+
+  it('rejects a non-upgrade apply (same tier already on the weapon) before rolling', () => {
+    const already = { uid: 'w6', name: 'Sabre', strikes: { damage: '1d6' }, runes: { striking: 'striking' } };
+    const { result } = renderHook(() => useMoveRune('a'));
+    expect(result.current.move({ direction: 'toWeapon', weapon: already, runestone: strikingStone, rune: strikingDoc, d20: 18, total: 40 })).toBeNull();
+    expect(setAcquired).not.toHaveBeenCalled();
+    expect(setRemoved).not.toHaveBeenCalled();
+  });
+
+  it('rejects moving potency off a weapon whose property runes ride its slots', () => {
+    const laden = { uid: 'w7', name: 'Pick', strikes: { damage: '1d6' }, runes: { potency: 1, property: ['flaming'] } };
+    const { result } = renderHook(() => useMoveRune('a'));
+    expect(result.current.move({ direction: 'toRunestone', weapon: laden, rune: potencyDoc, d20: 18, total: 40 })).toBeNull();
+    expect(setAcquired).not.toHaveBeenCalled();
+  });
+
+  it('moves potency off a property-free weapon, minting a tier descriptor stone', () => {
+    const plusOne = { uid: 'w8', name: 'Rapier', strikes: { damage: '1d6' }, runes: { potency: 1 } };
+    const { result } = renderHook(() => useMoveRune('a'));
+    const res = result.current.move({ direction: 'toRunestone', weapon: plusOne, rune: potencyDoc, d20: 18, total: 40 });
+    expect(res.outcome.moved).toBe(true);
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Rapier', runes: {} }),
+      expect.objectContaining({ ref: 'runestone', fundamental: 'potency', tier: 1 }),
+    ]);
+  });
+
+  it('overwrites a lower striking tier in place on apply (no displaced stone minted)', () => {
+    const greaterDoc = { id: 'greater-striking', name: 'Greater Striking', fundamental: 'striking', tierKey: 'greater', level: 12, price: 1065 };
+    const greaterStone = { uid: 'fs2', runestone: { runeRef: null, fundamental: 'striking', key: 'greater', rune: greaterDoc } };
+    const armed = { uid: 'w9', name: 'Glaive', strikes: { damage: '1d8' }, runes: { striking: 'striking' } };
+    const { result } = renderHook(() => useMoveRune('a'));
+    const res = result.current.move({ direction: 'toWeapon', weapon: armed, runestone: greaterStone, rune: greaterDoc, d20: 18, total: 40 });
+    expect(res.outcome.moved).toBe(true);
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Glaive', runes: { striking: 'greater' } }),
+    ]);
+  });
+});
+
 describe('guards', () => {
   it('rejects when the success upkeep exceeds the buyer’s gold (no writes)', () => {
     gold = 10;

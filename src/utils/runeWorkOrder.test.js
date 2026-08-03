@@ -6,6 +6,8 @@ import {
   orderStatus,
   eligibleWeapons,
   foldRuneIntoWeapon,
+  foldFundamentalIntoWeapon,
+  canFoldFundamental,
   TURNAROUND_HOURS,
 } from './runeWorkOrder';
 import { toGameSeconds } from './gameTime';
@@ -85,6 +87,59 @@ describe('foldRuneIntoWeapon', () => {
     expect(out.state).toBeUndefined();
     expect(out.hand).toBeUndefined();
     expect(out.runes.property).toEqual(['flaming']);
+  });
+});
+
+describe('foldFundamentalIntoWeapon (#832)', () => {
+  it('sets a potency tier on a bare weapon (replace-in-place, fresh uid)', () => {
+    const out = foldFundamentalIntoWeapon(
+      { uid: 'w1', name: 'Longsword', strikes: { damage: '1d8' } },
+      { fundamental: 'potency', tier: 1 },
+    );
+    expect(out.runes).toEqual({ potency: 1 });
+    expect(out.uid).toBeTruthy();
+    expect(out.uid).not.toBe('w1');
+  });
+
+  it('overwrites a lower potency tier in place (up-tier)', () => {
+    const out = foldFundamentalIntoWeapon(
+      { uid: 'w1', runes: { potency: 1, striking: 'striking', property: ['flaming'] } },
+      { fundamental: 'potency', tier: 2 },
+    );
+    expect(out.runes).toEqual({ potency: 2, striking: 'striking', property: ['flaming'] });
+  });
+
+  it('blocks a same- or lower-tier potency (never a silent downgrade)', () => {
+    const w = { uid: 'w1', runes: { potency: 2 } };
+    expect(foldFundamentalIntoWeapon(w, { fundamental: 'potency', tier: 2 })).toBeNull();
+    expect(foldFundamentalIntoWeapon(w, { fundamental: 'potency', tier: 1 })).toBeNull();
+  });
+
+  it('upgrades striking by rank and blocks same/lower (entry `key` or doc `tierKey`)', () => {
+    const w = { uid: 'w1', runes: { striking: 'striking' } };
+    expect(foldFundamentalIntoWeapon(w, { fundamental: 'striking', key: 'greater' }).runes.striking).toBe('greater');
+    expect(foldFundamentalIntoWeapon(w, { fundamental: 'striking', tierKey: 'major' }).runes.striking).toBe('major');
+    expect(foldFundamentalIntoWeapon(w, { fundamental: 'striking', key: 'striking' })).toBeNull();
+    expect(foldFundamentalIntoWeapon({ uid: 'w2', runes: { striking: 'major' } }, { fundamental: 'striking', key: 'greater' })).toBeNull();
+  });
+
+  it('strips transient loadout fields (state/hand)', () => {
+    const out = foldFundamentalIntoWeapon(
+      { uid: 'w1', state: 'held1', hand: 1 }, { fundamental: 'striking', key: 'striking' },
+    );
+    expect(out.state).toBeUndefined();
+    expect(out.hand).toBeUndefined();
+  });
+
+  it('canFoldFundamental rejects a dragonbreath weapon (template-locked fundamentals)', () => {
+    const db = { uid: 'w1', strikes: {}, dragonbreath: { tier: 'base', dragonType: 'red' } };
+    expect(canFoldFundamental(db, { fundamental: 'potency', tier: 3 })).toBe(false);
+    expect(foldFundamentalIntoWeapon(db, { fundamental: 'potency', tier: 3 })).toBeNull();
+  });
+
+  it('rejects an unknown descriptor', () => {
+    expect(foldFundamentalIntoWeapon({ uid: 'w1' }, { fundamental: 'resilient', key: 'resilient' })).toBeNull();
+    expect(foldFundamentalIntoWeapon({ uid: 'w1' }, null)).toBeNull();
   });
 });
 
