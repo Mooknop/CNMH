@@ -210,6 +210,21 @@ describe('shieldEffectiveTraits + shieldHasFinesse', () => {
     expect(shieldEffectiveTraits({ shield: {}, augmentation: { id: 'mirror' } })).toEqual([]);
   });
 
+  it('grants the CHOSEN traits of an array-choice augmentation (#1428 Shield Augmentation)', () => {
+    // The stored pick rides `augmentation.choice` as an array — resolved doc shape.
+    expect(shieldEffectiveTraits({ shield: {}, augmentation: { id: 'shield-augmentation', name: 'Shield Augmentation', choice: ['Trip', 'Versatile S'] } }))
+      .toEqual(['Trip', 'Versatile S']);
+    // A bare { ref, choice } entry binding grants the same.
+    expect(shieldEffectiveTraits({ traits: ['Deflecting'], shield: {}, augmentation: { ref: 'shield-augmentation', choice: ['Backswing'] } }))
+      .toEqual(['Deflecting', 'Backswing']);
+    // A STRING choice (Ancestral Predator's creature type) is not a trait.
+    expect(shieldEffectiveTraits({ shield: {}, augmentation: { ref: 'ancestral-predator', choice: 'dragon' } }))
+      .toEqual([]);
+    // A choiceless Shield Augmentation grants nothing (picked at the table).
+    expect(shieldEffectiveTraits({ shield: {}, augmentation: { ref: 'shield-augmentation' } }))
+      .toEqual([]);
+  });
+
   it('de-dupes a granted trait already present on the base (case-insensitive)', () => {
     // A Targe (base Finesse) with a Feather rune keeps a single Finesse.
     const item = { traits: ['Finesse'], shield: {}, runes: { reinforcing: 'minor', property: [feather] } };

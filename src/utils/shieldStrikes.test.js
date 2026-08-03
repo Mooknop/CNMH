@@ -122,6 +122,51 @@ describe('shieldStrikes — Shield Throw (Throwing rune)', () => {
   });
 });
 
+describe('shieldStrikes — Shield Augmentation chosen traits (#1428)', () => {
+  const augmented = (choice) =>
+    shield('s1', 'held1', { augmentation: { id: 'shield-augmentation', name: 'Shield Augmentation', choice } });
+
+  it('a pickOne choice (Backswing) rides the derived bash traits', () => {
+    const [bash] = shieldBashStrikes({ ...character, inventory: [augmented(['Backswing'])] }, {});
+    expect(bash.name).toBe('Shield Bash');
+    expect(bash.traits).toContain('Backswing');
+  });
+
+  it('Versatile S alters the derived bash Strike (trait carried to resolution)', () => {
+    const strikes = shieldBashStrikes({ ...character, inventory: [augmented(['Trip', 'Versatile S'])] }, {});
+    expect(strikes).toHaveLength(1); // no thrown pick → melee only
+    expect(strikes[0].traits).toEqual(expect.arrayContaining(['Trip', 'Versatile S']));
+  });
+
+  it('a chosen Thrown 10 ft derives a real Shield Throw at 10 ft range', () => {
+    const strikes = shieldBashStrikes({ ...character, inventory: [augmented(['Thrown 10 ft', 'Versatile S'])] }, {});
+    expect(strikes).toHaveLength(2);
+    const toss = strikes.find((s) => s.type === 'ranged');
+    expect(toss).toMatchObject({ name: 'Shield Throw', thrown: true, returning: false, range: '10ft' });
+    // The chosen distance beats the size-category default (medium would be 20ft).
+    expect(toss.range).not.toBe(SHIELD_THROW_RANGE.medium);
+    // The other chosen trait rides the throw too; the melee bash keeps the
+    // thrown trait for display but stays melee.
+    expect(toss.traits).toContain('Versatile S');
+    const bash = strikes.find((s) => s.type === 'melee');
+    expect(bash.traits).toContain('Thrown 10 ft');
+    expect(bash.thrown).toBeFalsy();
+  });
+
+  it('a choiceless Shield Augmentation changes nothing (rules text stands)', () => {
+    const bare = shield('s1', 'held1', { augmentation: { id: 'shield-augmentation', name: 'Shield Augmentation' } });
+    const strikes = shieldBashStrikes({ ...character, inventory: [bare] }, {});
+    expect(strikes).toHaveLength(1);
+    expect(strikes[0].traits).not.toContain('Backswing');
+  });
+
+  it('the Throwing rune keeps its size-category range (no distance-bearing trait)', () => {
+    const char = { ...character, inventory: [throwingShield('s1', 'held1', 1)] };
+    const toss = shieldBashStrikes(char, {}).find((s) => s.type === 'ranged');
+    expect(toss.range).toBe(SHIELD_THROW_RANGE.medium);
+  });
+});
+
 describe('shieldStrikes — deriveShieldBash shape', () => {
   it('derives a resolver-ready pseudo-weapon carrying the shield uid', () => {
     const derived = deriveShieldBash(throwingShield('s1', 'held1', 0));

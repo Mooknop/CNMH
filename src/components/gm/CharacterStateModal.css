@@ -334,3 +334,53 @@
 .gm-rune-sockets select {
   max-width: 12rem;
 }
+
+/* Augmentation trait chooser (#1428) — the either/or multi-select a traitChoice
+   augmentation (Shield Augmentation) stages before it can apply. */
+.gm-aug-row--choosing {
+  flex-wrap: wrap;
+}
+
+.gm-aug-traits {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: var(--surface-inset);
+  border-radius: var(--radius-sm);
+}
+
+.gm-aug-trait-group-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-aug-trait-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.gm-aug-trait {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--shell-text-primary);
+  cursor: pointer;
+}
+
+.gm-aug-trait:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gm-aug-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

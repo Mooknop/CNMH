@@ -48,11 +48,19 @@ const INV = {
   jade: [],
 };
 
-// Augmentation catalog (item.json type 'augmentation') — both shield-targeted,
-// unrestricted (#1202 U1).
+// Augmentation catalog (item.json type 'augmentation') — all shield-targeted,
+// unrestricted (#1202 U1). Shield Augmentation carries the multi-trait choice
+// (#1428): one of pickOne OR two of orTwoOf.
 const AUGS = [
   { id: 'coat-of-arms', type: 'augmentation', augTarget: ['shield'], name: 'Coat of Arms', price: 20 },
   { id: 'mirror', type: 'augmentation', augTarget: ['shield'], name: 'Mirror', price: 1 },
+  {
+    id: 'shield-augmentation', type: 'augmentation', augTarget: ['shield'], name: 'Shield Augmentation', price: 0.8,
+    traitChoice: {
+      pickOne: ['Backswing', 'Forceful'],
+      orTwoOf: ['Disarm', 'Nonlethal', 'Shove', 'Thrown 10 ft', 'Trip', 'Versatile S'],
+    },
+  },
 ];
 
 // Minimal rune catalog: a weapon property rune, a +2 weapon potency fundamental,
@@ -180,6 +188,89 @@ describe('GmGearModal', () => {
     fireEvent.change(sel, { target: { value: 'mirror' } });
     expect(lastUpdate('acquired').value.at(-1).augmentation).toEqual({ ref: 'mirror' });
     expect(logText()).toContain('replaced the augmentation on War Shield with Mirror — the old one was destroyed');
+  });
+
+  it('a traitChoice augmentation stages a trait picker instead of applying (#1428)', () => {
+    open();
+    select('pellias');
+    fireEvent.change(screen.getByLabelText('augmentation for Steel Shield'), { target: { value: 'shield-augmentation' } });
+    // Nothing written yet — the pick is pending.
+    expect(lastUpdate('acquired')).toBeUndefined();
+    expect(screen.getByTestId('aug-traits-Steel Shield')).toBeInTheDocument();
+    // Apply is disabled until the pick is valid.
+    expect(screen.getByLabelText('apply Shield Augmentation to Steel Shield')).toBeDisabled();
+  });
+
+  it('enforces one-of XOR two-of: cross-group picks clear the other side, the pair caps at two', () => {
+    open();
+    select('pellias');
+    fireEvent.change(screen.getByLabelText('augmentation for Steel Shield'), { target: { value: 'shield-augmentation' } });
+    const apply = () => screen.getByLabelText('apply Shield Augmentation to Steel Shield');
+    const box = (t) => screen.getByLabelText(`choose ${t}`);
+
+    // Two of the pair group → valid.
+    fireEvent.click(box('Trip'));
+    expect(apply()).toBeDisabled(); // one from orTwoOf is NOT valid
+    fireEvent.click(box('Versatile S'));
+    expect(apply()).toBeEnabled();
+    // A third pair pick is disabled — no triple storable.
+    expect(box('Disarm')).toBeDisabled();
+
+    // Crossing to the single group clears the pair — no mix ever holds.
+    fireEvent.click(box('Backswing'));
+    expect(box('Trip')).not.toBeChecked();
+    expect(box('Versatile S')).not.toBeChecked();
+    expect(box('Backswing')).toBeChecked();
+    expect(apply()).toBeEnabled();
+
+    // Two singles can't combine — picking the other replaces.
+    fireEvent.click(box('Forceful'));
+    expect(box('Backswing')).not.toBeChecked();
+    expect(box('Forceful')).toBeChecked();
+    expect(apply()).toBeEnabled();
+
+    // Crossing back clears the single pick.
+    fireEvent.click(box('Shove'));
+    expect(box('Forceful')).not.toBeChecked();
+    expect(apply()).toBeDisabled(); // one pair trait only
+  });
+
+  it('applies the picked traits as an ARRAY on the binding and logs them', () => {
+    open();
+    select('pellias');
+    fireEvent.change(screen.getByLabelText('augmentation for Steel Shield'), { target: { value: 'shield-augmentation' } });
+    fireEvent.click(screen.getByLabelText('choose Thrown 10 ft'));
+    fireEvent.click(screen.getByLabelText('choose Versatile S'));
+    fireEvent.click(screen.getByLabelText('apply Shield Augmentation to Steel Shield'));
+
+    const entry = lastUpdate('acquired').value.at(-1);
+    expect(entry.augmentation).toEqual({ ref: 'shield-augmentation', choice: ['Thrown 10 ft', 'Versatile S'] });
+    expect(lastUpdate('acquired').options).toEqual({ force: true });
+    expect(logText()).toContain('GM: Pellias — augmented Steel Shield with Shield Augmentation (Thrown 10 ft, Versatile S)');
+    // The picker closes after applying.
+    expect(screen.queryByTestId('aug-traits-Steel Shield')).not.toBeInTheDocument();
+  });
+
+  it('cancel dismisses the trait picker without writing', () => {
+    open();
+    select('pellias');
+    fireEvent.change(screen.getByLabelText('augmentation for Steel Shield'), { target: { value: 'shield-augmentation' } });
+    fireEvent.click(screen.getByLabelText('choose Backswing'));
+    fireEvent.click(screen.getByLabelText('cancel Shield Augmentation for Steel Shield'));
+    expect(screen.queryByTestId('aug-traits-Steel Shield')).not.toBeInTheDocument();
+    expect(lastUpdate('acquired')).toBeUndefined();
+  });
+
+  it('shows the stored trait picks beside the current augmentation name', () => {
+    INV.augbearer2 = [
+      { uid: 'sb', name: 'Bazaar Shield', weight: 1, shield: { hardness: 5 }, augmentation: { id: 'shield-augmentation', name: 'Shield Augmentation', choice: ['Trip', 'Shove'] } },
+    ];
+    useContent.mockReturnValue({ characters: [...CHARACTERS, { id: 'augbearer2', name: 'Augbearer2' }], runes: RUNES, items: AUGS });
+    open();
+    select('augbearer2');
+    const row = screen.getByTestId('aug-row-Bazaar Shield');
+    expect(within(row).getByText(/Shield Augmentation \(Trip, Shove\)/)).toBeInTheDocument();
+    delete INV.augbearer2;
   });
 
   it('removes an augmentation, clearing the binding and logging the destroy', () => {

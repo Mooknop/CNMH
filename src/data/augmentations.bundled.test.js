@@ -127,6 +127,14 @@ describe('seeded official adjustments (armor / weapon / shield)', () => {
     }
   });
 
+  it('Shield Augmentation authors its multi-trait choice (#1428): one of two OR two of six', () => {
+    const tc = byId('shield-augmentation').traitChoice;
+    expect(tc.pickOne).toEqual(['Backswing', 'Forceful']);
+    expect(tc.orTwoOf).toEqual(['Disarm', 'Nonlethal', 'Shove', 'Thrown 10 ft', 'Trip', 'Versatile S']);
+    // No other augmentation carries a traitChoice block.
+    expect(items.filter((d) => isAugmentation(d) && d.traitChoice)).toHaveLength(1);
+  });
+
   it('seeds 24 augmentations total: 12 shield, 9 armor, 3 weapon', () => {
     const augs = items.filter(isAugmentation);
     expect(augs).toHaveLength(24);

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isAugmentation, augTargets, hostMatchesAugTarget, augmentationUsageAllows,
   augmentationOf, hasAugmentation, augmentationFits, canAugment,
-  applyAugmentation, clearAugmentation,
+  applyAugmentation, clearAugmentation, traitChoiceOf, isValidTraitChoice,
   isGmAdjudicatedAugmentation, GM_ADJUDICATED_AUGMENTS,
   augmentationArmorDeltas,
   augmentationShieldHardnessDelta, isConsumedOnActivate, augmentationManualNote,
@@ -118,6 +118,73 @@ describe('apply / clear entry shapes', () => {
 
   it('clearAugmentation returns null when there is nothing to remove', () => {
     expect(clearAugmentation(lightShield)).toBeNull();
+  });
+});
+
+// #1428 — Shield Augmentation's "one of {backswing, forceful} OR two of {disarm,
+// nonlethal, shove, thrown 10 ft, trip, versatile S}" multi-trait choice.
+describe('traitChoice model (#1428)', () => {
+  const shieldAug = {
+    id: 'shield-augmentation', type: 'augmentation', augTarget: ['shield'],
+    name: 'Shield Augmentation',
+    traitChoice: {
+      pickOne: ['Backswing', 'Forceful'],
+      orTwoOf: ['Disarm', 'Nonlethal', 'Shove', 'Thrown 10 ft', 'Trip', 'Versatile S'],
+    },
+  };
+
+  it('traitChoiceOf reads the block; plain and choices docs carry none', () => {
+    expect(traitChoiceOf(shieldAug)).toBe(shieldAug.traitChoice);
+    expect(traitChoiceOf(mirror)).toBeNull();
+    expect(traitChoiceOf({ ...mirror, choices: ['dragon'] })).toBeNull();
+    expect(traitChoiceOf(null)).toBeNull();
+  });
+
+  it('accepts exactly ONE trait from pickOne', () => {
+    expect(isValidTraitChoice(shieldAug, ['Backswing'])).toBe(true);
+    expect(isValidTraitChoice(shieldAug, ['Forceful'])).toBe(true);
+    // Case-insensitive against the authored list.
+    expect(isValidTraitChoice(shieldAug, ['forceful'])).toBe(true);
+  });
+
+  it('accepts exactly TWO distinct traits from orTwoOf', () => {
+    expect(isValidTraitChoice(shieldAug, ['Trip', 'Versatile S'])).toBe(true);
+    expect(isValidTraitChoice(shieldAug, ['Thrown 10 ft', 'Disarm'])).toBe(true);
+  });
+
+  it('rejects invalid mixes, counts, duplicates, and unknown traits', () => {
+    expect(isValidTraitChoice(shieldAug, ['Backswing', 'Trip'])).toBe(false); // cross-group mix
+    expect(isValidTraitChoice(shieldAug, ['Backswing', 'Forceful'])).toBe(false); // two from pickOne
+    expect(isValidTraitChoice(shieldAug, ['Trip'])).toBe(false); // one from orTwoOf
+    expect(isValidTraitChoice(shieldAug, ['Disarm', 'Shove', 'Trip'])).toBe(false); // three
+    expect(isValidTraitChoice(shieldAug, ['Trip', 'trip'])).toBe(false); // duplicate
+    expect(isValidTraitChoice(shieldAug, ['Agile'])).toBe(false); // not offered
+    expect(isValidTraitChoice(shieldAug, [])).toBe(false);
+    expect(isValidTraitChoice(shieldAug, 'Backswing')).toBe(false); // not an array
+    expect(isValidTraitChoice(mirror, ['Backswing'])).toBe(false); // no traitChoice block
+  });
+
+  it('applyAugmentation stores a VALID trait array on the binding (a copy)', () => {
+    const choice = ['Thrown 10 ft', 'Versatile S'];
+    const next = applyAugmentation(lightShield, shieldAug, { choice });
+    expect(next.augmentation).toEqual({ ref: 'shield-augmentation', choice: ['Thrown 10 ft', 'Versatile S'] });
+    expect(next.augmentation.choice).not.toBe(choice); // defensive copy
+  });
+
+  it('applyAugmentation REJECTS an invalid mix — nothing stores', () => {
+    expect(applyAugmentation(lightShield, shieldAug, { choice: ['Backswing', 'Trip'] })).toBeNull();
+    expect(applyAugmentation(lightShield, shieldAug, { choice: ['Trip'] })).toBeNull();
+    expect(applyAugmentation(lightShield, shieldAug, { choice: 'Backswing' })).toBeNull();
+  });
+
+  it('applyAugmentation without a choice stays legal (binding lands choiceless)', () => {
+    expect(applyAugmentation(lightShield, shieldAug).augmentation)
+      .toEqual({ ref: 'shield-augmentation' });
+  });
+
+  it('a single-string choice on a NON-traitChoice doc still flows unchanged', () => {
+    const next = applyAugmentation(lightShield, { ...mirror, id: 'ancestral-predator' }, { choice: 'Dragon' });
+    expect(next.augmentation).toEqual({ ref: 'ancestral-predator', choice: 'Dragon' });
   });
 });
 

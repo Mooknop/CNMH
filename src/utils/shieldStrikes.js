@@ -30,20 +30,33 @@ import { shieldCategory } from './shieldCategory';
 // it is light, 20 feet if it is medium, and 15 feet if it is heavy).
 export const SHIELD_THROW_RANGE = { light: '25ft', medium: '20ft', heavy: '15ft' };
 
-const hasThrownTrait = (traits) =>
-  traits.some((t) => String(t).toLowerCase().startsWith('thrown'));
+const isThrownTraitStr = (t) => String(t).toLowerCase().startsWith('thrown');
+const hasThrownTrait = (traits) => traits.some(isThrownTraitStr);
+
+// A thrown trait that carries its own distance ('Thrown 10 ft' — a Shield
+// Augmentation pick, or a base trait like the Blade Byrnie's blades).
+const THROWN_DISTANCE_RE = /^thrown\s+(\d+)/i;
 
 /**
  * The derived bash pseudo-weapon for one shield: a melee Shield Bash always,
- * plus a ranged Shield Throw when the shield's effective traits (base or
- * Throwing rune) include Thrown. Carries the shield's uid so a resolved throw
- * drops the shield itself.
+ * plus a ranged Shield Throw when the shield's effective traits (base, Throwing
+ * rune, or a chosen augmentation trait) include Thrown. A Shield Augmentation's
+ * CHOSEN traits (#1428 — an array on `augmentation.choice`) ride both derived
+ * Strikes so the bash/throw honors Backswing / Trip / Versatile S / … like a
+ * real weapon; a chosen 'Thrown 10 ft' also fixes the throw's range increment
+ * (otherwise the shield's size category decides, per the Throwing rune text).
+ * Carries the shield's uid so a resolved throw drops the shield itself.
  *
  * @param {Object} shield - inventory shield item
  * @returns {Object} a derived weapon item (resolveItemStrikes-ready)
  */
 export const deriveShieldBash = (shield) => {
   const finesse = shieldHasFinesse(shield);
+  const effective = shieldEffectiveTraits(shield);
+  const aug = shield?.augmentation;
+  const chosen = Array.isArray(aug?.choice)
+    ? aug.choice.filter((t) => typeof t === 'string')
+    : [];
   const strikes = [
     {
       name: 'Shield Bash',
@@ -52,11 +65,16 @@ export const deriveShieldBash = (shield) => {
       damage: '1d4',
       damageType: 'bludgeoning',
       actionCount: 1,
-      traits: ['Attack', 'Melee', ...(finesse ? ['Finesse'] : [])],
+      // A chosen thrown trait stays on the melee bash for display (a thrown
+      // melee weapon keeps its trait and never drops on a melee Strike).
+      traits: ['Attack', 'Melee', ...(finesse ? ['Finesse'] : []), ...chosen],
       description: 'You slam your shield into the target.',
     },
   ];
-  if (hasThrownTrait(shieldEffectiveTraits(shield))) {
+  if (hasThrownTrait(effective)) {
+    const dist = effective
+      .map((t) => THROWN_DISTANCE_RE.exec(String(t)))
+      .find(Boolean);
     strikes.push({
       name: 'Shield Throw',
       proficiency: 'martial',
@@ -64,8 +82,10 @@ export const deriveShieldBash = (shield) => {
       damage: '1d4',
       damageType: 'bludgeoning',
       actionCount: 1,
-      range: SHIELD_THROW_RANGE[shieldCategory(shield?.weight)] || SHIELD_THROW_RANGE.medium,
-      traits: ['Attack', 'Thrown'],
+      range: dist
+        ? `${dist[1]}ft`
+        : SHIELD_THROW_RANGE[shieldCategory(shield?.weight)] || SHIELD_THROW_RANGE.medium,
+      traits: ['Attack', 'Thrown', ...chosen.filter((t) => !isThrownTraitStr(t))],
       description: 'You hurl your shield at the target.',
     });
   }

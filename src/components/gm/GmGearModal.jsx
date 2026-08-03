@@ -16,7 +16,7 @@ import {
 import { gearSockets, compatibleRunes, applyRune } from '../../utils/runeSockets';
 import {
   isAugmentation, augmentationFits, augmentationOf, hasAugmentation,
-  applyAugmentation, clearAugmentation,
+  applyAugmentation, clearAugmentation, traitChoiceOf, isValidTraitChoice,
 } from '../../utils/augmentations';
 import { reinforcingRuneDocs, clearedGearEntry, applyGearEntry } from '../../utils/gmRunes';
 import { STRIKING } from '../../utils/weaponRunes';
@@ -159,14 +159,49 @@ const RuneSocketRow = ({ item, socket, options, onFill, onClear }) => {
 // One augmentable host and its single augmentation slot: the current binding, a
 // picker of the augmentations that fit (used to set OR swap), and — when filled —
 // a remove button. Swapping or removing DESTROYS the current augmentation, so an
-// occupied slot shows a warning. Every edit is instant (writes straight through).
+// occupied slot shows a warning. Every edit is instant (writes straight through) —
+// EXCEPT a `traitChoice` augmentation (#1428, Shield Augmentation), which can't
+// apply until its traits are picked: ONE of `pickOne` or TWO of `orTwoOf`. The
+// picker enforces the either/or (choosing across groups clears the other side;
+// the pair caps at two), and Apply enables only on a valid pick — an invalid mix
+// is unstorable.
 const AugmentationRow = ({ item, options, onApply, onClear }) => {
   const current = augmentationOf(item);
+  const [pending, setPending] = useState(null); // a traitChoice doc awaiting its picks
+  const [picks, setPicks] = useState([]);
+  const tc = pending ? traitChoiceOf(pending) : null;
+
+  const pick = (doc) => {
+    if (!doc) return;
+    if (traitChoiceOf(doc)) { setPending(doc); setPicks([]); }
+    else onApply(item, doc);
+  };
+  // Picking from the single-trait group replaces everything (its own XOR and the
+  // group XOR at once); re-picking the same unchecks it.
+  const togglePickOne = (t) => setPicks((p) => (p.includes(t) ? [] : [t]));
+  // Picking from the pair group drops any single-trait pick, then toggles, capped
+  // at two (the checkbox is also disabled once two are held).
+  const toggleTwoOf = (t) => setPicks((p) => {
+    const pair = p.filter((x) => (tc?.orTwoOf || []).includes(x));
+    if (pair.includes(t)) return pair.filter((x) => x !== t);
+    return pair.length >= 2 ? pair : [...pair, t];
+  });
+  const cancel = () => { setPending(null); setPicks([]); };
+  const commit = () => { onApply(item, pending, picks); cancel(); };
+  const pairHeld = picks.filter((x) => (tc?.orTwoOf || []).includes(x));
+
   return (
-    <li className="cs-row" data-testid={`aug-row-${item.name}`}>
+    <li
+      className={`cs-row${pending ? ' gm-aug-row--choosing' : ''}`}
+      data-testid={`aug-row-${item.name}`}
+    >
       <span className="cs-label">
         {item.name}
-        <span className="gm-help"> — {current?.name || 'none'}</span>
+        <span className="gm-help">
+          {' — '}
+          {current?.name || 'none'}
+          {Array.isArray(current?.choice) && current.choice.length > 0 && ` (${current.choice.join(', ')})`}
+        </span>
         {current && (
           <span className="gm-help"> · swapping or removing destroys it</span>
         )}
@@ -176,10 +211,7 @@ const AugmentationRow = ({ item, options, onApply, onClear }) => {
           <select
             aria-label={`augmentation for ${item.name}`}
             value=""
-            onChange={(e) => {
-              const doc = options.find((o) => String(o.id) === e.target.value);
-              if (doc) onApply(item, doc);
-            }}
+            onChange={(e) => pick(options.find((o) => String(o.id) === e.target.value))}
           >
             <option value="">{current ? '— swap —' : '— set —'}</option>
             {options.map((o) => (
@@ -198,6 +230,58 @@ const AugmentationRow = ({ item, options, onApply, onClear }) => {
           </button>
         )}
       </div>
+      {pending && tc && (
+        <div className="gm-aug-traits" data-testid={`aug-traits-${item.name}`}>
+          <span className="gm-aug-trait-group-label">{pending.name} — one of:</span>
+          <div className="gm-aug-trait-group" role="group" aria-label={`${pending.name} single trait for ${item.name}`}>
+            {(tc.pickOne || []).map((t) => (
+              <label key={t} className="gm-aug-trait">
+                <input
+                  type="checkbox"
+                  aria-label={`choose ${t}`}
+                  checked={picks.includes(t)}
+                  onChange={() => togglePickOne(t)}
+                />
+                {t}
+              </label>
+            ))}
+          </div>
+          <span className="gm-aug-trait-group-label">…or two of:</span>
+          <div className="gm-aug-trait-group" role="group" aria-label={`${pending.name} trait pair for ${item.name}`}>
+            {(tc.orTwoOf || []).map((t) => (
+              <label key={t} className="gm-aug-trait">
+                <input
+                  type="checkbox"
+                  aria-label={`choose ${t}`}
+                  checked={picks.includes(t)}
+                  disabled={!picks.includes(t) && pairHeld.length >= 2}
+                  onChange={() => toggleTwoOf(t)}
+                />
+                {t}
+              </label>
+            ))}
+          </div>
+          <div className="gm-aug-actions">
+            <button
+              type="button"
+              className="cs-save-btn"
+              aria-label={`apply ${pending.name} to ${item.name}`}
+              disabled={!isValidTraitChoice(pending, picks)}
+              onClick={commit}
+            >
+              Apply
+            </button>
+            <button
+              type="button"
+              className="cs-clear-btn"
+              aria-label={`cancel ${pending.name} for ${item.name}`}
+              onClick={cancel}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </li>
   );
 };
@@ -344,11 +428,16 @@ const GmGearModal = ({ isOpen, onClose }) => {
     () => flatInventory.filter((it) => augDocs.some((d) => augmentationFits(it, d))),
     [flatInventory, augDocs],
   );
-  const applyAug = (item, augDoc) =>
-    editRune(item, applyAugmentation(item, augDoc),
+  // `choice` is the picked trait array of a traitChoice augmentation (#1428) —
+  // absent for the ordinary instant-apply docs.
+  const applyAug = (item, augDoc, choice) => {
+    const withChoice = Array.isArray(choice) && choice.length > 0;
+    const label = `${augDoc.name}${withChoice ? ` (${choice.join(', ')})` : ''}`;
+    editRune(item, applyAugmentation(item, augDoc, withChoice ? { choice } : {}),
       hasAugmentation(item)
-        ? `replaced the augmentation on ${item.name} with ${augDoc.name} — the old one was destroyed`
-        : `augmented ${item.name} with ${augDoc.name}`);
+        ? `replaced the augmentation on ${item.name} with ${label} — the old one was destroyed`
+        : `augmented ${item.name} with ${label}`);
+  };
   const clearAug = (item) =>
     editRune(item, clearAugmentation(item),
       `removed the ${augmentationOf(item)?.name || 'augmentation'} from ${item.name} — it was destroyed`);
