@@ -2705,6 +2705,10 @@
           "Concentrate",
           "Manipulate"
         ],
+        "frequencyRule": {
+          "per": "day",
+          "uses": 1
+        },
         "description": "Activate envision, Interact; Frequency once per day (once per hour for Greater); Effect The cape unleashes a blinding flash. Each enemy within 30 feet that can see you must attempt a DC 19 Fortitude save (DC 25 for Moderate, DC 34 for Greater). Critical Success Unaffected. Success Dazzled 1 round. Failure Blinded 1 round and dazzled 1 minute (the creature can use an Interact action to end the blinded condition). Critical Failure Blinded 1 round and dazzled 1 hour."
       }
     ],
@@ -3212,6 +3216,10 @@
         "traits": [
           "Concentrate"
         ],
+        "frequencyRule": {
+          "per": "day",
+          "uses": 1
+        },
         "description": "Activate command; Frequency once per day; Effect You wield your great stature to make a Request of a creature. If you roll a success on the check, you get a critical success instead."
       }
     ],
@@ -5104,6 +5112,10 @@
         "traits": [
           "Manipulate"
         ],
+        "frequencyRule": {
+          "per": "hour",
+          "uses": 1
+        },
         "description": "Activate 1 minute (Interact); Frequency once per hour; Effect You draw any number of pieces of mundane gear from the pack with a combined value of 1 gp or less."
       }
     ],
