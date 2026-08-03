@@ -370,6 +370,105 @@ test.describe('Casting resources — spell counters', () => {
   });
 });
 
+/**
+ * Spell-slot economy (#957, e2e per #1046): the repertoire ledger behind
+ * `cnmh_slots_<id>` ({ [rank]: spent }). Deduction happens on cast — the
+ * non-encounter one-tap slot cast (#961/#996) is driven here. The rank-header
+ * pips (#997) are a READ-ONLY render of that ledger: the sole player-side
+ * writer is the cast path (useCastingResources.spend), daily preparations
+ * reset it, and GMs remediate via CharacterStateModal — there is no manual
+ * pip toggle left to press.
+ */
+test.describe('Casting resources — spell-slot ledger', () => {
+  const SLOTS_KEY = `cnmh_slots_${CHAR_ID}`;
+
+  test.beforeEach(async ({ reset, seed }) => {
+    await reset();
+    await seed({
+      spell: [EMBER, FROST, ZAP, ...snapshotSpells('bless')],
+      item: [STAFF_ITEM, WAND_ITEM],
+      character: [caster()],
+    });
+  });
+
+  /** Sheet Spells tab → Repertoire view (SpellsList, NOT the encounter deck). */
+  async function openRepertoire(page: Page) {
+    await gotoSheet(page, CHAR_ID, CHAR_NAME);
+    await openPlayTab(page, 'Spells');
+    await page.getByRole('button', { name: 'Repertoire' }).click();
+  }
+
+  /** Open a repertoire spell's detail modal (same name-click as castFromCard). */
+  async function openSpellCard(page: Page, name: string) {
+    await page
+      .getByTestId('spell-card')
+      .filter({ has: page.locator('.spell-name', { hasText: name }) })
+      .locator('.spell-name')
+      .click();
+  }
+
+  test('a non-encounter repertoire cast deducts a slot of the cast rank', async ({ page }) => {
+    // Deliberately NO encounter seeded: the deduction under test is the
+    // one-tap slot cast (#961) SpellDetailModal offers outside the encounter
+    // cast flow — outside a live encounter there is no Cast chip at all,
+    // only the slot-spend buttons.
+    const mock = await mockSession(page);
+    await openRepertoire(page);
+
+    // Full ledger before anything is spent.
+    await expect(
+      page.getByRole('img', { name: 'Rank 1 spell slots: 3 of 3 remaining' }),
+    ).toBeVisible();
+
+    await openSpellCard(page, 'Bless');
+    await page.getByRole('button', { name: 'Cast — Rank 1 slot (3 left)' }).click();
+
+    // cnmh_slots_<id> counts slots SPENT per rank (mirror of cnmh_staff_*).
+    expect(await mock.expectSent(SLOTS_KEY, (v) => v?.['1'] === 1)).toMatchObject({ '1': 1 });
+    await expect(
+      page.getByRole('img', { name: 'Rank 1 spell slots: 2 of 3 remaining' }),
+    ).toBeVisible();
+
+    // A second cast stacks on the same rank bucket.
+    await openSpellCard(page, 'Bless');
+    await page.getByRole('button', { name: 'Cast — Rank 1 slot (2 left)' }).click();
+    await mock.expectSent(SLOTS_KEY, (v) => v?.['1'] === 2);
+    await expect(
+      page.getByRole('img', { name: 'Rank 1 spell slots: 1 of 3 remaining' }),
+    ).toBeVisible();
+  });
+
+  test('the slot ledger renders from cast history and cannot be hand-toggled', async ({ page }) => {
+    // Two of three rank-1 slots already spent by prior casts.
+    const mock = await mockSession(page, { seed: { [SLOTS_KEY]: { '1': 2 } } });
+    await openRepertoire(page);
+
+    // The pips render the seeded history…
+    const pips = page.getByRole('img', { name: 'Rank 1 spell slots: 1 of 3 remaining' });
+    await expect(pips).toBeVisible();
+    // …and are a plain readout: no interactive control inside. (Contrast the
+    // staff charge track above, whose pips ARE buttons — the manual
+    // remediation surface the slot ledger deliberately lost in #997.)
+    await expect(pips.getByRole('button')).toHaveCount(0);
+    await pips.click({ force: true });
+
+    // Anchored absence: spend the last slot through the real cast path; that
+    // write (2 → 3) landing proves the round-trip completed, so exactly ONE
+    // slots write in total means the pip click above wrote nothing.
+    await openSpellCard(page, 'Bless');
+    await page.getByRole('button', { name: 'Cast — Rank 1 slot (1 left)' }).click();
+    await mock.expectSent(SLOTS_KEY, (v) => v?.['1'] === 3);
+    expect(mock.sent.filter((m) => m.stateType === 'slots')).toHaveLength(1);
+
+    // Exhausted pool: empty pips, and the cast control refuses.
+    await expect(
+      page.getByRole('img', { name: 'Rank 1 spell slots: 0 of 3 remaining' }),
+    ).toBeVisible();
+    await openSpellCard(page, 'Bless');
+    await expect(page.getByRole('button', { name: 'Cast — Rank 1 slot (0 left)' })).toBeDisabled();
+  });
+});
+
 test.describe('Casting resources — daily prep resets', () => {
   test.beforeEach(async ({ reset, seed }) => {
     await reset();
