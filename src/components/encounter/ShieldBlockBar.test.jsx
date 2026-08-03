@@ -2,6 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 let mockShield;
+// lowerShield MUST flip the mocked raised state: the component re-renders off
+// the same click (state updates in handleShieldBlock), so the next useShield
+// read sees raised:false — exactly what production does after #1341. A bare
+// vi.fn() here is what hid the armed-follow-up unmount bug (#1050 audit).
 const mockLowerShield = vi.fn();
 const mockApplyBlock = vi.fn();
 vi.mock('../../hooks/useShield', () => ({
@@ -53,6 +57,9 @@ beforeEach(() => {
     raised: true,
     broken: false,
   };
+  mockLowerShield.mockImplementation(() => {
+    mockShield = { ...mockShield, raised: false };
+  });
   mockTurnState = { hasStartedFirstTurn: true, reactionAvailable: true, reactionSpent: false };
   mockGateAvailable = true;
 });
@@ -85,10 +92,11 @@ describe('ShieldBlockBar', () => {
       charId: 'Pellias',
       text: expect.stringContaining('5 prevented, shield → 13 HP'),
     }));
-    expect(screen.getByLabelText('Shield Block damage')).toHaveValue(null); // cleared
     // Table rule: a raised-shield reaction consumes the raise even when the
-    // shield survives intact.
+    // shield survives intact — and with no armed rider, the whole bar goes
+    // with it.
     expect(mockLowerShield).toHaveBeenCalled();
+    expect(screen.queryByLabelText('Shield Block damage')).not.toBeInTheDocument();
   });
 
   it('a breaking block lowers the shield and logs the break', () => {
@@ -311,6 +319,31 @@ describe('ShieldBlockBar', () => {
       expect(screen.queryByTestId('shieldblock-rune-followup')).not.toBeInTheDocument();
       expect(mockRecord).not.toHaveBeenCalled();
       expect(mockAddSaveRequest).not.toHaveBeenCalled();
+    });
+
+    // The #1050-audit regression: #1341 lowers the shield on every block, and
+    // the bar's mount guard used to be raised-only — the follow-up unmounted on
+    // the very render that armed it. The armed strip must outlive the raise.
+    it('the armed follow-up survives the lowered raise, alone on the bar', () => {
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={withRune(retaliation)} />);
+      block();
+      expect(mockLowerShield).toHaveBeenCalled();
+      // Only the follow-up remains: the block controls and the raised-shield
+      // rider reminder went down with the raise.
+      expect(screen.getByTestId('shieldblock-rune-followup')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Shield Block damage')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('shieldblock-rune-rider')).not.toBeInTheDocument();
+    });
+
+    it('a destroying block loses the rider with the arm — nothing arms', () => {
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={withRune(retaliation)} />);
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 0, broken: true, destroyed: true });
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '40' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(screen.queryByTestId('shieldblock-rune-followup')).not.toBeInTheDocument();
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('shield DESTROYED!'),
+      }));
     });
 
     it('a spent hourly gate blocks arming and says so on the rider line', () => {

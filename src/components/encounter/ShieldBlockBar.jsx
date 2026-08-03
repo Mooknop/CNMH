@@ -34,8 +34,12 @@ import './ShieldBlockBar.css';
  *    captured, and logged for the GM to adjudicate.
  * Either follow-up is the rune's free action, spent from the shared hourly
  * frequency ledger (the same one the item modal's activation card ticks).
- * A legacy prose-string rider stays a display-only reminder. If the block
- * broke the shield the bar unmounts with it — the rider is lost with the arm.
+ * A legacy prose-string rider stays a display-only reminder.
+ *
+ * The block itself ends the raise (#1341), so an armed follow-up outlives
+ * `raised`: the bar stays mounted showing ONLY the follow-up strip until the
+ * rider is fired or skipped. A DESTROYING block is the exception — the rider
+ * is lost with the arm and nothing arms.
  */
 const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const { heldShield, raised, lowerShield, applyBlock } = useShield(charId, inventory);
@@ -58,8 +62,6 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const hostItem = (inventory || []).find((e) => e && e.uid === heldShield?.uid) || null;
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const { gateFor, record } = useFrequency(charId);
-
-  if (!heldShield || !raised) return null;
 
   const blockRune = accessoryRuneOf(hostItem);
   const rider = runeOnBlock(blockRune);
@@ -85,6 +87,13 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
 
   const enemies = (encounter?.order || []).filter((e) => e && e.kind === 'enemy');
   const riderReady = liveRider && gate.available;
+  const followupLive = armed && riderReady;
+
+  // The bar exists while the shield is raised — OR while an armed follow-up is
+  // pending, because the block that armed it also ended the raise (#1341) and
+  // the rider must not vanish with it. Losing the shield itself (stowed,
+  // dropped) still takes the rider with the arm.
+  if (!heldShield || (!raised && !followupLive)) return null;
 
   // A deflecting shield gets +2 effective Hardness against ranged attacks; the
   // trait rides on the host inventory entry (heldShield is the normalized view).
@@ -114,7 +123,9 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
     appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${deflectNote}${runeNote}` });
-    if (riderReady) setArmed(true);
+    // A destroying block loses the rider with the arm; otherwise the follow-up
+    // arms and outlives the lowered raise (see the mount guard above).
+    if (riderReady && !result.destroyed) setArmed(true);
   };
 
   const clearRider = () => {
@@ -184,48 +195,52 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
 
   return (
     <div className="ttp-shieldblock-bar">
-      <input
-        type="number"
-        min="0"
-        className="ttp-shieldblock-input"
-        placeholder="Damage taken"
-        aria-label="Shield Block damage"
-        value={blockDamage}
-        onChange={(e) => setBlockDamage(e.target.value)}
-      />
-      <button
-        className="btn-secondary ttp-shieldblock"
-        onClick={handleShieldBlock}
-        disabled={!canShieldBlock || blockDamage === '' || parseInt(blockDamage, 10) < 0}
-        aria-label="Shield Block"
-        title={
-          !canShieldBlock
-            ? (reactionSpent ? 'Reaction already spent' : 'Reaction not yet available')
-            : 'Block this damage with your shield (reaction)'
-        }
-      >
-        🛡 Block ↩
-      </button>
-      {hasDeflecting && (
-        <label className="ttp-shieldblock-ranged" title="Deflecting: +2 Hardness against ranged attacks">
+      {raised && (
+        <>
           <input
-            type="checkbox"
-            checked={ranged}
-            onChange={(e) => setRanged(e.target.checked)}
-            aria-label="Triggering attack was ranged (deflecting +2 Hardness)"
+            type="number"
+            min="0"
+            className="ttp-shieldblock-input"
+            placeholder="Damage taken"
+            aria-label="Shield Block damage"
+            value={blockDamage}
+            onChange={(e) => setBlockDamage(e.target.value)}
           />
-          ranged (+2 Hard.)
-        </label>
-      )}
-      {rider && rider.summary && (
-        <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">
-          ✦ {blockRune.name}: {rider.summary}
-          {liveRider && !gate.available && (
-            <span className="ttp-shieldblock-rider-spent"> (used — the clock frees it up)</span>
+          <button
+            className="btn-secondary ttp-shieldblock"
+            onClick={handleShieldBlock}
+            disabled={!canShieldBlock || blockDamage === '' || parseInt(blockDamage, 10) < 0}
+            aria-label="Shield Block"
+            title={
+              !canShieldBlock
+                ? (reactionSpent ? 'Reaction already spent' : 'Reaction not yet available')
+                : 'Block this damage with your shield (reaction)'
+            }
+          >
+            🛡 Block ↩
+          </button>
+          {hasDeflecting && (
+            <label className="ttp-shieldblock-ranged" title="Deflecting: +2 Hardness against ranged attacks">
+              <input
+                type="checkbox"
+                checked={ranged}
+                onChange={(e) => setRanged(e.target.checked)}
+                aria-label="Triggering attack was ranged (deflecting +2 Hardness)"
+              />
+              ranged (+2 Hard.)
+            </label>
           )}
-        </div>
+          {rider && rider.summary && (
+            <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">
+              ✦ {blockRune.name}: {rider.summary}
+              {liveRider && !gate.available && (
+                <span className="ttp-shieldblock-rider-spent"> (used — the clock frees it up)</span>
+              )}
+            </div>
+          )}
+        </>
       )}
-      {armed && riderReady && (
+      {followupLive && (
         <div className="ttp-shieldblock-followup" data-testid="shieldblock-rune-followup">
           <select
             aria-label={`${blockRune.name} target`}
