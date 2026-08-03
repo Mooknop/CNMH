@@ -461,6 +461,8 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     { id: 'no-vs', name: 'Bad Resistance', modifiers: [{ stat: 'resistance', amount: 99 }] },
     { id: 'bonus', name: 'Bless', modifiers: [{ stat: 'meleeAttack', kind: 'status', amount: 1 }] },
     { id: 'preserving', name: 'Preserving Ward', modifiers: [{ stat: 'resistance', amount: 3, vs: 'persistent' }] },
+    { id: 'backfire', name: 'Backfire Mantle', modifiers: [{ stat: 'resistance', amount: 3, vs: 'splash' }] },
+    { id: 'splash-big', name: 'Greater Splash Ward', modifiers: [{ stat: 'resistance', amount: 15, vs: 'splash' }] },
   ];
 
   it('returns the matching resistance amount for a descriptor in the vs list', () => {
@@ -506,6 +508,31 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     expect(resistanceFor([entry('fire-ward'), entry('preserving')], 'persistent-fire', cat)).toBe(10);
     // persistent-specific 4 vs wildcard 3 → 4, not 7
     expect(resistanceFor([entry('pfire-ward'), entry('preserving')], 'persistent-fire', cat)).toBe(4);
+  });
+
+  // The `splash` descriptor (#929): a splash-flagged typed hit queries
+  // `splash-<type>` and consults BOTH the plain type and the bare `splash`
+  // token — a bomb's fire splash IS fire damage carrying the splash trait.
+  it("a 'splash' resistance reduces a splash-flagged hit but never an unflagged one (#929)", () => {
+    expect(resistanceFor([entry('backfire')], 'splash-fire', cat)).toBe(3);
+    expect(resistanceFor([entry('backfire')], 'splash-acid', cat)).toBe(3);
+    // An untyped splash hit queries the bare token.
+    expect(resistanceFor([entry('backfire')], 'splash', cat)).toBe(3);
+    // Unflagged hits never match `splash`.
+    expect(resistanceFor([entry('backfire')], 'fire', cat)).toBe(0);
+    expect(resistanceFor([entry('backfire')], 'acid', cat)).toBe(0);
+  });
+
+  it('a plain-type resistance still covers its splash-flagged flavour (#929)', () => {
+    expect(resistanceFor([entry('fire-ward')], 'splash-fire', cat)).toBe(10);
+    expect(resistanceFor([entry('fire-ward')], 'splash-cold', cat)).toBe(0);
+  });
+
+  it('base-type + splash resistances both matching take the max, never the sum (#929)', () => {
+    // plain fire 10 vs splash 3 → 10, not 13
+    expect(resistanceFor([entry('fire-ward'), entry('backfire')], 'splash-fire', cat)).toBe(10);
+    // splash 15 beats the plain fire 10
+    expect(resistanceFor([entry('fire-ward'), entry('splash-big')], 'splash-fire', cat)).toBe(15);
   });
 
   it('returns 0 for non-matching, vs-less, empty, null, or unknown effects', () => {
@@ -648,6 +675,30 @@ describe('vsMatches', () => {
       expect(vsMatches('persistent,persistent-bleed', 'bleed')).toBe(false);
     });
   });
+
+  // The splash-<type> query form (#929): a splash-flagged typed hit reaches
+  // both its plain type and the bare `splash` token (the Backfire Mantle).
+  describe("the splash-<type> query form (#929)", () => {
+    it('matches the plain type and the bare splash token', () => {
+      expect(vsMatches('splash', 'splash-fire')).toBe(true);
+      expect(vsMatches('fire', 'splash-fire')).toBe(true);
+      expect(vsMatches('fire,cold', 'splash-cold')).toBe(true);
+      // An untyped splash hit queries the bare token (exact match).
+      expect(vsMatches('splash', 'splash')).toBe(true);
+    });
+
+    it('is one-directional — a splash descriptor never matches an unflagged query', () => {
+      expect(vsMatches('splash', 'fire')).toBe(false);
+      expect(vsMatches('splash-fire', 'fire')).toBe(false);
+      expect(vsMatches('splash', 'splash-')).toBe(false);
+      expect(vsMatches('fire', 'splash')).toBe(false);
+    });
+
+    it('never crosses into the persistent family', () => {
+      expect(vsMatches('splash', 'persistent-fire')).toBe(false);
+      expect(vsMatches('persistent', 'splash-fire')).toBe(false);
+    });
+  });
 });
 
 describe('isImmuneTo (#919)', () => {
@@ -666,6 +717,15 @@ describe('isImmuneTo (#919)', () => {
 
   it('a plain-type immunity also covers its persistent flavour (#1679)', () => {
     expect(isImmuneTo([entry('fire-immune')], 'persistent-fire', cat)).toBe(true);
+  });
+
+  it('a plain-type immunity also negates its splash-flagged flavour (#929)', () => {
+    expect(isImmuneTo([entry('fire-immune')], 'splash-fire', cat)).toBe(true);
+    expect(isImmuneTo([entry('fire-immune')], 'splash-cold', cat)).toBe(false);
+    // Immunity to splash itself covers a splash-flagged hit of any type.
+    const e = { id: 'uid-s', effectId: 'x', modifiers: [{ stat: 'immunity', vs: 'splash' }] };
+    expect(isImmuneTo([e], 'splash-fire', cat)).toBe(true);
+    expect(isImmuneTo([e], 'fire', cat)).toBe(false);
   });
 
   it('a persistent-only immunity never covers direct damage of the base type', () => {

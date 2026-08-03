@@ -477,6 +477,28 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(wornResistanceFor([cold], invested, 'fire')).toBe(0);
   });
 
+  // #929 "Done when": the Backfire Mantle's authored splash resistance (#911)
+  // actually bites once the apply-site flags a hit as splash — a splash-flagged
+  // typed hit queries `splash-<type>`, an untyped one queries bare `splash`.
+  it('Backfire Mantle splash resistance bites on splash-flagged hits (#929)', () => {
+    const resolve = (level) => resolveCharacterItems(
+      { id: 'tester', level: 20, inventory: [{ ref: 'backfire-mantle', level }] }, items, spells,
+    ).inventory[0];
+    const invested = () => true;
+
+    const std = resolve(3);
+    expect(std.resistance).toEqual({ amount: 3, type: 'splash' });
+    // A fire bomb's splash and an untyped splash hit both match…
+    expect(wornResistanceFor([std], invested, 'splash-fire')).toBe(3);
+    expect(wornResistanceFor([std], invested, 'splash-acid')).toBe(3);
+    expect(wornResistanceFor([std], invested, 'splash')).toBe(3);
+    // …an unflagged hit of the same type never does.
+    expect(wornResistanceFor([std], invested, 'fire')).toBe(0);
+
+    // Greater tier: resistance 10.
+    expect(wornResistanceFor([resolve(8)], invested, 'splash-fire')).toBe(10);
+  });
+
   it('Blu\'s orb is tagged Artifact but mechanically inert', () => {
     const orb = items.find((i) => i.id === 'mysterious-blue-orb');
     expect(orb.traits).toContain('Artifact');

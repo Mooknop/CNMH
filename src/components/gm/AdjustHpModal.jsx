@@ -40,6 +40,17 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState('heal');
   const [damageType, setDamageType] = useState('');
+  const [splash, setSplash] = useState(false);
+
+  // The descriptor the resistance/weakness/immunity readers are asked about
+  // (#929). A splash-flagged typed hit queries `splash-<type>` — vsMatches
+  // resolves that against BOTH the plain type and the bare `splash` token
+  // (max wins, never sum); an untyped splash hit queries bare `splash`.
+  const descriptor = damageType
+    ? (splash ? `splash-${damageType}` : damageType)
+    : (splash ? 'splash' : '');
+  // Human label for the encounter log: 'fire splash damage 8 → 5 (…)'.
+  const descriptorLabel = [damageType, splash ? 'splash' : null].filter(Boolean).join(' ');
 
   const sel = parseSelection(selectedId);
 
@@ -80,14 +91,14 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   // (#900/#918), surfaced beside the damage-type picker. PCs only — minions/
   // summons carry no effects here.
   const preview = useMemo(
-    () => (sel?.kind === 'char' && mode === 'damage' && damageType
+    () => (sel?.kind === 'char' && mode === 'damage' && descriptor
       ? {
-          immune: isImmuneTo(resolvedEffects, damageType, resolvedCatalog),
-          weakness: weaknessFor(resolvedEffects, damageType, resolvedCatalog),
-          resistance: resistanceFor(resolvedEffects, damageType, resolvedCatalog),
+          immune: isImmuneTo(resolvedEffects, descriptor, resolvedCatalog),
+          weakness: weaknessFor(resolvedEffects, descriptor, resolvedCatalog),
+          resistance: resistanceFor(resolvedEffects, descriptor, resolvedCatalog),
         }
       : { immune: false, weakness: 0, resistance: 0 }),
-    [sel?.kind, mode, damageType, resolvedEffects, resolvedCatalog],
+    [sel?.kind, mode, descriptor, resolvedEffects, resolvedCatalog],
   );
 
   const handleApply = () => {
@@ -108,17 +119,20 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
       // absolute and takes precedence: matching damage zeroes outright.
       // Otherwise, per PF2e, weakness ADDS first and resistance REDUCES after,
       // on the running total; floors at 0. Neither stacks (highest matching
-      // applies). Applied before temp HP absorbs it.
+      // applies). Applied before temp HP absorbs it. A splash-flagged hit
+      // (#929) queries the compound descriptor, consulting both the base type
+      // and `splash` — immunity to either negates, and the readers keep the
+      // single highest weakness/resistance across both (max, never sum).
       const immune =
-        mode === 'damage' && damageType
-          && isImmuneTo(resolvedEffects, damageType, resolvedCatalog);
+        mode === 'damage' && descriptor
+          && isImmuneTo(resolvedEffects, descriptor, resolvedCatalog);
       const weak =
-        mode === 'damage' && damageType && !immune
-          ? weaknessFor(resolvedEffects, damageType, resolvedCatalog)
+        mode === 'damage' && descriptor && !immune
+          ? weaknessFor(resolvedEffects, descriptor, resolvedCatalog)
           : 0;
       const resisted =
-        mode === 'damage' && damageType && !immune
-          ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
+        mode === 'damage' && descriptor && !immune
+          ? resistanceFor(resolvedEffects, descriptor, resolvedCatalog)
           : 0;
       const incoming = immune ? 0 : Math.max(0, n + weak - resisted);
 
@@ -150,7 +164,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         appendLog({
           type: 'action',
           charId: sel.id,
-          text: `${charName}: ${damageType} damage ${n} → ${incoming} (${parts.join(', ')})`,
+          text: `${charName}: ${descriptorLabel} damage ${n} → ${incoming} (${parts.join(', ')})`,
         });
       }
 
@@ -181,6 +195,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   const handleClose = () => {
     setAmount('');
     setDamageType('');
+    setSplash(false);
     onClose();
   };
 
@@ -248,7 +263,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                 type="button"
                 className={`adj-hp-mode-btn${mode === 'heal' ? ' is-active' : ''}`}
                 data-mode="heal"
-                onClick={() => { setMode('heal'); setDamageType(''); }}
+                onClick={() => { setMode('heal'); setDamageType(''); setSplash(false); }}
                 aria-pressed={mode === 'heal'}
               >
                 Heal
@@ -269,6 +284,15 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
+                <label className="adj-hp-splash-check">
+                  <input
+                    type="checkbox"
+                    checked={splash}
+                    onChange={(e) => setSplash(e.target.checked)}
+                    aria-label="splash damage"
+                  />
+                  Splash
+                </label>
                 {(preview.immune || preview.weakness > 0 || preview.resistance > 0) && (
                   <span className="adj-hp-resist-note" aria-label="damage modifier preview">
                     {preview.immune

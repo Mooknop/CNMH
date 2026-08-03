@@ -507,6 +507,128 @@ describe('AdjustHpModal', () => {
     });
   });
 
+  // ─── splash-flagged damage (#929) ───────────────────────────
+  describe('splash-flagged damage (#929)', () => {
+    // The Backfire Mantle's resolved worn-gear shape: resistance 3 vs `splash`
+    // (#911), reaching the modal through useResolvedEffects like any worn item.
+    const SPLASH_CATALOG = [
+      { id: 'backfire-mantle', name: 'Backfire Mantle', modifiers: [{ stat: 'resistance', amount: 3, vs: 'splash' }] },
+      { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] },
+    ];
+
+    const selectDamage = (type, { splash = false } = {}) => {
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+      });
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      if (type) fireEvent.change(screen.getByLabelText('damage type'), { target: { value: type } });
+      if (splash) fireEvent.click(screen.getByLabelText('splash damage'));
+    };
+
+    beforeEach(() => {
+      __store['cnmh_hp_thorn'] = { ...THORN_HP }; // current 20
+      resolvedHolder.value = {
+        effects: [{ id: 'bm', effectId: 'backfire-mantle' }],
+        catalog: SPLASH_CATALOG,
+      };
+    });
+
+    it('shows the splash checkbox in Damage mode only', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+      });
+      expect(screen.queryByLabelText('splash damage')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      expect(screen.getByLabelText('splash damage')).toBeInTheDocument();
+    });
+
+    it('splash resistance reduces a splash-flagged typed hit and logs it', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire', { splash: true });
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(15); // 20 - (8 - 3)
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ charId: 'thorn', text: expect.stringMatching(/fire splash damage 8 → 5 \(resistance 3\)/) })
+      );
+      // The HpFx glyph payload keeps the plain base type.
+      expect(__store['cnmh_hp_thorn'].damageType).toBe('fire');
+    });
+
+    it('an unflagged hit never matches splash resistance', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(12); // full 8
+      expect(appendLogMock).not.toHaveBeenCalled();
+    });
+
+    it('a splash-flagged hit takes the best of base-type and splash resistance (max, never sum)', () => {
+      resolvedHolder.value = {
+        effects: [{ id: 'bm', effectId: 'backfire-mantle' }, { id: 'fw', effectId: 'fire-ward' }],
+        catalog: SPLASH_CATALOG,
+      };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire', { splash: true });
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      // fire 5 vs splash 3 → 5, not 8: 20 - (8 - 5) = 17
+      expect(__store['cnmh_hp_thorn'].current).toBe(17);
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringMatching(/fire splash damage 8 → 3 \(resistance 5\)/) })
+      );
+    });
+
+    it('an untyped splash hit still matches splash resistance', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('', { splash: true });
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(15); // 20 - (8 - 3)
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringMatching(/splash damage 8 → 5 \(resistance 3\)/) })
+      );
+    });
+
+    it('immunity to the base type negates a splash-flagged hit', () => {
+      resolvedHolder.value = {
+        effects: [{ id: 'fi', effectId: 'fire-immune' }],
+        catalog: [{ id: 'fire-immune', name: 'Fire Immunity', modifiers: [{ stat: 'immunity', vs: 'fire' }] }],
+      };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire', { splash: true });
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(20); // untouched
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringMatching(/fire splash damage 8 → 0 \(immune\)/) })
+      );
+    });
+
+    it('previews the splash resistance once the checkbox is ticked', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      expect(screen.queryByLabelText('damage modifier preview')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('splash damage'));
+      expect(screen.getByLabelText('damage modifier preview')).toHaveTextContent('resistance 3');
+    });
+
+    it('switching to Heal mode clears the splash flag', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire', { splash: true });
+      fireEvent.click(screen.getByRole('button', { name: /heal/i }));
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      expect(screen.getByLabelText('splash damage')).not.toBeChecked();
+    });
+  });
+
   it('amount field clears after applying', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);

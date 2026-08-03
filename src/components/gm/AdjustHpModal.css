@@ -37,6 +37,27 @@
   text-transform: capitalize;
 }
 
+/* Splash modifier on a typed hit (#929) — flags the hit so splash resistance
+   (Backfire Mantle) is consulted alongside the base type. Scoped under the
+   dtype row to out-specify its block-label rule. */
+.adj-hp-dtype-row label.adj-hp-splash-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+  margin-right: var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
+.adj-hp-splash-check input {
+  cursor: pointer;
+  margin: 0;
+}
+
 /* Resistance preview beside the damage-type picker (#900). */
 .adj-hp-resist-note {
   display: inline-block;
