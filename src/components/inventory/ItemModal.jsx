@@ -1746,8 +1746,17 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       )}
 
       {/* Actions / Reactions / Free Actions (shared with the shop preview, #882);
-          an inscribed rune's display activations merge in (#1033 S2) */}
-      <ItemActivations item={withAccessoryActivations(item)} />
+          an inscribed rune's display activations merge in (#1033 S2). With the
+          character in scope, frequency-bearing activations grow a Use affordance
+          that spends the shared per-character ledger (#916). */}
+      <ItemActivations
+        item={withAccessoryActivations(item)}
+        character={character}
+        nowSecs={nowSecs}
+        onActivate={(entry) =>
+          appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${entry.name}` })
+        }
+      />
 
       {/* Item-granted innate spells (#914) — cast a catalog spell the item grants
           (Pendant of the Occult → guidance) through the shared cast flow. A

@@ -528,6 +528,15 @@
   font-style: italic;
   margin: 0.3rem 0;
 }
+/* Use affordance on frequency-bearing item activations (#916) */
+.loot-scroll .item-activation-use {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.loot-scroll .item-activation-use .actuated-cost {
+  margin: 0;
+}
 .loot-scroll .actuated-broken { display: flex; flex-direction: column; gap: 0.4rem; }
 .loot-scroll .actuated-broken-tag {
   align-self: flex-start;
