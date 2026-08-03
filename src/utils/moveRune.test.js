@@ -5,6 +5,9 @@ import {
   removeRuneFromWeapon,
   runestoneEntryFor,
   weaponMovableRunes,
+  fundamentalRunestoneEntryFor,
+  removeFundamentalFromWeapon,
+  weaponMovableFundamentals,
   MOVE_RUNE_HOURS,
 } from './moveRune';
 
@@ -100,6 +103,69 @@ describe('weaponMovableRunes', () => {
   it('is empty for a weapon without property runes', () => {
     expect(weaponMovableRunes({ runes: { potency: 1 } })).toEqual([]);
     expect(weaponMovableRunes({})).toEqual([]);
+  });
+});
+
+describe('fundamental moves (#832)', () => {
+  describe('fundamentalRunestoneEntryFor', () => {
+    it('mints a potency descriptor entry (tier form)', () => {
+      expect(fundamentalRunestoneEntryFor({ fundamental: 'potency', tier: 2 })).toEqual({
+        ref: 'runestone', fundamental: 'potency', tier: 2, uid: 'u-1', quantity: 1,
+      });
+    });
+    it('mints a striking descriptor entry from a doc (tierKey) or entry (key) form', () => {
+      expect(fundamentalRunestoneEntryFor({ fundamental: 'striking', tierKey: 'greater' })).toEqual({
+        ref: 'runestone', fundamental: 'striking', key: 'greater', uid: 'u-1', quantity: 1,
+      });
+      expect(fundamentalRunestoneEntryFor({ fundamental: 'striking', key: 'major' }).key).toBe('major');
+    });
+  });
+
+  describe('removeFundamentalFromWeapon', () => {
+    it('strips striking, keeping the rest of the rune block (fresh uid)', () => {
+      const w = { uid: 'w1', name: 'Longsword', state: 'held', hand: 'main', runes: { potency: 1, striking: 'greater', property: ['flaming'] } };
+      const out = removeFundamentalFromWeapon(w, 'striking');
+      expect(out.runes).toEqual({ potency: 1, property: ['flaming'] });
+      expect(out.uid).toBe('u-1');
+      expect(out.state).toBeUndefined();
+      expect(out.hand).toBeUndefined();
+    });
+
+    it('strips potency when no property runes ride its slots', () => {
+      const out = removeFundamentalFromWeapon({ uid: 'w1', runes: { potency: 2, striking: 'striking' } }, 'potency');
+      expect(out.runes).toEqual({ striking: 'striking' });
+    });
+
+    it('BLOCKS a potency removal while etched property runes exceed the resulting capacity', () => {
+      const w = { uid: 'w1', runes: { potency: 1, property: ['flaming'] } };
+      expect(removeFundamentalFromWeapon(w, 'potency')).toBeNull();
+    });
+
+    it('is null when the weapon lacks that fundamental (or for an unknown one)', () => {
+      expect(removeFundamentalFromWeapon({ uid: 'w1', runes: { potency: 1 } }, 'striking')).toBeNull();
+      expect(removeFundamentalFromWeapon({ uid: 'w1' }, 'potency')).toBeNull();
+      expect(removeFundamentalFromWeapon({ uid: 'w1', runes: { potency: 1 } }, 'resilient')).toBeNull();
+    });
+  });
+
+  describe('weaponMovableFundamentals', () => {
+    it('lists the etched fundamentals as rune docs (id/name/level/price)', () => {
+      const out = weaponMovableFundamentals({ runes: { potency: 2, striking: 'striking' } });
+      expect(out).toEqual([
+        expect.objectContaining({ id: 'weapon-potency-2', fundamental: 'potency', tier: 2, level: 10, price: 935 }),
+        expect.objectContaining({ id: 'striking', fundamental: 'striking', tierKey: 'striking', level: 4, price: 65 }),
+      ]);
+    });
+
+    it('excludes potency while property runes are etched (its removal is blocked)', () => {
+      const out = weaponMovableFundamentals({ runes: { potency: 1, striking: 'greater', property: ['flaming'] } });
+      expect(out).toEqual([expect.objectContaining({ fundamental: 'striking', tierKey: 'greater' })]);
+    });
+
+    it('is empty for a bare weapon', () => {
+      expect(weaponMovableFundamentals({ runes: { property: [] } })).toEqual([]);
+      expect(weaponMovableFundamentals({})).toEqual([]);
+    });
   });
 });
 

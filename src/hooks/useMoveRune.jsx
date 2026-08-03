@@ -5,12 +5,16 @@ import { useContent } from '../contexts/ContentContext';
 import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { computeSaveDegree } from '../utils/saveDegree';
-import { foldRuneIntoWeapon } from '../utils/runeWorkOrder';
-import { moveRuneDc, moveRuneOutcome, removeRuneFromWeapon, runestoneEntryFor } from '../utils/moveRune';
+import { foldRuneIntoWeapon, foldFundamentalIntoWeapon } from '../utils/runeWorkOrder';
+import {
+  moveRuneDc, moveRuneOutcome, removeRuneFromWeapon, runestoneEntryFor,
+  removeFundamentalFromWeapon, fundamentalRunestoneEntryFor,
+} from '../utils/moveRune';
 import { APP, syncKey } from '../sync/keys';
 
-// Move a rune (#803). A 1-hour Crafting check relocates a property rune between
-// a weapon and a runestone: Standard DC vs the rune's level-based DC, resolved
+// Move a rune (#803; fundamentals #832). A 1-hour Crafting check relocates a
+// property or fundamental (potency/striking) rune between a weapon and a
+// runestone: Standard DC vs the rune's level-based DC, resolved
 // by degree of success (crit = free, success = −10% value, failure = no-op,
 // crit-fail = rune destroyed). The weapon is always swapped for a fresh copy
 // (the rune added or removed); a runestone that gives up its rune cracks and is
@@ -50,6 +54,17 @@ export const useMoveRune = (charId) => {
       if (!weapon || weapon.uid == null || !rune || rune.id == null) return null;
       if (direction === 'toWeapon' && (!runestone || runestone.uid == null)) return null;
 
+      // Fundamental moves (#832) are replace-in-place: reject up-front when the
+      // move could never land — a non-upgrade apply (same/lower tier), or
+      // stripping potency while etched property runes still ride its slots.
+      const isFundamental = !!rune.fundamental;
+      if (isFundamental) {
+        const viable = direction === 'toWeapon'
+          ? foldFundamentalIntoWeapon(weapon, rune)
+          : removeFundamentalFromWeapon(weapon, rune.fundamental);
+        if (!viable) return null;
+      }
+
       const runeRef = rune.id;
       const dc = moveRuneDc(rune.level);
       const degree = computeSaveDegree({ d20, total, dc });
@@ -67,23 +82,33 @@ export const useMoveRune = (charId) => {
       if (direction === 'toWeapon') {
         if (outcome.moved) {
           pull(weapon.uid);
-          // Displace an existing rune first when replacing (no free slot); the
-          // displaced rune is re-housed in a fresh runestone.
-          const base = replaceRuneId ? removeRuneFromWeapon(weapon, replaceRuneId) : weapon;
-          credit.push(foldRuneIntoWeapon(base, runeRef));
-          if (replaceRuneId) credit.push(runestoneEntryFor(replaceRuneId));
+          if (isFundamental) {
+            // Replace-in-place: the fundamental tier is SET on the weapon; a
+            // lower tier it overwrites is destroyed (no runestone minted),
+            // matching the shop etch flow.
+            credit.push(foldFundamentalIntoWeapon(weapon, rune));
+          } else {
+            // Displace an existing rune first when replacing (no free slot); the
+            // displaced rune is re-housed in a fresh runestone.
+            const base = replaceRuneId ? removeRuneFromWeapon(weapon, replaceRuneId) : weapon;
+            credit.push(foldRuneIntoWeapon(base, runeRef));
+            if (replaceRuneId) credit.push(runestoneEntryFor(replaceRuneId));
+          }
           pull(runestone.uid); // the stone cracks on transfer
         } else if (outcome.destroyed) {
           pull(runestone.uid); // consumed; the rune is lost with it
         }
       } else { // toRunestone
+        const strip = () => (isFundamental
+          ? removeFundamentalFromWeapon(weapon, rune.fundamental)
+          : removeRuneFromWeapon(weapon, runeRef));
         if (outcome.moved) {
           pull(weapon.uid);
-          credit.push(removeRuneFromWeapon(weapon, runeRef));
-          credit.push(runestoneEntryFor(runeRef));
+          credit.push(strip());
+          credit.push(isFundamental ? fundamentalRunestoneEntryFor(rune) : runestoneEntryFor(runeRef));
         } else if (outcome.destroyed) {
           pull(weapon.uid);
-          credit.push(removeRuneFromWeapon(weapon, runeRef)); // rune gone, no stone minted
+          credit.push(strip()); // rune gone, no stone minted
         }
       }
 

@@ -72,3 +72,47 @@ describe('resolveRunestone', () => {
     expect(resolveRunestone({ ref: 'runestone' }, runeMap, emptyBase).image).toBeUndefined();
   });
 });
+
+describe('resolveRunestone — fundamental descriptors (#832)', () => {
+  // Fundamentals resolve from the fixed POTENCY/STRIKING tables (via
+  // data/fundamentalRunes.js), never the property-rune catalog: name + price
+  // (stone 3 gp + rune) + canonical PF2e item level, for all six tiers.
+  it.each([
+    [{ fundamental: 'potency', tier: 1 }, '+1 Weapon Potency Runestone', 3 + 35, 2],
+    [{ fundamental: 'potency', tier: 2 }, '+2 Weapon Potency Runestone', 3 + 935, 10],
+    [{ fundamental: 'potency', tier: 3 }, '+3 Weapon Potency Runestone', 3 + 8935, 16],
+    [{ fundamental: 'striking', key: 'striking' }, 'Striking Runestone', 3 + 65, 4],
+    [{ fundamental: 'striking', key: 'greater' }, 'Greater Striking Runestone', 3 + 1065, 12],
+    [{ fundamental: 'striking', key: 'major' }, 'Major Striking Runestone', 3 + 31065, 19],
+  ])('resolves %o with table name/price/level', (desc, name, price, level) => {
+    const r = resolveRunestone({ ref: 'runestone', ...desc }, runeMap);
+    expect(r.name).toBe(name);
+    expect(r.price).toBe(price);
+    expect(r.runestone.rune.level).toBe(level);
+    expect(r.runestone.fundamental).toBe(desc.fundamental);
+    if (desc.tier != null) expect(r.runestone.tier).toBe(desc.tier);
+    if (desc.key != null) expect(r.runestone.key).toBe(desc.key);
+  });
+
+  it('carries the fundamental rune doc in the marker (no runeRef, no runeMap hit)', () => {
+    const r = resolveRunestone({ ref: 'runestone', fundamental: 'striking', key: 'greater' });
+    expect(r.runestone.runeRef).toBeNull();
+    expect(r.runestone.rune).toMatchObject({
+      type: 'fundamental', fundamental: 'striking', target: 'weapon', tierKey: 'greater',
+    });
+    expect(r.id).toBe('runestone-greater-striking');
+  });
+
+  it('grants NO mechanical effect (no strikes/runes block)', () => {
+    const r = resolveRunestone({ ref: 'runestone', fundamental: 'potency', tier: 2 }, runeMap);
+    expect(r.strikes).toBeUndefined();
+    expect(r.runes).toBeUndefined();
+  });
+
+  it('shows an unknown marker for a bad tier (weightless-safe)', () => {
+    const r = resolveRunestone({ ref: 'runestone', fundamental: 'potency', tier: 9 }, runeMap);
+    expect(r.name).toBe('Runestone (unknown potency rune)');
+    expect(r.weight).toBe(RUNESTONE_BASE.weight);
+    expect(r.runestone.rune).toBeNull();
+  });
+});

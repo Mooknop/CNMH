@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import MoveRunePanel from './MoveRunePanel';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useMoveRune } from '../../hooks/useMoveRune';
@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe('MoveRunePanel', () => {
   it('renders nothing when there are no movable runes', () => {
-    setChar([dagger]); // no runed weapon, no runestone
+    setChar([club]); // no runed weapon (a +1 weapon's potency IS movable, #832), no runestone
     const { container } = render(<MoveRunePanel character={character} />);
     expect(container).toBeEmptyDOMElement();
   });
@@ -114,6 +114,66 @@ describe('MoveRunePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Move rune' }));
     expect(screen.getByText('Critical Failure')).toBeInTheDocument();
     expect(screen.getByText(/rune was destroyed/i)).toBeInTheDocument();
+  });
+
+  describe('fundamental runes (#832)', () => {
+    const strikingDoc = {
+      id: 'striking', type: 'fundamental', fundamental: 'striking', target: 'weapon',
+      tierKey: 'striking', name: 'Striking', level: 4, price: 65,
+    };
+    const strikingStone = {
+      uid: 'fs1', name: 'Striking Runestone',
+      runestone: { runeRef: null, fundamental: 'striking', key: 'striking', rune: strikingDoc },
+    };
+    // Already carries the same striking tier — never an upgrade target.
+    const alreadyStriking = { uid: 'w5', name: 'Falchion', strikes: { damage: '1d10' }, runes: { striking: 'striking' } };
+
+    it('applies a fundamental runestone to any weapon it upgrades (replace-in-place)', () => {
+      setChar([strikingStone, club, alreadyStriking]);
+      render(<MoveRunePanel character={character} />);
+      fireEvent.change(screen.getByLabelText('Rune to move'), { target: { value: 'r:fs1' } });
+      expect(screen.getByText(/DC 19/)).toBeInTheDocument(); // level-4 rune
+      // The potency-0 Club IS a target (fundamentals need no property slot);
+      // the same-tier Falchion is not (no downgrade / same-tier re-apply).
+      const targetSelect = screen.getByLabelText('Target weapon');
+      expect(within(targetSelect).getByRole('option', { name: /Club/ })).toBeInTheDocument();
+      expect(within(targetSelect).queryByRole('option', { name: /Falchion/ })).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('Target weapon'), { target: { value: 'w4' } });
+      fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '18' } });
+      fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '40' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Move rune' }));
+      expect(mockMove).toHaveBeenCalledWith(expect.objectContaining({
+        direction: 'toWeapon', weapon: club, runestone: strikingStone, rune: strikingDoc,
+      }));
+    });
+
+    it('lists an etched striking rune as movable, but not potency holding property runes', () => {
+      // +1 Flaming Longsword: potency's slots are in use, so only its property
+      // rune and (here) no fundamentals are movable — striking on the Falchion is.
+      const runedLongsword = { uid: 'w6', name: 'Runed Longsword', strikes: { damage: '1d8' }, runes: { potency: 1, property: [flaming] } };
+      setChar([runedLongsword, alreadyStriking]);
+      render(<MoveRunePanel character={character} />);
+      expect(screen.getByRole('option', { name: /Striking — remove from Falchion/ })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Potency/ })).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('Rune to move'), { target: { value: 'w:w5:striking' } });
+      fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '18' } });
+      fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '40' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Move rune' }));
+      expect(mockMove).toHaveBeenCalledWith(expect.objectContaining({
+        direction: 'toRunestone',
+        weapon: alreadyStriking,
+        rune: expect.objectContaining({ fundamental: 'striking', tierKey: 'striking' }),
+      }));
+    });
+
+    it('hints when no weapon would be upgraded by the held fundamental', () => {
+      setChar([strikingStone, alreadyStriking]);
+      render(<MoveRunePanel character={character} />);
+      fireEvent.change(screen.getByLabelText('Rune to move'), { target: { value: 'r:fs1' } });
+      expect(screen.getByText(/no weapon this rune would upgrade/i)).toBeInTheDocument();
+    });
   });
 
   it('surfaces a rejection (e.g. unaffordable upkeep)', () => {

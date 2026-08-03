@@ -10,6 +10,8 @@
 import { toGameSeconds } from './gameTime';
 import { newEntryUid } from './uid';
 import { applyRune } from './runeSockets';
+import { STRIKING } from './weaponRunes';
+import { isDragonbreath } from './dragonbreath';
 
 export const TURNAROUND_HOURS = 24;
 
@@ -104,4 +106,63 @@ export const foldRuneIntoWeapon = (weapon, runeRef) => {
   // Drop transient loadout fields; the owner's tree re-derives placement.
   const { state, hand, ...rest } = base;
   return { ...rest, uid: newEntryUid(), runes: { ...runes, property: nextProperty } };
+};
+
+// ── Fundamental fold (#832) ───────────────────────────────────────────────────
+// Applying a potency/striking runestone is replace-in-place: it SETS
+// `runes.potency` / `runes.striking` rather than appending to a slot array.
+// Only an UPGRADE applies — a same- or lower-tier fundamental is blocked
+// (mirroring the property-slot displacement principle: nothing on a weapon is
+// ever silently downgraded). The lower-tier rune it overwrites is destroyed, as
+// with the shop etch flow (applyRune); it does not mint a runestone.
+
+// Striking tier rank (striking=1, greater=2, major=3) — extraDice doubles as the
+// rank order of the fixed table.
+const strikingRank = (key) => (key && STRIKING[key] ? STRIKING[key].extraDice : 0);
+
+/**
+ * Whether a fundamental descriptor ({ fundamental: 'potency', tier } or
+ * { fundamental: 'striking', key|tierKey }) is a strict UPGRADE over a weapon's
+ * current `runes` block. Pure predicate — the move panel filters targets with
+ * it, and foldFundamentalIntoWeapon enforces it.
+ */
+export const fundamentalUpgrades = (runes, descriptor) => {
+  const cur = runes && typeof runes === 'object' ? runes : {};
+  if (!descriptor) return false;
+  if (descriptor.fundamental === 'potency') {
+    const tier = Number(descriptor.tier) || 0;
+    return tier >= 1 && tier <= 3 && tier > (cur.potency || 0);
+  }
+  if (descriptor.fundamental === 'striking') {
+    const next = strikingRank(descriptor.key || descriptor.tierKey);
+    return next > 0 && next > strikingRank(cur.striking);
+  }
+  return false;
+};
+
+/**
+ * Whether a fundamental descriptor can fold onto this weapon: a strict upgrade,
+ * and never onto a dragonbreath weapon (its fundamentals are template-locked,
+ * #1210 M4c — same guard as applyRune). The move panel filters apply targets
+ * with this.
+ */
+export const canFoldFundamental = (weapon, descriptor) =>
+  !isDragonbreath(weapon) && fundamentalUpgrades(weapon && weapon.runes, descriptor);
+
+/**
+ * Fold a fundamental (potency/striking) rune onto a weapon snapshot (#832),
+ * returning a fresh-uid inline entry to credit back — or null when the
+ * descriptor is not a strict upgrade (same or lower tier: blocked). Mirrors
+ * foldRuneIntoWeapon's conventions (fresh uid, transient loadout fields
+ * dropped).
+ */
+export const foldFundamentalIntoWeapon = (weapon, descriptor) => {
+  const base = weapon && typeof weapon === 'object' ? weapon : {};
+  const runes = base.runes && typeof base.runes === 'object' ? base.runes : {};
+  if (!canFoldFundamental(base, descriptor)) return null;
+  const nextRunes = descriptor.fundamental === 'potency'
+    ? { ...runes, potency: Number(descriptor.tier) }
+    : { ...runes, striking: descriptor.key || descriptor.tierKey };
+  const { state, hand, ...rest } = base;
+  return { ...rest, uid: newEntryUid(), runes: nextRunes };
 };
