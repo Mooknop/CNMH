@@ -25,6 +25,7 @@ import {
   applyEffectByUuid, applyTypedDamage,
   isEffectItem, getEffectItemActor, getEffects,
   getBestiaryInfo,
+  rollFormula, _resetCanvasFallbackWarnings,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
@@ -692,5 +693,98 @@ describe('getBestiaryInfo', () => {
       const l2 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior', level: 2 })).creatureKey;
       expect(l1).not.toBe(l2);
     });
+  });
+});
+
+// --- v14 namespace hardening ---------------------------------------------------
+// Exposures verified against https://foundryvtt.com/api/v14: fromUuid →
+// foundry.utils.fromUuid; ChatMessage → CONFIG.ChatMessage.documentClass (the
+// configured class the v13 global resolves to) then foundry.documents.ChatMessage;
+// polygonBackends.move.testCollision and grid.measurePath survive into v14 but
+// are guarded to DEGRADE (fail-open / Chebyshev estimate) instead of throw.
+describe('v14 namespace hardening', () => {
+  // Minimal core-Roll stand-in for rollFormula (mirrors dice.test.js MockRoll).
+  class MockRoll {
+    constructor(formula) { this.formula = formula; this.total = 7; this.dice = []; }
+    static validate() { return true; }
+    async evaluate() { return this; }
+    async toMessage() {}
+  }
+
+  afterEach(() => {
+    delete global.foundry;
+    delete global.Roll;
+    delete global.ChatMessage;
+    _resetCanvasFallbackWarnings();
+  });
+
+  test('applyEffectByUuid resolves through foundry.utils.fromUuid when the bare global is gone', async () => {
+    const actor = makeActor();
+    const src = { toObject: jest.fn().mockReturnValue({ type: 'effect', name: 'Effect: NS' }) };
+    // v14 world: only the namespaced resolver exists.
+    delete global.fromUuid;
+    global.foundry = { utils: { fromUuid: jest.fn().mockResolvedValue(src) } };
+
+    await applyEffectByUuid(actor, 'Compendium.pf2e.spell-effects.Item.ns1');
+
+    expect(global.foundry.utils.fromUuid).toHaveBeenCalledWith('Compendium.pf2e.spell-effects.Item.ns1');
+    expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith(
+      'Item', [{ type: 'effect', name: 'Effect: NS' }], { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+  });
+
+  test('rollFormula speaker prefers CONFIG.ChatMessage.documentClass over the namespaced base', async () => {
+    const configured = { getSpeaker: jest.fn().mockReturnValue({ alias: 'configured' }) };
+    const namespaced = { getSpeaker: jest.fn() };
+    global.CONFIG.ChatMessage = { documentClass: configured };
+    global.foundry = { dice: { Roll: MockRoll }, documents: { ChatMessage: namespaced } };
+    // v14 world: the bare globals are gone.
+    delete global.Roll;
+    delete global.ChatMessage;
+
+    const result = await rollFormula('1d20');
+
+    expect(result).toEqual({ total: 7, faces: [] });
+    expect(configured.getSpeaker).toHaveBeenCalledWith();
+    expect(namespaced.getSpeaker).not.toHaveBeenCalled();
+  });
+
+  test('rollFormula speaker falls back to foundry.documents.ChatMessage when nothing is configured', async () => {
+    const namespaced = { getSpeaker: jest.fn().mockReturnValue({ alias: 'ns' }) };
+    global.foundry = { dice: { Roll: MockRoll }, documents: { ChatMessage: namespaced } };
+    delete global.Roll;
+    delete global.ChatMessage;
+
+    const actor = makeActor();
+    const result = await rollFormula('1d20', { actor });
+
+    expect(result).toEqual({ total: 7, faces: [] });
+    expect(namespaced.getSpeaker).toHaveBeenCalledWith({ actor });
+  });
+
+  test('hasWallCollision fails OPEN (no collision, warns once) when the polygon backend is unavailable', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      global.CONFIG = {};
+      expect(hasWallCollision(0, 0, 100, 0)).toBe(false);
+      expect(hasWallCollision(0, 0, 200, 0)).toBe(false);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toMatch(/testCollision unavailable/);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  test('measureMoveCost degrades to Chebyshev feet (warns once) when measurePath is unavailable', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      global.canvas.grid = { size: 100 };
+      expect(measureMoveCost(0, 0, 300, 0)).toBe(15);
+      expect(measureMoveCost(0, 0, 200, 200)).toBe(10);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toMatch(/measurePath unavailable/);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
