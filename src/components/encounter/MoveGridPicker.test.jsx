@@ -230,4 +230,82 @@ describe('MoveGridPicker', () => {
       expect(screen.getByText("Step off your ally's square to stop.")).toBeInTheDocument();
     });
   });
+
+  describe('tap mode (#1736 S2)', () => {
+    // maxFeet is read as the per-action Speed in tap mode, not a total budget.
+    const tapProps = {
+      origin: { col: 10, row: 10 },
+      tapMode: true,
+      maxFeet: 25,
+    };
+
+    it('renders no obstacle legend (no obstacle data in tap mode)', () => {
+      render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      expect(screen.queryByLabelText('Obstacle legend')).toBeNull();
+    });
+
+    it('applies the mgp--tap modifier class', () => {
+      const { container } = render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      expect(container.querySelector('.mgp--tap')).toBeInTheDocument();
+    });
+
+    it('shades adjacent cells (5 ft, well within 25 ft Speed) as band 1', () => {
+      const { container } = render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      const cell = screen.getByLabelText(/Move to 11,10 — 5 ft \(hint\) · 1 action$/);
+      expect(cell.closest('.mgp-cell--band-1')).toBeInTheDocument();
+      expect(cell.tagName).toBe('BUTTON');
+      // Sanity: cell is inside the rendered grid at all.
+      expect(container.querySelector('.mgp-grid')).toBeInTheDocument();
+    });
+
+    it('shades a cell needing a 2nd action as band 2', () => {
+      render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      // 30 ft straight-line (6 cells east) at Speed 25 → ceil(30/25) = 2 actions.
+      const cell = screen.getByLabelText(/Move to 16,10 — 30 ft \(hint\) · 2 actions$/);
+      expect(cell.closest('.mgp-cell--band-2')).toBeInTheDocument();
+    });
+
+    it('shades a cell needing a 3rd action as band 3', () => {
+      render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      // 55 ft straight-line (11 cells east) at Speed 25 → ceil(55/25) = 3 actions.
+      const cell = screen.getByLabelText(/Move to 21,10 — 55 ft \(hint\) · 3 actions$/);
+      expect(cell.closest('.mgp-cell--band-3')).toBeInTheDocument();
+    });
+
+    it('tapping a cell emits its col/row via onSelect', () => {
+      const onSelect = vi.fn();
+      render(<MoveGridPicker {...tapProps} onSelect={onSelect} onCancel={vi.fn()} />);
+      fireEvent.click(screen.getByLabelText(/Move to 11,10 —/));
+      expect(onSelect).toHaveBeenCalledWith({ col: 11, row: 10 });
+    });
+
+    it('caps the radius at RADIUS_TAP_CAP (12) for a high Speed — 25×25 grid', () => {
+      // Theoretical radius for Speed 30 is ceil(90/5)=18, capped to 12 → span 25.
+      const { container } = render(
+        <MoveGridPicker origin={{ col: 10, row: 10 }} tapMode maxFeet={30} onSelect={vi.fn()} onCancel={vi.fn()} />
+      );
+      const cells = container.querySelectorAll('.mgp-cell');
+      expect(cells).toHaveLength(25 * 25);
+    });
+
+    it('highlights the planned route cells and the destination distinctly', () => {
+      render(
+        <MoveGridPicker
+          {...tapProps}
+          plannedPath={[{ col: 11, row: 10 }, { col: 12, row: 10 }]}
+          destination={{ col: 12, row: 10 }}
+          onSelect={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      );
+      expect(screen.getByLabelText(/Move to 11,10 \(on planned route\)/)).toHaveClass('mgp-cell--path');
+      expect(screen.getByLabelText(/Move to 12,10 \(destination\)/)).toHaveClass('mgp-cell--dest');
+    });
+
+    it('the origin cell is not a button', () => {
+      render(<MoveGridPicker {...tapProps} onSelect={vi.fn()} onCancel={vi.fn()} />);
+      const origin = screen.getByLabelText('Your position');
+      expect(origin.tagName).not.toBe('BUTTON');
+    });
+  });
 });

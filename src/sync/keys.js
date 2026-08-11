@@ -7,7 +7,21 @@
 // (RELAY) + the README table; app-only types go in APP below. An ESLint rule
 // bans hand-written `cnmh_` literals in src/ (tests excepted), so every key
 // must come from this module.
-export { GLOBAL_ID, RELAY, syncKey, globalKey } from '../../foundry-bridge/syncKeys.js';
+export { GLOBAL_ID, syncKey, globalKey } from '../../foundry-bridge/syncKeys.js';
+import { RELAY as BRIDGE_RELAY } from '../../foundry-bridge/syncKeys.js';
+
+// #1736 S2 (app-only slice): the plan/confirm movement rail's relay pair.
+// The paired bridge PR (#1736 S1) adds the same two entries to
+// foundry-bridge/syncKeys.js RELAY — that's the eventual single source of
+// truth. Declaring them here too lets the app-only slice ship independently
+// without touching foundry-bridge/ (a sibling agent owns that PR); once both
+// merge this becomes a harmless duplicate and can fold back into a plain
+// re-export.
+export const RELAY = Object.freeze({
+  ...BRIDGE_RELAY,
+  MOVEPLAN: 'moveplan',
+  MOVEPLANNED: 'moveplanned',
+});
 
 // App-only channels — synced between app clients (and persisted by the
 // CampaignSession DO) but never consumed by the Foundry bridge. Same

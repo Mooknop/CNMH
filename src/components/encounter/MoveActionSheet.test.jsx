@@ -304,4 +304,197 @@ describe('MoveActionSheet', () => {
     expect(screen.queryByLabelText('Step east')).toBeNull();
     Date.now.mockRestore();
   });
+
+  // #1736 S2: the plan/confirm tap flow, gated on a protocol-14+ bridgehello.
+  describe('plan/confirm tap flow (#1736 S2)', () => {
+    // origin (5,5), Speed 10 keeps the tap grid small (radius 6) for fast tests.
+    const openTapFlow = (setHello, setOpts) => {
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 10 }));
+    };
+
+    it('protocol 13 keeps the stepper unchanged (no confirm bar, D-pad renders)', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setHello({ protocol: 13, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({
+        reqTs: 555, origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }], blocked: [], speed: 25,
+      }));
+      expect(screen.getByLabelText('Step east')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Confirm move')).toBeNull();
+      Date.now.mockRestore();
+    });
+
+    it('tapping a cell opens the confirm bar with the route summary and action math', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts, setPlanned;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      openTapFlow(setHello, setOpts);
+
+      // 2 cells east = 10 ft, exactly Speed 10 → 1 action.
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveplan', expect.objectContaining({
+        waypoints: [{ col: 7, row: 5 }], moveType: 'stride',
+      }));
+
+      act(() => setPlanned({
+        reqTs: 555, path: [{ col: 7, row: 5, x: 700, y: 500 }], costFeet: 10, clipped: false,
+      }));
+
+      const bar = screen.getByLabelText('Confirm move');
+      expect(bar).toHaveTextContent('10 ft — 1 action');
+      expect(screen.getByRole('button', { name: 'Confirm' })).not.toBeDisabled();
+      Date.now.mockRestore();
+    });
+
+    it('shows the clipped note when the bridge reports the path stopped at a wall', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts, setPlanned;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      openTapFlow(setHello, setOpts);
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      act(() => setPlanned({ reqTs: 555, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 5, clipped: true }));
+
+      expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
+    });
+
+    it('disables Confirm and shows a hint when the plan costs more actions than remain', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let tsDriver, setHello, setOpts, setPlanned;
+      render(
+        <>
+          <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      // Spend all 3 actions before planning — the confirm gate should refuse.
+      act(() => tsDriver.spendActions(3, 'Test setup'));
+
+      openTapFlow(setHello, setOpts);
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      act(() => setPlanned({ reqTs: 555, path: [{ col: 7, row: 5, x: 700, y: 500 }], costFeet: 10, clipped: false }));
+
+      expect(screen.getByText('Not enough actions left this turn.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+    });
+
+    it('Confirm spends the priced actions, sends moveconfirm with waypoints, and closes on movedone', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      const onClose = vi.fn();
+      let tsDriver, setHello, setOpts, setPlanned, setDone;
+      render(
+        <>
+          <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={onClose} />
+        </>
+      );
+      openTapFlow(setHello, setOpts);
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      const planPath = [{ col: 7, row: 5, x: 700, y: 500 }];
+      act(() => setPlanned({ reqTs: 555, path: planPath, costFeet: 10, clipped: false }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+      expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
+        waypoints: planPath, moveType: 'stride', actionCost: 1,
+      }));
+
+      // Full move lands exactly as planned — no refund, sheet closes (no chaining loop).
+      act(() => setDone({ reqTs: 555, newPosition: { col: 7, row: 5 }, feetMoved: 10 }));
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+      expect(onClose).toHaveBeenCalled();
+      Date.now.mockRestore();
+    });
+
+    it('refunds the over-charge when Foundry legally stops the move short', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let tsDriver, setHello, setOpts, setPlanned, setDone;
+      render(
+        <>
+          <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      openTapFlow(setHello, setOpts);
+      // Tap 4 cells east = 20 ft at Speed 10 → planned as 2 actions.
+      fireEvent.click(screen.getByLabelText(/Move to 9,5 —/));
+      const planPath = [{ col: 9, row: 5, x: 900, y: 500 }];
+      act(() => setPlanned({ reqTs: 555, path: planPath, costFeet: 20, clipped: false }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+      expect(tsDriver.turnState.actionsSpent).toBe(2);
+
+      // A wall legally stops the actual move at 10 ft (1 action's worth) — refund 1.
+      act(() => setDone({ reqTs: 555, newPosition: { col: 7, row: 5 }, feetMoved: 10 }));
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+      Date.now.mockRestore();
+    });
+
+    // The bridge re-plans at confirm time and can find the very first leg
+    // blocked — movedone still arrives (never hangs), with feetMoved: 0
+    // (confirmed against the paired bridge PR #1738). The full charge must
+    // come back, and the sheet must still close instead of getting stuck.
+    it('fully refunds and closes gracefully when the confirmed move is blocked at feetMoved: 0', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      const onClose = vi.fn();
+      let tsDriver, setHello, setOpts, setPlanned, setDone;
+      render(
+        <>
+          <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={onClose} />
+        </>
+      );
+      openTapFlow(setHello, setOpts);
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      act(() => setPlanned({
+        reqTs: 555, path: [{ col: 7, row: 5, x: 700, y: 500 }], costFeet: 10, clipped: false,
+      }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+      expect(tsDriver.turnState.actionsSpent).toBe(1);
+
+      act(() => setDone({ reqTs: 555, newPosition: { col: 5, row: 5 }, feetMoved: 0 }));
+
+      expect(tsDriver.turnState.actionsSpent).toBe(0); // full refund
+      expect(onClose).toHaveBeenCalled();
+      Date.now.mockRestore();
+    });
+  });
 });

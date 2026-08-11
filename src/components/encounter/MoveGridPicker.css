@@ -193,3 +193,60 @@
     transform: none;
   }
 }
+
+/* ── Tap mode (destination-tap overlay, #1736 S2) ───────────────────────────
+   Every non-origin cell in the capped radius is tappable; shading bands hint
+   the action cost (straight-line only — the bridge's moveplanned reply is
+   the real, terrain/wall-aware route + cost). */
+.mgp--tap .mgp-cell {
+  font-size: 0.55rem;
+  color: var(--theme-text-secondary, var(--color-text-muted));
+  cursor: pointer;
+}
+
+/* Band 1 = affordable in a single action at the actor's Speed — the
+   friendliest tint so the "usual" tap target reads calmest. */
+.mgp-cell--band-1 {
+  background: rgba(61, 148, 88, 0.28);
+  border-color: rgba(61, 148, 88, 0.55);
+}
+
+.mgp-cell--band-1:hover {
+  background: rgba(61, 148, 88, 0.45);
+}
+
+/* Band 2 = a second Stride action's worth of distance. */
+.mgp-cell--band-2 {
+  background: rgba(196, 154, 46, 0.28);
+  border-color: rgba(196, 154, 46, 0.55);
+}
+
+.mgp-cell--band-2:hover {
+  background: rgba(196, 154, 46, 0.45);
+}
+
+/* Band 3 = a third action's worth — the outer edge of the capped grid. */
+.mgp-cell--band-3 {
+  background: rgba(192, 106, 57, 0.28);
+  border-color: rgba(192, 106, 57, 0.55);
+}
+
+.mgp-cell--band-3:hover {
+  background: rgba(192, 106, 57, 0.45);
+}
+
+/* The current plan's route cells and its landing cell — overrides band tint
+   so the confirmed-looking path always reads distinctly. */
+.mgp-cell--path {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text, var(--accent-outline));
+}
+
+.mgp-cell--dest {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: var(--accent-glow);
+  color: var(--accent-text, var(--accent-outline));
+  font-size: 0.9rem;
+}
