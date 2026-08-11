@@ -1,9 +1,13 @@
 // Movement unit tests — reachable-square computation + confirm/move write-back.
 // Geometry logic lives here; raw canvas/actor reads go through the adapter.
 
-import { initMovement, handleMoveRequest, handleMoveConfirm, resolveToken } from './movement.js';
+import {
+  initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm, resolveToken,
+} from './movement.js';
 import { updateActorMap } from './encounter.js';
-import { makeActor, makeToken, makeGame, makeCombat, makeCombatant } from './test/foundryMock.js';
+import {
+  makeActor, makeToken, makeGame, makeCombat, makeCombatant, equipV14Movement,
+} from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
 let send;
@@ -200,6 +204,245 @@ describe('handleMoveConfirm', () => {
     await handleMoveConfirm('Nobody', { destination: { col: 6, row: 5 }, ts: 1 });
     expect(token.document.update).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+// Plan → execute path rail (#1736 S1). Pellias sits at grid (5,5) on a 100px
+// grid; every waypoint below is a cell to the east unless noted.
+describe('handleMovePlan', () => {
+  test('v14 pipeline: reports the resolved route, its cost, and the echoed ts', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    equipV14Movement(token);
+
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }],
+      moveType: 'stride',
+      ts: 77,
+    });
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const [charId, key, planned] = send.mock.calls[0];
+    expect(charId).toBe('Pellias');
+    expect(key).toBe('moveplanned');
+    // Route cells excluding the origin; x,y are the cell's TOP-LEFT pixels.
+    expect(planned.path).toEqual([
+      { col: 6, row: 5, x: 600, y: 500 },
+      { col: 7, row: 5, x: 700, y: 500 },
+      { col: 8, row: 5, x: 800, y: 500 },
+    ]);
+    expect(planned.costFeet).toBe(15);
+    expect(planned.clipped).toBe(false);
+    expect(planned.reqTs).toBe(77);
+  });
+
+  test('v14 pipeline: core is asked for the route origin-first, in token corners', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    equipV14Movement(token);
+
+    await handleMovePlan('Pellias', { waypoints: [{ col: 6, row: 5 }], ts: 1 });
+
+    // The rail thinks in creature centres (the collision/measurement backends
+    // demand it) but core's path APIs take the token's TOP-LEFT — the adapter
+    // owns that translation, and prepends the origin core expects at index 0.
+    const [asked] = token.findMovementPath.mock.calls[0];
+    expect(asked).toEqual([{ x: 500, y: 500 }, { x: 600, y: 500 }]);
+  });
+
+  test('v14 pipeline: cost comes from the terrain-aware measureMovementPath', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    // Region difficult terrain: 10 ft per 5 ft leg. Pure grid geometry (what the
+    // stepper's measureMoveCost sees) would report 10 for these two legs.
+    equipV14Movement(token, { costPerLeg: 10 });
+
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }], ts: 2,
+    });
+
+    expect(send.mock.calls[0][2].costFeet).toBe(20);
+    expect(token.document.measureMovementPath).toHaveBeenCalled();
+  });
+
+  test('v14 pipeline: a constrained route is reported clipped, ending where it stops', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    // constrainMovementPath keeps origin + 1 leg — a wall two cells out.
+    equipV14Movement(token, { clipAfter: 1 });
+
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }], ts: 3,
+    });
+
+    const planned = send.mock.calls[0][2];
+    expect(planned.path).toEqual([{ col: 6, row: 5, x: 600, y: 500 }]);
+    expect(planned.costFeet).toBe(5);
+    expect(planned.clipped).toBe(true);
+  });
+
+  test('without the v14 APIs the plan degrades to the stepper collision walk', async () => {
+    setupPellias();
+    // generation 13 (mock default), no findMovementPath — the same
+    // center-to-center test the D-pad has always used, leg by leg.
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }], ts: 4,
+    });
+
+    const planned = send.mock.calls[0][2];
+    expect(planned.path).toEqual([
+      { col: 6, row: 5, x: 600, y: 500 },
+      { col: 7, row: 5, x: 700, y: 500 },
+    ]);
+    expect(planned.costFeet).toBe(10);
+    expect(planned.clipped).toBe(false);
+  });
+
+  test('degraded plan clips at the first wall-blocked leg', async () => {
+    setupPellias();
+    // A wall between (6,5) and (7,5): centres (650,550) → (750,550).
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      origin.x === 650 && dest.x === 750;
+
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }], ts: 5,
+    });
+
+    const planned = send.mock.calls[0][2];
+    expect(planned.path).toEqual([{ col: 6, row: 5, x: 600, y: 500 }]);
+    expect(planned.clipped).toBe(true);
+  });
+
+  test('an empty or missing waypoint list pushes nothing', async () => {
+    setupPellias();
+    await handleMovePlan('Pellias', { waypoints: [], ts: 6 });
+    await handleMovePlan('Pellias', { ts: 6 });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  test('unmapped character → no plan pushed', async () => {
+    setupPellias();
+    await handleMovePlan('Nobody', { waypoints: [{ col: 6, row: 5 }], ts: 7 });
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleMoveConfirm with waypoints (#1736 S1)', () => {
+  test('executes the whole route in ONE move and reports the landing', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    equipV14Movement(token);
+
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 8, row: 5 },
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }],
+      moveType: 'stride',
+      ts: 55,
+    });
+
+    // One pipeline call carrying every waypoint as a top-left corner, tagged.
+    expect(token.document.move).toHaveBeenCalledTimes(1);
+    expect(token.document.move).toHaveBeenCalledWith(
+      [{ x: 600, y: 500 }, { x: 700, y: 500 }, { x: 800, y: 500 }],
+      { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+    expect(token.document.update).not.toHaveBeenCalled();
+
+    const [, key, done] = send.mock.calls[0];
+    expect(key).toBe('movedone');
+    expect(done.newPosition).toEqual({ col: 8, row: 5, x: 800, y: 500 });
+    expect(done.feetMoved).toBe(15);
+    expect(done.reqTs).toBe(55);
+    expect(done.nextOpts.origin).toEqual({ col: 8, row: 5 });
+  });
+
+  test('a stop-short reports the ACTUAL landing and only the feet walked', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    // The pipeline parks the token at (7,5) — one cell short of the request.
+    equipV14Movement(token, { stopAt: { x: 700, y: 500 } });
+
+    await handleMoveConfirm('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }],
+      moveType: 'stride',
+      ts: 56,
+    });
+
+    const done = send.mock.calls[0][2];
+    expect(done.newPosition).toEqual({ col: 7, row: 5, x: 700, y: 500 });
+    expect(done.feetMoved).toBe(10);
+    expect(done.nextOpts.origin).toEqual({ col: 7, row: 5 });
+  });
+
+  test('the route is re-planned at confirm time, so a fresh wall clips it', async () => {
+    const { token } = setupPellias();
+    // No v14 APIs → the degraded walk, and a wall that appeared after the plan.
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      origin.x === 650 && dest.x === 750;
+
+    await handleMoveConfirm('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }],
+      moveType: 'stride',
+      ts: 57,
+    });
+
+    expect(token.document.update).toHaveBeenCalledTimes(1);
+    expect(token.document.update).toHaveBeenCalledWith(
+      { x: 600, y: 500 },
+      { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+    );
+    const done = send.mock.calls[0][2];
+    expect(done.newPosition).toEqual({ col: 6, row: 5, x: 600, y: 500 });
+    expect(done.feetMoved).toBe(5);
+  });
+
+  test('a route blocked at its first leg still answers, with zero movement', async () => {
+    const { token } = setupPellias();
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = () => true;
+
+    await handleMoveConfirm('Pellias', {
+      waypoints: [{ col: 6, row: 5 }], moveType: 'stride', ts: 58,
+    });
+
+    expect(token.document.update).not.toHaveBeenCalled();
+    const done = send.mock.calls[0][2];
+    expect(done.newPosition).toEqual({ col: 5, row: 5, x: 500, y: 500 });
+    expect(done.feetMoved).toBe(0);
+  });
+
+  test('without the v14 pipeline the route walks waypoint by waypoint', async () => {
+    const { token } = setupPellias();
+    await handleMoveConfirm('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 6, row: 6 }], moveType: 'stride', ts: 59,
+    });
+
+    expect(token.document.update).toHaveBeenNthCalledWith(
+      1, { x: 600, y: 500 }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+    );
+    expect(token.document.update).toHaveBeenNthCalledWith(
+      2, { x: 600, y: 600 }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+    );
+    const done = send.mock.calls[0][2];
+    expect(done.newPosition).toEqual({ col: 6, row: 6, x: 600, y: 600 });
+    expect(done.feetMoved).toBe(10);
+  });
+
+  test('a confirm WITHOUT waypoints keeps the single-destination stepper flow', async () => {
+    const { token } = setupPellias();
+    global.game.release = { generation: 14 };
+    equipV14Movement(token);
+
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 6, row: 5 }, moveType: 'step', ts: 60,
+    });
+
+    // The stepper's own single-point move(), not the waypoint ARRAY form, and
+    // the path planner is never consulted.
+    expect(token.document.move).toHaveBeenCalledWith(
+      { x: 600, y: 500 }, { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+    expect(token.findMovementPath).not.toHaveBeenCalled();
+    expect(send.mock.calls[0][2].newPosition).toEqual({ col: 6, row: 5, x: 600, y: 500 });
   });
 });
 

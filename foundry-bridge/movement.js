@@ -1,12 +1,21 @@
-// Feature 3: Token movement via an 8-direction 5-ft stepper.
+// Feature 3: Token movement — an 8-direction 5-ft stepper AND a plan → execute
+// path rail on the v14 movement pipeline.
 //
-// Instead of scanning a whole speed-radius grid with one straight ray per square
-// (which can't see around walls — it disagrees with Foundry both ways), the
-// bridge probes only the 8 cells adjacent to the token. Each step is a single
-// 5-ft move to a neighbour, validated with one short center-to-center collision
-// test — which IS the real movement path, so it always matches Foundry. The app
-// renders the 8 neighbours as a 3x3 D-pad and chains a fresh probe after every
-// step; it accumulates traveled distance to charge actions in encounter mode.
+// The stepper (v13-era, still the fallback): instead of scanning a whole
+// speed-radius grid with one straight ray per square (which can't see around
+// walls — it disagrees with Foundry both ways), the bridge probes only the 8
+// cells adjacent to the token. Each step is a single 5-ft move to a neighbour,
+// validated with one short center-to-center collision test — which IS the real
+// movement path, so it always matches Foundry. The app renders the 8 neighbours
+// as a 3x3 D-pad and chains a fresh probe after every step; it accumulates
+// traveled distance to charge actions in encounter mode.
+//
+// The path rail (#1736 S1): the app taps a destination and the bridge answers
+// with the REAL route core would walk, its terrain-aware cost, and whether a
+// wall clipped it — then executes the whole route as one move on confirm. No
+// per-cell round-trips, and the player sees the true cost before committing.
+// The two rails share resolveToken/getStepNeighbors and coexist: an app that
+// never sends `moveplan` gets byte-identical stepper behaviour.
 //
 // Protocol (all modeled as cnmh_* keys so the session relay relays them):
 //   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts }
@@ -18,9 +27,25 @@
 //                  speed = actor land Speed (ft), for action accounting
 //                  originOccupied = the token currently shares its cell with an
 //                    ally (it stepped through one) — the app forbids stopping here.
-//   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts }
-//   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved, nextOpts }
-//                  nextOpts = the moveopts for the *destination* cell, computed
+//   App → bridge:  cnmh_moveplan_<charId>    = { waypoints, moveType, ts }
+//                  waypoints = tapped destination cells [{ col, row }, …] in
+//                    order, EXCLUDING the origin.
+//   Bridge → app:  cnmh_moveplanned_<charId> = { path, costFeet, clipped, reqTs }
+//                  path = the legal route cells the token would traverse,
+//                    [{ col, row, x, y }, …] excluding the origin and ending at
+//                    the ACTUAL landing cell; x,y = the cell's top-left pixels.
+//                  costFeet = terrain-aware total, snapped to 5.
+//                  clipped = a wall/constraint stopped the route short of the
+//                    last requested waypoint — the app offers a waypoint tap.
+//   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts, waypoints? }
+//                  waypoints (optional) = the planned path cells verbatim →
+//                    execute the whole multi-waypoint move. Absent → the legacy
+//                    single-`destination` stepper flow, unchanged.
+//   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved, reqTs, nextOpts }
+//                  Shape is identical for both flows. feetMoved is the measured
+//                  cost of the path ACTUALLY traveled (a v14 move may stop
+//                  short); newPosition is the real landing.
+//                  nextOpts = the moveopts for the *landing* cell, computed
 //                    right after the move so chained steps skip a whole
 //                    movereq→moveopts round-trip (#451). Same shape as moveopts.
 //
@@ -46,6 +71,9 @@ import {
   measureMoveCost,
   hasWallCollision,
   moveToken,
+  planTokenPath,
+  measureTokenPathCost,
+  moveTokenPath,
   resolveCombatantToken,
 } from './pf2eAdapter.js';
 import { RELAY } from './syncKeys.js';
@@ -127,10 +155,129 @@ export async function handleMoveRequest(charId, value) {
   _sendUpdate?.(charId, RELAY.MOVEOPTS, { ...options, reqTs: value?.ts ?? null });
 }
 
+// Cell ↔ pixel converters for one token (#1736 S1). Three coordinate spaces
+// meet on this rail and each conversion has to be explicit:
+//   * the wire speaks CELLS, and a cell's x,y on the wire is its TOP-LEFT pixel
+//     (what gridToPixels yields and what token.x/y stores);
+//   * the collision / measurement backends want CREATURE CENTRES (same reason
+//     getStepNeighbors offsets its rays — a corner-to-corner ray runs along the
+//     grid lines where walls sit).
+// The offset is the token's own footprint, so a Large creature converts right.
+function cellGeometry(token) {
+  const gridSize = getGridSize();
+  const { width: tW, height: tH } = getTokenDimensions(token);
+  const offX = (tW * gridSize) / 2;
+  const offY = (tH * gridSize) / 2;
+  return {
+    gridSize,
+    offX,
+    offY,
+    toCenter: ({ col, row }) => {
+      const { x, y } = gridToPixels(col, row);
+      return { x: x + offX, y: y + offY };
+    },
+    toCell: ({ x, y }) => {
+      const left = x - offX;
+      const top  = y - offY;
+      return {
+        col: Math.round(left / gridSize),
+        row: Math.round(top / gridSize),
+        x: left,
+        y: top,
+      };
+    },
+  };
+}
+
+// Called by bridge.js when cnmh_moveplan_<charId> arrives (#1736 S1). Turns the
+// tapped destination cells into the route core would ACTUALLY walk, prices it
+// terrain-aware, and flags a wall/constraint that clipped it short. Read-only:
+// nothing moves until a moveconfirm carrying waypoints arrives, which is what
+// lets the app show a true cost and gate the action spend behind a confirm.
+export async function handleMovePlan(charId, value) {
+  const token = resolveToken(charId);
+  if (!token) return;
+
+  const cells = Array.isArray(value?.waypoints) ? value.waypoints : [];
+  if (!cells.length) return;
+
+  const geo = cellGeometry(token);
+  const { path, clipped } = await planTokenPath(token, cells.map(geo.toCenter));
+  const costFeet = snapFeet(await measureTokenPathCost(token, path));
+
+  // Echo the request ts (same correlation pattern as moveopts) so the app can
+  // discard a plan superseded by a later tap.
+  _sendUpdate?.(charId, RELAY.MOVEPLANNED, {
+    path: path.map(geo.toCell),
+    costFeet,
+    clipped,
+    reqTs: value?.ts ?? null,
+  });
+}
+
+// Execute a planned multi-waypoint route (#1736 S1) — the waypoint branch of
+// handleMoveConfirm. Reports through the SAME movedone shape as the stepper.
+async function confirmWaypointMove(charId, token, value) {
+  const geo = cellGeometry(token);
+  // Capture the start BEFORE the move: on the v14 pipeline the document may
+  // already read as the landing by the time the move resolves, and the route's
+  // cost has to be measured from where the token actually stood.
+  const startCenter = {
+    x: Number(token.x ?? token.document?.x ?? 0) + geo.offX,
+    y: Number(token.y ?? token.document?.y ?? 0) + geo.offY,
+  };
+
+  // Cheap staleness protection: the world can change between plan and confirm
+  // (a foe steps into the route), so re-plan/constrain right before executing
+  // rather than trusting the app's cached path. Worst case is a stop-short,
+  // which movedone already reports honestly.
+  const { path } = await planTokenPath(
+    token,
+    value.waypoints.map(geo.toCenter),
+    { origin: startCenter },
+  );
+
+  // A route blocked at its very first segment still answers — a silent bridge
+  // would strand the app's awaiting-done state.
+  const landedCenter = path.length ? await moveTokenPath(token, path) : startCenter;
+  const landing = geo.toCell(landedCenter);
+
+  // feetMoved prices the route ACTUALLY traveled: a v14 move may legally stop
+  // short, so truncate the plan at the landing before measuring.
+  const landedAt = path.findIndex(
+    (p) => Math.abs(p.x - landedCenter.x) <= 0.5 && Math.abs(p.y - landedCenter.y) <= 0.5,
+  );
+  const traveled = path.length === 0
+    ? []
+    : (landedAt >= 0 ? path.slice(0, landedAt + 1) : [landedCenter]);
+  const feetMoved = snapFeet(
+    await measureTokenPathCost(token, traveled, { origin: startCenter }),
+  );
+
+  // Same piggyback as the stepper (#451) — the app re-opens the picker at the
+  // landing without another movereq→moveopts round-trip.
+  const nextOpts = await getStepNeighbors(token, landing);
+
+  _sendUpdate?.(charId, RELAY.MOVEDONE, {
+    newPosition: landing,
+    feetMoved,
+    reqTs: value?.ts ?? null,
+    nextOpts,
+  });
+}
+
 // Called by bridge.js when cnmh_moveconfirm_<charId> arrives.
 export async function handleMoveConfirm(charId, value) {
   const token = resolveToken(charId);
   if (!token) return;
+
+  // Path rail (#1736 S1): a confirm carrying the planned waypoints executes the
+  // whole route in one move. Without them everything below is the legacy
+  // single-destination stepper flow, byte-identical.
+  if (Array.isArray(value?.waypoints) && value.waypoints.length) {
+    await confirmWaypointMove(charId, token, value);
+    return;
+  }
 
   const { destination } = value;
   const { x, y } = gridToPixels(destination.col, destination.row);

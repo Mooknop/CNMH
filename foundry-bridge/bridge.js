@@ -13,7 +13,7 @@ import { getBridgeSecret, SECRET_SETTING } from './secret.js';
 import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, updateActorMap } from './encounter.js';
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
-import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
+import { initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
@@ -326,6 +326,10 @@ function dispatch(msg) {
   // Movement requests.
   if (key === RELAY.MOVEREQ) {
     handleMoveRequest(characterId, value);
+    return;
+  }
+  if (key === RELAY.MOVEPLAN) {
+    handleMovePlan(characterId, value);
     return;
   }
   if (key === RELAY.MOVECONFIRM) {

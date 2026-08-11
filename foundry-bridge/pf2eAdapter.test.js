@@ -20,7 +20,7 @@ import {
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   getGridSize, getAllTokens, getTokenDimensions, getTokenDisposition,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
-  resolveMovedPosition,
+  resolveMovedPosition, planTokenPath, measureTokenPathCost, moveTokenPath,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
   applyEffectByUuid, applyTypedDamage,
   isEffectItem, getEffectItemActor, getEffects,
@@ -30,7 +30,7 @@ import {
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
-  makeCombat, makeCombatant, makeEffectItem,
+  makeCombat, makeCombatant, makeEffectItem, equipV14Movement,
 } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
@@ -109,6 +109,27 @@ describe.each(FIXTURE_VERSIONS)('contract: %s fixtures', (version) => {
     test('getTokenGridPosition converts pixel x/y to grid col/row via canvas grid size', () => {
       // setup.js installs a 100px grid.
       expect(getTokenGridPosition(tokenJson)).toEqual({ col: 5, row: 3 });
+    });
+
+    // The path rail (#1736 S1) reads the SAME document.{width,height} to centre
+    // its collision walk, so it belongs on the cross-version tripwire.
+    test('planTokenPath centres its degraded collision walk on the token footprint', async () => {
+      const probed = [];
+      global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) => {
+        probed.push([origin, dest]);
+        return false;
+      };
+      // Fixture token sits at (500,300) → 1×1 footprint → centre (550,350).
+      const { path, clipped } = await planTokenPath(tokenJson, [{ x: 650, y: 350 }]);
+      expect(clipped).toBe(false);
+      expect(path).toEqual([{ x: 650, y: 350 }]);
+      expect(probed[0][0]).toEqual({ x: 550, y: 350 });
+    });
+
+    test('measureTokenPathCost sums centre-to-centre legs from the token position', async () => {
+      await expect(
+        measureTokenPathCost(tokenJson, [{ x: 650, y: 350 }, { x: 750, y: 350 }])
+      ).resolves.toBe(10);
     });
   });
 });
@@ -225,6 +246,164 @@ describe('adapter writes are echo-tagged', () => {
       await expect(resolveMovedPosition(doc, { x: 250, y: 400 }, PREV, { timeoutMs: 200, intervalMs: 1 }))
         .resolves.toEqual({ x: 250, y: 400 });
     });
+  });
+});
+
+// Multi-waypoint path rail (#1736 S1). Every pixel in/out is a creature CENTRE;
+// the adapter owns the centre ↔ token-corner translation core's APIs require.
+describe('path rail: planTokenPath / measureTokenPathCost / moveTokenPath', () => {
+  // 1×1 token at grid (1,1) on the 100px grid → centre (150,150).
+  const setup = ({ generation = 13, ...v14 } = {}) => {
+    const token = makeToken({ x: 100, y: 100 });
+    global.game.release = { generation };
+    if (generation >= 14) equipV14Movement(token, v14);
+    return token;
+  };
+
+  describe('planTokenPath', () => {
+    test('v14: findMovementPath is asked origin-first in token corners', async () => {
+      const token = setup({ generation: 14 });
+      const { path, clipped } = await planTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+
+      expect(token.findMovementPath).toHaveBeenCalledWith([
+        { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 100 },
+      ]);
+      // The origin is stripped back off; the caller only sees the route ahead.
+      expect(path).toEqual([{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+      expect(clipped).toBe(false);
+    });
+
+    test('v14: constrainMovementPath clipping the route sets clipped', async () => {
+      const token = setup({ generation: 14, clipAfter: 1 });
+      const { path, clipped } = await planTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+      expect(path).toEqual([{ x: 250, y: 150 }]);
+      expect(clipped).toBe(true);
+    });
+
+    test('v14: a PARTIAL findMovementPath result also reads as clipped', async () => {
+      const token = setup({ generation: 14 });
+      // The pathfinder is allowed to give up before the last waypoint.
+      token.findMovementPath = jest.fn(() => ({
+        promise: Promise.resolve([{ x: 100, y: 100 }, { x: 200, y: 100 }]),
+      }));
+      const { path, clipped } = await planTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+      expect(path).toEqual([{ x: 250, y: 150 }]);
+      expect(clipped).toBe(true);
+    });
+
+    test('v14: a job that resolves to nothing degrades to the collision walk', async () => {
+      const token = setup({ generation: 14 });
+      token.findMovementPath = jest.fn(() => ({ promise: Promise.resolve(null) }));
+      const { path, clipped } = await planTokenPath(token, [{ x: 250, y: 150 }]);
+      expect(path).toEqual([{ x: 250, y: 150 }]);
+      expect(clipped).toBe(false);
+    });
+
+    test('v13 (or no findMovementPath): the walk stops at the first blocked leg', async () => {
+      const token = setup();
+      global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin) => origin.x === 250;
+      const { path, clipped } = await planTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+      expect(path).toEqual([{ x: 250, y: 150 }]);
+      expect(clipped).toBe(true);
+    });
+
+    test('generation 13 never enters the pipeline even when the methods exist', async () => {
+      const token = makeToken({ x: 100, y: 100 });
+      equipV14Movement(token);
+      await planTokenPath(token, [{ x: 250, y: 150 }]);
+      expect(token.findMovementPath).not.toHaveBeenCalled();
+    });
+
+    test('an empty waypoint list is a no-op', async () => {
+      const token = setup({ generation: 14 });
+      await expect(planTokenPath(token, [])).resolves.toEqual({ path: [], clipped: false });
+      expect(token.findMovementPath).not.toHaveBeenCalled();
+    });
+
+    test('an explicit origin overrides the token position', async () => {
+      const token = setup({ generation: 14 });
+      await planTokenPath(token, [{ x: 250, y: 150 }], { origin: { x: 950, y: 150 } });
+      expect(token.findMovementPath).toHaveBeenCalledWith([
+        { x: 900, y: 100 }, { x: 200, y: 100 },
+      ]);
+    });
+  });
+
+  describe('measureTokenPathCost', () => {
+    test('v14: prefers the terrain-aware measureMovementPath cost', async () => {
+      const token = setup({ generation: 14, costPerLeg: 10 });
+      // Geometry alone would price these two 5-ft legs at 10.
+      await expect(measureTokenPathCost(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]))
+        .resolves.toBe(20);
+      expect(token.document.measureMovementPath).toHaveBeenCalledWith([
+        { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 100 },
+      ]);
+    });
+
+    test('v14: falls back to `distance` when the build reports no cost', async () => {
+      const token = setup({ generation: 14 });
+      token.document.measureMovementPath = jest.fn(() => ({ distance: 25 }));
+      await expect(measureTokenPathCost(token, [{ x: 250, y: 150 }])).resolves.toBe(25);
+    });
+
+    test('v13: sums measureMoveCost per leg (diagonal rule kept, Region cost lost)', async () => {
+      const token = setup();
+      await expect(measureTokenPathCost(token, [{ x: 250, y: 150 }, { x: 250, y: 250 }]))
+        .resolves.toBe(10);
+    });
+
+    test('an empty waypoint list costs nothing', async () => {
+      await expect(measureTokenPathCost(setup(), [])).resolves.toBe(0);
+    });
+  });
+
+  describe('moveTokenPath', () => {
+    test('v14: ONE move() carrying every waypoint, tagged, resolving at the landing', async () => {
+      const token = setup({ generation: 14 });
+      const landed = await moveTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]);
+
+      expect(token.document.move).toHaveBeenCalledTimes(1);
+      expect(token.document.move).toHaveBeenCalledWith(
+        [{ x: 200, y: 100 }, { x: 300, y: 100 }],
+        { [BRIDGE_SOURCE_FLAG]: 'app' },
+      );
+      expect(token.document.update).not.toHaveBeenCalled();
+      expect(landed).toEqual({ x: 350, y: 150 });
+    });
+
+    test('v14: a stop-short resolves with where the token ACTUALLY parked', async () => {
+      const token = setup({ generation: 14, stopAt: { x: 200, y: 100 } });
+      await expect(moveTokenPath(token, [{ x: 250, y: 150 }, { x: 350, y: 150 }]))
+        .resolves.toEqual({ x: 250, y: 150 });
+    });
+
+    test('v13: one tagged update() per waypoint, resolving at the last', async () => {
+      const token = setup();
+      const landed = await moveTokenPath(token, [{ x: 250, y: 150 }, { x: 250, y: 250 }]);
+
+      expect(token.document.update).toHaveBeenCalledTimes(2);
+      expect(token.document.update).toHaveBeenNthCalledWith(
+        2, { x: 200, y: 200 }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+      );
+      expect(landed).toEqual({ x: 250, y: 250 });
+    });
+
+    test('an empty waypoint list leaves the token where it is', async () => {
+      const token = setup();
+      await expect(moveTokenPath(token, [])).resolves.toEqual({ x: 150, y: 150 });
+      expect(token.document.update).not.toHaveBeenCalled();
+    });
+  });
+
+  test('a Large token converts on its own 2x2 footprint, not one square', async () => {
+    global.game.release = { generation: 14 };
+    const ogre = makeToken({ x: 800, y: 800, width: 2, height: 2 });
+    equipV14Movement(ogre);
+    // Centre offset is a whole grid square for a 2x2: corner (800,800) → (900,900).
+    await planTokenPath(ogre, [{ x: 1000, y: 900 }]);
+    expect(ogre.findMovementPath).toHaveBeenCalledWith([
+      { x: 800, y: 800 }, { x: 900, y: 800 },
+    ]);
   });
 });
 

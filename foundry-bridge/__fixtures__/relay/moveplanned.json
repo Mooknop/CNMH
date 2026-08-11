@@ -1,0 +1,28 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "path": [
+      {
+        "col": 6,
+        "row": 5,
+        "x": 600,
+        "y": 500
+      },
+      {
+        "col": 7,
+        "row": 5,
+        "x": 700,
+        "y": 500
+      },
+      {
+        "col": 8,
+        "row": 6,
+        "x": 800,
+        "y": 600
+      }
+    ],
+    "costFeet": 15,
+    "clipped": false,
+    "reqTs": 999
+  }
+}
