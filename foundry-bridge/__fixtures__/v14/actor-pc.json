@@ -1,0 +1,83 @@
+{
+  "_id": "MVvMwyyIRSnYQDwm",
+  "id": "MVvMwyyIRSnYQDwm",
+  "name": "Pellias",
+  "type": "character",
+  "system": {
+    "attributes": {
+      "hp": { "value": 32, "max": 48, "temp": 5 },
+      "dying": { "value": 0, "max": 4 },
+      "wounded": { "value": 1 },
+      "doomed": { "value": 0 }
+    },
+    "resources": {
+      "heroPoints": { "value": 2, "max": 3 },
+      "focus": { "value": 1, "max": 2 }
+    },
+    "movement": {
+      "speeds": {
+        "land": { "value": 25, "total": 30 }
+      }
+    },
+    "_migration": {
+      "version": 0.959,
+      "previous": { "schema": 0.955, "foundry": "14.365", "system": "8.4.0" }
+    }
+  },
+  "items": [
+    {
+      "_id": "cond0Frightened1",
+      "img": "systems/pf2e/icons/conditions/frightened.webp",
+      "name": "Frightened",
+      "type": "condition",
+      "system": {
+        "slug": "frightened",
+        "group": null,
+        "value": { "isValued": true, "value": 2 },
+        "references": { "children": [], "overriddenBy": [], "overrides": [], "parent": null },
+        "rules": [],
+        "traits": { "value": [], "otherTags": [] },
+        "_migration": {
+          "version": 0.959,
+          "previous": { "schema": 0.955, "foundry": "14.365", "system": "8.4.0" }
+        }
+      },
+      "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+    },
+    {
+      "_id": "cond0OffGuard001",
+      "img": "systems/pf2e/icons/conditions/off-guard.webp",
+      "name": "Off-Guard",
+      "type": "condition",
+      "system": {
+        "slug": "off-guard",
+        "group": null,
+        "value": { "isValued": false, "value": null },
+        "references": { "children": [], "overriddenBy": [], "overrides": [], "parent": null },
+        "rules": [],
+        "traits": { "value": [], "otherTags": [] },
+        "_migration": {
+          "version": 0.959,
+          "previous": { "schema": 0.955, "foundry": "14.365", "system": "8.4.0" }
+        }
+      },
+      "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+    },
+    {
+      "_id": "jWPg980u980RhCaB",
+      "name": "Pick",
+      "type": "weapon",
+      "system": {
+        "slug": "pick",
+        "baseItem": "pick",
+        "category": "martial",
+        "group": "pick",
+        "damage": { "dice": 1, "die": "d6", "damageType": "piercing", "persistent": null },
+        "runes": { "potency": 0, "striking": 0, "property": [] },
+        "traits": { "value": ["fatal-d10"], "otherTags": [], "rarity": "common" },
+        "equipped": { "carryType": "worn", "invested": null, "handsHeld": 0 }
+      },
+      "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+    }
+  ]
+}
