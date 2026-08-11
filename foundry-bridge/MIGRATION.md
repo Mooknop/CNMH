@@ -34,6 +34,17 @@ data path moves, **only the adapter changes.**
   Remaining v14 work: the in-world smoke pass, plus verifying that `move()`'s
   options bag still forwards `BRIDGE_SOURCE_FLAG` into the update context the
   hook listeners see.
+  **Multi-waypoint path rail (#1736 S1)** rides the same switch point:
+  `planTokenPath` (`Token#findMovementPath` → `Token#constrainMovementPath`),
+  `measureTokenPathCost` (`TokenDocument#measureMovementPath` — the ONLY
+  terrain-aware measurement; `canvas.grid.measurePath` is pure geometry and
+  cannot see v14's Region difficult terrain), and `moveTokenPath`
+  (`TokenDocument#move` over the whole waypoint array). Each method is
+  capability-detected on top of the generation gate and degrades to the
+  stepper's own primitives, so a renamed surface costs path fidelity, not the
+  movement rail. Smoke pass additions: plan a full-speed stride from the app,
+  confirm it, and verify the token walks the whole route with the reported
+  cost — including one route across difficult terrain and one clipped at a wall.
 - **Namespaced core classes — dice half resolved (#1574).** `rollFormula` reads
   `foundry.dice.Roll` when present (the only exposure once v14 retires the
   deprecated global) with the bare global as the v13 fallback.

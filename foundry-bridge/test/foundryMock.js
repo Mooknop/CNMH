@@ -327,6 +327,56 @@ export function makeToken(opts = {}) {
   };
 }
 
+// Fit a token with the v14 movement-pipeline surfaces the path rail uses
+// (#1736 S1) — opt-in, so every pre-v14 test keeps its bare token. Defaults
+// model a cooperative world: findMovementPath echoes the requested waypoints,
+// constrainMovementPath clips nothing, measureMovementPath prices the path with
+// the same 5ft/square Chebyshev the canvas mock uses, and move() teleports the
+// document to the last waypoint.
+//
+//   clipAfter  — keep only this many waypoints after the origin (constrained)
+//   costPerLeg — feet each leg costs (models Region difficult terrain)
+//   stopAt     — { x, y } the document actually parks at (models a stop-short)
+export function equipV14Movement(token, opts = {}) {
+  const { clipAfter = null, costPerLeg = null, stopAt = null } = opts;
+  const gridSize = global.canvas?.grid?.size ?? 100;
+
+  token.findMovementPath = jest.fn((waypoints) => ({
+    // A resolved job exposes the path synchronously AND as a promise; the
+    // adapter accepts either.
+    result: waypoints.map((w) => ({ x: w.x, y: w.y })),
+    promise: Promise.resolve(waypoints.map((w) => ({ x: w.x, y: w.y }))),
+  }));
+
+  token.constrainMovementPath = jest.fn((waypoints) =>
+    (clipAfter === null
+      ? [waypoints, false]
+      : [waypoints.slice(0, clipAfter + 1), waypoints.length > clipAfter + 1]));
+
+  token.document.measureMovementPath = jest.fn((waypoints) => {
+    let cost = 0;
+    for (let i = 1; i < waypoints.length; i++) {
+      if (costPerLeg !== null) { cost += costPerLeg; continue; }
+      const dc = Math.abs(waypoints[i].x - waypoints[i - 1].x) / gridSize;
+      const dr = Math.abs(waypoints[i].y - waypoints[i - 1].y) / gridSize;
+      cost += Math.max(Math.round(dc), Math.round(dr)) * 5;
+    }
+    return { distance: cost, cost };
+  });
+
+  // TokenDocument#move takes either a single waypoint object (the stepper's
+  // one-cell move) or an array of them (the path rail) — accept both.
+  token.document.move = jest.fn(async (waypoints) => {
+    const list = Array.isArray(waypoints) ? waypoints : [waypoints];
+    const end = stopAt ?? list.at(-1) ?? { x: token.x, y: token.y };
+    token.document.x = end.x;
+    token.document.y = end.y;
+    return true;
+  });
+
+  return token;
+}
+
 export function makeCombatant(opts = {}) {
   const {
     id = autoId('combatant'),

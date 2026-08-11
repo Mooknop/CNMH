@@ -18,7 +18,7 @@ import path from 'path';
 import { diffShapes } from './__fixtures__/relay/shape.js';
 import { RELAY } from './syncKeys.js';
 
-import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
+import { initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm } from './movement.js';
 import { initEncounter, updateActorMap } from './encounter.js';
 import { initCharacterSync } from './characterSync.js';
 import { initMinionSync, cacheMinions, _resetMinionCache } from './minionSync.js';
@@ -38,7 +38,7 @@ import { initPositions, pushPositions } from './positions.js';
 import { initActorFeed } from './actorFeed.js';
 import {
   installFoundryGlobals, makeActor, makeToken, makeCombat, makeCombatant,
-  makeGame, makeChatMessage,
+  makeGame, makeChatMessage, equipV14Movement,
   makeNpcStrike, makeSpellcastingEntry, makeSpellItem, makeAbilityItem,
 } from './test/foundryMock.js';
 
@@ -134,6 +134,20 @@ const RECIPES = {
     const send = movementWorld();
     await handleMoveConfirm('Pellias', { destination: { col: 6, row: 5 }, moveType: 'step', ts: 42 });
     return grab(send, RELAY.MOVEDONE);
+  },
+
+  // Path rail (#1736 S1) — recorded on the v14 pipeline, which is where it
+  // lives: findMovementPath → constrainMovementPath → measureMovementPath.
+  [RELAY.MOVEPLANNED]: async () => {
+    const send = movementWorld();
+    global.game.release = { generation: 14 };
+    equipV14Movement(global.canvas.tokens.get('tok-pellias'));
+    await handleMovePlan('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 6 }],
+      moveType: 'stride',
+      ts: 999,
+    });
+    return grab(send, RELAY.MOVEPLANNED);
   },
 
   [RELAY.ROSTER]: () => {

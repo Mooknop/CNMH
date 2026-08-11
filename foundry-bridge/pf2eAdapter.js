@@ -894,6 +894,196 @@ export async function resolveMovedPosition(
   return { x: target.x, y: target.y };
 }
 
+// --- Multi-waypoint path rail (#1736 S1) --------------------------------------
+//
+// The plan → execute movement rail. Three functions, one convention:
+//
+//   * every pixel point in and out is a CREATURE CENTRE, matching the sibling
+//     movement adapters (measureMoveCost / hasWallCollision) — the collision and
+//     measurement backends want centres, not the cell corner that TokenDocument
+//     x/y actually stores. Each function translates centre → top-left itself
+//     before touching a Foundry API, and back again on the way out.
+//   * `waypointCenters` NEVER includes the token's own position. Core's path
+//     APIs want the origin as waypoint 0, so these prepend it; `planTokenPath`
+//     likewise strips it back off the returned route.
+//
+// v14 is where this rail actually lives: TokenDocument#move executes a whole
+// multi-waypoint path, Token#constrainMovementPath clips it at walls, and
+// TokenDocument#measureMovementPath is the ONLY terrain-aware measurement (v14
+// difficult terrain is Region-driven, which canvas.grid.measurePath — pure
+// geometry — cannot see). Every method is capability-detected on top of the
+// generation gate so a build that moves or renames one degrades to the v13-era
+// segment-by-segment behaviour instead of throwing: the stepper's own
+// primitives, which are always available.
+
+// The centre-of-footprint offset for a token, in pixels.
+function tokenCenterOffset(token) {
+  const gridSize = getGridSize();
+  const { width, height } = getTokenDimensions(token);
+  return { offX: (width * gridSize) / 2, offY: (height * gridSize) / 2 };
+}
+
+// The token's CURRENT centre, or an explicit override (the confirm flow must
+// measure from where the token stood BEFORE the move — token.x/y already read
+// as the landing by then).
+function tokenCenter(token, override) {
+  if (override) return { x: Number(override.x), y: Number(override.y) };
+  const { offX, offY } = tokenCenterOffset(token);
+  const doc = token.document;
+  const x = Number(token.x ?? doc?.x ?? 0);
+  const y = Number(token.y ?? doc?.y ?? 0);
+  return { x: x + offX, y: y + offY };
+}
+
+// A TokenFindMovementPathJob is deliberately not a plain promise: it exposes a
+// `promise` for the async search and (once resolved, or for a trivial path) a
+// synchronous `result`. Accept all three shapes — job.result, job.promise, or a
+// thenable/array job — so a signature tweak doesn't break the rail.
+// https://foundryvtt.com/api/v14/classes/foundry.canvas.placeables.Token.html
+async function settleMovementPathJob(job) {
+  if (Array.isArray(job)) return job;
+  if (Array.isArray(job?.result)) return job.result;
+  if (typeof job?.promise?.then === 'function') return job.promise;
+  if (typeof job?.then === 'function') return job;
+  return null;
+}
+
+// Resolve the legal route a token would actually walk through `waypointCenters`.
+// Returns { path, clipped } — path in centres, EXCLUDING the origin, ending at
+// the last cell the token can legally reach; clipped = a wall/constraint stopped
+// it short of the final requested waypoint.
+//
+// v14: Token#findMovementPath routes between the waypoints (it does NOT avoid
+// walls — core offers no A*; it constrains), then Token#constrainMovementPath
+// clips the result and reports whether it had to.
+// https://foundryvtt.com/api/v14/classes/foundry.canvas.placeables.Token.html
+//
+// Degraded path (generation < 14, or either method missing): walk the requested
+// waypoints in order and stop at the first segment a wall blocks — the same
+// center-to-center collision test the 5-ft stepper has always used.
+export async function planTokenPath(token, waypointCenters, { origin } = {}) {
+  const requested = (waypointCenters ?? []).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
+  if (!requested.length) return { path: [], clipped: false };
+
+  const start = tokenCenter(token, origin);
+  const { offX, offY } = tokenCenterOffset(token);
+  const toCorner  = (p) => ({ x: p.x - offX, y: p.y - offY });
+  const toCentre  = (p) => ({ x: Number(p.x) + offX, y: Number(p.y) + offY });
+  const generation = game.release?.generation ?? 13;
+
+  if (generation >= 14 && typeof token?.findMovementPath === 'function') {
+    const corners = [start, ...requested].map(toCorner);
+    let clipped = false;
+    let path = await settleMovementPathJob(token.findMovementPath(corners));
+
+    if (Array.isArray(path) && path.length) {
+      if (typeof token.constrainMovementPath === 'function') {
+        const constrained = token.constrainMovementPath(path);
+        // [constrainedPath, wasConstrained] — tolerate a build that returns the
+        // bare array by falling back to the array itself.
+        if (Array.isArray(constrained?.[0])) {
+          clipped = Boolean(constrained[1]);
+          path = constrained[0];
+        } else if (Array.isArray(constrained)) {
+          path = constrained;
+        }
+      }
+      // findMovementPath may itself return a PARTIAL path (it is allowed to give
+      // up before the last waypoint) — that reads as clipped too.
+      const legs = path.slice(1).map(toCentre);
+      const end  = legs.at(-1) ?? start;
+      const want = requested.at(-1);
+      if (Math.abs(end.x - want.x) > 0.5 || Math.abs(end.y - want.y) > 0.5) clipped = true;
+      return { path: legs, clipped };
+    }
+    // A pathfinder that produced nothing is not a reason to strand the player:
+    // fall through to the collision walk below.
+  }
+
+  const path = [];
+  let from = start;
+  for (const point of requested) {
+    if (hasWallCollision(from.x, from.y, point.x, point.y)) {
+      return { path, clipped: true };
+    }
+    path.push(point);
+    from = point;
+  }
+  return { path, clipped: false };
+}
+
+// Terrain-aware cost, in scene distance units (feet), of walking
+// `waypointCenters` from the token's position. Callers snap to 5.
+//
+// v14: TokenDocument#measureMovementPath is the terrain-aware measurement —
+// canvas.grid.measurePath (what measureMoveCost uses) is pure geometry and
+// cannot see v14's Region-driven difficult terrain, which is the whole point of
+// planning a route instead of probing a cell.
+// https://foundryvtt.com/api/v14/classes/foundry.documents.TokenDocument.html
+// Degraded path: sum measureMoveCost per segment — diagonal rule intact, Region
+// terrain lost.
+export async function measureTokenPathCost(token, waypointCenters, { origin } = {}) {
+  const points = (waypointCenters ?? []).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
+  if (!points.length) return 0;
+
+  const start = tokenCenter(token, origin);
+  const { offX, offY } = tokenCenterOffset(token);
+  const generation = game.release?.generation ?? 13;
+  const doc = token?.document;
+
+  if (generation >= 14 && typeof doc?.measureMovementPath === 'function') {
+    const corners = [start, ...points].map((p) => ({ x: p.x - offX, y: p.y - offY }));
+    const result = await doc.measureMovementPath(corners);
+    // GridMeasurePathResult: `cost` is the terrain-aware total, `distance` the
+    // raw geometry. Prefer cost; fall back through distance to the segment sum.
+    const cost = result?.cost;
+    if (Number.isFinite(cost)) return cost;
+    if (Number.isFinite(result?.distance)) return result.distance;
+  }
+
+  let total = 0;
+  let from = start;
+  for (const point of points) {
+    total += measureMoveCost(from.x, from.y, point.x, point.y);
+    from = point;
+  }
+  return total;
+}
+
+// Execute a whole multi-waypoint move. Resolves with WHERE THE TOKEN ACTUALLY
+// LANDED (a centre) — a v14 move may legally stop short, and the app charges
+// actions off the real landing.
+//
+// v14: one TokenDocument#move over the whole waypoint array — a single animated
+// stride with native legality, tagged like every other bridge write so the
+// module's own hooks skip the echo. resolveMovedPosition() then handles the two
+// field-verified pipeline gotchas (see moveToken).
+// https://foundryvtt.com/api/v14/classes/foundry.documents.TokenDocument.html
+// Degraded path: sequential moveToken() calls, one per waypoint — visibly
+// steppier, but the same landing.
+export async function moveTokenPath(token, waypointCenters) {
+  const points = (waypointCenters ?? []).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
+  if (!points.length) return tokenCenter(token);
+
+  const { offX, offY } = tokenCenterOffset(token);
+  const corners = points.map((p) => ({ x: p.x - offX, y: p.y - offY }));
+  const doc = token.document;
+  const generation = game.release?.generation ?? 13;
+
+  if (generation >= 14 && typeof doc?.move === 'function') {
+    const prev = { x: Number(token.x ?? doc.x ?? 0), y: Number(token.y ?? doc.y ?? 0) };
+    await doc.move(corners, { [BRIDGE_SOURCE_FLAG]: 'app' });
+    const landed = await resolveMovedPosition(doc, corners.at(-1), prev);
+    return { x: landed.x + offX, y: landed.y + offY };
+  }
+
+  let landed = corners[0];
+  for (const corner of corners) {
+    landed = (await moveToken(token, corner.x, corner.y)) ?? corner;
+  }
+  return { x: landed.x + offX, y: landed.y + offY };
+}
+
 // Create a token for an actor on the active scene at a pixel position (#362).
 // Builds the token from the actor's prototype token (so it inherits art/size/
 // vision), then places it. Tagged with BRIDGE_SOURCE_FLAG for consistency with
