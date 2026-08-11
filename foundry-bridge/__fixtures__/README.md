@@ -4,8 +4,25 @@ Captured Foundry/PF2e document JSON used by the **adapter contract tests**
 (`pf2eAdapter.test.js`). Each version directory holds the document shapes the
 adapter reads from a live world running that Foundry generation:
 
-- `v13/` — Foundry **v13** + PF2e **v6.x** (current `compatibility.verified`).
-- `v14/` — Foundry **v14** target. Placeholder until re-exported (see below).
+- `v13/` — Foundry **v13** + PF2e **v6.x**.
+- `v14/` — Foundry **14.365** + PF2e **8.4.0** (exported from the live world
+  2026-08-10, then curated — see below).
+
+## Curation convention
+
+Fixtures carry each version's **shape** with **canonical values**: the raw
+export is trimmed to the documents/fields the adapter reads, and the values
+the contract tests assert (hp 32/48/5, hero points 2, focus 1/2, speed 30,
+frightened 2 + off-guard, combat round 2 turn 1, token at 500,300) are
+grafted in so the same assertions run against every version. Synthetic ids
+(`tok-pellias`, `cbt-goblin`) are part of that contract. Fields that only
+exist in *prepared* (runtime-derived) data but that the adapter reads off
+live documents — PC `hp.max`, `dying/wounded/doomed`, `movement.speeds` —
+are curated in deliberately; the raw v14 export stores none of them. The
+v14 files keep the new structural fields the export surfaced
+(`system.value.isValued` on conditions, combatant `type`/`system`/`groups`,
+token `_movementHistory`/`_regions`/`depth`/`level`/`shape`) so a future
+shape drift diffs loudly.
 
 ## What these are
 

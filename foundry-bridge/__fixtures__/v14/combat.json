@@ -1,0 +1,68 @@
+{
+  "_id": "J2EtzrtoJcDh8wXq",
+  "id": "J2EtzrtoJcDh8wXq",
+  "type": "base",
+  "system": {},
+  "scene": null,
+  "groups": [],
+  "active": true,
+  "started": true,
+  "round": 2,
+  "turn": 1,
+  "sort": 0,
+  "flags": {},
+  "name": "",
+  "combatants": [
+    {
+      "_id": "cbt-pellias",
+      "id": "cbt-pellias",
+      "type": "base",
+      "system": {},
+      "name": "Pellias",
+      "actorId": "MVvMwyyIRSnYQDwm",
+      "tokenId": "tok-pellias",
+      "sceneId": "g76YMfCiDi5JlWrK",
+      "img": null,
+      "initiative": 18,
+      "defeated": false,
+      "hidden": false,
+      "group": null,
+      "roundJoined": 1,
+      "flags": {
+        "pf2e": {
+          "initiativeStatistic": null,
+          "overridePriority": { "18": null },
+          "roundOfLastTurn": 2,
+          "roundOfLastTurnEnd": 1
+        }
+      },
+      "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+    },
+    {
+      "_id": "cbt-goblin",
+      "id": "cbt-goblin",
+      "type": "base",
+      "system": {},
+      "name": "Goblin Warrior",
+      "actorId": "npc-goblin-1",
+      "tokenId": "tok-goblin",
+      "sceneId": "g76YMfCiDi5JlWrK",
+      "img": null,
+      "initiative": 22,
+      "defeated": false,
+      "hidden": false,
+      "group": null,
+      "roundJoined": 1,
+      "flags": {
+        "pf2e": {
+          "initiativeStatistic": null,
+          "overridePriority": { "22": null },
+          "roundOfLastTurn": 2,
+          "roundOfLastTurnEnd": 2
+        }
+      },
+      "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+    }
+  ],
+  "_stats": { "coreVersion": "14.365", "systemId": "pf2e", "systemVersion": "8.4.0" }
+}
