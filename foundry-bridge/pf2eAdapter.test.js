@@ -26,6 +26,7 @@ import {
   isEffectItem, getEffectItemActor, getEffects,
   getBestiaryInfo,
   rollFormula, _resetCanvasFallbackWarnings,
+  createMeasuredTemplate,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
@@ -786,5 +787,88 @@ describe('v14 namespace hardening', () => {
     } finally {
       warn.mockRestore();
     }
+  });
+});
+
+// Spell-area outlines (#1573 B4) — v14 removed MeasuredTemplate; the adapter
+// switches to Scene Regions on generation >= 14 (same switch point as moveToken).
+describe('createMeasuredTemplate v14 Region switch', () => {
+  // 100px grid squares worth 5 ft each → 20 ft radius = 400 px.
+  const templateScene = ({ sceneId = 'scene-1', created = [{ id: 'made-1' }] } = {}) => {
+    const createEmbeddedDocuments = jest.fn().mockResolvedValue(created);
+    global.canvas = {
+      scene: { id: sceneId, grid: { size: 100, distance: 5 }, createEmbeddedDocuments },
+    };
+    return createEmbeddedDocuments;
+  };
+
+  test('generation 13 keeps the MeasuredTemplate write byte-identical', async () => {
+    const create = templateScene();
+    const id = await createMeasuredTemplate({
+      shape: 'burst', feet: 20, x: 500, y: 300, sceneId: 'scene-1', fillColor: '#ff6400',
+    });
+    expect(create).toHaveBeenCalledWith(
+      'MeasuredTemplate',
+      [{ t: 'circle', x: 500, y: 300, distance: 20, direction: 0, fillColor: '#ff6400' }],
+      { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+    expect(id).toBe('made-1');
+  });
+
+  test('generation 14 creates a Region circle in canvas pixels, visible to everyone', async () => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    const id = await createMeasuredTemplate({
+      shape: 'burst', feet: 20, x: 500, y: 300, sceneId: 'scene-1',
+    });
+    expect(create).toHaveBeenCalledWith(
+      'Region',
+      [expect.objectContaining({
+        // 20 ft / 5 ft-per-square * 100 px-per-square = 400 px radius.
+        shapes: [{ type: 'circle', x: 500, y: 300, radius: 400 }],
+        visibility: 2, // CONST.REGION_VISIBILITY.ALWAYS — template parity
+      })],
+      { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+    expect(create).not.toHaveBeenCalledWith('MeasuredTemplate', expect.anything(), expect.anything());
+    expect(id).toBe('made-1');
+  });
+
+  test('generation 14 honours CONST.REGION_VISIBILITY when the build exposes it', async () => {
+    global.game.release = { generation: 14 };
+    global.CONST = { REGION_VISIBILITY: { ALWAYS: 2 } };
+    const create = templateScene();
+    try {
+      await createMeasuredTemplate({ shape: 'emanation', feet: 30, x: 0, y: 0 });
+    } finally {
+      delete global.CONST;
+    }
+    expect(create.mock.calls[0][1][0].visibility).toBe(2);
+    // 30 ft / 5 * 100 = 600 px.
+    expect(create.mock.calls[0][1][0].shapes[0].radius).toBe(600);
+  });
+
+  test('generation 14 maps fillColor onto the Region color field, omitted when blank', async () => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    await createMeasuredTemplate({ shape: 'burst', feet: 10, x: 1, y: 2, fillColor: '#ff6400' });
+    await createMeasuredTemplate({ shape: 'burst', feet: 10, x: 1, y: 2 });
+    expect(create.mock.calls[0][1][0].color).toBe('#ff6400');
+    expect(create.mock.calls[1][1][0]).not.toHaveProperty('color');
+  });
+
+  test.each([13, 14])('generation %i: scene mismatch and bad inputs return null', async (generation) => {
+    global.game.release = { generation };
+    const create = templateScene({ sceneId: 'scene-2' });
+    expect(await createMeasuredTemplate({
+      shape: 'burst', feet: 20, x: 1, y: 2, sceneId: 'scene-1',
+    })).toBeNull();
+
+    const create2 = templateScene(); // matching scene again
+    expect(await createMeasuredTemplate({ shape: 'cone', feet: 20, x: 1, y: 2 })).toBeNull();
+    expect(await createMeasuredTemplate({ shape: 'burst', feet: 0, x: 1, y: 2 })).toBeNull();
+    expect(await createMeasuredTemplate({ shape: 'burst', feet: 20, x: NaN, y: 2 })).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+    expect(create2).not.toHaveBeenCalled();
   });
 });

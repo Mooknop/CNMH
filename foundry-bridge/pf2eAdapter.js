@@ -1243,9 +1243,18 @@ export function pingCanvasPoint(x, y, { sceneId = '' } = {}) {
 // Scene-guarded like the ping. Returns the created template's id (so a later
 // cleanup rail can remove it) or null when nothing was drawn.
 //
-// v14 MIGRATION: MeasuredTemplateDocument's schema (t/x/y/distance/direction/
-// fillColor) is core and stable v11→v14; `t: 'circle'` is CONST.MEASURED_
-// TEMPLATE_TYPES.CIRCLE. Re-verify if v14 renames the embedded collection.
+// [v14-MIGRATION resolved]: v14 REMOVED the MeasuredTemplate document type —
+// area outlines are Scene Regions now (RegionDocument, embedded collection
+// 'Region'; https://foundryvtt.com/api/classes/foundry.documents.RegionDocument.html).
+// Same switch-point pattern as moveToken: generation >= 14 creates a Region,
+// v13 keeps the MeasuredTemplate write byte-identical. Two schema deltas the
+// Region path must absorb:
+//   1. UNITS — MeasuredTemplate.distance is scene units (feet); Region shapes
+//      are canvas PIXELS: radiusPx = feet / scene.grid.distance * scene.grid.size.
+//   2. VISIBILITY — Regions default to layer-gated visibility (GM-only in
+//      practice); CONST.REGION_VISIBILITY.ALWAYS (2) restores template parity
+//      so every player sees the outline.
+// fillColor maps to the Region's `color` ColorField.
 export async function createMeasuredTemplate({
   shape, feet, x, y, sceneId = '', fillColor = '',
 } = {}) {
@@ -1255,6 +1264,22 @@ export async function createMeasuredTemplate({
   if (shape !== 'burst' && shape !== 'emanation') return null;
   const scene = canvas.scene;
   if (typeof scene?.createEmbeddedDocuments !== 'function') return null;
+
+  const generation = game.release?.generation ?? 13;
+  if (generation >= 14) {
+    // Region circle shapes are in canvas pixel coordinates, not scene units.
+    const gridDistance = Number(scene.grid?.distance) || 5;
+    const gridSize = Number(scene.grid?.size) || 100;
+    const radius = (Number(feet) / gridDistance) * gridSize;
+    const created = await scene.createEmbeddedDocuments('Region', [{
+      name: `Spell Area (${Number(feet)} ft)`,
+      shapes: [{ type: 'circle', x, y, radius }],
+      visibility: globalThis.CONST?.REGION_VISIBILITY?.ALWAYS ?? 2,
+      ...(fillColor ? { color: fillColor } : {}),
+    }], { [BRIDGE_SOURCE_FLAG]: 'app' });
+    const doc = Array.isArray(created) ? created[0] : created;
+    return doc?.id ?? null;
+  }
 
   const created = await scene.createEmbeddedDocuments('MeasuredTemplate', [{
     t: 'circle',
