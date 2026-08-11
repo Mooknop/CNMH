@@ -305,7 +305,12 @@ async function resolveEffectSource(ref) {
     const items = game.items?.contents ?? (Array.isArray(game.items) ? game.items : []);
     return items.find((i) => i.slug === slug) ?? null;
   }
-  return fromUuid(ref);
+  // v14 MIGRATION (resolved): fromUuid is namespaced as foundry.utils.fromUuid
+  // (https://foundryvtt.com/api/v14/functions/foundry.utils.fromUuid.html) —
+  // read it namespace-first with the bare v13 global as fallback, mirroring
+  // the foundry.dice.Roll pattern in rollFormula.
+  const fromUuidFn = globalThis.foundry?.utils?.fromUuid ?? fromUuid;
+  return fromUuidFn(ref);
 }
 
 // Apply a PF2e effect item to an actor by ref (UUID or slug: form — see
@@ -560,13 +565,20 @@ export function getChatMessageSpeakerActorId(messageId) {
 // v14 MIGRATION (dice half resolved, #1574): Roll reads through the namespaced
 // foundry.dice.Roll when present — the only exposure once v14 retires the
 // deprecated global — with the bare global as the v13 fallback.
-// ChatMessage.getSpeaker keeps the global read; re-verify it on the v14-era
-// release (likely foundry.documents namespace).
+// v14 MIGRATION (speaker half resolved): the v13 ChatMessage global resolves to
+// the CONFIGURED document class, so prefer CONFIG.ChatMessage.documentClass
+// (keeps system/module subclass behavior), then the namespaced base class
+// foundry.documents.ChatMessage — which carries static getSpeaker in v14
+// (https://foundryvtt.com/api/v14/classes/foundry.documents.ChatMessage.html) —
+// then the bare v13 global.
 export async function rollFormula(formula, { actor = null, flavor = '' } = {}) {
   const RollCls = globalThis.foundry?.dice?.Roll ?? Roll;
   if (typeof formula !== 'string' || !formula.trim() || !RollCls.validate(formula)) return null;
   const roll = await new RollCls(formula).evaluate();
-  const speaker = actor ? ChatMessage.getSpeaker({ actor }) : ChatMessage.getSpeaker();
+  const ChatMessageCls = globalThis.CONFIG?.ChatMessage?.documentClass
+    ?? globalThis.foundry?.documents?.ChatMessage
+    ?? ChatMessage;
+  const speaker = actor ? ChatMessageCls.getSpeaker({ actor }) : ChatMessageCls.getSpeaker();
   await roll.toMessage({ speaker, flavor }, { rollMode: 'publicroll' });
   return { total: roll.total ?? null, faces: keptFaces(roll) };
 }
@@ -936,12 +948,38 @@ export function findOpenAdjacentCell(ownerToken) {
 // Movement cost in scene distance units (feet) between two pixel points,
 // honoring the scene's diagonal rule (PF2e's alternating 5/10 when configured).
 // v12/v13: measurePath takes an array of {x,y} waypoints and returns { distance }.
+// v14 MIGRATION (verified): BaseGrid#measurePath survives with the same
+// waypoints → { distance } contract
+// (https://foundryvtt.com/api/v14/classes/foundry.grid.BaseGrid.html).
+// Guarded anyway: every move measurement flows through here, so if the surface
+// ever moves we degrade to a plain Chebyshev estimate (5 ft diagonals, no
+// alternating rule, no terrain cost) instead of throwing — movement keeps
+// working, just without diagonal/terrain fidelity. Warns once per session.
+let _warnedNoMeasurePath = false;
+// Test hook (mirrors animations.js _resetSequencerWarning): reset the
+// warn-once flags for the degraded canvas fallbacks.
+export function _resetCanvasFallbackWarnings() {
+  _warnedNoMeasurePath = false;
+  _warnedNoCollisionBackend = false;
+}
 export function measureMoveCost(fromX, fromY, toX, toY) {
-  const path = canvas.grid.measurePath([
-    { x: fromX, y: fromY },
-    { x: toX,   y: toY },
-  ]);
-  return path.distance;
+  const grid = canvas?.grid;
+  if (typeof grid?.measurePath === 'function') {
+    const distance = grid.measurePath([
+      { x: fromX, y: fromY },
+      { x: toX,   y: toY },
+    ])?.distance;
+    if (Number.isFinite(distance)) return distance;
+  }
+  if (!_warnedNoMeasurePath) {
+    _warnedNoMeasurePath = true;
+    console.warn('CNMH Bridge | canvas.grid.measurePath unavailable — falling back to straight Chebyshev distance (no diagonal rule / terrain cost)');
+  }
+  const gridSize = getGridSize();
+  const feetPerSquare = canvas?.scene?.grid?.distance ?? 5;
+  const dc = Math.abs(toX - fromX) / gridSize;
+  const dr = Math.abs(toY - fromY) / gridSize;
+  return Math.max(Math.round(dc), Math.round(dr)) * feetPerSquare;
 }
 
 // All player-character actors on this world (hasPlayerOwner = true, type =
@@ -1065,10 +1103,27 @@ export function setDoorState(wall, ds) {
 // True if a wall blocks movement between two pixel points.
 // v12/v13: canvas.walls.checkCollision was removed; collision goes through the
 // move polygon backend. mode:'any' returns a boolean.
+// v14 MIGRATION (verified): CONFIG.Canvas.polygonBackends.move remains the
+// sanctioned collision path (ClockwiseSweepPolygon.testCollision, static, with
+// mode 'any' → boolean — https://foundryvtt.com/api/v14/classes/foundry.canvas.geometry.ClockwiseSweepPolygon.html).
+// Guarded anyway: this deep chain feeds movement probing AND minion placement,
+// so if any link moves we fail OPEN (report "no collision") rather than throw —
+// players keep moving and minions keep spawning, just without wall awareness.
+// That trade-off is deliberate: a missed wall is a table nuisance the GM can
+// police; a thrown probe kills the whole movement rail. Warns once per session.
+let _warnedNoCollisionBackend = false;
 export function hasWallCollision(fromX, fromY, toX, toY) {
+  const backend = globalThis.CONFIG?.Canvas?.polygonBackends?.move;
+  if (typeof backend?.testCollision !== 'function') {
+    if (!_warnedNoCollisionBackend) {
+      _warnedNoCollisionBackend = true;
+      console.warn('CNMH Bridge | CONFIG.Canvas.polygonBackends.move.testCollision unavailable — movement/placement probes proceed without wall awareness');
+    }
+    return false;
+  }
   const origin      = { x: fromX, y: fromY };
   const destination = { x: toX,   y: toY };
-  return CONFIG.Canvas.polygonBackends.move.testCollision(origin, destination, {
+  return backend.testCollision(origin, destination, {
     type: 'move',
     mode: 'any',
   });

@@ -7,6 +7,20 @@
     "minimum": "13",
     "verified": "13"
   },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "sequencer",
+        "type": "module",
+        "reason": "Plays the app's battle-FX catalog (spell/strike animations via JB2A assets); without it the bridge disables animations with a single warning."
+      },
+      {
+        "id": "dice-so-nice",
+        "type": "module",
+        "reason": "3D dice for app-requested rolls, including per-character signature dice sets; without it rolls resolve in chat only."
+      }
+    ]
+  },
   "esmodules": ["bridge.js"],
   "manifest": "https://github.com/Mooknop/CNMH/releases/latest/download/module.json",
   "download": "https://github.com/Mooknop/CNMH/releases/download/v0.1.0/cnmh-bridge.zip",
