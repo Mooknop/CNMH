@@ -307,8 +307,17 @@ export function makeToken(opts = {}) {
     id = autoId('token'),
     x = 0, y = 0, width = 1, height = 1,
     actor = null,
-    // Foundry CONST.TOKEN_DISPOSITIONS: FRIENDLY = 1, NEUTRAL = 0, HOSTILE = -1.
+    // Foundry CONST.TOKEN_DISPOSITIONS: FRIENDLY = 1, NEUTRAL = 0, HOSTILE = -1,
+    // SECRET = -2.
     disposition = 0,
+    // The GM's eye toggle (TokenDocument#hidden) — the pathpreview filter and
+    // the snapshot capture both read it (#1744 WS-1).
+    hidden = false,
+    // TokenDocument#name, carried on the pathpreview payload as ghost identity.
+    name = null,
+    // The Scene the token is embedded in (TokenDocument#parent). Omit for a
+    // token on whatever scene the canvas is showing.
+    scene = null,
     // isFlanking: PF2e TokenPF2e method. Pass a boolean to set a fixed return
     // value, or a function to control per-call. Defaults to false (not flanking).
     isFlanking = false,
@@ -321,10 +330,19 @@ export function makeToken(opts = {}) {
       typeof isFlanking === 'function' ? isFlanking : () => isFlanking
     ),
     document: {
-      width, height, disposition,
+      width, height, disposition, hidden,
+      ...(name !== null ? { name } : {}),
+      ...(scene !== null ? { parent: scene } : {}),
       update: jest.fn().mockResolvedValue(undefined),
     },
   };
+}
+
+// A Scene document, for the cross-scene grid cases (#1744 WS-1): a token's own
+// scene owns its grid, which is NOT necessarily the active canvas's.
+export function makeScene(opts = {}) {
+  const { id = autoId('scene'), gridSize = 100, gridDistance = 5 } = opts;
+  return { id, grid: { size: gridSize, distance: gridDistance } };
 }
 
 // Fit a token with the v14 movement-pipeline surfaces the path rail uses
@@ -553,7 +571,8 @@ export function makeCanvas(opts = {}) {
   tokens.get = (id) => (tokens.placeables || []).find((t) => t.id === id) ?? null;
   return {
     scene: {
-      grid: { size: gridSize },
+      id: opts.sceneId ?? 'scene-1',
+      grid: { size: gridSize, distance: opts.gridDistance ?? 5 },
       createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
     },
     grid: { size: gridSize, measurePath },

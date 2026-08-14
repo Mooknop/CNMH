@@ -81,9 +81,30 @@ import {
 import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
+let _onMoveDone = null;
 
 export function initMovement(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
+}
+
+// Move-completion seam (#1744 WS-2). Anything that wants to react to "a mover
+// finished moving" registers here rather than being imported by this module —
+// the snapshot rail's post-move broadcast is the first user, wired in bridge.js,
+// and movement.js stays unaware of it. The listener is fired AFTER movedone is
+// on the wire (the app's own reply must never wait on a capture) and its
+// failures are swallowed: a broken listener must not break movement.
+export function setMoveDoneListener(fn) {
+  _onMoveDone = typeof fn === 'function' ? fn : null;
+}
+
+function notifyMoveDone(charId) {
+  if (!_onMoveDone) return;
+  try {
+    Promise.resolve(_onMoveDone(charId)).catch((err) =>
+      console.error('CNMH Bridge | move-done listener failed:', err));
+  } catch (err) {
+    console.error('CNMH Bridge | move-done listener failed:', err);
+  }
 }
 
 // PF2e movement is always in 5ft increments; measurePath can return IEEE noise
@@ -299,6 +320,7 @@ async function confirmWaypointMove(charId, token, value) {
     reqTs: value?.ts ?? null,
     nextOpts,
   });
+  notifyMoveDone(charId);
 }
 
 // Called by bridge.js when cnmh_moveconfirm_<charId> arrives.
@@ -351,6 +373,7 @@ export async function handleMoveConfirm(charId, value) {
     reqTs: value?.ts ?? null,
     nextOpts,
   });
+  notifyMoveDone(charId);
 }
 
 // Probe the 8 cells adjacent to the token's current cell. Each candidate is a

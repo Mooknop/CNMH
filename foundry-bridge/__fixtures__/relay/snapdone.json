@@ -22,6 +22,8 @@
       "y2": 566.6666666666666
     },
     "gridSize": 100,
+    "moverId": null,
+    "trigger": "request",
     "ts": 1700000000000
   }
 }

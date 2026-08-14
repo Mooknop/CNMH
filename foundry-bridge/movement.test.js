@@ -2,7 +2,8 @@
 // Geometry logic lives here; raw canvas/actor reads go through the adapter.
 
 import {
-  initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm, resolveToken,
+  initMovement, setMoveDoneListener, handleMoveRequest, handleMovePlan, handleMoveConfirm,
+  resolveToken,
 } from './movement.js';
 import { updateActorMap } from './encounter.js';
 import {
@@ -617,5 +618,69 @@ describe('enemy movement', () => {
     global.canvas.tokens.placeables = [pcToken, decoy];
 
     expect(resolveToken('Pellias')).toBe(pcToken);
+  });
+});
+
+// The move-completion seam (#1744 WS-2) — how the snapshot rail learns that a
+// mover finished moving without either module importing the other.
+describe('move-done listener seam', () => {
+  afterEach(() => { setMoveDoneListener(null); });
+
+  test('fires with the mover id after a stepper move, once movedone is on the wire', async () => {
+    const seen = [];
+    setMoveDoneListener((charId) => {
+      // The reply must already have been sent — a capture never delays it.
+      seen.push([charId, send.mock.calls.filter((c) => c[1] === 'movedone').length]);
+    });
+    setupPellias();
+    await handleMoveConfirm('Pellias', { destination: { col: 6, row: 5 }, ts: 1 });
+
+    expect(seen).toEqual([['Pellias', 1]]);
+  });
+
+  test('fires for the waypoint (path-rail) branch too', async () => {
+    const listener = jest.fn();
+    setMoveDoneListener(listener);
+    const { token } = setupPellias();
+    equipV14Movement(token);
+    await handleMoveConfirm('Pellias', {
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }], ts: 2,
+    });
+
+    expect(listener).toHaveBeenCalledWith('Pellias');
+  });
+
+  test('a move that never resolves a token notifies nothing', async () => {
+    const listener = jest.fn();
+    setMoveDoneListener(listener);
+    setupPellias();
+    await handleMoveConfirm('Nobody', { destination: { col: 6, row: 5 }, ts: 3 });
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  test('a throwing listener cannot break movement', async () => {
+    setMoveDoneListener(() => { throw new Error('capture exploded'); });
+    setupPellias();
+    await expect(
+      handleMoveConfirm('Pellias', { destination: { col: 6, row: 5 }, ts: 4 })
+    ).resolves.toBeUndefined();
+    expect(send.mock.calls.filter((c) => c[1] === 'movedone')).toHaveLength(1);
+  });
+
+  test('a rejected async listener is swallowed, not left unhandled', async () => {
+    setMoveDoneListener(() => Promise.reject(new Error('upload failed')));
+    setupPellias();
+    await handleMoveConfirm('Pellias', { destination: { col: 6, row: 5 }, ts: 5 });
+    await Promise.resolve();
+    expect(send.mock.calls.filter((c) => c[1] === 'movedone')).toHaveLength(1);
+  });
+
+  test('clearing the listener stops the notifications', async () => {
+    const listener = jest.fn();
+    setMoveDoneListener(listener);
+    setMoveDoneListener(null);
+    setupPellias();
+    await handleMoveConfirm('Pellias', { destination: { col: 6, row: 5 }, ts: 6 });
+    expect(listener).not.toHaveBeenCalled();
   });
 });

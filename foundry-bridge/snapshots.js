@@ -2,9 +2,9 @@
 // placement: players have no Foundry client, so the GM canvas is captured,
 // uploaded, and served back to them as a plain image URL.
 //
-//   App → bridge:  cnmh_snapreq_global  = { id, ts }
+//   App → bridge:  cnmh_snapreq_global  = { id, ts, moverId?, radiusFeet? }
 //   Bridge → app:  cnmh_snapdone_global = { id, ok, url?, capture?, worldRect?,
-//                                           gridSize?, ts }
+//                                           gridSize?, moverId, trigger, ts }
 //     url       — stable app-relative /api/images/… (the SAME secret-gated,
 //                 content-addressed R2 pipeline as bestiary tokens, filed under
 //                 the 'Scene Snapshots' catalog folder; captures are never
@@ -15,6 +15,16 @@
 //                 back to world coordinates
 //     worldRect — {x1,y1,x2,y2} viewport in world coords (matrix-less fallback)
 //     gridSize  — px per grid square, for world→cell math
+//
+// MOVER-CENTERED captures (#1744 WS-2, epic OQ-1/OQ-5): a `snapreq` naming a
+// `moverId` is answered with a capture of the WORLD RECT around that token
+// (`radiusFeet` in every direction, defaulting to 1.5× its Speed) instead of the
+// GM's screen view — so the destination a player wants to tap is in frame no
+// matter where the GM is looking. The same capture is BROADCAST once after every
+// `movedone`, so the map a player taps is never more than one move stale. The
+// geometry fields keep their exact meaning (they describe the captured rect), so
+// the app's existing inverse tap math needs no change. A `snapreq` WITHOUT a
+// moverId is the legacy GM-view capture, unchanged.
 //
 // The IMAGE never rides the relay: the session DO drops frames over 64KB and
 // synced keys persist to localStorage — only metadata and the URL travel.
@@ -39,8 +49,18 @@
 //     `templateId` comes back so a later cleanup rail can remove it.
 
 import { RELAY } from './syncKeys.js';
-import { captureSceneSnapshot, pingCanvasPoint, createMeasuredTemplate } from './pf2eAdapter.js';
+import {
+  captureSceneSnapshot, getSpeed, moverCaptureRect, pingCanvasPoint, createMeasuredTemplate,
+} from './pf2eAdapter.js';
+import { resolveToken } from './movement.js';
 import { uploadImageBytes } from './tokenImages.js';
+
+// How far a mover-centered capture reaches when the request doesn't say: 1.5×
+// the mover's Speed in every direction (epic #1744, OQ-5 ruling) — a full
+// Stride plus half again, so a two-action move stays in frame. Falls back to a
+// plain 30 ft radius for a token whose actor reports no Speed at all.
+export const MOVER_RADIUS_SPEED_FACTOR = 1.5;
+export const MOVER_RADIUS_FALLBACK_FEET = 30;
 
 let _sendUpdate = null;
 
@@ -49,14 +69,75 @@ export function initSnapshots(sendUpdateFn) {
 }
 
 // Called by bridge.js when cnmh_snapreq_global arrives.
+//
+// `moverId` (optional) switches the capture to the mover-centered world rect;
+// it resolves through the SAME id spaces as every movement key (PC charId,
+// minion `<ownerCharId>-<role>`, combat entryId). An unresolvable moverId falls
+// back to the legacy GM-view capture rather than nacking — the player still gets
+// a map, just the GM's one.
 export async function handleSnapshotRequest(value) {
   const id = value?.id;
   if (!id) return;
+
+  const moverId = value?.moverId ? String(value.moverId) : null;
+  const rect = moverId ? rectForMover(moverId, value?.radiusFeet) : null;
+  await deliver({
+    id,
+    moverId: rect ? moverId : null,
+    trigger: 'request',
+    worldRect: rect,
+  });
+}
+
+// One broadcast mover-centered capture per completed move (#1744 WS-2, OQ-1
+// ruling): the bridge pushes it unprompted so N viewing clients cost ONE
+// capture instead of N private snapreqs. Wired to movement.js's move-done seam
+// in bridge.js, so this module and the movement rail stay independent.
+export async function pushMoverSnapshot(moverId) {
+  if (!moverId || !_sendUpdate) return;
+  const rect = rectForMover(moverId);
+  // No rect = the mover isn't on the rendered scene (or has no token any more).
+  // A broadcast nobody asked for is not worth a nack.
+  if (!rect) return;
+  await deliver({
+    id: `snapmove-${moverId}-${Date.now()}`,
+    moverId,
+    trigger: 'movedone',
+    worldRect: rect,
+  });
+}
+
+// The world rect for a mover, or null when it can't be built (unknown id, token
+// on another scene, no canvas dimensions).
+function rectForMover(moverId, radiusFeet) {
+  try {
+    const token = resolveToken(moverId);
+    if (!token) return null;
+    const requested = Number(radiusFeet);
+    const feet = requested > 0 ? requested : defaultRadiusFeet(token);
+    return moverCaptureRect(token, feet);
+  } catch (err) {
+    console.error('CNMH Bridge | mover capture rect failed:', err);
+    return null;
+  }
+}
+
+function defaultRadiusFeet(token) {
+  const speed = Number(getSpeed(token.actor));
+  return speed > 0 ? speed * MOVER_RADIUS_SPEED_FACTOR : MOVER_RADIUS_FALLBACK_FEET;
+}
+
+// capture → R2 upload → snapdone ack. One path for every trigger, so a
+// broadcast capture and a requested one are indistinguishable to the app apart
+// from the `trigger` / `moverId` fields.
+async function deliver({ id, moverId, trigger, worldRect }) {
   const ack = (payload) =>
-    _sendUpdate?.('global', RELAY.SNAPDONE, { id, ...payload, ts: Date.now() });
+    _sendUpdate?.('global', RELAY.SNAPDONE, {
+      id, ...payload, moverId, trigger, ts: Date.now(),
+    });
 
   try {
-    const snap = captureSceneSnapshot();
+    const snap = captureSceneSnapshot(worldRect ? { worldRect } : undefined);
     const blob = snap ? dataUrlToBlob(snap.dataUrl) : null;
     const url = blob
       ? await uploadImageBytes(blob, `snapshot-${snap.capture.sceneId || 'scene'}`, {
