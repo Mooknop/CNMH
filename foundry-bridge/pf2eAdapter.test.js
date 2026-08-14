@@ -27,9 +27,11 @@ import {
   getBestiaryInfo,
   rollFormula, _resetCanvasFallbackWarnings,
   createMeasuredTemplate,
+  getGridDistance, getTokenScene, getSceneGridSize, isTokenHidden, getTokenName,
+  pixelsToGrid, getCanvasBoundsRect, moverCaptureRect,
 } from './pf2eAdapter.js';
 import {
-  hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
+  hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken, makeScene,
   makeCombat, makeCombatant, makeEffectItem, equipV14Movement,
 } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
@@ -1049,5 +1051,107 @@ describe('createMeasuredTemplate v14 Region switch', () => {
     expect(await createMeasuredTemplate({ shape: 'burst', feet: 20, x: NaN, y: 2 })).toBeNull();
     expect(create).not.toHaveBeenCalled();
     expect(create2).not.toHaveBeenCalled();
+  });
+});
+
+// Per-token scene + identity reads (#1744 WS-1). Movement hooks fire for every
+// TokenDocument in the world, so "the scene" is a property of the token, not of
+// the canvas.
+describe('token scene + identity accessors', () => {
+  test('a token embedded in another scene reports THAT scene and its grid', () => {
+    const scene = makeScene({ id: 'scene-dungeon', gridSize: 50, gridDistance: 10 });
+    const token = makeToken({ id: 'tok-a', scene });
+    expect(getTokenScene(token)).toBe(scene);
+    expect(getSceneGridSize(getTokenScene(token))).toBe(50);
+  });
+
+  test('a scene-less token falls back to the active canvas scene and grid', () => {
+    const token = makeToken({ id: 'tok-b' });
+    expect(getTokenScene(token)).toBe(global.canvas.scene);
+    expect(getSceneGridSize(null)).toBe(getGridSize());
+  });
+
+  test('a TokenDocument is accepted directly, via its embedding parent', () => {
+    const scene = makeScene({ id: 'scene-cave' });
+    const token = makeToken({ id: 'tok-c', scene });
+    expect(getTokenScene(token.document)).toBe(scene);
+  });
+
+  test('hidden + name read off either a placed token or its document', () => {
+    const token = makeToken({ id: 'tok-d', hidden: true, name: 'Ambusher' });
+    expect(isTokenHidden(token)).toBe(true);
+    expect(isTokenHidden(token.document)).toBe(true);
+    expect(getTokenName(token)).toBe('Ambusher');
+    expect(isTokenHidden(makeToken({ id: 'tok-e' }))).toBe(false);
+  });
+
+  test('a nameless token falls back to its actor\'s name, then to empty', () => {
+    const actor = makeActor({ id: 'actor-x', name: 'Goblin Warrior' });
+    const token = makeToken({ id: 'tok-f', actor });
+    expect(getTokenName(token)).toBe('Goblin Warrior');
+    expect(getTokenName(null)).toBe('');
+  });
+
+  test('grid distance defaults to 5 ft per square', () => {
+    expect(getGridDistance()).toBe(5);
+    global.canvas.scene.grid.distance = 10;
+    expect(getGridDistance()).toBe(10);
+    global.canvas.scene.grid.distance = 0;
+    expect(getGridDistance()).toBe(5);
+  });
+
+  test('pixelsToGrid takes an explicit grid size for off-canvas scenes', () => {
+    expect(pixelsToGrid(250, 250)).toEqual({ col: 3, row: 3 });   // active 100px grid
+    expect(pixelsToGrid(250, 250, 50)).toEqual({ col: 5, row: 5 });
+    expect(pixelsToGrid(250, 250, 0)).toEqual({ col: 3, row: 3 }); // bad size → active
+  });
+});
+
+// The mover-centered capture rect (#1744 WS-2, epic OQ-5).
+describe('moverCaptureRect', () => {
+  test('centres on the token and extends radiusFeet in every direction', () => {
+    const token = makeToken({ id: 'tok-a', x: 1000, y: 1000 });
+    global.canvas.dimensions = { width: 4000, height: 3000 };
+    // 1x1 token on a 100px/5ft grid → centre (1050,1050); 25 ft = 500 px.
+    expect(moverCaptureRect(token, 25)).toEqual({ x1: 550, y1: 550, x2: 1550, y2: 1550 });
+  });
+
+  test('a Large token centres on its whole footprint', () => {
+    const token = makeToken({ id: 'tok-big', x: 1000, y: 1000, width: 2, height: 2 });
+    global.canvas.dimensions = { width: 4000, height: 3000 };
+    expect(moverCaptureRect(token, 25)).toEqual({ x1: 600, y1: 600, x2: 1600, y2: 1600 });
+  });
+
+  test('clamps to canvas.dimensions.rect, padding band included', () => {
+    const token = makeToken({ id: 'tok-a', x: 0, y: 0 });
+    global.canvas.dimensions = { rect: { x: -200, y: -200, width: 4400, height: 3400 } };
+    expect(moverCaptureRect(token, 25)).toEqual({ x1: -200, y1: -200, x2: 550, y2: 550 });
+  });
+
+  test('does not clamp when the canvas reports no dimensions at all', () => {
+    const token = makeToken({ id: 'tok-a', x: 0, y: 0 });
+    delete global.canvas.dimensions;
+    expect(getCanvasBoundsRect()).toBeNull();
+    expect(moverCaptureRect(token, 25)).toEqual({ x1: -450, y1: -450, x2: 550, y2: 550 });
+  });
+
+  test('a token on a scene the canvas is not showing has no capturable rect', () => {
+    const token = makeToken({ id: 'tok-a', x: 1000, y: 1000, scene: makeScene({ id: 'elsewhere' }) });
+    expect(moverCaptureRect(token, 25)).toBeNull();
+  });
+
+  test('a non-positive radius, a missing token, or a non-finite position → null', () => {
+    const token = makeToken({ id: 'tok-a', x: 1000, y: 1000 });
+    expect(moverCaptureRect(token, 0)).toBeNull();
+    expect(moverCaptureRect(null, 25)).toBeNull();
+    token.x = undefined;
+    token.document.x = 'over-there';
+    expect(moverCaptureRect(token, 25)).toBeNull();
+  });
+
+  test('a rect clamped out of existence returns null rather than an empty capture', () => {
+    const token = makeToken({ id: 'tok-a', x: 5000, y: 5000 });
+    global.canvas.dimensions = { width: 1000, height: 1000 };
+    expect(moverCaptureRect(token, 25)).toBeNull();
   });
 });

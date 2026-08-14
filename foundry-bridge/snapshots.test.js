@@ -3,10 +3,23 @@
 
 import {
   initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace,
+  pushMoverSnapshot,
 } from './snapshots.js';
+import { updateActorMap } from './encounter.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
+import { makeActor, makeToken } from './test/foundryMock.js';
+// The invariant WS-2 exists to protect: the app's tap math must keep inverting
+// a mover-centered capture with no change at all. Imported from src/ on purpose
+// — a copy of the formula here would pin nothing.
+import { worldPointFromTap, cellFromWorldPoint } from '../src/utils/snapshotGeometry.js';
 
 const WT = { a: 1.5, b: 0, c: 0, d: 1.5, tx: -100, ty: -50 };
+
+// A PIXI ObservablePoint stand-in: the adapter retargets the stage through
+// set() and restores through it too.
+function makePoint(x, y) {
+  return { x, y, set(nx, ny) { this.x = nx; this.y = ny; } };
+}
 
 // A GM canvas world: 1200x800 viewport at 1.5x zoom, one hidden token, the
 // GM-only layers visible. The extract mock snapshots layer visibility AT
@@ -21,6 +34,7 @@ function fakeCanvasWorld({ hiddenToken = null } = {}) {
   global.document = { createElement: jest.fn(() => out) };
 
   const visibleAtRender = {};
+  const stageAtRender = {};
   const renderer = {
     screen: { width: 1200, height: 800 },
     render: jest.fn(),
@@ -30,6 +44,10 @@ function fakeCanvasWorld({ hiddenToken = null } = {}) {
         visibleAtRender.drawings = global.canvas.drawings.visible;
         visibleAtRender.hud = global.canvas.controls.hud.visible;
         visibleAtRender.hiddenToken = hiddenToken ? hiddenToken.visible : null;
+        const { position, scale, pivot } = global.canvas.stage;
+        Object.assign(stageAtRender, {
+          px: position.x, py: position.y, sx: scale.x, sy: scale.y, vx: pivot.x, vy: pivot.y,
+        });
         return { fake: 'extracted' };
       }),
     },
@@ -42,6 +60,11 @@ function fakeCanvasWorld({ hiddenToken = null } = {}) {
     app: { renderer, view: {} },
     stage: {
       worldTransform: WT,
+      // Foundry pans by moving pivot AND position together; the mover-centered
+      // capture retargets all three and must put them back.
+      position: makePoint(640, 400),
+      scale: makePoint(1.5, 1.5),
+      pivot: makePoint(2000, 1500),
       toLocal: ({ x, y }) => ({ x: (x - WT.tx) / WT.a, y: (y - WT.ty) / WT.d }),
     },
     scene: { id: 'scene-1', grid: { size: 100 } },
@@ -60,7 +83,7 @@ function fakeCanvasWorld({ hiddenToken = null } = {}) {
     ok: true,
     json: async () => ({ id: 'tok_abc.webp', url: '/api/images/tok_abc.webp' }),
   }));
-  return { out, visibleAtRender, renderer };
+  return { out, visibleAtRender, stageAtRender, renderer };
 }
 
 let send;
@@ -241,6 +264,218 @@ describe('handleSnapshotRequest', () => {
 
     expect(visibleAtRender.hiddenTile).toBe(false);
     expect(hiddenTile.visible).toBe(true);
+  });
+});
+
+// Mover-centered captures (#1744 WS-2, epic OQ-1/OQ-5): the world rect around
+// the moving token, not the GM's screen view.
+describe('mover-centered capture', () => {
+  // A mapped PC with a 1x1 token whose top-left is (x, y) on a 100px grid, so
+  // its centre is (x + 50, y + 50). Default Speed 25 → a 1.5× radius of 37.5 ft
+  // → 750 world px.
+  const moverWorld = ({ x = 1000, y = 1000, speed = 25 } = {}) => {
+    const world = fakeCanvasWorld();
+    const token = makeToken({ id: 'tok-pellias', x, y, disposition: 1 });
+    const actor = makeActor({ id: 'actor-pellias', name: 'Pellias', speed, tokens: [token] });
+    token.actor = actor;
+    global.game.actors.set('actor-pellias', actor);
+    global.canvas.tokens.placeables = [token];
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    return { ...world, token };
+  };
+
+  afterEach(() => { updateActorMap({}); });
+
+  test('captures the rect around the mover: 1.5× Speed in every direction', async () => {
+    const { out } = moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m1', moverId: 'Pellias', ts: 1 });
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ id: 'snap-m1', ok: true, moverId: 'Pellias', trigger: 'request' });
+    // centre (1050,1050) ± 750 → a 1500×1500 world rect, downscaled to 900px.
+    expect(value.worldRect).toEqual({ x1: 300, y1: 300, x2: 1800, y2: 1800 });
+    expect(value.capture).toMatchObject({
+      a: 0.6, b: 0, c: 0, d: 0.6, tx: -180, ty: -180,
+      screenW: 900, screenH: 900, sceneId: 'scene-1',
+    });
+    expect(value.gridSize).toBe(100);
+    expect(out.width).toBe(900);
+    expect(out.height).toBe(900);
+  });
+
+  // THE contract of this slice: worldRect / capture / gridSize keep their exact
+  // existing semantics, so the app's untouched inverse math round-trips.
+  test('a world point survives the round trip through the app\'s own tap math', async () => {
+    moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m2', moverId: 'Pellias', ts: 1 });
+    const snap = lastAck().value;
+
+    // Forward (world → normalized) by hand, inverse via the app's helper.
+    const forward = ({ x, y }) => ({
+      nx: (snap.capture.a * x + snap.capture.tx) / snap.capture.screenW,
+      ny: (snap.capture.d * y + snap.capture.ty) / snap.capture.screenH,
+    });
+
+    for (const world of [{ x: 1050, y: 1050 }, { x: 300, y: 300 }, { x: 1425, y: 700 }]) {
+      const { nx, ny } = forward(world);
+      expect(nx).toBeGreaterThanOrEqual(0);
+      expect(nx).toBeLessThanOrEqual(1);
+      const back = worldPointFromTap(snap, nx, ny);
+      expect(back.x).toBeCloseTo(world.x, 6);
+      expect(back.y).toBeCloseTo(world.y, 6);
+    }
+
+    // …and the mover's own centre resolves to the cell the token stands in.
+    const centre = forward({ x: 1050, y: 1050 });
+    expect(cellFromWorldPoint(worldPointFromTap(snap, centre.nx, centre.ny), snap.gridSize))
+      .toEqual({ col: 10, row: 10 });
+  });
+
+  test('the matrix and the worldRect fallback agree to the pixel', async () => {
+    moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m3', moverId: 'Pellias', ts: 1 });
+    const snap = lastAck().value;
+
+    // worldPointFromTap prefers the matrix; drop it to force the rect path.
+    for (const [nx, ny] of [[0, 0], [0.25, 0.75], [1, 1]]) {
+      const viaMatrix = worldPointFromTap(snap, nx, ny);
+      const viaRect = worldPointFromTap({ worldRect: snap.worldRect }, nx, ny);
+      expect(viaRect.x).toBeCloseTo(viaMatrix.x, 6);
+      expect(viaRect.y).toBeCloseTo(viaMatrix.y, 6);
+    }
+  });
+
+  test('an explicit radiusFeet overrides the Speed default', async () => {
+    moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m4', moverId: 'Pellias', radiusFeet: 10, ts: 1 });
+    // 10 ft = 200 px around (1050,1050); 400px < maxWidth so no downscale.
+    expect(lastAck().value.worldRect).toEqual({ x1: 850, y1: 850, x2: 1250, y2: 1250 });
+    expect(lastAck().value.capture).toMatchObject({ a: 1, tx: -850, screenW: 400, screenH: 400 });
+  });
+
+  test('a speedless actor falls back to a fixed radius instead of a zero-size rect', async () => {
+    moverWorld({ speed: 0 });
+    await handleSnapshotRequest({ id: 'snap-m5', moverId: 'Pellias', ts: 1 });
+    // 30 ft → 600 px around (1050,1050).
+    expect(lastAck().value.worldRect).toEqual({ x1: 450, y1: 450, x2: 1650, y2: 1650 });
+  });
+
+  test('the rect is clamped to the canvas bounds at the edge of the map', async () => {
+    moverWorld({ x: 0, y: 0 });
+    await handleSnapshotRequest({ id: 'snap-m6', moverId: 'Pellias', ts: 1 });
+    // centre (50,50) ± 750 clamps to the canvas origin; 800px needs no downscale.
+    expect(lastAck().value.worldRect).toEqual({ x1: 0, y1: 0, x2: 800, y2: 800 });
+    expect(lastAck().value.capture).toMatchObject({ a: 1, tx: -0, ty: -0 });
+  });
+
+  test('the GM stage is retargeted for the render and restored afterwards', async () => {
+    const { stageAtRender } = moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m7', moverId: 'Pellias', ts: 1 });
+
+    // At render time the stage framed the mover's rect…
+    expect(stageAtRender).toEqual({ px: -180, py: -180, sx: 0.6, sy: 0.6, vx: 0, vy: 0 });
+    // …and the GM's own view is exactly as it was.
+    expect(global.canvas.stage.position).toMatchObject({ x: 640, y: 400 });
+    expect(global.canvas.stage.scale).toMatchObject({ x: 1.5, y: 1.5 });
+    expect(global.canvas.stage.pivot).toMatchObject({ x: 2000, y: 1500 });
+  });
+
+  test('the stage is restored even when the render throws', async () => {
+    const { renderer } = moverWorld();
+    renderer.render.mockImplementation(() => { throw new Error('gpu gone'); });
+    await handleSnapshotRequest({ id: 'snap-m8', moverId: 'Pellias', ts: 1 });
+
+    expect(lastAck().value).toMatchObject({ id: 'snap-m8', ok: false });
+    expect(global.canvas.stage.position).toMatchObject({ x: 640, y: 400 });
+    expect(global.canvas.stage.scale).toMatchObject({ x: 1.5, y: 1.5 });
+  });
+
+  // The viewport path can fall back to drawing the raw view; the world-rect path
+  // cannot — that image would be the GM's screen under a matrix claiming it is
+  // the mover's neighbourhood.
+  test('a build with no extractable renderer nacks instead of returning the GM view', async () => {
+    moverWorld();
+    delete global.canvas.app.renderer.extract;
+    delete global.PIXI;
+    await handleSnapshotRequest({ id: 'snap-m9', moverId: 'Pellias', ts: 1 });
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(lastAck().value).toMatchObject({ id: 'snap-m9', ok: false, moverId: 'Pellias' });
+  });
+
+  test('an unresolvable moverId falls back to the legacy GM-view capture', async () => {
+    moverWorld();
+    await handleSnapshotRequest({ id: 'snap-m10', moverId: 'Nobody', ts: 1 });
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ id: 'snap-m10', ok: true, moverId: null, trigger: 'request' });
+    // The GM viewport rect, i.e. exactly what a legacy request would have got.
+    expect(value.capture).toMatchObject({ screenW: 1200, screenH: 800 });
+  });
+
+  test('a legacy request carries the additive fields as null / "request"', async () => {
+    fakeCanvasWorld();
+    await handleSnapshotRequest({ id: 'snap-m11', ts: 1 });
+    expect(lastAck().value).toMatchObject({ moverId: null, trigger: 'request' });
+  });
+
+  test('hidden tokens are excluded from a mover-centered capture too', async () => {
+    const hidden = { visible: true, document: { hidden: true } };
+    const { visibleAtRender } = moverWorld();
+    global.canvas.tokens.placeables.push(hidden);
+    await handleSnapshotRequest({ id: 'snap-m12', moverId: 'Pellias', ts: 1 });
+
+    expect(visibleAtRender.notes).toBe(false);
+    expect(hidden.visible).toBe(true);
+  });
+});
+
+// The post-move broadcast (#1744 WS-2, OQ-1 ruling): one capture for the whole
+// table instead of N private snapreqs.
+describe('pushMoverSnapshot', () => {
+  afterEach(() => { updateActorMap({}); });
+
+  const moverWorld = () => {
+    const world = fakeCanvasWorld();
+    const token = makeToken({ id: 'tok-pellias', x: 1000, y: 1000, disposition: 1 });
+    const actor = makeActor({ id: 'actor-pellias', name: 'Pellias', tokens: [token] });
+    token.actor = actor;
+    global.game.actors.set('actor-pellias', actor);
+    global.canvas.tokens.placeables = [token];
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    return world;
+  };
+
+  test('broadcasts one mover-centered capture tagged trigger "movedone"', async () => {
+    moverWorld();
+    await pushMoverSnapshot('Pellias');
+
+    const { characterId, value } = lastAck();
+    expect(characterId).toBe('global');
+    expect(value).toMatchObject({ ok: true, moverId: 'Pellias', trigger: 'movedone' });
+    expect(value.worldRect).toEqual({ x1: 300, y1: 300, x2: 1800, y2: 1800 });
+  });
+
+  // snapdone is correlated by `id` app-side, so a broadcast must never collide
+  // with a request a client is waiting on.
+  test('the broadcast carries its own id, distinct from any pending request', async () => {
+    moverWorld();
+    await pushMoverSnapshot('Pellias');
+    expect(typeof lastAck().value.id).toBe('string');
+    expect(lastAck().value.id).toMatch(/^snapmove-Pellias-/);
+  });
+
+  test('an unknown mover pushes nothing at all — a broadcast nobody asked for', async () => {
+    moverWorld();
+    await pushMoverSnapshot('Nobody');
+    expect(send).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('no mover id is a no-op', async () => {
+    moverWorld();
+    await pushMoverSnapshot(null);
+    expect(send).not.toHaveBeenCalled();
   });
 });
 

@@ -77,6 +77,38 @@ data path moves, **only the adapter changes.**
   token from the app and confirm the same key arrives with `source: 'app'`.
   (The app-side consumer that draws the ghost is a later slice — verify the
   relay writes, not a visual.)
+  As of #1744 WS-1 there are TWO keys: `cnmh_pathpreview_global` (filtered to
+  visible friendly movers) and `cnmh_pathpreviewgm_global` (unfiltered). The
+  smoke pass gains one assertion: drag a **hidden** or hostile token and confirm
+  the write lands on `pathpreviewgm` and **not** on `pathpreview`. Cells are now
+  converted against `getTokenScene(document)`'s grid — `TokenDocument#parent` is
+  the embedding Scene in v14
+  (https://foundryvtt.com/api/v14/classes/foundry.documents.TokenDocument.html);
+  if a build stops exposing it the adapter falls back to `canvas.scene`, i.e.
+  today's single-scene-correct answer. Verify by moving a token on a scene the
+  GM is NOT viewing and checking the emitted `sceneId`.
+- **Mover-centered world-rect capture (#1744 WS-2)** — `captureSceneSnapshot({
+  worldRect })` renders an arbitrary world rect instead of the GM's screen view
+  by retargeting `canvas.stage` (`pivot` → 0,0; `scale` → k; `position` →
+  `-x1·k, -y1·k`) for exactly one synchronous render to an offscreen
+  RenderTexture, restoring all three in a `finally`. The PIXI surfaces involved
+  are the **v14 hotspots** to re-verify:
+  - `Container#position` / `#scale` / `#pivot` are `ObservablePoint`s in PIXI v7
+    and v8 alike; the adapter uses `set()` with a plain-property fallback.
+  - `renderer.render({ container, target })` (v8) vs
+    `renderer.render(stage, { renderTexture })` (v7) — both call shapes are
+    attempted, in that order.
+  - `renderer.extract.canvas(texture)` (v8) vs `renderer.plugins.extract` (v7).
+  If none of that is available the world-rect path returns **null** (→
+  `snapdone ok:false`) rather than falling back to the raw view — a GM-view
+  image under a matrix claiming to be the mover's neighbourhood would send taps
+  to the wrong squares.
+  Smoke-pass items, none of which unit tests can prove without a live canvas:
+  (1) the GM's own view shows **no flicker** during a capture; (2) the returned
+  image really is the mover's neighbourhood, not the GM's viewport;
+  (3) hidden tokens are absent from it; (4) tapping the mover's own square in
+  the app resolves to the cell it is standing on; (5) one broadcast `snapdone`
+  with `trigger: 'movedone'` arrives per completed move, and only one.
 - **Namespaced core classes — dice half resolved (#1574).** `rollFormula` reads
   `foundry.dice.Roll` when present (the only exposure once v14 retires the
   deprecated global) with the bare global as the v13 fallback.
@@ -178,7 +210,8 @@ same-day emergency release:
    reaches the hook listeners' update context), place a spell-area outline from
    the app (`templateplace` → Region branch) and clean it up, roll from the
    dice tower with a DSN appearance override, capture a map snapshot (PIXI v8
-   render path), and fire one Sequencer/JB2A animation. (Evaluate the community
+   render path) AND a mover-centered one (the stage-retarget path — watch for
+   flicker), and fire one Sequencer/JB2A animation. (Evaluate the community
    **Quench** module for in-world automation — confirm its v14 support first.)
 6. **Bump `module.json`** `compatibility.verified` to `"14"` **only after** the
    contract suite passes against the v14 fixtures **and** the smoke pass is clean.

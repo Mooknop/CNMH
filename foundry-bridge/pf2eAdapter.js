@@ -793,6 +793,44 @@ export function getGridSize() {
   return canvas.scene?.grid?.size ?? 100;
 }
 
+// Feet per grid square on the ACTIVE scene (Foundry's `grid.distance`). Used to
+// turn a radius in feet into world pixels; 5 is the PF2e default.
+export function getGridDistance() {
+  return Number(canvas.scene?.grid?.distance) || 5;
+}
+
+// The Scene a token actually lives on — NOT necessarily the one the GM is
+// looking at. Movement hooks fire for every TokenDocument in the world, so a
+// listener that reads `canvas.scene` converts a move on scene B against scene
+// A's grid (#1744 WS-1). A TokenDocument's scene is its embedding parent; a
+// placed Token exposes `.scene`. Falls back to the active scene so a build that
+// stops exposing the parent degrades to today's (single-scene-correct) answer
+// rather than to no preview at all.
+// https://foundryvtt.com/api/v14/classes/foundry.documents.TokenDocument.html
+export function getTokenScene(token) {
+  const doc = token?.document ?? token ?? null;
+  return doc?.parent ?? doc?.scene ?? token?.scene ?? canvas.scene ?? null;
+}
+
+// px per grid square on a specific scene (see getTokenScene).
+export function getSceneGridSize(scene) {
+  return Number(scene?.grid?.size) || getGridSize();
+}
+
+// Whether a token is hidden from players (the GM's eye toggle). The ONLY other
+// place the bridge reads this is captureSceneSnapshot, which excludes hidden
+// tokens from the image for exactly the same reason (#1744 WS-1).
+export function isTokenHidden(token) {
+  const doc = token?.document ?? token ?? null;
+  return !!(doc?.hidden ?? token?.hidden);
+}
+
+// A token's display name (TokenDocument#name, falling back to the actor's).
+export function getTokenName(token) {
+  const doc = token?.document ?? token ?? null;
+  return String(doc?.name ?? token?.name ?? doc?.actor?.name ?? token?.actor?.name ?? '');
+}
+
 // All placed tokens on the current scene (for occupancy / flanking geometry).
 export function getAllTokens() {
   return canvas.tokens?.placeables ?? [];
@@ -816,11 +854,15 @@ export function getTokenDisposition(token) {
 // Pixel → cell. Both sides of the wire speak a cell's TOP-LEFT pixel (what
 // token.x/y stores and gridToPixels yields), so this is the exact inverse of
 // gridToPixels.
-export function pixelsToGrid(x, y) {
-  const gridSize = getGridSize();
+//
+// `gridSize` is optional and defaults to the ACTIVE scene's grid. Pass one
+// explicitly when converting pixels that belong to some other scene — see
+// getTokenScene / getSceneGridSize (#1744 WS-1).
+export function pixelsToGrid(x, y, gridSize = getGridSize()) {
+  const size = Number(gridSize) || getGridSize();
   return {
-    col: Math.round(Number(x) / gridSize),
-    row: Math.round(Number(y) / gridSize),
+    col: Math.round(Number(x) / size),
+    row: Math.round(Number(y) / size),
   };
 }
 
@@ -1433,7 +1475,9 @@ export function hasWallCollision(fromX, fromY, toX, toY) {
 // vs render(stage, {renderTexture})) — the nested try/catch covers both call
 // shapes, but re-verify extract.canvas and stage.worldTransform on the v14
 // build.
-export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68 } = {}) {
+export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68, worldRect = null } = {}) {
+  if (worldRect) return captureWorldRect(worldRect, { maxWidth, quality });
+
   const renderer = canvas.app?.renderer;
   const source = canvas.app?.view;
   if (!renderer && !source) return null;
@@ -1447,41 +1491,11 @@ export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68 } = {}) {
   const ctx = out.getContext('2d');
   if (!ctx) return null;
 
-  const hidden = [];
-  const hide = (node) => {
-    if (!node) return;
-    hidden.push([node, node.visible]);
-    node.visible = false;
-  };
-  try {
-    hide(canvas.notes);
-    hide(canvas.drawings);
-    hide(canvas.controls?.hud);
-    hide(canvas.controls?.rulers);
-    (canvas.tiles?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
-    (canvas.tokens?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
-
-    const extract = renderer?.extract ?? renderer?.plugins?.extract;
-    const RenderTexture = globalThis.PIXI?.RenderTexture;
-    if (extract?.canvas && RenderTexture && canvas.stage) {
-      const texture = RenderTexture.create({ width: screenW, height: screenH, resolution: 1 });
-      try {
-        try {
-          renderer.render({ container: canvas.stage, target: texture, clear: true });
-        } catch {
-          renderer.render(canvas.stage, { renderTexture: texture, clear: true });
-        }
-        ctx.drawImage(extract.canvas(texture), 0, 0, out.width, out.height);
-      } finally {
-        texture.destroy(true);
-      }
-    } else if (source) {
-      ctx.drawImage(source, 0, 0, out.width, out.height);
-    } else {
-      return null;
-    }
-  } finally {
-    for (const [node, visible] of hidden) node.visible = visible;
+  const drawn = withCaptureLayersHidden(() =>
+    renderStageInto(ctx, { texW: screenW, texH: screenH, dw: out.width, dh: out.height }));
+  if (!drawn) {
+    if (!source) return null;
+    withCaptureLayersHidden(() => ctx.drawImage(source, 0, 0, out.width, out.height));
   }
 
   const wt = canvas.stage?.worldTransform;
@@ -1501,6 +1515,206 @@ export function captureSceneSnapshot({ maxWidth = 900, quality = 0.68 } = {}) {
     worldRect: viewportWorldRect(screenW, screenH),
     gridSize: getGridSize(),
   };
+}
+
+// GM-only layers + hidden tiles/tokens are excluded from EVERY capture path;
+// visibility is restored in a finally so a throwing renderer can't leave the
+// GM's canvas mutilated.
+function withCaptureLayersHidden(fn) {
+  const hidden = [];
+  const hide = (node) => {
+    if (!node) return;
+    hidden.push([node, node.visible]);
+    node.visible = false;
+  };
+  try {
+    hide(canvas.notes);
+    hide(canvas.drawings);
+    hide(canvas.controls?.hud);
+    hide(canvas.controls?.rulers);
+    (canvas.tiles?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
+    (canvas.tokens?.placeables ?? []).filter((t) => t.document?.hidden).forEach(hide);
+    return fn();
+  } finally {
+    for (const [node, visible] of hidden) node.visible = visible;
+  }
+}
+
+// Render canvas.stage into an offscreen RenderTexture and blit it into `ctx`.
+// Returns false when this build exposes no extractable renderer, so callers can
+// decide whether a fallback is honest (the viewport path draws the raw view; the
+// world-rect path cannot, and nacks instead).
+//
+// v14 MIGRATION: v14 ships PIXI v8, whose renderer takes render({ container,
+// target }) where v7 took render(stage, { renderTexture }). Both call shapes are
+// attempted; `extract` moved from renderer.plugins.extract (v7) to
+// renderer.extract (v8) and both are probed by the caller of this helper.
+// https://pixijs.download/v8.x/docs/rendering.html
+function renderStageInto(ctx, { texW, texH, dw, dh }) {
+  const renderer = canvas.app?.renderer;
+  const extract = renderer?.extract ?? renderer?.plugins?.extract;
+  const RenderTexture = globalThis.PIXI?.RenderTexture;
+  if (!extract?.canvas || !RenderTexture || !canvas.stage) return false;
+
+  const texture = RenderTexture.create({
+    width: Math.max(1, Math.round(texW)),
+    height: Math.max(1, Math.round(texH)),
+    resolution: 1,
+  });
+  try {
+    try {
+      renderer.render({ container: canvas.stage, target: texture, clear: true });
+    } catch {
+      renderer.render(canvas.stage, { renderTexture: texture, clear: true });
+    }
+    ctx.drawImage(extract.canvas(texture), 0, 0, dw, dh);
+  } finally {
+    texture.destroy(true);
+  }
+  return true;
+}
+
+// --- Mover-centered capture (#1744 WS-2, epic OQ-5) ---------------------------
+//
+// A capture of a WORLD RECT rather than of the GM's screen view: the player
+// asking to move gets the battlefield around THEIR token, not wherever the GM
+// happens to be zoomed.
+//
+// The stage is retargeted for exactly one synchronous render and restored in a
+// finally, so the GM's own view never repaints in the retargeted state (the
+// browser cannot paint between the mutate and the restore — it is one JS turn,
+// and the render goes to an offscreen texture, never to the screen buffer).
+// Foundry pans by moving `stage.pivot` and `stage.position` together, so all
+// three of pivot/position/scale are saved, zeroed, and put back.
+//
+// GEOMETRY INVARIANT: the returned `capture` matrix is computed ANALYTICALLY
+// from the rect and the output size, not read back off `stage.worldTransform` —
+// so `capture`, `worldRect` and `gridSize` keep their exact existing meanings
+// (world → capture-space pixels; the rect the image covers; px per square) and
+// the app's `worldPointFromTap` / `cellFromWorldPoint` invert it unchanged. The
+// two agree to the pixel: worldRect is derived back out of the output size, so a
+// floor()ed edge never leaves the matrix and the rect describing different rects.
+function captureWorldRect(rect, { maxWidth = 900, quality = 0.68 } = {}) {
+  const x1 = Number(rect?.x1);
+  const y1 = Number(rect?.y1);
+  const rectW = Number(rect?.x2) - x1;
+  const rectH = Number(rect?.y2) - y1;
+  if (!Number.isFinite(x1) || !Number.isFinite(y1) || !(rectW > 0) || !(rectH > 0)) return null;
+
+  const stage = canvas.stage;
+  if (!stage?.position || !stage?.scale) return null;
+
+  const scale = Math.min(1, maxWidth / rectW);
+  const outW = Math.max(1, Math.floor(rectW * scale));
+  const outH = Math.max(1, Math.floor(rectH * scale));
+
+  const out = document.createElement('canvas');
+  out.width = outW;
+  out.height = outH;
+  const ctx = out.getContext('2d');
+  if (!ctx) return null;
+
+  const saved = {
+    px: stage.position.x, py: stage.position.y,
+    sx: stage.scale.x, sy: stage.scale.y,
+    vx: stage.pivot?.x ?? 0, vy: stage.pivot?.y ?? 0,
+  };
+  let drawn = false;
+  try {
+    setPoint(stage.pivot, 0, 0);
+    setPoint(stage.scale, scale, scale);
+    setPoint(stage.position, -x1 * scale, -y1 * scale);
+    drawn = withCaptureLayersHidden(() =>
+      renderStageInto(ctx, { texW: outW, texH: outH, dw: outW, dh: outH }));
+  } finally {
+    setPoint(stage.pivot, saved.vx, saved.vy);
+    setPoint(stage.scale, saved.sx, saved.sy);
+    setPoint(stage.position, saved.px, saved.py);
+  }
+  // No extractable renderer: the viewport path's "draw the raw view" fallback
+  // would return the GM's screen under a matrix claiming it is the mover's
+  // neighbourhood. Nack instead — a wrong map is worse than none.
+  if (!drawn) return null;
+
+  return {
+    dataUrl: out.toDataURL('image/webp', quality),
+    capture: {
+      a: scale, b: 0, c: 0, d: scale,
+      tx: -x1 * scale,
+      ty: -y1 * scale,
+      screenW: outW,
+      screenH: outH,
+      sceneId: canvas.scene?.id ?? '',
+    },
+    worldRect: { x1, y1, x2: x1 + outW / scale, y2: y1 + outH / scale },
+    gridSize: getGridSize(),
+  };
+}
+
+// PIXI points are ObservablePoints (set()); a plain-object stand-in still works.
+function setPoint(point, x, y) {
+  if (!point) return;
+  if (typeof point.set === 'function') point.set(x, y);
+  else { point.x = x; point.y = y; }
+}
+
+// The full canvas rect in world coordinates, padding included (tokens can stand
+// in the padding band). `canvas.dimensions.rect` is a PIXI.Rectangle in v11+;
+// `sceneRect` excludes the padding, which would clip a rect legitimately
+// overlapping it. Returns null when no dimensions are known — the caller then
+// simply does not clamp.
+export function getCanvasBoundsRect() {
+  const dims = canvas.dimensions;
+  if (!dims) return null;
+  const r = dims.rect;
+  if (Number.isFinite(Number(r?.width)) && Number(r.width) > 0) {
+    const x = Number(r.x ?? 0);
+    const y = Number(r.y ?? 0);
+    return { x1: x, y1: y, x2: x + Number(r.width), y2: y + Number(r.height) };
+  }
+  const w = Number(dims.width);
+  const h = Number(dims.height);
+  if (!(w > 0) || !(h > 0)) return null;
+  return { x1: 0, y1: 0, x2: w, y2: h };
+}
+
+// The world rect to capture for a mover: `radiusFeet` in every direction from
+// the token's CENTRE, clamped to the canvas bounds. Returns null for a token
+// that isn't on the scene the GM client is rendering — the capture can only
+// ever show the active canvas.
+export function moverCaptureRect(token, radiusFeet) {
+  const feet = Number(radiusFeet);
+  if (!token || !(feet > 0)) return null;
+
+  const scene = getTokenScene(token);
+  const activeId = canvas.scene?.id;
+  if (scene?.id && activeId && scene.id !== activeId) return null;
+
+  const gridSize = getSceneGridSize(scene);
+  const doc = token.document ?? token;
+  const x = Number(token.x ?? doc?.x);
+  const y = Number(token.y ?? doc?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+
+  const { width: tW, height: tH } = getTokenDimensions(token);
+  const cx = x + (tW * gridSize) / 2;
+  const cy = y + (tH * gridSize) / 2;
+  const radiusPx = (feet / getGridDistance()) * gridSize;
+
+  let x1 = cx - radiusPx;
+  let y1 = cy - radiusPx;
+  let x2 = cx + radiusPx;
+  let y2 = cy + radiusPx;
+
+  const bounds = getCanvasBoundsRect();
+  if (bounds) {
+    x1 = Math.max(x1, bounds.x1);
+    y1 = Math.max(y1, bounds.y1);
+    x2 = Math.min(x2, bounds.x2);
+    y2 = Math.min(y2, bounds.y2);
+  }
+  if (!(x2 > x1) || !(y2 > y1)) return null;
+  return { x1, y1, x2, y2 };
 }
 
 // Ping a world point on the GM canvas (#1573 B2) — Foundry's own ping pulse,

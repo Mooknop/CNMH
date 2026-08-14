@@ -89,6 +89,22 @@ function movementWorld() {
   return send;
 }
 
+// The pathpreview world (#1736 S3, #1744 WS-1): the movement world plus one
+// `moveToken` hook fire for the PC token, with its visibility/disposition set
+// so each channel's recipe drives its own audience.
+function pathPreviewWorld({ disposition = 1, hidden = false, name = 'Pellias' } = {}) {
+  const send = movementWorld();
+  _resetPathPreview();
+  initPathPreview(send);
+  const token = global.canvas.tokens.placeables.find((t) => t.id === 'tok-pellias');
+  Object.assign(token.document, { disposition, hidden, name });
+  const { document, movement } = makeTokenMovement(token, {
+    pending: [{ x: 600, y: 500 }, { x: 700, y: 600 }],
+  });
+  global.Hooks.fire('moveToken', document, movement, {}, 'user1');
+  return send;
+}
+
 function combatWorld({ saves } = {}) {
   const goblin = makeActor({ id: 'actor-gob', name: 'Goblin Warrior', saves: saves ?? null });
   const tokG = makeToken({ id: 'tok-gob', actor: goblin });
@@ -526,16 +542,20 @@ const RECIPES = {
   [RELAY.PATHPREVIEW]: () => {
     // Drive the real v14 `moveToken` hook against the mocked world (#1736 S3):
     // a mapped PC striding two cells, so `id` carries a charId and `path`
-    // carries more than one row.
-    const send = movementWorld();
-    _resetPathPreview();
-    initPathPreview(send);
-    const token = global.canvas.tokens.placeables.find((t) => t.id === 'tok-pellias');
-    const { document, movement } = makeTokenMovement(token, {
-      pending: [{ x: 600, y: 500 }, { x: 700, y: 600 }],
-    });
-    global.Hooks.fire('moveToken', document, movement, {}, 'user1');
+    // carries more than one row. FRIENDLY and visible — the only combination
+    // the public channel carries at all (#1744 WS-1).
+    const send = pathPreviewWorld({ disposition: 1 });
     return grab(send, RELAY.PATHPREVIEW);
+  },
+
+  [RELAY.PATHPREVIEWGM]: () => {
+    // The unfiltered twin (#1744 WS-1): same payload shape, driven by a HIDDEN
+    // HOSTILE mover — precisely the emission the public channel drops.
+    const send = pathPreviewWorld({ disposition: -1, hidden: true, name: 'Ambusher' });
+    if (send.mock.calls.some((c) => c[1] === RELAY.PATHPREVIEW)) {
+      throw new Error('a hidden hostile mover reached the PUBLIC pathpreview channel');
+    }
+    return grab(send, RELAY.PATHPREVIEWGM);
   },
 
   [RELAY.ACTORFEED]: () => {

@@ -13,7 +13,9 @@ import { getBridgeSecret, SECRET_SETTING } from './secret.js';
 import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, updateActorMap } from './encounter.js';
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
-import { initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm } from './movement.js';
+import {
+  initMovement, setMoveDoneListener, handleMoveRequest, handleMovePlan, handleMoveConfirm,
+} from './movement.js';
 import { initPathPreview } from './pathPreview.js';
 import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
@@ -33,7 +35,7 @@ import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPoo
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
 import {
-  initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace,
+  initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace, pushMoverSnapshot,
 } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
@@ -129,6 +131,10 @@ Hooks.once('ready', () => {
   initStrikes(sendUpdate);
   initCasts(sendUpdate);
   initSnapshots(sendUpdate);
+  // One broadcast mover-centered capture per completed move (#1744 WS-2): the
+  // movement rail exposes the seam, the snapshot rail fills it, and neither
+  // module imports the other.
+  setMoveDoneListener(pushMoverSnapshot);
   initDiceSets();
   connect();
 });
@@ -410,7 +416,9 @@ function dispatch(msg) {
 
   // Scene snapshot for Ping the Map / template placement (#1573 B1) — capture
   // the GM canvas, upload to R2, ack the URL + capture matrix on
-  // cnmh_snapdone_global. Live-only: never replayed from FULL_STATE.
+  // cnmh_snapdone_global. A request naming a `moverId` gets the world rect
+  // around that mover instead of the GM's view (#1744 WS-2).
+  // Live-only: never replayed from FULL_STATE.
   if (characterId === 'global' && key === RELAY.SNAPREQ) {
     handleSnapshotRequest(value);
     return;
