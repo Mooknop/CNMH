@@ -35,3 +35,15 @@
 
 /* Plan/confirm bar (tap flow, #1736 S2) now lives in the shared
    MoveConfirmBar component (#1736 S4) — see MoveConfirmBar.css. */
+
+/* Below-protocol-floor notice for Stride (#1736 S5) — same dashed-box
+   affordance as DockEnemyPane's .dock-enemy-waiting. */
+.mas-outdated {
+  margin: 0;
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+  text-align: center;
+}

@@ -77,37 +77,60 @@ describe('MoveActionSheet', () => {
     Date.now.mockRestore();
   });
 
-  it('Stride charges 1 action per Speed of accumulated stepping', () => {
-    vi.spyOn(Date, 'now').mockReturnValue(555);
-    let tsDriver, setOpts, setDone;
-    render(
-      <>
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
-        <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
-        <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
-      </>
-    );
+  // #1736 S5: the Stride D-pad fallback is retired — below protocol 14 (or no
+  // hello at all, as here) the sheet shows a compact notice instead of ever
+  // driving a move. Step is unaffected (separate describe block below).
+  describe('Stride outdated-bridge notice (#1736 S5)', () => {
+    it('shows the notice instead of a pad when no bridge hello has arrived', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      render(<MoveActionSheet character={character} moveType="stride" onClose={() => {}} />);
+      expect(screen.getByTestId('mas-outdated-notice')).toHaveTextContent(
+        'Full-speed Stride needs the CNMH Bridge module updated to protocol 14+.'
+      );
+      expect(screen.queryByLabelText('Step east')).toBeNull();
+      expect(screen.queryByLabelText('Confirm move')).toBeNull();
+      Date.now.mockRestore();
+    });
 
-    // First step spends the Stride action; the confirm carries no action cost.
-    stepEast(setOpts, setDone);
-    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
-      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 555,
-    }));
-    expect(tsDriver.turnState.actionsSpent).toBe(1);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
+    it('shows the notice on a below-floor bridge (protocol 13) even once opts arrive', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setHello({ protocol: 13, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({
+        reqTs: 555, origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }], blocked: [], speed: 25,
+      }));
+      expect(screen.getByTestId('mas-outdated-notice')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Step east')).toBeNull();
+      Date.now.mockRestore();
+    });
 
-    // Steps 2–5 stay within the 25ft Speed → still 1 action.
-    for (let i = 0; i < 4; i++) stepEast(setOpts, setDone);
-    expect(tsDriver.turnState.actionsSpent).toBe(1);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('25/25 ft');
+    it('switches to the tap flow once a 14+ hello arrives', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      expect(screen.getByTestId('mas-outdated-notice')).toBeInTheDocument();
 
-    // Step 6 crosses Speed → a 2nd Stride action, distance resets to this step.
-    stepEast(setOpts, setDone);
-    expect(tsDriver.turnState.actionsSpent).toBe(2);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 25 }));
 
-    Date.now.mockRestore();
+      expect(screen.queryByTestId('mas-outdated-notice')).toBeNull();
+      expect(screen.getByLabelText(/Move to 6,5 —/)).toBeInTheDocument();
+      Date.now.mockRestore();
+    });
   });
 
   it('Step spends exactly one action and closes the sheet', () => {
@@ -132,9 +155,13 @@ describe('MoveActionSheet', () => {
     Date.now.mockRestore();
   });
 
-  // SP4 (#1223): the app-derived speed spine backs the pad when Foundry's
-  // moveopts are absent or carry no speed, plus the drift note.
-  describe('derived-speed fallback + parity (SP4 #1223)', () => {
+  // SP4 (#1223): the app-derived speed spine backs the tap flow's grid bands
+  // and confirm-bar action math when Foundry's moveopts are absent or carry
+  // no speed, plus the drift note. Rewritten for #1736 S5 — Stride's stepper
+  // fallback (and the "Stride distance" readout it drove) is gone, so these
+  // now exercise the tap flow (which is the only Stride path left) on a
+  // protocol-14+ hello instead of the old D-pad.
+  describe('derived-speed fallback + parity (SP4 #1223, #1736 S5)', () => {
     const runner = {
       id: 'Runner',
       name: 'Runner',
@@ -142,166 +169,125 @@ describe('MoveActionSheet', () => {
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
     };
 
-    it('shows the derived speed as the Stride budget before moveopts arrive', () => {
-      vi.spyOn(Date, 'now').mockReturnValue(555);
-      render(<MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />);
-      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('0/30 ft');
-      Date.now.mockRestore();
-    });
-
-    it('charges Stride actions against the derived speed when moveopts carry none', () => {
+    it('prices a planned route against the derived speed when moveopts carry none', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
       const shortRunner = { ...runner, id: 'Runner2', speed: 10 };
-      let tsDriver, setOpts, setDone;
+      let setHello, setOpts, setPlanned;
       render(
         <>
-          <TurnDriver charId="Runner2" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
           <SyncDriver skey="cnmh_moveopts_Runner2" onReady={(s) => (setOpts = s)} />
-          <SyncDriver skey="cnmh_movedone_Runner2" onReady={(s) => (setDone = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Runner2" onReady={(s) => (setPlanned = s)} />
           <MoveActionSheet character={shortRunner} moveType="stride" onClose={() => {}} />
         </>
       );
-      // Sandbox-shaped opts: reachable squares but NO speed field.
-      const stepEastNoSpeed = () => {
-        act(() => setOpts({
-          reqTs: 555,
-          origin: { col: 5, row: 5 },
-          reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-          blocked: [],
-        }));
-        fireEvent.click(screen.getByLabelText('Step east'));
-        act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
-      };
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      // Sandbox-shaped opts: origin present but NO speed field.
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [] }));
 
-      // Steps 1-2 fill the derived 10 ft budget → 1 action.
-      stepEastNoSpeed();
-      stepEastNoSpeed();
-      expect(tsDriver.turnState.actionsSpent).toBe(1);
-      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('10/10 ft');
-      // Step 3 crosses it → a 2nd Stride action.
-      stepEastNoSpeed();
-      expect(tsDriver.turnState.actionsSpent).toBe(2);
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      // 15 ft against the derived 10 ft Speed → ceil(15/10) = 2 actions.
+      act(() => setPlanned({
+        reqTs: 555, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 15, clipped: false,
+      }));
+      expect(screen.getByLabelText('Confirm move')).toHaveTextContent('15 ft — 2 actions');
       Date.now.mockRestore();
     });
 
     it('shows the parity note when Foundry speed differs from the derived total', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
-      let setOpts;
+      let setHello, setOpts;
       render(
         <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
           <SyncDriver skey="cnmh_moveopts_Runner" onReady={(s) => (setOpts = s)} />
           <MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />
         </>
       );
-      act(() => setOpts({
-        reqTs: 555,
-        origin: { col: 5, row: 5 },
-        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-        blocked: [],
-        speed: 25,
-      }));
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 25 }));
       expect(screen.getByLabelText('Speed parity note')).toHaveTextContent(
         "Using the sheet's 30 ft; Foundry's actor says 25 ft."
       );
-      // The budget display reads the authoritative (derived) number too.
-      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('0/30 ft');
       Date.now.mockRestore();
     });
 
-    it('charges Stride actions against the derived speed even when Foundry disagrees', () => {
+    it('prices the planned route against the derived speed even when Foundry disagrees', () => {
       // App-authoritative accounting: the Foundry actor doesn't model
       // app-owned gear/feats, so its (higher) speed must NOT stretch the
-      // Stride budget. Derived 10 ft vs Foundry 25 ft → 2 steps = 1 action.
+      // action math. Derived 10 ft vs Foundry 25 ft on a 15 ft route → 2
+      // actions (ceil(15/10)), not the 1 action Foundry's speed would price.
       vi.spyOn(Date, 'now').mockReturnValue(555);
       const shortRunner = { ...runner, id: 'Runner3', speed: 10 };
-      let tsDriver, setOpts, setDone;
+      let setHello, setOpts, setPlanned;
       render(
         <>
-          <TurnDriver charId="Runner3" onReady={(t) => (tsDriver = t)} />
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
           <SyncDriver skey="cnmh_moveopts_Runner3" onReady={(s) => (setOpts = s)} />
-          <SyncDriver skey="cnmh_movedone_Runner3" onReady={(s) => (setDone = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Runner3" onReady={(s) => (setPlanned = s)} />
           <MoveActionSheet character={shortRunner} moveType="stride" onClose={() => {}} />
         </>
       );
-      const stepEastFoundryFast = () => {
-        act(() => setOpts({
-          reqTs: 555,
-          origin: { col: 5, row: 5 },
-          reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-          blocked: [],
-          speed: 25,
-        }));
-        fireEvent.click(screen.getByLabelText('Step east'));
-        act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
-      };
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 25 }));
 
-      stepEastFoundryFast();
-      stepEastFoundryFast();
-      expect(tsDriver.turnState.actionsSpent).toBe(1);
-      expect(screen.getByLabelText('Stride distance')).toHaveTextContent('10/10 ft');
-      // Step 3 crosses the DERIVED 10 ft (well under Foundry's 25) → action 2.
-      stepEastFoundryFast();
-      expect(tsDriver.turnState.actionsSpent).toBe(2);
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      act(() => setPlanned({
+        reqTs: 555, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 15, clipped: false,
+      }));
+      expect(screen.getByLabelText('Confirm move')).toHaveTextContent('15 ft — 2 actions');
       Date.now.mockRestore();
     });
 
     it('no parity note when Foundry and the spine agree', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
-      let setOpts;
+      let setHello, setOpts;
       render(
         <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
           <SyncDriver skey="cnmh_moveopts_Runner" onReady={(s) => (setOpts = s)} />
           <MoveActionSheet character={runner} moveType="stride" onClose={() => {}} />
         </>
       );
-      act(() => setOpts({
-        reqTs: 555,
-        origin: { col: 5, row: 5 },
-        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-        blocked: [],
-        speed: 30,
-      }));
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30 }));
       expect(screen.queryByLabelText('Speed parity note')).toBeNull();
       Date.now.mockRestore();
     });
 
     it('no parity note for a character the spine cannot derive (total 0)', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
-      let setOpts;
+      let setHello, setOpts;
       render(
         <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
           <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
           <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
         </>
       );
-      act(() => setOpts({
-        reqTs: 555,
-        origin: { col: 5, row: 5 },
-        reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-        blocked: [],
-        speed: 25,
-      }));
+      act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 25 }));
       expect(screen.queryByLabelText('Speed parity note')).toBeNull();
       Date.now.mockRestore();
     });
   });
 
-  it('ignores stale option sets from a previous request', () => {
+  it('ignores stale option sets from a previous request (tap flow, protocol 14)', () => {
     vi.spyOn(Date, 'now').mockReturnValue(100);
-    let setOpts;
+    let setHello, setOpts;
     render(
       <>
+        <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
         <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
         <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
       </>
     );
+    act(() => setHello({ protocol: 14, module: '0.0.0-test', ts: 1 }));
     // A stale response (reqTs ≠ the open request's ts) must not open the grid.
     act(() => setOpts({
-      reqTs: 1, origin: { col: 5, row: 5 },
-      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-      blocked: [], speed: 25,
+      reqTs: 1, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 25,
     }));
-    expect(screen.queryByLabelText('Step east')).toBeNull();
+    expect(screen.queryByLabelText(/Move to 6,5 —/)).toBeNull();
     Date.now.mockRestore();
   });
 
@@ -313,7 +299,7 @@ describe('MoveActionSheet', () => {
       act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 10 }));
     };
 
-    it('protocol 13 keeps the stepper unchanged (no confirm bar, D-pad renders)', () => {
+    it('protocol 13 shows the outdated-bridge notice, no D-pad and no confirm bar (#1736 S5)', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
       let setHello, setOpts;
       render(
@@ -328,7 +314,8 @@ describe('MoveActionSheet', () => {
         reqTs: 555, origin: { col: 5, row: 5 },
         reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }], blocked: [], speed: 25,
       }));
-      expect(screen.getByLabelText('Step east')).toBeInTheDocument();
+      expect(screen.getByTestId('mas-outdated-notice')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Step east')).toBeNull();
       expect(screen.queryByLabelText('Confirm move')).toBeNull();
       Date.now.mockRestore();
     });
