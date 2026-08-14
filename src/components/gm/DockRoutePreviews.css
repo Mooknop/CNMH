@@ -1,0 +1,48 @@
+/* Route previews card (#1744 S3/WS-4) — scoped under .dock-console via the
+   shared .dock-console-card rule (DockGmConsole.css); only the row internals
+   live here. */
+
+.dock-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dock-route-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dock-route-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shell-text);
+  overflow-wrap: anywhere;
+}
+
+.dock-route-phase {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-route-row--plan .dock-route-phase {
+  color: var(--gold-light);
+}
+
+.dock-route-row--move .dock-route-phase {
+  color: var(--ember-light);
+}
+
+.dock-route-cells {
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
+  margin-left: auto;
+}

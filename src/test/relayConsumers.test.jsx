@@ -13,6 +13,7 @@ import { useMinions } from '../hooks/useMinions';
 import { useDoors } from '../hooks/useDoors';
 import { useCharacterLiveState } from '../hooks/useCharacterLiveState';
 import { useFoeKit } from '../hooks/useFoeKit';
+import { usePathPreview } from '../hooks/usePathPreview';
 
 beforeEach(() => window.localStorage.clear());
 
@@ -187,6 +188,49 @@ describe('minions', () => {
       max: fixtureHp.max,
       temp: fixtureHp.temp,
     });
+  });
+});
+
+describe('pathpreview (#1744 S3/WS-4)', () => {
+  it('usePathPreview surfaces a friendly mover from the recorded PUBLIC payload', () => {
+    const { result, session } = renderHookWithProviders(() => usePathPreview({ audience: 'player' }));
+    act(() => { session.push('global', RELAY.BRIDGEHELLO, { protocol: 16, module: '0.0.0-test' }); });
+    // The recorded fixture's `ts` is a fixed point in the past — override it
+    // to "now" so the client TTL (which anchors expiry to `ts`, not arrival)
+    // doesn't treat a perfectly valid recorded payload as already stale.
+    act(() => { pushRelayFixture(session, RELAY.PATHPREVIEW, { ts: Date.now() }); });
+
+    expect(result.current.entries).toHaveLength(1);
+    // Typed asserts on the fields the ghost overlay actually reads off the
+    // wire (see the moveopts note above): a bridge-side rename + re-record
+    // fails here, not vacuously on undefined === undefined.
+    const entry = result.current.entries[0];
+    expect(entry.tokenId).toEqual(expect.any(String));
+    expect(entry.name).toEqual(expect.any(String));
+    expect(entry.phase).toMatch(/^(plan|move)$/);
+    expect(entry.origin).toMatchObject({ col: expect.any(Number), row: expect.any(Number) });
+    expect(entry.path.length).toBeGreaterThan(0);
+    expect(entry.path[0]).toMatchObject({ col: expect.any(Number), row: expect.any(Number) });
+  });
+
+  it('usePathPreview({ audience: "gm" }) surfaces the recorded UNFILTERED payload (a hostile mover the public channel would drop)', () => {
+    const { result, session } = renderHookWithProviders(() => usePathPreview({ audience: 'gm' }));
+    act(() => { session.push('global', RELAY.BRIDGEHELLO, { protocol: 16, module: '0.0.0-test' }); });
+    act(() => { pushRelayFixture(session, RELAY.PATHPREVIEWGM, { ts: Date.now() }); });
+
+    expect(result.current.entries).toHaveLength(1);
+    const entry = result.current.entries[0];
+    expect(entry.name).toEqual(expect.any(String));
+    expect(entry.disposition).toEqual(relayFixtures.pathpreviewgm.value.disposition);
+    expect(entry.path.length).toBeGreaterThan(0);
+  });
+
+  it('returns nothing below the map-move protocol floor even with a live recorded payload', () => {
+    const { result, session } = renderHookWithProviders(() => usePathPreview({ audience: 'player' }));
+    act(() => { session.push('global', RELAY.BRIDGEHELLO, { protocol: 15, module: '0.0.0-test' }); });
+    act(() => { pushRelayFixture(session, RELAY.PATHPREVIEW); });
+
+    expect(result.current.entries).toEqual([]);
   });
 });
 

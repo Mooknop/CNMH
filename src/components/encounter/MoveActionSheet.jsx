@@ -17,7 +17,14 @@
 //     grid, toggled per device (OQ-4 ruling). Nothing about the plan/confirm
 //     protocol changes: a map tap resolves to the same {col,row} the grid
 //     would have produced and feeds the identical planMove/handleTap path.
-import React, { useRef, useCallback, useEffect } from 'react';
+//   • Route ghosts (#1744 S3/WS-4) — while map mode is showing, other movers'
+//     in-flight routes (usePathPreview, PUBLIC/player-audience channel only —
+//     this is a player-facing surface) draw as faint dashed ghosts alongside
+//     the viewer's own solid plan, via SnapshotRouteOverlay's `variant`.
+//     Filtered to the captured scene and excludes the viewer's own mover
+//     (their own plan is already drawn from `plannedPath`, not the preview
+//     channel).
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import Modal from '../shared/Modal';
 import MoveGridPicker from './MoveGridPicker';
 import MoveConfirmBar from './MoveConfirmBar';
@@ -30,6 +37,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useDevicePref } from '../../hooks/useDevicePref';
 import { useMoverMapSurface } from '../../hooks/useMoverMapSurface';
+import { usePathPreview } from '../../hooks/usePathPreview';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import {
   actionsForDistance, FULL_MOVE_PROTOCOL, MAP_MOVE_PROTOCOL, MOVE_SURFACE_PREF,
@@ -181,6 +189,27 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
     radiusFeet: knownSpeed ? knownSpeed * 1.5 : undefined,
   });
 
+  // Other movers' route ghosts (#1744 S3/WS-4). PLAYER audience always — this
+  // sheet is mounted on player-facing surfaces (the PC's own Move sheet, and
+  // the GM dock's act-as-player mirror of it), never a GM-exclusive one.
+  // usePathPreview already gates on the protocol floor and the client TTL;
+  // the only filtering left here is surface-local:
+  //   - drop the viewer's own mover (their in-progress plan is already drawn
+  //     from `plannedPath` above, not the preview channel)
+  //   - keep only ghosts on the SAME scene as the captured snapshot — a
+  //     mover-centered capture (WS-2) carries its own `capture.sceneId`,
+  //     exactly like `pathpreview`'s per-token `sceneId` (#1744 WS-1)
+  const { entries: pathPreviewEntries } = usePathPreview({ audience: 'player' });
+  const snapshotSceneId = mapSnapshot?.capture?.sceneId || null;
+  const ghostEntries = useMemo(() => {
+    if (!useMapSurface || !mapSnapshot) return [];
+    return pathPreviewEntries.filter((entry) => {
+      if (entry.id === charId) return false;
+      if (snapshotSceneId && entry.sceneId && entry.sceneId !== snapshotSceneId) return false;
+      return true;
+    });
+  }, [pathPreviewEntries, useMapSurface, mapSnapshot, snapshotSceneId, charId]);
+
   // Tap a cell: first tap (or any re-tap on a non-clipped plan) replaces the
   // plan outright; a tap after a CLIPPED plan chains a waypoint onto it — the
   // same gesture Foundry's own ruler uses for a corner. See MoveGridPicker's
@@ -312,13 +341,25 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
                         src={mapSnapshot.url}
                         onPick={handleMapTap}
                         overlay={(
-                          <SnapshotRouteOverlay
-                            snapshot={mapSnapshot}
-                            origin={pickerOpts.origin}
-                            cells={plannedPath?.path}
-                            destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                            showLattice
-                          />
+                          <>
+                            <SnapshotRouteOverlay
+                              snapshot={mapSnapshot}
+                              origin={pickerOpts.origin}
+                              cells={plannedPath?.path}
+                              destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                              showLattice
+                            />
+                            {ghostEntries.map((ghost) => (
+                              <SnapshotRouteOverlay
+                                key={ghost.tokenId}
+                                snapshot={mapSnapshot}
+                                origin={ghost.origin}
+                                cells={ghost.path}
+                                destination={ghost.path?.length ? ghost.path[ghost.path.length - 1] : null}
+                                variant="ghost"
+                              />
+                            ))}
+                          </>
                         )}
                       />
                       <p className="mas-hint">Tap the map to choose a destination.</p>
