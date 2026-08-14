@@ -22,6 +22,7 @@ import minionactors from '../../foundry-bridge/__fixtures__/relay/minionactors.j
 import minions from '../../foundry-bridge/__fixtures__/relay/minions.json';
 import movedone from '../../foundry-bridge/__fixtures__/relay/movedone.json';
 import moveopts from '../../foundry-bridge/__fixtures__/relay/moveopts.json';
+import moveplanned from '../../foundry-bridge/__fixtures__/relay/moveplanned.json';
 import positions from '../../foundry-bridge/__fixtures__/relay/positions.json';
 import rolldone from '../../foundry-bridge/__fixtures__/relay/rolldone.json';
 import roster from '../../foundry-bridge/__fixtures__/relay/roster.json';
@@ -34,7 +35,7 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 export const relayFixtures = {
   actorfeed, adjacency, castdone, conditions, dmgdone, dooropts, encounter, exploremove,
   flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
-  movedone, moveopts, positions, rolldone, roster, savedone, strikedone,
+  movedone, moveopts, moveplanned, positions, rolldone, roster, savedone, strikedone,
   summonpool,
 };
 

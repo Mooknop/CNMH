@@ -62,6 +62,32 @@ describe('movement chain (moveopts / movedone / nextOpts)', () => {
     expect(result.current.pickerOpts).toMatchObject({ speed: expect.any(Number), reachable: expect.any(Array) });
     expect(session.sent.length).toBe(sentBefore);
   });
+
+  it('useTokenMovement reaches "planned" from the recorded moveplanned payload (#1736)', () => {
+    const { result, session } = renderHookWithProviders(() => useTokenMovement('Pellias'));
+    act(() => result.current.requestMove('stride'));
+    const { ts: optsTs } = session.sent.at(-1).value;
+    act(() => { pushRelayFixture(session, RELAY.MOVEOPTS, { charId: 'Pellias', reqTs: optsTs }); });
+
+    act(() => result.current.planMove([{ col: 8, row: 6 }]));
+    const { ts: planTs } = session.sent.at(-1).value;
+    act(() => { pushRelayFixture(session, RELAY.MOVEPLANNED, { charId: 'Pellias', reqTs: planTs }); });
+
+    expect(result.current.stage).toBe('planned');
+    const planned = result.current.plannedPath;
+    // Typed asserts on the fields the app reads off the wire (see the moveopts
+    // note above): a bridge-side rename + re-record fails here, not vacuously.
+    expect(planned.costFeet).toEqual(expect.any(Number));
+    expect(planned.clipped).toEqual(expect.any(Boolean));
+    expect(planned.path.length).toBeGreaterThan(0);
+    expect(planned.path[0]).toMatchObject({ col: expect.any(Number), row: expect.any(Number) });
+
+    // Confirming forwards the recorded path cells as the moveconfirm waypoints.
+    act(() => result.current.confirmPlannedMove(1));
+    const confirm = session.sent.at(-1);
+    expect(confirm.stateType).toBe(RELAY.MOVECONFIRM);
+    expect(confirm.value.waypoints).toEqual(planned.path);
+  });
 });
 
 describe('encounter', () => {
