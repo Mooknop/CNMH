@@ -5,12 +5,14 @@
 // resolver uses) which mounts the real controller and charges actions exactly as
 // the old TurnTrackerPanel Move UI did:
 //   • Step   — one dedicated 5-ft action, then close. Always the D-pad, every protocol.
-//   • Stride — on a protocol-14+ bridge (#1736 S2): tap a destination, see the real
-//              route's cost + action count, Confirm to spend and execute (a full
-//              Stride closes the sheet — no chaining loop). Below protocol 14 (or
-//              no bridge at all), falls back unchanged to the 5-ft stepper: 1 action
-//              on the first step, +1 each time accumulated distance crosses Speed.
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+//   • Stride — tap a destination, see the real route's cost + action count, Confirm
+//              to spend and execute (a full Stride closes the sheet — no chaining
+//              loop). This needs a protocol-14+ bridge (#1736 S1/S2); the 5-ft
+//              stepper fallback for Stride was retired in #1736 S5 once the tap
+//              flow was verified — below protocol 14 the sheet shows a compact
+//              "bridge outdated" notice instead of a pad. Step is unaffected: it
+//              never used the tap flow and keeps the D-pad on every protocol.
+import React, { useRef, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import MoveGridPicker from './MoveGridPicker';
 import MoveConfirmBar from './MoveConfirmBar';
@@ -19,7 +21,7 @@ import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
-import { needsNewStride, actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
+import { actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import './MoveActionSheet.css';
 
 const LABEL = { stride: 'Stride', step: 'Step' };
@@ -40,22 +42,20 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
   // flags drift.
   const derivedSpeed = useCharacter(character)?.speed ?? null;
 
-  // feetThisAction: distance walked under the current Stride action (resets each
-  // time a new action is charged). Step ignores it. Only the stepper fallback
-  // uses this — the tap flow prices the whole route at Confirm instead.
-  const [feetThisAction, setFeetThisAction] = useState(0);
-
-  // requestMoveRefresh / cancelMove come from the hook below but are needed inside
-  // onMoveDone (which the hook takes as input) — bridge via refs to break the cycle.
-  const requestMoveRefreshRef = useRef(null);
+  // cancelMove comes from the hook below but is needed inside onMoveDone (which
+  // the hook takes as input) — bridge via a ref to break the cycle.
   const cancelMoveRef = useRef(null);
   const speedRef = useRef(0);
 
-  // Bridge protocol gate (#1736 S2): PC Stride gets the destination-tap
-  // confirm-gate flow on a 14+ bridge; everything else (Step always, Stride
-  // on an older/absent bridge) is the untouched stepper below.
+  // Bridge protocol gate (#1736 S2, floor raised to a hard requirement in S5):
+  // PC Stride only runs the destination-tap confirm-gate flow, and only on a
+  // 14+ bridge. Below that floor the sheet shows the outdated-bridge notice
+  // instead of a pad — there is no more Stride D-pad fallback. Step is
+  // unaffected: tapFlowEligible is always false for it, so it always renders
+  // the D-pad branch below regardless of protocol.
   const { protocol } = useBridgeStatus();
   const tapFlowEligible = moveType === 'stride' && (protocol ?? 0) >= FULL_MOVE_PROTOCOL;
+  const strideBridgeOutdated = moveType === 'stride' && !tapFlowEligible;
 
   // Tap-flow-only bookkeeping (unused by the stepper path):
   //  - waypointsRef: the tapped cells sent in the CURRENT plan, so a chained
@@ -99,37 +99,22 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
       return;
     }
 
+    // Only Step reaches this branch now — Stride's D-pad fallback was retired
+    // in #1736 S5 (a below-protocol bridge shows the outdated notice instead
+    // of ever driving a move), so a non-planned movedone can only be Step's
+    // single dedicated action.
     const stepFeet = done?.feetMoved ?? 5;
     appendLog({ type: 'action', charId, text: `${character.name} moved ${stepFeet} ft` });
-
-    if (moveType === 'step') {
-      spendActions(1, 'Step');
-      cancelMoveRef.current?.();
-      onClose?.();
-      return;
-    }
-
-    // Stride (stepper fallback): charge the 1st action on the 1st step, then
-    // one more each time the running distance would cross the character's
-    // Speed. Budget precedence: the app-derived total → Foundry's actor
-    // speed (via moveopts) → this step.
-    const speed = derivedSpeed?.total || speedRef.current || stepFeet;
-    const needNewAction = needsNewStride(feetThisAction, stepFeet, speed);
-    if (needNewAction) {
-      spendActions(1, 'Stride');
-      setFeetThisAction(stepFeet);
-    } else {
-      setFeetThisAction(feetThisAction + stepFeet);
-    }
-    requestMoveRefreshRef.current?.('stride'); // keep the pad open to chain steps
-  }, [feetThisAction, spendActions, refundActions, appendLog, charId, character.name, moveType, onClose, derivedSpeed?.total]);
+    spendActions(1, 'Step');
+    cancelMoveRef.current?.();
+    onClose?.();
+  }, [spendActions, refundActions, appendLog, charId, character.name, onClose]);
 
   const {
     stage,
     pickerOpts,
     plannedPath,
     requestMove,
-    requestMoveRefresh,
     confirmMove,
     cancelMove,
     planMove,
@@ -137,11 +122,12 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
     cancelPlan,
   } = useTokenMovement(charId, { onMoveDone: handleMoveDone });
 
-  requestMoveRefreshRef.current = requestMoveRefresh;
   cancelMoveRef.current = cancelMove;
   speedRef.current = pickerOpts?.speed || speedRef.current;
 
-  // The tile already chose Stride vs Step, so request reachable squares on open.
+  // The tile already chose Stride vs Step, so request reachable squares/origin
+  // on open — the tap flow needs pickerOpts.origin too, so this fires the same
+  // way regardless of which branch below ends up rendering.
   const startedRef = useRef(false);
   useEffect(() => {
     if (!startedRef.current) {
@@ -199,76 +185,86 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
       highZ
     >
       <div className="mas-body">
-        {moveType === 'stride' && !tapFlowEligible && (
-          <div className="mas-dist" aria-label="Stride distance">
-            {feetThisAction}/{derivedSpeed?.total || pickerOpts?.speed || speedRef.current || 0} ft
-          </div>
-        )}
-
-        {/* Parity check (#1223): Foundry's actor speed vs the app spine — a
-            cheap drift detector. The sheet's number is what the pad charges
-            against; the GM fixes the Foundry actor if it's the stale side. */}
-        {pickerOpts?.speed != null &&
-          derivedSpeed?.total != null &&
-          derivedSpeed.total > 0 &&
-          pickerOpts.speed !== derivedSpeed.total && (
-          <div className="mas-parity" role="note" aria-label="Speed parity note">
-            Using the sheet&apos;s {derivedSpeed.total} ft; Foundry&apos;s actor says {pickerOpts.speed} ft.
-          </div>
-        )}
-
-        {stage === 'awaiting-opts' && (
-          <div className="mas-status">Calculating reachable squares…</div>
-        )}
-
-        {tapFlowEligible ? (
-          <>
-            {(stage === 'picking' || stage === 'planned') && pickerOpts && (
-              <MoveGridPicker
-                tapMode
-                origin={pickerOpts.origin}
-                maxFeet={speedForGrid}
-                plannedPath={plannedPath?.path}
-                destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                onSelect={handleTap}
-                onCancel={handleClose}
-              />
-            )}
-
-            {stage === 'awaiting-plan' && <div className="mas-status">Plotting route…</div>}
-
-            {stage === 'planned' && plannedPath && (
-              <MoveConfirmBar
-                feet={plannedPath.costFeet}
-                actions={planActions}
-                disabled={overBudget}
-                disabledHint="Not enough actions left this turn."
-                clipped={plannedPath.clipped}
-                onConfirm={handleConfirm}
-                onCancel={handleCancelPlan}
-              />
-            )}
-
-            {stage === 'awaiting-done' && <div className="mas-status">Moving…</div>}
-          </>
+        {strideBridgeOutdated ? (
+          // #1736 S5: the Stride D-pad fallback is retired — below protocol 14
+          // there's no pad left to show at all. Mirrors DockEnemyPane's
+          // below-protocol-floor affordance (dock-enemy-waiting): a single
+          // compact dashed-box notice naming the floor, rather than a dead
+          // control. Step is unaffected and never reaches this branch.
+          <p className="mas-outdated" data-testid="mas-outdated-notice">
+            Full-speed Stride needs the CNMH Bridge module updated to protocol 14+.
+            Update the module in Foundry (Add-on Modules) and reload — Step still
+            works on any bridge.
+          </p>
         ) : (
           <>
-            {stage === 'picking' && pickerOpts && (
-              <MoveGridPicker
-                origin={pickerOpts.origin}
-                reachable={pickerOpts.reachable}
-                blocked={pickerOpts.blocked}
-                radius={1}
-                stepMode
-                cancelLabel="Done"
-                cancelDisabled={pickerOpts.originOccupied}
-                cancelHint="Step off your ally's square to stop."
-                onSelect={confirmMove}
-                onCancel={handleClose}
-              />
+            {/* Parity check (#1223): Foundry's actor speed vs the app spine —
+                a cheap drift detector. The sheet's number is what the pad
+                charges against; the GM fixes the Foundry actor if it's the
+                stale side. */}
+            {pickerOpts?.speed != null &&
+              derivedSpeed?.total != null &&
+              derivedSpeed.total > 0 &&
+              pickerOpts.speed !== derivedSpeed.total && (
+              <div className="mas-parity" role="note" aria-label="Speed parity note">
+                Using the sheet&apos;s {derivedSpeed.total} ft; Foundry&apos;s actor says {pickerOpts.speed} ft.
+              </div>
             )}
 
-            {stage === 'awaiting-done' && <div className="mas-status">Moving…</div>}
+            {stage === 'awaiting-opts' && (
+              <div className="mas-status">Calculating reachable squares…</div>
+            )}
+
+            {moveType === 'step' ? (
+              <>
+                {stage === 'picking' && pickerOpts && (
+                  <MoveGridPicker
+                    origin={pickerOpts.origin}
+                    reachable={pickerOpts.reachable}
+                    blocked={pickerOpts.blocked}
+                    radius={1}
+                    stepMode
+                    cancelLabel="Done"
+                    cancelDisabled={pickerOpts.originOccupied}
+                    cancelHint="Step off your ally's square to stop."
+                    onSelect={confirmMove}
+                    onCancel={handleClose}
+                  />
+                )}
+
+                {stage === 'awaiting-done' && <div className="mas-status">Moving…</div>}
+              </>
+            ) : (
+              <>
+                {(stage === 'picking' || stage === 'planned') && pickerOpts && (
+                  <MoveGridPicker
+                    tapMode
+                    origin={pickerOpts.origin}
+                    maxFeet={speedForGrid}
+                    plannedPath={plannedPath?.path}
+                    destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                    onSelect={handleTap}
+                    onCancel={handleClose}
+                  />
+                )}
+
+                {stage === 'awaiting-plan' && <div className="mas-status">Plotting route…</div>}
+
+                {stage === 'planned' && plannedPath && (
+                  <MoveConfirmBar
+                    feet={plannedPath.costFeet}
+                    actions={planActions}
+                    disabled={overBudget}
+                    disabledHint="Not enough actions left this turn."
+                    clipped={plannedPath.clipped}
+                    onConfirm={handleConfirm}
+                    onCancel={handleCancelPlan}
+                  />
+                )}
+
+                {stage === 'awaiting-done' && <div className="mas-status">Moving…</div>}
+              </>
+            )}
           </>
         )}
       </div>

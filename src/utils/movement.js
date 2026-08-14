@@ -1,8 +1,15 @@
-// Movement action accounting (#415, #391). Shared by the PC movement sheet
-// (MoveActionSheet) and minion movement (MinionMove) so both charge Strides the
-// same way: 1 action on the first step, then one more each time the running
-// distance under the current Stride would cross the actor's Speed.
+// Movement action accounting (#415, #391). Originally shared by the PC movement
+// sheet, minion movement, and the foe dock so all three charged Strides the same
+// way: 1 action on the first step, then one more each time the running distance
+// under the current Stride would cross the actor's Speed.
 
+// #1736 S5: MoveActionSheet's PC Stride retired its 5-ft D-pad fallback once the
+// destination-tap confirm-gate flow (actionsForDistance below) shipped and was
+// verified — it no longer calls this. needsNewStride is NOT dead, though: it
+// still backs the per-step stepper fallback in MinionMove and DockEnemyPane
+// (foe movement), which keep their D-pads on a below-protocol-floor bridge.
+// Leave this in place for those two surfaces; only remove it if/when they also
+// retire their steppers.
 /**
  * Whether the next step starts a *new* Stride action.
  *

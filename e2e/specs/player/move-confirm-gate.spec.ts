@@ -23,9 +23,10 @@
  * is eligible only for Stride at protocol >= FULL_MOVE_PROTOCOL (14, mirrored
  * from src/utils/movement.js — see that constant's doc comment in
  * helpers/bridge.ts for the drift-risk note shared by every protocol floor in
- * this file). Below that floor — or with no hello at all — MoveActionSheet
- * degrades to the classic 5-ft D-pad stepper unchanged; the last test in this
- * file proves that degradation still works end to end.
+ * this file). Below that floor — or with no hello at all — there is no more
+ * D-pad fallback for Stride: #1736 S5 retired it once the tap flow was
+ * table-verified, so the sheet shows a compact outdated-bridge notice
+ * instead. The last test in this file proves that notice renders correctly.
  *
  * Speed is seeded at a deliberately small 10 ft (character.speed, the SP1-SP4
  * derive-speed spine) so the tap-mode grid's radius (3x-Speed, capped at 12
@@ -58,7 +59,9 @@ const baseSeed = (protocol: number, turnOverrides: Record<string, unknown> = {})
 });
 
 /** Answer every `movereq` with a fixed origin/speed and one eastward reachable
- *  step (the tap flow ignores `reachable`; the stepper fallback needs it). */
+ *  step. The tap flow ignores `reachable` — it's carried for the below-floor
+ *  test (test 6), where MoveActionSheet requests opts on open regardless of
+ *  protocol but has no pad left to render them into (#1736 S5). */
 function answerMoveReq(session: MockSession) {
   session.onSent(`cnmh_movereq_${CHAR_ID}`, (req) => {
     session.push(`cnmh_moveopts_${CHAR_ID}`, {
@@ -309,41 +312,31 @@ test.describe('PC Stride plan/confirm gate (#1736 S4)', () => {
     await expect(confirmBar(page)).toContainText('15 ft — 2 actions');
   });
 
-  // ── 6: fallback stepper (protocol 13) ───────────────────────────────────
+  // ── 6: below-protocol-floor notice (#1736 S5) ───────────────────────────
 
-  test('a protocol-13 bridge falls back to the classic D-pad — Stride still works', async ({ page }) => {
+  test('a protocol-13 bridge shows the outdated-bridge notice — the Stride D-pad fallback is retired', async ({ page }) => {
     const session = await mockSession(page, { seed: baseSeed(FULL_MOVE_PROTOCOL - 1) });
     answerMoveReq(session);
-    session.onSent(`cnmh_moveconfirm_${CHAR_ID}`, (req) => {
-      session.push(`cnmh_movedone_${CHAR_ID}`, {
-        reqTs: req.ts,
-        newPosition: { col: ORIGIN.col + 1, row: ORIGIN.row },
-        feetMoved: 5,
-      });
-    });
 
     await openActionsSegment(page);
     await openStrideSheet(page);
 
-    // No confirm-gate UI at all below FULL_MOVE_PROTOCOL — the classic pad.
+    // No confirm-gate UI and no D-pad at all below FULL_MOVE_PROTOCOL — #1736
+    // S5 retired the Stride stepper fallback, so there's nothing left to drive
+    // a move with. A compact notice explains why and names the fix.
     await expect(confirmBar(page)).toHaveCount(0);
-    const stepEast = page.getByRole('button', { name: 'Step east' });
-    await expect(stepEast).toBeVisible();
-    await stepEast.click();
-
-    await session.expectSent(
-      `cnmh_moveconfirm_${CHAR_ID}`,
-      (v) => v?.destination?.col === ORIGIN.col + 1 && v?.destination?.row === ORIGIN.row && v.moveType === 'stride',
+    await expect(page.getByRole('button', { name: 'Step east' })).toHaveCount(0);
+    await expect(page.getByTestId('mas-outdated-notice')).toBeVisible();
+    await expect(page.getByTestId('mas-outdated-notice')).toContainText(
+      'Full-speed Stride needs the CNMH Bridge module updated to protocol 14+.',
     );
 
-    // One 5-ft step charges exactly one Stride action, same as the pre-#1736 pad.
-    await expect(budget(page)).toHaveAttribute('aria-valuenow', '2'); // 3 - 1
-    await expect(page.getByLabel('Stride distance')).toContainText('5/10 ft');
+    // Budget untouched — nothing was ever charged, and no relay traffic was
+    // sent besides the initial movereq (there's no pad to tap).
+    await expect(budget(page)).toHaveAttribute('aria-valuenow', '3');
 
-    // The pad stays open to chain further steps (stepper semantics unchanged);
-    // closing it is the same "Done" affordance as the pre-#1736 sheet.
-    await expect(page.getByRole('button', { name: 'Done' })).toBeVisible();
-    await page.getByRole('button', { name: 'Done' }).click();
+    // The sheet still closes normally via its own Cancel/close affordance.
+    await page.getByRole('dialog', { name: 'Stride' }).getByRole('button', { name: 'Close' }).click();
     await expect(page.getByRole('dialog', { name: 'Stride' })).toHaveCount(0);
   });
 });

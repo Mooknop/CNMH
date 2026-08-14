@@ -37,7 +37,7 @@ import { test, expect } from '../../fixtures/gm';
 import type { Page, WebSocketRoute } from '@playwright/test';
 import { activeEncounter, readyTurnState } from '../../helpers/encounter';
 import { expectSheet, openPlayTab } from '../../helpers/sheet';
-import { bridgeHello, TEMPLATE_PROTOCOL } from '../../helpers/bridge';
+import { bridgeHello, MIN_BRIDGE_PROTOCOL } from '../../helpers/bridge';
 
 const CHAR_ID = 'e2e-fighter';
 const CHAR_NAME = 'E2E Fighter';
@@ -182,8 +182,10 @@ const enterStance = async (page: Page, name: string) => {
 // 'live' — which would make every badge assertion below fail for a reason this
 // file isn't about. It also has to be in EACH snapshot, not just the first: this
 // spec varies the snapshot per connect, and #1476 means a key the snapshot omits
-// is treated as cleared.
-const BASE_SEED = { cnmh_bridgehello_global: bridgeHello(TEMPLATE_PROTOCOL) };
+// is treated as cleared. Seeded at MIN_BRIDGE_PROTOCOL itself (raised to 14 in
+// #1736 S5) rather than an older per-feature floor like TEMPLATE_PROTOCOL,
+// which now reads as outdated.
+const BASE_SEED = { cnmh_bridgehello_global: bridgeHello(MIN_BRIDGE_PROTOCOL) };
 
 const ENCOUNTER_SEED = {
   ...BASE_SEED,

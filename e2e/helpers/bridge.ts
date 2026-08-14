@@ -22,6 +22,7 @@
  *   - STRIKE_PROTOCOL / STRIKE_TIMEOUT_MS     → src/utils/strikeRelay.js
  *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
  *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL → src/utils/movement.js
+ *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -89,9 +90,23 @@ export const ENEMY_MOVE_PROTOCOL = 10;
  *  pipeline (#1736 S1/S2) — findMovementPath/constrainMovementPath/
  *  measureMovementPath wrappers plus the moveplan→moveplanned relay pair and
  *  moveconfirm's waypoints[] field. PC Stride gates the destination-tap
- *  confirm flow on this floor; below it (or no hello at all) MoveActionSheet
- *  falls back to the 5-ft stepper unchanged. */
+ *  confirm flow on this floor; below it (or no hello at all) the encounter
+ *  dock's Stride sheet shows an outdated-bridge notice instead of a pad — the
+ *  5-ft D-pad fallback for Stride was retired in #1736 S5 once the tap flow
+ *  was table-verified. (Step, exploration, minions, and foe movement keep
+ *  their own stepper fallbacks; this floor is Stride-only.) */
 export const FULL_MOVE_PROTOCOL = 14;
+
+// ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
+
+/** The oldest protocol the app still fully supports — below this, SyncStatus
+ *  renders the "Bridge outdated" badge ('stale', not 'live'). Raised 1 → 14 in
+ *  #1736 S5 alongside FULL_MOVE_PROTOCOL (same value, same reason: PC Stride's
+ *  tap flow is now the only way to Stride in the encounter dock). Specs that
+ *  need a healthy 'live' badge and don't care about a SPECIFIC feature's own
+ *  floor should seed `bridgeHello(MIN_BRIDGE_PROTOCOL)`, not an older
+ *  per-feature constant like TEMPLATE_PROTOCOL. */
+export const MIN_BRIDGE_PROTOCOL = 14;
 
 // ── the handshake payload ────────────────────────────────────────────────────
 

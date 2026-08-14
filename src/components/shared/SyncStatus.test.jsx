@@ -5,8 +5,10 @@ import { RELAY } from '../../sync/keys';
 import SyncStatus from './SyncStatus';
 
 // A current-protocol bridge hello (#1310) — seeded as session state so the
-// live case models a healthy, handshaking bridge.
-const hello = (protocol = 1) => ({ protocol, module: '1.9.0', ts: Date.now() });
+// live case models a healthy, handshaking bridge. Default matches
+// MIN_BRIDGE_PROTOCOL (raised to 14 in #1736 S5 — the app's Stride flow now
+// depends on the moveplan/moveplanned pipeline).
+const hello = (protocol = 14) => ({ protocol, module: '1.9.0', ts: Date.now() });
 
 const renderStatus = ({ connected, foundryConnected, bridgehello, pendingWrites } = {}) =>
   renderWithProviders(<SyncStatus />, {
