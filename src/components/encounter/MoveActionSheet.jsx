@@ -13,6 +13,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import MoveGridPicker from './MoveGridPicker';
+import MoveConfirmBar from './MoveConfirmBar';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -26,7 +27,7 @@ const LABEL = { stride: 'Stride', step: 'Step' };
 const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }) => {
   const charId = character.id;
   const { appendLog } = useEncounter();
-  const { turnState, spendActions } = useTurnState(charId);
+  const { turnState, spendActions, refundActions } = useTurnState(charId);
   // Actions remaining this turn, same "implicit 3" convention as
   // SelfStatusBar/SegmentedDeck — no dedicated constant exists to import.
   const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
@@ -86,14 +87,11 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
 
       // Stop-short refund: a legal wall/obstacle can land Foundry short of
       // the planned costFeet (down to a full refund at 0 ft moved), so fewer
-      // actions than charged may have been needed. useTurnState has no
-      // dedicated refund call — spendActions takes any integer delta, so a
-      // negative cost nets the over-charge back out through the same
-      // actionsLog trail (see PR notes for the alternative mechanisms
-      // considered).
+      // actions than charged may have been needed. refundActions (#1736 S4)
+      // credits the over-charge back through the same actionsLog trail.
       const actualActions = actionsForDistance(actualFeet, chargeSpeedRef.current || 1);
       const refund = chargedActionsRef.current - actualActions;
-      if (refund > 0) spendActions(-refund, 'Stride refund');
+      if (refund > 0) refundActions(refund, 'Stride');
 
       waypointsRef.current = [];
       cancelMoveRef.current?.();
@@ -124,7 +122,7 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
       setFeetThisAction(feetThisAction + stepFeet);
     }
     requestMoveRefreshRef.current?.('stride'); // keep the pad open to chain steps
-  }, [feetThisAction, spendActions, appendLog, charId, character.name, moveType, onClose, derivedSpeed?.total]);
+  }, [feetThisAction, spendActions, refundActions, appendLog, charId, character.name, moveType, onClose, derivedSpeed?.total]);
 
   const {
     stage,
@@ -240,29 +238,15 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
             {stage === 'awaiting-plan' && <div className="mas-status">Plotting route…</div>}
 
             {stage === 'planned' && plannedPath && (
-              <div className="mas-confirm-bar" role="group" aria-label="Confirm move">
-                <p className="mas-confirm-summary" aria-label="Route summary">
-                  <strong>{plannedPath.costFeet} ft — {planActions} action{planActions === 1 ? '' : 's'}</strong>
-                </p>
-                {plannedPath.clipped && (
-                  <p className="mas-confirm-note" role="status">
-                    Path stops at a wall — tap further to add a waypoint.
-                  </p>
-                )}
-                {overBudget && (
-                  <p className="mas-confirm-hint" role="status">
-                    Not enough actions left this turn.
-                  </p>
-                )}
-                <div className="mas-confirm-buttons">
-                  <button type="button" className="btn-secondary" onClick={handleCancelPlan}>
-                    Cancel
-                  </button>
-                  <button type="button" className="btn-primary" onClick={handleConfirm} disabled={overBudget}>
-                    Confirm
-                  </button>
-                </div>
-              </div>
+              <MoveConfirmBar
+                feet={plannedPath.costFeet}
+                actions={planActions}
+                disabled={overBudget}
+                disabledHint="Not enough actions left this turn."
+                clipped={plannedPath.clipped}
+                onConfirm={handleConfirm}
+                onCancel={handleCancelPlan}
+              />
             )}
 
             {stage === 'awaiting-done' && <div className="mas-status">Moving…</div>}

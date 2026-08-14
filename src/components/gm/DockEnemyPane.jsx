@@ -24,7 +24,8 @@ import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { monogram } from '../encounter/commandsheet/Dossier';
 import PersistentChip from '../encounter/PersistentChip';
 import MoveGridPicker from '../encounter/MoveGridPicker';
-import { needsNewStride, ENEMY_MOVE_PROTOCOL } from '../../utils/movement';
+import MoveConfirmBar from '../encounter/MoveConfirmBar';
+import { needsNewStride, actionsForDistance, ENEMY_MOVE_PROTOCOL, FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
 
@@ -445,18 +446,25 @@ const AbilityRow = ({ ability, witnessed, onReveal }) => (
   </li>
 );
 
-// A2 (#1572): step-pad movement for the acting foe. Reuses the PC/minion
+// A2 (#1572) + #1736 S4: movement for the acting foe. Reuses the PC/minion
 // movement state machine (useTokenMovement + MoveGridPicker) keyed by the
 // combat entryId — the bridge resolves it to the combatant's token from
-// protocol 10. Tapping a direction auto-confirms a 5-ft step and chains via
-// the piggybacked nextOpts; "Done" closes the pad and writes one combat-log
-// line for the whole move. Stride tally is display-only (MinionMove's
-// accumulation via needsNewStride) — enemy action pips stay Foundry's truth.
+// protocol 10. On a protocol-14+ bridge this is the destination-tap flow: tap
+// a cell, see the real route's cost on a FEET-ONLY confirm bar (the dock has
+// no app-side action accounting for enemies — pips stay Foundry-authoritative,
+// so there's nothing to price actions against, per MoveConfirmBar's
+// actions-less variant), Confirm to execute. Below protocol 14 it's the
+// original 8-direction D-pad — tapping a direction auto-confirms a 5-ft step
+// and chains via the piggybacked nextOpts. Either way "Done" closes the pad
+// and writes one combat-log line for the whole move. The Stride tally shown
+// while stepping is display-only (needsNewStride's accumulation) — it has no
+// bearing on Foundry's own action economy for the foe.
 const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
   const { appendLog } = useEncounter();
   const [feetTotal, setFeetTotal] = useState(0);
   // Distance walked under the current (implied) Stride — resets on overflow so
-  // the tally matches how a GM would charge actions, not a naive ceil().
+  // the tally matches how a GM would charge actions, not a naive ceil(). Only
+  // the stepper fallback uses this.
   const [feetThisAction, setFeetThisAction] = useState(0);
   const [strides, setStrides] = useState(0);
 
@@ -464,7 +472,34 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
   const requestMoveRefreshRef = useRef(null);
   const speedRef = useRef(0);
 
+  // Bridge protocol gate (#1736 S4): the destination-tap flow needs
+  // findMovementPath/measureMovementPath on the bridge side; an older/absent
+  // bridge (below FULL_MOVE_PROTOCOL, but still at/above ENEMY_MOVE_PROTOCOL
+  // for the Move tab itself) keeps the D-pad below unchanged.
+  const { protocol } = useBridgeStatus();
+  const tapFlowEligible = (protocol ?? 0) >= FULL_MOVE_PROTOCOL;
+
+  // Tap-flow-only bookkeeping (unused by the stepper path) — mirrors
+  // MoveActionSheet's Stride tap flow, minus any action charging.
+  const waypointsRef = useRef([]);
+  const wasPlannedMoveRef = useRef(false);
+
   const handleMoveDone = useCallback((payload) => {
+    if (wasPlannedMoveRef.current) {
+      wasPlannedMoveRef.current = false;
+      const actualFeet = payload?.feetMoved ?? 0;
+      waypointsRef.current = [];
+      setFeetTotal((f) => {
+        const total = f + actualFeet;
+        // Display-only Stride count for the whole tally, same convention as
+        // the stepper's readout — nothing here charges or gates anything.
+        setStrides(speedRef.current > 0 ? actionsForDistance(total, speedRef.current) : 0);
+        return total;
+      });
+      requestMoveRefreshRef.current?.('stride');
+      return;
+    }
+
     const stepFeet = payload?.feetMoved ?? 0;
     setFeetTotal((f) => f + stepFeet);
     const speed = speedRef.current || stepFeet || 5;
@@ -481,19 +516,28 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
     stage,
     pickerOpts,
     isRefreshing,
+    plannedPath,
     requestMove,
     requestMoveRefresh,
     confirmMove,
     cancelMove,
+    planMove,
+    confirmPlannedMove,
+    cancelPlan,
   } = useTokenMovement(entryId, { onMoveDone: handleMoveDone });
 
   requestMoveRefreshRef.current = requestMoveRefresh;
+  // moveopts.speed is the bridge's own actor read — foes have no app-derived
+  // speed spine (#1223 is a PC-only concern), so it's the sole source here
+  // besides the bestiary fallback.
   speedRef.current = pickerOpts?.speed || speedRef.current || fallbackSpeed || 0;
+  const speed = speedRef.current;
 
   const reset = () => {
     setFeetTotal(0);
     setFeetThisAction(0);
     setStrides(0);
+    waypointsRef.current = [];
   };
 
   const handleStart = () => {
@@ -509,7 +553,25 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
     cancelMove();
   };
 
-  const speed = speedRef.current;
+  // Tap a cell: first tap (or any re-tap on a non-clipped plan) replaces the
+  // plan outright; a tap after a CLIPPED plan chains a waypoint onto it.
+  const handleTap = (cell) => {
+    waypointsRef.current = (stage === 'planned' && plannedPath?.clipped)
+      ? [...waypointsRef.current, cell]
+      : [cell];
+    planMove(waypointsRef.current);
+  };
+
+  const handleCancelPlan = () => {
+    waypointsRef.current = [];
+    cancelPlan();
+  };
+
+  const handleConfirmPlan = () => {
+    if (!plannedPath) return;
+    wasPlannedMoveRef.current = true;
+    confirmPlannedMove(0); // no app-side action accounting for enemies
+  };
 
   return (
     <div className="dock-enemy-move" data-testid="dock-enemy-move">
@@ -526,35 +588,87 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
       {stage === 'awaiting-opts' && !isRefreshing && (
         <p className="dock-enemy-move-status" role="status">Calculating reachable squares…</p>
       )}
-      {(stage === 'picking' || (isRefreshing && pickerOpts)) && (
+
+      {tapFlowEligible ? (
         <>
-          <p className="dock-enemy-move-meta" data-testid="dock-enemy-move-meta">
-            {feetTotal > 0 ? (
-              <>
-                Moved <strong>{feetTotal} ft</strong>
-                {speed > 0 && ` · ${strides} Stride${strides === 1 ? '' : 's'} at ${speed} ft`}
-              </>
-            ) : (
-              speed > 0 && `Speed ${speed} ft`
-            )}
-          </p>
-          {isRefreshing && (
-            <p className="dock-enemy-move-status" role="status">Updating…</p>
+          {(stage === 'picking' || stage === 'planned' || (isRefreshing && pickerOpts)) && pickerOpts && (
+            <>
+              <p className="dock-enemy-move-meta" data-testid="dock-enemy-move-meta">
+                {feetTotal > 0 ? (
+                  <>
+                    Moved <strong>{feetTotal} ft</strong>
+                    {speed > 0 && ` · ${strides} Stride${strides === 1 ? '' : 's'} at ${speed} ft`}
+                  </>
+                ) : (
+                  speed > 0 && `Speed ${speed} ft`
+                )}
+              </p>
+              {isRefreshing && (
+                <p className="dock-enemy-move-status" role="status">Updating…</p>
+              )}
+              <MoveGridPicker
+                tapMode
+                origin={pickerOpts.origin}
+                maxFeet={speed || 25}
+                plannedPath={plannedPath?.path}
+                destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                cancelLabel="Done"
+                onSelect={handleTap}
+                onCancel={handleDone}
+              />
+            </>
           )}
-          <MoveGridPicker
-            origin={pickerOpts.origin}
-            reachable={pickerOpts.reachable}
-            blocked={pickerOpts.blocked}
-            radius={1}
-            stepMode
-            cancelLabel="Done"
-            onSelect={confirmMove}
-            onCancel={handleDone}
-          />
+
+          {stage === 'awaiting-plan' && (
+            <p className="dock-enemy-move-status" role="status">Plotting route…</p>
+          )}
+
+          {stage === 'planned' && plannedPath && (
+            <MoveConfirmBar
+              feet={plannedPath.costFeet}
+              clipped={plannedPath.clipped}
+              onConfirm={handleConfirmPlan}
+              onCancel={handleCancelPlan}
+            />
+          )}
+
+          {stage === 'awaiting-done' && (
+            <p className="dock-enemy-move-status" role="status">Moving…</p>
+          )}
         </>
-      )}
-      {stage === 'awaiting-done' && (
-        <p className="dock-enemy-move-status" role="status">Moving…</p>
+      ) : (
+        <>
+          {(stage === 'picking' || (isRefreshing && pickerOpts)) && (
+            <>
+              <p className="dock-enemy-move-meta" data-testid="dock-enemy-move-meta">
+                {feetTotal > 0 ? (
+                  <>
+                    Moved <strong>{feetTotal} ft</strong>
+                    {speed > 0 && ` · ${strides} Stride${strides === 1 ? '' : 's'} at ${speed} ft`}
+                  </>
+                ) : (
+                  speed > 0 && `Speed ${speed} ft`
+                )}
+              </p>
+              {isRefreshing && (
+                <p className="dock-enemy-move-status" role="status">Updating…</p>
+              )}
+              <MoveGridPicker
+                origin={pickerOpts.origin}
+                reachable={pickerOpts.reachable}
+                blocked={pickerOpts.blocked}
+                radius={1}
+                stepMode
+                cancelLabel="Done"
+                onSelect={confirmMove}
+                onCancel={handleDone}
+              />
+            </>
+          )}
+          {stage === 'awaiting-done' && (
+            <p className="dock-enemy-move-status" role="status">Moving…</p>
+          )}
+        </>
       )}
     </div>
   );

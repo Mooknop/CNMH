@@ -77,6 +77,35 @@ describe('useTurnState', () => {
     expect(result.current.turnState.actionsLog[0].name).toBe('Action');
   });
 
+  describe('refundActions (#1736 S4)', () => {
+    it('credits actions back onto the same accumulator spendActions debits', () => {
+      const { result } = setup();
+      act(() => result.current.spendActions(2, 'Stride'));
+      act(() => result.current.refundActions(1, 'Stride'));
+      expect(result.current.turnState.actionsSpent).toBe(1);
+    });
+
+    it('appends a distinctly-marked refund log entry (negative cost, refund: true)', () => {
+      const { result } = setup();
+      act(() => result.current.refundActions(1, 'Stride'));
+      const entry = result.current.turnState.actionsLog[0];
+      expect(entry).toMatchObject({ name: 'Stride refund', cost: -1, refund: true });
+    });
+
+    it('no label defaults to "Action refund"', () => {
+      const { result } = setup();
+      act(() => result.current.refundActions(1));
+      expect(result.current.turnState.actionsLog[0].name).toBe('Action refund');
+    });
+
+    it('can drive actionsSpent negative (a full over-charge refund) without clamping', () => {
+      const { result } = setup();
+      act(() => result.current.spendActions(1, 'Stride'));
+      act(() => result.current.refundActions(1, 'Stride'));
+      expect(result.current.turnState.actionsSpent).toBe(0);
+    });
+  });
+
   it('spendReaction with no label defaults to "Reaction"', () => {
     const { result } = setup();
     act(() => result.current.spendReaction());
