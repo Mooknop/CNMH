@@ -2,9 +2,9 @@ import { RELAY, globalKey } from '../sync/keys';
 
 // Scene-snapshot + map-ping relay contract (#1573 B1/B2).
 //
-//   app → bridge  cnmh_snapreq_global   { id, ts }
+//   app → bridge  cnmh_snapreq_global   { id, ts, moverId?, radiusFeet? }
 //   bridge → app  cnmh_snapdone_global  { id, ok, url?, capture?, worldRect?,
-//                                         gridSize?, ts }
+//                                         gridSize?, ts, moverId?, trigger? }
 //   app → bridge  cnmh_pingpoint_global { id, x, y, sceneId, name?, ts }
 //
 // The IMAGE never rides the relay — snapdone carries a stable /api/images URL
@@ -14,6 +14,20 @@ import { RELAY, globalKey } from '../sync/keys';
 // `id` is unique per request, so a persisted snapdone hydrated on mount can
 // never satisfy a live request. ok:false = "no snapshot available" — the
 // requester should say so rather than wait out the timeout.
+//
+// `moverId` / `radiusFeet` (#1744 WS-2, protocol 16) are additive and
+// optional: a plain `snapreq` with neither still gets the GM's current
+// viewport, unchanged. When `moverId` is present the bridge instead centers
+// the capture on that token, extending `radiusFeet` in every direction (or
+// its own 1.5×Speed default when omitted) — a world-rect render rather than
+// a screen extract. `snapdone`'s `worldRect`/`worldTransform`/`gridSize`
+// keep their exact prior meaning for whichever rect got captured, so
+// `worldPointFromTap` / `normalizedFromWorld` need no changes either way.
+// The bridge also broadcasts an unsolicited mover-centered `snapdone`
+// (`trigger: 'movedone'`) after every `movedone` for that mover — it carries
+// no request `id` a pending promise can correlate against, so a consumer
+// that wants to adopt it must watch the raw synced value by `moverId`
+// instead (see `useMoverMapSurface`).
 
 export const SNAPREQ_KEY = globalKey(RELAY.SNAPREQ);
 export const SNAPDONE_KEY = globalKey(RELAY.SNAPDONE);
@@ -32,10 +46,22 @@ export const TEMPLATE_PROTOCOL = 13;
 // an R2 PUT), so this is deliberately longer than ROLL_TIMEOUT_MS.
 export const SNAP_TIMEOUT_MS = 20_000;
 
+// A mover-centered capture (#1744 S4) backs a live destination picker, which
+// blocks the player's turn — unlike Ping the Map's "ask, then wait", a dead
+// or busy GM client here must fall back to the abstract grid quickly rather
+// than stall a Stride behind the full SNAP_TIMEOUT_MS. Still generous enough
+// for a real PIXI-extract-plus-R2-upload round trip on a slow connection.
+export const MOVE_SNAP_TIMEOUT_MS = 8_000;
+
 let counter = 0;
 
-export const buildSnapshotRequest = () => ({
+// `moverId` + `radiusFeet` (#1744 WS-2, protocol 16) are additive/optional —
+// omitting both sends byte-identical requests to every pre-#1744 consumer
+// (Ping the Map, area-spell placement).
+export const buildSnapshotRequest = ({ moverId, radiusFeet } = {}) => ({
   id: `snap-${Date.now()}-${(counter += 1)}`,
+  ...(moverId ? { moverId } : {}),
+  ...(radiusFeet != null ? { radiusFeet } : {}),
   ts: Date.now(),
 });
 

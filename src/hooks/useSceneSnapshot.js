@@ -22,6 +22,21 @@ import {
 // `available` gates on live Foundry presence AND the capture protocol; `canPing`
 // additionally needs the ping channel (protocol 12) — a protocol-11 bridge can
 // still show a snapshot, just not place the pulse.
+//
+// `request({ moverId, radiusFeet })` (#1744 WS-3, protocol 16) asks for a
+// mover-centered capture instead of the GM's current viewport — both fields
+// optional and additive, so every existing caller's plain `request()` is
+// unaffected. The raw `ack` is also returned for callers that need to watch
+// the channel continuously rather than await a single correlated reply — the
+// bridge's unsolicited post-`movedone` broadcast (`trigger: 'movedone'`)
+// carries no request id this hook's promise can settle against.
+//
+// Only ONE request is ever in flight per hook instance — a second `request()`
+// call while one is still outstanding is a no-op (`Promise.resolve(null)`),
+// same as `available` being false. A caller that may need to give up on an
+// unanswered request before it naturally resolves (e.g. the player leaves
+// map mode before the GM client replies) should call `cancel()` first, or
+// its own next `request()` would silently do nothing.
 export function useSceneSnapshot() {
   const { sendUpdate, foundryConnected } = useSession();
   const { protocol } = useBridgeStatus();
@@ -51,9 +66,9 @@ export function useSceneSnapshot() {
   // Unmount with a request in flight: resolve null so awaiters never hang.
   useEffect(() => () => settle(null), [settle]);
 
-  const request = useCallback(() => {
+  const request = useCallback((opts) => {
     if (!available || pendingRef.current) return Promise.resolve(null);
-    const req = buildSnapshotRequest();
+    const req = buildSnapshotRequest(opts);
     setRequesting(true);
     return new Promise((resolve) => {
       pendingRef.current = {
@@ -81,7 +96,12 @@ export function useSceneSnapshot() {
     return true;
   }, [canTemplate, sendUpdate]);
 
-  return { request, requesting, available, canPing, ping, canTemplate, placeTemplate };
+  // Give up on an outstanding request without waiting out its timeout —
+  // resolves the caller's promise null (mirrors the unmount cleanup above)
+  // and frees pendingRef so the NEXT request() isn't silently swallowed.
+  const cancel = useCallback(() => settle(null), [settle]);
+
+  return { request, requesting, available, canPing, ping, canTemplate, placeTemplate, ack, cancel };
 }
 
 export default useSceneSnapshot;

@@ -18,6 +18,11 @@ import './MapSnapshotViewer.css';
 //   marker     { nx, ny } | null — the picked point, drawn as a pin
 //   onPick     ({ nx, ny }) => void
 //   disabled   suppress picking (post-confirm states)
+//   overlay    optional React node (#1744 S2), rendered inside `.msv-pane`
+//              alongside the image — the same percentage-positioned trick the
+//              `marker` pin below uses, so it inherits the pan/zoom transform
+//              for free. Purely presentational (SnapshotRouteOverlay); this
+//              component neither knows nor cares what it draws.
 
 const DRAG_SLOP = 8;      // px of movement that turns a tap into a pan
 const MIN_ZOOM = 1;
@@ -25,7 +30,7 @@ const MAX_ZOOM = 5;
 
 const clampZoom = (z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
 
-const MapSnapshotViewer = ({ src, marker = null, onPick, disabled = false }) => {
+const MapSnapshotViewer = ({ src, marker = null, onPick, disabled = false, overlay = null }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const imgRef = useRef(null);
@@ -106,6 +111,7 @@ const MapSnapshotViewer = ({ src, marker = null, onPick, disabled = false }) => 
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
         >
           <img ref={imgRef} className="msv-img" src={src} alt="Battlefield snapshot" draggable="false" />
+          {overlay}
           {marker && (
             <span
               className="msv-pin"
