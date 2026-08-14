@@ -21,7 +21,7 @@
  *   - SNAP/PING/TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS → src/utils/snapshotRelay.js
  *   - STRIKE_PROTOCOL / STRIKE_TIMEOUT_MS     → src/utils/strikeRelay.js
  *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
- *   - ENEMY_MOVE_PROTOCOL                     → src/utils/movement.js
+ *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL → src/utils/movement.js
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -84,6 +84,14 @@ export const CAST_TIMEOUT_MS = 10_000;
  *  learned to resolve a combat `entryId` to a token (A1), so an older module
  *  hides the tab rather than offering a pad that can never move anything. */
 export const ENEMY_MOVE_PROTOCOL = 10;
+
+/** The bridge protocol that taught the movement rail the plan/confirm
+ *  pipeline (#1736 S1/S2) — findMovementPath/constrainMovementPath/
+ *  measureMovementPath wrappers plus the moveplan→moveplanned relay pair and
+ *  moveconfirm's waypoints[] field. PC Stride gates the destination-tap
+ *  confirm flow on this floor; below it (or no hello at all) MoveActionSheet
+ *  falls back to the 5-ft stepper unchanged. */
+export const FULL_MOVE_PROTOCOL = 14;
 
 // ── the handshake payload ────────────────────────────────────────────────────
 
