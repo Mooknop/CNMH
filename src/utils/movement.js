@@ -34,6 +34,19 @@ export const ENEMY_MOVE_PROTOCOL = 10;
 // below it (or no hello at all) falls back to the 5-ft stepper unchanged.
 export const FULL_MOVE_PROTOCOL = 14;
 
+// The bridge protocol that taught the relay a filtered pathpreview channel,
+// per-token-scene grid conversion, and mover-centered snapshot captures
+// (#1744 WS-1/WS-2) — `snapreq` grows optional `{ moverId, radiusFeet }` and
+// `snapdone` grows additive `{ moverId, trigger }`. The Move sheet's
+// grid/map surface toggle only appears at this floor or above; below it (or
+// no hello at all) the abstract grid is the only surface, exactly as today.
+export const MAP_MOVE_PROTOCOL = 16;
+
+// Device-local pref key (useDevicePref, #1575 D3) for the Move sheet's
+// grid-vs-map surface toggle (#1744 S4, OQ-4 ruling: sticky per device, no
+// imposed default). 'grid' | 'map'.
+export const MOVE_SURFACE_PREF = 'moveSurface';
+
 /**
  * Actions needed to cover a terrain-aware move cost against a Speed budget —
  * the generalized, charge-at-confirm form of needsNewStride's per-step

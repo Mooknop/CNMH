@@ -1,0 +1,57 @@
+/* SnapshotRouteOverlay (#1744 S2) — an SVG layer inside MapSnapshotViewer's
+   `.msv-pane`, so it scales and pans with the image for free. viewBox is a
+   flat 0-100 percentage space; every coordinate the component computes is
+   already a percentage, so strokes below are sized in that same space and
+   scale naturally with pinch-zoom, exactly like the image content. */
+.sro {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sro-lattice {
+  stroke: var(--color-theme, var(--shell-border-strong));
+  stroke-width: 0.15;
+  opacity: 0.3;
+}
+
+.sro-line {
+  fill: none;
+  stroke: var(--color-theme, var(--ember-mid));
+  stroke-width: 0.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+}
+
+.sro-origin {
+  fill: var(--color-theme, var(--ember-mid));
+  fill-opacity: 0.16;
+  stroke: var(--color-theme, var(--ember-mid));
+  stroke-width: 0.4;
+  opacity: 0.85;
+}
+
+.sro-dest {
+  fill: var(--ember-mid);
+  fill-opacity: 0.28;
+  stroke: var(--ember-mid);
+  stroke-width: 0.6;
+}
+
+/* Someone else's in-flight move (#1744 S3/WS-4, a later wave) — same
+   geometry, rendered as a fainter dashed ghost rather than the viewer's own
+   solid route. */
+.sro--ghost .sro-line {
+  stroke: var(--shell-text-tertiary);
+  stroke-dasharray: 2.5 1.5;
+  opacity: 0.75;
+}
+
+.sro--ghost .sro-dest {
+  fill: var(--shell-text-tertiary);
+  stroke: var(--shell-text-tertiary);
+}
