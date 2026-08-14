@@ -35,10 +35,11 @@ import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
+import { initPathPreview, _resetPathPreview } from './pathPreview.js';
 import { initActorFeed } from './actorFeed.js';
 import {
   installFoundryGlobals, makeActor, makeToken, makeCombat, makeCombatant,
-  makeGame, makeChatMessage, equipV14Movement,
+  makeGame, makeChatMessage, equipV14Movement, makeTokenMovement,
   makeNpcStrike, makeSpellcastingEntry, makeSpellItem, makeAbilityItem,
 } from './test/foundryMock.js';
 
@@ -520,6 +521,21 @@ const RECIPES = {
     initPositions(send);
     pushPositions();
     return grab(send, RELAY.POSITIONS);
+  },
+
+  [RELAY.PATHPREVIEW]: () => {
+    // Drive the real v14 `moveToken` hook against the mocked world (#1736 S3):
+    // a mapped PC striding two cells, so `id` carries a charId and `path`
+    // carries more than one row.
+    const send = movementWorld();
+    _resetPathPreview();
+    initPathPreview(send);
+    const token = global.canvas.tokens.placeables.find((t) => t.id === 'tok-pellias');
+    const { document, movement } = makeTokenMovement(token, {
+      pending: [{ x: 600, y: 500 }, { x: 700, y: 600 }],
+    });
+    global.Hooks.fire('moveToken', document, movement, {}, 'user1');
+    return grab(send, RELAY.PATHPREVIEW);
   },
 
   [RELAY.ACTORFEED]: () => {

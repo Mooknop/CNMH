@@ -64,8 +64,10 @@ import {
   getTokenDimensions,
   getActorById,
   getActorTokens,
+  getCombatTokenMap,
   getMinionActorLinks,
   getTokenGridPosition,
+  getTokenIdentity,
   getTokenDisposition,
   gridToPixels,
   measureMoveCost,
@@ -110,9 +112,21 @@ function occupiedCells(movingToken, gridSize) {
   return occupied;
 }
 
-export function resolveToken(charId) {
+// The three id spaces a movement key can carry, and the Foundry data behind
+// each. resolveToken() walks id → token (an app request naming a mover);
+// resolveMoverId() walks token → id (#1736 S3 — the pathpreview push starts
+// from a Foundry-side move and has to name the mover for the app). Both read
+// their sources through here so the two directions can't drift apart.
+// (getMinionActorLinks comes from pf2eAdapter, not minionActors.js, to avoid a
+// circular import.)
+function moverSources() {
   const actorMap = getActorMap();
-  const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
+  return { actorMap, minionLinks: getMinionActorLinks(actorMap) };
+}
+
+export function resolveToken(charId) {
+  const { actorMap, minionLinks } = moverSources();
+  const actorId = Object.keys(actorMap).find((k) => actorMap[k] === charId);
   if (actorId) {
     const actor = getActorById(actorId);
     // PCs have a single token on the scene; companions/familiars are separate
@@ -123,10 +137,8 @@ export function resolveToken(charId) {
 
   // Minion fallback (#362): a charId of the form `<ownerCharId>-<role>` is a
   // companion/familiar that isn't in the PC actor map. Resolve it through the
-  // ownership-derived minion link to its own Foundry actor token. (Imported from
-  // pf2eAdapter, not minionActors.js, to avoid a circular import.)
-  const link = getMinionActorLinks(actorMap)
-    .find((l) => `${l.ownerCharId}-${l.role}` === charId);
+  // ownership-derived minion link to its own Foundry actor token.
+  const link = minionLinks.find((l) => `${l.ownerCharId}-${l.role}` === charId);
   if (link) {
     const actor  = getActorById(link.foundryActorId);
     const tokens = actor ? getActorTokens(actor) : [];
@@ -138,6 +150,29 @@ export function resolveToken(charId) {
   // random Foundry ids, so they can't shadow the branches above; outside combat
   // (or for an unknown id) this resolves null and the request is ignored.
   return resolveCombatantToken(charId);
+}
+
+// token → the app-side mover id, in the SAME precedence resolveToken applies in
+// reverse: mapped PC charId, then minion `<ownerCharId>-<role>`, then the
+// combat entryId. Accepts a placed Token or a TokenDocument (movement hooks
+// hand over the latter). Returns null for a token the app has no mover for —
+// unmapped scenery, an out-of-combat NPC — which is a legitimate preview
+// subject, just an anonymous one (the payload's tokenId still identifies it).
+export function resolveMoverId(token) {
+  const { tokenId, actorId } = getTokenIdentity(token);
+  const { actorMap, minionLinks } = moverSources();
+
+  if (actorId && actorMap[actorId]) return actorMap[actorId];
+
+  const link = actorId ? minionLinks.find((l) => l.foundryActorId === actorId) : null;
+  if (link) return `${link.ownerCharId}-${link.role}`;
+
+  if (tokenId) {
+    const entry = getCombatTokenMap().find((e) => e.token?.id === tokenId);
+    if (entry) return entry.combatantId;
+  }
+
+  return null;
 }
 
 // Called by bridge.js when cnmh_movereq_<charId> arrives. moveType (step vs

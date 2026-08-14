@@ -1,0 +1,24 @@
+{
+  "characterId": "global",
+  "value": {
+    "tokenId": "tok-pellias",
+    "id": "Pellias",
+    "origin": {
+      "col": 5,
+      "row": 5
+    },
+    "path": [
+      {
+        "col": 6,
+        "row": 5
+      },
+      {
+        "col": 7,
+        "row": 6
+      }
+    ],
+    "phase": "move",
+    "source": "foundry",
+    "ts": 1700000000000
+  }
+}

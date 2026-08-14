@@ -45,6 +45,38 @@ data path moves, **only the adapter changes.**
   movement rail. Smoke pass additions: plan a full-speed stride from the app,
   confirm it, and verify the token walks the whole route with the reported
   cost — including one route across difficult terrain and one clipped at a wall.
+  **Movement hooks — names VERIFIED against the 14.365 API docs (#1736 S3).**
+  Earlier planning notes named `planToken` / `preMoveToken`; only the first is
+  the right hook. The v14 movement-pipeline hooks are:
+  - `planToken(document)` — "fires when the current movement of a Token
+    document is planned". Takes **no path argument**: the plan hangs off
+    `document.movement` (a `TokenMovementData`).
+  - `moveToken(document, movement, operation, user)` — "fires for every Token
+    document that was moved after conclusion of an update workflow […]
+    activates on all connected clients". Fires while the animation is still
+    running, so it reads as *movement started*, not a post-mortem.
+  - `preMoveToken(document, movement, operation)` — real, cancellable
+    (`return false` rejects the move), but **only executes on the client
+    initiating the update request**. That makes it useless for observing other
+    clients' movement; `pathPreview.js` deliberately does not register it.
+  Payload shape: `movement.origin` / `.destination` are `TokenPosition`s and
+  `movement.passed` / `.pending` are `TokenMovementSectionData` whose
+  `waypoints` are `TokenMeasuredMovementWaypoint`s — whose `x`/`y` are the
+  **top-left pixel** of the token, the same space `token.x/y`, `gridToPixels`
+  and `pixelsToGrid` use, so no centre offset is involved. All of this is read
+  in one place, `readTokenMovement()` in the adapter, and returns null (→ no
+  preview, no crash) if a future build moves the fields.
+  Still open from #1736 S3: whether `move()`'s options bag forwards
+  `BRIDGE_SOURCE_FLAG` into the hook contexts. `readMovementSource()` checks
+  BOTH the hook's `operation` argument and `movement.updateOptions` so either
+  routing works; if neither carries it on the live build, app-driven moves will
+  simply report `source: 'foundry'` — cosmetic, not a failure.
+  Smoke pass additions: with the app open, drag-plan a foe in Foundry and
+  confirm a `cnmh_pathpreview_global` write arrives with `phase: 'plan'`
+  (throttled, not one per frame) followed by `phase: 'move'` on release; move a
+  token from the app and confirm the same key arrives with `source: 'app'`.
+  (The app-side consumer that draws the ghost is a later slice — verify the
+  relay writes, not a visual.)
 - **Namespaced core classes — dice half resolved (#1574).** `rollFormula` reads
   `foundry.dice.Roll` when present (the only exposure once v14 retires the
   deprecated global) with the bare global as the v13 fallback.

@@ -14,6 +14,7 @@ import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, upd
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm } from './movement.js';
+import { initPathPreview } from './pathPreview.js';
 import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
@@ -113,6 +114,7 @@ Hooks.once('ready', () => {
   initActorFeed(sendUpdate);
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
+  initPathPreview(sendUpdate);
   initFlankingPush(sendUpdate);
   initAdjacencyPush(sendUpdate);
   initPositions(sendUpdate);
