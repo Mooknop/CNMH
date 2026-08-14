@@ -377,6 +377,59 @@ export function equipV14Movement(token, opts = {}) {
   return token;
 }
 
+// The two payloads a v14 movement hook hands a listener (#1736 S3):
+//   moveToken(document, movement, operation, user) — both objects
+//   planToken(document)                            — the document only, with
+//     the same movement record hanging off `document.movement`
+// so one description drives both hooks. `passed` / `pending` are
+// TokenMovementSectionData: their waypoints are TOP-LEFT pixel coordinates,
+// and Foundry's own path starts AT the origin (which is why the emitter drops
+// the leading waypoint) — the default models that.
+//
+//   origin        — { x, y } the movement started from (defaults to the token)
+//   passed        — waypoints already traversed
+//   pending       — waypoints still to come
+//   constrained   — a wall/constraint clipped the route
+//   updateOptions — the caller's options bag (carries BRIDGE_SOURCE_FLAG)
+export function makeTokenMovement(token, opts = {}) {
+  const {
+    origin = { x: token.x, y: token.y },
+    passed = [{ x: token.x, y: token.y }],
+    pending = [],
+    constrained = false,
+    updateOptions = {},
+  } = opts;
+
+  const section = (waypoints) => ({
+    waypoints: waypoints.map((w) => ({ ...w, elevation: 0, width: 1, height: 1 })),
+    distance: 0, cost: 0, spaces: waypoints.length, diagonals: 0,
+  });
+
+  const movement = {
+    id: autoId('movement'),
+    chain: [],
+    origin: { ...origin },
+    destination: { ...(pending.at(-1) ?? passed.at(-1) ?? origin) },
+    passed: section(passed),
+    pending: section(pending),
+    constrained,
+    recorded: true,
+    method: 'dragging',
+    updateOptions,
+  };
+
+  const document = {
+    ...token.document,
+    id: token.id,
+    x: token.x,
+    y: token.y,
+    actor: token.actor,
+    movement,
+  };
+
+  return { document, movement };
+}
+
 export function makeCombatant(opts = {}) {
   const {
     id = autoId('combatant'),

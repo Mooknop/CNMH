@@ -7,7 +7,7 @@
 //   2. Update the two canvas functions marked [v14-MIGRATION] below
 //   3. Re-verify system.* data paths (stable across v13→v14 for PF2e 7.x)
 
-import { BRIDGE_SOURCE_FLAG } from './utils.js';
+import { BRIDGE_SOURCE_FLAG, isBridgeEcho } from './utils.js';
 
 // --- Actor data ---
 
@@ -813,12 +813,19 @@ export function getTokenDisposition(token) {
   return token?.document?.disposition ?? token?.disposition ?? 0;
 }
 
-export function getTokenGridPosition(token) {
+// Pixel → cell. Both sides of the wire speak a cell's TOP-LEFT pixel (what
+// token.x/y stores and gridToPixels yields), so this is the exact inverse of
+// gridToPixels.
+export function pixelsToGrid(x, y) {
   const gridSize = getGridSize();
   return {
-    col: Math.round(token.x / gridSize),
-    row: Math.round(token.y / gridSize),
+    col: Math.round(Number(x) / gridSize),
+    row: Math.round(Number(y) / gridSize),
   };
+}
+
+export function getTokenGridPosition(token) {
+  return pixelsToGrid(token.x, token.y);
 }
 
 export function gridToPixels(col, row) {
@@ -1082,6 +1089,95 @@ export async function moveTokenPath(token, waypointCenters) {
     landed = (await moveToken(token, corner.x, corner.y)) ?? corner;
   }
   return { x: landed.x + offX, y: landed.y + offY };
+}
+
+// --- v14 movement-pipeline hooks (#1736 S3) ----------------------------------
+//
+// The hook names, VERIFIED against the Foundry v14 (14.365) API docs — the
+// epic's sketch guessed `planToken` / `preMoveToken` and only the first is the
+// right one:
+//
+//   planToken(document)                             — "fires when the current
+//     movement of a Token document is planned". No path argument: the plan
+//     hangs off `document.movement`.
+//   moveToken(document, movement, operation, user)  — "fires for every Token
+//     document that was moved after conclusion of an update workflow […]
+//     activates on all connected clients". The animation is still running when
+//     it fires, so it is a *start-of-movement* signal, not a post-mortem.
+//   preMoveToken(document, movement, operation)     — deliberately NOT used:
+//     it "only executes on the client initiating the update request", i.e.
+//     exactly the moves the bridge already knows about and never the
+//     GM-drag / other-player moves the preview push exists to surface.
+//
+// https://foundryvtt.com/api/v14/modules/hookEvents.html
+export const MOVEMENT_HOOKS = Object.freeze({
+  PLAN: 'planToken',
+  MOVE: 'moveToken',
+});
+
+// Normalize a movement-hook payload into { origin, points } in TOP-LEFT pixel
+// space (the space token.x/y, gridToPixels and pixelsToGrid all speak).
+//
+// `movement` (a TokenMovementOperation, from moveToken) and `document.movement`
+// (a TokenMovementData, all planToken gives us) carry the same fields we read,
+// so ONE reader serves both hooks: `origin`/`destination` are TokenPositions,
+// `passed`/`pending` are TokenMovementSectionData whose `waypoints` are
+// TokenMeasuredMovementWaypoints — and a waypoint's x/y is documented as "the
+// top-left […] coordinate in pixels", i.e. already the wire's space.
+//
+// Returns null when there is no movement record at all (a build that renamed
+// the fields degrades to no preview rather than a wrong one).
+export function readTokenMovement(document, movement) {
+  const data = movement ?? document?.movement ?? document?._movement ?? null;
+  if (!data) return null;
+
+  const point = (p) => (Number.isFinite(Number(p?.x)) && Number.isFinite(Number(p?.y))
+    ? { x: Number(p.x), y: Number(p.y) }
+    : null);
+
+  // The document has already been written to the destination by the time
+  // moveToken fires, so document.x/y is only a last-resort origin.
+  const origin = point(data.origin) ?? point(document);
+
+  const points = [];
+  for (const section of [data.passed, data.pending]) {
+    for (const waypoint of section?.waypoints ?? []) {
+      const p = point(waypoint);
+      if (p) points.push(p);
+    }
+  }
+
+  // A movement with no waypoint sections still has a destination — for a
+  // one-hop move that IS the whole path.
+  if (!points.length) {
+    const destination = point(data.destination);
+    if (destination) points.push(destination);
+  }
+
+  return { origin, points, constrained: !!data.constrained };
+}
+
+// Which side asked for a movement. The bridge tags its own writes with
+// BRIDGE_SOURCE_FLAG; v14 surfaces the caller's options bag both as the hook's
+// `operation` argument and (on the movement record) as `updateOptions`, so
+// check both — whichever way core forwards it, one of them carries the flag.
+// Unlike the other hook listeners this does NOT suppress the echo: an app-driven
+// move is worth previewing too (the other players watch it happen).
+export function readMovementSource(movement, operation) {
+  return (isBridgeEcho(operation) || isBridgeEcho(movement?.updateOptions))
+    ? 'app'
+    : 'foundry';
+}
+
+// Identity of the token a movement hook fired for. Hooks hand over a
+// TokenDocument; the rest of the bridge mostly holds placed Tokens — accept
+// either, so the reverse mover lookup has one entry point.
+export function getTokenIdentity(token) {
+  const doc = token?.document ?? token ?? null;
+  return {
+    tokenId: doc?.id ?? token?.id ?? null,
+    actorId: getActorId(doc?.actor ?? token?.actor ?? null),
+  };
 }
 
 // Create a token for an actor on the active scene at a pixel position (#362).

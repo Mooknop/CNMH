@@ -22,7 +22,7 @@ export const GLOBAL_ID = 'global';
 // exactly the degradation this exists to surface). Bump it in the same PR as
 // the payload change; the app-side minimum (src/hooks/useBridgeStatus.js)
 // decides when old protocols stop being acceptable.
-export const PROTOCOL_VERSION = 14;
+export const PROTOCOL_VERSION = 15;
 
 // App ↔ bridge relay channels. Values are the bare <type> tokens carried as
 // the `key` field on the wire and used as the middle segment of storage keys.
@@ -61,6 +61,7 @@ export const RELAY = Object.freeze({
   MOVEPLAN: 'moveplan',
   MOVEPLANNED: 'moveplanned',
   MOVEREQ: 'movereq',
+  PATHPREVIEW: 'pathpreview',
   PINGPOINT: 'pingpoint',
   POSITIONS: 'positions',
   POSITIONSREQ: 'positionsreq',
