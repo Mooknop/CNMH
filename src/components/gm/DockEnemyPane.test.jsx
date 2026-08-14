@@ -401,6 +401,122 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  // #1736 S4: destination-tap flow on a protocol-14+ bridge. Foe speed budget
+  // comes straight off moveopts.speed (the bridge's actor read — foes have no
+  // app-derived speed spine); the confirm bar is the feet-only variant since
+  // the dock has no app-side action accounting for enemies.
+  describe('move rail tap flow (#1736 S4)', () => {
+    const armTapMove = (session, { protocol = 14 } = {}) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol, module: '0.0.0-test', ts: 1 });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+
+    const lastMoveReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.MOVEREQ).at(-1);
+
+    const openMove = () => fireEvent.click(screen.getByRole('tab', { name: 'Move' }));
+
+    const TAP_OPTS = { origin: { col: 5, row: 5 }, speed: 25 };
+
+    it('a protocol-13 bridge keeps the D-pad; protocol 14 shows the tap grid instead', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armTapMove(session, { protocol: 13 });
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, {
+          origin: TAP_OPTS.origin,
+          reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+          blocked: [],
+          speed: 25,
+          reqTs: ts,
+        });
+      });
+      expect(screen.getByRole('button', { name: 'Step east' })).toBeInTheDocument();
+
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol: 14, module: '0.0.0-test', ts: 2 });
+      });
+      // Re-request under the new protocol to see the tap grid replace the D-pad.
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts: ts2 } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts2 });
+      });
+      expect(screen.queryByRole('button', { name: 'Step east' })).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/Move to 6,5 —/)).toBeInTheDocument();
+    });
+
+    it('tapping a cell sends moveplan; the confirm bar is FEET-ONLY (no action count)', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armTapMove(session);
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts });
+      });
+
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      expect(plan.characterId).toBe('cbt-gob');
+      expect(plan.value).toMatchObject({ waypoints: [{ col: 6, row: 5 }], moveType: 'stride' });
+
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEPLANNED, {
+          reqTs: plan.value.ts, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 5, clipped: false,
+        });
+      });
+
+      const bar = screen.getByLabelText('Confirm move');
+      expect(bar).toHaveTextContent('5 ft');
+      expect(bar).not.toHaveTextContent('action');
+    });
+
+    it('Confirm sends moveconfirm with waypoints and no action cost; Done logs the real total', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armTapMove(session);
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts });
+      });
+
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      const planPath = [{ col: 6, row: 5, x: 600, y: 500 }];
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEPLANNED, {
+          reqTs: plan.value.ts, path: planPath, costFeet: 5, clipped: false,
+        });
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+      const confirm = session.sent.filter((m) => m.stateType === RELAY.MOVECONFIRM).at(-1);
+      expect(confirm.characterId).toBe('cbt-gob');
+      expect(confirm.value).toMatchObject({ waypoints: planPath, moveType: 'stride', actionCost: 0 });
+
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEDONE, {
+          newPosition: { col: 6, row: 5, x: 600, y: 500 },
+          feetMoved: 5,
+          reqTs: plan.value.ts,
+        });
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+      const encUpdate = session.sent.filter((m) => m.stateType === RELAY.ENCOUNTER).at(-1);
+      const logged = (encUpdate.value.log || []).at(-1);
+      expect(logged.text).toBe('Goblin Warrior moved 5 ft (dock)');
+    });
+  });
+
   describe('condition truth + GM management (S3)', () => {
     it('renders the foe’s recorded Foundry conditions as truth chips', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);

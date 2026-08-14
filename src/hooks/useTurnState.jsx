@@ -37,6 +37,29 @@ export const useTurnState = (charId) => {
     [setTurnState]
   );
 
+  // Credit actions back onto the same accumulator spendActions debits (#1736
+  // S4) — a stop-short movement refund (Foundry legally lands a planned move
+  // short of its priced cost) is the first caller, but the shape is generic:
+  // any over-charge can flow back through here. The log entry is marked
+  // distinctly ("<label> refund", negative cost, `refund: true`) so the trail
+  // reads as money returned, not a fresh spend — replaces the old idiom of
+  // calling spendActions with a negative count.
+  const refundActions = useCallback(
+    (count, sourceLabel) =>
+      setTurnState((cur) => {
+        const base = cur || defaultTurnState();
+        return {
+          ...base,
+          actionsSpent: base.actionsSpent - count,
+          actionsLog: [
+            ...base.actionsLog,
+            { name: `${sourceLabel || 'Action'} refund`, cost: -count, refund: true, ts: Date.now() },
+          ],
+        };
+      }),
+    [setTurnState]
+  );
+
   const spendReaction = useCallback(
     (sourceLabel) =>
       setTurnState((cur) => {
@@ -99,6 +122,7 @@ export const useTurnState = (charId) => {
   return {
     turnState: turnState || defaultTurnState(),
     spendActions,
+    refundActions,
     grantActions,
     spendReaction,
     recordAttack,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import ExplorationMove from './ExplorationMove';
 
 const mockPlayMode = {
@@ -28,10 +28,14 @@ const mockMovement = {
   stage: null,
   pickerOpts: null,
   isRefreshing: false,
+  plannedPath: null,
   requestMove: vi.fn(),
   requestMoveRefresh: vi.fn(),
   confirmMove: vi.fn(),
   cancelMove: vi.fn(),
+  planMove: vi.fn(),
+  confirmPlannedMove: vi.fn(),
+  cancelPlan: vi.fn(),
 };
 vi.mock('../../hooks/useTokenMovement', () => ({
   useTokenMovement: (charId, opts) => {
@@ -39,6 +43,14 @@ vi.mock('../../hooks/useTokenMovement', () => ({
     mockMovement.lastOpts = opts;
     return mockMovement;
   },
+}));
+
+// Bridge protocol gate (#1736 S4): defaults to null (no hello) so every
+// existing test in this file stays on the D-pad fallback unchanged; the tap
+// flow describe block below flips this to 14.
+let mockProtocol = null;
+vi.mock('../../hooks/useBridgeStatus', () => ({
+  useBridgeStatus: () => ({ protocol: mockProtocol, outdated: false, moduleVersion: null }),
 }));
 
 vi.mock('../encounter/MoveGridPicker', () => ({
@@ -74,6 +86,8 @@ beforeEach(() => {
   mockMovement.stage = null;
   mockMovement.pickerOpts = null;
   mockMovement.isRefreshing = false;
+  mockMovement.plannedPath = null;
+  mockProtocol = null;
   mockCharData = null;
 });
 
@@ -238,6 +252,87 @@ describe('ExplorationMove', () => {
       mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
       render(<ExplorationMove charId="char-1" />);
       expect(screen.queryByLabelText('Derived speed')).toBeNull();
+    });
+  });
+
+  // #1736 S4: destination-tap flow on a protocol-14+ bridge — feet-only
+  // confirm bar, no action economy, real feetMoved still tallies.
+  describe('tap flow (#1736 S4)', () => {
+    beforeEach(() => { mockProtocol = 14; });
+
+    it('protocol 13 stays on the D-pad (no confirm bar)', () => {
+      mockProtocol = 13;
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+      expect(screen.getByRole('button', { name: 'Select Square' })).toBeInTheDocument();
+      expect(screen.queryByLabelText('Confirm move')).toBeNull();
+    });
+
+    it('tapping a cell plans a move instead of confirming a step directly', () => {
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Select Square' }));
+      expect(mockMovement.planMove).toHaveBeenCalledWith([{ x: 100, y: 200 }]);
+      expect(mockMovement.confirmMove).not.toHaveBeenCalled();
+    });
+
+    it('planned stage shows a FEET-ONLY confirm bar (no action count, exploration has no economy)', () => {
+      mockMovement.stage = 'planned';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      mockMovement.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 35, clipped: false };
+      render(<ExplorationMove charId="char-1" />);
+
+      const bar = screen.getByLabelText('Confirm move');
+      expect(bar).toHaveTextContent('35 ft');
+      expect(bar).not.toHaveTextContent('action');
+    });
+
+    it('Confirm sends confirmPlannedMove with no action cost', () => {
+      mockMovement.stage = 'planned';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      mockMovement.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 35, clipped: false };
+      render(<ExplorationMove charId="char-1" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+      expect(mockMovement.confirmPlannedMove).toHaveBeenCalledWith(0);
+    });
+
+    it('Cancel on the confirm bar backs out of the plan without leaving movement mode', () => {
+      mockMovement.stage = 'planned';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      mockMovement.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 35, clipped: false };
+      render(<ExplorationMove charId="char-1" />);
+
+      // Both the (mocked) grid's Done button and the confirm bar's Cancel
+      // button render together at 'planned' (same as MoveActionSheet's tap
+      // flow) — scope to the confirm bar so this only exercises its Cancel.
+      const bar = screen.getByLabelText('Confirm move');
+      fireEvent.click(within(bar).getByRole('button', { name: 'Cancel' }));
+      expect(mockMovement.cancelPlan).toHaveBeenCalled();
+      expect(mockMovement.cancelMove).not.toHaveBeenCalled();
+    });
+
+    it('shows the clipped note when the bridge reports the path stopped at a wall', () => {
+      mockMovement.stage = 'planned';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      mockMovement.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 5, clipped: true };
+      render(<ExplorationMove charId="char-1" />);
+      expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
+    });
+
+    it('a completed move still tallies feetMoved into the distance readout and shared tally', () => {
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 35 }));
+      expect(screen.getByLabelText('Distance walked')).toHaveTextContent('Moved 35 ft');
+      expect(mockExploreDist).toBe(35);
+      // Chains a refresh probe exactly like the stepper does.
+      expect(mockMovement.requestMoveRefresh).toHaveBeenCalledWith('stride');
     });
   });
 });
