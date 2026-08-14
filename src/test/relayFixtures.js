@@ -23,6 +23,8 @@ import minions from '../../foundry-bridge/__fixtures__/relay/minions.json';
 import movedone from '../../foundry-bridge/__fixtures__/relay/movedone.json';
 import moveopts from '../../foundry-bridge/__fixtures__/relay/moveopts.json';
 import moveplanned from '../../foundry-bridge/__fixtures__/relay/moveplanned.json';
+import pathpreview from '../../foundry-bridge/__fixtures__/relay/pathpreview.json';
+import pathpreviewgm from '../../foundry-bridge/__fixtures__/relay/pathpreviewgm.json';
 import positions from '../../foundry-bridge/__fixtures__/relay/positions.json';
 import rolldone from '../../foundry-bridge/__fixtures__/relay/rolldone.json';
 import roster from '../../foundry-bridge/__fixtures__/relay/roster.json';
@@ -35,8 +37,8 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 export const relayFixtures = {
   actorfeed, adjacency, castdone, conditions, dmgdone, dooropts, encounter, exploremove,
   flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
-  movedone, moveopts, moveplanned, positions, rolldone, roster, savedone, strikedone,
-  summonpool,
+  movedone, moveopts, moveplanned, pathpreview, pathpreviewgm, positions, rolldone, roster,
+  savedone, strikedone, summonpool,
 };
 
 // Push a fixture into a test session bus as if the bridge sent it.

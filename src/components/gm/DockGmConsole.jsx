@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RequestedSaves from '../encounter/RequestedSaves';
 import ArmedPayloads from '../encounter/ArmedPayloads';
+import DockRoutePreviews from './DockRoutePreviews';
 import GmSaveRequest from './GmSaveRequest';
 import AddSummonModal from './AddSummonModal';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
@@ -38,6 +39,10 @@ import './DockGmConsole.css';
 // Table block (#1537 S8): play-mode control, FX test fire, Apply Effect +
 // Bestiary redaction launchers, and the session log — the /gm/encounter
 // long tail, after which that page retires.
+// Route previews (#1744 S3/WS-4): the UNFILTERED pathpreview channel
+// (audience: 'gm') as a self-hiding text card, same family as
+// RequestedSaves/ArmedPayloads — see DockRoutePreviews.jsx for why a text
+// card rather than a map overlay this wave.
 const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
   const [addSummonOpen, setAddSummonOpen] = useState(false);
   const [challengeOpen, setChallengeOpen] = useState(false);
@@ -53,6 +58,7 @@ const DockGmConsole = ({ pcEntries, entries = [], round = 0 }) => {
       <div className="dock-console-head">GM console</div>
       <RequestedSaves />
       <ArmedPayloads />
+      <DockRoutePreviews />
       <GmSaveRequest pcEntries={pcEntries} />
       <GmTriggerConsole pcEntries={pcEntries} round={round} />
       <div className="dock-console-card dock-console-challenges" data-testid="dock-challenges">
