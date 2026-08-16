@@ -128,4 +128,36 @@ describe('useSecondaryProfiles', () => {
     build();
     expect(captured).toEqual([]);
   });
+
+  // ── Hidden-combatant filtering (#1749 ruling addendum) ────────────────────
+  it('excludes a hidden enemy from the zone target picker', () => {
+    const withHidden = [
+      ...order,
+      { entryId: 'e-skulk', kind: 'enemy', name: 'Skulker', hidden: true, defenses: { saves: { reflex: 5 } } },
+    ];
+    const Harness2 = () => {
+      const { section } = useSecondaryProfiles({
+        ability: arc, character, order: withHidden, castRank: 2, casterEntryId: 'e-caster',
+      });
+      return <div>{section}</div>;
+    };
+    render(<Harness2 />);
+    expect(screen.getByLabelText('Goblin')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Skulker')).not.toBeInTheDocument();
+  });
+
+  it('an enemy with no hidden field at all (older bridge) stays offered', () => {
+    const noHiddenField = [
+      { entryId: 'e-caster', kind: 'pc', charId: 'char-a', name: 'Brimstone' },
+      { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', defenses: { saves: { reflex: 8 } } },
+    ];
+    const Harness3 = () => {
+      const { section } = useSecondaryProfiles({
+        ability: arc, character, order: noHiddenField, castRank: 2, casterEntryId: 'e-caster',
+      });
+      return <div>{section}</div>;
+    };
+    render(<Harness3 />);
+    expect(screen.getByLabelText('Goblin')).toBeInTheDocument();
+  });
 });

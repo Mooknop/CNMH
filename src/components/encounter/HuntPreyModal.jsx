@@ -4,6 +4,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { preyKeyFor } from '../../utils/huntPrey';
+import { visibleOrder } from '../../utils/encounterUtils';
 import './TreatWoundsModal.css';
 
 /**
@@ -24,7 +25,9 @@ const HuntPreyModal = ({ isOpen, onClose, character, themeColor, actionCost = 0 
   const [selectedEntryId, setSelectedEntryId] = useState(null);
 
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
-  const enemies = (encounter?.order || []).filter((e) => e.kind === 'enemy');
+  // #1749 ruling addendum: a hidden combatant must not be nameable from this
+  // picker (mirrors useTargeting.selectable / #1753's positions filter).
+  const enemies = visibleOrder(encounter?.order).filter((e) => e.kind === 'enemy');
   const selected = enemies.find((e) => e.entryId === selectedEntryId) || null;
 
   const handleConfirm = () => {

@@ -34,8 +34,17 @@ vi.mock('../../../contexts/ContentContext', () => ({
 }));
 
 // The Discover CTAs open the real reveal flows — each has its own suite.
+// Captures the `enemies` prop so a test can assert on the candidate list the
+// modal was handed, without re-implementing BestiaryModal's own rendering.
 vi.mock('../BestiaryModal', () => ({
-  default: ({ isOpen }) => (isOpen ? <div data-testid="bestiary-modal" /> : null),
+  default: ({ isOpen, enemies }) =>
+    isOpen ? (
+      <div data-testid="bestiary-modal">
+        {(enemies || []).map((e) => (
+          <span key={e.entryId}>{e.name}</span>
+        ))}
+      </div>
+    ) : null,
 }));
 vi.mock('../ExploitVulnerabilityModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="exploit-modal" /> : null),
@@ -267,6 +276,33 @@ describe('Dossier', () => {
     expect(screen.getByTestId('bestiary-modal')).toBeInTheDocument();
     fireEvent.click(within(discover).getByRole('button', { name: /Exploit Vulnerability/ }));
     expect(screen.getByTestId('exploit-modal')).toBeInTheDocument();
+  });
+
+  // #1749 ruling addendum: the Bestiary/Recall Knowledge candidate list must
+  // not carry a hidden combatant, same as useTargeting.selectable.
+  it('excludes a hidden enemy from the Bestiary candidate list', () => {
+    let drv, setEnc, setFocus;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (setFocus = s)} />
+        <Dossier charId="Pellias" character={{ id: 'Pellias', name: 'Pellias' }} />
+      </>
+    );
+    setupFocus(() => drv, { setEnc, setFocus });
+    act(() => drv.addEnemy('Skulker', 5));
+    const skulker = drv.encounter.order.find((e) => e.name === 'Skulker');
+    act(() => setEnc((cur) => ({
+      ...cur,
+      order: cur.order.map((e) => (e.entryId === skulker.entryId ? { ...e, hidden: true } : e)),
+    })));
+
+    const discover = screen.getByTestId('dossier-discover');
+    fireEvent.click(within(discover).getByRole('button', { name: /Recall Knowledge/ }));
+    const modal = screen.getByTestId('bestiary-modal');
+    expect(within(modal).getByText('Goblin')).toBeInTheDocument();
+    expect(within(modal).queryByText('Skulker')).not.toBeInTheDocument();
   });
 
   it('hides the EV CTA for non-thaumaturges and the whole block once identified', () => {

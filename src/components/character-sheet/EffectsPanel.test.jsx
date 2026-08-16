@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 
 const mockRemoveEffect = vi.fn();
 const mockEffects = { effects: [], removeEffect: mockRemoveEffect };
@@ -52,6 +52,24 @@ vi.mock('../../contexts/GameDateContext', () => ({
   }),
 }));
 
+// The panel reads the live encounter order (for the arm-vs picker) and
+// writes the raw effects overlay through useSyncedState directly (no
+// useEncounter/useEffects wrapper for either). Key-dispatch mock so the
+// encounter order can be seeded per test while other synced keys fall back
+// to their init value, mirroring PersistentChip.test.jsx's pattern.
+let mockEncounterOrder = null;
+vi.mock('../../hooks/useSyncedState', () => {
+  const ReactLib = require('react');
+  return {
+    useSyncedState: (key, init) => {
+      const [value, setValue] = ReactLib.useState(
+        key === 'cnmh_encounter_global' ? { order: mockEncounterOrder || [] } : init
+      );
+      return [value, setValue];
+    },
+  };
+});
+
 import EffectsPanel from './EffectsPanel';
 import { toGameSeconds } from '../../utils/gameTime';
 
@@ -65,6 +83,7 @@ describe('EffectsPanel', () => {
     mockCounters.counters = [];
     mockStance.active = false;
     mockStance.stanceName = null;
+    mockEncounterOrder = null;
   });
 
   it('renders nothing when no effects are active', () => {
@@ -244,5 +263,47 @@ describe('EffectsPanel', () => {
     render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
     fireEvent.click(screen.getByTitle('Leave Dragon Stance'));
     expect(mockLeaveStance).toHaveBeenCalled();
+  });
+
+  // ── Arm-vs picker hidden filtering (#1749 ruling addendum) ────────────────
+  describe('the whetstone arm-vs picker', () => {
+    const armableEffect = {
+      id: 'uid-arm',
+      effectId: 'heroism-1',
+      ts: 1,
+      whetstone: { effect: { armedBonus: { bonus: 1, trigger: 'when you hit' } } },
+    };
+
+    it('offers every visible enemy to arm against', () => {
+      mockEncounterOrder = [
+        { entryId: 'e1', kind: 'enemy', name: 'Goblin' },
+        { entryId: 'e2', kind: 'enemy', name: 'Troll' },
+      ];
+      mockEffects.effects = [armableEffect];
+      render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+      const select = screen.getByLabelText('Arm Heroism 1 against an enemy');
+      expect(within(select).getByRole('option', { name: 'Goblin' })).toBeInTheDocument();
+      expect(within(select).getByRole('option', { name: 'Troll' })).toBeInTheDocument();
+    });
+
+    it('excludes a hidden enemy from the arm-vs picker', () => {
+      mockEncounterOrder = [
+        { entryId: 'e1', kind: 'enemy', name: 'Goblin' },
+        { entryId: 'e2', kind: 'enemy', name: 'Skulker', hidden: true },
+      ];
+      mockEffects.effects = [armableEffect];
+      render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+      const select = screen.getByLabelText('Arm Heroism 1 against an enemy');
+      expect(within(select).getByRole('option', { name: 'Goblin' })).toBeInTheDocument();
+      expect(within(select).queryByRole('option', { name: 'Skulker' })).not.toBeInTheDocument();
+    });
+
+    it('an enemy with no hidden field at all (older bridge) stays offered', () => {
+      mockEncounterOrder = [{ entryId: 'e1', kind: 'enemy', name: 'Goblin' }];
+      mockEffects.effects = [armableEffect];
+      render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+      const select = screen.getByLabelText('Arm Heroism 1 against an enemy');
+      expect(within(select).getByRole('option', { name: 'Goblin' })).toBeInTheDocument();
+    });
   });
 });

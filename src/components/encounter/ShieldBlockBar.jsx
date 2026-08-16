@@ -9,6 +9,7 @@ import { itemUidOf } from '../../utils/affix';
 import { accessoryRuneOf, runeOnBlock } from '../../utils/accessoryRunes';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
+import { visibleOrder } from '../../utils/encounterUtils';
 // Bare name, not DEFENSE_LABELS (#1639): the retaliation log leads with its own
 // "DC <n>" and closes on the save, so the DC-flavoured label tails the sentence
 // with a stray "DC" ("DC 20 basic Reflex DC").
@@ -85,7 +86,12 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const canShieldBlock =
     raised && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
 
-  const enemies = (encounter?.order || []).filter((e) => e && e.kind === 'enemy');
+  // #1749 ruling addendum: a hidden combatant must not be nameable as a
+  // retaliation/catching target (mirrors useTargeting.selectable / #1753's
+  // positions filter). `target` below re-derives from this filtered list every
+  // render, so a riderTarget that TURNS hidden mid-flow drops the same way a
+  // stale useTargeting selection does — no separate cleanup needed.
+  const enemies = visibleOrder(encounter?.order).filter((e) => e && e.kind === 'enemy');
   const riderReady = liveRider && gate.available;
   const followupLive = armed && riderReady;
 

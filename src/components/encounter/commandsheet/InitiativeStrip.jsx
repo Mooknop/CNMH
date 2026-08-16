@@ -6,6 +6,20 @@
 // kind (enemy peril · ally arcane · self ember), the focused one filled solid.
 // All the existing per-entry chips travel with it (flanked / Hunt Prey /
 // conditions / aura / omen / stance / playing / persistent).
+//
+// #1749 ruling addendum — special case: the strip's tap-to-focus IS its
+// candidate-list picker, but it's also the turn-order display, and this
+// component renders both off the same `order.map`. The ruling extends the
+// hidden filter to "the focus-row picker candidates," not to the visible
+// turn order (that's a bigger table-visibility surface than a picker, and
+// changing it wasn't asked for here — see the PR body for the follow-up
+// question). So a hidden entry stays RENDERED (name, badges, position in the
+// strip all unchanged) but is no longer focusable: its tap is a no-op and it
+// carries aria-disabled. This does not, on its own, stop a hidden entry's
+// name from being visible in the strip — only from becoming the focus (and
+// therefore the dossier / other pickers that read focusEnemy/focusAlly/
+// focusSelf, which useFocusTarget already degrades to null for a hidden
+// entry).
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useSyncedState } from '../../../hooks/useSyncedState';
@@ -59,6 +73,10 @@ const InitiativeStrip = ({ charId }) => {
       {order.map((entry, idx) => {
         const isCurrent = isInProgress && idx === encounter.currentTurnIndex;
         const isFocused = entry.entryId === focusId;
+        // #1749 ruling addendum: hidden entries stay visible in this strip
+        // (the turn-order display, untouched by this ruling) but drop out of
+        // the focus-row picker candidates — see the file-header note.
+        const isHiddenEntry = !!entry.hidden;
         // Kind tint: enemy peril, another PC arcane, the viewer's own entry ember.
         const kindClass = entry.kind === 'enemy'
           ? 'cmd-init-entry--enemy'
@@ -73,7 +91,8 @@ const InitiativeStrip = ({ charId }) => {
         ].filter(Boolean).join(' ');
 
         // Every combatant is tap-to-focus (#429): foes drive offense, allies
-        // drive support, yourself the personal readout (#1502 S2).
+        // drive support, yourself the personal readout (#1502 S2) — except a
+        // hidden one, which the tap no-ops on (#1749 ruling addendum).
         return (
           <button
             key={entry.entryId}
@@ -81,8 +100,9 @@ const InitiativeStrip = ({ charId }) => {
             className={className}
             aria-current={isCurrent ? 'true' : undefined}
             aria-pressed={isFocused}
+            aria-disabled={isHiddenEntry || undefined}
             aria-label={`Focus ${entry.name}`}
-            onClick={() => toggleFocus(entry.entryId)}
+            onClick={() => { if (!isHiddenEntry) toggleFocus(entry.entryId); }}
           >
             {renderInner(entry)}
           </button>

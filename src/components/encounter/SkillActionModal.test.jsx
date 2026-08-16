@@ -170,6 +170,50 @@ describe('SkillActionModal (Demoralize)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
     expect(recordAttack).not.toHaveBeenCalled();
   });
+
+  // ── Hidden-combatant filtering (#1749 ruling addendum) ───────────────────
+  it('excludes a hidden enemy from the picker', () => {
+    useEncounter.mockReturnValue({
+      encounter: { order: [...order, { entryId: 'e-c', kind: 'enemy', name: 'Skulker', hidden: true }] },
+      appendLog,
+    });
+    render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
+    expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Skulker' })).not.toBeInTheDocument();
+  });
+
+  it('an enemy with no hidden field at all (older bridge) stays selectable', () => {
+    useEncounter.mockReturnValue({
+      encounter: { order: [{ entryId: 'e-a', kind: 'enemy', name: 'Goblin', defenses: { ac: 16, saves: { will: 4 } } }] },
+      appendLog,
+    });
+    render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
+    expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
+  });
+
+  // Selected-entry hygiene (#1749 ruling addendum): `target` used to resolve
+  // against the raw order, so a picked enemy that turned hidden mid-flow kept
+  // leaking its name/DC via `target` even though the picker itself (already
+  // filtered through useTargeting.selectable) no longer offered it.
+  it('a picked enemy that turns hidden mid-flow drops out of target — the confirm section disappears', () => {
+    const { rerender } = render(
+      <SkillActionModal isOpen onClose={() => {}} action={action} character={character} />
+    );
+    pickGoblin();
+    rollD20(10);
+    expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Use Demoralize/ })).toBeInTheDocument();
+
+    // Goblin (e-a) turns hidden mid-flow.
+    useEncounter.mockReturnValue({
+      encounter: { order: order.map((e) => (e.entryId === 'e-a' ? { ...e, hidden: true } : e)) },
+      appendLog,
+    });
+    rerender(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
+
+    expect(screen.queryByRole('button', { name: /Use Demoralize/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Goblin')).not.toBeInTheDocument();
+  });
 });
 
 describe('SkillActionModal (Athletics maneuvers)', () => {

@@ -48,6 +48,7 @@ import TurnTrackerPanel from './TurnTrackerPanel';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useSummons } from '../../hooks/useSummons';
+import { RELAY, globalKey } from '../../sync/keys';
 
 // Exposes the shared summon ledger so a test can seed a summon and observe the
 // panel's sustain-end reconciler prune it (#261).
@@ -333,6 +334,67 @@ describe('TurnTrackerPanel', () => {
     fireEvent.click(screen.getByLabelText('Open Bestiary'));
     // Modal is open: the modal heading and the enemy name both appear.
     expect(screen.getAllByText('Bestiary').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Goblin').length).toBeGreaterThanOrEqual(1);
+  });
+
+  // ── Hidden-combatant filtering (#1749 ruling addendum) ────────────────────
+  // The Bestiary/Recall Knowledge candidate list is a player-facing picker
+  // built straight from the raw order — it must drop hidden combatants the
+  // same way useTargeting.selectable does.
+  it('excludes a hidden enemy from the Bestiary candidate list', () => {
+    let drv, setEncounter;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey={globalKey(RELAY.ENCOUNTER)} onReady={(set) => (setEncounter = set)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias]));
+    act(() => drv.addEnemy('Goblin', 8));
+    act(() => drv.addEnemy('Skulker', 5));
+    const [p] = drv.encounter.order;
+    act(() => drv.setInitiative(p.entryId, 15));
+    act(() => drv.beginRound1());
+    const skulker = drv.encounter.order.find((e) => e.name === 'Skulker');
+    act(() => setEncounter((cur) => ({
+      ...cur,
+      order: cur.order.map((e) => (e.entryId === skulker.entryId ? { ...e, hidden: true } : e)),
+    })));
+
+    fireEvent.click(screen.getByLabelText('Open Bestiary'));
+    expect(screen.getAllByText('Goblin').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('Skulker')).not.toBeInTheDocument();
+  });
+
+  it('hides the Bestiary button entirely when the only enemy is hidden', () => {
+    let drv, setEncounter;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey={globalKey(RELAY.ENCOUNTER)} onReady={(set) => (setEncounter = set)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+    act(() => setEncounter((cur) => ({
+      ...cur,
+      order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
+    })));
+    expect(screen.queryByLabelText('Open Bestiary')).not.toBeInTheDocument();
+  });
+
+  it('an enemy with no hidden field at all (older bridge) stays in the Bestiary list', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    fireEvent.click(screen.getByLabelText('Open Bestiary'));
     expect(screen.getAllByText('Goblin').length).toBeGreaterThanOrEqual(1);
   });
 

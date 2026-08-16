@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useEncounter } from './useEncounter';
+import { visibleOrder } from '../utils/encounterUtils';
 import { APP, syncKey } from '../sync/keys';
 
 // Focus target (#411, #429, #1502) — a per-viewer pointer to the one combatant
@@ -19,12 +20,17 @@ import { APP, syncKey } from '../sync/keys';
 // We persist the order *entryId* (not the resolved entry) and resolve it against
 // the live encounter on read, so a focus that leaves the order — defeated,
 // encounter ended — self-clears to null with no explicit cleanup.
+//
+// #1749 ruling addendum (selected-entry hygiene): a focus that TURNS hidden
+// mid-encounter (still in the order, `hidden: true`) resolves to null the
+// same way one that leaves the order entirely does — a hidden combatant must
+// not be nameable via the focus dossier any more than via a picker.
 export const useFocusTarget = (charId) => {
   const [focusId, setFocusId] = useSyncedState(syncKey(APP.FOCUSTARGET, charId || 'none'), null);
   const { encounter } = useEncounter();
 
   const focusEntry =
-    (encounter?.order || []).find((e) => e.entryId === focusId) || null;
+    visibleOrder(encounter?.order).find((e) => e.entryId === focusId) || null;
   const focusEnemy = focusEntry?.kind === 'enemy' ? focusEntry : null;
   const isSelf = focusEntry?.kind === 'pc' && focusEntry.charId === charId;
   const focusSelf = isSelf ? focusEntry : null;
