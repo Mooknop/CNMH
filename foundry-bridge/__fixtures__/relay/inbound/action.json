@@ -1,0 +1,9 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "kind": "strike",
+    "sourceUid": "Mace Strike",
+    "targets": ["cbt-goblin"],
+    "ts": 1700000000000
+  }
+}

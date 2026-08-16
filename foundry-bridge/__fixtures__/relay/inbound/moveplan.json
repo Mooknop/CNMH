@@ -1,0 +1,12 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "waypoints": [
+      { "col": 6, "row": 5 },
+      { "col": 7, "row": 5 },
+      { "col": 8, "row": 6 }
+    ],
+    "moveType": "stride",
+    "ts": 1700000000000
+  }
+}
