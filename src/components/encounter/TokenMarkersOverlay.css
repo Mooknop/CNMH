@@ -29,6 +29,45 @@
   stroke-linejoin: round;
 }
 
+/* Selection ring (#1749 S4) — a tapped marker and a lit chip are the same
+   state, so this has to be as unmistakable as `.ttp-target-chip--on`. */
+.tmo-select {
+  fill: none;
+  stroke: var(--shell-text-primary);
+  stroke-width: 0.7;
+  stroke-dasharray: 1.4 1;
+}
+
+.tmo-marker--selected .tmo-footprint {
+  fill-opacity: 0.38;
+  stroke-width: 0.9;
+}
+
+/* ⚔ on a marker the viewer flanks (#1749 S5) — the same badge, from the same
+   `cnmh_flanked_global` data, that InitiativeStrip/Dossier/TargetPicker draw.
+   Informational only: the off-guard attack bonus is still the manual toggle
+   built by utils/attackToggles.js. */
+.tmo-flank {
+  font-size: 3px;
+  fill: var(--peril-base);
+  paint-order: stroke;
+  stroke: var(--shell-bg);
+  stroke-width: 0.6px;
+  stroke-linejoin: round;
+}
+
+/* useAdjacency says this one is out of reach — dimmed, never hidden and never
+   un-tappable: `inReach` fails open and the app has never hard-blocked a
+   target on it. */
+.tmo-marker--far {
+  opacity: 0.45;
+}
+
+/* The attacker themselves — the vantage point every range band is drawn from. */
+.tmo-marker--origin .tmo-footprint {
+  stroke-dasharray: 1.2 0.8;
+}
+
 .tmo-marker--pc .tmo-footprint,
 .tmo-marker--pc .tmo-dot {
   stroke: var(--ember-base);

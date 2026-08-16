@@ -41,6 +41,22 @@ describe('MultiRayResolver', () => {
     expect(screen.getByLabelText('ray 3 target')).toHaveValue('e2');
   });
 
+  it('takes the map tap order as the per-ray default (#1749 OQ-2b)', () => {
+    // Tapped Orc first, then Goblin — tap order IS ray order.
+    render(<MultiRayResolver rayCount={2} enemyTargets={targets} rollBonus={9} tapOrder={['e2', 'e1']} />);
+    expect(screen.getByLabelText('ray 1 target')).toHaveValue('e2');
+    rollRay(1, 10);
+    expect(screen.getByLabelText('ray 2 target')).toHaveValue('e1');
+  });
+
+  it('ignores a tap-order id that is no longer a target, and rays past the end', () => {
+    render(<MultiRayResolver rayCount={2} enemyTargets={targets} rollBonus={9} tapOrder={['e-gone']} />);
+    // Falls straight back to the pre-existing "ray i → target i" rule.
+    expect(screen.getByLabelText('ray 1 target')).toHaveValue('e1');
+    rollRay(1, 10);
+    expect(screen.getByLabelText('ray 2 target')).toHaveValue('e2');
+  });
+
   it('hides the per-ray target select when only one target is selected', () => {
     render(<MultiRayResolver rayCount={2} enemyTargets={[targets[0]]} rollBonus={9} />);
     expect(screen.queryByLabelText(/ray 1 target/)).not.toBeInTheDocument();

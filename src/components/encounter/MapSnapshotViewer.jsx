@@ -16,7 +16,14 @@ import './MapSnapshotViewer.css';
 // Props:
 //   src        image URL from the snapdone ack
 //   marker     { nx, ny } | null — the picked point, drawn as a pin
-//   onPick     ({ nx, ny }) => void
+//   onPick     ({ nx, ny, paneWidthPx, paneHeightPx }) => void
+//              `paneWidthPx`/`paneHeightPx` (#1749 S4) are the rendered image's
+//              CURRENT on-screen size, i.e. already multiplied by the live zoom
+//              — additive fields every pre-#1749 consumer simply ignores. A
+//              tap-to-TARGET hit test snaps to the nearest marker within a
+//              CSS-px radius ("the honest unit for a finger", OQ-1), and only
+//              this component knows what a normalized delta is worth in px;
+//              measuring the wrapper instead would be wrong at any zoom > 1.
 //   disabled   suppress picking (post-confirm states)
 //   overlay    optional React node (#1744 S2), rendered inside `.msv-pane`
 //              alongside the image — the same percentage-positioned trick the
@@ -85,7 +92,7 @@ const MapSnapshotViewer = ({ src, marker = null, onPick, disabled = false, overl
     const nx = (e.clientX - rect.left) / rect.width;
     const ny = (e.clientY - rect.top) / rect.height;
     if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;  // tap landed in the letterbox
-    onPick({ nx, ny });
+    onPick({ nx, ny, paneWidthPx: rect.width, paneHeightPx: rect.height });
   };
 
   const nudgeZoom = useCallback((delta) => {

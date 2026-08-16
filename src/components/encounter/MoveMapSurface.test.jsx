@@ -122,6 +122,8 @@ describe('MoveMapSurface (#1744 S7 — factored out of MoveActionSheet)', () => 
     const frame = screen.getByTestId('map-snapshot-frame');
     fireEvent.pointerDown(frame, { pointerId: 1, clientX: 50, clientY: 50 });
     fireEvent.pointerUp(frame, { pointerId: 1, clientX: 50, clientY: 50 });
-    expect(onMapTap).toHaveBeenCalledWith({ nx: 0.5, ny: 0.5 });
+    // The pane size rides along too (#1749 S4) — additive, and the movement
+    // flow simply ignores it.
+    expect(onMapTap).toHaveBeenCalledWith(expect.objectContaining({ nx: 0.5, ny: 0.5 }));
   });
 });

@@ -27,12 +27,27 @@ describe('MapSnapshotViewer (#1573 B2)', () => {
     const { onPick, frame } = mountViewer();
     // Centre of the rect → (0.5, 0.5).
     tap(frame, 300, 200);
-    expect(onPick).toHaveBeenCalledWith({ nx: 0.5, ny: 0.5 });
+    expect(onPick).toHaveBeenCalledWith(
+      expect.objectContaining({ nx: 0.5, ny: 0.5 })
+    );
 
     // A quarter in from the top-left.
     onPick.mockClear();
     tap(frame, 200, 125, 2);
-    expect(onPick).toHaveBeenCalledWith({ nx: 0.25, ny: 0.25 });
+    expect(onPick).toHaveBeenCalledWith(
+      expect.objectContaining({ nx: 0.25, ny: 0.25 })
+    );
+  });
+
+  it("a tap also reports the image's on-screen size (#1749 S4)", () => {
+    // The CSS-px marker snap radius the targeting hit test uses can only be
+    // converted against a normalized delta with this number, and only this
+    // component knows it — the rect it reads already includes the live zoom.
+    const { onPick, frame } = mountViewer();
+    tap(frame, 300, 200);
+    expect(onPick).toHaveBeenCalledWith({
+      nx: 0.5, ny: 0.5, paneWidthPx: IMG_RECT.width, paneHeightPx: IMG_RECT.height,
+    });
   });
 
   it('a drag pans instead of picking (no accidental ping)', () => {
