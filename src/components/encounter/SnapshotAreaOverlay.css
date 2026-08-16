@@ -1,0 +1,54 @@
+/* SnapshotAreaOverlay (#1751 S2) — an SVG layer inside MapSnapshotViewer's
+   `.msv-pane`, so it scales and pans with the image for free, exactly like
+   SnapshotRouteOverlay. viewBox is a flat 0-100 percentage space; every
+   coordinate the component computes is already a percentage. */
+.sao {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.sao-lattice {
+  stroke: var(--color-theme, var(--shell-border-strong));
+  stroke-width: 0.15;
+  opacity: 0.3;
+}
+
+/* Every cell `areaOccupants` actually counted — shaded so the map and the
+   occupant list below it are visibly describing the same footprint. */
+.sao-cell {
+  fill: var(--color-theme, var(--ember-mid));
+  fill-opacity: 0.18;
+  stroke: var(--color-theme, var(--ember-mid));
+  stroke-width: 0.25;
+  opacity: 0.75;
+}
+
+/* The true shape outline — a burst's circle, or an emanation's rounded-
+   rectangle ring (deliberately NOT the same shape Foundry's Region actually
+   draws for an emanation; see the component's doc comment). */
+.sao-outline {
+  fill: var(--color-theme, var(--accent-outline));
+  fill-opacity: 0.08;
+  stroke: var(--color-theme, var(--accent-outline));
+  stroke-width: 0.5;
+  stroke-dasharray: 1.4 1;
+  opacity: 0.9;
+}
+
+/* A cone/line facing hint (#1751 S5) — a direction arrow only, never
+   computed cone/line cell occupancy (that's #1735). */
+.sao-direction-shaft {
+  stroke: var(--color-theme, var(--accent-outline));
+  stroke-width: 0.6;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.sao-direction-head {
+  fill: var(--color-theme, var(--accent-outline));
+  opacity: 0.85;
+}

@@ -197,6 +197,31 @@ describe('useEncounter', () => {
     expect(typeof log[0].ts).toBe('number');
   });
 
+  it('appendLog returns the new entry\'s id (#1751 S3)', () => {
+    const { result } = setup();
+    let id;
+    act(() => { id = result.current.appendLog({ type: 'note', text: 'hi' }); });
+    expect(id).toBe(result.current.encounter.log[0].id);
+  });
+
+  it('patchLogEntry merges fields onto an existing entry by id (#1751 S3)', () => {
+    const { result } = setup();
+    let id;
+    act(() => { id = result.current.appendLog({ type: 'action', text: 'Fireball placed', templateId: null }); });
+    act(() => result.current.patchLogEntry(id, { templateId: 'tpl-123' }));
+    expect(result.current.encounter.log[0]).toMatchObject({
+      type: 'action', text: 'Fireball placed', templateId: 'tpl-123',
+    });
+  });
+
+  it('patchLogEntry is a no-op for an unknown id', () => {
+    const { result } = setup();
+    act(() => result.current.appendLog({ type: 'note', text: 'hi' }));
+    const before = result.current.encounter.log;
+    act(() => result.current.patchLogEntry('log-does-not-exist', { templateId: 'tpl-1' }));
+    expect(result.current.encounter.log).toEqual(before);
+  });
+
   describe('expiry sweep — granted actions', () => {
     let isExpiredMock;
 

@@ -4,7 +4,7 @@ import { useSyncedState } from './useSyncedState';
 import { useBridgeStatus } from './useBridgeStatus';
 import { RELAY } from '../sync/keys';
 import {
-  SNAPDONE_KEY, SNAP_PROTOCOL, PING_PROTOCOL, TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS,
+  SNAPDONE_KEY, TEMPLATEDONE_KEY, SNAP_PROTOCOL, PING_PROTOCOL, TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS,
   buildSnapshotRequest, buildPingPoint, buildTemplatePlace,
 } from '../utils/snapshotRelay';
 
@@ -37,10 +37,19 @@ import {
 // unanswered request before it naturally resolves (e.g. the player leaves
 // map mode before the GM client replies) should call `cancel()` first, or
 // its own next `request()` would silently do nothing.
+//
+// `templateAck` (#1751 S3) is the raw `cnmh_templatedone_global` value —
+// `{ id, ok, templateId?, ts }`, echoing the `id` a `placeTemplate()` call
+// sent. Like `ack`, it's the persisted-and-live synced value rather than a
+// per-call promise (a template placement is fire-and-forget from this hook's
+// side — the bridge draws it regardless of whether anyone is watching), so a
+// caller that wants "did MY placement land" correlates by the `id` returned
+// from its own `placeTemplate()` call.
 export function useSceneSnapshot() {
   const { sendUpdate, foundryConnected } = useSession();
   const { protocol } = useBridgeStatus();
   const [ack] = useSyncedState(SNAPDONE_KEY, null);
+  const [templateAck] = useSyncedState(TEMPLATEDONE_KEY, null);
   const [requesting, setRequesting] = useState(false);
   const pendingRef = useRef(null); // { id, resolve, timer }
 
@@ -90,10 +99,15 @@ export function useSceneSnapshot() {
   // Draw a placed area's outline (#1573 B4). Fire-and-forget from the caller's
   // side — the bridge pings the centre regardless, so the table sees the spot
   // even if the outline can't be drawn; the ack only sharpens the log line.
+  // Returns the sent request `{ id, shape, feet, x, y, sceneId, name?, ts }`
+  // (#1751 S3) so a caller can correlate `templateAck.id` back to ITS OWN
+  // placement rather than the last one sent by anybody — or `null` when
+  // nothing was sent (below `TEMPLATE_PROTOCOL`).
   const placeTemplate = useCallback((area) => {
-    if (!canTemplate) return false;
-    sendUpdate('global', RELAY.TEMPLATEPLACE, buildTemplatePlace(area));
-    return true;
+    if (!canTemplate) return null;
+    const req = buildTemplatePlace(area);
+    sendUpdate('global', RELAY.TEMPLATEPLACE, req);
+    return req;
   }, [canTemplate, sendUpdate]);
 
   // Give up on an outstanding request without waiting out its timeout —
@@ -101,7 +115,10 @@ export function useSceneSnapshot() {
   // and frees pendingRef so the NEXT request() isn't silently swallowed.
   const cancel = useCallback(() => settle(null), [settle]);
 
-  return { request, requesting, available, canPing, ping, canTemplate, placeTemplate, ack, cancel };
+  return {
+    request, requesting, available, canPing, ping, canTemplate, placeTemplate,
+    ack, templateAck, cancel,
+  };
 }
 
 export default useSceneSnapshot;
