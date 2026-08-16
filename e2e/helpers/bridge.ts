@@ -18,10 +18,10 @@
  * of truth, this is the only place to follow it:
  *
  *   - ROLL_PROTOCOL / ROLL_TIMEOUT_MS         → src/utils/diceRelay.js
- *   - SNAP/PING/TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS → src/utils/snapshotRelay.js
+ *   - SNAP/PING/TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS, MOVE_SNAP_TIMEOUT_MS → src/utils/snapshotRelay.js
  *   - STRIKE_PROTOCOL / STRIKE_TIMEOUT_MS     → src/utils/strikeRelay.js
  *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
- *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL → src/utils/movement.js
+ *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL / MAP_MOVE_PROTOCOL → src/utils/movement.js
  *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
  */
 
@@ -56,6 +56,13 @@ export const TEMPLATE_PROTOCOL = 13;
 /** Capture + upload + ack (a PIXI extract plus an R2 PUT) is slower than a dice
  *  round-trip, hence longer than ROLL_TIMEOUT_MS. */
 export const SNAP_TIMEOUT_MS = 20_000;
+
+/** The mover-centered capture behind Move-sheet map mode (#1744 S4) gives up
+ *  faster than a plain `snapreq` — a live destination picker blocks the
+ *  player's turn, so a dead/busy GM client must fall back to the abstract
+ *  grid well before SNAP_TIMEOUT_MS. Specs use it to prove the fallback
+ *  notice appears once this deadline (not SNAP_TIMEOUT_MS) elapses. */
+export const MOVE_SNAP_TIMEOUT_MS = 8_000;
 
 // ── src/utils/strikeRelay.js ─────────────────────────────────────────────────
 
@@ -96,6 +103,15 @@ export const ENEMY_MOVE_PROTOCOL = 10;
  *  was table-verified. (Step, exploration, minions, and foe movement keep
  *  their own stepper fallbacks; this floor is Stride-only.) */
 export const FULL_MOVE_PROTOCOL = 14;
+
+/** The bridge protocol that taught the relay a filtered `pathpreview` channel
+ *  (plus the unfiltered `pathpreviewgm` companion), per-token-scene grid
+ *  conversion, and mover-centered snapshot captures (#1744 WS-1/WS-2). The
+ *  Move sheet's grid/map surface toggle (`useDevicePref`, OQ-4) only appears
+ *  at this floor or above; below it — or with no hello at all — the abstract
+ *  grid is the only surface, and `usePathPreview` renders no ghosts even off
+ *  a live preview channel (an older, unfiltered bridge must never leak one). */
+export const MAP_MOVE_PROTOCOL = 16;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 
