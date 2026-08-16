@@ -157,12 +157,12 @@ describe('InitiativeStrip', () => {
     expect(screen.getByText('Ashka').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--ally');
   });
 
-  // ── Hidden-combatant special case (#1749 ruling addendum) ─────────────────
-  // The strip's tap-to-focus IS the picker, but it's also the turn-order
-  // display — the ruling filters the FOCUS candidates, not the display, so a
-  // hidden entry stays rendered but its tap becomes a no-op.
+  // ── Hidden-combatant DISPLAY filter (#1749 ruling addendum 2) ─────────────
+  // Supersedes #1758's interim state (hidden entries rendered with
+  // aria-disabled/no-op tap): the strip's display now matches Foundry's own
+  // tracker — a hidden combatant is simply absent, not a disabled row.
   describe('hidden combatants', () => {
-    it('stays rendered in the strip (the turn-order display is untouched)', () => {
+    it('is absent from the strip entirely — no name, no button', () => {
       let drv, sync;
       render(
         <>
@@ -177,34 +177,14 @@ describe('InitiativeStrip', () => {
         ...cur,
         order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
       })));
-      expect(screen.getByText('Goblin')).toBeInTheDocument();
+      expect(screen.queryByText('Goblin')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Focus Goblin' })).not.toBeInTheDocument();
+      // The rest of the strip is unaffected — no count leak, no ghost slot.
+      expect(screen.getByText('Pellias')).toBeInTheDocument();
+      expect(screen.getByText('Ashka')).toBeInTheDocument();
     });
 
-    it('is not focusable — tapping it is a no-op and it carries aria-disabled', () => {
-      let drv, sync, focus;
-      render(
-        <>
-          <EncounterDriver onReady={(e) => (drv = e)} />
-          <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (sync = s)} />
-          <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (focus = s)} />
-          <InitiativeStrip charId="Pellias" />
-        </>
-      );
-      startWithEnemy(() => drv);
-      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
-      act(() => sync.set((cur) => ({
-        ...cur,
-        order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
-      })));
-
-      const btn = screen.getByRole('button', { name: 'Focus Goblin' });
-      expect(btn).toHaveAttribute('aria-disabled', 'true');
-      fireEvent.click(btn);
-      expect(focus.val).toBeNull();
-      expect(btn).toHaveAttribute('aria-pressed', 'false');
-    });
-
-    it('a focused entry that TURNS hidden mid-encounter drops the focused styling', () => {
+    it('a focused entry that TURNS hidden mid-encounter disappears from the strip', () => {
       let drv, sync;
       render(
         <>
@@ -222,13 +202,16 @@ describe('InitiativeStrip', () => {
         ...cur,
         order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
       })));
-      // Still visible (turn-order display untouched), but no longer reads as
-      // focused (useFocusTarget's hygiene degrades focusEntry to null).
-      expect(screen.getByText('Goblin')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Focus Goblin' })).toHaveAttribute('aria-pressed', 'false');
+      // Gone from the strip, and no stray button elsewhere reads as focused
+      // in its place (useFocusTarget's hygiene degrades focusEntry to null).
+      expect(screen.queryByText('Goblin')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Focus Goblin' })).not.toBeInTheDocument();
+      screen.getAllByRole('button').forEach((btn) => {
+        expect(btn).toHaveAttribute('aria-pressed', 'false');
+      });
     });
 
-    it('an entry with no hidden field at all (older bridge) stays focusable', () => {
+    it('an entry with no hidden field at all (older bridge) stays rendered and focusable', () => {
       let drv, focus;
       render(
         <>
@@ -243,6 +226,58 @@ describe('InitiativeStrip', () => {
       expect(btn).not.toHaveAttribute('aria-disabled');
       fireEvent.click(btn);
       expect(focus.val).toBe(goblin.entryId);
+    });
+  });
+
+  // ── Hidden ACTIVE combatant (#1749 ruling addendum 2) ──────────────────────
+  // `currentTurnIndex` can point at an entry this ruling just made invisible.
+  // Rather than drift the highlight onto whichever neighbor now sits at that
+  // index, or invent a placeholder row, the strip shows no current-turn
+  // highlight at all — the same thing Foundry's own player tracker shows.
+  describe('hidden active combatant', () => {
+    it('drops the current-turn highlight rather than mis-highlighting a neighbor', () => {
+      let drv, sync;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (sync = s)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+      const goblinIdx = drv.encounter.order.findIndex((e) => e.entryId === goblin.entryId);
+
+      act(() => sync.set((cur) => ({
+        ...cur,
+        currentTurnIndex: goblinIdx,
+        order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
+      })));
+
+      // Goblin (the active entry) is gone from the strip...
+      expect(screen.queryByText('Goblin')).not.toBeInTheDocument();
+      // ...and no visible entry is falsely marked current in its place.
+      expect(document.querySelectorAll('.cmd-init-entry--current').length).toBe(0);
+      screen.getAllByRole('button').forEach((btn) => {
+        expect(btn).not.toHaveAttribute('aria-current', 'true');
+      });
+      // The rest of the strip renders normally.
+      expect(screen.getByText('Pellias')).toBeInTheDocument();
+      expect(screen.getByText('Ashka')).toBeInTheDocument();
+    });
+
+    it('a VISIBLE current combatant still gets the highlight (untouched behavior)', () => {
+      let drv;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      // Pellias (init 15) leads the order → current on round 1 by default.
+      expect(screen.getByText('Pellias').closest('.cmd-init-entry')).toHaveAttribute('aria-current', 'true');
+      expect(document.querySelectorAll('.cmd-init-entry--current').length).toBe(1);
     });
   });
 });
