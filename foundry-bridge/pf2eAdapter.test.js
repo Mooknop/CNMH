@@ -26,7 +26,7 @@ import {
   isEffectItem, getEffectItemActor, getEffects,
   getBestiaryInfo,
   rollFormula, _resetCanvasFallbackWarnings,
-  createMeasuredTemplate,
+  createMeasuredTemplate, compassToRegionRotation, regionShapeTypeSupported,
   getGridDistance, getTokenScene, getSceneGridSize, isTokenHidden, getTokenName,
   pixelsToGrid, getCanvasBoundsRect, moverCaptureRect,
 } from './pf2eAdapter.js';
@@ -1046,11 +1046,174 @@ describe('createMeasuredTemplate v14 Region switch', () => {
     })).toBeNull();
 
     const create2 = templateScene(); // matching scene again
+    // A cone with no `direction` is a bad input on BOTH generations: v13 has no
+    // cone at all, and v14 refuses to guess a facing (#1735 S2).
     expect(await createMeasuredTemplate({ shape: 'cone', feet: 20, x: 1, y: 2 })).toBeNull();
     expect(await createMeasuredTemplate({ shape: 'burst', feet: 0, x: 1, y: 2 })).toBeNull();
     expect(await createMeasuredTemplate({ shape: 'burst', feet: 20, x: NaN, y: 2 })).toBeNull();
     expect(create).not.toHaveBeenCalled();
     expect(create2).not.toHaveBeenCalled();
+  });
+});
+
+// Directional spell areas (#1735 S2) — cone/line Region shapes with a facing.
+describe('createMeasuredTemplate cone + line (v14 Region shapes)', () => {
+  const templateScene = ({ sceneId = 'scene-1', created = [{ id: 'made-1' }] } = {}) => {
+    const createEmbeddedDocuments = jest.fn().mockResolvedValue(created);
+    global.canvas = {
+      scene: { id: sceneId, grid: { size: 100, distance: 5 }, createEmbeddedDocuments },
+    };
+    return createEmbeddedDocuments;
+  };
+  const shapeOf = (create, call = 0) => create.mock.calls[call][1][0].shapes[0];
+
+  // The whole compass→Foundry translation, pinned. Compass: 0 = north,
+  // clockwise. Foundry Region rotation: 0 = EAST, clockwise on screen (y grows
+  // down) — a fixed −90° offset. If a live canvas ever disagrees, this table is
+  // the single place the fix lands.
+  describe('compassToRegionRotation', () => {
+    test.each([
+      ['N', 0, 270],
+      ['NE', 45, 315],
+      ['E', 90, 0],
+      ['SE', 135, 45],
+      ['S', 180, 90],
+      ['SW', 225, 135],
+      ['W', 270, 180],
+      ['NW', 315, 225],
+    ])('compass %s (%i°) → Region rotation %i°', (_label, compass, rotation) => {
+      expect(compassToRegionRotation(compass)).toBe(rotation);
+    });
+
+    test('wraps past a full turn and accepts negatives', () => {
+      expect(compassToRegionRotation(360)).toBe(270); // 360 == 0 == north
+      expect(compassToRegionRotation(-45)).toBe(225); // -45 == 315 == NW
+    });
+
+    test('a missing or non-numeric facing is null, not zero', () => {
+      expect(compassToRegionRotation(undefined)).toBeNull();
+      expect(compassToRegionRotation('north')).toBeNull();
+      expect(compassToRegionRotation(NaN)).toBeNull();
+    });
+  });
+
+  test.each([
+    ['N', 0, 270],
+    ['NE', 45, 315],
+    ['E', 90, 0],
+    ['SE', 135, 45],
+    ['S', 180, 90],
+    ['SW', 225, 135],
+    ['W', 270, 180],
+    ['NW', 315, 225],
+  ])('a 30 ft cone facing %s becomes a 90° Region wedge at rotation %i→%i', async (
+    _label, compass, rotation,
+  ) => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    const id = await createMeasuredTemplate({
+      shape: 'cone', feet: 30, x: 500, y: 300, sceneId: 'scene-1', direction: compass,
+    });
+    expect(create).toHaveBeenCalledWith(
+      'Region',
+      [expect.objectContaining({
+        // 30 ft / 5 ft-per-square * 100 px-per-square = 600 px.
+        shapes: [{
+          type: 'cone', x: 500, y: 300, radius: 600, angle: 90, rotation,
+        }],
+        visibility: 2,
+      })],
+      { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+    expect(id).toBe('made-1');
+  });
+
+  test('a line carries its length AND width in pixels, defaulting to 5 ft wide', async () => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    await createMeasuredTemplate({
+      shape: 'line', feet: 60, x: 500, y: 300, direction: 180, width: 10,
+    });
+    expect(shapeOf(create)).toEqual({
+      // 60 ft = 1200 px long, 10 ft = 200 px wide, facing south → rotation 90.
+      type: 'line', x: 500, y: 300, length: 1200, width: 200, rotation: 90,
+    });
+
+    await createMeasuredTemplate({ shape: 'line', feet: 60, x: 0, y: 0, direction: 0 });
+    expect(shapeOf(create, 1).width).toBe(100); // default 5 ft
+    // A nonsense width falls back to the default rather than collapsing the line.
+    await createMeasuredTemplate({
+      shape: 'line', feet: 60, x: 0, y: 0, direction: 0, width: 0,
+    });
+    expect(shapeOf(create, 2).width).toBe(100);
+  });
+
+  test('the radial payload is untouched by the new fields', async () => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    // A burst that (harmlessly) carries a direction still draws a plain circle.
+    await createMeasuredTemplate({
+      shape: 'burst', feet: 20, x: 500, y: 300, direction: 45, width: 10,
+    });
+    expect(shapeOf(create)).toEqual({ type: 'circle', x: 500, y: 300, radius: 400 });
+  });
+
+  test('a directional shape without a facing draws nothing', async () => {
+    global.game.release = { generation: 14 };
+    const create = templateScene();
+    expect(await createMeasuredTemplate({ shape: 'cone', feet: 30, x: 1, y: 2 })).toBeNull();
+    expect(await createMeasuredTemplate({
+      shape: 'line', feet: 30, x: 1, y: 2, direction: 'north',
+    })).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  test('v13 keeps refusing cone and line — with a facing or without', async () => {
+    global.game.release = { generation: 13 };
+    const create = templateScene();
+    expect(await createMeasuredTemplate({
+      shape: 'cone', feet: 30, x: 1, y: 2, direction: 0,
+    })).toBeNull();
+    expect(await createMeasuredTemplate({
+      shape: 'line', feet: 30, x: 1, y: 2, direction: 90, width: 5,
+    })).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+    // …while the radial write on v13 is unchanged.
+    expect(await createMeasuredTemplate({ shape: 'burst', feet: 20, x: 1, y: 2 })).toBe('made-1');
+    expect(create).toHaveBeenCalledWith('MeasuredTemplate', expect.anything(), expect.anything());
+  });
+
+  describe('shape-type capability probe', () => {
+    afterEach(() => { delete global.foundry; });
+
+    test('a v14 build that registers cone/line draws them', () => {
+      global.foundry = { data: { BaseShapeData: { TYPES: { circle: {}, cone: {}, line: {} } } } };
+      expect(regionShapeTypeSupported('cone')).toBe(true);
+      expect(regionShapeTypeSupported('line')).toBe(true);
+    });
+
+    test('a build whose registry lacks the shape refuses it', async () => {
+      global.game.release = { generation: 14 };
+      global.foundry = { data: { BaseShapeData: { TYPES: { circle: {}, rectangle: {} } } } };
+      const create = templateScene();
+      expect(regionShapeTypeSupported('cone')).toBe(false);
+      expect(await createMeasuredTemplate({
+        shape: 'cone', feet: 30, x: 1, y: 2, direction: 0,
+      })).toBeNull();
+      expect(create).not.toHaveBeenCalled();
+      // The radial path is unaffected: circles never consult the probe.
+      expect(await createMeasuredTemplate({ shape: 'burst', feet: 20, x: 1, y: 2 })).toBe('made-1');
+    });
+
+    test('a build that exposes no registry falls back to the generation gate', async () => {
+      global.game.release = { generation: 14 };
+      const create = templateScene();
+      expect(regionShapeTypeSupported('cone')).toBe(true);
+      expect(await createMeasuredTemplate({
+        shape: 'cone', feet: 30, x: 1, y: 2, direction: 0,
+      })).toBe('made-1');
+      expect(shapeOf(create).type).toBe('cone');
+    });
   });
 });
 

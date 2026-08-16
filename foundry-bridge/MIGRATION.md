@@ -128,7 +128,20 @@ data path moves, **only the adapter changes.**
   v11→v14" comment is **wrong**. On v14 the create fails and area outlines
   silently stop drawing. Needs a `generation >= 14` branch that creates a
   circle-shaped Region instead (and the cleanup rail must delete whichever
-  document type was created).
+  document type was created). **[resolved #1732 for circles; extended #1735 S2
+  to cone/line.]** v14's Region shape registry
+  (`foundry.data.BaseShapeData.TYPES` — `circle`, `cone`, `ellipse`,
+  `emanation`, `grid`, `line`, `polygon`, `rectangle`, `ring`, `token`) is what
+  the adapter capability-probes before drawing a directional shape; the shapes
+  written are `{ type:'cone', x, y, radius, angle, rotation }` and
+  `{ type:'line', x, y, length, width, rotation }`, all lengths in canvas
+  PIXELS. **`rotation` is Foundry's screen-space convention: 0 = EAST,
+  increasing clockwise** (the convention `MeasuredTemplate#direction` used
+  before v14), while the wire carries COMPASS degrees (0 = north, clockwise) —
+  `compassToRegionRotation()` is the single translation point, and the live
+  canvas is the only thing that can prove its handedness (smoke item below).
+  The `curvature` field a cone accepts is deliberately left unset, so the
+  build's own default cone rendering applies.
 - **Bare globals with no v14 fallback yet** (audited 2026-08-10; fix by
   mirroring the `rollFormula` pattern — namespace first, bare global fallback):
   - `fromUuid(ref)` in `applyEffectByUuid` — no namespace fallback, not
@@ -208,7 +221,14 @@ same-day emergency release:
    hit + Shield Block, roll a save prompt. v14-specific additions: move a token
    from the app (the `TokenDocument#move` pipeline — verify `BRIDGE_SOURCE_FLAG`
    reaches the hook listeners' update context), place a spell-area outline from
-   the app (`templateplace` → Region branch) and clean it up, roll from the
+   the app (`templateplace` → Region branch) and clean it up, **place a CONE
+   from the app at a known facing and confirm the wedge on canvas points that
+   way** (#1735 S2 — cast NE and the wedge must open toward the top-right, not
+   the bottom-right; repeat for one cardinal, e.g. N, plus a line, whose length
+   must run along the facing and whose width must read as 5 ft unless the spell
+   says otherwise. The compass→`rotation` translation and its handedness are
+   unit-pinned but only a canvas proves them; if they are mirrored or 90° off,
+   the entire fix is the offset in `compassToRegionRotation`), roll from the
    dice tower with a DSN appearance override, capture a map snapshot (PIXI v8
    render path) AND a mover-centered one (the stage-retarget path — watch for
    flicker), and fire one Sequencer/JB2A animation. (Evaluate the community

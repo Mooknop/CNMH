@@ -1,0 +1,14 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "tpl-1700000000000-1",
+    "shape": "cone",
+    "feet": 30,
+    "x": 500,
+    "y": 300,
+    "sceneId": "scene-1",
+    "name": "Pellias",
+    "direction": 45,
+    "ts": 1700000000000
+  }
+}

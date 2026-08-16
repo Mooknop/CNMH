@@ -7,9 +7,10 @@
 // have always been driven with plain inline arguments — nothing recorded a
 // payload a rename on the app side could ever fail against.
 //
-// This file closes that gap for the three newest inbound contracts (#1749's
+// This file closes that gap for the newest inbound contracts (#1749's
 // `action`, plus `moveplan` and `snapreq`, all shipped in the last three
-// weeks — see __fixtures__/relay/inbound/README section in the bridge
+// weeks, plus `templateplace`'s directional payload from #1735 S2 — see
+// the __fixtures__/relay/inbound README section in the bridge
 // README's Tests section for the full remainder and the update rule).
 //
 // Each fixture under __fixtures__/relay/inbound/<channel>.json is
@@ -28,7 +29,7 @@ import path from 'path';
 
 import { handleAction, _resetTargeting } from './targeting.js';
 import { initMovement, handleMovePlan } from './movement.js';
-import { initSnapshots, handleSnapshotRequest } from './snapshots.js';
+import { initSnapshots, handleSnapshotRequest, handleTemplatePlace } from './snapshots.js';
 import { updateActorMap } from './encounter.js';
 import { RELAY } from './syncKeys.js';
 import {
@@ -160,6 +161,49 @@ describe('inbound relay contract (#1749 S1 follow-up)', () => {
         delete global.document;
         delete global.PIXI;
       }
+    });
+  });
+
+  describe(`${RELAY.TEMPLATEPLACE} — foundry-bridge/snapshots.js handleTemplatePlace`, () => {
+    // A CONE fixture on purpose (#1735 S2): the directional payload is the new
+    // half of this contract — `direction` in COMPASS degrees (0 = north,
+    // clockwise, multiples of 45), `x`/`y` the shape's ORIGIN rather than a
+    // centre. A line adds `width` (feet, default 5); a burst/emanation carries
+    // neither field.
+    test('the committed fixture is accepted: draws the Region wedge its facing asks for', async () => {
+      const send = jest.fn();
+      initSnapshots(send);
+      const createEmbeddedDocuments = jest.fn().mockResolvedValue([{ id: 'region-1' }]);
+      const ping = jest.fn();
+      global.game.release = { generation: 14 };
+      global.canvas = {
+        ping,
+        scene: {
+          id: 'scene-1', grid: { size: 100, distance: 5 }, createEmbeddedDocuments,
+        },
+      };
+
+      const fixture = readFixture(RELAY.TEMPLATEPLACE);
+
+      await expect(handleTemplatePlace(fixture.value)).resolves.not.toThrow();
+
+      const call = send.mock.calls.find((c) => c[1] === RELAY.TEMPLATEDONE);
+      expect(call).toBeTruthy();
+      const [characterId, , payload] = call;
+      expect(characterId).toBe('global');
+      expect(payload).toMatchObject({ id: fixture.value.id, ok: true, templateId: 'region-1' });
+      // Observable effect: the fixture's `shape`/`feet`/`direction` were really
+      // read — a 30 ft cone facing NE (compass 45) is a 600 px wedge at Region
+      // rotation 315, drawn at the origin point the fixture named.
+      expect(createEmbeddedDocuments.mock.calls[0][1][0].shapes[0]).toEqual({
+        type: 'cone',
+        x: fixture.value.x,
+        y: fixture.value.y,
+        radius: 600,
+        angle: 90,
+        rotation: 315,
+      });
+      expect(ping).toHaveBeenCalledWith({ x: fixture.value.x, y: fixture.value.y });
     });
   });
 });
