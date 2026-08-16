@@ -588,7 +588,8 @@ const UseAbilityModal = ({
     && castGateOk && frequencyGate.gateOk && immunityGate.gateOk
     && auraGate.gateOk && shieldGate.gateOk && omenGate.gateOk
     && (flatChecks.length === 0 || allFlatChecksRolled)
-    && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
+    && !anyTargetOutOfRange  // ranged Strike beyond 4× increment is out of range (#530)
+    && placement.gateOk;     // out-of-range template placement hard-blocks the cast (#1751 OQ-5)
 
   // The dice-tower chat label AND the roll toast's headline (#1490 S2/S3) —
   // reads like the action: "Strike: Longsword (MAP -5)".
