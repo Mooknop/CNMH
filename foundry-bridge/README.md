@@ -157,3 +157,45 @@ factories in `test/foundryMock.js`. Two layers:
   fails a named test on both sides. After an intentional payload change,
   re-record with `RELAY_FIXTURES=record npm run test:bridge -- --testPathPattern=relayContract`
   and fix the failing app consumers.
+- **Inbound relay contract tests** (`relayContractInbound.test.js`, #1749 S1
+  follow-up) — the app→bridge mirror of the rail above, for the direction the
+  outbound rail never covered. `relayContract.test.js` only ever recorded what
+  the bridge SENT; every inbound channel (`movereq`, `snapreq`, `action`, …)
+  was driven with plain inline arguments and had no fixture at all, so an
+  app-side payload rename never tripped a named bridge test.
+
+  **Direction**: fixtures live in `__fixtures__/relay/inbound/<channel>.json`,
+  separate from the bridge→app fixtures one level up. **There is no RECORD
+  mode** — unlike an emission, there is nothing bridge-side to capture an app
+  payload FROM. Every inbound fixture is **hand-authored from the real app
+  producer's emitted shape**: read the hook that calls `sendUpdate` for that
+  channel (e.g. `useActionTargetSync`, `useTokenMovement.planMove`,
+  `useMoverMapSurface`/`useSceneSnapshot`), copy its exact field set, and use
+  realistic values — never invent fields from the README table alone, and
+  never generate one from a schema.
+
+  Each fixture is driven from **both** sides against the SAME file:
+  - `relayContractInbound.test.js` drives the real handler with the fixture
+    against the mocked world and asserts the bridge **accepts** it — no
+    throw, and the handler's real observable effect fires (e.g. `handleAction`
+    with the active combatant's fixture calls `setUserTargets`).
+  - `src/test/relayInboundContract.test.jsx` drives the real producer hook
+    and shape-compares ITS emission against the same fixture, via the
+    identical `__fixtures__/relay/shape.js` `diffShapes` the outbound rail
+    uses.
+
+  A field rename on either side now fails a named test on both. Re-author the
+  fixture by hand (not `RELAY_FIXTURES=record` — that flag only applies to
+  the outbound rail) whenever the producer's shape intentionally changes, and
+  fix whichever side's test goes red first.
+
+  **Coverage**: `action`, `moveplan`, `snapreq` — the three newest inbound
+  contracts as of #1749 S1. The epic's own grep of `origin/main` found `action`
+  was the only documented relay channel with no recorded emission at all;
+  `moveplan`/`snapreq`'s mover-centered form are equally recent (#1736,
+  #1744). **Not yet covered** (a follow-up, not swept here): `movereq`,
+  `moveconfirm`, `doorreq`, `doorinteract`, `rosterreq`, `actormap`, `turncmd`,
+  `initcommit`, `initroll`, `exploremove`, `shieldraise`, `applyeffect`,
+  `dmgapply`, `saveroll`, `rollreq`, `strikereq`, `castreq`, `pingpoint`,
+  `templateplace`, `dicesets`, `positionsreq`, `minionactorsreq`,
+  `summonpoolreq`, `spawnminion`.
