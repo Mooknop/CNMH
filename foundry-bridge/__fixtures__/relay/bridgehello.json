@@ -1,7 +1,7 @@
 {
   "characterId": "global",
   "value": {
-    "protocol": 16,
+    "protocol": 17,
     "module": "0.0.0-test",
     "ts": 1700000000000
   }

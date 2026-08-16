@@ -17,7 +17,7 @@ import {
   initMovement, setMoveDoneListener, handleMoveRequest, handleMovePlan, handleMoveConfirm,
 } from './movement.js';
 import { initPathPreview } from './pathPreview.js';
-import { handleAction } from './targeting.js';
+import { initTargeting, handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
@@ -117,6 +117,9 @@ Hooks.once('ready', () => {
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initPathPreview(sendUpdate);
+  // After initEncounter, so its combat hooks have already refreshed the active
+  // combat id by the time the targeting clear reads it (#1749 OQ-3).
+  initTargeting();
   initFlankingPush(sendUpdate);
   initAdjacencyPush(sendUpdate);
   initPositions(sendUpdate);

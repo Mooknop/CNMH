@@ -4,7 +4,7 @@
 
 import {
   initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll,
-  updateActorMap, getActorMap,
+  updateActorMap, getActorMap, getActiveEntryId,
 } from './encounter.js';
 import { makeCombat, makeCombatant, makeActor } from './test/foundryMock.js';
 
@@ -545,5 +545,49 @@ describe('combatant disposition (#1537 S6)', () => {
     expect(byId['cbt-ally']).toMatchObject({ kind: 'enemy', disposition: 1 });
     expect(byId['cbt-gob'].disposition).toBe(-1);
     expect(byId['cbt-ghost'].disposition).toBeNull();
+  });
+});
+
+describe('combatant visibility (#1749 OQ-5, protocol 17)', () => {
+  test('order entries carry hidden; hidden combatants still ship (GM surfaces need them)', () => {
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    const combat = makeCombat({
+      id: 'combat-hidden',
+      combatants: [
+        makeCombatant({ id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: 18, token: { disposition: 1 } }),
+        makeCombatant({ id: 'cbt-amb', name: 'Ambusher', actorId: 'actor-amb', initiative: 14, token: { disposition: -1, hidden: true } }),
+        makeCombatant({ id: 'cbt-ghost', name: 'Tokenless', actorId: 'actor-ghost', initiative: 5 }),
+      ],
+      activeTurnIndex: 0,
+    });
+    global.Hooks.fire('createCombat', combat);
+
+    const payload = send.mock.calls.filter((c) => c[1] === 'encounter').at(-1)[2];
+    const byId = Object.fromEntries(payload.order.map((e) => [e.entryId, e]));
+    expect(payload.order).toHaveLength(3);
+    expect(byId['cbt-amb'].hidden).toBe(true);
+    expect(byId['cbt-pellias'].hidden).toBe(false);
+    // No token → not hidden (permissive; never invents concealment).
+    expect(byId['cbt-ghost'].hidden).toBe(false);
+  });
+});
+
+describe('getActiveEntryId (#1749 OQ-3)', () => {
+  test('names the combatant whose turn it is, and null outside combat', () => {
+    const combat = makeCombat({
+      id: 'combat-active',
+      combatants: [
+        makeCombatant({ id: 'cbt-a', name: 'A', actorId: 'actor-a', initiative: 20 }),
+        makeCombatant({ id: 'cbt-b', name: 'B', actorId: 'actor-b', initiative: 10 }),
+      ],
+      activeTurnIndex: 1,
+    });
+    global.game.combat = combat;
+    global.Hooks.fire('createCombat', combat);
+    expect(getActiveEntryId()).toBe('cbt-b');
+
+    global.game.combat = null;
+    global.Hooks.fire('deleteCombat');
+    expect(getActiveEntryId()).toBeNull();
   });
 });
