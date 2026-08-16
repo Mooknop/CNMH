@@ -17,6 +17,9 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useActionTargetSync } from '../../hooks/useActionTargetSync';
+import { useFlanking } from '../../hooks/useFlanking';
+import { useMapTargetSection } from '../../hooks/useMapTargetSection';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { useEffects } from '../../hooks/useEffects';
@@ -273,6 +276,43 @@ const UseAbilityModal = ({
   const effectiveVerb = verb.toLowerCase();
   const isAttack = isAttackAbility(ability);
 
+  // ── cnmh_action_<charId>: the first producer this channel has ever had ────
+  // (#1749 S1). `foundry-bridge/targeting.js` has consumed
+  // `{ kind, sourceUid, targets, ts }` since Slice 2 and nothing in the app
+  // ever emitted it, so the GM's Foundry canvas has never shown the targets a
+  // player actually picked. THIS is the seam: the one flow where `useTargeting`
+  // owns the target set AND the action's identity is known. `useActionTargetSync`
+  // debounces on toggle (OQ-3), and the ACTIVE-COMBATANT gate that decides
+  // whether the write reaches the canvas is the bridge's, not ours.
+  //
+  // `kind` is the bridge's own vocabulary ('strike' | 'spell' | 'save-effect');
+  // it is derived from the ability SHAPE alone so it can be computed above the
+  // `!ability` guard, where the hook has to live. An ability that fits none of
+  // the three reports no kind at all, which `useActionTargetSync` treats as a
+  // no-op — better than mislabelling a Demoralize as a Strike and having the
+  // bridge annotate flanking for it.
+  const actionKind = (() => {
+    if (!ability) return null;
+    if (ability.type === 'melee' || ability.type === 'ranged') return 'strike';
+    if (effectiveVerb === 'cast') return 'spell';
+    const defense = String(ability.defense || ability.targetDefense || '').toLowerCase();
+    if (['fortitude', 'reflex', 'will'].includes(defense)) return 'save-effect';
+    return isAttack ? 'strike' : null;
+  })();
+  useActionTargetSync(character?.id || '', targets, {
+    kind: actionKind,
+    // Strikes carry no stable id of their own (they are derived from the
+    // wielded weapon), so the name is the best uid available; the bridge only
+    // logs this field today.
+    sourceUid: ability?.id || ability?.name || null,
+  });
+
+  // ⚔ flanking, from `cnmh_flanked_global` (#1749 S5). `TargetPicker` has
+  // accepted an `isFlanking` prop since it was written and neither mount below
+  // has ever passed one — the badge has been dead the whole time. Both mounts
+  // pass it now, and the map markers read the same set.
+  const { isFlanking, flankedIds } = useFlanking(character?.id || '');
+
   // Mechanic section hooks (#1317 D2) — each owns its state, derivations,
   // section JSX and confirm slice, mirroring the D1 gate hooks. The
   // orchestrator folds their outputs into confirmEnabled / the cost spend,
@@ -384,6 +424,29 @@ const UseAbilityModal = ({
     casterEntryId,
     positionsState,
     adoptTargets: adoptTargetIds,
+  });
+
+  // Tap-to-target on the live map (#1749 S4/S5) — the battlefield beside the
+  // chips, not instead of them (OQ-6: no toggle). Hoisted above the ability
+  // guard like the sections around it; it needs `rayCount` from castPlan, so
+  // it sits after it. The capture is gated on an explicit tap inside the
+  // section itself, so mounting this costs the GM client nothing until a
+  // player asks — including on the classic (non-RollSheet) render path below,
+  // where `skeleton` is not behind a collapsed Edit disclosure.
+  const targetMap = useMapTargetSection({
+    charId: character?.id || '',
+    ability,
+    isRangedStrike,
+    order,
+    positionsState,
+    casterEntryId,
+    targets,
+    selectable,
+    toggleTarget,
+    flankedIds,
+    // Ordered resolvers cap their own list (OQ-2b); everything else is
+    // unbounded, exactly like every targeting flow today.
+    maxTaps: isMultiRay ? rayCount : undefined,
   });
 
   // The attack path's RollSheet state (#1687) — situational toggles, damage
@@ -1069,11 +1132,16 @@ const UseAbilityModal = ({
             {isOpposedReaction ? opposedSection : (
               <>
                 {needsPicker && (
-                  <TargetPicker
-                    selectable={selectable}
-                    isTargeted={isTargeted}
-                    onToggle={toggleTarget}
-                  />
+                  <>
+                    <TargetPicker
+                      selectable={selectable}
+                      isTargeted={isTargeted}
+                      isFlanking={isFlanking}
+                      onToggle={toggleTarget}
+                    />
+                    {/* Chips say who, the map says where — same target set (#1749 S4) */}
+                    {targetMap.section}
+                  </>
                 )}
                 {mapSection}
                 {rollSection}
@@ -1101,8 +1169,11 @@ const UseAbilityModal = ({
             <TargetPicker
               selectable={selectable}
               isTargeted={isTargeted}
+              isFlanking={isFlanking}
               onToggle={toggleTarget}
             />
+            {/* Chips say who, the map says where — same target set (#1749 S4) */}
+            {targetMap.section}
             <ChainedActionsSwitch
               ability={ability}
               character={character}
@@ -1222,6 +1293,10 @@ const UseAbilityModal = ({
             charId={character.id}
             rollFlavor={rollFlavor}
             onProgress={(done, total) => setRaysReady(done === total && total > 0)}
+            // Tap order → ray order (#1749 OQ-2b). A default only: the per-ray
+            // select still overrides, and with no map taps this is [] and the
+            // pre-existing "i-th target, clamped" default is untouched.
+            tapOrder={targetMap.tapOrder.order}
           />
         }
         commitLabel={`${verb} ${ability.name} (${costText})`}

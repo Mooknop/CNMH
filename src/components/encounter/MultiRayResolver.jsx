@@ -13,6 +13,15 @@
 // (or ChainedSpellSection, #581) can read the per-ray results at confirm time.
 // Shape: [{ rayIndex, results }] where `results` is the chosen target's
 // resolver-shaped result array (length 1). Rays not yet rolled are absent.
+//
+// `tapOrder` (#1749 S4, OQ-2 ruling option (b)): tapping targets on the live
+// map in sequence is a better interface than N dropdowns for the ray case —
+// tap order IS ray order. But `useTargeting` deliberately has no ordering
+// contract and five other flows share it, so the ORDER arrives here as a
+// separate, optional override (`useTapOrder.order`) rather than by changing
+// what `targets` means. It only shifts the per-ray DEFAULT; the existing
+// `<select>` still wins for any ray the player re-points by hand, and a ray
+// index past the end of the list falls back to the pre-existing rule.
 
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import SequentialAttackSteps from './SequentialAttackSteps';
@@ -29,13 +38,20 @@ const MultiRayResolver = forwardRef(({
   charId = null,
   rollFlavor = '',
   onProgress = null,
+  tapOrder = [],
 }, ref) => {
   const innerRef = useRef(null);
   // Per-ray chosen target entryId; unset entries fall back to defaultTargetId(i).
   const [targetIds, setTargetIds] = useState([]);
 
-  const defaultTargetId = (i) =>
-    enemyTargets[Math.min(i, enemyTargets.length - 1)]?.entryId;
+  const defaultTargetId = (i) => {
+    // The map's tap sequence, when it reaches this ray and still names a
+    // creature that is actually a target (a since-deselected tap is ignored
+    // rather than resurrected).
+    const tapped = tapOrder[i];
+    if (tapped && enemyTargets.some((e) => e.entryId === tapped)) return tapped;
+    return enemyTargets[Math.min(i, enemyTargets.length - 1)]?.entryId;
+  };
 
   const chosenId = (i) => targetIds[i] ?? defaultTargetId(i);
 

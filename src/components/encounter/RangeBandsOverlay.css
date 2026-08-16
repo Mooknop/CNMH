@@ -1,0 +1,60 @@
+/* RangeBandsOverlay (#1749 S5) — an SVG layer inside MapSnapshotViewer's
+   `.msv-pane`, sharing TokenMarkersOverlay.css's flat 0-100 percentage viewBox
+   convention, so every stroke/font-size here is already in that space and
+   scales naturally with pinch-zoom. Bands are outlines only: a filled band
+   would obscure the very tokens the player is trying to tap. */
+.rbo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.rbo-ring {
+  fill: none;
+  stroke-width: 0.4;
+  stroke-dasharray: 1.6 1.2;
+  opacity: 0.75;
+}
+
+.rbo-label {
+  font-size: 2.2px;
+  paint-order: stroke;
+  stroke: var(--shell-bg);
+  stroke-width: 0.5px;
+  stroke-linejoin: round;
+}
+
+/* The first increment: no penalty, the shot you want. */
+.rbo-band--clear .rbo-ring,
+.rbo-band--reach .rbo-ring {
+  stroke: var(--verdant-mid);
+}
+.rbo-band--clear .rbo-label,
+.rbo-band--reach .rbo-label {
+  fill: var(--verdant-mid);
+}
+
+/* Reach is a hint, not a claim — solid, so it reads as "your space" rather
+   than as another increment step. */
+.rbo-band--reach .rbo-ring {
+  stroke-dasharray: none;
+}
+
+/* Increments 2 and 3: -2 / -4, still legal. */
+.rbo-band--penalty .rbo-ring {
+  stroke: var(--ember-base);
+}
+.rbo-band--penalty .rbo-label {
+  fill: var(--ember-base);
+}
+
+/* The house-rule wall: past 4x the increment the Strike is blocked outright. */
+.rbo-band--max .rbo-ring {
+  stroke: var(--peril-base);
+}
+.rbo-band--max .rbo-label {
+  fill: var(--peril-base);
+}
