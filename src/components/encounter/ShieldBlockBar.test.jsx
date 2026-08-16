@@ -21,14 +21,14 @@ vi.mock('../../hooks/useTurnState', () => ({
 const mockAppendLog = vi.fn();
 const mockAddSaveRequest = vi.fn();
 // Two enemies in the order: one with captured saves, one without (#1055 S2).
-const enemyOrder = [
+let enemyOrder = [
   { entryId: 'e1', kind: 'enemy', name: 'Skeleton', defenses: { saves: { reflex: 8 } } },
   { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
   { entryId: 'p1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
 ];
 vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({
-    encounter: { order: enemyOrder },
+    get encounter() { return { order: enemyOrder }; },
     appendLog: mockAppendLog,
     addSaveRequest: mockAddSaveRequest,
   }),
@@ -62,6 +62,11 @@ beforeEach(() => {
   });
   mockTurnState = { hasStartedFirstTurn: true, reactionAvailable: true, reactionSpent: false };
   mockGateAvailable = true;
+  enemyOrder = [
+    { entryId: 'e1', kind: 'enemy', name: 'Skeleton', defenses: { saves: { reflex: 8 } } },
+    { entryId: 'e2', kind: 'enemy', name: 'Ghoul' },
+    { entryId: 'p1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+  ];
 });
 
 const setup = () =>
@@ -352,6 +357,48 @@ describe('ShieldBlockBar', () => {
       expect(screen.getByTestId('shieldblock-rune-rider')).toHaveTextContent('used — the clock frees it up');
       block();
       expect(screen.queryByTestId('shieldblock-rune-followup')).not.toBeInTheDocument();
+    });
+
+    // ── Hidden-combatant filtering (#1749 ruling addendum) ──────────────────
+    it('excludes a hidden enemy from the retaliation target picker', () => {
+      enemyOrder = [
+        { entryId: 'e1', kind: 'enemy', name: 'Skeleton', defenses: { saves: { reflex: 8 } } },
+        { entryId: 'e2', kind: 'enemy', name: 'Ghoul', hidden: true },
+        { entryId: 'p1', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+      ];
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={withRune(retaliation)} />);
+      block();
+      expect(screen.getByRole('option', { name: 'Skeleton' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Ghoul' })).not.toBeInTheDocument();
+    });
+
+    it('an attacker with no hidden field at all (older bridge) stays offered', () => {
+      enemyOrder = [{ entryId: 'e1', kind: 'enemy', name: 'Skeleton', defenses: { saves: { reflex: 8 } } }];
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={withRune(retaliation)} />);
+      block();
+      expect(screen.getByRole('option', { name: 'Skeleton' })).toBeInTheDocument();
+    });
+
+    // Selected-entry hygiene: mirrors useTargeting's pattern of dropping a
+    // stale selection when the entry it points at turns hidden mid-flow.
+    it('a picked attacker that turns hidden mid-flow drops from the target select and disarms Fire', () => {
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={withRune(retaliation)} />);
+      block();
+      fireEvent.change(screen.getByLabelText('Retaliation (Lesser) target'), { target: { value: 'e1' } });
+      fireEvent.change(screen.getByLabelText('Retaliation (Lesser) rolled damage'), { target: { value: '9' } });
+      expect(screen.getByLabelText('use Retaliation (Lesser)')).not.toBeDisabled();
+
+      // Skeleton (e1) turns hidden mid-flow — force a re-render (the component
+      // re-reads useEncounter, i.e. `enemyOrder`, on every render) with a
+      // DIFFERENT input value; setting the same string again is a no-op React
+      // bails on.
+      enemyOrder = enemyOrder.map((e) => (e.entryId === 'e1' ? { ...e, hidden: true } : e));
+      fireEvent.change(screen.getByLabelText('Retaliation (Lesser) rolled damage'), { target: { value: '10' } });
+
+      expect(screen.queryByRole('option', { name: 'Skeleton' })).not.toBeInTheDocument();
+      expect(screen.getByLabelText('use Retaliation (Lesser)')).toBeDisabled();
+      fireEvent.click(screen.getByLabelText('use Retaliation (Lesser)'));
+      expect(mockAddSaveRequest).not.toHaveBeenCalled();
     });
   });
 });

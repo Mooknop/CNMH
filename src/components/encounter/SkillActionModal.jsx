@@ -98,9 +98,14 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [resolved, setResolved] = useState(null); // locks the UI after confirm
   const [talismanUsed, setTalismanUsed] = useState(false); // Wolf Fang activated this resolve
 
+  // Resolved against the FILTERED picker list, not the raw order (#1749
+  // ruling addendum — selected-entry hygiene): a picked enemy that turns
+  // hidden mid-flow must drop out of `target` the same way a stale
+  // useTargeting selection does, rather than keep resolving its name/defenses
+  // off the raw order after it's no longer in the picker.
   const target = useMemo(
-    () => order.find((e) => e.entryId === pickedId) || null,
-    [order, pickedId]
+    () => enemyTargets.find((e) => e.entryId === pickedId) || null,
+    [enemyTargets, pickedId]
   );
 
   // Skill choice — actions with skillOptions (Escape) let the player pick; we

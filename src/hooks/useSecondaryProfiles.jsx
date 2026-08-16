@@ -3,6 +3,7 @@ import DamagePanel from '../components/encounter/DamagePanel';
 import { buildDamageProfile } from '../utils/damage';
 import { buildTargetSaveRequest } from '../utils/saveRequest';
 import { mapSpellDefense } from '../utils/rollResolution';
+import { visibleOrder } from '../utils/encounterUtils';
 
 /**
  * Secondary damage profiles (#987) — a spell whose damage lands in more than one
@@ -77,7 +78,11 @@ export const useSecondaryProfiles = ({
     }));
   }, []);
 
-  const enemies = order.filter((e) => e.kind === 'enemy');
+  // #1749 ruling addendum: a hidden combatant must not be nameable as a zone
+  // target (mirrors useTargeting.selectable / #1753's positions filter). A
+  // selection that TURNS hidden mid-flow drops the same way it does in
+  // buildRequests below — `targets` re-derives from this filtered list.
+  const enemies = visibleOrder(order).filter((e) => e.kind === 'enemy');
 
   // A synthetic single-save ability per zone, so the existing builders do the
   // work. Deliberately NOT spread from `ability`: the primary's saveConditions /

@@ -6,6 +6,7 @@ import { markPlayingOnCast } from '../utils/playing';
 import { resolveActionRoll } from '../utils/rollResolution';
 import { SKILL_KEYS } from '../utils/EffectUtils';
 import { skillLabel } from '../utils/victoryPoints';
+import { visibleOrder } from '../utils/encounterUtils';
 
 /**
  * Opposed reaction (#226-C, extracted #1317 D3): a reaction-cost ability whose
@@ -34,7 +35,13 @@ export const useOpposedReactionResolution = ({
   const opposedRef = useRef(null);
 
   const isOpposedReaction = ability?.roll?.opposed === true;
-  const enemyOptions = isOpposedReaction ? (order || []).filter((e) => e.kind === 'enemy') : [];
+  // #1749 ruling addendum: a hidden combatant must not be nameable as the
+  // triggering enemy (mirrors useTargeting.selectable / #1753's positions
+  // filter). OpposedReactionResolver re-derives `enemyName` from this list on
+  // every render, so a picked enemy that TURNS hidden mid-flow degrades to a
+  // null name (the stale entryId still travels, exactly like a stale
+  // useTargeting selection would be dropped) rather than leaking it.
+  const enemyOptions = isOpposedReaction ? visibleOrder(order).filter((e) => e.kind === 'enemy') : [];
 
   const rollOpts = {
     conditions: activeConditions || [],

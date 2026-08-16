@@ -12,6 +12,7 @@ import { toGameSeconds } from '../../utils/gameTime';
 import { IMMUNITY_EFFECT_ID } from '../../utils/treatWounds';
 import { ABILITY_IMMUNITY_EFFECT_ID } from '../../utils/immunity';
 import { withWhetstoneArmedVs } from '../../utils/whetstone';
+import { visibleOrder } from '../../utils/encounterUtils';
 import { RELAY, APP, syncKey, globalKey } from '../../sync/keys';
 
 const FROM_NAME_EFFECT_IDS = [IMMUNITY_EFFECT_ID, ABILITY_IMMUNITY_EFFECT_ID];
@@ -31,7 +32,9 @@ const EffectsPanel = ({ charId, themeColor }) => {
   // call); the strike surface then offers the bonus vs that enemy.
   const [, setRawEffects] = useSyncedState(syncKey(APP.EFFECTS, charId), []);
   const [encounterState] = useSyncedState(globalKey(RELAY.ENCOUNTER), null);
-  const enemyEntries = (encounterState?.order || []).filter((e) => e.kind === 'enemy');
+  // #1749 ruling addendum: a hidden combatant must not be nameable from this
+  // arm-vs picker (mirrors useTargeting.selectable / #1753's positions filter).
+  const enemyEntries = visibleOrder(encounterState?.order).filter((e) => e.kind === 'enemy');
   const armVs = (entryId, target) => setRawEffects((cur) => withWhetstoneArmedVs(cur, entryId, target));
 
   const stanceCount = stanceActive ? 1 : 0;

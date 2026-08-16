@@ -156,4 +156,93 @@ describe('InitiativeStrip', () => {
     expect(screen.getByText('Pellias').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--self');
     expect(screen.getByText('Ashka').closest('.cmd-init-entry')).toHaveClass('cmd-init-entry--ally');
   });
+
+  // ── Hidden-combatant special case (#1749 ruling addendum) ─────────────────
+  // The strip's tap-to-focus IS the picker, but it's also the turn-order
+  // display — the ruling filters the FOCUS candidates, not the display, so a
+  // hidden entry stays rendered but its tap becomes a no-op.
+  describe('hidden combatants', () => {
+    it('stays rendered in the strip (the turn-order display is untouched)', () => {
+      let drv, sync;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (sync = s)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+      act(() => sync.set((cur) => ({
+        ...cur,
+        order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
+      })));
+      expect(screen.getByText('Goblin')).toBeInTheDocument();
+    });
+
+    it('is not focusable — tapping it is a no-op and it carries aria-disabled', () => {
+      let drv, sync, focus;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (sync = s)} />
+          <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (focus = s)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+      act(() => sync.set((cur) => ({
+        ...cur,
+        order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
+      })));
+
+      const btn = screen.getByRole('button', { name: 'Focus Goblin' });
+      expect(btn).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(btn);
+      expect(focus.val).toBeNull();
+      expect(btn).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('a focused entry that TURNS hidden mid-encounter drops the focused styling', () => {
+      let drv, sync;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (sync = s)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+      fireEvent.click(screen.getByRole('button', { name: 'Focus Goblin' }));
+      expect(screen.getByRole('button', { name: 'Focus Goblin' })).toHaveAttribute('aria-pressed', 'true');
+
+      act(() => sync.set((cur) => ({
+        ...cur,
+        order: cur.order.map((e) => (e.entryId === goblin.entryId ? { ...e, hidden: true } : e)),
+      })));
+      // Still visible (turn-order display untouched), but no longer reads as
+      // focused (useFocusTarget's hygiene degrades focusEntry to null).
+      expect(screen.getByText('Goblin')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Focus Goblin' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('an entry with no hidden field at all (older bridge) stays focusable', () => {
+      let drv, focus;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_focustarget_Pellias" onReady={(s) => (focus = s)} />
+          <InitiativeStrip charId="Pellias" />
+        </>
+      );
+      startWithEnemy(() => drv);
+      const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+      const btn = screen.getByRole('button', { name: 'Focus Goblin' });
+      expect(btn).not.toHaveAttribute('aria-disabled');
+      fireEvent.click(btn);
+      expect(focus.val).toBe(goblin.entryId);
+    });
+  });
 });

@@ -34,6 +34,7 @@ import {
   isSaveRevealed,
   isIwrRevealed,
 } from '../../../utils/recallKnowledge';
+import { visibleOrder } from '../../../utils/encounterUtils';
 import './Dossier.css';
 import { RELAY, APP, globalKey, syncKey } from '../../../sync/keys';
 
@@ -512,11 +513,15 @@ const Dossier = ({ charId, character, model }) => {
       )}
     </section>
 
+    {/* #1749 ruling addendum: the Bestiary/Recall Knowledge candidate list is
+        a player-facing picker built straight from the raw order — a hidden
+        combatant must not be nameable there (mirrors useTargeting.selectable
+        / #1753's positions filter). */}
     {rkOpen && (
       <BestiaryModal
         isOpen
         onClose={() => setRkOpen(false)}
-        enemies={(encounter?.order || []).filter((e) => e.kind === 'enemy')}
+        enemies={visibleOrder(encounter?.order).filter((e) => e.kind === 'enemy')}
         actingCharId={charId}
         actingCharName={character?.name}
       />

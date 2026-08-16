@@ -10,6 +10,7 @@ import {
   everyEntryHasInitiative,
   activeEntry,
   isCharTurn,
+  visibleOrder,
 } from './encounterUtils';
 
 describe('encounterUtils', () => {
@@ -138,6 +139,33 @@ describe('encounterUtils', () => {
     it('isCharTurn is false when there is no acting entry', () => {
       expect(isCharTurn({ order: [], currentTurnIndex: 0 }, 'p1')).toBe(false);
       expect(isCharTurn(null, 'p1')).toBe(false);
+    });
+  });
+
+  describe('visibleOrder (#1749 ruling addendum — player-facing picker sweep)', () => {
+    it('drops entries with hidden: true', () => {
+      const order = [
+        { entryId: 'a', kind: 'pc' },
+        { entryId: 'b', kind: 'enemy', hidden: true },
+        { entryId: 'c', kind: 'enemy' },
+      ];
+      expect(visibleOrder(order).map((e) => e.entryId)).toEqual(['a', 'c']);
+    });
+
+    it('an entry with no hidden field at all (older bridge) reads as visible', () => {
+      const order = [{ entryId: 'a', kind: 'enemy' }];
+      expect(visibleOrder(order)).toEqual(order);
+    });
+
+    it('tolerates a missing/undefined order', () => {
+      expect(visibleOrder(undefined)).toEqual([]);
+      expect(visibleOrder(null)).toEqual([]);
+      expect(visibleOrder([])).toEqual([]);
+    });
+
+    it('hidden: false stays visible', () => {
+      const order = [{ entryId: 'a', kind: 'enemy', hidden: false }];
+      expect(visibleOrder(order)).toEqual(order);
     });
   });
 });

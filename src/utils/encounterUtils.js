@@ -175,3 +175,25 @@ export const makeEnemyEntry = (name, initiative) => ({
 export const everyEntryHasInitiative = (order) =>
   (order || []).length > 0 &&
   (order || []).every((e) => Number.isFinite(e?.initiative));
+
+// #1749 ruling addendum (2026-08-16): every PLAYER-FACING picker that builds
+// its candidate list straight from the raw encounter order must drop entries
+// carrying `hidden: true` — the epic's wave 1 established the rule for the
+// target-chip source (`useTargeting.selectable`) and the map's `positions`
+// markers (#1753's protocol bump); the GM ruled it extends to every other
+// order-derived picker a player can act through (Exploit Vulnerability, Hunt
+// Prey, the effects-panel arm-vs picker, Shield Block's rune-rider target,
+// the opposed-reaction enemy picker, secondary damage zones, the Bestiary/RK
+// candidate list, and the initiative strip's focus row). A hidden combatant
+// must not be nameable from a dropdown or a checkbox list any more than it's
+// drawable on the map. Shape-tolerant: an entry with no `hidden` field at all
+// (an older bridge, below the protocol floor that adds it) reads as visible —
+// same as `useTargeting`.
+//
+// GM surfaces (ArmedPayloads, DockReactionRail, GmDashboard, DockGmConsole,
+// and any other GM-only mount) must NOT filter through this — the GM sees the
+// whole table, hidden combatants included, by design.
+//
+// @param {Array} order - encounter.order entries [{ entryId, kind, hidden? }]
+// @returns {Array} entries with `hidden !== true`
+export const visibleOrder = (order) => (order || []).filter((e) => e && !e.hidden);

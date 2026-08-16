@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { minionTurnId, MINION_COMPANION, MINION_FAMILIAR } from '../../utils/minionUtils';
-import { isCharTurn } from '../../utils/encounterUtils';
+import { isCharTurn, visibleOrder } from '../../utils/encounterUtils';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
@@ -218,7 +218,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   };
 
   const isInProgress = encounter.phase === 'in-progress';
-  const enemies = order.filter((e) => e.kind === 'enemy');
+  // #1749 ruling addendum: the Bestiary/Recall Knowledge candidate list is a
+  // player-facing picker built straight from the raw order — a hidden
+  // combatant must not be nameable there either (mirrors useTargeting.selectable).
+  const enemies = visibleOrder(order).filter((e) => e.kind === 'enemy');
 
   return (
     <div className="ttp-panel" role="region" aria-label="Encounter tracker">

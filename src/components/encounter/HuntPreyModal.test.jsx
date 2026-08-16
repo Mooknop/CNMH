@@ -77,4 +77,25 @@ describe('HuntPreyModal', () => {
     expect(mockDesignate).toHaveBeenCalledWith({ targetKey: 'orc', targetName: 'Orc' });
     expect(mockSpendActions).not.toHaveBeenCalled();
   });
+
+  // #1749 ruling addendum: a hidden combatant must not be nameable from this
+  // picker, mirroring useTargeting.selectable / #1753's positions filter.
+  it('excludes a hidden enemy from the picker', () => {
+    mockEncounterState.order = [
+      { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', creatureKey: 'gob' },
+      { entryId: 'e-skulk', kind: 'enemy', name: 'Skulker', creatureKey: 'skulk', hidden: true },
+      { entryId: 'e-ash', kind: 'pc', name: 'Ashka', charId: 'AshkaBGosh' },
+    ];
+    render(<HuntPreyModal {...props} />);
+    expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Skulker' })).not.toBeInTheDocument();
+  });
+
+  it('an enemy with no hidden field at all (older bridge) stays selectable', () => {
+    mockEncounterState.order = [
+      { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', creatureKey: 'gob' },
+    ];
+    render(<HuntPreyModal {...props} />);
+    expect(screen.getByRole('button', { name: 'Goblin' })).toBeInTheDocument();
+  });
 });
