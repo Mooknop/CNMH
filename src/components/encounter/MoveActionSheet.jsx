@@ -24,24 +24,19 @@
 //     Filtered to the captured scene and excludes the viewer's own mover
 //     (their own plan is already drawn from `plannedPath`, not the preview
 //     channel).
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import Modal from '../shared/Modal';
 import MoveGridPicker from './MoveGridPicker';
 import MoveConfirmBar from './MoveConfirmBar';
-import MapSnapshotViewer from './MapSnapshotViewer';
-import SnapshotRouteOverlay from './SnapshotRouteOverlay';
+import MoveMapSurface from './MoveMapSurface';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
-import { useDevicePref } from '../../hooks/useDevicePref';
-import { useMoverMapSurface } from '../../hooks/useMoverMapSurface';
-import { usePathPreview } from '../../hooks/usePathPreview';
+import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
-import {
-  actionsForDistance, FULL_MOVE_PROTOCOL, MAP_MOVE_PROTOCOL, MOVE_SURFACE_PREF,
-} from '../../utils/movement';
+import { actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import './MoveActionSheet.css';
 
 const LABEL = { stride: 'Stride', step: 'Step' };
@@ -76,18 +71,6 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
   const { protocol } = useBridgeStatus();
   const tapFlowEligible = moveType === 'stride' && (protocol ?? 0) >= FULL_MOVE_PROTOCOL;
   const strideBridgeOutdated = moveType === 'stride' && !tapFlowEligible;
-
-  // Map mode (#1744 S4, OQ-4 ruling): a device-sticky toggle between the
-  // abstract grid and the actual battlefield snapshot, gated on a
-  // protocol-16+ bridge (MAP_MOVE_PROTOCOL implies FULL_MOVE_PROTOCOL, so
-  // mapEligible never fires without tapFlowEligible also true — i.e. never
-  // while strideBridgeOutdated is showing). The toggle itself only renders
-  // when eligible; the STORED device preference persists across sessions
-  // regardless, so an older/no bridge simply ignores it and stays on the
-  // grid — the universal fallback rule.
-  const [surfacePref, setSurfacePref] = useDevicePref(MOVE_SURFACE_PREF, 'grid');
-  const mapEligible = tapFlowEligible && (protocol ?? 0) >= MAP_MOVE_PROTOCOL;
-  const useMapSurface = mapEligible && surfacePref === 'map';
 
   // Tap-flow-only bookkeeping (unused by the stepper path):
   //  - waypointsRef: the tapped cells sent in the CURRENT plan, so a chained
@@ -184,31 +167,28 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
   // deliberately excluded here; omitting radiusFeet lets the bridge fall
   // back to 1.5× the actor's OWN Speed instead of our guess.
   const knownSpeed = derivedSpeed?.total || pickerOpts?.speed || speedRef.current || null;
-  const { status: mapStatus, snapshot: mapSnapshot } = useMoverMapSurface(charId, {
-    active: useMapSurface,
-    radiusFeet: knownSpeed ? knownSpeed * 1.5 : undefined,
-  });
 
-  // Other movers' route ghosts (#1744 S3/WS-4). PLAYER audience always — this
-  // sheet is mounted on player-facing surfaces (the PC's own Move sheet, and
-  // the GM dock's act-as-player mirror of it), never a GM-exclusive one.
-  // usePathPreview already gates on the protocol floor and the client TTL;
-  // the only filtering left here is surface-local:
-  //   - drop the viewer's own mover (their in-progress plan is already drawn
-  //     from `plannedPath` above, not the preview channel)
-  //   - keep only ghosts on the SAME scene as the captured snapshot — a
-  //     mover-centered capture (WS-2) carries its own `capture.sceneId`,
-  //     exactly like `pathpreview`'s per-token `sceneId` (#1744 WS-1)
-  const { entries: pathPreviewEntries } = usePathPreview({ audience: 'player' });
-  const snapshotSceneId = mapSnapshot?.capture?.sceneId || null;
-  const ghostEntries = useMemo(() => {
-    if (!useMapSurface || !mapSnapshot) return [];
-    return pathPreviewEntries.filter((entry) => {
-      if (entry.id === charId) return false;
-      if (snapshotSceneId && entry.sceneId && entry.sceneId !== snapshotSceneId) return false;
-      return true;
-    });
-  }, [pathPreviewEntries, useMapSurface, mapSnapshot, snapshotSceneId, charId]);
+  // Map mode (#1744 S4/S7, OQ-4 ruling): a device-sticky toggle between the
+  // abstract grid and the actual battlefield snapshot, gated on a
+  // protocol-16+ bridge (MAP_MOVE_PROTOCOL implies FULL_MOVE_PROTOCOL, so
+  // mapEligible never fires without tapFlowEligible also true — i.e. never
+  // while strideBridgeOutdated is showing). The toggle itself only renders
+  // when eligible; the STORED device preference persists across sessions
+  // regardless, so an older/no bridge simply ignores it and stays on the
+  // grid — the universal fallback rule. useMoveMapMode (#1744 S7) is the
+  // wiring every map-mode surface shares — see its doc comment; ghosts are
+  // the PLAYER audience always, since this sheet is mounted on player-facing
+  // surfaces only (the PC's own Move sheet, and the GM dock's act-as-player
+  // mirror of it), never a GM-exclusive one.
+  const {
+    surfacePref, setSurfacePref, mapEligible, useMapSurface, mapStatus, mapSnapshot, ghostEntries,
+  } = useMoveMapMode({
+    moverId: charId,
+    tapFlowEligible,
+    protocol,
+    knownSpeed,
+    ghostAudience: 'player',
+  });
 
   // Tap a cell: first tap (or any re-tap on a non-clipped plan) replaces the
   // plan outright; a tap after a CLIPPED plan chains a waypoint onto it — the
@@ -312,80 +292,35 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
               <>
                 {/* Past strideBridgeOutdated + moveType!=='step' means we're
                     always tap-flow eligible here (#1736 S5) — the toggle
-                    below only ever appears on top of a live tap flow. */}
-                {mapEligible && (
-                  <div className="mas-surface-toggle" role="group" aria-label="Movement surface">
-                    <button
-                      type="button"
-                      className="btn-secondary mas-surface-btn"
-                      aria-pressed={surfacePref !== 'map'}
-                      onClick={() => setSurfacePref('grid')}
-                    >
-                      Grid
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary mas-surface-btn"
-                      aria-pressed={surfacePref === 'map'}
-                      onClick={() => setSurfacePref('map')}
-                    >
-                      Map
-                    </button>
-                  </div>
-                )}
+                    below only ever appears on top of a live tap flow.
+                    MoveMapSurface (#1744 S7) is the shared toggle + map body
+                    every map-mode surface now renders identically. */}
+                <MoveMapSurface
+                  mapEligible={mapEligible}
+                  surfacePref={surfacePref}
+                  onSurfaceChange={setSurfacePref}
+                  showBody={(stage === 'picking' || stage === 'planned') && !!pickerOpts}
+                  status={mapStatus}
+                  snapshot={mapSnapshot}
+                  origin={pickerOpts?.origin}
+                  plannedPath={plannedPath}
+                  ghosts={ghostEntries}
+                  onMapTap={handleMapTap}
+                  onCancel={handleClose}
+                  cancelLabel="Cancel"
+                />
 
-                {(stage === 'picking' || stage === 'planned') && pickerOpts && (
-                  useMapSurface && mapStatus === 'ready' && mapSnapshot ? (
-                    <>
-                      <MapSnapshotViewer
-                        src={mapSnapshot.url}
-                        onPick={handleMapTap}
-                        overlay={(
-                          <>
-                            <SnapshotRouteOverlay
-                              snapshot={mapSnapshot}
-                              origin={pickerOpts.origin}
-                              cells={plannedPath?.path}
-                              destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                              showLattice
-                            />
-                            {ghostEntries.map((ghost) => (
-                              <SnapshotRouteOverlay
-                                key={ghost.tokenId}
-                                snapshot={mapSnapshot}
-                                origin={ghost.origin}
-                                cells={ghost.path}
-                                destination={ghost.path?.length ? ghost.path[ghost.path.length - 1] : null}
-                                variant="ghost"
-                              />
-                            ))}
-                          </>
-                        )}
-                      />
-                      <p className="mas-hint">Tap the map to choose a destination.</p>
-                      <button type="button" className="btn-secondary mas-map-cancel" onClick={handleClose}>
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <MoveGridPicker
-                        tapMode
-                        origin={pickerOpts.origin}
-                        maxFeet={speedForGrid}
-                        plannedPath={plannedPath?.path}
-                        destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                        onSelect={handleTap}
-                        onCancel={handleClose}
-                      />
-                      {useMapSurface && mapStatus === 'loading' && (
-                        <div className="mas-status" role="status">Loading map…</div>
-                      )}
-                      {useMapSurface && mapStatus === 'unavailable' && (
-                        <div className="mas-status" role="status">Map unavailable — using the grid.</div>
-                      )}
-                    </>
-                  )
+                {(stage === 'picking' || stage === 'planned') && pickerOpts
+                  && !(useMapSurface && mapStatus === 'ready' && mapSnapshot) && (
+                  <MoveGridPicker
+                    tapMode
+                    origin={pickerOpts.origin}
+                    maxFeet={speedForGrid}
+                    plannedPath={plannedPath?.path}
+                    destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                    onSelect={handleTap}
+                    onCancel={handleClose}
+                  />
                 )}
 
                 {stage === 'awaiting-plan' && <div className="mas-status">Plotting route…</div>}

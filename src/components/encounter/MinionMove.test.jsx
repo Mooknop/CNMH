@@ -16,6 +16,16 @@ const h = vi.hoisted(() => ({
   encounter: { active: false, phase: 'idle' },
   turnState: { actionsGranted: 0, actionsSpent: 0 },
   protocol: null,
+  setSurfacePref: vi.fn(),
+  lastMapModeOpts: null,
+  mapMode: {
+    surfacePref: 'grid',
+    mapEligible: false,
+    useMapSurface: false,
+    mapStatus: 'idle',
+    mapSnapshot: null,
+    ghostEntries: [],
+  },
 }));
 
 vi.mock('../../hooks/useMinionActors', () => ({
@@ -65,6 +75,33 @@ vi.mock('./MoveGridPicker', () => ({
   ),
 }));
 
+// Map mode (#1744 S7): mock the shared useMoveMapMode wiring hook + the
+// shared MoveMapSurface component exactly like useTokenMovement/
+// MoveGridPicker above — its own behavior is covered by
+// MoveActionSheet.mapMode.test.jsx / MoveActionSheet.pathpreviewGhosts.test.jsx.
+vi.mock('../../hooks/useMoveMapMode', () => ({
+  __esModule: true,
+  useMoveMapMode: (opts) => {
+    h.lastMapModeOpts = opts;
+    return { ...h.mapMode, setSurfacePref: h.setSurfacePref };
+  },
+}));
+
+vi.mock('./MoveMapSurface', () => ({
+  __esModule: true,
+  default: ({ mapEligible, surfacePref, onSurfaceChange, onMapTap, onCancel }) => {
+    if (!mapEligible) return null;
+    return (
+      <div data-testid="move-map-surface">
+        <button aria-pressed={surfacePref !== 'map'} onClick={() => onSurfaceChange('grid')}>Grid</button>
+        <button aria-pressed={surfacePref === 'map'} onClick={() => onSurfaceChange('map')}>Map</button>
+        <button onClick={() => onMapTap({ nx: 0.5, ny: 0.5 })}>Tap Map</button>
+        <button onClick={onCancel}>Map Cancel</button>
+      </div>
+    );
+  },
+}));
+
 import MinionMove from './MinionMove';
 
 const { linkFor, requestMove, confirmMove, cancelMove, planMove, confirmPlannedMove, cancelPlan } = h;
@@ -74,6 +111,14 @@ beforeEach(() => {
   h.encounter = { active: false, phase: 'idle' };
   h.turnState = { actionsGranted: 0, actionsSpent: 0 };
   h.protocol = null;
+  h.mapMode = {
+    surfacePref: 'grid',
+    mapEligible: false,
+    useMapSurface: false,
+    mapStatus: 'idle',
+    mapSnapshot: null,
+    ghostEntries: [],
+  };
   h.moveState = {
     stage: null,
     pickerOpts: null,
@@ -317,6 +362,81 @@ describe('MinionMove', () => {
 
       act(() => h.lastMoveOpts.onMoveDone({ feetMoved: 60 }));
       expect(h.refundActions).not.toHaveBeenCalled();
+      expect(cancelMove).toHaveBeenCalled();
+    });
+  });
+
+  // #1744 S7: map mode rolled out to this surface, mirroring #1743's tap-flow
+  // rollout — same shared useMoveMapMode wiring + MoveMapSurface component
+  // MoveActionSheet uses, keyed to the minion's `<ownerId>-<role>` id,
+  // PLAYER-audience ghosts. Granted-pool pricing/confirm logic is untouched —
+  // a map tap feeds the identical handleTap/planMove path a grid tap does.
+  describe('map mode (#1744 S7)', () => {
+    beforeEach(() => { h.protocol = 14; });
+
+    it('wires useMoveMapMode to the minion <owner>-<role> id with player-audience ghosts', () => {
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.moveState.stage = 'picking';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [] };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+
+      expect(h.lastMapModeOpts).toMatchObject({
+        moverId: 'Ashka-companion', tapFlowEligible: true, protocol: 14, ghostAudience: 'player',
+      });
+    });
+
+    it('renders no map surface below the map-move protocol floor (mapEligible false)', () => {
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.moveState.stage = 'picking';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [] };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+      expect(screen.queryByTestId('move-map-surface')).toBeNull();
+      expect(screen.getByText('pick-cell')).toBeInTheDocument();
+    });
+
+    it('a map tap resolves to the same handleTap/planMove path a grid tap uses', () => {
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.mapMode.mapEligible = true;
+      h.mapMode.mapSnapshot = {
+        url: '/api/images/mover.webp',
+        capture: { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0, screenW: 800, screenH: 600, sceneId: 'scene-1' },
+        worldRect: { x1: 0, y1: 0, x2: 800, y2: 600 },
+        gridSize: 100,
+      };
+      h.moveState.stage = 'picking';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [] };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tap Map' }));
+      // world (400, 300) → cell (4, 3) on a 100 ft grid, identity capture.
+      expect(planMove).toHaveBeenCalledWith([{ col: 4, row: 3 }]);
+    });
+
+    it('hides the grid once the map surface is ready and showing', () => {
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.mapMode.mapEligible = true;
+      h.mapMode.useMapSurface = true;
+      h.mapMode.mapStatus = 'ready';
+      h.mapMode.mapSnapshot = { url: '/api/images/mover.webp', gridSize: 100 };
+      h.moveState.stage = 'picking';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [] };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+
+      expect(screen.getByTestId('move-map-surface')).toBeInTheDocument();
+      expect(screen.queryByText('pick-cell')).toBeNull();
+    });
+
+    it('the map surface\'s own Done control ends the move exactly like the grid\'s', () => {
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.mapMode.mapEligible = true;
+      h.mapMode.useMapSurface = true;
+      h.mapMode.mapStatus = 'ready';
+      h.mapMode.mapSnapshot = { url: '/api/images/mover.webp', gridSize: 100 };
+      h.moveState.stage = 'picking';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [] };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Map Cancel' }));
       expect(cancelMove).toHaveBeenCalled();
     });
   });

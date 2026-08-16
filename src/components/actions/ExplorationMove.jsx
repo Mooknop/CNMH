@@ -5,11 +5,14 @@ import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { useContent } from '../../contexts/ContentContext';
 import { formatSpeedBreakdown } from '../../utils/speed';
+import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import MoveConfirmBar from '../encounter/MoveConfirmBar';
+import MoveMapSurface from '../encounter/MoveMapSurface';
 import './ExplorationMove.css';
 import { APP, globalKey } from '../../sync/keys';
 
@@ -29,6 +32,13 @@ import { APP, globalKey } from '../../sync/keys';
 // opens automatically either way (no preliminary "Move Token" button). A
 // running total of distance walked is shown; "Done" resets it (the pad stays
 // open while movement is enabled).
+//
+// Map mode (#1744 S7, mirrors #1743's tap-flow rollout to this surface): on a
+// protocol-16+ bridge the tap flow's picker can also be the actual battlefield
+// snapshot instead of the abstract grid, toggled per device via the SAME
+// MOVE_SURFACE_PREF every map-mode surface shares (useMoveMapMode). Other
+// movers' route ghosts draw alongside the viewer's own plan — PLAYER audience,
+// since this is a player-facing surface.
 
 const ExplorationMove = ({ charId, onMoveDone }) => {
   const { mode, moveEnabled } = usePlayMode();
@@ -86,11 +96,37 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
 
   const speedForGrid = derivedSpeed?.total || pickerOpts?.speed || 25;
 
+  // Mover-centered capture radius (#1744 WS-2/OQ-5 ruling) — deliberately
+  // excludes the hardcoded 25 ft grid fallback above (a UI convenience, not
+  // a real Speed); omitting radiusFeet lets the bridge fall back to 1.5× the
+  // actor's own Speed instead of our guess. useMoveMapMode (#1744 S7) is the
+  // wiring every map-mode surface shares — see its doc comment.
+  const knownSpeed = derivedSpeed?.total || pickerOpts?.speed || null;
+  const {
+    surfacePref, setSurfacePref, mapEligible, useMapSurface, mapStatus, mapSnapshot, ghostEntries,
+  } = useMoveMapMode({
+    moverId: charId,
+    tapFlowEligible,
+    protocol,
+    knownSpeed,
+    ghostAudience: 'player',
+  });
+
   const handleTap = (cell) => {
     waypointsRef.current = (stage === 'planned' && plannedPath?.clipped)
       ? [...waypointsRef.current, cell]
       : [cell];
     planMove(waypointsRef.current);
+  };
+
+  // Map-mode tap: the same normalized-tap → world → cell conversion as
+  // MoveActionSheet — the snapshot replaces the PICKER, not the plan/confirm
+  // protocol, so it feeds the identical handleTap path above.
+  const handleMapTap = ({ nx, ny }) => {
+    if (!mapSnapshot) return;
+    const world = worldPointFromTap(mapSnapshot, nx, ny);
+    const cell = cellFromWorldPoint(world, mapSnapshot.gridSize);
+    if (cell) handleTap(cell);
   };
 
   const handleCancelPlan = () => {
@@ -153,18 +189,34 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
                 </div>
               )}
               {isRefreshing && <div className="em-status em-status--refresh">Updating…</div>}
-              <MoveGridPicker
-                tapMode
+              <MoveMapSurface
+                mapEligible={mapEligible}
+                surfacePref={surfacePref}
+                onSurfaceChange={setSurfacePref}
+                showBody
+                status={mapStatus}
+                snapshot={mapSnapshot}
                 origin={pickerOpts.origin}
-                maxFeet={speedForGrid}
-                plannedPath={plannedPath?.path}
-                destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                cancelLabel="Done"
-                cancelDisabled={pickerOpts.originOccupied}
-                cancelHint="Step off your ally's square to stop."
-                onSelect={handleTap}
+                plannedPath={plannedPath}
+                ghosts={ghostEntries}
+                onMapTap={handleMapTap}
                 onCancel={handleDone}
+                cancelLabel="Done"
               />
+              {!(useMapSurface && mapStatus === 'ready' && mapSnapshot) && (
+                <MoveGridPicker
+                  tapMode
+                  origin={pickerOpts.origin}
+                  maxFeet={speedForGrid}
+                  plannedPath={plannedPath?.path}
+                  destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                  cancelLabel="Done"
+                  cancelDisabled={pickerOpts.originOccupied}
+                  cancelHint="Step off your ally's square to stop."
+                  onSelect={handleTap}
+                  onCancel={handleDone}
+                />
+              )}
             </>
           )}
 

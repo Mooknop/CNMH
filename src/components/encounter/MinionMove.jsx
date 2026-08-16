@@ -4,10 +4,13 @@ import { useMinionActors } from '../../hooks/useMinionActors';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
+import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { minionTurnId } from '../../utils/minionUtils';
+import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { needsNewStride, actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import MoveGridPicker from './MoveGridPicker';
 import MoveConfirmBar from './MoveConfirmBar';
+import MoveMapSurface from './MoveMapSurface';
 import './MinionMove.css';
 
 // Minion token movement (#362). Reuses the same movereq→moveopts→moveconfirm→
@@ -35,6 +38,17 @@ import './MinionMove.css';
 // crosses Speed. Either way, when the granted pool runs dry the pad closes
 // (tap flow) or stops offering steps it can't afford (stepper), so the token
 // can't over-move. Out of encounter there's no economy: movement stays free.
+//
+// Map mode (#1744 S7, mirrors #1743's tap-flow rollout to this surface): on a
+// protocol-16+ bridge the tap flow's picker can also be the actual battlefield
+// snapshot, toggled per device via the SAME MOVE_SURFACE_PREF every map-mode
+// surface shares (useMoveMapMode). The mover id is the minion's own
+// `<ownerCharId>-<role>` id — resolveToken (foundry-bridge/snapshots.js)
+// already resolves that form to the companion/familiar's own token, same as
+// useTokenMovement above. Other movers' route ghosts draw alongside the
+// viewer's own plan — PLAYER audience, since this is a player-facing surface.
+// Granted-pool pricing/confirm logic is entirely unaffected — a map tap feeds
+// the identical handleTap/planMove path a grid tap does.
 const MinionMove = ({ ownerId, role }) => {
   const { linkFor } = useMinionActors();
   const link = linkFor(ownerId, role);
@@ -140,6 +154,7 @@ const MinionMove = ({ ownerId, role }) => {
     }
   }, [encounterMode, feetThisAction, actionsLeft, spendActions, refundActions]);
 
+  const moverId = minionTurnId(ownerId, role);
   const {
     stage,
     pickerOpts,
@@ -152,7 +167,7 @@ const MinionMove = ({ ownerId, role }) => {
     planMove,
     confirmPlannedMove,
     cancelPlan,
-  } = useTokenMovement(minionTurnId(ownerId, role), { onMoveDone: handleMoveDone });
+  } = useTokenMovement(moverId, { onMoveDone: handleMoveDone });
 
   requestMoveRefreshRef.current = requestMoveRefresh;
   cancelMoveRef.current = cancelMove;
@@ -161,6 +176,20 @@ const MinionMove = ({ ownerId, role }) => {
   // Same precedence as the stepper's budget (last-known Speed → fallback).
   const speedForGrid = speedRef.current || pickerOpts?.speed || 25;
 
+  // Mover-centered capture radius (#1744 WS-2/OQ-5 ruling) — deliberately
+  // excludes the hardcoded 25 ft grid fallback above; omitting radiusFeet lets
+  // the bridge fall back to 1.5× the actor's own Speed instead of our guess.
+  const knownSpeed = speedRef.current || pickerOpts?.speed || null;
+  const {
+    surfacePref, setSurfacePref, mapEligible, useMapSurface, mapStatus, mapSnapshot, ghostEntries,
+  } = useMoveMapMode({
+    moverId,
+    tapFlowEligible,
+    protocol,
+    knownSpeed,
+    ghostAudience: 'player',
+  });
+
   // Tap a cell: first tap (or any re-tap on a non-clipped plan) replaces the
   // plan outright; a tap after a CLIPPED plan chains a waypoint onto it.
   const handleTap = (cell) => {
@@ -168,6 +197,16 @@ const MinionMove = ({ ownerId, role }) => {
       ? [...waypointsRef.current, cell]
       : [cell];
     planMove(waypointsRef.current);
+  };
+
+  // Map-mode tap: the same normalized-tap → world → cell conversion as
+  // MoveActionSheet — the snapshot replaces the PICKER, not the plan/confirm
+  // protocol, so it feeds the identical handleTap path above.
+  const handleMapTap = ({ nx, ny }) => {
+    if (!mapSnapshot) return;
+    const world = worldPointFromTap(mapSnapshot, nx, ny);
+    const cell = cellFromWorldPoint(world, mapSnapshot.gridSize);
+    if (cell) handleTap(cell);
   };
 
   const handleCancelPlan = () => {
@@ -241,16 +280,32 @@ const MinionMove = ({ ownerId, role }) => {
                 </div>
               )}
               {isRefreshing && <div className="mm-status mm-status--refresh">Updating…</div>}
-              <MoveGridPicker
-                tapMode
+              <MoveMapSurface
+                mapEligible={mapEligible}
+                surfacePref={surfacePref}
+                onSurfaceChange={setSurfacePref}
+                showBody
+                status={mapStatus}
+                snapshot={mapSnapshot}
                 origin={pickerOpts.origin}
-                maxFeet={speedForGrid}
-                plannedPath={plannedPath?.path}
-                destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                cancelLabel="Done"
-                onSelect={handleTap}
+                plannedPath={plannedPath}
+                ghosts={ghostEntries}
+                onMapTap={handleMapTap}
                 onCancel={handleDone}
+                cancelLabel="Done"
               />
+              {!(useMapSurface && mapStatus === 'ready' && mapSnapshot) && (
+                <MoveGridPicker
+                  tapMode
+                  origin={pickerOpts.origin}
+                  maxFeet={speedForGrid}
+                  plannedPath={plannedPath?.path}
+                  destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                  cancelLabel="Done"
+                  onSelect={handleTap}
+                  onCancel={handleDone}
+                />
+              )}
             </>
           )}
 
