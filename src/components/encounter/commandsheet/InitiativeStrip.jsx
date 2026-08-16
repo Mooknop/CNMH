@@ -7,23 +7,41 @@
 // All the existing per-entry chips travel with it (flanked / Hunt Prey /
 // conditions / aura / omen / stance / playing / persistent).
 //
-// #1749 ruling addendum — special case: the strip's tap-to-focus IS its
-// candidate-list picker, but it's also the turn-order display, and this
-// component renders both off the same `order.map`. The ruling extends the
-// hidden filter to "the focus-row picker candidates," not to the visible
-// turn order (that's a bigger table-visibility surface than a picker, and
-// changing it wasn't asked for here — see the PR body for the follow-up
-// question). So a hidden entry stays RENDERED (name, badges, position in the
-// strip all unchanged) but is no longer focusable: its tap is a no-op and it
-// carries aria-disabled. This does not, on its own, stop a hidden entry's
-// name from being visible in the strip — only from becoming the focus (and
-// therefore the dossier / other pickers that read focusEnemy/focusAlly/
-// focusSelf, which useFocusTarget already degrades to null for a hidden
-// entry).
+// #1749 ruling addendum 2 — the DISPLAY hides hidden combatants, matching
+// Foundry's own tracker (which simply omits hidden tokens for players rather
+// than showing a disabled row). This replaces #1758's interim state, where a
+// hidden entry stayed rendered with its tap disabled (aria-disabled, no-op):
+// that was fine for every OTHER order-derived picker (a dropdown/checkbox
+// candidate list has no "just don't list it" cost), but the strip doubles as
+// the visible turn-order display, and a named-but-unusable row was itself the
+// name-leak the epic's OQ-5 called out. The row is now simply absent, via
+// `visibleOrder(order)` (utils/encounterUtils) — the same derivation the
+// other seven order-based pickers already use.
+//
+// Mount site: InitiativeStrip has exactly one mount, EncounterSkeleton, used
+// from both CharacterSheet (the player's own client) and GmCommandDock's
+// DockActingPane (the GM acting AS a PC). DockActingPane is documented at its
+// call site as staying "byte-identical to the player's own" deck, so that's
+// not a GM-omniscient surface for this component — the GM's actual full-order
+// rail is the separate DockOrderStrip, untouched by this filter. Filtering
+// unconditionally inside this component is therefore correct; no prop is
+// needed to distinguish mounts.
+//
+// Hidden-active-combatant case: `currentTurnIndex` can point at an entry that
+// is hidden (an enemy that Hides mid-fight ahead of its next turn). Indexing
+// into the now-shorter visible list would drift the current-turn highlight
+// onto the wrong neighbor, so "current" is resolved by entryId against
+// `activeEntry(encounter)` instead of by position. When that entry is hidden
+// it is simply absent from `order` here, so nothing in the strip reads as
+// current. That is the deliberate choice — it mirrors Foundry's own player
+// tracker (no row, no highlight) rather than inventing a placeholder or
+// mis-highlighting a visible neighbor. The strip carries no "X of Y" count,
+// so there's no numbering that could go stale either.
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
+import { activeEntry, visibleOrder } from '../../../utils/encounterUtils';
 import PersistentChip from '../PersistentChip';
 import AuraChip from '../AuraChip';
 import OmenChip from '../OmenChip';
@@ -43,8 +61,17 @@ const InitiativeStrip = ({ charId }) => {
 
   if (!encounter || encounter.phase === 'idle') return null;
 
-  const order = encounter.order || [];
+  // Display drops hidden combatants entirely (#1749 ruling addendum 2) — see
+  // the file-header note. HuntPreyBadge's hunter lookup (below, via
+  // `renderInner`) runs off this same filtered list — a hidden PC hunter
+  // (edge case) drops its 🎯 badge too, consistent with the rest of the app's
+  // order-derived pickers.
+  const order = visibleOrder(encounter.order || []);
   const isInProgress = encounter.phase === 'in-progress';
+  // Resolved by entryId, not index, so a hidden active combatant (dropped
+  // from `order` above) never mis-highlights a visible neighbor — see the
+  // file-header note.
+  const currentEntryId = isInProgress ? activeEntry(encounter)?.entryId ?? null : null;
 
   const renderInner = (entry) => (
     <>
@@ -70,13 +97,9 @@ const InitiativeStrip = ({ charId }) => {
   return (
     <div className="cmd-init" aria-label="Initiative order">
       <span className="cmd-init-label" aria-hidden="true">Target ▸</span>
-      {order.map((entry, idx) => {
-        const isCurrent = isInProgress && idx === encounter.currentTurnIndex;
+      {order.map((entry) => {
+        const isCurrent = currentEntryId != null && entry.entryId === currentEntryId;
         const isFocused = entry.entryId === focusId;
-        // #1749 ruling addendum: hidden entries stay visible in this strip
-        // (the turn-order display, untouched by this ruling) but drop out of
-        // the focus-row picker candidates — see the file-header note.
-        const isHiddenEntry = !!entry.hidden;
         // Kind tint: enemy peril, another PC arcane, the viewer's own entry ember.
         const kindClass = entry.kind === 'enemy'
           ? 'cmd-init-entry--enemy'
@@ -90,9 +113,8 @@ const InitiativeStrip = ({ charId }) => {
           isFocused ? 'cmd-init-entry--focused' : '',
         ].filter(Boolean).join(' ');
 
-        // Every combatant is tap-to-focus (#429): foes drive offense, allies
-        // drive support, yourself the personal readout (#1502 S2) — except a
-        // hidden one, which the tap no-ops on (#1749 ruling addendum).
+        // Every visible combatant is tap-to-focus (#429): foes drive offense,
+        // allies drive support, yourself the personal readout (#1502 S2).
         return (
           <button
             key={entry.entryId}
@@ -100,9 +122,8 @@ const InitiativeStrip = ({ charId }) => {
             className={className}
             aria-current={isCurrent ? 'true' : undefined}
             aria-pressed={isFocused}
-            aria-disabled={isHiddenEntry || undefined}
             aria-label={`Focus ${entry.name}`}
-            onClick={() => { if (!isHiddenEntry) toggleFocus(entry.entryId); }}
+            onClick={() => toggleFocus(entry.entryId)}
           >
             {renderInner(entry)}
           </button>
