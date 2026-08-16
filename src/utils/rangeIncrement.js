@@ -14,6 +14,26 @@
 export const MAX_RANGE_INCREMENTS = 4;
 
 /**
+ * Feet for a grid-square offset (PF2e 5-10-5 alternating diagonals), given
+ * the offset already reduced to whole squares on each axis. Shared by
+ * `gridDistanceFeet` below (cell-to-cell) and `spellArea.js` (point/rect-to-
+ * cell, for burst/emanation occupancy — #1751) so both measure diagonals the
+ * same way.
+ *
+ * @param {number} dCol  absolute column offset, in whole grid squares
+ * @param {number} dRow  absolute row offset, in whole grid squares
+ * @param {number} [feetPerSquare=5]
+ * @returns {number} distance in feet
+ */
+export function diagonalSquaresToFeet(dCol, dRow, feetPerSquare = 5) {
+  const diagonals = Math.min(dCol, dRow);
+  const straights = Math.max(dCol, dRow) - diagonals;
+  // Every second diagonal costs an extra square (5/10/5/10…).
+  const diagSquares = diagonals + Math.floor(diagonals / 2);
+  return (straights + diagSquares) * feetPerSquare;
+}
+
+/**
  * Distance between two grid cells in feet (PF2e 5-10-5 diagonals).
  * Cells are { col, row } in grid squares; gridSize (pixels/square) is irrelevant
  * because positions arrive pre-converted to cells.
@@ -27,11 +47,7 @@ export function gridDistanceFeet(from, to, feetPerSquare = 5) {
   if (!from || !to) return 0;
   const dCol = Math.abs((to.col ?? 0) - (from.col ?? 0));
   const dRow = Math.abs((to.row ?? 0) - (from.row ?? 0));
-  const diagonals = Math.min(dCol, dRow);
-  const straights = Math.max(dCol, dRow) - diagonals;
-  // Every second diagonal costs an extra square (5/10/5/10…).
-  const diagSquares = diagonals + Math.floor(diagonals / 2);
-  return (straights + diagSquares) * feetPerSquare;
+  return diagonalSquaresToFeet(dCol, dRow, feetPerSquare);
 }
 
 /**

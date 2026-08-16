@@ -2,9 +2,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import MapSnapshotViewer from '../components/encounter/MapSnapshotViewer';
 import { useSceneSnapshot } from './useSceneSnapshot';
 import { useEncounter } from './useEncounter';
-import { worldPointFromTap, cellFromWorldPoint } from '../utils/snapshotGeometry';
+import { worldPointFromTap } from '../utils/snapshotGeometry';
 import {
   parseSpellArea, areaNeedsPlacement, areaComputesOccupancy, areaOccupants, areaLabel,
+  snapToGridIntersection, intersectionFromWorld, casterRectFromPosition, casterRectCenterWorld,
 } from '../utils/spellArea';
 
 /**
@@ -59,28 +60,39 @@ export const useTemplatePlacementSection = ({
 
   const positions = positionsState?.positions || null;
 
-  // The tapped point in world space, then in the bridge's { col, row }.
+  // The tapped point in world space, then SNAPPED to the nearest grid
+  // intersection — a burst originates at a grid line crossing, not a cell
+  // (#1751 OQ-1, ruled 2026-08-16 GM; see spellArea.js's convention note).
+  // `placedIntersectionWorld` is what gets sent to `templateplace`, so the
+  // outline Foundry draws and the point occupancy is measured from agree
+  // exactly; `placedIntersection` is the same point in the corner-index
+  // space `areaOccupants` measures in.
   const placedWorld = useMemo(
     () => (marker ? worldPointFromTap(snapshot, marker.nx, marker.ny) : null),
     [snapshot, marker]
   );
-  const placedCell = useMemo(
-    () => cellFromWorldPoint(placedWorld, snapshot?.gridSize),
+  const placedIntersectionWorld = useMemo(
+    () => snapToGridIntersection(placedWorld, snapshot?.gridSize),
+    [placedWorld, snapshot]
+  );
+  const placedIntersection = useMemo(
+    () => intersectionFromWorld(placedWorld, snapshot?.gridSize),
     [placedWorld, snapshot]
   );
 
-  // An emanation is centred on the caster, so its occupants are known without
-  // any tap; a burst needs the placed cell first.
+  // An emanation is centred on the caster's occupied RECTANGLE (token-size-
+  // aware, #1751 OQ-1) — nothing to tap; a burst needs the placed
+  // intersection first.
   const occupants = useMemo(() => {
     if (!computesOccupancy) return [];
-    if (needsPlacement && !placedCell) return [];
+    if (needsPlacement && !placedIntersection) return [];
     return areaOccupants(area, {
-      originCell: placedCell,
+      originIntersection: placedIntersection,
       positions,
       casterEntryId,
       order,
     });
-  }, [area, computesOccupancy, needsPlacement, placedCell, positions, casterEntryId, order]);
+  }, [area, computesOccupancy, needsPlacement, placedIntersection, positions, casterEntryId, order]);
 
   const capture = useCallback(async () => {
     setFailed(false);
@@ -95,18 +107,19 @@ export const useTemplatePlacementSection = ({
     setAdopted(true);
   }, [adoptTargets, occupants]);
 
-  // An emanation has no tapped point, but its centre is known: the caster's
-  // own square. That's enough to draw its outline without ever opening the map.
+  // An emanation has no tapped point, but its centre is known: the centre of
+  // the caster's occupied RECTANGLE (token-size-aware — a 2x2 caster's
+  // outline is centred on their whole space, not their anchor cell). That's
+  // enough to draw its outline without ever opening the map.
   const casterWorld = useMemo(() => {
     if (area?.shape !== 'emanation') return null;
-    const cell = positions?.[casterEntryId];
-    const size = Number(positionsState?.gridSize);
-    if (!cell || !(size > 0)) return null;
-    return { x: (cell.col + 0.5) * size, y: (cell.row + 0.5) * size };
+    const rect = casterRectFromPosition(positions?.[casterEntryId]);
+    return casterRectCenterWorld(rect, positionsState?.gridSize);
   }, [area, positions, casterEntryId, positionsState]);
 
-  // Where the area actually sits, whether it was tapped or derived.
-  const originWorld = area?.shape === 'emanation' ? casterWorld : placedWorld;
+  // Where the area actually sits, whether it was tapped or derived. A burst
+  // sends the SNAPPED intersection, not the raw tap.
+  const originWorld = area?.shape === 'emanation' ? casterWorld : placedIntersectionWorld;
 
   // Confirm slice (#1573 B4): draw the real outline on the canvas when the
   // bridge can (the bridge pings its centre too), otherwise fall back to B2's
@@ -139,8 +152,13 @@ export const useTemplatePlacementSection = ({
     snapshot, occupants, appendLog, ability, area,
   ]);
 
-  // Nothing to show for a spell with no area, or when the bridge can't capture.
-  const section = (!hasArea || !available) ? null : (
+  // Nothing to show for a spell with no area. #1751 OQ-6: the emanation
+  // occupant list and the area label are pure `positions` + parsed-area
+  // math and need no capture, so `hasArea` alone gates the section — only
+  // the capture/placement UI below (the button, the snapshot viewer) gates
+  // on `available`. A bridge-less client still gets the full section for a
+  // spell that doesn't need placement.
+  const section = !hasArea ? null : (
     <>
       <hr className="ct-divider" />
       <section className="ct-section" data-testid="area-placement-section">
@@ -152,7 +170,14 @@ export const useTemplatePlacementSection = ({
           </div>
         )}
 
-        {needsPlacement && !snapshot && (
+        {needsPlacement && !available && (
+          <div className="uam-variant-note" role="status">
+            No live map available — cast without placing, or let the GM judge
+            who's caught.
+          </div>
+        )}
+
+        {needsPlacement && available && !snapshot && (
           <button
             type="button"
             className="btn-secondary"
@@ -169,7 +194,7 @@ export const useTemplatePlacementSection = ({
           </div>
         )}
 
-        {snapshot && (
+        {available && snapshot && (
           <>
             <MapSnapshotViewer
               src={snapshot.url}
@@ -185,7 +210,7 @@ export const useTemplatePlacementSection = ({
           </>
         )}
 
-        {computesOccupancy && (needsPlacement ? !!placedCell : true) && (
+        {computesOccupancy && (needsPlacement ? !!placedIntersection : true) && (
           <div className="uam-variant-note" data-testid="area-occupants">
             {!positions ? (
               'Token positions unavailable — the GM will judge who is caught.'
