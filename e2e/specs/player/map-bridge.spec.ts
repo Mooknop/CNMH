@@ -74,10 +74,12 @@ const OGRE = { entryId: 'ent-ogre', kind: 'enemy' as const, name: 'Ogre', initia
 const TROLL = { entryId: 'ent-troll', kind: 'enemy' as const, name: 'Troll', initiative: 8 };
 const ORDER = [CASTER_ENTRY, GOBLIN, OGRE, TROLL];
 
-// Bridge-reported token grid (cnmh_positions_global). All on row 2, so the
-// burst placed on the goblin's square (col 2) catches the goblin (0 ft) and the
-// ogre (5 ft) but not the troll (35 ft) or the caster (40 ft) — PF2e grid
-// distance, the same rule the canvas measures with.
+// Bridge-reported token grid (cnmh_positions_global). All on row 2. A tap near
+// the goblin's square snaps to the grid INTERSECTION at col 3 (#1751 OQ-1 —
+// bursts originate at an intersection, not a cell), which touches BOTH the
+// goblin's (col 2) and the ogre's (col 3) squares — both measure 0 ft. The
+// troll (col 9) is 30 ft away and the caster (col 10) 35 ft, both outside the
+// 20-ft burst — PF2e grid distance, the same rule the canvas measures with.
 const POSITIONS = {
   gridSize: 100,
   positions: {
@@ -185,6 +187,15 @@ const expectNear = (actual: number, expected: number, slack = 20) =>
     Math.abs(actual - expected),
     `expected ${actual} to be within ${slack} of ${expected}`,
   ).toBeLessThanOrEqual(slack);
+
+// A burst's placed WORLD point is the nearest grid intersection to the tap,
+// not the raw tapped point (#1751 OQ-1 — mirrors `snapToGridIntersection` in
+// src/utils/spellArea.js; e2e/ never imports from src/, so this is a small
+// standalone copy of the same round-to-nearest-multiple rule). Under
+// IDENTITY_CAPTURE, world == capture-space pixels == `nx * screenW`.
+const identityWorld = (nx: number) => nx * IDENTITY_CAPTURE.screenW;
+const nearestIntersection = (world: number, gridSize = POSITIONS.gridSize) =>
+  Math.round(world / gridSize) * gridSize;
 
 /**
  * Tap the rendered snapshot at normalized (nx, ny) and return the image's box.
@@ -324,15 +335,19 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
     await expect(section).toContainText(`Area — ${AREA_LABEL}`);
     await section.getByRole('button', { name: 'Place on the map' }).click();
 
-    // Tap (0.25, 0.25) → world (250, 250) → cell (2,2), the goblin's square.
+    // Tap (0.25, 0.25) → world (250, 250) → snaps to the nearest grid
+    // intersection (300, 300) (#1751 OQ-1 — a burst originates at an
+    // intersection, not a cell).
     await tapSnapshot(page, 0.25, 0.25);
 
-    // Occupancy comes from the bridge's real token positions, PF2e grid
-    // distance: goblin 0 ft and ogre 5 ft are inside the 20-ft burst; the troll
-    // (35 ft) and the caster (40 ft) are not.
+    // Occupancy comes from the bridge's real token positions, measured from
+    // that intersection with PF2e grid distance: the intersection at col 3
+    // touches both the goblin's (col 2) and the ogre's (col 3) squares, so
+    // both are 0 ft; the troll (30 ft) and the caster (35 ft) are outside the
+    // 20-ft burst.
     const occupants = page.getByTestId('area-occupants');
     await expect(occupants).toContainText('Goblin (0 ft)');
-    await expect(occupants).toContainText('Ogre (5 ft)');
+    await expect(occupants).toContainText('Ogre (0 ft)');
     await expect(occupants).not.toContainText('Troll');
 
     // …and they can be adopted as the cast's targets in one tap.
@@ -350,8 +365,10 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
 
     const [template] = sentValues(session, 'templateplace');
     expect(template).toMatchObject({ shape: 'burst', feet: 20, sceneId: 'e2e-scene', name: SPELL_NAME });
-    expectNear(template.x, 250);
-    expectNear(template.y, 250);
+    // The SNAPPED intersection, not the raw tapped world point.
+    const origin = nearestIntersection(identityWorld(0.25));
+    expectNear(template.x, origin);
+    expectNear(template.y, origin);
     // The bridge pings the template's centre itself, so the app doesn't double up.
     expect(sentValues(session, 'pingpoint')).toHaveLength(0);
   });
@@ -402,14 +419,16 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
     );
 
     // Measured templates need protocol 13; the fallback is B2's bare ping, so
-    // the table still sees the spot even without the outline.
+    // the table still sees the spot even without the outline — at the SNAPPED
+    // intersection (#1751 OQ-1), same as the drawn template above.
     expect(sentValues(session, 'templateplace')).toHaveLength(0);
     const [ping] = sentValues(session, 'pingpoint');
-    expectNear(ping.x, 250);
-    expectNear(ping.y, 250);
+    const origin = nearestIntersection(identityWorld(0.25));
+    expectNear(ping.x, origin);
+    expectNear(ping.y, origin);
   });
 
-  test('protocol 10: below every floor, no map surface appears at all', async ({ page }) => {
+  test('protocol 10: below every floor, the area label survives but all placement UI is gone (#1751 OQ-6)', async ({ page }) => {
     await mockSession(page, { seed: baseSeed(SNAP_PROTOCOL - 1) });
 
     await openEncounterTab(page);
@@ -418,8 +437,21 @@ test.describe('Map bridge rails (#1573 B1–B4)', () => {
     await openSpellsSegment(page);
     await castSpell(page, SPELL_NAME);
     await expect(page.getByRole('button', { name: 'confirm-cast' })).toBeVisible();
-    // The spell is still perfectly castable — the section just never renders.
-    await expect(page.getByTestId('area-placement-section')).toHaveCount(0);
+
+    // The section itself is gated on `hasArea` alone (#1751 OQ-6) — this
+    // spell needs placement (a burst), so with no bridge there's still
+    // nothing to compute occupancy from, but the area label survives. What's
+    // actually gone is everything that needs a capture: the "Place on the
+    // map" button and the snapshot viewer.
+    const section = page.getByTestId('area-placement-section');
+    await expect(section).toContainText(`Area — ${AREA_LABEL}`);
+    await expect(section).toContainText('No live map available');
+    await expect(section.getByRole('button', { name: 'Place on the map' })).toHaveCount(0);
+    await expect(page.getByRole('img', { name: 'Battlefield snapshot' })).toHaveCount(0);
+    await expect(page.getByTestId('area-occupants')).toHaveCount(0);
+
+    // The spell is still perfectly castable.
+    await page.getByRole('button', { name: 'confirm-cast' }).click();
   });
 
   // ── ok:false and stale-ack correlation ─────────────────────────────────────
