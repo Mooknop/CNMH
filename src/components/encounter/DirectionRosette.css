@@ -1,0 +1,73 @@
+.dir-rosette {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.dir-rosette-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 4px;
+}
+
+.dir-rosette-point {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--shell-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--theme-text-secondary, var(--color-text-muted));
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.06s ease, background 0.12s ease;
+}
+
+.dir-rosette-point:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dir-rosette-point:active {
+  transform: scale(0.9);
+}
+
+.dir-rosette-point--selected {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: var(--accent-glow);
+  color: var(--accent-text, var(--accent-outline));
+}
+
+.dir-rosette-center {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px dashed var(--shell-border);
+  opacity: 0.4;
+}
+
+/* 3x3 compass layout: NW/N/NE across the top, center empty, SW/S/SE below. */
+.dir-rosette-point--northwest { grid-column: 1; grid-row: 1; }
+.dir-rosette-point--north     { grid-column: 2; grid-row: 1; }
+.dir-rosette-point--northeast { grid-column: 3; grid-row: 1; }
+.dir-rosette-point--west      { grid-column: 1; grid-row: 2; }
+.dir-rosette-center           { grid-column: 2; grid-row: 2; }
+.dir-rosette-point--east      { grid-column: 3; grid-row: 2; }
+.dir-rosette-point--southwest { grid-column: 1; grid-row: 3; }
+.dir-rosette-point--south     { grid-column: 2; grid-row: 3; }
+.dir-rosette-point--southeast { grid-column: 3; grid-row: 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-rosette-point {
+    transition: none;
+  }
+  .dir-rosette-point:active {
+    transform: none;
+  }
+}

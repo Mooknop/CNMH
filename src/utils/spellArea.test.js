@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseSpellArea, areaNeedsPlacement, areaComputesOccupancy, areaOccupants, areaLabel,
+  snapToGridIntersection, intersectionFromWorld, casterRectFromPosition, casterRectCenterWorld,
 } from './spellArea';
 
 const order = [
@@ -10,8 +11,7 @@ const order = [
   { entryId: 'e-ally', kind: 'pc', charId: 'Ashka', name: 'Ashka' },
 ];
 
-// Caster at (0,0); goblin 2 squares east (10 ft); ogre 5 east (25 ft);
-// ally 1 diagonal (5 ft under the 5-10-5 rule).
+// Caster at (0,0); goblin 2 squares east; ogre 5 east; ally 1 diagonal.
 const positions = {
   'e-caster': { col: 0, row: 0 },
   'e-gob': { col: 2, row: 0 },
@@ -65,31 +65,85 @@ describe('shape classification', () => {
   });
 });
 
-describe('areaOccupants', () => {
+describe('snapToGridIntersection / intersectionFromWorld (#1751 OQ-1)', () => {
+  it('rounds a world point to the nearest grid line crossing', () => {
+    expect(snapToGridIntersection({ x: 240, y: 260 }, 100)).toEqual({ x: 200, y: 300 });
+    expect(snapToGridIntersection({ x: 149, y: 51 }, 100)).toEqual({ x: 100, y: 100 });
+  });
+
+  it('a point already on a grid line snaps to itself', () => {
+    expect(snapToGridIntersection({ x: 200, y: 0 }, 100)).toEqual({ x: 200, y: 0 });
+  });
+
+  it('addresses the same snap in corner-index space for occupancy math', () => {
+    expect(intersectionFromWorld({ x: 240, y: 260 }, 100)).toEqual({ col: 2, row: 3 });
+  });
+
+  it('is null without a usable point or grid size', () => {
+    expect(snapToGridIntersection(null, 100)).toBeNull();
+    expect(snapToGridIntersection({ x: 1, y: 1 }, 0)).toBeNull();
+    expect(intersectionFromWorld({ x: 1, y: 1 }, null)).toBeNull();
+  });
+});
+
+describe('casterRectFromPosition / casterRectCenterWorld (#1751 OQ-1)', () => {
+  it('reads width/height off a positions entry', () => {
+    expect(casterRectFromPosition({ col: 3, row: 4, width: 2, height: 2 }))
+      .toEqual({ col: 3, row: 4, width: 2, height: 2 });
+  });
+
+  it('is shape-tolerant: a payload with no width/height defaults to 1x1', () => {
+    expect(casterRectFromPosition({ col: 3, row: 4 }))
+      .toEqual({ col: 3, row: 4, width: 1, height: 1 });
+  });
+
+  it('is null without a usable position', () => {
+    expect(casterRectFromPosition(null)).toBeNull();
+  });
+
+  it('centers on the rectangle, not the anchor cell', () => {
+    expect(casterRectCenterWorld({ col: 0, row: 0, width: 1, height: 1 }, 100))
+      .toEqual({ x: 50, y: 50 });
+    // A 2x2 creature's own square is (0,0)-(1,1) in cells — center at (100,100).
+    expect(casterRectCenterWorld({ col: 0, row: 0, width: 2, height: 2 }, 100))
+      .toEqual({ x: 100, y: 100 });
+  });
+});
+
+describe('areaOccupants — burst, measured from a grid intersection (#1751 OQ-1)', () => {
   const args = { positions, casterEntryId: 'e-caster', order };
 
-  it('a burst catches everyone within its radius of the PLACED point', () => {
-    // Placed on the goblin's square: goblin 0 ft, ally 5 ft, caster 10 ft,
-    // ogre 15 ft (outside). The caster counts — see the next test.
+  // A burst originates at a grid INTERSECTION (a point), and each candidate
+  // cell's distance is measured to its NEAREST edge, not its center — the
+  // same "measure from the near edge" idiom PF2e uses between two tokens.
+  // This is a deliberate behavior change from the old cell-center-to-cell-
+  // center math: placed on the goblin's own corner (2,0), the caster (whose
+  // cell shares that corner's opposite edge) is now 5 ft away, not 10 — and
+  // ties with the diagonal ally, which is also 5 ft under both schemes.
+  it('a burst catches everyone within its radius of the PLACED intersection', () => {
     const inside = areaOccupants({ shape: 'burst', feet: 10 }, {
-      ...args, originCell: { col: 2, row: 0 },
+      ...args, originIntersection: { col: 2, row: 0 },
     });
-    expect(inside.map((o) => o.entryId)).toEqual(['e-gob', 'e-ally', 'e-caster']);
-    expect(inside[0]).toMatchObject({ name: 'Goblin', kind: 'enemy', feet: 0 });
+    expect(inside.map((o) => [o.entryId, o.feet])).toEqual([
+      ['e-gob', 0], ['e-caster', 5], ['e-ally', 5],
+    ]);
     expect(inside.some((o) => o.entryId === 'e-ogre')).toBe(false);
   });
 
   it('a burst at your own feet catches YOU — no caster exemption', () => {
     const inside = areaOccupants({ shape: 'burst', feet: 10 }, {
-      ...args, originCell: { col: 0, row: 0 },
+      ...args, originIntersection: { col: 0, row: 0 },
     });
     expect(inside.map((o) => o.entryId)).toContain('e-caster');
     expect(inside.find((o) => o.entryId === 'e-caster').feet).toBe(0);
   });
 
   it('sorts nearest first and reports each distance', () => {
+    // Placed at the caster's own top-left corner: this intersection is the
+    // same point the OLD cell-floor convention addressed the caster's cell
+    // by, so these distances happen to match the pre-#1751 numbers exactly.
     const inside = areaOccupants({ shape: 'burst', feet: 30 }, {
-      ...args, originCell: { col: 0, row: 0 },
+      ...args, originIntersection: { col: 0, row: 0 },
     });
     expect(inside.map((o) => [o.entryId, o.feet]))
       .toEqual([['e-caster', 0], ['e-ally', 5], ['e-gob', 10], ['e-ogre', 25]]);
@@ -103,7 +157,7 @@ describe('areaOccupants', () => {
 
   it('catches allies too — a burst does not discriminate', () => {
     const inside = areaOccupants({ shape: 'burst', feet: 5 }, {
-      ...args, originCell: { col: 1, row: 1 },
+      ...args, originIntersection: { col: 1, row: 1 },
     });
     expect(inside.map((o) => o.kind)).toContain('pc');
   });
@@ -111,15 +165,15 @@ describe('areaOccupants', () => {
   it('ignores combatants the encounter order does not know', () => {
     const withGhost = { ...positions, 'e-ghost': { col: 0, row: 1 } };
     const inside = areaOccupants({ shape: 'burst', feet: 30 }, {
-      ...args, positions: withGhost, originCell: { col: 0, row: 0 },
+      ...args, positions: withGhost, originIntersection: { col: 0, row: 0 },
     });
     expect(inside.some((o) => o.entryId === 'e-ghost')).toBe(false);
   });
 
   it('returns nothing for a cone/line, without positions, or without a placement', () => {
-    expect(areaOccupants({ shape: 'cone', feet: 15 }, { ...args, originCell: { col: 1, row: 0 } }))
+    expect(areaOccupants({ shape: 'cone', feet: 15 }, { ...args, originIntersection: { col: 1, row: 0 } }))
       .toEqual([]);
-    expect(areaOccupants({ shape: 'burst', feet: 20 }, { ...args, positions: null, originCell: { col: 0, row: 0 } }))
+    expect(areaOccupants({ shape: 'burst', feet: 20 }, { ...args, positions: null, originIntersection: { col: 0, row: 0 } }))
       .toEqual([]);
     expect(areaOccupants({ shape: 'burst', feet: 20 }, args)).toEqual([]);
   });
@@ -128,10 +182,29 @@ describe('areaOccupants', () => {
     // 10 ft per square: the goblin 2 squares out is 20 ft, outside a 15-ft
     // burst — where at the default 5 ft/square it would have been caught.
     const inside = areaOccupants({ shape: 'burst', feet: 15 }, {
-      ...args, originCell: { col: 0, row: 0 }, feetPerSquare: 10,
+      ...args, originIntersection: { col: 0, row: 0 }, feetPerSquare: 10,
     });
     expect(inside.map((o) => o.entryId)).toEqual(['e-caster', 'e-ally']);
     expect(inside.some((o) => o.entryId === 'e-gob')).toBe(false);
+  });
+});
+
+describe('areaOccupants — emanation, token-size-aware (#1751 OQ-1)', () => {
+  const args = { positions, casterEntryId: 'e-caster', order };
+
+  it('a 1x1 caster (no width/height on the payload) matches the old single-cell math', () => {
+    const inside = areaOccupants({ shape: 'emanation', feet: 30 }, args);
+    expect(inside.map((o) => [o.entryId, o.feet]))
+      .toEqual([['e-ally', 5], ['e-gob', 10], ['e-ogre', 25]]);
+  });
+
+  it('a 2x2 caster covers more squares — the emanation extends from the rectangle EDGE', () => {
+    const big = { ...positions, 'e-caster': { col: 0, row: 0, width: 2, height: 2 } };
+    const inside = areaOccupants({ shape: 'emanation', feet: 30 }, { ...args, positions: big });
+    // Ally at (1,1) is now INSIDE the caster's own 2x2 rectangle — 0 ft, not 5.
+    // Goblin at (2,0) is adjacent to the rectangle's east edge — 5 ft, not 10.
+    expect(inside.map((o) => [o.entryId, o.feet]))
+      .toEqual([['e-ally', 0], ['e-gob', 5], ['e-ogre', 20]]);
   });
 });
 
