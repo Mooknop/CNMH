@@ -47,6 +47,17 @@ export const MAP_MOVE_PROTOCOL = 16;
 // imposed default). 'grid' | 'map'.
 export const MOVE_SURFACE_PREF = 'moveSurface';
 
+// The bridge protocol that taught `positions` entries `hidden`/`width`/
+// `height` and made `cnmh_action_<charId>` writes land on Foundry's target
+// set for the ACTIVE combatant only (#1749 OQ-1/OQ-3/OQ-5 rulings, shared
+// bump with #1751). Gates the first-ever app write to `cnmh_action_<charId>`
+// (useActionTargetSync) and, once it ships, the map-targeting overlay's
+// footprint/visibility fields — below this floor `positions` entries are
+// still shape-tolerant (missing width/height → 1, missing hidden → false),
+// but the app never fires the action write at all, so an older bridge never
+// receives a target-set payload from a lifecycle it was never built for.
+export const MAP_TARGET_PROTOCOL = 17;
+
 /**
  * Actions needed to cover a terrain-aware move cost against a Speed budget —
  * the generalized, charge-at-confirm form of needsNewStride's per-step

@@ -70,4 +70,28 @@ describe('useTargeting', () => {
     rerender({ o: order.filter((e) => e.entryId !== 'e2') });
     expect(result.current.targets).toEqual([]);
   });
+
+  it('selectable drops hidden entries (#1749 OQ-5 — the chip list must not leak them)', () => {
+    const withHidden = [...order, { entryId: 'e4', kind: 'enemy', name: 'Skulker', hidden: true }];
+    const { result } = renderHook(() => useTargeting('Pellias', withHidden));
+    expect(result.current.selectable.map((e) => e.entryId)).toEqual(['e2', 'e3']);
+  });
+
+  it('an older bridge with no hidden field at all leaves everything selectable', () => {
+    const { result } = renderHook(() => useTargeting('Pellias', order));
+    expect(result.current.selectable.map((e) => e.entryId)).toEqual(['e2', 'e3']);
+  });
+
+  it('a targeted entry that BECOMES hidden mid-turn drops from the selection', () => {
+    const { result, rerender } = renderHook(({ o }) => useTargeting('Pellias', o), {
+      initialProps: { o: order },
+    });
+    act(() => result.current.toggleTarget('e2'));
+    expect(result.current.targets).toEqual(['e2']);
+
+    const nowHidden = order.map((e) => (e.entryId === 'e2' ? { ...e, hidden: true } : e));
+    rerender({ o: nowHidden });
+    expect(result.current.targets).toEqual([]);
+    expect(result.current.selectable.map((e) => e.entryId)).toEqual(['e3']);
+  });
 });

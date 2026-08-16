@@ -1,0 +1,50 @@
+/* TokenMarkersOverlay (#1749 wave 1) — an SVG layer inside MapSnapshotViewer's
+   `.msv-pane`, same flat 0-100 percentage viewBox convention as
+   SnapshotRouteOverlay.css, so every stroke/font-size here is already in
+   that space and scales naturally with pinch-zoom. */
+.tmo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.tmo-footprint {
+  stroke-width: 0.5;
+  fill-opacity: 0.18;
+}
+
+.tmo-dot {
+  stroke-width: 0.4;
+}
+
+.tmo-label {
+  font-size: 2.6px;
+  fill: var(--shell-text-primary);
+  paint-order: stroke;
+  stroke: var(--shell-bg);
+  stroke-width: 0.5px;
+  stroke-linejoin: round;
+}
+
+.tmo-marker--pc .tmo-footprint,
+.tmo-marker--pc .tmo-dot {
+  stroke: var(--ember-base);
+  fill: var(--ember-base);
+}
+
+.tmo-marker--enemy .tmo-footprint,
+.tmo-marker--enemy .tmo-dot {
+  stroke: var(--peril-base);
+  fill: var(--peril-base);
+}
+
+.tmo-marker--ally .tmo-footprint,
+.tmo-marker--ally .tmo-dot,
+.tmo-marker--summon .tmo-footprint,
+.tmo-marker--summon .tmo-dot {
+  stroke: var(--verdant-mid);
+  fill: var(--verdant-mid);
+}
