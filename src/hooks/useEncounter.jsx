@@ -80,14 +80,40 @@ export const useEncounter = () => {
   }, [resolvedEncounter, summons]);
 
   // Defined ahead of the sweep/tick callbacks below so they can log through it.
+  // Returns the new entry's id (#1751 S3) so a caller with an async follow-up
+  // — the `templatedone` ack landing after the log line that announced the
+  // placement was already written — has something to find it back by.
   const appendLog = useCallback(
-    (entry) =>
+    (entry) => {
+      const logEntry = makeLogEntry(entry);
       setEncounter((cur) => ({
         ...(cur || defaultEncounter()),
-        log: [...((cur && cur.log) || []), makeLogEntry(entry)],
-      })),
+        log: [...((cur && cur.log) || []), logEntry],
+      }));
+      return logEntry.id;
+    },
     [setEncounter]
   );
+
+  // Patch an already-written log entry by id (#1751 S3) — the minimal "cast
+  // record" this codebase has: `cnmh_encounter_global.log` is the durable,
+  // synced record of what a cast did. Used to attach a `templateId` once the
+  // bridge's `templatedone` ack lands, well after the log line itself was
+  // written at confirm time. A no-op if the entry has scrolled out of
+  // existence (there's no log trimming today, but this stays defensive) or
+  // the id is falsy.
+  const patchLogEntry = useCallback((id, patch) => {
+    if (!id) return;
+    setEncounter((cur) => {
+      const log = cur?.log;
+      if (!log) return cur;
+      const idx = log.findIndex((entry) => entry.id === id);
+      if (idx === -1) return cur;
+      const nextLog = [...log];
+      nextLog[idx] = { ...nextLog[idx], ...patch };
+      return { ...cur, log: nextLog };
+    });
+  }, [setEncounter]);
 
   // App-driven turn advance only (#443): a Foundry-linked combat never calls
   // advanceTurn (the bridge writes round/currentTurnIndex back), so these
@@ -406,6 +432,7 @@ export const useEncounter = () => {
     advanceTurn,
     beginNextRound,
     appendLog,
+    patchLogEntry,
     addSaveRequest,
     removeSaveRequest,
     resolveSaveRequest,

@@ -28,7 +28,7 @@ const CAPTURE = {
 };
 
 const Probe = ({ ability, adoptTargets }) => {
-  const { section, applyOnConfirm, hasArea } = useTemplatePlacementSection({
+  const { section, applyOnConfirm, hasArea, gateOk } = useTemplatePlacementSection({
     ability,
     order: ORDER,
     casterEntryId: 'e-pellias',
@@ -38,6 +38,7 @@ const Probe = ({ ability, adoptTargets }) => {
   return (
     <div>
       <span data-testid="has-area">{String(hasArea)}</span>
+      <span data-testid="gate-ok">{String(gateOk)}</span>
       <button onClick={applyOnConfirm}>confirm</button>
       {section}
     </div>
@@ -52,6 +53,7 @@ const mount = (ability, { protocol = 13, adoptTargets = vi.fn() } = {}) => {
 };
 
 const sentOf = (session, key) => session.sent.filter((m) => m.stateType === key).at(-1);
+const allSentOf = (session, key) => session.sent.filter((m) => m.stateType === key);
 
 // Open the map and answer the capture with an identity-matrix snapshot.
 const placeMap = async (session) => {
@@ -248,6 +250,209 @@ describe('useTemplatePlacementSection (#1573 B3)', () => {
     expect(sentOf(session, RELAY.TEMPLATEPLACE).value).toMatchObject({
       shape: 'emanation', feet: 30, x: 100, y: 100,
     });
+  });
+});
+
+describe('useTemplatePlacementSection — caster-centered capture (#1751 S1)', () => {
+  it('requests a mover-centered capture at spell range + area reach, at protocol 17', () => {
+    const { session } = mount(
+      { name: 'Fireball', area: '20-foot burst', range: '30 feet' },
+      { protocol: 17 }
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Place on the map' }));
+    expect(sentOf(session, RELAY.SNAPREQ).value).toMatchObject({
+      moverId: 'e-pellias', radiusFeet: 50, // 30 ft range + 20 ft burst reach
+    });
+  });
+
+  it('omits radiusFeet for an unparseable range, deferring to the bridge\'s own default', () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' }, { protocol: 17 });
+    fireEvent.click(screen.getByRole('button', { name: 'Place on the map' }));
+    const req = sentOf(session, RELAY.SNAPREQ).value;
+    expect(req.moverId).toBe('e-pellias');
+    expect(req.radiusFeet).toBeUndefined();
+  });
+
+  it('below MAP_TARGET_PROTOCOL (17), sends the bare legacy request — no moverId', () => {
+    const { session } = mount(
+      { name: 'Fireball', area: '20-foot burst', range: '30 feet' },
+      { protocol: 16 }
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Place on the map' }));
+    const req = sentOf(session, RELAY.SNAPREQ).value;
+    expect(req.moverId).toBeUndefined();
+    expect(req.radiusFeet).toBeUndefined();
+  });
+
+  it('an ok:false mover-centered reply falls back to the bare legacy request', async () => {
+    const { session } = mount(
+      { name: 'Fireball', area: '20-foot burst', range: '30 feet' },
+      { protocol: 17 }
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Place on the map' }));
+
+    const first = allSentOf(session, RELAY.SNAPREQ)[0];
+    expect(first.value.moverId).toBe('e-pellias');
+
+    await act(async () => {
+      session.push('global', RELAY.SNAPDONE, { id: first.value.id, ok: false, ts: Date.now() });
+    });
+
+    const second = allSentOf(session, RELAY.SNAPREQ)[1];
+    expect(second).toBeDefined();
+    expect(second.value.moverId).toBeUndefined();
+
+    await act(async () => {
+      session.push('global', RELAY.SNAPDONE, {
+        id: second.value.id, ok: true, url: '/api/images/snap.webp',
+        capture: CAPTURE, worldRect: { x1: 0, y1: 0, x2: 1000, y2: 1000 },
+        gridSize: 100, ts: Date.now(),
+      });
+    });
+    expect(screen.getByTestId('map-snapshot-frame')).toBeInTheDocument();
+  });
+
+  it('cancels an in-flight capture on unmount without leaking a state update', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { unmount } = mount({ name: 'Fireball', area: '20-foot burst' }, { protocol: 17 });
+    fireEvent.click(screen.getByRole('button', { name: 'Place on the map' }));
+    expect(() => unmount()).not.toThrow();
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+});
+
+describe('useTemplatePlacementSection — shape preview overlay (#1751 S2)', () => {
+  it('draws a live burst outline + the counted cells on the snapshot before confirm', async () => {
+    const { session, container } = mount({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+
+    const svg = container.querySelector('.sao--burst');
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector('.sao-outline')).not.toBeNull();
+    // Goblin + Pellias both count, matching the occupancy test above.
+    expect(svg.querySelectorAll('.sao-cell').length).toBe(2);
+  });
+
+  it('draws no outline before anything is tapped', async () => {
+    const { session, container } = mount({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    expect(container.querySelector('.sao-outline')).toBeNull();
+  });
+});
+
+describe('useTemplatePlacementSection — templatedone consumer (#1751 S3)', () => {
+  it('shows "landed" and retains templateId on the log entry once the ack is ok', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    const tpl = sentOf(session, RELAY.TEMPLATEPLACE);
+    await act(async () => {
+      session.push('global', RELAY.TEMPLATEDONE, { id: tpl.value.id, ok: true, templateId: 'tpl-abc', ts: Date.now() });
+    });
+
+    expect(screen.getByTestId('area-template-outcome')).toHaveTextContent('The outline landed on the table.');
+    const logged = sentOf(session, RELAY.ENCOUNTER).value.log.at(-1);
+    expect(logged.templateId).toBe('tpl-abc');
+  });
+
+  it('shows "didn\'t land" for a failed ack, and never patches a templateId', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    const tpl = sentOf(session, RELAY.TEMPLATEPLACE);
+    await act(async () => {
+      session.push('global', RELAY.TEMPLATEDONE, { id: tpl.value.id, ok: false, ts: Date.now() });
+    });
+
+    expect(screen.getByTestId('area-template-outcome')).toHaveTextContent("didn't land");
+    const logged = sentOf(session, RELAY.ENCOUNTER).value.log.at(-1);
+    expect(logged.templateId).toBeNull();
+  });
+
+  it('ignores a templatedone ack for a different placement request', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    await act(async () => {
+      session.push('global', RELAY.TEMPLATEDONE, { id: 'someone-elses-request', ok: true, templateId: 'tpl-xyz', ts: Date.now() });
+    });
+    expect(screen.queryByTestId('area-template-outcome')).not.toBeInTheDocument();
+  });
+});
+
+describe('useTemplatePlacementSection — range hard-block (#1751 S4)', () => {
+  it('hard-blocks an out-of-range placement: no template, no ping, a visible hint, gateOk false', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst', range: '30 feet' });
+    await placeMap(session);
+    // The ogre's square, 40 ft from the caster — beyond the 30-ft range.
+    tapAt(0.8, 0);
+
+    expect(screen.getByTestId('area-range-blocked')).toHaveTextContent('40 ft is beyond');
+    expect(screen.getByTestId('gate-ok')).toHaveTextContent('false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeUndefined();
+    expect(sentOf(session, RELAY.PINGPOINT)).toBeUndefined();
+  });
+
+  it('disables adopting targets for an out-of-range placement', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst', range: '5 feet' });
+    await placeMap(session);
+    tapAt(0.2, 0); // goblin's square, 10 ft from the caster — beyond a 5-ft range
+    expect(screen.getByRole('button', { name: /Target these/ })).toBeDisabled();
+  });
+
+  it('degrades to no gate for an unparseable range, even far from the caster', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst' }); // no range field
+    await placeMap(session);
+    tapAt(0.8, 0); // the ogre's square, 40 ft away
+    expect(screen.queryByTestId('area-range-blocked')).not.toBeInTheDocument();
+    expect(screen.getByTestId('gate-ok')).toHaveTextContent('true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeDefined();
+  });
+
+  it('a within-range placement never shows the blocked hint', async () => {
+    const { session } = mount({ name: 'Fireball', area: '20-foot burst', range: '30 feet' });
+    await placeMap(session);
+    tapAt(0.2, 0); // goblin's square, 10 ft away — within range
+    expect(screen.queryByTestId('area-range-blocked')).not.toBeInTheDocument();
+    expect(screen.getByTestId('gate-ok')).toHaveTextContent('true');
+  });
+});
+
+describe('useTemplatePlacementSection — cone/line direction picker (#1751 S5)', () => {
+  it('mounts an 8-point rosette once the origin is tapped, and draws a facing arrow on pick', async () => {
+    const { session, container } = mount({ name: 'Burning Hands', area: '15-foot cone' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+
+    expect(screen.getByText(/#1735's geometry/)).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'cone facing' })).toBeInTheDocument();
+    expect(container.querySelector('.sao-direction-shaft')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    expect(container.querySelector('.sao-direction-shaft')).not.toBeNull();
+  });
+
+  it('never sends computed cone/line geometry — a facing pick still only pings on confirm', async () => {
+    const { session } = mount({ name: 'Burning Hands', area: '15-foot cone' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeUndefined();
+    expect(sentOf(session, RELAY.PINGPOINT).value).toMatchObject({ x: 200, y: 0 });
   });
 });
 
