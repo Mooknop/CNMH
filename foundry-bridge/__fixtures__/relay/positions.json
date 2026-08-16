@@ -5,7 +5,10 @@
     "positions": {
       "cbt-ashka": {
         "col": 3,
-        "row": 1
+        "row": 1,
+        "width": 1,
+        "height": 1,
+        "hidden": false
       }
     }
   }

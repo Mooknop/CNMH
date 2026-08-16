@@ -11,7 +11,7 @@
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
-  getBestiaryInfo, getActorId, getCombatantDisposition,
+  getBestiaryInfo, getActorId, getCombatantDisposition, getCombatantHidden,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   setMultipleInitiatives, rollNpcInitiatives, startCombat,
   onHook,
@@ -84,6 +84,16 @@ function onUpdateActor(actor) {
 // scene while combat is still running.
 function resolveActiveCombat() {
   return (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
+}
+
+// The combat entry whose TURN it is, in the app's entryId vocabulary — null
+// outside a running combat. This is the bridge's single answer to "who is
+// acting right now"; targeting.js gates its Foundry target-set write on it
+// (#1749 OQ-3) rather than re-deriving turn state from the raw Combat.
+export function getActiveEntryId() {
+  const combat = resolveActiveCombat();
+  if (!combat) return null;
+  return getCombatState(combat).activeCombatantId ?? null;
 }
 
 // Handle incoming relay message addressed to 'global'/'encounter' channel.
@@ -235,6 +245,13 @@ function buildEncounterPayload(combat) {
       // Token disposition (#1537 S6) — the app renders a FRIENDLY (1) no-charId
       // combatant as an ally pane instead of an enemy one.
       disposition:   getCombatantDisposition(c),
+      // The GM's eye toggle (protocol ≥ 17, #1749 OQ-5). The FULL order —
+      // hidden combatants included — keeps flowing: GM surfaces need the
+      // complete picture, and the dock's own turn tracker is built from it.
+      // Player-facing chip lists filter on this flag app-side, which is how
+      // the status-quo name leak in TargetPicker gets closed without the
+      // bridge deciding who the audience is.
+      hidden:        getCombatantHidden(c),
       foundryActorId,
       ...(charId    ? { charId }    : {}),
       ...(defenses  ? { defenses }  : {}),

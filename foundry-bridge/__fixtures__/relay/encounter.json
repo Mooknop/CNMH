@@ -12,6 +12,7 @@
         "name": "Goblin",
         "initiative": 22,
         "disposition": -1,
+        "hidden": false,
         "foundryActorId": "actor-goblin",
         "defenses": {
           "ac": null,
@@ -50,6 +51,7 @@
         "name": "Pellias",
         "initiative": 18,
         "disposition": 1,
+        "hidden": false,
         "foundryActorId": "actor-pellias",
         "charId": "Pellias"
       }

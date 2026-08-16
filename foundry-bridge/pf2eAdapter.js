@@ -393,6 +393,15 @@ export function getCombatantDisposition(combatant) {
     ?? null;
 }
 
+// Whether the combatant's token carries the GM's eye toggle (#1749 OQ-5 /
+// #1751 OQ-3). Read from the combat entry rather than a placed token so the
+// answer survives a combatant whose token is on another scene. Always a
+// boolean — an absent token reads as "not hidden", which is the permissive
+// (status-quo) answer and never invents a concealment the GM didn't set.
+export function getCombatantHidden(combatant) {
+  return !!(combatant.token?.hidden ?? combatant.token?.document?.hidden ?? false);
+}
+
 // --- Combat lookup & lifecycle ---
 
 export function getCombatById(combatId) {
