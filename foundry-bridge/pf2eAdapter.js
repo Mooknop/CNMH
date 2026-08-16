@@ -1744,13 +1744,84 @@ export function pingCanvasPoint(x, y, { sceneId = '' } = {}) {
   return true;
 }
 
-// Draw a measured template on the GM canvas (#1573 B4) — the actual burst
-// outline the table sees, not just a ping pulse. Radial shapes only: a cone or
-// line needs a facing the app can't know from a single tapped point, so those
-// stay ping-only and the GM places them by hand.
+// PF2e cone templates are drawn as quarter-circle wedges; 90° is the angle the
+// Foundry cone shape needs to come closest to them. See the expressiveness note
+// on createMeasuredTemplate.
+const PF2E_CONE_ANGLE = 90;
+
+// A PF2e line is 5 ft wide unless the spell says otherwise (wire default).
+const DEFAULT_LINE_WIDTH_FEET = 5;
+
+// Compass degrees (the wire's facing convention, epic #1735: 0 = north,
+// increasing CLOCKWISE, multiples of 45) → the `rotation` a v14 Region shape
+// wants. Returns null for a facing that isn't a finite number — a directional
+// shape with no facing is a refusal, never an east-pointing guess.
 //
-// Scene-guarded like the ping. Returns the created template's id (so a later
+// Foundry canvas angles are screen-space polar: +x is east, +y is DOWN, and
+// zero points due EAST — the convention `MeasuredTemplate#direction` used
+// before v14, which the Region cone/line `rotation` field inherits (the v14
+// template→Region migration carries `direction` straight across to
+// `rotation`). Because y grows downward, increasing degrees sweep CLOCKWISE on
+// screen — the same handedness the compass uses. The two conventions therefore
+// differ only in where zero sits: a fixed −90° offset.
+//
+//   compass   0 N  → rotation 270    compass 180 S  → rotation  90
+//   compass  45 NE → rotation 315    compass 225 SW → rotation 135
+//   compass  90 E  → rotation   0    compass 270 W  → rotation 180
+//   compass 135 SE → rotation  45    compass 315 NW → rotation 225
+//
+// Only a live canvas can prove the handedness (see MIGRATION.md's smoke pass).
+// If a cone cast to the NE ever draws pointing SE, the entire fix is the sign
+// of this one offset — nothing else in the rail encodes an angle.
+export function compassToRegionRotation(compassDeg) {
+  const deg = Number(compassDeg);
+  if (!Number.isFinite(deg)) return null;
+  return (((deg - 90) % 360) + 360) % 360;
+}
+
+// Capability probe for a v14 Region shape type — house style is to ask the
+// build rather than trust the version number. v14 registers every shape data
+// model on `foundry.data.BaseShapeData.TYPES`, a record keyed by the `type`
+// string (`circle`, `cone`, `ellipse`, `emanation`, `grid`, `line`, `polygon`,
+// `rectangle`, `ring`, `token` on 14.365 —
+// https://foundryvtt.com/api/v14/classes/foundry.data.BaseShapeData.html).
+//
+// A build that exposes the registry is taken at its word. A build that does
+// not expose it at all falls back to the generation gate that already guards
+// the Region branch: the registry's ABSENCE is not evidence a shape is
+// missing, and refusing on it would silently kill cone/line on any future
+// namespace reshuffle.
+export function regionShapeTypeSupported(type) {
+  const types = globalThis.foundry?.data?.BaseShapeData?.TYPES;
+  if (!types || typeof types !== 'object') return true;
+  return type in types;
+}
+
+// Draw a spell-area outline on the GM canvas (#1573 B4) — the actual shape the
+// table sees, not just a ping pulse.
+//
+// Radial shapes (`burst`/`emanation` → a circle) draw on every generation.
+// Directional shapes (`cone`/`line`, epic #1735 S2) draw on **v14 only**: they
+// need `direction` (compass degrees) and, for a line, `width` (feet, default
+// 5), and they are expressible only as v14 Region shapes. The v13
+// MeasuredTemplate branch keeps refusing them exactly as it always has, so a
+// re-connected v13 world degrades to today's ping-only "the GM calls who is
+// caught" path instead of drawing something wrong.
+//
+// Scene-guarded like the ping. Returns the created document's id (so a later
 // cleanup rail can remove it) or null when nothing was drawn.
+//
+// EXPRESSIVENESS (cone): a PF2e cone template is not a swept wedge at all — it
+// is a quantized staircase of grid squares from the printed template diagram,
+// and the diagonal templates are not any single wedge's outline. Foundry's cone
+// shape takes `{radius, angle, rotation}`, so the closest honest mapping is a
+// 90° wedge: near-exact for the cardinal templates, approximate for the
+// diagonals. That divergence is deliberate and harmless — the Region is
+// PRESENTATIONAL (it shows the table where the spell went), while occupancy is
+// decided app-side by `spellArea.js` over the same quantized cells the rulebook
+// draws. The Region is never read back to decide who was caught.
+// (`curvature` is left unset so the build's own default applies; a flat- vs
+// round-ended wedge is a cosmetic knob to revisit at the smoke pass.)
 //
 // [v14-MIGRATION resolved]: v14 REMOVED the MeasuredTemplate document type —
 // area outlines are Scene Regions now (RegionDocument, embedded collection
@@ -1765,24 +1836,47 @@ export function pingCanvasPoint(x, y, { sceneId = '' } = {}) {
 //      so every player sees the outline.
 // fillColor maps to the Region's `color` ColorField.
 export async function createMeasuredTemplate({
-  shape, feet, x, y, sceneId = '', fillColor = '',
+  shape, feet, x, y, sceneId = '', fillColor = '', direction, width,
 } = {}) {
   if (!Number.isFinite(x) || !Number.isFinite(y) || !(Number(feet) > 0)) return null;
   if (sceneId && canvas.scene?.id && sceneId !== canvas.scene.id) return null;
-  // Bursts and emanations are both circles; everything else needs a direction.
-  if (shape !== 'burst' && shape !== 'emanation') return null;
+  // Bursts and emanations are both circles; cones and lines carry a facing.
+  const radial = shape === 'burst' || shape === 'emanation';
+  const directional = shape === 'cone' || shape === 'line';
+  if (!radial && !directional) return null;
   const scene = canvas.scene;
   if (typeof scene?.createEmbeddedDocuments !== 'function') return null;
 
   const generation = game.release?.generation ?? 13;
   if (generation >= 14) {
-    // Region circle shapes are in canvas pixel coordinates, not scene units.
+    // Region shapes are in canvas pixel coordinates, not scene units.
     const gridDistance = Number(scene.grid?.distance) || 5;
     const gridSize = Number(scene.grid?.size) || 100;
-    const radius = (Number(feet) / gridDistance) * gridSize;
+    const toPixels = (ft) => (Number(ft) / gridDistance) * gridSize;
+
+    let regionShape = { type: 'circle', x, y, radius: toPixels(feet) };
+    if (directional) {
+      const rotation = compassToRegionRotation(direction);
+      // No facing, or a build without the shape type: degrade to the radial
+      // refusal (null → the caller's ok:false ack), never a throw.
+      if (rotation === null || !regionShapeTypeSupported(shape)) return null;
+      regionShape = shape === 'cone'
+        ? {
+          type: 'cone', x, y, radius: toPixels(feet), angle: PF2E_CONE_ANGLE, rotation,
+        }
+        : {
+          type: 'line',
+          x,
+          y,
+          length: toPixels(feet),
+          width: toPixels(Number(width) > 0 ? width : DEFAULT_LINE_WIDTH_FEET),
+          rotation,
+        };
+    }
+
     const created = await scene.createEmbeddedDocuments('Region', [{
       name: `Spell Area (${Number(feet)} ft)`,
-      shapes: [{ type: 'circle', x, y, radius }],
+      shapes: [regionShape],
       visibility: globalThis.CONST?.REGION_VISIBILITY?.ALWAYS ?? 2,
       ...(fillColor ? { color: fillColor } : {}),
     }], { [BRIDGE_SOURCE_FLAG]: 'app' });
@@ -1790,6 +1884,9 @@ export async function createMeasuredTemplate({
     return doc?.id ?? null;
   }
 
+  // v13 legacy: MeasuredTemplate, radial only — a cone/line has no honest
+  // representation here, so it stays ping-only exactly as before.
+  if (!radial) return null;
   const created = await scene.createEmbeddedDocuments('MeasuredTemplate', [{
     t: 'circle',
     x,

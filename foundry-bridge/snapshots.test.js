@@ -527,10 +527,20 @@ describe('handlePingPoint', () => {
 
 // Measured templates (#1573 B4) — the real burst outline, not just a pulse.
 describe('handleTemplatePlace', () => {
-  const templateWorld = ({ sceneId = 'scene-1', created = [{ id: 'tpl-1' }] } = {}) => {
+  // generation 13 by default (the MeasuredTemplate write); pass 14 for the
+  // Region branch. 100 px squares worth 5 ft each, so 30 ft = 600 px.
+  const templateWorld = ({
+    sceneId = 'scene-1', created = [{ id: 'tpl-1' }], generation = 13,
+  } = {}) => {
     const createEmbeddedDocuments = jest.fn().mockResolvedValue(created);
     const ping = jest.fn();
-    global.canvas = { ping, scene: { id: sceneId, createEmbeddedDocuments } };
+    global.game.release = { generation };
+    global.canvas = {
+      ping,
+      scene: {
+        id: sceneId, grid: { size: 100, distance: 5 }, createEmbeddedDocuments,
+      },
+    };
     return { createEmbeddedDocuments, ping };
   };
 
@@ -566,7 +576,7 @@ describe('handleTemplatePlace', () => {
     );
   });
 
-  test('a cone draws nothing but still pings — a facing is the GM’s call', async () => {
+  test('on v13 a cone draws nothing but still pings — a facing is the GM’s call', async () => {
     const { createEmbeddedDocuments, ping } = templateWorld();
     await handleTemplatePlace({
       id: 'tpl-req-3', shape: 'cone', feet: 15, x: 500, y: 300, sceneId: 'scene-1', ts: 1,
@@ -574,6 +584,63 @@ describe('handleTemplatePlace', () => {
     expect(createEmbeddedDocuments).not.toHaveBeenCalled();
     expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
     expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-3', ok: false });
+  });
+
+  // Directional shapes (#1735 S2) — the payload's `direction` is COMPASS
+  // degrees (0 = north, clockwise); the adapter owns the translation to
+  // Foundry's Region rotation (0 = east, clockwise) and this rail just carries
+  // the field through, origin point included.
+  test('a cone with a facing draws a Region wedge, pings its origin, and acks ok', async () => {
+    const { createEmbeddedDocuments, ping } = templateWorld({ generation: 14 });
+    await handleTemplatePlace({
+      id: 'tpl-req-8',
+      shape: 'cone',
+      feet: 30,
+      x: 500,
+      y: 300,
+      sceneId: 'scene-1',
+      direction: 45, // NE
+      ts: 1,
+    });
+
+    expect(createEmbeddedDocuments).toHaveBeenCalledWith(
+      'Region',
+      [expect.objectContaining({
+        shapes: [{
+          type: 'cone', x: 500, y: 300, radius: 600, angle: 90, rotation: 315,
+        }],
+      })],
+      expect.objectContaining({ [BRIDGE_SOURCE_FLAG]: 'app' }),
+    );
+    // The pulse still marks the ORIGIN of the cone, the point the app sent.
+    expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-8', ok: true, templateId: 'tpl-1' });
+  });
+
+  test('a line carries its width through, defaulting to 5 ft', async () => {
+    const { createEmbeddedDocuments } = templateWorld({ generation: 14 });
+    await handleTemplatePlace({
+      id: 'tpl-req-9', shape: 'line', feet: 60, x: 0, y: 0, direction: 90, width: 10, ts: 1,
+    });
+    await handleTemplatePlace({
+      id: 'tpl-req-10', shape: 'line', feet: 60, x: 0, y: 0, direction: 90, ts: 1,
+    });
+    const shapeOf = (call) => createEmbeddedDocuments.mock.calls[call][1][0].shapes[0];
+    expect(shapeOf(0)).toEqual({
+      type: 'line', x: 0, y: 0, length: 1200, width: 200, rotation: 0,
+    });
+    expect(shapeOf(1).width).toBe(100);
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-10', ok: true });
+  });
+
+  test('a directional shape with no facing nacks and never writes the canvas', async () => {
+    const { createEmbeddedDocuments, ping } = templateWorld({ generation: 14 });
+    await handleTemplatePlace({
+      id: 'tpl-req-11', shape: 'cone', feet: 30, x: 500, y: 300, sceneId: 'scene-1', ts: 1,
+    });
+    expect(createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(ping).toHaveBeenCalledWith({ x: 500, y: 300 });
+    expect(lastTemplateAck()).toMatchObject({ id: 'tpl-req-11', ok: false });
   });
 
   test('a stale scene draws nothing and nacks', async () => {

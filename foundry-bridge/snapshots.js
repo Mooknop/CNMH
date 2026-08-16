@@ -39,14 +39,27 @@
 //     ping pulse to every client, and the player's own confirmation is local.
 //     Scene-guarded in the adapter: a snapshot of scene A never pings scene B.
 //
-// The template half (#1573 B4):
+// The template half (#1573 B4, directional shapes #1735 S2):
 //   App → bridge:  cnmh_templateplace_global = { id, shape, feet, x, y,
-//                                                sceneId, name?, ts }
+//                                                sceneId, name?, ts,
+//                                                direction?, width? }
 //   Bridge → app:  cnmh_templatedone_global  = { id, ok, templateId?, ts }
-//     Draws the real burst outline on the canvas and pings its centre, so the
-//     table sees both the shape and a "look here" pulse. Radial shapes only —
-//     a cone/line needs a facing the app can't infer, so those stay ping-only.
-//     `templateId` comes back so a later cleanup rail can remove it.
+//     Draws the real area outline on the canvas and pings its origin, so the
+//     table sees both the shape and a "look here" pulse. `templateId` comes
+//     back so a later cleanup rail can remove it.
+//
+//     `shape` is 'burst'/'emanation' (radial, drawn on every generation) or —
+//     protocol ≥ 18 — 'cone'/'line', which carry `direction` (COMPASS degrees:
+//     0 = north, clockwise, multiples of 45) and, for a line, `width` (feet,
+//     default 5). For a directional shape `x`/`y` is the shape's ORIGIN, not a
+//     centre: the app derives it from the caster's own space. Directional
+//     shapes are v14-only (they exist as Region cone/line shapes and nothing
+//     else); a v13 world, a build missing the shape type, or a missing facing
+//     all nack with ok:false and the table falls back to the ping.
+//
+//     The Region drawn here is PRESENTATIONAL. Occupancy — who is caught —
+//     stays app-side in spellArea.js over the quantized template cells; the
+//     bridge never reads a Region back to answer that.
 
 import { RELAY } from './syncKeys.js';
 import {
@@ -195,6 +208,11 @@ export async function handleTemplatePlace(value) {
       x,
       y,
       sceneId,
+      // Optional on the wire (radial shapes never send them); the adapter
+      // refuses a directional shape whose facing is absent rather than
+      // guessing one.
+      direction: value?.direction,
+      width: value?.width,
     });
     // The pulse is worth sending even when no outline was drawn — the player
     // still told the table where they meant.
