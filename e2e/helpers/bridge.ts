@@ -113,6 +113,17 @@ export const FULL_MOVE_PROTOCOL = 14;
  *  a live preview channel (an older, unfiltered bridge must never leak one). */
 export const MAP_MOVE_PROTOCOL = 16;
 
+/** The shared protocol bump #1749 (map targeting) and #1751 (template
+ *  placement) both landed on: `positions` gains per-entry `hidden` +
+ *  `width`/`height` (OQ-1/OQ-5 of #1749, OQ-1.2 of #1751), and it is the
+ *  floor `useMapTargetSection` (tap-to-target) and
+ *  `useTemplatePlacementSection.capture()` (caster-centered placement
+ *  captures) both gate on. Below it — or with no hello at all — map
+ *  targeting never renders (`TargetPicker` chips are the only surface) and
+ *  template placement falls back to the bare GM-viewport `request()`, same
+ *  as every pre-wave client gets today. */
+export const MAP_TARGET_PROTOCOL = 17;
+
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 
 /** The oldest protocol the app still fully supports — below this, SyncStatus
