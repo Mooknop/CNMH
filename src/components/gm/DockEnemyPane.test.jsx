@@ -517,6 +517,153 @@ describe('DockEnemyPane (#1531 S2)', () => {
     });
   });
 
+  // #1744 S7: map mode rolled out to the dock's own foe Move tab, mirroring
+  // #1743's tap-flow rollout — same shared useMoveMapMode wiring + MoveMapSurface
+  // component MoveActionSheet uses, keyed to the combat entryId. This IS the
+  // GM's own surface, so ghosts come off the UNFILTERED pathpreviewgm channel
+  // (audience: 'gm'), consistent with DockRoutePreviews — never the
+  // player-filtered one.
+  describe('move rail map mode (#1744 S7)', () => {
+    const armMapMove = (session, { protocol = 16 } = {}) => {
+      act(() => {
+        session.push('global', RELAY.BRIDGEHELLO, { protocol, module: '0.0.0-test', ts: 1 });
+        pushRelayFixture(session, RELAY.FOEKIT);
+      });
+    };
+
+    const lastMoveReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.MOVEREQ).at(-1);
+    const lastSnapReq = (session) =>
+      session.sent.filter((m) => m.stateType === RELAY.SNAPREQ).at(-1);
+
+    const openMove = () => fireEvent.click(screen.getByRole('tab', { name: 'Move' }));
+
+    const TAP_OPTS = { origin: { col: 5, row: 5 }, speed: 25 };
+
+    const snapAckFor = (id, overrides = {}) => ({
+      id,
+      ok: true,
+      url: '/api/images/mover.webp',
+      capture: { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0, screenW: 800, screenH: 600, sceneId: 'scene-1' },
+      worldRect: { x1: 0, y1: 0, x2: 800, y2: 600 },
+      gridSize: 100,
+      moverId: 'cbt-gob',
+      trigger: 'request',
+      ts: Date.now(),
+      ...overrides,
+    });
+
+    // PingTheMap.test.jsx's tap mechanics, reused by MoveActionSheet.mapMode.test.jsx.
+    const tapMapAt = (nx, ny) => {
+      const img = document.querySelector('.msv-img');
+      img.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 });
+      const frame = screen.getByTestId('map-snapshot-frame');
+      fireEvent.pointerDown(frame, { pointerId: 1, clientX: nx * 100, clientY: ny * 100 });
+      fireEvent.pointerUp(frame, { pointerId: 1, clientX: nx * 100, clientY: ny * 100 });
+    };
+
+    const openTapMoveTo = async (session) => {
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts });
+      });
+    };
+
+    it('protocol 15 keeps the surface toggle hidden (below the map-move floor)', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session, { protocol: 15 });
+      await openTapMoveTo(session);
+      expect(screen.queryByRole('group', { name: 'Movement surface' })).toBeNull();
+    });
+
+    it('shows the toggle at protocol 16; Map sends a mover-centered snapreq keyed to the combat entryId', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session);
+      await openTapMoveTo(session);
+
+      expect(screen.getByRole('group', { name: 'Movement surface' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+
+      const req = lastSnapReq(session);
+      expect(req.characterId).toBe('global');
+      expect(req.value).toMatchObject({ moverId: 'cbt-gob', radiusFeet: 37.5 }); // 1.5 × 25 ft speed
+    });
+
+    it('a map tap resolves the real world cell and plans a move exactly like the grid', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session);
+      await openTapMoveTo(session);
+      fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+      const req = lastSnapReq(session);
+      await act(async () => { session.push('global', RELAY.SNAPDONE, snapAckFor(req.value.id)); });
+
+      // Tap the centre: world (400, 300) → cell (4, 3) on a 100 ft grid.
+      tapMapAt(0.5, 0.5);
+
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      expect(plan.characterId).toBe('cbt-gob');
+      expect(plan.value).toMatchObject({ waypoints: [{ col: 4, row: 3 }], moveType: 'stride' });
+    });
+
+    it('Confirm on a map-mode plan stays feet-only, exactly like the grid', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session);
+      await openTapMoveTo(session);
+      fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+      const req = lastSnapReq(session);
+      await act(async () => { session.push('global', RELAY.SNAPDONE, snapAckFor(req.value.id)); });
+
+      tapMapAt(0.5, 0.5);
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEPLANNED, {
+          reqTs: plan.value.ts, path: [{ col: 4, row: 3, x: 400, y: 300 }], costFeet: 5, clipped: false,
+        });
+      });
+
+      const bar = screen.getByLabelText('Confirm move');
+      expect(bar).toHaveTextContent('5 ft');
+      expect(bar).not.toHaveTextContent('action');
+    });
+
+    it('renders the UNFILTERED pathpreviewgm channel as a ghost on the dock\'s own map surface', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session);
+      await openTapMoveTo(session);
+      fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+      const req = lastSnapReq(session);
+      await act(async () => { session.push('global', RELAY.SNAPDONE, snapAckFor(req.value.id)); });
+
+      // A hidden/hostile mover the PLAYER channel would never carry — the GM's
+      // own surface renders it anyway (OQ-2: filter what the dock receives
+      // from elsewhere, not what it draws for movers it can already see).
+      act(() => {
+        session.push('global', RELAY.PATHPREVIEWGM, {
+          tokenId: 'tok-ambush', id: null, name: 'Hidden Ambusher', disposition: -1,
+          sceneId: 'scene-1', origin: { col: 1, row: 1 }, path: [{ col: 2, row: 1 }],
+          phase: 'move', source: 'foundry', ts: Date.now(),
+        });
+      });
+
+      expect(document.querySelectorAll('.sro--ghost').length).toBe(1);
+    });
+
+    it('falls back to the grid on an explicit nack, without stranding the GM', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armMapMove(session);
+      await openTapMoveTo(session);
+      fireEvent.click(screen.getByRole('button', { name: 'Map' }));
+      const req = lastSnapReq(session);
+
+      await act(async () => { session.push('global', RELAY.SNAPDONE, { id: req.value.id, ok: false, ts: Date.now() }); });
+
+      expect(screen.getByText('Map unavailable — using the grid.')).toBeInTheDocument();
+      expect(screen.getByLabelText(/Move to 6,5 —/)).toBeInTheDocument();
+    });
+  });
+
   describe('condition truth + GM management (S3)', () => {
     it('renders the foe’s recorded Foundry conditions as truth chips', () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);

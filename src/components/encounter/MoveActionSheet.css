@@ -48,24 +48,5 @@
   text-align: center;
 }
 
-/* Grid/map surface toggle (#1744 S4, OQ-4 ruling) */
-.mas-surface-toggle {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.mas-surface-btn[aria-pressed="true"] {
-  color: var(--shell-text-primary);
-  border-color: var(--color-theme, var(--shell-border-strong));
-}
-
-.mas-hint {
-  margin: 0;
-  text-align: center;
-  font-size: var(--text-xs);
-  color: var(--shell-text-tertiary);
-}
-
-.mas-map-cancel {
-  align-self: stretch;
-}
+/* Grid/map surface toggle + map body (#1744 S4/S7, OQ-4 ruling) now lives in
+   the shared MoveMapSurface component (#1744 S7) — see MoveMapSurface.css. */

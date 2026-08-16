@@ -25,6 +25,9 @@ import { monogram } from '../encounter/commandsheet/Dossier';
 import PersistentChip from '../encounter/PersistentChip';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import MoveConfirmBar from '../encounter/MoveConfirmBar';
+import MoveMapSurface from '../encounter/MoveMapSurface';
+import { useMoveMapMode } from '../../hooks/useMoveMapMode';
+import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { needsNewStride, actionsForDistance, ENEMY_MOVE_PROTOCOL, FULL_MOVE_PROTOCOL } from '../../utils/movement';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
@@ -459,6 +462,17 @@ const AbilityRow = ({ ability, witnessed, onReveal }) => (
 // and writes one combat-log line for the whole move. The Stride tally shown
 // while stepping is display-only (needsNewStride's accumulation) — it has no
 // bearing on Foundry's own action economy for the foe.
+//
+// Map mode (#1744 S7, mirrors #1743's tap-flow rollout to this surface): on a
+// protocol-16+ bridge the tap flow's picker can also be the actual battlefield
+// snapshot, toggled per device via the SAME MOVE_SURFACE_PREF every map-mode
+// surface shares (useMoveMapMode). The mover id is the combat entryId, same
+// as useTokenMovement above. This IS the GM's own surface, so it renders
+// usePathPreview({ audience: 'gm' }) ghosts — the unfiltered channel, exactly
+// like DockRoutePreviews — never the player-filtered one; OQ-2's filter
+// governs what the dock RECEIVES from a hidden/hostile mover elsewhere, not
+// what the dock draws for the foe it is itself driving. Confirm stays
+// feet-only, unaffected by the surface choice.
 const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
   const { appendLog } = useEncounter();
   const [feetTotal, setFeetTotal] = useState(0);
@@ -533,6 +547,20 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
   speedRef.current = pickerOpts?.speed || speedRef.current || fallbackSpeed || 0;
   const speed = speedRef.current;
 
+  // Mover-centered capture radius (#1744 WS-2/OQ-5 ruling) — 1.5× the foe's
+  // best-known Speed (whatever speedRef already resolved above), sent only
+  // when we actually have one; omitting radiusFeet lets the bridge fall back
+  // to 1.5× the actor's own Speed instead of our guess.
+  const {
+    surfacePref, setSurfacePref, mapEligible, useMapSurface, mapStatus, mapSnapshot, ghostEntries,
+  } = useMoveMapMode({
+    moverId: entryId,
+    tapFlowEligible,
+    protocol,
+    knownSpeed: speed || null,
+    ghostAudience: 'gm',
+  });
+
   const reset = () => {
     setFeetTotal(0);
     setFeetThisAction(0);
@@ -560,6 +588,16 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
       ? [...waypointsRef.current, cell]
       : [cell];
     planMove(waypointsRef.current);
+  };
+
+  // Map-mode tap: the same normalized-tap → world → cell conversion as
+  // MoveActionSheet — the snapshot replaces the PICKER, not the plan/confirm
+  // protocol, so it feeds the identical handleTap path above.
+  const handleMapTap = ({ nx, ny }) => {
+    if (!mapSnapshot) return;
+    const world = worldPointFromTap(mapSnapshot, nx, ny);
+    const cell = cellFromWorldPoint(world, mapSnapshot.gridSize);
+    if (cell) handleTap(cell);
   };
 
   const handleCancelPlan = () => {
@@ -606,16 +644,32 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
               {isRefreshing && (
                 <p className="dock-enemy-move-status" role="status">Updating…</p>
               )}
-              <MoveGridPicker
-                tapMode
+              <MoveMapSurface
+                mapEligible={mapEligible}
+                surfacePref={surfacePref}
+                onSurfaceChange={setSurfacePref}
+                showBody
+                status={mapStatus}
+                snapshot={mapSnapshot}
                 origin={pickerOpts.origin}
-                maxFeet={speed || 25}
-                plannedPath={plannedPath?.path}
-                destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
-                cancelLabel="Done"
-                onSelect={handleTap}
+                plannedPath={plannedPath}
+                ghosts={ghostEntries}
+                onMapTap={handleMapTap}
                 onCancel={handleDone}
+                cancelLabel="Done"
               />
+              {!(useMapSurface && mapStatus === 'ready' && mapSnapshot) && (
+                <MoveGridPicker
+                  tapMode
+                  origin={pickerOpts.origin}
+                  maxFeet={speed || 25}
+                  plannedPath={plannedPath?.path}
+                  destination={plannedPath?.path?.length ? plannedPath.path[plannedPath.path.length - 1] : null}
+                  cancelLabel="Done"
+                  onSelect={handleTap}
+                  onCancel={handleDone}
+                />
+              )}
             </>
           )}
 

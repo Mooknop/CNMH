@@ -1,0 +1,30 @@
+/* src/components/encounter/MoveMapSurface.css
+   Grid/map surface toggle + map body (#1744 S7), factored out of
+   MoveActionSheet.css's original .mas-surface-* rules. Tokens from
+   pf2e-tokens.css. */
+
+.mvms-toggle {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mvms-toggle-btn[aria-pressed="true"] {
+  color: var(--shell-text-primary);
+  border-color: var(--color-theme, var(--shell-border-strong));
+}
+
+.mvms-hint {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+.mvms-status {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
+.mvms-cancel {
+  align-self: stretch;
+}

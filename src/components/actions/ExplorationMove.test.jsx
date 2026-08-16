@@ -64,6 +64,43 @@ vi.mock('../encounter/MoveGridPicker', () => ({
   }
 }));
 
+// Map mode (#1744 S7): mock the shared useMoveMapMode wiring hook + the
+// shared MoveMapSurface component exactly like useTokenMovement/
+// MoveGridPicker above — its own behavior is covered by
+// MoveActionSheet.mapMode.test.jsx / MoveActionSheet.pathpreviewGhosts.test.jsx
+// (the real thing needs a live SessionContext/EncounterContext this file's
+// minimal useSyncedState mock can't provide). Defaults keep every existing
+// test in this file on the grid unchanged.
+const mockMapMode = {
+  surfacePref: 'grid',
+  setSurfacePref: vi.fn(),
+  mapEligible: false,
+  useMapSurface: false,
+  mapStatus: 'idle',
+  mapSnapshot: null,
+  ghostEntries: [],
+};
+vi.mock('../../hooks/useMoveMapMode', () => ({
+  useMoveMapMode: (opts) => {
+    mockMapMode.lastOpts = opts;
+    return mockMapMode;
+  },
+}));
+
+vi.mock('../encounter/MoveMapSurface', () => ({
+  default: function DummyMoveMapSurface({ mapEligible, surfacePref, onSurfaceChange, onMapTap, onCancel }) {
+    if (!mapEligible) return null;
+    return (
+      <div data-testid="move-map-surface" role="group" aria-label="Movement surface">
+        <button aria-pressed={surfacePref !== 'map'} onClick={() => onSurfaceChange('grid')}>Grid</button>
+        <button aria-pressed={surfacePref === 'map'} onClick={() => onSurfaceChange('map')}>Map</button>
+        <button onClick={() => onMapTap({ nx: 0.5, ny: 0.5 })}>Tap Map</button>
+        <button onClick={onCancel}>Map Cancel</button>
+      </div>
+    );
+  }
+}));
+
 // Derived-speed line (SP4 #1223): the real useCharacter can't run under this
 // file's minimal useSyncedState mock, so stub the spine output directly.
 let mockCharData = null;
@@ -89,6 +126,12 @@ beforeEach(() => {
   mockMovement.plannedPath = null;
   mockProtocol = null;
   mockCharData = null;
+  mockMapMode.surfacePref = 'grid';
+  mockMapMode.mapEligible = false;
+  mockMapMode.useMapSurface = false;
+  mockMapMode.mapStatus = 'idle';
+  mockMapMode.mapSnapshot = null;
+  mockMapMode.ghostEntries = [];
 });
 
 describe('ExplorationMove', () => {
@@ -333,6 +376,75 @@ describe('ExplorationMove', () => {
       expect(mockExploreDist).toBe(35);
       // Chains a refresh probe exactly like the stepper does.
       expect(mockMovement.requestMoveRefresh).toHaveBeenCalledWith('stride');
+    });
+  });
+
+  // #1744 S7: map mode rolled out to this surface, mirroring #1743's tap-flow
+  // rollout — same shared useMoveMapMode wiring + MoveMapSurface component
+  // MoveActionSheet uses, keyed to the PC's own charId, PLAYER-audience ghosts.
+  describe('map mode (#1744 S7)', () => {
+    beforeEach(() => { mockProtocol = 14; });
+
+    it('wires useMoveMapMode to this charId with player-audience ghosts', () => {
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      expect(mockMapMode.lastOpts).toMatchObject({
+        moverId: 'char-1', tapFlowEligible: true, protocol: 14, ghostAudience: 'player',
+      });
+    });
+
+    it('renders no map surface below the map-move protocol floor (mapEligible false)', () => {
+      mockMapMode.mapEligible = false;
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+      expect(screen.queryByTestId('move-map-surface')).toBeNull();
+      expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();
+    });
+
+    it('a map tap resolves to the same handleTap/planMove path a grid tap uses', () => {
+      mockMapMode.mapEligible = true;
+      mockMapMode.mapSnapshot = {
+        url: '/api/images/mover.webp',
+        capture: { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0, screenW: 800, screenH: 600, sceneId: 'scene-1' },
+        worldRect: { x1: 0, y1: 0, x2: 800, y2: 600 },
+        gridSize: 100,
+      };
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Tap Map' }));
+      // world (400, 300) → cell (4, 3) on a 100 ft grid, identity capture.
+      expect(mockMovement.planMove).toHaveBeenCalledWith([{ col: 4, row: 3 }]);
+    });
+
+    it('hides the grid once the map surface is ready and showing', () => {
+      mockMapMode.mapEligible = true;
+      mockMapMode.useMapSurface = true;
+      mockMapMode.mapStatus = 'ready';
+      mockMapMode.mapSnapshot = { url: '/api/images/mover.webp', gridSize: 100 };
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      expect(screen.getByTestId('move-map-surface')).toBeInTheDocument();
+      expect(screen.queryByTestId('move-grid-picker')).toBeNull();
+    });
+
+    it('the map surface\'s own Cancel control ends the move exactly like Done', () => {
+      mockMapMode.mapEligible = true;
+      mockMapMode.useMapSurface = true;
+      mockMapMode.mapStatus = 'ready';
+      mockMapMode.mapSnapshot = { url: '/api/images/mover.webp', gridSize: 100 };
+      mockMovement.stage = 'picking';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      render(<ExplorationMove charId="char-1" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Map Cancel' }));
+      expect(mockMovement.cancelMove).toHaveBeenCalled();
     });
   });
 });
