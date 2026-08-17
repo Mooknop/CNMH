@@ -30,10 +30,12 @@ import path from 'path';
 import { handleAction, _resetTargeting } from './targeting.js';
 import { initMovement, handleMovePlan } from './movement.js';
 import { initSnapshots, handleSnapshotRequest, handleTemplatePlace } from './snapshots.js';
+import { initAuras, handleAuraSet, _resetAuras } from './auras.js';
 import { updateActorMap } from './encounter.js';
 import { RELAY } from './syncKeys.js';
 import {
   makeActor, makeToken, makeCombat, makeCombatant, equipV14Movement,
+  installTokenEmanation,
 } from './test/foundryMock.js';
 
 const FIXTURE_DIR = path.join(__dirname, '__fixtures__', 'relay', 'inbound');
@@ -204,6 +206,69 @@ describe('inbound relay contract (#1749 S1 follow-up)', () => {
         rotation: 315,
       });
       expect(ping).toHaveBeenCalledWith({ x: fixture.value.x, y: fixture.value.y });
+    });
+  });
+
+  describe(`${RELAY.AURASET} — foundry-bridge/auras.js handleAuraSet`, () => {
+    // An ACTIVATION fixture (#1733 S1): `active:true` with an explicitly
+    // authored `feet`. There is no default radius — an aura whose ability
+    // carries no `areaShape { shape:'emanation', feet }` is never sent at all —
+    // so the fixture pins that `feet` is part of the payload, not an option.
+    // `label`/`color` are the optional ring presentation.
+    //
+    // Hand-authored from the CONTRACT rather than from a live producer: the app
+    // half of the epic has not shipped its `useAura` bridge write yet, exactly
+    // like `templateplace`'s cone fixture waited for #1735 S3. The app-side
+    // mirror in src/test/relayInboundContract.test.jsx picks this file up when
+    // #1733's app slice lands.
+    afterEach(() => { delete global.foundry; _resetAuras(); });
+
+    test('the committed fixture is accepted: attaches an emanation Region and answers auramembers', async () => {
+      const send = movementWorld();
+      initAuras(send);
+
+      // A second creature standing in the aura, and in the current combat — so
+      // the members payload has to carry BOTH id spaces (tokenId always,
+      // entryId only for a combatant).
+      const ally = makeToken({ id: 'tok-ally', x: 600, y: 500, disposition: 1, name: 'Zevira' });
+      global.canvas.tokens.placeables = [...global.canvas.tokens.placeables, ally];
+      global.game.combat = makeCombat({
+        combatants: [makeCombatant({ id: 'cbt-ally', actorId: null, tokenId: 'tok-ally' })],
+      });
+      const { createTokenEmanation } = installTokenEmanation({ contains: [ally] });
+
+      const fixture = readFixture(RELAY.AURASET);
+
+      await expect(handleAuraSet(fixture.characterId, fixture.value)).resolves.not.toThrow();
+
+      // Observable effect 1: the fixture's `feet`/`label`/`color` were really
+      // read — core is handed the RANGE IN GRID UNITS (feet, NOT pixels: this
+      // API authors the shape itself) plus the ring's presentation, and the
+      // Region is stamped with the charId the sweep reads back.
+      expect(createTokenEmanation).toHaveBeenCalledTimes(1);
+      const [tokenDoc, range, regionData] = createTokenEmanation.mock.calls[0];
+      expect(tokenDoc).toBe(global.canvas.tokens.get('tok-pellias').document);
+      expect(range).toBe(fixture.value.feet);
+      expect(regionData).toMatchObject({
+        name: fixture.value.label,
+        color: fixture.value.color,
+        visibility: 2,
+        flags: { 'cnmh-bridge': { auraCharId: fixture.characterId } },
+      });
+
+      // Observable effect 2: initial membership went back on the read-back
+      // channel, keyed by the same charId the fixture activated.
+      const call = send.mock.calls.find((c) => c[1] === RELAY.AURAMEMBERS);
+      expect(call).toBeTruthy();
+      const [charId, , payload] = call;
+      expect(charId).toBe(fixture.characterId);
+      expect(payload.inside).toEqual([{
+        entryId: 'cbt-ally',
+        tokenId: 'tok-ally',
+        name: 'Zevira',
+        disposition: 1,
+        hidden: false,
+      }]);
     });
   });
 });

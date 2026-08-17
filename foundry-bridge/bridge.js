@@ -17,6 +17,7 @@ import {
   initMovement, setMoveDoneListener, handleMoveRequest, handleMovePlan, handleMoveConfirm,
 } from './movement.js';
 import { initPathPreview } from './pathPreview.js';
+import { initAuras, handleAuraSet, armAuraSweep, replayAuraState } from './auras.js';
 import { initTargeting, handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
@@ -117,6 +118,9 @@ Hooks.once('ready', () => {
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initPathPreview(sendUpdate);
+  // After initMovement (#1733): the aura rail resolves its owner token through
+  // movement.js's resolveToken, which reads the actor map initEncounter owns.
+  initAuras(sendUpdate);
   // After initEncounter, so its combat hooks have already refreshed the active
   // combat id by the time the targeting clear reads it (#1749 OQ-3).
   initTargeting();
@@ -199,6 +203,13 @@ function connect() {
     pushMinionActors();
     pushPositions();
     pushFoeKit();  // reconnect mid-enemy-turn → dock kit is fresh (#1531)
+    // Aura orphan sweep (#1733). It can't RUN here: the sweep has to know which
+    // auras are still active, and that only arrives with the FULL_STATE this
+    // open is about to be answered with. So onopen ARMS it and the FULL_STATE
+    // branch fires it — sweep first (every bridge-stamped ring on the scene is
+    // deleted), then replay (FULL_STATE's active auras are re-created fresh).
+    // See sweepOrphanAuraRegions in auras.js for why the order is that way.
+    armAuraSweep();
   };
 
   ws.onclose = (evt) => {
@@ -270,6 +281,11 @@ function dispatch(msg) {
     for (const [cid, state] of Object.entries(msg.payload || {})) {
       if (cid !== 'global' && state?.minions) cacheMinions(cid, state.minions);
     }
+    // Auras (#1733) are a PERSISTED channel: sweep the scene clear of every
+    // bridge-stamped ring, then replay each stored `auraset` through the live
+    // handler so a bridge restart brings the active rings back. Armed by
+    // ws.onopen so it only runs for a genuine (re)connection.
+    replayAuraState(msg.payload);
     return;
   }
 
@@ -361,6 +377,15 @@ function dispatch(msg) {
   // HP / hero points write-back from app → Foundry actor.
   if (key === RELAY.HP || key === RELAY.HEROPOINTS) {
     handleCharacterUpdate(characterId, key, value);
+    return;
+  }
+
+  // Aura activation from app → token-attached emanation Region (#1733). A
+  // per-character rail like HP: the key alone identifies it, whatever the
+  // charId's id space (PC, minion `<owner>-<role>`, or a combat entryId).
+  // Fire-and-forget — no ack, `auramembers` is the read-back.
+  if (key === RELAY.AURASET) {
+    handleAuraSet(characterId, value);
     return;
   }
 

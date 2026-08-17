@@ -142,6 +142,21 @@ data path moves, **only the adapter changes.**
   canvas is the only thing that can prove its handedness (smoke item below).
   The `curvature` field a cone accepts is deliberately left unset, so the
   build's own default cone rendering applies.
+- **Token-attached emanation Regions are v14-GREENFIELD, not a migration**
+  (#1733, `createTokenAuraRegion` / `deleteRegion` / `findBridgeAuraRegions` /
+  `getRegionTokens` in the adapter, driven by `auras.js`). 14.353 added
+  `RegionDocument.createTokenEmanation(token, range, regionData, options)` plus
+  `RegionDocument#attachedToken`, so a Region can follow — and rotate with — the
+  creature it belongs to; v13 has no equivalent and the whole rail no-ops there.
+  Two things about it diverge from the template rail above and are easy to get
+  wrong: **`range` is in GRID UNITS (feet), not pixels** — core authors the
+  shape, we only name the distance — and **region events never reach `Hooks`**.
+  `CONST.REGION_EVENTS.TOKEN_ENTER` / `TOKEN_EXIT` are delivered to
+  `RegionBehaviorType#_handleRegionEvent` on behavior documents embedded in the
+  Region and nowhere else (the 14.365 hook registry has no region hook at all),
+  so membership is recomputed off the token lifecycle hooks and read from
+  `RegionDocument#tokens`. See the aura block in the smoke pass below — the mock
+  world can prove the code, only a canvas can prove those two facts.
 - **Bare globals with no v14 fallback yet** (audited 2026-08-10; fix by
   mirroring the `rollFormula` pattern — namespace first, bare global fallback):
   - `fromUuid(ref)` in `applyEffectByUuid` — no namespace fallback, not
@@ -233,6 +248,44 @@ same-day emergency release:
    render path) AND a mover-centered one (the stage-retarget path — watch for
    flicker), and fire one Sequencer/JB2A animation. (Evaluate the community
    **Quench** module for in-world automation — confirm its v14 support first.)
+
+   **Aura emanations (#1733) — four canvas facts the mock world cannot prove.**
+   The whole rail is v14-only (`RegionDocument.createTokenEmanation`, 14.353)
+   and every one of these is a live-canvas question:
+
+   a. **The API exists and accepts our arguments.** Console-check
+      `typeof foundry.documents.RegionDocument.createTokenEmanation` in the real
+      world. The signature the adapter is written against is
+      `(token, range, regionData, options)` with `regionData` an
+      `Omit<RegionData, 'elevation' | 'shapes'>`. If the world rejects the
+      `flags`/`visibility` keys, or wants the token as a placeable rather than a
+      TokenDocument, the fix is entirely inside `createTokenAuraRegion`.
+   b. **`range` is FEET, not pixels.** The docs call it "the emanation range in
+      grid units", so this is the ONE Region write in the bridge that does not
+      convert with `feet / grid.distance * grid.size`. Activate a 15 ft aura and
+      count squares: three out on a 5 ft grid. A ring that draws a barely-visible
+      dot means `range` wanted pixels after all — the fix is one `toPixels()`
+      call in `createTokenAuraRegion`.
+   c. **The ring follows its token, and enter/exit actually reaches the app.**
+      Activate an aura, then walk the *owner* around (the ring must travel with
+      it) and walk a *second* token in and out of it. Each crossing must produce
+      one `cnmh_auramembers_<charId>` within a round-trip. **This is the highest
+      risk item in the rail**: v14 core routes `CONST.REGION_EVENTS.TOKEN_ENTER`
+      / `TOKEN_EXIT` only to `RegionBehaviorType` instances — there is no core
+      hook for them (verified against the 14.365 hook registry) — so
+      `auras.js` recomputes membership off `updateToken`/`createToken`/
+      `deleteToken` and reads `RegionDocument#tokens` for the answer. If
+      membership never changes on canvas, `RegionDocument#tokens` is not being
+      kept current for attached emanations, and the fallback in
+      `geometricMembers` should become the primary path. Check the GM console
+      for `region.tokens` right after a token walks in.
+   d. **The connect-time orphan sweep.** Activate an aura, then reload Foundry
+      (F5). On reconnect the scene must end up with exactly ONE ring for that
+      character — the sweep deletes every `flags['cnmh-bridge'].auraCharId`
+      Region first, then FULL_STATE's replay re-creates the active ones. Two
+      rings means the flag is not surviving the document write; zero means the
+      replay is not seeing the persisted `auraset`. Also confirm a GM's own
+      hand-drawn Region is untouched by the sweep.
 6. **Bump `module.json`** `compatibility.verified` to `"14"` **only after** the
    contract suite passes against the v14 fixtures **and** the smoke pass is clean.
 7. Delete `__fixtures__/v14/PLACEHOLDER.md` once real v14 fixtures are committed.

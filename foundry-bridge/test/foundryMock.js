@@ -345,6 +345,76 @@ export function makeScene(opts = {}) {
   return { id, grid: { size: gridSize, distance: gridDistance } };
 }
 
+// --- v14 Scene Regions (#1733 aura emanations) -------------------------------
+
+// A RegionDocument. `tokens` is core's own ReadonlySet<TokenDocument> of who is
+// currently inside (the authoritative membership read); `flags` carries the
+// bridge's `cnmh-bridge.auraCharId` stamp on rings the bridge created.
+export function makeRegion(opts = {}) {
+  const {
+    id = autoId('region'), name = 'Region', flags = {}, visibility = 2,
+    color = '', attachedToken = null, tokens = [],
+  } = opts;
+  return {
+    id, name, flags, visibility, color, attachedToken,
+    tokens: new Set(tokens.map(asTokenDocument)),
+  };
+}
+
+// A placed Token or a TokenDocument → the document, with `id` back-filled.
+// makeToken's document omits it (the placeable carries it) while a REAL
+// TokenDocument always has one, and region membership hands out documents.
+function asTokenDocument(token) {
+  const doc = token?.document ?? token ?? null;
+  if (doc && doc.id == null && token?.id != null) doc.id = token.id;
+  return doc;
+}
+
+// A Region embedded collection whose `contents` tracks deletions (the real
+// collection's does; makeCollection's static array would not).
+function makeRegionCollection(docs = []) {
+  const map = new Map(docs.map((d) => [d.id, d]));
+  Object.defineProperty(map, 'contents', { get: () => [...map.values()] });
+  return map;
+}
+
+// Equip the world with v14's token-emanation surface (#1733): the generation
+// gate, `foundry.documents.RegionDocument.createTokenEmanation`, a live Region
+// collection on the scene, and a delete seam. Every created Region is stamped
+// with `regionData` verbatim so a test can assert the flags/visibility the
+// adapter authored.
+//
+//   regions  — Regions already on the scene (orphan-sweep cases)
+//   contains — tokens each NEWLY created emanation reports as inside
+//   generation — drop to 13 to prove the v13 no-op
+export function installTokenEmanation(opts = {}) {
+  const { regions = [], contains = [], generation = 14 } = opts;
+
+  global.game.release = { generation };
+  const collection = makeRegionCollection(regions);
+  global.canvas.scene.regions = collection;
+  global.canvas.scene.deleteEmbeddedDocuments = jest.fn(async (type, ids) => {
+    const removed = ids.filter((id) => collection.delete(id));
+    return removed;
+  });
+
+  const createTokenEmanation = jest.fn(async (tokenDoc, range, regionData) => {
+    const region = makeRegion({
+      ...regionData, attachedToken: tokenDoc, tokens: contains,
+    });
+    region.range = range;
+    collection.set(region.id, region);
+    return region;
+  });
+
+  global.foundry = {
+    ...(global.foundry ?? {}),
+    documents: { ...(global.foundry?.documents ?? {}), RegionDocument: { createTokenEmanation } },
+  };
+
+  return { collection, createTokenEmanation };
+}
+
 // Fit a token with the v14 movement-pipeline surfaces the path rail uses
 // (#1736 S1) — opt-in, so every pre-v14 test keeps its bare token. Defaults
 // model a cooperative world: findMovementPath echoes the requested waypoints,

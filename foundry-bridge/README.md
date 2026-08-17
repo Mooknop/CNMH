@@ -28,6 +28,7 @@ devices.
 | `adjacencyPush.js` | Hooks into token-move / combat lifecycle to push combatant adjacency (#430). |
 | `positions.js` | Hooks into token-move / combat lifecycle to push each combatant's grid cell to the app (range-increment measurement). |
 | `pathPreview.js` | Hooks the v14 movement pipeline (`planToken` / `moveToken`) to push route ghosts for moves the app didn't initiate (#1736 S3). |
+| `auras.js` | Turns `auraset` into a token-attached v14 emanation Region that follows the creature, and pushes `auramembers` when who is standing inside it changes (#1733). v14-only. |
 | `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
 | `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
 | `config.js` | Per-campaign config (worker URL, actor/token maps). **Public — no secrets.** |
@@ -194,10 +195,16 @@ factories in `test/foundryMock.js`. Two layers:
   **Coverage**: `action`, `moveplan`, `snapreq` — the three newest inbound
   contracts as of #1749 S1 — plus `templateplace` (#1735 S2, hand-authored as a
   CONE: the directional payload is the newest half of that contract, and the
-  fixture pins that a cone carries `direction` but **no** `width`). Only the
+  fixture pins that a cone carries `direction` but **no** `width`) and
+  `auraset` (#1733 S1, hand-authored as an ACTIVATION: `active:true` with an
+  explicitly authored `feet`, plus the optional `label`/`color`, so the fixture
+  pins that a radius is part of the payload rather than something the bridge may
+  default). Only the
   bridge half of `templateplace` runs today: the app producer still refuses to
   send a cone, so `src/test/relayInboundContract.test.jsx` picks this fixture
-  up when #1735 S3 wires the rosette into `useTemplatePlacementSection`. The epic's own grep of `origin/main` found `action`
+  up when #1735 S3 wires the rosette into `useTemplatePlacementSection`.
+  `auraset` is in the same state for the same reason — `useAura` does not write
+  the bridge key yet, so the app half joins when #1733's app slice lands. The epic's own grep of `origin/main` found `action`
   was the only documented relay channel with no recorded emission at all;
   `moveplan`/`snapreq`'s mover-centered form are equally recent (#1736,
   #1744). **Not yet covered** (a follow-up, not swept here): `movereq`,

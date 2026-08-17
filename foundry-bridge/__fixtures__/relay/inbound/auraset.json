@@ -1,0 +1,10 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "active": true,
+    "feet": 10,
+    "label": "Kinetic Aura",
+    "color": "#4a9c6d",
+    "ts": 1700000000000
+  }
+}
