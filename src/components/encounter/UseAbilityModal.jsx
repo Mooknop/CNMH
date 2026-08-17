@@ -27,6 +27,9 @@ import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useIwrReveal } from '../../hooks/useIwrReveal';
 import { useFrequencyGate } from '../../hooks/useFrequencyGate';
 import { useAuraGate } from '../../hooks/useAuraGate';
+import { useAura } from '../../hooks/useAura';
+import { useAuraMembers } from '../../hooks/useAuraMembers';
+import { auraNarrowedEntryIds, resolveAuraSource } from '../../utils/auraSources';
 import { useShieldGate } from '../../hooks/useShieldGate';
 import { useOmenGate } from '../../hooks/useOmenGate';
 import { useImmunityGate } from '../../hooks/useImmunityGate';
@@ -121,7 +124,7 @@ const UseAbilityModal = ({
   themeColor,
 }) => {
   const { getState, sendUpdate } = useSession();
-  const { characters, effects: effectCatalog, fxAnimations } = useContent();
+  const { characters, effects: effectCatalog, fxAnimations, spells: spellCatalog } = useContent();
   const { gameDate, time } = useGameDate();
   const { encounter, appendLog, addSaveRequest, addArmedPayload, clearSaveResolution } =
     useEncounter();
@@ -227,6 +230,32 @@ const UseAbilityModal = ({
 
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character?.id);
   const casterEntryId  = casterEntry?.entryId || null;
+
+  // Aura membership narrowing for `all-allies` (#1733 S3) — Courageous Anthem
+  // is the case that motivated it: "you and all allies in the area" has always
+  // applied to every PC in the order regardless of where they stand, because
+  // nothing in the app knew the area's occupants. With a bridge drawing the
+  // caster's aura Region, the bridge does know, and pushes it back.
+  //
+  // `auraNarrowedEntryIds` returns null for every case that isn't provably this
+  // ability's own circle — no bridge, no membership push yet, a caster whose
+  // live aura is a different one — and null means "apply to everyone", i.e. the
+  // pre-#1733 behaviour byte for byte. It can only ever REMOVE recipients that
+  // the bridge says are out of range, and never in the bridgeless mode.
+  const { active: casterAuraActive } = useAura(character?.id || 'nobody');
+  const auraMembers = useAuraMembers(character?.id || 'nobody');
+  const casterAuraSource = resolveAuraSource({
+    character,
+    auraActive: casterAuraActive,
+    effects: activeEffects,
+    spells: spellCatalog,
+  });
+  const auraInsideEntryIds = auraNarrowedEntryIds({
+    ability,
+    auraSource: casterAuraSource,
+    members: auraMembers,
+    casterEntryId,
+  });
 
   // Adopt a computed set of combatants into the target selection (#1573 B3 —
   // the creatures standing in a placed area). Additive by design: toggling only
@@ -818,7 +847,7 @@ const UseAbilityModal = ({
     // suffix already landed on a log line.
     const suffixLogged = applyEffectsOrLogGeneric({
       ...ctx, hasEffects, targetCharIds, enemyTargetNames, selectedEntries,
-      rayGroups, directCastRank, foundryAuthoritative, sourceSuffix,
+      rayGroups, directCastRank, foundryAuthoritative, auraInsideEntryIds, sourceSuffix,
     });
 
     // Per-target rolled results (#222, #274; extracted #1317 D4) — one log
@@ -1128,7 +1157,15 @@ const UseAbilityModal = ({
           <section className="ct-section">
             <h3 className="ct-section-title">Apply Effects</h3>
 
-            <StaticEffectsList effects={effects} characterName={character.name} />
+            <StaticEffectsList
+              effects={effects}
+              characterName={character.name}
+              allAlliesNames={auraInsideEntryIds
+                ? order
+                  .filter((e) => e.kind === 'pc' && e.charId && auraInsideEntryIds.includes(e.entryId))
+                  .map((e) => e.name)
+                : null}
+            />
 
             {isOpposedReaction ? opposedSection : (
               <>

@@ -12,14 +12,23 @@ const writeLocal = (key, value) => {
 //  'self'       -> caster only
 //  'all-allies' -> every PC in the encounter order
 //  'target'/'ally' -> the passed-in picked PC targets
-export const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
+//
+// `opts.insideEntryIds` (#1733 S3) narrows 'all-allies' to the combatants a
+// live Foundry aura actually contains — the membership `useAuraMembers` reads
+// back from the bridge, resolved by `auraNarrowedEntryIds`. It is ONLY ever a
+// narrowing, and only when the caller could prove the membership describes this
+// very ability's area; null/undefined (no bridge, no push, a mismatched aura,
+// any pre-#1733 caller) means every PC in the order, exactly as before.
+export const resolveApplyTargets = (applyTo, caster, targetCharIds, order, opts = {}) => {
   if (applyTo === 'self') {
     const selfEntry = (order || []).find((e) => e.kind === 'pc' && e.charId === caster.id);
     return [{ charId: caster.id, entryId: selfEntry?.entryId || null }];
   }
   if (applyTo === 'all-allies') {
+    const inside = opts.insideEntryIds;
     return (order || [])
       .filter((e) => e.kind === 'pc' && e.charId)
+      .filter((e) => !Array.isArray(inside) || inside.includes(e.entryId))
       .map((e) => ({ charId: e.charId, entryId: e.entryId }));
   }
   // 'target' | 'ally' — use the user-picked PC target set
@@ -83,6 +92,10 @@ export const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEn
  *                                      cnmh_foundryeffects read-back (#455). Set when the
  *                                      ability is Foundry-authoritative AND the bridge is
  *                                      connected; grants/immunity/foundryEffect still run.
+ * @param {string[]} [auraInsideEntryIds] - Narrow every 'all-allies' resolution to these
+ *                                      combatants: the live aura membership the bridge
+ *                                      pushed back (#1733 S3, `auraNarrowedEntryIds`).
+ *                                      Omit for "don't narrow" — the historical behaviour.
  */
 export function applyAbility({
   ability,
@@ -101,7 +114,9 @@ export function applyAbility({
   nowSecs,
   effectDurationOverride,
   suppressStructuredEffects = false,
+  auraInsideEntryIds = null,
 }) {
+  const applyOpts = { insideEntryIds: auraInsideEntryIds };
   const effects = Array.isArray(ability.effects) ? ability.effects : [];
   const grants  = Array.isArray(ability.grants)  ? ability.grants  : [];
   const name    = ability.name || '';
@@ -120,7 +135,7 @@ export function applyAbility({
     const effForApply = (effectDurationOverride && eff.duration)
       ? { ...eff, duration: effectDurationOverride }
       : eff;
-    const resolved = resolveApplyTargets(eff.applyTo, caster, targetCharIds, order);
+    const resolved = resolveApplyTargets(eff.applyTo, caster, targetCharIds, order, applyOpts);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
       const current  = getState(targetCharId, APP.EFFECTS) || [];
       const newEntry = buildEffectEntry({
@@ -151,7 +166,7 @@ export function applyAbility({
   // tell the bridge to clone the compendium effect item onto the target tokens.
   const fe = ability.foundryEffect;
   if (fe?.ref) {
-    const feResolved = resolveApplyTargets(fe.applyTo || 'self', caster, targetCharIds, order);
+    const feResolved = resolveApplyTargets(fe.applyTo || 'self', caster, targetCharIds, order, applyOpts);
     const feTargets  = feResolved.map((r) => r.entryId).filter(Boolean);
     sendUpdate(caster.id, RELAY.APPLYEFFECT, {
       ref:     fe.ref,
@@ -164,7 +179,7 @@ export function applyAbility({
 
   // ── Structured grants ───────────────────────────────────────────────────────
   grants.forEach((grant) => {
-    const resolved = resolveApplyTargets(grant.applyTo || 'ally', caster, targetCharIds, order);
+    const resolved = resolveApplyTargets(grant.applyTo || 'ally', caster, targetCharIds, order, applyOpts);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
       const expireAt = resolveExpireAt(grant.duration || null, encounter, casterEntryId, targetEntryId);
       const current  = getState(targetCharId, APP.GRANTEDACTIONS) || [];

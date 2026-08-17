@@ -2908,6 +2908,18 @@
         "level": 4
       },
       {
+        "name": "Champion's Aura",
+        "source": "Champion",
+        "level": 1,
+        "championAura": true,
+        "areaShape": {
+          "shape": "emanation",
+          "feet": 15
+        },
+        "description": "Your championly conviction is a palpable presence around you, a 15-foot emanation. Abilities that refer to your champion's aura affect creatures within it: Retributive Strike's ally, Blessed Swiftness's guarded movement, and the champion's aura clauses of any champion feat you take.\n\n(The table rules Pellias's kinetic aura and his champion's aura to be the same aura — one toggle. It shows on the Stats tab and on the turn tracker, it stays up until he Dismisses it, and while a Foundry bridge is connected it is drawn on the canvas as a 15-foot emanation around his token so the GM can see at a glance which allies are inside it.)",
+        "reminder": "Champion's aura: 15-foot emanation, up until Dismissed."
+      },
+      {
         "name": "Rust Blessing",
         "description": "Pellias's deity blesses implements of rust and ruin: he continues using items even while they are broken. A broken weapon he wields takes only a -2 item penalty to attack rolls; a broken shield he holds functions fully (AC bonus and Shield Block); broken armor's status penalty to AC is one step kinder for him (-0 light, -1 medium, -2 heavy). Items he uses are still destroyed at 0 Hit Points, and a destroyed item is beyond even his deity's patience."
       },
@@ -2969,6 +2981,7 @@
         "name": "Retributive Strike",
         "trigger": "An enemy damages an ally within 15 feet of you.",
         "triggerType": "damaged-ally",
+        "requiresAllyInAura": true,
         "chain": {
           "into": "strike",
           "cost": "included"

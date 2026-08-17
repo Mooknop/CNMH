@@ -12,11 +12,16 @@ let _reqCounter = 0;
 
 export const REACT_PROMPT_TTL_SEC = 30;
 
-export const buildReactionPrompt = ({ eventId, label, note, round, reqId } = {}) => ({
+// allyEntryId (#1733 S3): the combatant id of the ally the event happened TO,
+// when the GM named one. Additive and optional — a prompt without it behaves
+// exactly as every prompt did before, which is what keeps aura gating from ever
+// suppressing a reaction on a guess (see `filterAllyAuraReactions`).
+export const buildReactionPrompt = ({ eventId, label, note, round, reqId, allyEntryId } = {}) => ({
   reqId: reqId || `react-${Date.now()}-${++_reqCounter}`,
   eventId,
   label,
   ...(note ? { note } : {}),
+  ...(allyEntryId ? { allyEntryId } : {}),
   round,
   ttlSec: REACT_PROMPT_TTL_SEC,
   ts: Date.now(),

@@ -84,6 +84,14 @@ const PromptDriver = () => {
   return null;
 };
 
+// Aura membership the bridge would have pushed for this character (#1733 S3).
+let setMembers;
+const MembersDriver = () => {
+  const [, sm] = useSyncedState('cnmh_auramembers_Blu', null);
+  React.useEffect(() => { setMembers = sm; }, [sm]);
+  return null;
+};
+
 const prompt = {
   reqId: 'r1',
   eventId: 'ranged-attack',
@@ -96,10 +104,20 @@ function setup() {
   render(
     <>
       <PromptDriver />
+      <MembersDriver />
       <ReactionPrompt character={character} themeColor="#abc" />
     </>
   );
 }
+
+// A champion-style prompt: the GM fired "ally damaged" and named who was hit.
+const allyPrompt = {
+  reqId: 'r-ally',
+  eventId: 'ally-damaged',
+  label: 'Ally damaged nearby',
+  round: 2,
+  allyEntryId: 'cbt-jade',
+};
 
 beforeEach(() => {
   __reset();
@@ -131,6 +149,45 @@ describe('ReactionPrompt', () => {
     // ranged-attack wakes both attack-ranged and attack-any
     expect(screen.getByLabelText('Use Deflect Projectile')).toBeInTheDocument();
     expect(screen.getByLabelText('Use Wing Deflection')).toBeInTheDocument();
+  });
+
+  // ── Champion aura gating (#1733 S3) ───────────────────────────────────────
+  describe('ally-in-aura gating', () => {
+    beforeEach(() => {
+      mockReactions = [
+        { name: 'Retributive Strike', triggerType: 'damaged-ally', requiresAllyInAura: true },
+        { name: 'Wing Deflection',    triggerType: 'damaged-any' },
+      ];
+    });
+
+    it('offers the aura-scoped reaction when no membership has been pushed', () => {
+      setup();
+      act(() => setPrompt(allyPrompt));
+      expect(screen.getByLabelText('Use Retributive Strike')).toBeInTheDocument();
+    });
+
+    it('offers it when the struck ally is inside the aura', () => {
+      setup();
+      act(() => setMembers({ inside: [{ entryId: 'cbt-jade' }], ts: 1 }));
+      act(() => setPrompt(allyPrompt));
+      expect(screen.getByLabelText('Use Retributive Strike')).toBeInTheDocument();
+    });
+
+    it('withholds it when the bridge says the struck ally is outside', () => {
+      setup();
+      act(() => setMembers({ inside: [{ entryId: 'cbt-pellias' }], ts: 1 }));
+      act(() => setPrompt(allyPrompt));
+      expect(screen.queryByLabelText('Use Retributive Strike')).toBeNull();
+      // …and the reactions that carry no aura clause are untouched.
+      expect(screen.getByLabelText('Use Wing Deflection')).toBeInTheDocument();
+    });
+
+    it('offers it when the prompt named no ally, however empty the aura is', () => {
+      setup();
+      act(() => setMembers({ inside: [], ts: 1 }));
+      act(() => setPrompt({ ...allyPrompt, allyEntryId: undefined }));
+      expect(screen.getByLabelText('Use Retributive Strike')).toBeInTheDocument();
+    });
   });
 
   it('renders nothing when no reaction matches the event', () => {

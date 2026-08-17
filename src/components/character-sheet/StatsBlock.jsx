@@ -13,6 +13,7 @@ import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { usePlaying } from '../../hooks/usePlaying';
 import { characterHasKineticAura } from '../../utils/kineticAura';
+import { characterHasChampionAura } from '../../utils/auraSources';
 import { computeConditionEffects, withDerivedEncumbrance } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
@@ -112,8 +113,15 @@ const StatsBlock = ({ character, characterColor }) => {
     charData?.inventory,
   );
 
-  // Kinetic aura (#228) — badge + out-of-encounter Dismiss for kineticists.
-  const { active: auraActive, deactivate: deactivateAura } = useAura(characterKey);
+  // Class aura (#228; champion source #1733 S3) — badge + out-of-encounter
+  // Dismiss. One key, one row: the table ruled a character's kineticist aura
+  // and champion aura are the same aura.
+  const { active: auraActive, activate: activateAura, deactivate: deactivateAura } =
+    useAura(characterKey);
+  const hasChampionAura = characterHasChampionAura(character);
+  const auraLabel = hasChampionAura
+    ? 'Champion Aura'
+    : (characterHasKineticAura(character) ? 'Kinetic Aura' : null);
 
   // 'While playing' (#935) — Composition-sustained performance flag.
   const { playing, stop: stopPlaying } = usePlaying(characterKey);
@@ -466,12 +474,18 @@ const StatsBlock = ({ character, characterColor }) => {
         </div>
       )}
 
-      {/* Kinetic aura (#228) — only kineticists render the row. Dismiss here is
-          the out-of-encounter hygiene surface (no action economy); in-encounter
-          Dismiss lives on the turn tracker and spends the action. */}
-      {characterHasKineticAura(character) && (
+      {/* Class aura (#228; champion source #1733 S3) — only characters with an
+          authored one render the row. Dismiss here is the out-of-encounter
+          hygiene surface (no action economy); in-encounter Dismiss lives on the
+          turn tracker and spends the action.
+
+          Activate appears only for a champion aura: it is a passive class
+          feature that costs no action, so unlike the kineticist's it has no
+          in-encounter activator of its own — a kineticist still has to Channel
+          Elements. Once up it stays up until Dismissed (GM ruling, #1733). */}
+      {auraLabel && (
         <div className="aura-row">
-          <span className="aura-label">Kinetic Aura</span>
+          <span className="aura-label">{auraLabel}</span>
           <span className={`aura-pill${auraActive ? ' aura-pill--active' : ''}`}>
             {auraActive ? '◈ Active' : 'Inactive'}
           </span>
@@ -480,9 +494,19 @@ const StatsBlock = ({ character, characterColor }) => {
               type="button"
               className="aura-dismiss-btn"
               onClick={deactivateAura}
-              aria-label="Dismiss kinetic aura"
+              aria-label={`Dismiss ${auraLabel.toLowerCase()}`}
             >
               Dismiss
+            </button>
+          )}
+          {!auraActive && hasChampionAura && (
+            <button
+              type="button"
+              className="aura-dismiss-btn"
+              onClick={activateAura}
+              aria-label={`Activate ${auraLabel.toLowerCase()}`}
+            >
+              Activate
             </button>
           )}
         </div>

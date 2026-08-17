@@ -38,8 +38,17 @@ export const AbilitySummarySection = ({ ability, allyResistance, showsOmen, omen
   </section>
 );
 
-/** Self / all-allies effect lines inside the Apply Effects section. */
-export const StaticEffectsList = ({ effects, characterName }) => (
+/**
+ * Self / all-allies effect lines inside the Apply Effects section.
+ *
+ * `allAlliesNames` (#1733 S3) is the live aura membership read-out: when the
+ * bridge has told us who actually stands in the caster's aura, an all-allies
+ * line names them instead of promising "all allies" and quietly meaning
+ * "everyone in the initiative order". Absent (the bridgeless mode, or any
+ * ability whose area the membership doesn't describe) it reads exactly as it
+ * always has.
+ */
+export const StaticEffectsList = ({ effects, characterName, allAlliesNames = null }) => (
   <>
     {effects
       .filter((e) => e.applyTo === 'self' || e.applyTo === 'all-allies')
@@ -50,7 +59,11 @@ export const StaticEffectsList = ({ effects, characterName }) => (
             <span className="uam-inline-gap">→ {characterName}</span>
           )}
           {eff.applyTo === 'all-allies' && (
-            <span className="uam-inline-gap">→ all allies</span>
+            <span className="uam-inline-gap">
+              {allAlliesNames
+                ? `→ in aura: ${allAlliesNames.length ? allAlliesNames.join(', ') : 'nobody'}`
+                : '→ all allies'}
+            </span>
           )}
           {eff.duration && (
             <span className="uam-duration-note">

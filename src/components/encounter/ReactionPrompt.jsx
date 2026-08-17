@@ -7,6 +7,8 @@ import { useShield } from '../../hooks/useShield';
 import { useCountdown } from '../../hooks/useCountdown';
 import { useContent } from '../../contexts/ContentContext';
 import { matchingReactions } from '../../utils/reactionTriggers';
+import { useAuraMembers } from '../../hooks/useAuraMembers';
+import { filterAllyAuraReactions } from '../../utils/auraSources';
 import { buildReactionSources, castSourceOf } from '../../utils/reactionSources';
 import UseAbilityModal from './UseAbilityModal';
 import ShieldBlockBar from './ShieldBlockBar';
@@ -98,12 +100,22 @@ const ReactionPrompt = ({ character, themeColor }) => {
   const roundLive = !(
     prompt?.round != null && encounter?.round != null && prompt.round !== encounter.round
   );
+  // Aura membership gate (#1733 S3): a reaction whose trigger requires the ally
+  // to be inside this character's aura (Retributive Strike's "an ally within 15
+  // feet of you") drops out when the bridge says the named ally is NOT inside.
+  // Both halves are required — a known membership snapshot AND an identified
+  // struck ally — so a bridgeless table, a prompt fired without an ally, or a
+  // membership that hasn't been pushed yet all leave the list untouched.
+  const auraMembers = useAuraMembers(charId);
   const matched = prompt
-    ? matchingReactions(sources, prompt.eventId)
-      // Shield Block is only a live option while the shield is raised — and
-      // `raised` already requires a usable shield (unbroken, or broken in a
-      // Rust-Blessed wielder's hands; never destroyed).
-      .filter((r) => r.name !== 'Shield Block' || raised)
+    ? filterAllyAuraReactions(
+      matchingReactions(sources, prompt.eventId)
+        // Shield Block is only a live option while the shield is raised — and
+        // `raised` already requires a usable shield (unbroken, or broken in a
+        // Rust-Blessed wielder's hands; never destroyed).
+        .filter((r) => r.name !== 'Shield Block' || raised),
+      { members: auraMembers, allyEntryId: prompt.allyEntryId },
+    )
     : [];
   const available =
     !!turnState?.hasStartedFirstTurn &&

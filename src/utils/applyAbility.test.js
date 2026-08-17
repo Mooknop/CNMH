@@ -310,3 +310,50 @@ describe('applyAbility — suppressStructuredEffects (Foundry-authoritative, #45
     expect(effectWrites).toHaveLength(2); // both PCs (all-allies)
   });
 });
+
+describe('applyAbility — aura membership narrowing (#1733 S3)', () => {
+  const anthem = {
+    effects: [{ effectId: 'inspire-courage', applyTo: 'all-allies', duration: { until: 'caster-turn-start' } }],
+    foundryEffect: { ref: 'slug:courageous-anthem-aura', applyTo: 'all-allies', authoritative: true },
+  };
+
+  // The acceptance bar: with no membership to consult, both modes behave
+  // exactly as they did before this parameter existed.
+  it('applies to every PC when no membership is passed — bridgeless mode', () => {
+    const { args, sendUpdate } = makeArgs(anthem);
+    applyAbility(args);
+    expect(sendUpdate.mock.calls.filter(([, key]) => key === 'effects')).toHaveLength(2);
+  });
+
+  it('applies to every PC when no membership is passed — foundry-authoritative mode', () => {
+    const { args, sendUpdate } = makeArgs(anthem);
+    applyAbility({ ...args, suppressStructuredEffects: true });
+    const fe = sendUpdate.mock.calls.find(([, key]) => key === 'applyeffect');
+    expect(fe[2].targets).toEqual(['cbt-pellias', 'cbt-izzy']);
+  });
+
+  it('narrows the structured writes to the combatants inside the aura', () => {
+    const { args, sendUpdate } = makeArgs(anthem);
+    applyAbility({ ...args, auraInsideEntryIds: ['cbt-pellias'] });
+    const writes = sendUpdate.mock.calls.filter(([, key]) => key === 'effects');
+    expect(writes).toHaveLength(1);
+    expect(writes[0][0]).toBe('Pellias');
+  });
+
+  it('narrows the foundryEffect target list too', () => {
+    const { args, sendUpdate } = makeArgs(anthem);
+    applyAbility({ ...args, suppressStructuredEffects: true, auraInsideEntryIds: ['cbt-izzy'] });
+    const fe = sendUpdate.mock.calls.find(([, key]) => key === 'applyeffect');
+    expect(fe[2].targets).toEqual(['cbt-izzy']);
+  });
+
+  it('leaves self / picked-target resolutions alone', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'self' }],
+    });
+    applyAbility({ ...args, auraInsideEntryIds: ['cbt-izzy'] });
+    const writes = sendUpdate.mock.calls.filter(([, key]) => key === 'effects');
+    expect(writes).toHaveLength(1);
+    expect(writes[0][0]).toBe('Pellias');
+  });
+});
