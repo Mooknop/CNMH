@@ -167,5 +167,31 @@ describe('catalyst spine', () => {
       expect(catalystAddActions(items.find((i) => i.id === 'bottled-screams'))).toBe(0);
       expect(catalystAddActions(items.find((i) => i.id === 'kushtaka-relic'))).toBe(1);
     });
+
+    it('imports the fire shield / mist / terror catalysts and their target spells (#1254 W1-B)', () => {
+      const ids = [
+        'witchwarg-fur', 'nevercold', 'nevercold-compressed', 'nevercold-refined',
+        'hippogriff-feather', 'void-salts', 'grave-token', 'broken-rams-thorn',
+        'silvered-marp-fur', 'defiled-costa', 'defiled-costa-greater',
+        'irritating-seedpod-lesser', 'gravemist-taper', 'irritating-seedpod',
+        'irritating-seedpod-greater', 'irritating-seedpod-major',
+      ];
+      ids.forEach((id) => {
+        const c = items.find((i) => i.id === id);
+        expect(c, id).toBeTruthy();
+        expect(isCatalyst(c), id).toBe(true);
+        expect(c.traits).not.toContain('3rd Party');
+      });
+      // spot-check a rider shape: Witchwarg Fur → Fire Shield, no extra action
+      expect(catalystTargetSpell(items.find((i) => i.id === 'witchwarg-fur'))).toBe('fire-shield');
+      expect(catalystAddActions(items.find((i) => i.id === 'witchwarg-fur'))).toBe(0);
+      // …and one that does cost the extra action
+      expect(catalystAddActions(items.find((i) => i.id === 'irritating-seedpod-major'))).toBe(1);
+      // every target spell landed in the spell catalog
+      ['fire-shield', 'ghostly-carrier', 'grim-tendrils', 'harm',
+        'howling-blizzard', 'impaling-spike', 'mask-of-terror', 'mist'].forEach((id) => {
+        expect(spells.find((s) => s.id === id), id).toBeTruthy();
+      });
+    });
   });
 });
