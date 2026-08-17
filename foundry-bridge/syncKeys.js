@@ -32,6 +32,8 @@ export const RELAY = Object.freeze({
   ACTORMAP: 'actormap',
   ADJACENCY: 'adjacency',
   APPLYEFFECT: 'applyeffect',
+  AURAMEMBERS: 'auramembers',
+  AURASET: 'auraset',
   BRIDGEHELLO: 'bridgehello',
   CASTDONE: 'castdone',
   CASTREQ: 'castreq',
