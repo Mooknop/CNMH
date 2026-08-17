@@ -899,7 +899,6 @@
     ],
     "level": 1,
     "price": 4,
-    "bulk": "L",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "stabilize",
@@ -1890,7 +1889,6 @@
     ],
     "level": 5,
     "price": 30,
-    "bulk": "L",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "wall-of-thorns",
@@ -1909,7 +1907,6 @@
     ],
     "level": 10,
     "price": 200,
-    "bulk": "L",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "wall-of-thorns",
@@ -1928,7 +1925,6 @@
     ],
     "level": 15,
     "price": 1300,
-    "bulk": "L",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "wall-of-thorns",
@@ -2629,7 +2625,8 @@
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "seal-fate",
-      "effect": "A target that fails its Seal Fate save takes 1d6 persistent damage of the spell's chosen type (2d6 on a critical failure)."
+      "effect": "A target that fails its Seal Fate save takes 1d6 persistent damage of the spell's chosen type (2d6 on a critical failure).",
+      "addActions": 1
     },
     "id": "bottled-screams"
   },
@@ -12776,7 +12773,6 @@
     ],
     "level": 9,
     "price": 110,
-    "bulk": "—",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "impaling-spike",
@@ -14113,7 +14109,8 @@
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "shadow-spy",
-      "effect": "The Shadow Spy homunculus endures: renew it by expending another shadow spy slot instead of letting it expire at your daily preparations."
+      "effect": "The Shadow Spy homunculus endures: renew it by expending another shadow spy slot instead of letting it expire at your daily preparations.",
+      "addActions": 1
     },
     "id": "steadfast-sentinel"
   },
@@ -16808,7 +16805,6 @@
     ],
     "level": 7,
     "price": 52,
-    "bulk": "—",
     "usage": "held in 1 hand",
     "catalyst": {
       "catalystFor": "fire-shield",

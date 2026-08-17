@@ -227,10 +227,10 @@ describe('catalyst spine', () => {
       ['mountain-resilience', 'oaken-resilience', 'resist-energy', 'revealing-light',
         'seal-fate', 'shadow-spy', 'soothe', 'spider-sting', 'spirit-blast',
       ].forEach((id) => expect(spellIds.has(id), id).toBe(true));
-      // sample rider shape: Bottled Screams → Seal Fate, no extra action;
+      // sample rider shape: Bottled Screams → Seal Fate, +1 action (its own ◆ envision activation);
       // Kushtaka Relic → Spirit Blast, +1 action ("Cast a Spell (add one action)")
       expect(catalystTargetSpell(items.find((i) => i.id === 'bottled-screams'))).toBe('seal-fate');
-      expect(catalystAddActions(items.find((i) => i.id === 'bottled-screams'))).toBe(0);
+      expect(catalystAddActions(items.find((i) => i.id === 'bottled-screams'))).toBe(1);
       expect(catalystAddActions(items.find((i) => i.id === 'kushtaka-relic'))).toBe(1);
     });
 
