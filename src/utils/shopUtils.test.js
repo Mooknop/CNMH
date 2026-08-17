@@ -451,6 +451,37 @@ describe('eligibleCatalysts (#1209 M3c)', () => {
   });
 });
 
+describe('eligibleCatalysts — trait-form (#1254 W2)', () => {
+  const deathless = { id: 'deathless-light', name: 'Deathless Light', price: 165, traits: ['Uncommon', 'Catalyst', 'Consumable', 'Magical'], catalyst: { catalystForTrait: 'Light', effect: 'counteract boost' } };
+  const shadowCat = { id: 'shadow-cat', name: 'Shadow Catalyst', price: 5, traits: ['Catalyst'], catalyst: { catalystForTrait: 'Shadow', effect: 'x' } };
+  const shop = { s: { wares: [{ spellItem: 'scroll', maxLevel: 3 }] } };
+  // A non-cantrip light-trait spell: cantrips (like the actual Light spell) are
+  // excluded from scroll/wand envelopes, so trait coverage needs a rank-1+ spell.
+  const litCatalog = [
+    ...spellCatalog,
+    { id: 'radiant-beam', name: 'Radiant Beam', level: 1, traditions: ['divine'], traits: ['Light'] },
+  ];
+
+  it('stocks a trait-form catalyst when any offered spell carries the trait', () => {
+    const out = eligibleCatalysts('s', shop, litCatalog, [deathless], catalogMap);
+    expect(out.map((w) => w.id)).toEqual(['deathless-light']);
+    expect(out[0].wareKey).toBe('catalyst:deathless-light');
+    expect(out[0].price).toBe(165);
+  });
+
+  it('excludes a trait-form catalyst when no offered spell has the trait', () => {
+    const out = eligibleCatalysts('s', shop, litCatalog, [deathless, shadowCat], catalogMap);
+    expect(out.map((w) => w.id)).not.toContain('shadow-cat');
+    // and without any light-trait spell in the envelope, Deathless Light drops too
+    expect(eligibleCatalysts('s', shop, spellCatalog, [deathless], catalogMap)).toEqual([]);
+  });
+
+  it('stays gated on spellcasting like id-targeted catalysts', () => {
+    const off = { s: { wares: [{ spellItem: 'scroll', maxLevel: 3 }], offersSpellcasting: false } };
+    expect(eligibleCatalysts('s', off, litCatalog, [deathless], catalogMap)).toEqual([]);
+  });
+});
+
 describe('eligibleSpellItems', () => {
   it('applies the item-level cap and excludes uncommon/rare/focus/cantrips by default (common only)', () => {
     // maxLevel 3 ⇒ scrolls up to rank 2 (item level 3): sleep(1), heal(1),

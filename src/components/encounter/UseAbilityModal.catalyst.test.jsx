@@ -130,4 +130,29 @@ describe('UseAbilityModal — catalysts', () => {
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(mockSpendActions).toHaveBeenCalledWith(2, expect.stringContaining('Drown'));
   });
+
+  // Trait-form catalysts (#1254 W2): Deathless Light augments ANY spell with
+  // the light trait rather than one specific spell.
+  const deathless = { id: 'deathless-light', name: 'Deathless Light', uid: 'dl1', quantity: 1, traits: ['Uncommon', 'Catalyst', 'Consumable', 'Magical'], catalyst: { catalystForTrait: 'Light', effect: 'counteract rank +1 (max 7) vs magical darkness' } };
+  const lightSpell = { id: 'light', name: 'Light', level: 1, actions: 'Two Actions', traits: ['Cantrip', 'Concentrate', 'Light', 'Manipulate'] };
+
+  it('offers a trait-form catalyst when the cast spell carries the trait', () => {
+    cast(lightSpell, [deathless]);
+    expect(screen.getByText('Catalysts')).toBeInTheDocument();
+    expect(screen.getByTestId('catalyst-dl1')).toBeInTheDocument();
+  });
+
+  it('does not offer a trait-form catalyst for a spell without the trait', () => {
+    cast(drown, [deathless]); // Drown has no light trait
+    expect(screen.queryByText('Catalysts')).toBeNull();
+  });
+
+  it('adding a trait-form catalyst consumes it and logs its rider effect', () => {
+    cast(lightSpell, [deathless]);
+    fireEvent.click(screen.getByTestId('catalyst-dl1'));
+    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    expect(mockConsumed).toEqual({ dl1: 1 });
+    const texts = mockAppendLog.mock.calls.map((c) => c[0].text);
+    expect(texts.some((t) => /adds Deathless Light to Light — counteract rank \+1/.test(t))).toBe(true);
+  });
 });

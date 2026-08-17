@@ -3,8 +3,10 @@ import {
   catalystMeta,
   isCatalyst,
   catalystTargetSpell,
+  catalystTargetTrait,
   catalystAddActions,
   catalystSummary,
+  catalystMatchesSpell,
   eligibleCatalystsFor,
   sumCatalystActions,
 } from './catalyst';
@@ -62,13 +64,62 @@ describe('catalyst spine', () => {
     expect(sumCatalystActions([])).toBe(0);
   });
 
+  describe('trait-form catalysts (#1254 W2)', () => {
+    const traitCat = {
+      id: 'deathless-light-fixture', name: 'Deathless Light', quantity: 1,
+      traits: ['Uncommon', 'Catalyst', 'Consumable', 'Magical'],
+      catalyst: { catalystForTrait: 'Light', effect: 'counteract boost' },
+    };
+    const lightSpell = { id: 'light', traits: ['Cantrip', 'Concentrate', 'Light', 'Manipulate'] };
+    const fireSpell = { id: 'fireball', traits: ['Concentrate', 'Fire', 'Manipulate'] };
+
+    it('reads the trait-form block', () => {
+      expect(catalystMeta(traitCat)).toBeTruthy();
+      expect(isCatalyst(traitCat)).toBe(true);
+      expect(catalystTargetTrait(traitCat)).toBe('Light');
+      expect(catalystTargetSpell(traitCat)).toBeNull();
+      expect(catalystTargetTrait(blueSalt())).toBeNull();
+    });
+
+    it('matches any spell carrying the trait, case-insensitively', () => {
+      expect(catalystMatchesSpell(traitCat, lightSpell)).toBe(true);
+      expect(catalystMatchesSpell(traitCat, { id: 'x', traits: ['light'] })).toBe(true);
+      expect(catalystMatchesSpell(traitCat, fireSpell)).toBe(false);
+      // an id string can never satisfy a trait-form catalyst
+      expect(catalystMatchesSpell(traitCat, 'light')).toBe(false);
+    });
+
+    it('is eligible for a light-trait cast alongside id-targeted catalysts', () => {
+      const inv = [traitCat, blueSalt()];
+      expect(eligibleCatalystsFor(inv, lightSpell, {}).map((c) => c.id))
+        .toEqual(['deathless-light-fixture']);
+      expect(eligibleCatalystsFor(inv, fireSpell, {})).toEqual([]);
+      // spell-object form still matches catalystFor catalysts by id
+      expect(eligibleCatalystsFor(inv, { id: 'drown', traits: [] }, {}).map((c) => c.id))
+        .toEqual(['blue-salt-crystal']);
+      // consumed overlay still applies
+      expect(eligibleCatalystsFor([traitCat], lightSpell, { 'Deathless Light': 1 })).toEqual([]);
+    });
+  });
+
   describe('seed content', () => {
-    it('every catalyst targets a real catalog spell (catches typos)', () => {
+    it('every catalyst targets a real catalog spell or trait (catches typos)', () => {
       const spellIds = new Set(spells.map((s) => s.id));
       const catalysts = items.filter(isCatalyst);
       expect(catalysts.length).toBeGreaterThanOrEqual(30);
       catalysts.forEach((c) => {
-        expect(spellIds.has(catalystTargetSpell(c))).toBe(true);
+        const trait = catalystTargetTrait(c);
+        if (trait) {
+          // trait-form (#1254): the targeted trait must exist on ≥1 catalog spell
+          const want = String(trait).toLowerCase();
+          const hit = spells.some((s) =>
+            (s.traits || []).some((t) => String(t).toLowerCase() === want));
+          expect(hit, `${c.id} targets trait "${trait}"`).toBe(true);
+          // the two targeting forms are mutually exclusive
+          expect(catalystTargetSpell(c), c.id).toBeNull();
+        } else {
+          expect(spellIds.has(catalystTargetSpell(c)), c.id).toBe(true);
+        }
       });
     });
 
