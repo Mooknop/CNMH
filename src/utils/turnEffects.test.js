@@ -163,6 +163,96 @@ describe('sweepExpiredOnBoundaries', () => {
       order, boundaries: [turnEnd], sendUpdate: vi.fn(), appendLog: vi.fn(), effectCatalog: [],
     })).toThrow(/getState/);
   });
+
+  // ── round-timed enemy conditions (#1246 D) ────────────────────────────────
+  describe('enemy-conditions sweep (#1246 D)', () => {
+    const laterStamp = { round: 9, entryId: 'e-ashka', boundary: 'turn-end' };
+
+    it('drops crossed stamps, keeps manual + uncrossed ones, one global write + logs', () => {
+      localStorage.setItem('cnmh_enemyfx_global', JSON.stringify({
+        'e-gob': {
+          conditions: [
+            { id: 'blinded', source: 'Chroma Kaleidoscope', expireAt: turnEnd, ts: 1 },
+            { id: 'frightened', value: 2, source: 'Demoralize', ts: 1 }, // manual — survives
+          ],
+          effects: [{ abilityKey: 'demoralize' }], // untouched
+        },
+        'e-other': {
+          conditions: [{ id: 'off-guard', expireAt: laterStamp, ts: 1 }], // not yet crossed
+          effects: [],
+        },
+      }));
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog, effectCatalog: [] });
+
+      const writes = sendUpdate.mock.calls.filter(([, k]) => k === 'enemyfx');
+      expect(writes).toHaveLength(1);
+      const [id, , next] = writes[0];
+      expect(id).toBe('global');
+      expect(next['e-gob'].conditions.map((c) => c.id)).toEqual(['frightened']);
+      expect(next['e-gob'].effects).toEqual([{ abilityKey: 'demoralize' }]);
+      expect(next['e-other'].conditions).toHaveLength(1);
+      expect(JSON.parse(localStorage.getItem('cnmh_enemyfx_global'))['e-gob'].conditions.map((c) => c.id))
+        .toEqual(['frightened']);
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Blinded expired on Goblin' }));
+    });
+
+    it('logs valued conditions with their value and names markers off the effect catalog', () => {
+      localStorage.setItem('cnmh_enemyfx_global', JSON.stringify({
+        'e-gob': { conditions: [
+          { id: 'stupefied', value: 2, expireAt: turnEnd, ts: 1 },
+          { id: 'limned', expireAt: turnEnd, ts: 1 },
+        ], effects: [] },
+      }));
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({
+        order, boundaries: [turnEnd], getState: noCache, sendUpdate: vi.fn(), appendLog,
+        effectCatalog: [{ id: 'limned', name: 'Limned' }],
+      });
+
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Stupefied 2 expired on Goblin' }));
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Limned expired on Goblin' }));
+    });
+
+    it('no write when every enemy condition is un-stamped (manual) or uncrossed — idempotent', () => {
+      localStorage.setItem('cnmh_enemyfx_global', JSON.stringify({
+        'e-gob': { conditions: [
+          { id: 'frightened', value: 1, ts: 1 },
+          { id: 'off-guard', expireAt: laterStamp, ts: 1 },
+        ], effects: [] },
+      }));
+      const sendUpdate = vi.fn();
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate, appendLog: vi.fn(), effectCatalog: [] });
+      expect(sendUpdate).not.toHaveBeenCalled();
+    });
+
+    it('expires a stamped condition held only in the session cache (#1649)', () => {
+      const getState = cache({ global: { enemyfx: {
+        'e-gob': { conditions: [{ id: 'dazzled', expireAt: turnEnd, ts: 1 }], effects: [] },
+      } } });
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState, sendUpdate, appendLog, effectCatalog: [] });
+
+      expect(sendUpdate).toHaveBeenCalledWith('global', 'enemyfx', expect.objectContaining({
+        'e-gob': expect.objectContaining({ conditions: [] }),
+      }));
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Dazzled expired on Goblin' }));
+    });
+
+    it('falls back to the entryId when the entry has left the order', () => {
+      localStorage.setItem('cnmh_enemyfx_global', JSON.stringify({
+        'e-gone': { conditions: [{ id: 'dazzled', expireAt: turnEnd, ts: 1 }], effects: [] },
+      }));
+      const appendLog = vi.fn();
+      sweepExpiredOnBoundaries({ order, boundaries: [turnEnd], getState: noCache, sendUpdate: vi.fn(), appendLog, effectCatalog: [] });
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Dazzled expired on e-gone' }));
+    });
+  });
 });
 
 describe('applyTurnStartFastHealing', () => {

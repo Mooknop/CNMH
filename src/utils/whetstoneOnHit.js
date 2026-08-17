@@ -2,6 +2,7 @@ import { applyHealing } from './consumables';
 import { rkKeyFor, revealOneIwr } from './recallKnowledge';
 import { getClassDC } from './CharacterUtils';
 import { calculateSpellStats } from './SpellUtils';
+import { resolveExpireAt } from './expiry';
 
 // Whetstone confirm-time automations (#1215/#1216) — the bound whetstone's
 // riders fire off the confirmed Strike results. Pure appliers: all state
@@ -21,6 +22,13 @@ const strikeResults = (rayGroups, chainResults) => [
  * automations fire off successful results: Analysis Eye learns one
  * weakness/resistance, Leeching Fangs heals half the damage dealt,
  * Limning Gem lights the target up (+ a reminder note).
+ *
+ * Round-timed condition expiry (#1246 D): `onHit.duration` ({ until, rounds? })
+ * stamps the applied condition with an expireAt resolved against the live
+ * encounter, anchored to the wielder (`casterEntryId`) — Limning Gem's "until
+ * the end of your next turn". A critical hit uses `onHit.critDuration` instead
+ * (absent → un-stamped, manual — Limning Gem's crit lasts the gem's remaining
+ * duration, which the round sweep can't see).
  */
 export const applyWhetstoneOnHit = ({
   ability,
@@ -28,6 +36,8 @@ export const applyWhetstoneOnHit = ({
   rayGroups,
   chainResults,
   order,
+  encounter,
+  casterEntryId,
   getState,
   sendUpdate,
   appendLog,
@@ -81,7 +91,17 @@ export const applyWhetstoneOnHit = ({
     hitResults.forEach((r) => {
       const entry = (order || []).find((e) => e.entryId === r.entryId);
       if (!entry || entry.kind !== 'enemy') return;
-      applyEnemyCondition(r.entryId, { id: wsOnHit.condition, source: wsOnHit.itemName });
+      const duration = r.degree === 'criticalSuccess'
+        ? (wsOnHit.critDuration ?? null)
+        : (wsOnHit.duration ?? null);
+      const expireAt = duration && encounter
+        ? resolveExpireAt(duration, encounter, casterEntryId, r.entryId)
+        : null;
+      applyEnemyCondition(r.entryId, {
+        id: wsOnHit.condition,
+        source: wsOnHit.itemName,
+        ...(expireAt ? { expireAt } : {}),
+      });
       appendLog({
         type: 'system',
         text: `${wsOnHit.itemName}: ${entry.name} is ${wsOnHit.condition}`,

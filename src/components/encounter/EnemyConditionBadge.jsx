@@ -2,6 +2,7 @@ import React from 'react';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useContent } from '../../contexts/ContentContext';
 import { getCondition } from '../../data/pf2eConditions';
+import { expiryLabel } from '../../utils/expiry';
 import './EnemyConditionBadge.css';
 
 /**
@@ -32,12 +33,16 @@ const EnemyConditionBadge = ({ enemyEntry }) => {
         // Observer-scoped conditions (#348) name the attacker they apply to:
         // "Off-Guard to Ashka".
         const label = c.scopedToName ? `${base} to ${c.scopedToName}` : base;
+        // Round-timed expiry (#1246 D): a stamped condition self-clears on the
+        // turn sweep — the tooltip says when, so the GM knows not to.
+        const until = expiryLabel(c.expireAt);
+        const detail = until ? `${label} (until ${until})` : label;
         return (
           <span
             key={`${c.id}:${c.scopedTo || ''}`}
             className="ttp-condition-badge"
-            title={`${enemyEntry.name}: ${label}`}
-            aria-label={`${enemyEntry.name} is ${label}`}
+            title={`${enemyEntry.name}: ${detail}`}
+            aria-label={`${enemyEntry.name} is ${detail}`}
           >
             {label}
           </span>

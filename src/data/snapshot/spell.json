@@ -4859,27 +4859,47 @@
       "success": [
         {
           "id": "off-guard",
-          "note": "against everyone except the caster, 1 round"
+          "note": "against everyone except the caster, 1 round",
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         }
       ],
       "failure": [
         {
           "id": "off-guard",
-          "note": "against everyone except the caster, 1 round"
+          "note": "against everyone except the caster, 1 round",
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         },
         {
           "id": "stupefied",
-          "value": 2
+          "value": 2,
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         }
       ],
       "criticalFailure": [
         {
           "id": "off-guard",
-          "note": "against everyone except the caster, 1 round"
+          "note": "against everyone except the caster, 1 round",
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         },
         {
           "id": "stupefied",
-          "value": 4
+          "value": 4,
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         }
       ]
     }

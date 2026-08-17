@@ -3,6 +3,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { resolveExpireAt } from '../../utils/expiry';
 import { DEGREE_LABELS, DEGREE_CLASS } from '../../utils/degreeDisplay';
 import { formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
 import { DEFENSE_NAMES } from '../../utils/defense';
@@ -142,16 +143,25 @@ const RequestedSaves = () => {
     if (req.fx) emitSaveFxPlay({ sendUpdate, fx: req.fx, results });
 
     // Per-degree target conditions (#1216 — Chroma Kaleidoscope's dazzle/blind
-    // ladder, Reactive Flash's off-guard). Applied to the enemy-conditions rail;
-    // durations ride as log notes (round-timed enemy-condition expiry is GM
-    // bookkeeping — the #1246 enemy-automation bucket). A `scopedToCaster`
-    // condition (off-guard vs this attack) scopes to the requesting attacker.
+    // ladder, Reactive Flash's off-guard). Applied to the enemy-conditions rail.
+    // A `scopedToCaster` condition (off-guard vs this attack) scopes to the
+    // requesting attacker.
+    //
+    // Round-timed expiry (#1246 D): a condition authored with a `duration`
+    // ({ until, rounds? } — the effect-duration vocabulary of resolveExpireAt)
+    // is stamped with an expireAt resolved against the encounter NOW, at
+    // application time; the turn-boundary sweep clears it when crossed. A
+    // condition without one keeps today's behaviour (manual clear only, the
+    // note says when).
     if (req.conditions) {
       results.forEach((r) => {
         const list = req.conditions[r.degree];
         if (!Array.isArray(list) || !list.length) return;
         list.forEach((c) => {
           if (!c?.id) return;
+          const expireAt = c.duration
+            ? resolveExpireAt(c.duration, encounter || {}, casterEntryIdFor(req), r.entryId)
+            : null;
           applyCondition(r.entryId, {
             id: c.id,
             ...(c.value != null ? { value: c.value } : {}),
@@ -159,6 +169,7 @@ const RequestedSaves = () => {
             ...(c.scopedToCaster
               ? { scopedTo: req.casterId, scopedToName: req.casterName }
               : {}),
+            ...(expireAt ? { expireAt } : {}),
           });
           appendLog({
             type: 'system',

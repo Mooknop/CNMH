@@ -14,7 +14,7 @@ import { APP, globalKey } from '../sync/keys';
 //
 //   cnmh_enemyfx_global = {
 //     [entryId]: {
-//       conditions: [{ id, value, source, ts }],
+//       conditions: [{ id, value, source, ts, expireAt? }],
 //       effects:    [ immunityEntry, ... ],   // self-expiring via expireAtSecs
 //     }
 //   }
@@ -23,6 +23,14 @@ import { APP, globalKey } from '../sync/keys';
 // so no turn-sweep is needed; the whole map is wiped by the GM's end-encounter
 // sweep (performEncounterGlobalSweep in utils/partySweep.js), the same way
 // knowledge is pruned.
+//
+// Round-timed conditions (#1246 D): a condition MAY carry an `expireAt` stamp —
+// the same { round, entryId?, boundary } shape PC effects use (utils/expiry.js),
+// resolved at application time. The turn-boundary sweep
+// (sweepExpiredOnBoundaries in utils/turnEffects.js) clears crossed stamps on
+// both the app-driven and Foundry-driven advance paths. Un-stamped conditions
+// behave exactly as before: manual clear (removeCondition / end-encounter
+// sweep) only.
 
 const ENEMY_FX_KEY = globalKey(APP.ENEMYFX);
 
@@ -62,8 +70,15 @@ export const useEnemyEffects = () => {
   // condition coexists with a generic one and with other attackers' scopes, so
   // dedupe keys on id + scope. `scopedToName` is the denormalized attacker name
   // for the badge (mirrors `source`), saving a lookup.
+  //
+  // `expireAt` (#1246 D) optionally stamps a round-timed expiry (utils/expiry
+  // shape, resolved by the caller against the live encounter). Merging with an
+  // existing entry follows the value ethos — never shorten: if EITHER side is
+  // un-stamped (manual/indefinite) the merged entry is un-stamped; when both
+  // are stamped the fresh application re-anchors the clock (a re-fire of the
+  // same ability always lands same-or-later).
   const applyCondition = useCallback(
-    (entryId, { id, value = null, source, scopedTo = null, scopedToName = null }) => {
+    (entryId, { id, value = null, source, scopedTo = null, scopedToName = null, expireAt = null }) => {
       if (!entryId || !id) return;
       setEnemyFx((cur) => {
         const rec = cur?.[entryId] || emptyRecord();
@@ -73,12 +88,16 @@ export const useEnemyEffects = () => {
         const nextValue = value != null && existing?.value != null
           ? Math.max(existing.value, value)
           : (value != null ? value : existing?.value ?? null);
+        const nextExpireAt = existing
+          ? (existing.expireAt && expireAt ? expireAt : null)
+          : expireAt;
         const entry = {
           id,
           value: nextValue,
           source: source || null,
           scopedTo: scopedTo || null,
           scopedToName: scopedToName || null,
+          ...(nextExpireAt ? { expireAt: nextExpireAt } : {}),
           ts: Date.now(),
         };
         const conditions = existing

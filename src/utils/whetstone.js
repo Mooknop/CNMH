@@ -183,16 +183,20 @@ export const withWhetstoneApplied = (effects, entry) => [
 //                                            //   appliesVsTrait:'from-choice' reads the apply-time trait pick,
 //                                            //   'fungus and plant' style picks gate on any of the traits)
 //     bleedDc: { base: 17, assisted: 12 },   // recovery-DC override for persistent bleed the weapon deals (Toothy Knife)
-//     onHit: { revealIwr?, healHalf?, condition?, note? },
+//     onHit: { revealIwr?, healHalf?, condition?, note?, duration?, critDuration? },
 //                                            // confirm-time riders (W3 — Analysis Eye / Leeching Fangs / Limning Gem),
-//                                            //   processed by the strike confirm off successful results
+//                                            //   processed by the strike confirm off successful results.
+//                                            //   duration/critDuration ({ until, rounds? } — resolveExpireAt vocabulary,
+//                                            //   #1246 D) stamp the applied condition for the round sweep; absent = manual
+
 //     reactionSave: { save, dc, conditions? },
 //                                            // W4 — Reactive Flash: a Strike made as a reaction forces the
 //                                            //   target's save via the GM save-request rail
 //     onCrit: { save, dcFrom: 'classOrSpellDC' | undefined, dc?, conditions? },
 //                                            // W4 — Chroma Kaleidoscope: a critical Strike forces a save
 //                                            //   vs the wielder's class/spell DC; per-degree conditions
-//                                            //   ride the request ({ failure: [{ id, value?, note? }], … })
+//                                            //   ride the request ({ failure: [{ id, value?, note?, duration? }], … }
+//                                            //   — duration stamps round-timed expiry, #1246 D)
 //     proficiencyFloor: 'highest-weapon',    // W4 — Blade Phantom's Guide: attack with your best weapon rank
 //     maxWeaponLevel: 11,                    // apply-time gate: not applicable to higher-level weapons
 //     hpTrigger: { belowFraction: 0.25, tempHpPerLevel: 1, effectId, note? },
