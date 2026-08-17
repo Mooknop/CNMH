@@ -2620,6 +2620,10 @@
               "Metal",
               "Primal"
             ],
+            "areaShape": {
+              "shape": "emanation",
+              "feet": 10
+            },
             "chain": {
               "into": "strike",
               "optional": true,
