@@ -1,5 +1,37 @@
 [
   {
+    "id": "acid-grip",
+    "name": "Acid Grip",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Acid",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "area": "",
+    "targets": "1 creature",
+    "defense": "Reflex",
+    "basic": true,
+    "duration": "",
+    "description": "An ephemeral, taloned hand grips the target, burning it with magical acid. The target takes 2d8 acid damage plus 1d6 persistent acid damage depending on its Reflex save. A creature taking persistent damage from this spell takes a –10-foot status penalty to its Speeds.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage and no persistent damage, and the claw moves it up to 5 feet in a direction of your choice.",
+      "Failure": "The creature takes full damage and persistent damage, and the claw moves it up to 10 feet in a direction of your choice.",
+      "Critical Failure": "The creature takes double damage and full persistent damage, and the claw moves it up to 20 feet in a direction of your choice."
+    },
+    "heightened": {
+      "+2": "The initial damage increases by 2d8, and the persistent acid damage increases by 1d6."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "aerial-form",
     "name": "Aerial Form",
     "level": 4,
@@ -808,6 +840,37 @@
     ]
   },
   {
+    "id": "chilling-spray",
+    "name": "Chilling Spray",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Cold",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "",
+    "area": "15-foot cone",
+    "targets": "",
+    "defense": "Reflex",
+    "duration": "",
+    "description": "A cone of icy shards bursts from your spread hands and coats the targets in a layer of frost. You deal 2d4 cold damage to creatures in the area; they must each attempt a Reflex save.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage and takes a –5-foot status penalty to its Speeds for 2 rounds.",
+      "Critical Failure": "The creature takes double damage and takes a –10-foot status penalty to its Speeds for 2 rounds."
+    },
+    "heightened": {
+      "+1": "The damage increases by 2d4."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "clairaudience",
     "name": "Clairaudience",
     "level": 3,
@@ -1521,6 +1584,34 @@
     ]
   },
   {
+    "id": "enfeeble",
+    "name": "Enfeeble",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "area": "",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "duration": "varies",
+    "description": "You sap the target's strength, depending on its Fortitude save.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target is enfeebled 1 until the start of your next turn.",
+      "Failure": "The target is enfeebled 2 for 1 minute.",
+      "Critical Failure": "The target is enfeebled 3 for 1 minute."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
+    ]
+  },
+  {
     "id": "enlarge",
     "name": "Enlarge",
     "level": 2,
@@ -1533,6 +1624,29 @@
     "actions": "Two Actions",
     "duration": "5 minutes",
     "description": "A willing creature grows to Large size, gaining reach, a +2 status bonus to melee damage, and clumsy 1.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "entangling-flora",
+    "name": "Entangling Flora",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Plant",
+      "Wood"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "area": "20-foot burst",
+    "targets": "",
+    "defense": "Reflex",
+    "duration": "1 minute",
+    "description": "Plants and fungi burst out or quickly grow, entangling creatures. All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it's also immobilized for 1 round. Creatures can attempt to Escape to remove these effects.",
     "traditions": [
       "arcane",
       "primal"
@@ -1726,6 +1840,32 @@
     "traditions": [
       "arcane",
       "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "fireball",
+    "name": "Fireball",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Fire",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "500 feet",
+    "area": "20-foot burst",
+    "targets": "",
+    "defense": "Reflex",
+    "basic": true,
+    "duration": "",
+    "description": "A roaring blast of fire detonates at a spot you designate, dealing 6d6 fire damage.",
+    "heightened": {
+      "+1": "The damage increases by 2d6."
+    },
+    "traditions": [
+      "arcane",
       "primal"
     ]
   },

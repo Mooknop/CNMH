@@ -2615,6 +2615,86 @@
     }
   },
   {
+    "name": "Bougainvillea Blossom (Greater)",
+    "description": "This pink flower has long, slender thorns along the stem. The flower can be used as a catalyst when casting an Entangling Flora spell, which causes the affected plants to sprout long thorns and vibrant pink blossoms. The area becomes hazardous terrain, dealing 3 piercing damage to an enemy each time it enters an affected square.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 11,
+    "price": 300,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "entangling-flora",
+      "effect": "The spell's area becomes hazardous terrain, dealing 3 piercing damage to an enemy each time it enters an affected square.",
+      "addActions": 1
+    },
+    "id": "bougainvillea-blossom-greater"
+  },
+  {
+    "name": "Bougainvillea Blossom (Lesser)",
+    "description": "This pink flower has long, slender thorns along the stem. The flower can be used as a catalyst when casting an Entangling Flora spell, which causes the affected plants to sprout long thorns and vibrant pink blossoms. The area becomes hazardous terrain, dealing 1 piercing damage to an enemy each time it enters an affected square.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 10,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "entangling-flora",
+      "effect": "The spell's area becomes hazardous terrain, dealing 1 piercing damage to an enemy each time it enters an affected square.",
+      "addActions": 1
+    },
+    "id": "bougainvillea-blossom-lesser"
+  },
+  {
+    "name": "Bougainvillea Blossom (Major)",
+    "description": "This pink flower has long, slender thorns along the stem. The flower can be used as a catalyst when casting an Entangling Flora spell, which causes the affected plants to sprout long thorns and vibrant pink blossoms. The area becomes hazardous terrain, dealing 5 piercing damage to an enemy each time it enters an affected square.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 15,
+    "price": 1200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "entangling-flora",
+      "effect": "The spell's area becomes hazardous terrain, dealing 5 piercing damage to an enemy each time it enters an affected square.",
+      "addActions": 1
+    },
+    "id": "bougainvillea-blossom-major"
+  },
+  {
+    "name": "Bougainvillea Blossom (Moderate)",
+    "description": "This pink flower has long, slender thorns along the stem. The flower can be used as a catalyst when casting an Entangling Flora spell, which causes the affected plants to sprout long thorns and vibrant pink blossoms. The area becomes hazardous terrain, dealing 2 piercing damage to an enemy each time it enters an affected square.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 60,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "entangling-flora",
+      "effect": "The spell's area becomes hazardous terrain, dealing 2 piercing damage to an enemy each time it enters an affected square.",
+      "addActions": 1
+    },
+    "id": "bougainvillea-blossom-moderate"
+  },
+  {
     "actions": [
       {
         "name": "Jangling Dash",
@@ -5445,6 +5525,46 @@
     "id": "featherlight-fletching"
   },
   {
+    "name": "Feral Linguist",
+    "description": "This wooden whistle is stuffed with cotton and carved with images of bellowing stags, howling wolves, and chirping birds. You can blow on this whistle to use it as a catalyst when casting an Animal Form spell. When you do, you retain the ability to speak, though this doesn't allow you to cast spells.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 1,
+    "price": 3,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "animal-form",
+      "effect": "You keep the ability to speak while in the battle form, though you still can't cast spells.",
+      "addActions": 1
+    },
+    "id": "feral-linguist"
+  },
+  {
+    "name": "Feral Linguist (Greater)",
+    "description": "This wooden whistle is stuffed with cotton and carved with images of bellowing stags, howling wolves, and chirping birds. You can blow on this whistle to use it as a catalyst when casting an Animal Form spell. When you do, you retain the ability to speak.\n\nOnce during the spell’s duration, you can cast either a spell of 4th-rank or lower or a cantrip of any level, ignoring the inability to cast spells while in your battle form.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 8,
+    "price": 85,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "animal-form",
+      "effect": "You keep the ability to speak, and once during the duration you can cast a 4th-rank or lower spell or any cantrip while in your battle form.",
+      "addActions": 1
+    },
+    "id": "feral-linguist-greater"
+  },
+  {
     "accessoryTags": [
       "clothing"
     ],
@@ -5458,6 +5578,63 @@
     "price": 2,
     "weight": 0.1,
     "id": "fine-clothing"
+  },
+  {
+    "name": "Firestarter Pellets",
+    "description": "These compacted pellets of bat guano, sulfur, and magical accelerants have long been a staple for spellcasters on the battlefield. Adding a firestarter pellet to a Fireball spell produces clinging flames that deal 1d6 persistent fire damage to all who fail the saving throw against the effect (2d6 persistent fire damage on a critical failure).",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fireball",
+      "effect": "Creatures that fail the save also take 1d6 persistent fire damage (2d6 on a critical failure).",
+      "addActions": 1
+    },
+    "id": "firestarter-pellets"
+  },
+  {
+    "name": "Firestarter Pellets (Greater)",
+    "description": "These compacted pellets of bat guano, sulfur, and magical accelerants have long been a staple for spellcasters on the battlefield. Adding a firestarter pellet to a Fireball spell produces clinging flames that deal 2d6 persistent fire damage to all who fail the saving throw against the effect (4d6 persistent fire damage on a critical failure).",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 175,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fireball",
+      "effect": "Creatures that fail the save also take 2d6 persistent fire damage (4d6 on a critical failure).",
+      "addActions": 1
+    },
+    "id": "firestarter-pellets-greater"
+  },
+  {
+    "name": "Firestarter Pellets (Major)",
+    "description": "These compacted pellets of bat guano, sulfur, and magical accelerants have long been a staple for spellcasters on the battlefield. Adding a firestarter pellet to a Fireball spell produces clinging flames that deal 3d6 persistent fire damage to all who fail the saving throw against the effect (6d6 persistent fire damage on a critical failure).",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 15,
+    "price": 1200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fireball",
+      "effect": "Creatures that fail the save also take 3d6 persistent fire damage (6d6 on a critical failure).",
+      "addActions": 1
+    },
+    "id": "firestarter-pellets-major"
   },
   {
     "name": "Fist Shield",
@@ -8815,6 +8992,86 @@
       "x": 50,
       "y": 50
     }
+  },
+  {
+    "name": "Necrotic Cap (Greater)",
+    "description": "You can use this slimy, rotting mushroom as a spell catalyst when you cast an Acid Grip spell by tapping it against the target, causing the mushroom to release a cloud of necrotic spores. When you do, acid grip loses the acid trait, gains the fungus trait, and all acid damage the spell deals becomes void damage. On a hit, the target additionally gains the Enfeebled 3 and Sickened 3 conditions as the spores consume their flesh. As long as the target is taking persistent void damage, they can't reduce the value of their sickened condition below 1.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 11,
+    "price": 350,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "acid-grip",
+      "effect": "Acid Grip's acid damage becomes void damage (it loses acid, gains fungus); on a hit the target is also enfeebled 3 and sickened 3.",
+      "addActions": 1
+    },
+    "id": "necrotic-cap-greater"
+  },
+  {
+    "name": "Necrotic Cap (Lesser)",
+    "description": "You can use this slimy, rotting mushroom as a spell catalyst when you cast an Acid Grip spell by tapping it against the target, causing the mushroom to release a cloud of necrotic spores. When you do, acid grip loses the acid trait, gains the fungus trait, and all acid damage the spell deals becomes void damage. On a hit, the target additionally gains the Enfeebled 1 and Sickened 1 conditions as the spores consume their flesh. As long as the target is taking persistent void damage, they can't reduce the value of their sickened condition below 1.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 4,
+    "price": 18,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "acid-grip",
+      "effect": "Acid Grip's acid damage becomes void damage (it loses acid, gains fungus); on a hit the target is also enfeebled 1 and sickened 1.",
+      "addActions": 1
+    },
+    "id": "necrotic-cap-lesser"
+  },
+  {
+    "name": "Necrotic Cap (Major)",
+    "description": "You can use this slimy, rotting mushroom as a spell catalyst when you cast an Acid Grip spell by tapping it against the target, causing the mushroom to release a cloud of necrotic spores. When you do, acid grip loses the acid trait, gains the fungus trait, and all acid damage the spell deals becomes void damage. On a hit, the target additionally gains the Enfeebled 4 and Sickened 4 conditions as the spores consume their flesh. As long as the target is taking persistent void damage, they can't reduce the value of their sickened condition below 1.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 15,
+    "price": 1200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "acid-grip",
+      "effect": "Acid Grip's acid damage becomes void damage (it loses acid, gains fungus); on a hit the target is also enfeebled 4 and sickened 4.",
+      "addActions": 1
+    },
+    "id": "necrotic-cap-major"
+  },
+  {
+    "name": "Necrotic Cap (Moderate)",
+    "description": "You can use this slimy, rotting mushroom as a spell catalyst when you cast an Acid Grip spell by tapping it against the target, causing the mushroom to release a cloud of necrotic spores. When you do, acid grip loses the acid trait, gains the fungus trait, and all acid damage the spell deals becomes void damage. On a hit, the target additionally gains the Enfeebled 2 and Sickened 2 conditions as the spores consume their flesh. As long as the target is taking persistent void damage, they can't reduce the value of their sickened condition below 1.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 8,
+    "price": 80,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "acid-grip",
+      "effect": "Acid Grip's acid damage becomes void damage (it loses acid, gains fungus); on a hit the target is also enfeebled 2 and sickened 2.",
+      "addActions": 1
+    },
+    "id": "necrotic-cap-moderate"
   },
   {
     "name": "Nightpitch",
@@ -15461,6 +15718,26 @@
     "id": "voratalo-tattoo"
   },
   {
+    "name": "Vulture's Wing",
+    "description": "This fan of vulture feathers scatters on an unnatural gust of wind. If this catalyst is used to cast an Enfeeble spell that has been heightened to at least 5th level, instead of targeting a single creature, you cast the spell in a 30-foot-area cone. You don't make a spell attack roll, instead affecting all creatures within the area with the effect the spell would normally have on a hit. This means creatures within the area must attempt a Fortitude save to determine whether they're enfeebled.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "enfeeble",
+      "effect": "Cast at 5th rank or higher, Enfeeble affects a 30-foot cone instead of one creature; each creature in the area attempts a Fortitude save.",
+      "addActions": 1
+    },
+    "id": "vultures-wing"
+  },
+  {
     "id": "wand-of-breathe-fire",
     "wand": {
       "spellRef": "breathe-fire"
@@ -15892,6 +16169,25 @@
     "description": "Activate 1 (manipulate) This set of tubing snakes down the striking surface of a weapon to deliver alchemical explosives. A single lesser alchemical bomb can be fitted to the weapon siphon as an Interact action. The bomb must be one that deals energy damage, such as an Acid Flask, Alchemist's Fire, Blasting Stone, Bottled Lightning, or Frost Vial. The next three attacks made with the weapon deal 1d4 damage of the bomb's damage type in addition to the weapon's normal damage. If the second and third attacks aren't all made within 1 minute of the first attack, the bomb's energy is wasted. These attacks never deal splash damage or other special effects of the bomb and aren't modified by any abilities that add to or modify a bomb's effect. Adding a weapon siphon to a weapon throws off its balance, causing the multiple attack penalty with the weapon to be one greater than usual (usually –6 on a second attack and –11 on a third; or –5 and –10 with an agile weapon)."
   },
   {
+    "name": "Wemmuth Trinket",
+    "description": "The baubles wemmuths use to lure victims to their hunting grounds are dangerous to retrieve and often stained by blood. One of these trinkets covers the plant matter created by Entangling Flora with blood-drinking thorns. Creatures who fail or critically fail their Reflex saves against entangling flora also take piercing damage equal to the spell’s rank.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 12,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "entangling-flora",
+      "effect": "Creatures that fail or critically fail their Reflex save against the spell also take piercing damage equal to the spell's rank.",
+      "addActions": 1
+    },
+    "id": "wemmuth-trinket"
+  },
+  {
     "name": "Wig of Holding",
     "description": "This magical headpiece is created from planar fibers and contains small extradimensional spaces accessible within the hair. It can hold up to four items of Light Bulk; Bulk held within the wig doesn't add to the wig's own Bulk. You can Interact with the wig to put items inside or remove them, and withdrawing an item takes only a single Interact action, like a worn item, rather than two Interact actions like a stowed item.",
     "traits": [
@@ -16041,6 +16337,24 @@
     "price": 3,
     "weight": 0,
     "id": "wolf-fang"
+  },
+  {
+    "name": "Wolliped Fleece",
+    "description": "A small bundle of wolliped fleece contains the memory of winter snows. Adding this catalyst to a casting of Chilling Spray coats all squares within the area of effect with a thin layer of ice. These squares become difficult terrain until the beginning of your next turn.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 1,
+    "price": 4,
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "chilling-spray",
+      "effect": "All squares in the spell's area become difficult terrain until the beginning of your next turn.",
+      "addActions": 1
+    },
+    "id": "wolliped-fleece"
   },
   {
     "actions": [
