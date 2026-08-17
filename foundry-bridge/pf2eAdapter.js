@@ -1900,6 +1900,177 @@ export async function createMeasuredTemplate({
   return doc?.id ?? null;
 }
 
+// --- Token-attached aura emanation Regions (#1733) ---------------------------
+//
+// An aura is NOT a placed template: it is a ring that belongs to a creature and
+// follows it. v14's Scene Regions v2 is the first Foundry surface that models
+// that natively — a Region can be *attached* to a Token, moves (and rotates)
+// with it, and carries its behaviors along. 14.353 added the one-call
+// constructor for exactly this shape:
+//
+//   RegionDocument.createTokenEmanation(token, range, regionData, options)
+//     → Promise<RegionDocument | void>
+//
+//   token      — the TokenDocument the emanation attaches to
+//   range      — the emanation range in GRID UNITS (i.e. scene units — FEET),
+//                NOT canvas pixels. This is the one Region write in the bridge
+//                that does NOT convert with `feet / grid.distance * grid.size`
+//                (createMeasuredTemplate above must, because it authors raw
+//                shape geometry; this one hands core a range and lets core
+//                author the shape). See MIGRATION.md's smoke item — a 30 ft
+//                aura that draws a 30 PIXEL ring is what a wrong reading of
+//                this parameter looks like.
+//   regionData — Omit<RegionData, 'elevation' | 'shapes'>: core owns the
+//                geometry and the elevation band, we own name/visibility/
+//                color/flags.
+//
+// https://foundryvtt.com/api/classes/foundry.documents.RegionDocument.html
+// https://github.com/foundryvtt/foundryvtt/issues/13640
+//
+// There is no v13 equivalent worth faking (a MeasuredTemplate does not follow
+// its caster), so the whole rail is v14-only and degrades to "nothing drawn".
+
+// Flag scope stamped on every bridge-created aura Region, so the connect-time
+// sweep can find OUR rings and never touch a GM's hand-drawn Region. Matches
+// the module id in module.json.
+export const AURA_FLAG_SCOPE = 'cnmh-bridge';
+
+// Region event names, from CONST.REGION_EVENTS (14.365):
+//   TOKEN_ENTER = 'tokenEnter', TOKEN_EXIT = 'tokenExit'
+// https://foundryvtt.com/api/variables/CONST.REGION_EVENTS.html
+//
+// CAVEAT — VERIFIED AGAINST THE v14 HOOK REGISTRY: core does **not** route
+// region events through `Hooks`. `hookEvents` (14.365) contains no region hook
+// at all; the events reach `RegionBehaviorType#_handleRegionEvent` on behavior
+// documents embedded in the Region, and nothing else. A module that wants them
+// must register a custom behavior type in `CONFIG.RegionBehavior.dataModels`
+// and embed an instance in every Region it cares about — a whole subsystem, and
+// one whose class (`foundry.data.regionBehaviors.RegionBehaviorType`) only
+// exists inside a live Foundry, so the mock world could never prove it works.
+//
+// So the membership rail is driven from the TOKEN side instead, off hooks the
+// bridge already trusts everywhere else (positions.js uses `updateToken` for
+// the same job): every token move recomputes who is inside, and the enter/exit
+// SEMANTICS are recovered by only pushing when the membership set actually
+// changed. That is observably equivalent — a token can only enter or leave a
+// region by something moving, being created, or being deleted — and it is
+// fully provable in tests.
+//
+// The two CONST names ride along anyway and are registered defensively: if a
+// future build (or a region-event shim module) ever does emit them as hooks,
+// the rail picks them up for free, and on 14.365 they simply never fire.
+export const REGION_HOOKS = Object.freeze({
+  TOKEN_UPDATE: 'updateToken',
+  TOKEN_CREATE: 'createToken',
+  TOKEN_DELETE: 'deleteToken',
+  // Opportunistic only — see the caveat above.
+  TOKEN_ENTER: 'tokenEnter',
+  TOKEN_EXIT: 'tokenExit',
+});
+
+// Both halves of the gate, house style: the generation AND a capability probe.
+// A v14 build that renamed or dropped the constructor reads as "no auras"
+// rather than throwing on the first activation.
+export function tokenEmanationSupported() {
+  const generation = game.release?.generation ?? 13;
+  if (generation < 14) return false;
+  return typeof globalThis.foundry?.documents?.RegionDocument?.createTokenEmanation === 'function';
+}
+
+// The Region embedded collection on the active scene, as a plain array.
+function sceneRegions() {
+  const regions = canvas.scene?.regions;
+  if (!regions) return [];
+  if (Array.isArray(regions)) return regions;
+  return regions.contents ?? Array.from(regions.values?.() ?? []);
+}
+
+// Create the token-attached emanation ring for one character's aura.
+//
+// `feet` is the authored radius — an aura with no authored size is never sent
+// (the #1733 ruling: no fallback radius), so a non-positive value is a refusal.
+// `charId` is stamped in the document flag the sweep reads back.
+//
+// Returns the created Region's id, or null for the universal "nothing drawn"
+// (v13, a build without the capability, no resolvable token, no scene).
+export async function createTokenAuraRegion({
+  tokenId = '', token = null, feet, label = '', color = '', charId = '',
+} = {}) {
+  if (!(Number(feet) > 0)) return null;
+  if (!tokenEmanationSupported()) return null;
+
+  const placed = token ?? (tokenId ? getTokenById(tokenId) : null);
+  const doc = placed?.document ?? placed ?? null;
+  if (!doc) return null;
+
+  const regionData = {
+    name: String(label || `Aura (${Number(feet)} ft)`),
+    // Regions default to layer-gated visibility (GM-only in practice); ALWAYS
+    // restores the parity a player expects from a drawn aura, same reasoning as
+    // createMeasuredTemplate's Region branch.
+    visibility: globalThis.CONST?.REGION_VISIBILITY?.ALWAYS ?? 2,
+    ...(color ? { color } : {}),
+    flags: { [AURA_FLAG_SCOPE]: { auraCharId: String(charId ?? '') } },
+  };
+
+  const created = await globalThis.foundry.documents.RegionDocument.createTokenEmanation(
+    doc, Number(feet), regionData, { [BRIDGE_SOURCE_FLAG]: 'app' },
+  );
+  const region = Array.isArray(created) ? created[0] : created;
+  return region?.id ?? null;
+}
+
+// The FIRST document deletion in the bridge. Tolerates an already-gone id: a GM
+// who deleted the ring by hand, a scene change, or a double teardown must all
+// read as "it's gone" rather than as an error.
+export async function deleteRegion(regionId) {
+  const scene = canvas.scene;
+  if (!regionId || typeof scene?.deleteEmbeddedDocuments !== 'function') return false;
+  try {
+    await scene.deleteEmbeddedDocuments('Region', [String(regionId)],
+      { [BRIDGE_SOURCE_FLAG]: 'app' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Every bridge-created aura Region on the active scene, for the connect-time
+// sweep: [{ regionId, auraCharId }]. A Region we did not stamp is never listed.
+export function findBridgeAuraRegions() {
+  const found = [];
+  for (const region of sceneRegions()) {
+    const auraCharId = region?.flags?.[AURA_FLAG_SCOPE]?.auraCharId;
+    if (typeof auraCharId !== 'string' || !auraCharId) continue;
+    const regionId = region.id ?? region._id ?? null;
+    if (regionId) found.push({ regionId: String(regionId), auraCharId });
+  }
+  return found;
+}
+
+// The tokens core says are currently inside a Region.
+// `RegionDocument#tokens` is a ReadonlySet<TokenDocument> maintained by core's
+// own region bookkeeping — the authoritative answer, and free.
+//
+// Returns null (NOT an empty array) when the region or the set can't be read,
+// which is the caller's signal to fall back to its own geometry: "core says
+// nobody is inside" and "core can't tell me" must not collapse into the same
+// empty push.
+export function getRegionTokens(regionId) {
+  if (!regionId) return null;
+  const collection = canvas.scene?.regions;
+  const region = collection?.get?.(String(regionId))
+    ?? sceneRegions().find((r) => String(r?.id ?? r?._id) === String(regionId))
+    ?? null;
+  const tokens = region?.tokens;
+  if (!tokens) return null;
+  try {
+    return Array.from(tokens);
+  } catch {
+    return null;
+  }
+}
+
 // The viewport's world-coordinate rectangle — the fallback mapping when the
 // capture matrix can't be applied app-side.
 function viewportWorldRect(width, height) {

@@ -37,10 +37,12 @@ import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
 import { initPathPreview, _resetPathPreview } from './pathPreview.js';
 import { initActorFeed } from './actorFeed.js';
+import { initAuras, handleAuraSet, _resetAuras } from './auras.js';
 import {
   installFoundryGlobals, makeActor, makeToken, makeCombat, makeCombatant,
   makeGame, makeChatMessage, equipV14Movement, makeTokenMovement,
   makeNpcStrike, makeSpellcastingEntry, makeSpellItem, makeAbilityItem,
+  installTokenEmanation,
 } from './test/foundryMock.js';
 
 const FIXTURE_DIR = path.join(__dirname, '__fixtures__', 'relay');
@@ -610,6 +612,35 @@ const RECIPES = {
       return { characterId: msg.characterId, value: msg.value };
     } finally {
       jest.useRealTimers();
+    }
+  },
+
+  // Aura membership (#1733 S2). The movement world plus one combatant ally and
+  // one non-combatant bystander standing inside the ring, so the recorded
+  // payload carries BOTH `inside` forms: `entryId` present for a token in the
+  // current combat, absent for one that isn't. Hidden rides as a flag rather
+  // than as an omission (#1749 OQ-5); the aura's own token is excluded.
+  [RELAY.AURAMEMBERS]: async () => {
+    const send = movementWorld();
+    _resetAuras();
+    initAuras(send);
+    const ally = makeToken({ id: 'tok-ally-aura', x: 600, y: 500, disposition: 1, name: 'Zevira' });
+    const lurker = makeToken({
+      id: 'tok-lurker', x: 400, y: 500, disposition: -1, name: 'Shadow', hidden: true,
+    });
+    global.canvas.tokens.placeables = [...global.canvas.tokens.placeables, ally, lurker];
+    global.game.combat = makeCombat({
+      combatants: [makeCombatant({ id: 'cbt-ally-aura', actorId: null, tokenId: 'tok-ally-aura' })],
+    });
+    installTokenEmanation({ contains: [ally, lurker] });
+    try {
+      await handleAuraSet('Pellias', {
+        active: true, feet: 10, label: 'Kinetic Aura', color: '#4a9c6d', ts: 1700000000000,
+      });
+      return grab(send, RELAY.AURAMEMBERS);
+    } finally {
+      delete global.foundry;
+      _resetAuras();
     }
   },
 

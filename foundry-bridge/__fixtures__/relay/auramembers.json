@@ -1,0 +1,21 @@
+{
+  "characterId": "Pellias",
+  "value": {
+    "inside": [
+      {
+        "entryId": "cbt-ally-aura",
+        "tokenId": "tok-ally-aura",
+        "name": "Zevira",
+        "disposition": 1,
+        "hidden": false
+      },
+      {
+        "tokenId": "tok-lurker",
+        "name": "Shadow",
+        "disposition": -1,
+        "hidden": true
+      }
+    ],
+    "ts": 1700000000000
+  }
+}
