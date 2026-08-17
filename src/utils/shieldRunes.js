@@ -242,10 +242,16 @@ export const AUGMENTATION_GRANTED_TRAITS = {
  * ARRAY on `augmentation.choice`. (A STRING choice — Ancestral Predator's
  * creature type — is not a trait and grants nothing.) Case-insensitive de-dupe,
  * base traits first, granted appended in slot order. Never mutates the item.
+ *
+ * `extraTraits` (#1246) appends TRANSIENT grants the caller resolves from live
+ * state — an active Tree Sap talisman buff's Grapple (shieldBuffGrantedTraits)
+ * — through the same de-dupe. This function stays pure: the caller owns the
+ * overlay read, mirroring how useShield hands resolveShieldBlock a live entry.
  * @param {Object} item
+ * @param {string[]} [extraTraits]
  * @returns {string[]}
  */
-export const shieldEffectiveTraits = (item) => {
+export const shieldEffectiveTraits = (item, extraTraits = []) => {
   const base = Array.isArray(item?.traits) ? item.traits : [];
   const seen = new Set(base.map((t) => String(t).toLowerCase()));
   const granted = [];
@@ -258,6 +264,7 @@ export const shieldEffectiveTraits = (item) => {
   const augId = aug && (aug.ref ?? aug.id);
   if (augId) grant(AUGMENTATION_GRANTED_TRAITS[augId]);
   if (aug && Array.isArray(aug.choice)) grant(aug.choice.filter((t) => typeof t === 'string'));
+  if (Array.isArray(extraTraits)) grant(extraTraits.filter((t) => typeof t === 'string'));
   return [...base, ...granted];
 };
 

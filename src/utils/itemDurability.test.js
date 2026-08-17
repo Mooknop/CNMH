@@ -151,7 +151,23 @@ describe('isBrokenHp / isDestroyedHp', () => {
 describe('applyItemDamage', () => {
   it('hardness reduces each instance of damage before HP is lost', () => {
     const r = applyItemDamage({ dealt: 12, hardness: 5, hp: 20, brokenThreshold: 10 });
-    expect(r).toEqual({ prevented: 5, taken: 7, hpAfter: 13, broken: false, destroyed: false });
+    expect(r).toEqual({ prevented: 5, taken: 7, hpAfter: 13, tempHpAfter: 0, broken: false, destroyed: false });
+  });
+
+  // Temporary HP (#1246 — Heartstone): the pool absorbs the remainder first.
+  it('a temp-HP pool absorbs damage before real HP', () => {
+    const r = applyItemDamage({ dealt: 12, hardness: 5, hp: 20, brokenThreshold: 10, tempHp: 25 });
+    expect(r.taken).toBe(7);
+    expect(r.hpAfter).toBe(20);
+    expect(r.tempHpAfter).toBe(18);
+    expect(r.broken).toBe(false);
+  });
+
+  it('overflow past the temp pool comes off real HP; broken math ignores the pool', () => {
+    const r = applyItemDamage({ dealt: 20, hardness: 5, hp: 20, brokenThreshold: 10, tempHp: 3 });
+    expect(r.tempHpAfter).toBe(0);
+    expect(r.hpAfter).toBe(8); // 20 - (15 - 3)
+    expect(r.broken).toBe(true);
   });
 
   it('damage at or below hardness is fully prevented', () => {
@@ -176,7 +192,7 @@ describe('applyItemDamage', () => {
     const block = applyShieldBlock({ dealt: 12, hardness: 5, shieldHp: 20, brokenThreshold: 10 });
     expect(block).toEqual({
       prevented: 5, characterTakes: 7, shieldTakes: 7, shieldHpAfter: 13,
-      broken: false, destroyed: false,
+      shieldTempHpAfter: 0, broken: false, destroyed: false,
     });
   });
 });

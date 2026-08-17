@@ -83,10 +83,16 @@ let mockItemHp = {};
 const mockSetItemHp = vi.fn((next) => {
   mockItemHp = typeof next === 'function' ? next(mockItemHp) : next;
 });
+// Wielder HP (#1246 — Heartstone grants the wielder temp HP on activation).
+let mockWielderHp = null;
+const mockSetWielderHp = vi.fn((next) => {
+  mockWielderHp = typeof next === 'function' ? next(mockWielderHp) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_encounter_')) return [mockEncounter, mockSetEncounter];
     if (String(key).startsWith('cnmh_itemhp_')) return [mockItemHp, mockSetItemHp];
+    if (String(key).startsWith('cnmh_hp_')) return [mockWielderHp, mockSetWielderHp];
     if (String(key).startsWith('cnmh_shieldstate_')) return [{}, vi.fn()];
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_attached_')) return [mockAttached, mockSetAttached];
@@ -209,6 +215,8 @@ beforeEach(() => {
   mockItemAct = makeItemAct();
   mockItemHp = {};
   mockSetItemHp.mockClear();
+  mockWielderHp = null;
+  mockSetWielderHp.mockClear();
 });
 
 const baseItem = {
@@ -1453,6 +1461,135 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     mockAffixed = {};
     open(sword);
     expect(screen.queryByTestId('hosted-talismans')).not.toBeInTheDocument();
+  });
+});
+
+describe('ItemModal — shield-talisman activation (#1246)', () => {
+  const steel = { uid: 's1', name: 'Steel Shield', shield: { hardness: 5, health: 20, breakThreshold: 10, bonus: 2 } };
+  const flake = {
+    uid: 'tf', id: 'adamantine-flake', name: 'Adamantine Flake',
+    traits: ['Consumable', 'Talisman'],
+    talisman: {
+      affixTo: 'shield',
+      activation: { cost: 1, trigger: 'You use the Shield Block reaction.', effect: { kind: 'shield-hardness', bonus: 2, durationMinutes: 1 } },
+    },
+  };
+  const heartstone = {
+    uid: 'th', id: 'heartstone', name: 'Heartstone',
+    traits: ['Consumable', 'Talisman'],
+    talisman: {
+      affixTo: 'shield',
+      activation: { cost: 1, effect: { kind: 'shield-temp-hp', roll: '5d6+10', wielderHalf: true } },
+    },
+  };
+  const crystal = {
+    uid: 'tc', id: 'prismatic-crystal', name: 'Prismatic Crystal',
+    traits: ['Consumable', 'Talisman'],
+    talisman: {
+      affixTo: 'shield',
+      activation: {
+        cost: 1,
+        effect: { kind: 'shield-energy-block', choose: ['acid', 'cold', 'electricity', 'fire', 'poison', 'sonic'], durationMinutes: 1 },
+      },
+    },
+  };
+  const treeSap = {
+    uid: 'ts', id: 'tree-sap', name: 'Tree Sap',
+    traits: ['Consumable', 'Talisman'],
+    talisman: {
+      affixTo: 'shield',
+      activation: { cost: 1, effect: { kind: 'shield-trait', traits: ['Grapple'], durationRounds: 1 } },
+    },
+  };
+  const charWith = (talisman) => ({ id: 'pel', name: 'Pellias', maxHp: 60, __inventory: [talisman, steel] });
+  const open = (item, char) => render(<ItemModal isOpen onClose={vi.fn()} item={item} character={char} />);
+
+  it('activating an affixed flake writes a shieldBuff effect entry and consumes the talisman', () => {
+    mockAffixed = { tf: 's1' };
+    open(flake, charWith(flake));
+    fireEvent.click(screen.getByTestId('item-action-activate'));
+
+    expect(mockEffects).toHaveLength(1);
+    expect(mockEffects[0].shieldBuff).toEqual(expect.objectContaining({
+      itemId: 'adamantine-flake', shieldUid: 's1', hardnessBonus: 2,
+    }));
+    expect(mockConsumed).toEqual({ tf: 1 });
+    expect(mockAffixed).toEqual({});
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('activated Adamantine Flake on Steel Shield: +2 Hardness to the shield (1 minute)'),
+    }));
+  });
+
+  it('tree sap works from the HOST shield card too, granting its trait entry', () => {
+    mockAffixed = { ts: 's1' };
+    open(steel, charWith(treeSap));
+    fireEvent.click(screen.getByTestId('hosted-activate-ts'));
+
+    expect(mockEffects).toHaveLength(1);
+    expect(mockEffects[0].shieldBuff).toEqual(expect.objectContaining({
+      itemId: 'tree-sap', shieldUid: 's1', grantTraits: ['Grapple'],
+    }));
+    expect(mockConsumed).toEqual({ ts: 1 });
+  });
+
+  it('an active tree-sap buff shows Grapple among the shield card traits', () => {
+    mockEffects = [{
+      id: 'fx1', name: 'Tree Sap (Steel Shield)',
+      shieldBuff: { itemId: 'tree-sap', shieldUid: 's1', grantTraits: ['Grapple'] },
+    }];
+    open(steel, charWith(treeSap));
+    const tags = screen.getAllByTestId('trait-tag').map((el) => el.textContent);
+    expect(tags).toContain('Grapple');
+  });
+
+  it('the prismatic crystal requires a triggering-type pick before Activate', () => {
+    mockAffixed = { tc: 's1' };
+    open(crystal, charWith(crystal));
+    const btn = screen.getByTestId('item-action-activate');
+    expect(btn).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Prismatic Crystal triggering damage type'), { target: { value: 'fire' } });
+    expect(btn).not.toBeDisabled();
+    fireEvent.click(btn);
+
+    expect(mockEffects[0].shieldBuff).toEqual(expect.objectContaining({
+      itemId: 'prismatic-crystal', shieldUid: 's1', energyBlock: 'fire',
+    }));
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('— fire'),
+    }));
+  });
+
+  it('the heartstone needs the rolled total, then grants shield temp HP and the wielder half', () => {
+    mockAffixed = { th: 's1' };
+    open(heartstone, charWith(heartstone));
+    const btn = screen.getByTestId('item-action-activate');
+    expect(btn).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Heartstone rolled total'), { target: { value: '27' } });
+    fireEvent.click(btn);
+
+    // Shield side through the durability rail: hp stays authored (20), pool 27.
+    expect(mockItemHp).toEqual({ s1: { hp: 20, tempHp: 27 } });
+    // Wielder side through the normal temp-HP path (take-higher from empty).
+    expect(mockWielderHp).toEqual(expect.objectContaining({ temp: 13 }));
+    // No timed entry — instantaneous.
+    expect(mockEffects).toEqual([]);
+    expect(mockConsumed).toEqual({ th: 1 });
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Pellias activated Heartstone: Steel Shield gains 27 temporary HP, Pellias gains 13',
+    }));
+  });
+
+  it('a non-shield talisman still takes the legacy log-only activation path', () => {
+    const wolfFang = {
+      uid: 't1', name: 'Wolf Fang', traits: ['Consumable', 'Talisman'],
+      talisman: { affixTo: 'weapon', activation: { cost: 'free', trigger: 'You successfully Trip', effect: { kind: 'damage', amount: 2, damageType: 'bludgeoning', onManeuver: 'trip' } } },
+    };
+    const sword = { uid: 'w1', name: 'Longsword', strikes: [{ damage: '1d8' }] };
+    mockAffixed = { t1: 'w1' };
+    open(wolfFang, { id: 'pel', name: 'Pellias', __inventory: [wolfFang, sword] });
+    fireEvent.click(screen.getByTestId('item-action-activate'));
+    expect(mockEffects).toEqual([]);
+    expect(mockConsumed).toEqual({ t1: 1 });
   });
 });
 

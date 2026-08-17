@@ -59,6 +59,11 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   // your Shield Block reaction against the attack, this applies before your
   // Shield Block"). Opt-in per block; off by default.
   const [useProtecting, setUseProtecting] = useState(false);
+  // Prismatic Crystal (#1246): while its buff is active the wielder may Shield
+  // Block the crystal's energy type — and the shield is immune to it. Same
+  // no-context deal as `ranged`: the player flags "the triggering damage was
+  // <type>", off by default; checked, the shield takes nothing on this block.
+  const [energyTriggered, setEnergyTriggered] = useState(false);
   // Armed rider follow-up (#1055 S2) — set by a successful block, cleared on
   // use or dismissal.
   const [armed, setArmed] = useState(false);
@@ -128,6 +133,10 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     (t) => String(t).toLowerCase() === 'deflecting'
   );
   const deflectBonus = hasDeflecting && ranged ? 2 : 0;
+  // The energy type an active Prismatic Crystal buff lets this shield block
+  // (and be immune to), or null — derived by useShield from the effects store.
+  const energyBlock = heldShield?.energyBlock || null;
+  const blockingEnergy = !!energyBlock && energyTriggered;
 
   const handleShieldBlock = () => {
     const dealt = parseInt(blockDamage, 10);
@@ -138,23 +147,30 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
     const protectingActive =
       !!protecting && useProtecting && protectingGate.available && hardness > 0;
     const preReduced = protectingActive ? Math.min(dealt, hardness) : 0;
-    const result = applyBlock(dealt - preReduced, { hardnessBonus: deflectBonus });
+    const result = applyBlock(dealt - preReduced, {
+      hardnessBonus: deflectBonus,
+      shieldImmune: blockingEnergy,
+    });
     if (!result) return;
     if (protectingActive) record(protectingAbility, { nowSecs });
     spendReaction('Shield Block');
     setBlockDamage('');
     setRanged(false);
     setUseProtecting(false);
+    setEnergyTriggered(false);
     // Table rule: using a reaction that requires a raised shield (Shield Block
     // today; the #1191 shield reactions will share this) ends the raise —
     // whether or not the shield broke. Re-raising costs the action as normal
     // (and Rust Blessing is what lets a broken shield be re-raised at all).
     lowerShield();
-    const detail = result.destroyed
+    const tempNote = result.shieldTempHpAfter > 0 ? ` (+${result.shieldTempHpAfter} temp)` : '';
+    const detail = blockingEnergy
+      ? `${result.prevented} prevented, shield immune to ${energyBlock} — no shield damage · shield lowered`
+      : result.destroyed
       ? `shield DESTROYED! (${result.prevented} prevented)`
       : result.broken
       ? `shield broke! (${result.prevented} prevented)`
-      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP · shield lowered`;
+      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP${tempNote} · shield lowered`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
     const protectNote = protectingActive
@@ -295,6 +311,20 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
             <span className="ttp-shieldblock-rider-spent" data-testid="shieldblock-protecting-spent">
               Protecting used — the clock frees it up
             </span>
+          )}
+          {energyBlock && (
+            <label
+              className="ttp-shieldblock-ranged"
+              title={`Prismatic Crystal: you may Shield Block ${energyBlock} damage — the shield is immune to it`}
+            >
+              <input
+                type="checkbox"
+                checked={energyTriggered}
+                onChange={(e) => setEnergyTriggered(e.target.checked)}
+                aria-label={`Triggering damage is ${energyBlock} (shield immune)`}
+              />
+              {energyBlock} (immune)
+            </label>
           )}
           {rider && rider.summary && (
             <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">

@@ -7,9 +7,12 @@ import { isStrappedShield } from '../utils/hands';
 import { normalizeShield, isShieldBroken } from '../utils/InventoryUtils';
 import { applyShieldBlock } from '../utils/shieldBlock';
 import { resolveShieldBlock, shieldDisplayName } from '../utils/shieldRunes';
+import {
+  shieldBuffHardnessBonus, shieldBuffGrantedTraits, shieldBuffEnergyBlock,
+} from '../utils/shieldTalismans';
 import { isDestroyedHp } from '../utils/itemDurability';
 import { hasRustBlessing } from '../utils/rustBlessing';
-import { RELAY, syncKey } from '../sync/keys';
+import { RELAY, APP, syncKey } from '../sync/keys';
 
 // Raise a Shield (PF2e): while wielding a shield, spend 1 action to gain a
 // circumstance bonus to AC equal to the shield's AC bonus until the start of
@@ -41,7 +44,14 @@ export const useShield = (charId, inventory = []) => {
 
   // Shared per-item mutable HP map (#541). Keyed by item uid; falls back to
   // the authored shield.hp when no block has been recorded this session.
-  const { hpFor, setHp } = useItemHp(charId);
+  // tempHpFor reads the Heartstone temp-HP pool riding the same record (#1246).
+  const { hpFor, tempHpFor, setHp } = useItemHp(charId);
+
+  // Active shield-talisman buffs (#1246) live in the character's effects store
+  // as `shieldBuff`-tagged entries (the whetstone pattern — no new synced key).
+  // Read here so the held shield's Hardness folds in an Adamantine Flake and
+  // the block surface sees a Prismatic Crystal's energy-block window.
+  const [activeEffects] = useSyncedState(syncKey(APP.EFFECTS, charId || 'none'), []);
 
   // The shield currently in the character's charge — kept as `heldShield` for
   // its 16 consumers, but since the strapped-shields slices it also covers a
@@ -62,7 +72,13 @@ export const useShield = (charId, inventory = []) => {
     const base = normalizeShield(resolveShieldBlock(entry));
     // Overlay the session HP if a block has been recorded.
     const liveHp = hpFor(entry.uid);
-    const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
+    const withHp = liveHp !== undefined ? { ...base, hp: liveHp } : base;
+    // An active Adamantine Flake buff (#1246) raises the shield's Hardness for
+    // its minute — folded here so applyBlock and every display agree.
+    const buffHardness = shieldBuffHardnessBonus(activeEffects, entry.uid);
+    const shield = buffHardness
+      ? { ...withHp, hardness: (withHp.hardness || 0) + buffHardness }
+      : withHp;
     // Resolved Remaster name ("Minor Reinforcing Steel Shield") for every held-
     // shield surface; a non-reinforced shield keeps its own name (#1165 S4).
     return {
@@ -70,6 +86,14 @@ export const useShield = (charId, inventory = []) => {
       name: shieldDisplayName(entry),
       shield,
       maxHp: base.hp,
+      // Heartstone temp-HP pool (#1246) — spent before HP on a block.
+      tempHp: tempHpFor(entry.uid),
+      // Talisman-buff annotations (#1246): the folded Hardness bonus, granted
+      // traits (Tree Sap), and the energy type a Prismatic Crystal lets this
+      // shield block (and be immune to) — null when none is active.
+      buffHardness,
+      buffTraits: shieldBuffGrantedTraits(activeEffects, entry.uid),
+      energyBlock: shieldBuffEnergyBlock(activeEffects, entry.uid),
       // Strapped-shield extras (absent/false for a held shield). `strapUsable`
       // is the effective-inventory stamp of the buckler rule: the strapped
       // hand is empty or holds a light non-weapon.
@@ -77,7 +101,7 @@ export const useShield = (charId, inventory = []) => {
       strapHand: !isHeldState(entry.state) ? entry.strapHand : undefined,
       strapUsable: isHeldState(entry.state) || entry.strapUsable === true,
     };
-  }, [inventory, hpFor]);
+  }, [inventory, hpFor, tempHpFor, activeEffects]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;
   const destroyed = heldShield ? isDestroyedHp(heldShield.shield?.hp ?? 0) : false;
@@ -128,8 +152,10 @@ export const useShield = (charId, inventory = []) => {
   // persists the new HP, and returns the full result for the caller to log.
   // `hardnessBonus` adds effective Hardness for this block only — e.g. a
   // deflecting shield's +2 vs a ranged attack (#1196 G1), decided by the caller.
+  // `shieldImmune` (#1246 — Prismatic Crystal) blocks the crystal's energy type:
+  // the character's share is normal but the shield itself takes nothing.
   const applyBlock = useCallback(
-    (dealt, { hardnessBonus = 0 } = {}) => {
+    (dealt, { hardnessBonus = 0, shieldImmune = false } = {}) => {
       if (!heldShield) return null;
       const { hp, hardness = 0, brokenThreshold = 0 } = heldShield.shield;
       const result = applyShieldBlock({
@@ -138,8 +164,10 @@ export const useShield = (charId, inventory = []) => {
         shieldHp: hp ?? 0,
         brokenThreshold,
         hardnessBonus,
+        shieldTempHp: heldShield.tempHp || 0,
+        shieldImmune,
       });
-      setHp(heldShield.uid, result.shieldHpAfter);
+      setHp(heldShield.uid, result.shieldHpAfter, result.shieldTempHpAfter);
       return result;
     },
     [heldShield, setHp]

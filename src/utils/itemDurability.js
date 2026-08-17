@@ -170,6 +170,9 @@ export const entryHpStatus = (item, overlayRecord) => {
   return {
     hp,
     maxHp: dur.hp,
+    // Temporary HP (#1246 — Heartstone): a separate pool the overlay may carry,
+    // spent before HP by applyItemDamage. Never part of broken/destroyed math.
+    tempHp: Math.max(0, overlayRecord?.tempHp ?? 0),
     hardness: dur.hardness,
     brokenThreshold: dur.brokenThreshold,
     broken: isBrokenHp(hp, dur.brokenThreshold),
@@ -183,23 +186,31 @@ export const entryHpStatus = (item, overlayRecord) => {
  * Hardness for this hit only (e.g. a deflecting shield vs ranged, #1196 G1);
  * negative bonuses are clamped so a bonus never lowers Hardness.
  *
+ * Temporary HP (#1246 — Heartstone): when the item carries a `tempHp` pool it
+ * absorbs the post-Hardness remainder before real HP, PF2e-style. Temp HP never
+ * counts toward the Broken/Destroyed comparison.
+ *
  * @param {object} opts
  * @param {number} opts.dealt           - incoming damage before Hardness
  * @param {number} opts.hardness        - the item's Hardness
  * @param {number} opts.hp              - the item's current HP
  * @param {number} opts.brokenThreshold - HP at or below which it breaks
  * @param {number} [opts.hardnessBonus] - extra Hardness for this hit only
- * @returns {{ prevented:number, taken:number, hpAfter:number, broken:boolean, destroyed:boolean }}
+ * @param {number} [opts.tempHp]        - temporary HP pool, spent before HP
+ * @returns {{ prevented:number, taken:number, hpAfter:number, tempHpAfter:number, broken:boolean, destroyed:boolean }}
  */
-export function applyItemDamage({ dealt, hardness, hp, brokenThreshold, hardnessBonus = 0 }) {
+export function applyItemDamage({ dealt, hardness, hp, brokenThreshold, hardnessBonus = 0, tempHp = 0 }) {
   const effectiveHardness = (hardness || 0) + Math.max(0, hardnessBonus || 0);
   const prevented = Math.min(dealt, effectiveHardness);
   const taken = dealt - prevented;
-  const hpAfter = Math.max(0, (hp || 0) - taken);
+  const tempPool = Math.max(0, tempHp || 0);
+  const tempLost = Math.min(taken, tempPool);
+  const hpAfter = Math.max(0, (hp || 0) - (taken - tempLost));
   return {
     prevented,
     taken,
     hpAfter,
+    tempHpAfter: tempPool - tempLost,
     broken: isBrokenHp(hpAfter, brokenThreshold ?? 0),
     destroyed: isDestroyedHp(hpAfter),
   };

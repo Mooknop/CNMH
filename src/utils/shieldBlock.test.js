@@ -103,4 +103,58 @@ describe('applyShieldBlock', () => {
       expect(r.characterTakes).toBe(0);
     });
   });
+
+  // Heartstone (#1246): the shield's temp-HP pool absorbs its share before HP.
+  describe('shieldTempHp (Heartstone)', () => {
+    it('temp pool absorbs the whole remainder when big enough', () => {
+      const r = applyShieldBlock({ dealt: 12, ...steel, shieldTempHp: 25 });
+      expect(r.characterTakes).toBe(7); // wielder unaffected by the pool
+      expect(r.shieldTakes).toBe(7);
+      expect(r.shieldHpAfter).toBe(20); // real HP untouched
+      expect(r.shieldTempHpAfter).toBe(18);
+      expect(r.broken).toBe(false);
+    });
+
+    it('overflow past the pool comes off real HP', () => {
+      const r = applyShieldBlock({ dealt: 15, ...steel, shieldTempHp: 4 });
+      expect(r.shieldTakes).toBe(10);
+      expect(r.shieldTempHpAfter).toBe(0);
+      expect(r.shieldHpAfter).toBe(14); // 20 - (10 - 4)
+      expect(r.broken).toBe(false);
+    });
+
+    it('defaults to 0 and reports an empty pool', () => {
+      const r = applyShieldBlock({ dealt: 12, ...steel });
+      expect(r.shieldTempHpAfter).toBe(0);
+    });
+  });
+
+  // Prismatic Crystal (#1246): blocking the crystal's energy type — the shield
+  // is immune, so it takes nothing; the character's share is unchanged.
+  describe('shieldImmune (Prismatic Crystal)', () => {
+    it('Hardness still prevents; shield HP and temp pool never move', () => {
+      const r = applyShieldBlock({ dealt: 12, ...steel, shieldTempHp: 6, shieldImmune: true });
+      expect(r.prevented).toBe(5);
+      expect(r.characterTakes).toBe(7);
+      expect(r.shieldTakes).toBe(0);
+      expect(r.shieldHpAfter).toBe(20);
+      expect(r.shieldTempHpAfter).toBe(6);
+      expect(r.broken).toBe(false);
+      expect(r.destroyed).toBe(false);
+    });
+
+    it('stacks with a hardness bonus (flake + crystal both active)', () => {
+      const r = applyShieldBlock({ dealt: 12, ...steel, hardnessBonus: 2, shieldImmune: true });
+      expect(r.prevented).toBe(7);
+      expect(r.characterTakes).toBe(5);
+      expect(r.shieldHpAfter).toBe(20);
+    });
+
+    it('reports the current broken state without changing it', () => {
+      const r = applyShieldBlock({ dealt: 30, hardness: 5, shieldHp: 8, brokenThreshold: 10, shieldImmune: true });
+      expect(r.shieldHpAfter).toBe(8);
+      expect(r.broken).toBe(true); // already at/below BT going in
+      expect(r.destroyed).toBe(false);
+    });
+  });
 });
