@@ -17,6 +17,14 @@ vi.mock('../shared/Modal', () => ({
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../hooks/useTurnState', () => ({ useTurnState: vi.fn() }));
 vi.mock('../../hooks/useSessionLog', () => ({ useSessionLog: vi.fn() }));
+// Fixed game clock for the once-per-minute gate (#1246) — the frequency ledger
+// itself (useFrequency → useSyncedState → localStorage) runs for real.
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    gameDate: { day: 1, month: 0, year: 4725 },
+    time: { hour: 12, minute: 0, second: 0 },
+  }),
+}));
 // useTargeting + the dragonbreath spine run for real.
 
 const vera = { id: 'vera', name: 'Vera' };
@@ -52,6 +60,7 @@ const renderModal = (item = greaterRed, { active = true } = {}) => {
 };
 
 beforeEach(() => {
+  window.localStorage.clear(); // frequency ledger persists via useSyncedState
   appendLog = vi.fn();
   appendEvent = vi.fn();
   spendActions = vi.fn();
@@ -125,5 +134,39 @@ describe('DragonbreathModal', () => {
     fireEvent.click(screen.getByTestId('dbm-breathe'));
     expect(appendEvent).toHaveBeenCalledTimes(1);
     expect(spendActions).not.toHaveBeenCalled(); // no action spend outside an active encounter
+  });
+
+  it('gates Breathe once per minute — reopening shows the lock; Clear lock reopens it (#1246)', () => {
+    const { unmount } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    fireEvent.click(screen.getByTestId('dbm-breathe'));
+    unmount();
+
+    // Second open inside the same game minute: blocked section + disabled confirm.
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    expect(screen.getByTestId('dbm-breathe')).toBeDisabled();
+    expect(screen.getByText(/Once per minute/)).toBeInTheDocument();
+
+    // GM "Clear lock" drops the ledger records and re-enables the breath.
+    fireEvent.click(screen.getByRole('button', { name: /Clear lock/ }));
+    expect(screen.getByTestId('dbm-breathe')).not.toBeDisabled();
+  });
+
+  it('GM override re-enables Breathe and the log notes the bypass (#1246)', () => {
+    const { unmount } = renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    fireEvent.click(screen.getByTestId('dbm-breathe'));
+    unmount();
+    appendLog.mockClear();
+
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    expect(screen.getByTestId('dbm-breathe')).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: /Override/ }));
+    expect(screen.getByTestId('dbm-breathe')).not.toBeDisabled();
+    fireEvent.click(screen.getByTestId('dbm-breathe'));
+    expect(appendLog).toHaveBeenCalledTimes(1);
+    expect(appendLog.mock.calls[0][0].text).toContain('(override — frequency)');
   });
 });

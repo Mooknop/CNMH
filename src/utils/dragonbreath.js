@@ -1,5 +1,6 @@
 // Dragonbreath Weapons (Magic+ arsenal M4, epic #1206 / #1210). Pure helpers —
 // no React, no catalog reads.
+import { itemUidOf } from './affix';
 //
 // Dragonbreath is a TEMPLATE applied to a base weapon, not a rune and not a fixed
 // catalog weapon. A base-weapon inventory entry carries:
@@ -45,6 +46,9 @@ const BREATH_DICE = { striking: '4d6', greater: '6d6', major: '8d6' };
 const BREATH_DC = { 1: 23, 2: 27, 3: 35 };
 export const BREATH_EMANATION_FT = 5;
 export const BREATH_FREQUENCY = 'once per minute';
+// Structured form of BREATH_FREQUENCY for the frequency engine (#1246) — the
+// Breathe activation gates through the shared per-character ledger.
+export const BREATH_FREQUENCY_RULE = { per: 'minute', uses: 1 };
 
 // Authored dragon-kind table — the breath/Strike damage type(s) per dragon,
 // transcribed from the pack's Dragon Scale catalysts (its two official dragon
@@ -184,8 +188,27 @@ export const dragonbreathBreath = (entry) => {
     coneFt: t.coneFt,
     emanationFt: BREATH_EMANATION_FT,
     frequency: BREATH_FREQUENCY,
+    frequencyRule: { ...BREATH_FREQUENCY_RULE },
     damageTypes: kind ? [...kind.damageTypes] : [],
     save: DEFAULT_BREATH_SAVE,
+  };
+};
+
+/**
+ * Synthetic "Breathe" ability for the frequency engine (#1246): a per-item-UID
+ * ledger key (`<uid>:breathe`, mirroring the ItemActivations `<uid>:<slug>`
+ * convention) carrying the structured once-per-minute rule, so two copies of
+ * the same weapon track separately. Item traits are deliberately NOT
+ * forwarded — parseFrequency's Flourish branch must never see them (#1727
+ * gotcha). Null for a non-dragonbreath entry.
+ */
+export const dragonbreathFreqAbility = (entry) => {
+  if (!isDragonbreath(entry)) return null;
+  const uid = itemUidOf(entry);
+  return {
+    id: uid != null ? `${uid}:breathe` : null,
+    name: 'Breathe',
+    frequencyRule: { ...BREATH_FREQUENCY_RULE },
   };
 };
 

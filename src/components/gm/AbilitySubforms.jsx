@@ -54,7 +54,7 @@ export const rollFromForm = (f) => {
 // the free-text `frequency` string, which stays display-only. Same round-trip
 // contract as roll: delete from `rest` on toForm, emit only when `per` is set.
 
-export const FREQUENCY_PER_OPTIONS = ['turn', 'round', 'hour', 'day', 'week'];
+export const FREQUENCY_PER_OPTIONS = ['turn', 'round', 'minute', 'hour', 'day', 'week'];
 
 export const frequencyRuleToForm = (r) => ({
   per:  FREQUENCY_PER_OPTIONS.includes(r?.per) ? r.per : '',
