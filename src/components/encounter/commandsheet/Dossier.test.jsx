@@ -509,6 +509,8 @@ describe('Dossier', () => {
         <SyncDriver skey="cnmh_heropoints_Pellias" onReady={(s) => (handles.setHero = s)} />
         <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (handles.setFocusSpent = s)} />
         <SyncDriver skey="cnmh_effects_Pellias" onReady={(s) => (handles.setEffects = s)} />
+        <SyncDriver skey="cnmh_aura_Pellias" onReady={(s) => (handles.setAura = s)} />
+        <SyncDriver skey="cnmh_auramembers_Pellias" onReady={(s) => (handles.setAuraMembers = s)} />
         <Dossier charId="Pellias" character={character} model={selfModel} />
       </>
     );
@@ -566,5 +568,44 @@ describe('Dossier', () => {
     act(() => h.setFocusSpent(2));
     expect(screen.getByRole('region', { name: 'Focused: Pellias (you)' })).toBeInTheDocument();
     expect(screen.getByTestId('dossier-self-meta')).toHaveTextContent('Focus 0/2');
+  });
+
+  // ── Aura membership row (#1733 S2) ────────────────────────────────────────
+  it('omits the aura row when the aura is down', () => {
+    const h = renderSelf();
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.queryByTestId('dossier-aura')).toBeNull();
+  });
+
+  it('omits the aura row while the aura is active but membership is unknown (no lying zero)', () => {
+    const h = renderSelf();
+    act(() => h.setAura({ active: true, ts: 1 }));
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.queryByTestId('dossier-aura')).toBeNull();
+  });
+
+  it('shows the aura row with the filtered ally count once the aura is active and membership is known', () => {
+    const h = renderSelf();
+    act(() => h.setAura({ active: true, ts: 1 }));
+    act(() => h.setAuraMembers({
+      inside: [
+        { entryId: 'e-ashka', tokenId: 't-ashka', name: 'Ashka', disposition: 1, hidden: false },
+        // Hidden ally + a hostile — player-facing row must not count either.
+        { entryId: 'e-scout', tokenId: 't-scout', name: 'Hidden Scout', disposition: 1, hidden: true },
+        { tokenId: 't-goblin', name: 'Goblin', disposition: -1, hidden: false },
+      ],
+      ts: 2,
+    }));
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.getByTestId('dossier-aura')).toHaveTextContent('Aura');
+    expect(screen.getByTestId('dossier-aura')).toHaveTextContent('1 ally inside');
+  });
+
+  it('shows a known-but-empty region as "0 allies inside", not a hidden row', () => {
+    const h = renderSelf();
+    act(() => h.setAura({ active: true, ts: 1 }));
+    act(() => h.setAuraMembers({ inside: [], ts: 2 }));
+    act(() => h.setFocus(h.self.entryId));
+    expect(screen.getByTestId('dossier-aura')).toHaveTextContent('0 allies inside');
   });
 });
