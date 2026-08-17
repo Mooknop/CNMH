@@ -21,7 +21,8 @@
  *   - SNAP/PING/TEMPLATE_PROTOCOL, SNAP_TIMEOUT_MS, MOVE_SNAP_TIMEOUT_MS → src/utils/snapshotRelay.js
  *   - STRIKE_PROTOCOL / STRIKE_TIMEOUT_MS     → src/utils/strikeRelay.js
  *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
- *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL / MAP_MOVE_PROTOCOL → src/utils/movement.js
+ *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL / MAP_MOVE_PROTOCOL /
+ *     MAP_TARGET_PROTOCOL / DIRECTIONAL_AREA_PROTOCOL → src/utils/movement.js
  *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
  */
 
@@ -123,6 +124,17 @@ export const MAP_MOVE_PROTOCOL = 16;
  *  template placement falls back to the bare GM-viewport `request()`, same
  *  as every pre-wave client gets today. */
 export const MAP_TARGET_PROTOCOL = 17;
+
+/** The bridge protocol that taught the relay directional area geometry
+ *  (#1735 S2, PR #1763): `templateplace` grows optional `direction` (compass
+ *  degrees) and `width` (line only). `useTemplatePlacementSection` gates the
+ *  self-origin cone/line flow (rosette shown immediately, no origin tap; live
+ *  `coneCells`/`lineCells` preview; a directional `templateplace`) on this
+ *  floor. Below it — or with no hello at all — cone/line keep the pre-#1735
+ *  v1 fallback verbatim: tap an aim point, pick a facing on the OLD
+ *  (non-measuring) rosette, and `cnmh_pingpoint_global` pings the table while
+ *  the GM adjudicates who is caught. */
+export const DIRECTIONAL_AREA_PROTOCOL = 18;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 
