@@ -32,8 +32,10 @@ export const useCatalystSection = ({
   // cast (by uid). Eligibility is computed once the cast spell/inventory are known.
   const [catalystIds, setCatalystIds] = useState([]);
 
+  // Pass the resolved ability object (not just its id) so trait-form catalysts
+  // (catalystForTrait, #1254) can match against the spell's traits.
   const eligibleCatalysts = effectiveVerb === 'cast'
-    ? eligibleCatalystsFor(charData?.inventory, ability?.id, consumed)
+    ? eligibleCatalystsFor(charData?.inventory, ability, consumed)
     : [];
   const selectedCatalysts = eligibleCatalysts.filter((c) => catalystIds.includes(itemUidOf(c)));
   const catalystActionBump = sumCatalystActions(selectedCatalysts);

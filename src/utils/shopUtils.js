@@ -7,7 +7,7 @@ import { isAugmentation, augTargets } from './augmentations';
 import { isWhetstone } from './whetstone';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
-import { isCatalyst, catalystTargetSpell } from './catalyst';
+import { isCatalyst, catalystTargetSpell, catalystTargetTrait } from './catalyst';
 import {
   dragonbreathMeta,
   dragonbreathDisplayName,
@@ -483,21 +483,33 @@ export function offeredSpellIds(loreId, shops, spells, catalogMap) {
 }
 
 // Catalysts implied by a shop's spell envelope: those whose `catalystFor` spell
-// is offered. Each is returned as a resolved flat ware ({ ...item, wareKey }), so
-// the storefront groups + sells it like any hand-stocked item. Gated on
-// shopOffersSpellcasting so a shop that offers no spellcasting never carries them;
-// an excluded item (#1105 noShop) is skipped. The caller dedupes against
-// hand-stocked wares by item id, so a GM's explicit catalyst ware (custom
-// price/stock, or one outside the envelope) always wins.
+// is offered, plus trait-form catalysts (`catalystForTrait`, #1254) when ANY
+// offered spell carries the trait. Each is returned as a resolved flat ware
+// ({ ...item, wareKey }), so the storefront groups + sells it like any
+// hand-stocked item. Gated on shopOffersSpellcasting so a shop that offers no
+// spellcasting never carries them; an excluded item (#1105 noShop) is skipped.
+// The caller dedupes against hand-stocked wares by item id, so a GM's explicit
+// catalyst ware (custom price/stock, or one outside the envelope) always wins.
 export function eligibleCatalysts(loreId, shops, spells, items, catalogMap) {
   if (!shopOffersSpellcasting(loreId, shops)) return [];
   const offered = offeredSpellIds(loreId, shops, spells, catalogMap);
   if (!offered.size) return [];
+  // Union of traits across the offered spells (lowercased), for trait-form
+  // catalysts: Deathless Light sells wherever any Light-trait spell sells.
+  const offeredTraits = new Set();
+  for (const s of Array.isArray(spells) ? spells : []) {
+    if (!s || !offered.has(String(s.id))) continue;
+    for (const t of s.traits || []) offeredTraits.add(String(t).toLowerCase());
+  }
   const out = [];
   for (const item of Array.isArray(items) ? items : []) {
     if (!isCatalyst(item) || isShopExcluded(item)) continue;
+    const trait = catalystTargetTrait(item);
     const spellId = catalystTargetSpell(item);
-    if (spellId == null || !offered.has(String(spellId))) continue;
+    const inEnvelope = trait
+      ? offeredTraits.has(String(trait).toLowerCase())
+      : spellId != null && offered.has(String(spellId));
+    if (!inEnvelope) continue;
     const price = Number.isFinite(item.price) ? item.price : 0;
     out.push({ ...item, baseName: item.name, price, wareKey: `catalyst:${item.id}` });
   }
