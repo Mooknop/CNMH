@@ -1,13 +1,41 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useContent } from '../../contexts/ContentContext';
 import { getReactions } from '../../utils/actionUtils';
 import { TRIGGER_EVENTS, matchingReactions } from '../../utils/reactionTriggers';
 import { buildReactionPrompt } from '../../utils/reactionPrompt';
+import { useAuraMembers } from '../../hooks/useAuraMembers';
+import { filterAllyAuraReactions } from '../../utils/auraSources';
 import { APP } from '../../sync/keys';
 
 let _reqCounter = 0;
+
+// Which events name a struck ALLY — the ones whose triggers can care whether
+// that ally stood inside the reactor's aura.
+const ALLY_EVENT_IDS = ['ally-damaged'];
+
+// One probe per PC so each can hold its own membership subscription (a hook
+// can't run in a loop). Renders nothing; it reports the reactions this event
+// would wake on that PC — already aura-filtered — up to the console, so the
+// GM's eligibility line agrees with what the player's device will actually
+// offer, and so the fire loop can skip a PC the aura ruled out.
+const EligibilityProbe = ({ entry, character, eventId, allyEntryId, onResolve }) => {
+  const members = useAuraMembers(entry.charId);
+  const all = matchingReactions(getReactions(character), eventId);
+  const kept = filterAllyAuraReactions(all, { members, allyEntryId });
+  const names = kept.map((r) => r.name).join(', ');
+  // The aura took away everything this PC had for the event — distinct from
+  // "never had one", which is why the fire loop can skip the former without
+  // changing what the latter has always received.
+  const blocked = all.length > 0 && kept.length === 0;
+
+  useEffect(() => {
+    onResolve(entry.charId, names, blocked);
+  }, [onResolve, entry.charId, names, blocked]);
+
+  return null;
+};
 
 /**
  * GM reaction-trigger console (#221). One tap broadcasts a trigger event —
@@ -27,21 +55,33 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
   const { characters } = useContent();
   const [eventId, setEventId] = useState(TRIGGER_EVENTS[0].id);
   const [target,  setTarget]  = useState('all');
+  const [ally,    setAlly]    = useState('');
   const [note,    setNote]    = useState('');
-
-  if (pcEntries.length === 0) return null;
+  // charId → { names, blocked } as resolved by the probes (aura-filtered).
+  const [eligibility, setEligibility] = useState({});
+  const noteEligibility = useCallback((charId, names, blocked) => {
+    setEligibility((cur) => (
+      cur[charId]?.names === names && cur[charId]?.blocked === blocked
+        ? cur
+        : { ...cur, [charId]: { names, blocked } }
+    ));
+  }, []);
 
   const event = TRIGGER_EVENTS.find((e) => e.id === eventId) || TRIGGER_EVENTS[0];
 
-  // Which in-encounter PCs hold a reaction that this event would wake.
+  // Naming the struck ally is what lets an aura-scoped trigger ("an enemy
+  // damages an ally within 15 feet of you") be answered rather than guessed
+  // (#1733 S3). Optional by design: leave it unset and every reaction surfaces,
+  // exactly as before.
+  const allyRelevant = ALLY_EVENT_IDS.includes(event.id);
+  const allyEntry = allyRelevant ? pcEntries.find((e) => e.entryId === ally) : null;
+  const allyEntryId = allyEntry?.entryId || undefined;
+
   const eligible = pcEntries
-    .map((entry) => {
-      const char = (characters || []).find((c) => c.id === entry.charId);
-      if (!char) return null;
-      const matched = matchingReactions(getReactions(char), event.id);
-      return matched.length ? { name: entry.name, reactions: matched } : null;
-    })
-    .filter(Boolean);
+    .map((entry) => ({ entry, names: eligibility[entry.charId]?.names }))
+    .filter((row) => !!row.names);
+
+  if (pcEntries.length === 0) return null;
 
   const handleFire = () => {
     const reqIdBase = `react-${Date.now()}-${++_reqCounter}`;
@@ -50,11 +90,17 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
       : pcEntries.filter((e) => e.charId === target);
 
     for (const entry of targets) {
+      // Aura ruled this PC's whole matching set out (#1733 S3) — don't send.
+      // Only ever true when a struck ally was named AND the bridge pushed a
+      // membership snapshot; a PC who simply holds no matching reaction still
+      // gets the prompt their device has always quietly discarded.
+      if (eligibility[entry.charId]?.blocked) continue;
       sendUpdate(entry.charId, APP.REACTPROMPT, buildReactionPrompt({
         reqId: `${reqIdBase}-${entry.charId}`,
         eventId: event.id,
         label: event.label,
         note: note.trim() || undefined,
+        allyEntryId,
         round,
       }));
     }
@@ -88,6 +134,18 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
           </select>
         </label>
 
+        {allyRelevant && (
+          <label>
+            Struck ally (optional)
+            <select value={ally} onChange={(e) => setAlly(e.target.value)} aria-label="struck ally">
+              <option value="">Unspecified</option>
+              {pcEntries.map((e) => (
+                <option key={e.entryId} value={e.entryId}>{e.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <label>
           Note (optional)
           <input
@@ -101,10 +159,24 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
         </label>
       </div>
 
+      {pcEntries.map((entry) => {
+        const char = (characters || []).find((c) => c.id === entry.charId);
+        return char ? (
+          <EligibilityProbe
+            key={entry.charId}
+            entry={entry}
+            character={char}
+            eventId={event.id}
+            allyEntryId={allyEntryId}
+            onResolve={noteEligibility}
+          />
+        ) : null;
+      })}
+
       <p className="gm-help" aria-label="eligible PCs">
         {eligible.length > 0
           ? `Holds a matching reaction: ${eligible
-              .map((e) => `${e.name} (${e.reactions.map((r) => r.name).join(', ')})`)
+              .map((e) => `${e.entry.name} (${e.names})`)
               .join(' · ')}`
           : 'No PCs in the encounter have a matching reaction for this event.'}
       </p>

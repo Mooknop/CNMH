@@ -2,8 +2,20 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 const mockSendUpdate = vi.fn();
+// getState/subscribe are here for useAuraMembers' useSyncedState read (#1733 S3):
+// no aura membership in these fixtures, so every probe resolves "unknown" and
+// the console behaves exactly as it did before aura gating existed.
+let mockMembers = {}; // charId -> { inside: [...] }
 vi.mock('../../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: mockSendUpdate }),
+  useSession: () => ({
+    sendUpdate: mockSendUpdate,
+    getState: (charId, type) => (type === 'auramembers' ? mockMembers[charId] : undefined),
+    subscribe: () => () => {},
+    connected: false,
+    foundryConnected: false,
+    hydrations: 0,
+  }),
+  isSandboxWritable: () => true,
 }));
 const mockAppendEvent = vi.fn();
 vi.mock('../../hooks/useSessionLog', () => ({
@@ -15,7 +27,7 @@ const mockCharacters = [
   {
     id: 'Pellias',
     name: 'Pellias',
-    reactions: [{ name: 'Retributive Strike', triggerType: 'damaged-ally' }],
+    reactions: [{ name: 'Retributive Strike', triggerType: 'damaged-ally', requiresAllyInAura: true }],
   },
   {
     id: 'Blu',
@@ -31,14 +43,15 @@ vi.mock('../../contexts/ContentContext', () => ({
 import GmTriggerConsole from './GmTriggerConsole';
 
 const pcs = [
-  { charId: 'Pellias', name: 'Pellias', kind: 'pc' },
-  { charId: 'Blu',     name: 'Blu',     kind: 'pc' },
-  { charId: 'Ashka',   name: 'Ashka',   kind: 'pc' },
+  { charId: 'Pellias', name: 'Pellias', kind: 'pc', entryId: 'cbt-pellias' },
+  { charId: 'Blu',     name: 'Blu',     kind: 'pc', entryId: 'cbt-blu' },
+  { charId: 'Ashka',   name: 'Ashka',   kind: 'pc', entryId: 'cbt-ashka' },
 ];
 
 beforeEach(() => {
   mockSendUpdate.mockClear();
   mockAppendEvent.mockClear();
+  mockMembers = {};
 });
 
 describe('GmTriggerConsole', () => {
@@ -100,5 +113,61 @@ describe('GmTriggerConsole', () => {
     fireEvent.change(screen.getByLabelText('trigger note'), { target: { value: 'archer' } });
     fireEvent.click(screen.getByLabelText('Fire trigger'));
     expect(screen.getByLabelText('trigger note')).toHaveValue('');
+  });
+
+  // ── Champion aura gating (#1733 S3) ───────────────────────────────────────
+  describe('ally-in-aura gating', () => {
+    const pickAllyEvent = () =>
+      fireEvent.change(screen.getByLabelText('trigger event'), { target: { value: 'ally-damaged' } });
+
+    it('offers the struck-ally picker only for ally events', () => {
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      expect(screen.queryByLabelText('struck ally')).toBeNull();
+      pickAllyEvent();
+      expect(screen.getByLabelText('struck ally')).toBeInTheDocument();
+    });
+
+    it('keeps current behaviour when membership is unknown, even with an ally named', () => {
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      pickAllyEvent();
+      fireEvent.change(screen.getByLabelText('struck ally'), { target: { value: 'cbt-blu' } });
+
+      expect(screen.getByLabelText('eligible PCs')).toHaveTextContent('Pellias (Retributive Strike)');
+      fireEvent.click(screen.getByLabelText('Fire trigger'));
+      expect(mockSendUpdate.mock.calls.map((c) => c[0])).toContain('Pellias');
+    });
+
+    it('drops the aura-scoped reaction when the bridge says the ally is outside', () => {
+      mockMembers = { Pellias: { inside: [{ entryId: 'cbt-ashka' }], ts: 1 } };
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      pickAllyEvent();
+      fireEvent.change(screen.getByLabelText('struck ally'), { target: { value: 'cbt-blu' } });
+
+      expect(screen.getByLabelText('eligible PCs')).toHaveTextContent(/No PCs/);
+      fireEvent.click(screen.getByLabelText('Fire trigger'));
+      expect(mockSendUpdate.mock.calls.map((c) => c[0])).not.toContain('Pellias');
+    });
+
+    it('keeps it — and stamps the ally on the payload — when the ally is inside', () => {
+      mockMembers = { Pellias: { inside: [{ entryId: 'cbt-blu' }], ts: 1 } };
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      pickAllyEvent();
+      fireEvent.change(screen.getByLabelText('struck ally'), { target: { value: 'cbt-blu' } });
+
+      expect(screen.getByLabelText('eligible PCs')).toHaveTextContent('Pellias (Retributive Strike)');
+      fireEvent.click(screen.getByLabelText('Fire trigger'));
+      const toPellias = mockSendUpdate.mock.calls.find((c) => c[0] === 'Pellias');
+      expect(toPellias[2]).toMatchObject({ allyEntryId: 'cbt-blu' });
+    });
+
+    it('never suppresses when the GM left the ally unspecified', () => {
+      mockMembers = { Pellias: { inside: [], ts: 1 } };
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      pickAllyEvent();
+
+      expect(screen.getByLabelText('eligible PCs')).toHaveTextContent('Pellias (Retributive Strike)');
+      fireEvent.click(screen.getByLabelText('Fire trigger'));
+      expect(mockSendUpdate.mock.calls.map((c) => c[0])).toContain('Pellias');
+    });
   });
 });

@@ -118,6 +118,7 @@ export const applyEffectsOrLogGeneric = ({
   directCastRank,
   nowSecs,
   foundryAuthoritative,
+  auraInsideEntryIds = null,
   sourceSuffix,
 }) => {
   // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
@@ -151,6 +152,10 @@ export const applyEffectsOrLogGeneric = ({
       nowSecs,
       effectDurationOverride,
       suppressStructuredEffects: foundryAuthoritative,
+      // Aura membership narrowing for 'all-allies' (#1733 S3). Null unless the
+      // orchestrator could prove the live membership describes this ability's
+      // own area — see `auraNarrowedEntryIds`.
+      auraInsideEntryIds,
     });
 
     if (effectDurationOverride) {
