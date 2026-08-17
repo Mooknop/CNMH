@@ -142,5 +142,30 @@ describe('catalyst spine', () => {
       // Cast-a-Spell activation adds nothing
       expect(catalystAddActions(items.find((i) => i.id === 'force-tiles'))).toBe(0);
     });
+
+    it('imports the resilience/devotion catalysts with their target spells (#1254 W1-C)', () => {
+      const ids = [
+        'dragon-scute-lesser', 'dragon-scute-moderate', 'dragon-scute-greater',
+        'wood-rotted-root-lesser', 'wood-rotted-root-moderate',
+        'wood-rotted-root-greater', 'wood-rotted-root-major',
+        'chaos-falcon-feather', 'shimmering-dust', 'bottled-screams',
+        'steadfast-sentinel', 'soothing-scents', 'ogre-spider-filament', 'kushtaka-relic',
+      ];
+      ids.forEach((id) => {
+        const c = items.find((i) => i.id === id);
+        expect(c, id).toBeTruthy();
+        expect(isCatalyst(c)).toBe(true);
+        expect(c.traits).not.toContain('3rd Party');
+      });
+      const spellIds = new Set(spells.map((s) => s.id));
+      ['mountain-resilience', 'oaken-resilience', 'resist-energy', 'revealing-light',
+        'seal-fate', 'shadow-spy', 'soothe', 'spider-sting', 'spirit-blast',
+      ].forEach((id) => expect(spellIds.has(id), id).toBe(true));
+      // sample rider shape: Bottled Screams → Seal Fate, no extra action;
+      // Kushtaka Relic → Spirit Blast, +1 action ("Cast a Spell (add one action)")
+      expect(catalystTargetSpell(items.find((i) => i.id === 'bottled-screams'))).toBe('seal-fate');
+      expect(catalystAddActions(items.find((i) => i.id === 'bottled-screams'))).toBe(0);
+      expect(catalystAddActions(items.find((i) => i.id === 'kushtaka-relic'))).toBe(1);
+    });
   });
 });

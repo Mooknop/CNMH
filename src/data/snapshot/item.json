@@ -2615,6 +2615,25 @@
     }
   },
   {
+    "name": "Bottled Screams",
+    "description": "The vengeful wails of a revenant, barely contained in this rattling jar, infuse your magic with all of their spite and malice. If a target fails its saving throw against your Seal Fate spell after you've added this catalyst, it takes 1d6 persistent damage of the type chosen for the spell (2d6 persistent damage if it critically fails).",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "seal-fate",
+      "effect": "A target that fails its Seal Fate save takes 1d6 persistent damage of the spell's chosen type (2d6 on a critical failure)."
+    },
+    "id": "bottled-screams"
+  },
+  {
     "name": "Bougainvillea Blossom (Greater)",
     "description": "This pink flower has long, slender thorns along the stem. The flower can be used as a catalyst when casting an Entangling Flora spell, which causes the affected plants to sprout long thorns and vibrant pink blossoms. The area becomes hazardous terrain, dealing 3 piercing damage to an enemy each time it enters an affected square.",
     "traits": [
@@ -3093,6 +3112,24 @@
     "price": 56,
     "weight": 0,
     "id": "channel-protection-amulet"
+  },
+  {
+    "name": "Chaos Falcon Feather",
+    "description": "When used as catalysts, chaos falcon feathers lend flexibility to spells that deal with elemental energy. For the duration of a catalyzed Resist Energy spell, you can Sustain the Spell on an adjacent target, touching them and changing the type of energy to which they have resistance. This reduces the remaining duration of the spell by 1 minute; if the spell has less than a minute remaining, it reduces the duration to 1 round.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 10,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "resist-energy",
+      "effect": "Sustain the catalyzed Resist Energy to touch an adjacent target and change its resisted energy type, spending 1 minute of the spell's remaining duration."
+    },
+    "id": "chaos-falcon-feather"
   },
   {
     "id": "charm-of-acid-resistance-greater",
@@ -4363,6 +4400,60 @@
       "addActions": 1
     },
     "id": "dragon-eye"
+  },
+  {
+    "name": "Dragon Scute (Greater)",
+    "description": "The thick plates that form the strongest points in a dragon's armor can be used as powerful defensive catalysts. Using one of these scales to cast Mountain Resilience causes the target's skin to grow a thick layer of draconic scales. Instead of the spell's normal effects, the target gains damage resistance based on the type and dragon's tradition.\n\nThe scale can be used with mountain resilience of 10th rank or higher.\n\nArcane resistance 10 against all damage from spells\n\nDivine resistance 20 to spirit, vitality, and void\n\nOccult resistance 20 to mental\n\nPrimal resistance 15 to bludgeoning, piercing, slashing, and poison",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 20,
+    "price": 14000,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mountain-resilience",
+      "effect": "Replaces Mountain Resilience's effect with tradition-keyed dragon scales: arcane resistance 10 vs. spell damage, divine 20 spirit/vitality/void, occult 20 mental, primal 15 physical and poison. Requires 10th rank or higher."
+    },
+    "id": "dragon-scute-greater"
+  },
+  {
+    "name": "Dragon Scute (Lesser)",
+    "description": "The thick plates that form the strongest points in a dragon's armor can be used as powerful defensive catalysts. Using one of these scales to cast Mountain Resilience causes the target's skin to grow a thick layer of draconic scales. Instead of the spell's normal effects, the target gains damage resistance based on the type and dragon's tradition.\n\nThe scale can be used with mountain resilience of 6th rank or higher.\n\nArcane resistance 5 against all damage from spells\n\nDivine resistance 10 to spirit, vitality, and void\n\nOccult resistance 10 to mental\n\nPrimal resistance 7 to bludgeoning, piercing, slashing, and poison",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 12,
+    "price": 400,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mountain-resilience",
+      "effect": "Replaces Mountain Resilience's effect with tradition-keyed dragon scales: arcane resistance 5 vs. spell damage, divine 10 spirit/vitality/void, occult 10 mental, primal 7 physical and poison. Requires 6th rank or higher."
+    },
+    "id": "dragon-scute-lesser"
+  },
+  {
+    "name": "Dragon Scute (Moderate)",
+    "description": "The thick plates that form the strongest points in a dragon's armor can be used as powerful defensive catalysts. Using one of these scales to cast Mountain Resilience causes the target's skin to grow a thick layer of draconic scales. Instead of the spell's normal effects, the target gains damage resistance based on the type and dragon's tradition.\n\nThe scale can be used with mountain resilience of 8th rank or higher.\n\nArcane resistance 7 against all damage from spells\n\nDivine resistance 15 to spirit, vitality, and void\n\nOccult resistance 15 to mental\n\nPrimal resistance 10 to bludgeoning, piercing, slashing, and poison",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 16,
+    "price": 2000,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mountain-resilience",
+      "effect": "Replaces Mountain Resilience's effect with tradition-keyed dragon scales: arcane resistance 7 vs. spell damage, divine 15 spirit/vitality/void, occult 15 mental, primal 10 physical and poison. Requires 8th rank or higher."
+    },
+    "id": "dragon-scute-moderate"
   },
   {
     "name": "Dragon Throat Scale",
@@ -7683,6 +7774,25 @@
     }
   },
   {
+    "name": "Kushtaka Relic",
+    "description": "These relics come in many forms, as the only requirement is they were owned by a human who transformed into a kushtaka. Used as a catalyst for Spirit Blast against a target possessing another creature, a kushtaka relic attempts to banish such a spirit. A creature who fails the Fortitude save against spirit blast has its grasp on its possessed target weakened. The result of the possessed creature's next Will save against the possession effect is improved by one degree. A creature who is possessing another and critically fails the Fortitude save against spirit blast takes damage and then is banished from the body it was possessing.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 13,
+    "price": 525,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "spirit-blast",
+      "effect": "Against a spirit possessing another creature, a failed Spirit Blast save improves the host's next Will save against the possession by one degree; a critical failure banishes the spirit.",
+      "addActions": 1
+    },
+    "id": "kushtaka-relic"
+  },
+  {
     "id": "ladys-knife",
     "name": "Lady's Knife",
     "description": "This +1 striking returning dagger has an elaborate, gemmed handle and can be strapped to the inside of a wrist or tucked within a bodice.",
@@ -9165,6 +9275,24 @@
       }
     },
     "description": "Uncork this bottle to loose a Huge octopus that grasps and repositions a creature within reach 15 feet unless it succeeds at a DC 24 Fortitude save. If it is in water, it then releases an ink cloud in a 30-foot emanation (creatures inside are concealed and can’t use scent) for 1 minute."
+  },
+  {
+    "name": "Ogre Spider Filament",
+    "description": "This delicate strand of spiderweb sticks to the target of a Spider Sting spell, hampering their movement. Using this catalyst causes a creature afflicted with spider venom to become Clumsy instead of Enfeebled.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 1,
+    "price": 4,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "spider-sting",
+      "effect": "Spider venom from the catalyzed Spider Sting inflicts clumsy instead of enfeebled."
+    },
+    "id": "ogre-spider-filament"
   },
   {
     "name": "Oil of Weightlessness",
@@ -12169,6 +12297,24 @@
     "description": "You have attached a leather or chain strap to your shield that you can loop over your forearm or a shoulder. When you Release your shield it doesn't fall to the ground and is considered to be worn. You may draw it as normal after Releasing it. The strap has a quick release, allowing you to still use actions and reactions that require throwing your shield, such as Interrupting Shield, but reattaching the strap is a three-action activity with the manipulate trait."
   },
   {
+    "name": "Shimmering Dust",
+    "description": "This luminous mica dust fluoresces for a short time after being exposed to significant amounts of magical energy. When a creature fails its save against a cloud of Revealing Light created using this catalyst, glowing grains stick to them, causing them to shed dim light in a 20-foot radius for as long as their invisibility is negated by the spell as well as causing them to take a -2 circumstance penalty to Stealth for that duration.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "revealing-light",
+      "effect": "A creature that fails its Revealing Light save sheds dim light in a 20-foot radius and takes a -2 circumstance penalty to Stealth for the duration."
+    },
+    "id": "shimmering-dust"
+  },
+  {
     "id": "shortbow",
     "name": "Shortbow",
     "description": "This smaller bow is made of a single piece of wood and favored by skirmishers and cavalry.",
@@ -12713,6 +12859,25 @@
     "price": 0.02,
     "weight": 0,
     "id": "soap"
+  },
+  {
+    "name": "Soothing Scents",
+    "description": "Performers popularized these bundles of aromatic herbs to calm the mind and ward off misfortune before a big show, though soldier bards have found them especially useful for clearing fear during particularly tumultuous battles. Adding this catalyst to a Soothe spell also causes the spell to reduce the target's Frightened condition value by 1.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 10,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "soothe",
+      "effect": "The Soothe also reduces the target's frightened condition value by 1.",
+      "addActions": 1
+    },
+    "id": "soothing-scents"
   },
   {
     "name": "Soothing Tonic",
@@ -13646,6 +13811,25 @@
       }
     ],
     "id": "star-grenade"
+  },
+  {
+    "name": "Steadfast Sentinel",
+    "description": "This catalyst is a bird's claw soaked in a mixture of blood and grave dirt. A Shadow Spy spell empowered by it creates an unusually long-lasting homunculus. Instead of the spell expiring when you next make your daily preparations, you can renew it by expending a spell slot for shadow spy again, maintaining the same homunculus so it can continue its observations. Steadfast sentinels are often used by powerful spellcasters of Geb to covertly monitor their rivals.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 6,
+    "price": 38,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "shadow-spy",
+      "effect": "The Shadow Spy homunculus endures: renew it by expending another shadow spy slot instead of letting it expire at your daily preparations."
+    },
+    "id": "steadfast-sentinel"
   },
   {
     "shield": {
@@ -16381,6 +16565,86 @@
     "price": 340,
     "weight": 0,
     "id": "wondrous-figurine-jade-serpent"
+  },
+  {
+    "name": "Wood-Rotted Root (Greater)",
+    "description": "This palm-sized chunk of wood is rotting, and riddled with mold and fungi. You can crush this wood to use it as a spell catalyst when you cast an Oaken Resilience. When you do, the bark that covers your skin is rotting, and emits a small cloud of spores whenever you're hurt. For the duration, whenever you take physical damage, your rotting bark skin emits a cloud of spores in a 10-foot emanation. Creatures in the area must attempt a DC 24 Fortitude save to avoid taking 1d8 poison damage.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 190,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "oaken-resilience",
+      "effect": "Each time you take physical damage, your rotting bark bursts in a 10-foot emanation of spores dealing 1d8 poison damage (DC 24 Fortitude negates).",
+      "addActions": 1
+    },
+    "id": "wood-rotted-root-greater"
+  },
+  {
+    "name": "Wood-Rotted Root (Lesser)",
+    "description": "This palm-sized chunk of wood is rotting, and riddled with mold and fungi. You can crush this wood to use it as a spell catalyst when you cast an Oaken Resilience. When you do, the bark that covers your skin is rotting, and emits a small cloud of spores whenever you're hurt. For the duration, whenever you take physical damage, your rotting bark skin emits a cloud of spores in a 5-foot emanation. Creatures in the area must attempt a DC 15 Fortitude save to avoid taking 1 poison damage.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 11,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "oaken-resilience",
+      "effect": "Each time you take physical damage, your rotting bark bursts in a 5-foot emanation of spores dealing 1 poison damage (DC 15 Fortitude negates).",
+      "addActions": 1
+    },
+    "id": "wood-rotted-root-lesser"
+  },
+  {
+    "name": "Wood-Rotted Root (Major)",
+    "description": "This palm-sized chunk of wood is rotting, and riddled with mold and fungi. You can crush this wood to use it as a spell catalyst when you cast an Oaken Resilience. When you do, the bark that covers your skin is rotting, and emits a small cloud of spores whenever you're hurt. For the duration, whenever you take physical damage, your rotting bark skin emits a cloud of spores in a 15-foot emanation. Creatures in the area must attempt a DC 29 Fortitude save to avoid taking 2d8 poison damage.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "oaken-resilience",
+      "effect": "Each time you take physical damage, your rotting bark bursts in a 15-foot emanation of spores dealing 2d8 poison damage (DC 29 Fortitude negates).",
+      "addActions": 1
+    },
+    "id": "wood-rotted-root-major"
+  },
+  {
+    "name": "Wood-Rotted Root (Moderate)",
+    "description": "This palm-sized chunk of wood is rotting, and riddled with mold and fungi. You can crush this wood to use it as a spell catalyst when you cast an Oaken Resilience. When you do, the bark that covers your skin is rotting, and emits a small cloud of spores whenever you're hurt. For the duration, whenever you take physical damage, your rotting bark skin emits a cloud of spores in a 5-foot emanation. Creatures in the area must attempt a DC 21 Fortitude save to avoid taking 1d4 poison damage.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 55,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "oaken-resilience",
+      "effect": "Each time you take physical damage, your rotting bark bursts in a 5-foot emanation of spores dealing 1d4 poison damage (DC 21 Fortitude negates).",
+      "addActions": 1
+    },
+    "id": "wood-rotted-root-moderate"
   },
   {
     "shield": {

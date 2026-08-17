@@ -3093,6 +3093,26 @@
     ]
   },
   {
+    "id": "mountain-resilience",
+    "name": "Mountain Resilience",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Earth",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 creature",
+    "duration": "20 minutes",
+    "description": "The target's skin hardens like the stone of a mountain face. It gains resistance 5 to physical damage, except adamantine. Each time the target is hit by a bludgeoning, piercing, or slashing attack, mountain resilience's duration decreases by 1 minute.\n\nHeightened (6th) The resistance increases to 10.\n\nHeightened (8th) The resistance increases to 15.\n\nHeightened (10th) The resistance increases to 20.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "murmured-prayer-plus",
     "name": "Murmured Prayer (+2 Guidance)",
     "level": 0,
@@ -3171,6 +3191,27 @@
       "arcane",
       "divine",
       "occult"
+    ]
+  },
+  {
+    "id": "oaken-resilience",
+    "name": "Oaken Resilience",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Plant",
+      "Wood"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 willing creature",
+    "duration": "10 minutes",
+    "description": "The target's skin becomes tough, with a consistency like bark or wood. The target gains resistance 2 to bludgeoning and piercing damage and weakness 3 to fire. After the target takes fire damage, it can Dismiss the spell as a free action triggered by taking the damage; doing so doesn't reduce the fire damage the target was dealt.\n\nHeightened (+2) The resistances increase by 2, and the weakness increases by 3.",
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {
@@ -3648,6 +3689,56 @@
     ]
   },
   {
+    "id": "resist-energy",
+    "name": "Resist Energy",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 creature",
+    "duration": "10 minutes",
+    "description": "A shield of elemental energy protects a creature against one type of energy damage. Choose acid, cold, electricity, fire, or sonic damage. The target and its gear gain resistance 5 against the damage type you chose.\n\nHeightened (4th) The resistance increases to 10, and you can target up to two creatures.\n\nHeightened (7th) The resistance increases to 15, and you can target up to five creatures.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "revealing-light",
+    "name": "Revealing Light",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Light",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "area": "10-foot burst",
+    "defense": "Reflex",
+    "duration": "varies",
+    "description": "A wave of magical light washes over the area. You choose the appearance of the light, such as colorful, heatless flames or sparkling motes. A creature affected by revealing light is Dazzled. If the creature was Invisible, it becomes Concealed instead. If the creature was already concealed for any other reason, it is no longer concealed.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The light affects the creature for 2 rounds.",
+      "Failure": "The light affects the creature for 1 minute.",
+      "Critical Failure": "The light affects the creature for 10 minutes."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
     "id": "reverberating-pain",
     "name": "Reverberating Pain",
     "level": 0,
@@ -3904,6 +3995,35 @@
     ]
   },
   {
+    "id": "seal-fate",
+    "name": "Seal Fate",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Curse",
+      "Death",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 living creature",
+    "defense": "Fortitude",
+    "duration": "varies",
+    "description": "You utter a curse that a creature will meet a certain end—a death by freezing, stabbing, or another means you devise. Choose one type of damage from the following list: acid, bludgeoning, cold, electricity, fire, piercing, slashing, sonic, or void. The effect is based on the target's Fortitude save.\n\nHeightened (+2) The weakness increases by 1, and the maximum level of creature that can be automatically killed increases by 4.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target gains weakness 2 to the chosen damage type until the end of your next turn.",
+      "Failure": "As success, but the duration is 1 minute. If the creature is reduced to 0 Hit Points by the chosen damage and its level is 7 or less, it dies.",
+      "Critical Failure": "As failure, but the duration is unlimited."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
+    ]
+  },
+  {
     "id": "see-the-unseen",
     "name": "See the Unseen",
     "level": 2,
@@ -3975,6 +4095,24 @@
     "traditions": [
       "arcane",
       "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "shadow-spy",
+    "name": "Shadow Spy",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "1 Minute",
+    "range": "120 feet",
+    "duration": "until the next time you make your daily preparations",
+    "description": "You mix blood, soil, and shadow together to form a half-real homunculus in the shape of a crow, sparrow, or other bird. You then command the bird to fly to a location within range and observe all around it. The bird has the statistics of a Homunculus, save that it has all of your senses and shares your Perception modifier. Once the spell's duration elapses or upon a trigger you set (which must be fairly simple—\"at dusk\" or \"when the judge leaves\"), the bird flies to your location. If you wring its neck and drink its blood, you learn all that it saw since its creation.",
+    "traditions": [
       "occult",
       "primal"
     ]
@@ -4345,6 +4483,80 @@
       "divine",
       "occult",
       "primal"
+    ]
+  },
+  {
+    "id": "soothe",
+    "name": "Soothe",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Emotion",
+      "Healing",
+      "Manipulate",
+      "Mental"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 willing creature",
+    "duration": "1 minute",
+    "description": "You grace the target's mind, boosting its mental defenses and healing its wounds. The target regains 1d10+4 Hit Points when you Cast the Spell and gains a +2 status bonus to saves against mental effects for the duration.\n\nHeightened (+1) The amount of healing increases by 1d10+4.",
+    "traditions": [
+      "occult"
+    ]
+  },
+  {
+    "id": "spider-sting",
+    "name": "Spider Sting",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Poison"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "description": "You magically duplicate a spider's venomous sting. You deal 1d4 piercing damage to the touched creature and afflict it with spider venom. The target must attempt a Fortitude save.\n\nSpider Venom (poison)\n\nLevel 1\n\nMaximum Duration 4 rounds\n\nStage 1 1d4 poison damage and Enfeebled 1 (1 round)\n\nStage 2 1d4 poison damage and Enfeebled 2 (1 round)",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target takes 1d4 poison damage.",
+      "Failure": "The target is afflicted with spider venom at stage 1.",
+      "Critical Failure": "The target is afflicted with spider venom at stage 2."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "spirit-blast",
+    "name": "Spirit Blast",
+    "level": 6,
+    "baseLevel": 6,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Spirit"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "basic": true,
+    "description": "You concentrate ethereal energy and attack a creature's spirit, dealing 16d6 spirit damage with a basic Fortitude save.\n\nHeightened (+1) The damage increases by 2d6.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double damage."
+    },
+    "traditions": [
+      "divine",
+      "occult"
     ]
   },
   {
