@@ -1,4 +1,7 @@
-import { heldShieldRuneEffects, heldShieldRollBonus, ENERGY_RESISTANT_AMOUNT } from './shieldRuneEffects';
+import {
+  heldShieldRuneEffects, heldShieldRollBonus,
+  ENERGY_RESISTANT_AMOUNT, SEEING_PERCEPTION_HINT,
+} from './shieldRuneEffects';
 import { resistanceFor, computeEffectBonuses, conditionalModifiersFor } from './EffectUtils';
 
 // A held shield entry carrying resolved property-rune docs (as contentUtils
@@ -120,6 +123,45 @@ describe('heldShieldRuneEffects — save-hint runes (Heavy)', () => {
     const fx = heldShieldRuneEffects([heldShield([heavyRune])], { raised: false });
     expect(fx).toHaveLength(1);
     expect(fx[0].def.modifiers[0]).toMatchObject({ stat: 'fort', vs: 'Grapple or Shove' });
+  });
+});
+
+describe('heldShieldRuneEffects — seeing runes (#1246)', () => {
+  const seeing = (id, name) => ({ id, type: 'property', target: 'shield', name });
+
+  it('emits a conditional Perception item hint for a held Seeing shield', () => {
+    const fx = heldShieldRuneEffects([heldShield([seeing('seeing', 'Seeing')])]);
+    expect(fx).toHaveLength(1);
+    expect(fx[0].def.modifiers).toEqual([
+      { stat: 'perception', kind: 'item', amount: 1, vs: 'Sense Motive or disbelieving an illusion' },
+    ]);
+    expect(fx[0].entry.modifiers).toBeUndefined();
+    expect(fx[0].entry.effectId).toBe(fx[0].def.id);
+  });
+
+  it('scales by grade (base 1 / greater 2 / major 3)', () => {
+    const amt = (id) =>
+      heldShieldRuneEffects([heldShield([seeing(id, 'Seeing')])])[0].def.modifiers[0].amount;
+    expect(amt('seeing')).toBe(SEEING_PERCEPTION_HINT.seeing);
+    expect(amt('greater-seeing')).toBe(2);
+    expect(amt('major-seeing')).toBe(3);
+  });
+
+  it('is a hint, never netted into the always-on Perception number', () => {
+    const fx = heldShieldRuneEffects([heldShield([seeing('greater-seeing', 'Greater Seeing')])]);
+    const effects = fx.map((f) => f.entry);
+    const catalog = fx.map((f) => f.def);
+    expect(computeEffectBonuses(effects, catalog).perception.total).toBe(0);
+    expect(conditionalModifiersFor(effects, 'perception', catalog)).toEqual([
+      { amount: 2, kind: 'item', label: 'Greater Seeing', vs: 'Sense Motive or disbelieving an illusion' },
+    ]);
+  });
+
+  it('stays ungated by raise (always-on while wielded) and off when not held', () => {
+    const fx = heldShieldRuneEffects([heldShield([seeing('seeing', 'Seeing')])], { raised: false });
+    expect(fx).toHaveLength(1);
+    const stowed = { ...heldShield([seeing('seeing', 'Seeing')]), state: 'stowed' };
+    expect(heldShieldRuneEffects([stowed])).toEqual([]);
   });
 });
 

@@ -7,6 +7,8 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds } from '../../utils/gameTime';
 import { itemUidOf } from '../../utils/affix';
 import { accessoryRuneOf, runeOnBlock } from '../../utils/accessoryRunes';
+import { shieldPropertyRunes } from '../../utils/shieldRunes';
+import { REVERBERATING } from '../../utils/shieldRuneStrike';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { visibleOrder } from '../../utils/encounterUtils';
@@ -52,6 +54,11 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   // attacks. There's no attack-type context on this bar, so the player flags
   // "the triggering attack was ranged" — off by default.
   const [ranged, setRanged] = useState(false);
+  // Protecting rune (#1246): once per minute, reduce the triggering physical
+  // damage by the shield's Hardness BEFORE the Shield Block ("If you also use
+  // your Shield Block reaction against the attack, this applies before your
+  // Shield Block"). Opt-in per block; off by default.
+  const [useProtecting, setUseProtecting] = useState(false);
   // Armed rider follow-up (#1055 S2) — set by a successful block, cleared on
   // use or dismissal.
   const [armed, setArmed] = useState(false);
@@ -78,6 +85,20 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const gate = gateFor(freqAbility, { nowSecs });
   // A structured rider can actually fire; a prose one only reminds.
   const liveRider = rider && (rider.damage || rider.check) ? rider : null;
+
+  // Self-side property runes on the blocking shield (#1246). Protecting rides
+  // its own once-per-minute ledger entry — the SAME `${uid}:protecting:actuated`
+  // key its ShieldRuneActivations card spends, so the two surfaces share one
+  // clock. Reverberating only needs recognizing here: a block stores its charge.
+  const propRunes = shieldPropertyRunes(hostItem);
+  const protecting = propRunes.find((r) => r.id === 'protecting') || null;
+  const protectingAbility = {
+    id: itemUidOf(hostItem) ? `${itemUidOf(hostItem)}:protecting:actuated` : null,
+    name: protecting?.actuated?.name || 'Protecting',
+    frequency: protecting?.actuated?.frequency || 'once per minute',
+  };
+  const protectingGate = gateFor(protectingAbility, { nowSecs });
+  const reverberating = propRunes.find((r) => REVERBERATING[r.id]) || null;
 
   const { reactionAvailable, reactionSpent, hasStartedFirstTurn } = turnState;
 
@@ -111,11 +132,19 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
   const handleShieldBlock = () => {
     const dealt = parseInt(blockDamage, 10);
     if (!canShieldBlock || isNaN(dealt) || dealt < 0) return;
-    const result = applyBlock(dealt, { hardnessBonus: deflectBonus });
+    // Protecting (#1246): the rune's field absorbs Hardness-worth of the
+    // triggering damage first; the Shield Block then runs on the remainder.
+    const hardness = heldShield?.shield?.hardness || 0;
+    const protectingActive =
+      !!protecting && useProtecting && protectingGate.available && hardness > 0;
+    const preReduced = protectingActive ? Math.min(dealt, hardness) : 0;
+    const result = applyBlock(dealt - preReduced, { hardnessBonus: deflectBonus });
     if (!result) return;
+    if (protectingActive) record(protectingAbility, { nowSecs });
     spendReaction('Shield Block');
     setBlockDamage('');
     setRanged(false);
+    setUseProtecting(false);
     // Table rule: using a reaction that requires a raised shield (Shield Block
     // today; the #1191 shield reactions will share this) ends the raise —
     // whether or not the shield broke. Re-raising costs the action as normal
@@ -128,7 +157,19 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
       : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP · shield lowered`;
     const runeNote = rider ? ` · ${blockRune.name}: ${rider.summary || 'rune follow-up'}` : '';
     const deflectNote = deflectBonus ? ' · deflecting +2 Hardness (ranged)' : '';
-    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${deflectNote}${runeNote}` });
+    const protectNote = protectingActive
+      ? ` · Protecting: −${preReduced} before the block (once per minute)` : '';
+    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}${protectNote}${deflectNote}${runeNote}` });
+    // Reverberating (#1246): the block stores the shockwave for 1 round. The
+    // release is the opt-in sonic rider on the shield's own Strikes — remind
+    // the player where to spend the charge. A destroyed shield stores nothing.
+    if (reverberating && !result.destroyed) {
+      appendLog({
+        type: 'system',
+        text: `${reverberating.name}: the shockwave is stored for 1 round — `
+          + "toggle the rune's sonic rider on your next hit with this shield.",
+      });
+    }
     // A destroying block loses the rider with the arm; otherwise the follow-up
     // arms and outlives the lowered raise (see the mount guard above).
     if (riderReady && !result.destroyed) setArmed(true);
@@ -235,6 +276,25 @@ const ShieldBlockBar = ({ charId, characterName, inventory = [] }) => {
               />
               ranged (+2 Hard.)
             </label>
+          )}
+          {protecting && protectingGate.available && (
+            <label
+              className="ttp-shieldblock-ranged"
+              title="Protecting (once per minute): the shield's field reduces the triggering physical damage by its Hardness before the Shield Block"
+            >
+              <input
+                type="checkbox"
+                checked={useProtecting}
+                onChange={(e) => setUseProtecting(e.target.checked)}
+                aria-label={`Use Protecting (reduce damage by ${heldShield?.shield?.hardness || 0} before the block)`}
+              />
+              ✦ Protecting (−{heldShield?.shield?.hardness || 0})
+            </label>
+          )}
+          {protecting && !protectingGate.available && (
+            <span className="ttp-shieldblock-rider-spent" data-testid="shieldblock-protecting-spent">
+              Protecting used — the clock frees it up
+            </span>
           )}
           {rider && rider.summary && (
             <div className="ttp-shieldblock-rider" data-testid="shieldblock-rune-rider">

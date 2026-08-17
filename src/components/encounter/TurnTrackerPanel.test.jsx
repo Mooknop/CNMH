@@ -665,4 +665,82 @@ describe('TurnTrackerPanel', () => {
     expect(summonsApi.summons).toHaveLength(0); // sustain gone → summon pruned
   });
 
+  // ── Resuscitating shield rune (#1246) ────────────────────────────────────
+  describe('Resuscitating offer (#1246)', () => {
+    const resuscInv = [{
+      uid: 'sh', name: 'Steel Shield', state: 'held1',
+      shield: { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 },
+      runes: {
+        property: [{
+          id: 'resuscitating', type: 'property', target: 'shield', name: 'Resuscitating',
+          actuated: { cost: 'none', name: 'Resuscitating', frequency: 'once per day' },
+        }],
+      },
+    }];
+    const dyingHp = { current: 0, max: 20, temp: 0, dying: 2, wounded: 0, doomed: 0 };
+
+    const renderDying = (inventory = resuscInv) => {
+      let drv, setHp;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_hp_Pellias" onReady={(s) => (setHp = s)} />
+          <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={inventory} />
+        </>
+      );
+      startMyTurn(() => drv);
+      act(() => setHp(dyingHp));
+      return { getDrv: () => drv, setHp };
+    };
+
+    it('offers Regain 1 HP on my turn while dying with the runed shield wielded', () => {
+      renderDying();
+      expect(screen.getByRole('group', { name: 'Resuscitating (shield rune)' })).toBeInTheDocument();
+      expect(screen.getByLabelText('Use Resuscitating (regain 1 HP)')).toBeInTheDocument();
+    });
+
+    it('makes no offer without the rune, or while not dying', () => {
+      const { setHp } = renderDying([{
+        uid: 'sh', name: 'Steel Shield', state: 'held1',
+        shield: { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 },
+      }]);
+      expect(screen.queryByRole('group', { name: 'Resuscitating (shield rune)' })).toBeNull();
+      act(() => setHp({ ...dyingHp, dying: 0 }));
+      expect(screen.queryByRole('group', { name: 'Resuscitating (shield rune)' })).toBeNull();
+    });
+
+    it('using it regains 1 HP, clears dying, bumps wounded, and logs', () => {
+      let hpNow;
+      const HpProbe = () => {
+        [hpNow] = useSyncedState('cnmh_hp_Pellias', null);
+        return null;
+      };
+      let drv, setHp;
+      render(
+        <>
+          <EncounterDriver onReady={(e) => (drv = e)} />
+          <SyncDriver skey="cnmh_hp_Pellias" onReady={(s) => (setHp = s)} />
+          <HpProbe />
+          <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={resuscInv} />
+        </>
+      );
+      startMyTurn(() => drv);
+      act(() => setHp(dyingHp));
+
+      fireEvent.click(screen.getByLabelText('Use Resuscitating (regain 1 HP)'));
+      expect(hpNow).toMatchObject({ current: 1, dying: 0, wounded: 1 });
+      expect(drv.encounter.log.some((l) =>
+        l.text.includes("Pellias's Resuscitating rune flares — regains 1 HP")
+      )).toBe(true);
+      // The offer is consumed for this turn.
+      expect(screen.queryByRole('group', { name: 'Resuscitating (shield rune)' })).toBeNull();
+    });
+
+    it('Dismiss hides the offer without touching HP', () => {
+      renderDying();
+      fireEvent.click(screen.getByLabelText('Dismiss Resuscitating'));
+      expect(screen.queryByRole('group', { name: 'Resuscitating (shield rune)' })).toBeNull();
+    });
+  });
+
 });

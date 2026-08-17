@@ -19,6 +19,7 @@ import { itemUidOf } from './affix';
 import { flattenInventory } from './InventoryUtils';
 import { resolveItemStrikes, isShieldAttachment } from './strikeUtils';
 import { shieldHasFinesse } from './shieldRunes';
+import { shieldRuneStrikeRiders } from './shieldRuneStrike';
 import { APP, syncKey } from '../sync/keys';
 
 /** Synced-state key for a character's shield-attachment overlay. */
@@ -118,13 +119,24 @@ export const attachmentStrikes = (character, overlay) => {
     // rune, #1196 G3) lends finesse to its attachment's Strike — so it uses the
     // better of Str/Dex (per the finesse trait; computeStrike honors it).
     const finesse = shieldHasFinesse(byUid.get(sUid));
+    // The HOST shield's rune damage riders (#1246 — Reverberating) ride the
+    // attachment's Strike too: a hit with a bound attachment is a hit with the
+    // shield ("with this shield or any attachment or adjustment", thirsting
+    // text; reverberating releases on the shield's next hit).
+    const hostRuneRiders = shieldRuneStrikeRiders(byUid.get(sUid));
     const resolved = resolveItemStrikes({ ...attachment, noHandRequired: true }, character);
     out.push(...resolved.map((s) => {
       const traits = Array.isArray(s.traits) ? s.traits : [];
       const withFinesse = finesse && !traits.some((t) => String(t).toLowerCase() === 'finesse')
         ? [...traits, 'Finesse']
         : traits;
-      return { ...s, traits: withFinesse, shieldAttachment: true, hostUid: sUid };
+      return {
+        ...s,
+        traits: withFinesse,
+        ...(hostRuneRiders.length ? { riders: [...(s.riders || []), ...hostRuneRiders] } : {}),
+        shieldAttachment: true,
+        hostUid: sUid,
+      };
     }));
   }
   return out;
