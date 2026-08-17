@@ -231,6 +231,14 @@ describe('shieldEffectiveTraits + shieldHasFinesse', () => {
     expect(shieldEffectiveTraits(item)).toEqual(['Finesse']);
   });
 
+  it('appends caller-supplied extraTraits (#1246 — an active Tree Sap buff) through the same de-dupe', () => {
+    expect(shieldEffectiveTraits({ traits: ['Deflecting'], shield: {} }, ['Grapple']))
+      .toEqual(['Deflecting', 'Grapple']);
+    // Already-present (case-insensitive) grants collapse; junk entries are ignored.
+    expect(shieldEffectiveTraits({ traits: ['Grapple'], shield: {} }, ['grapple', 42]))
+      .toEqual(['Grapple']);
+  });
+
   it('ignores non-trait-granting runes and returns base traits when unruned', () => {
     expect(shieldEffectiveTraits({ traits: ['Accessible'], shield: {}, runes: { reinforcing: 'minor', property: [energyRes] } }))
       .toEqual(['Accessible']);

@@ -12,6 +12,11 @@
 //     | { kind: 'check-bonus', skill: 'thievery', bonus: 1, value: 'status', note: '<rider text>' }
 //   }
 //
+// Shield talismans (#1246) carry the shield-buff kinds instead —
+// 'shield-hardness' | 'shield-temp-hp' | 'shield-energy-block' | 'shield-trait'
+// — whose activation machinery lives in shieldTalismans.js; this module only
+// summarizes them for the Activate button / session log.
+//
 // A `check-bonus` effect may also (or instead) shift the check's degree of
 // success one step in the wielder's favour via `successToCrit` and/or
 // `critFailToFail` (Mesmerizing Opal, #1085 — a Feint success becomes a
@@ -21,6 +26,17 @@
 import { getAbilityModifier } from './CharacterUtils';
 
 const SAVE_LABELS = { fortitude: 'Fortitude', reflex: 'Reflex', will: 'Will' };
+
+// '1 round' / '1 minute' label for a shield-buff effect's authored duration.
+const shieldBuffDuration = (effect) => {
+  if (effect?.durationRounds != null) {
+    return effect.durationRounds === 1 ? '1 round' : `${effect.durationRounds} rounds`;
+  }
+  if (effect?.durationMinutes) {
+    return effect.durationMinutes === 1 ? '1 minute' : `${effect.durationMinutes} minutes`;
+  }
+  return '';
+};
 
 /** The activation block of a talisman, or null. */
 export const activationOf = (item) => item?.talisman?.activation || null;
@@ -48,6 +64,24 @@ export const activationSummary = (item, character) => {
     const sign = effect.bonus >= 0 ? `+${effect.bonus}` : `${effect.bonus}`;
     return `${sign} ${effect.value || ''} to ${save} save`.replace(/\s+/g, ' ').trim()
       + (effect.critFailToFail ? '; critical failure becomes failure' : '');
+  }
+  // Shield-buff kinds (#1246) — see shieldTalismans.js for the machinery.
+  if (effect?.kind === 'shield-hardness') {
+    const dur = shieldBuffDuration(effect);
+    return `+${effect.bonus || 0} Hardness to the shield${dur ? ` (${dur})` : ''}`;
+  }
+  if (effect?.kind === 'shield-temp-hp') {
+    return `shield gains ${effect.roll || ''} temporary HP${effect.wielderHalf ? '; you gain half' : ''}`
+      .replace(/\s+/g, ' ').trim();
+  }
+  if (effect?.kind === 'shield-energy-block') {
+    const dur = shieldBuffDuration(effect);
+    return `Shield Block the triggering damage type — shield immune to it${dur ? ` (${dur})` : ''}`;
+  }
+  if (effect?.kind === 'shield-trait') {
+    const dur = shieldBuffDuration(effect);
+    const traits = (effect.traits || []).map((t) => String(t).toLowerCase()).join(', ');
+    return `the shield gains the ${traits} trait${dur ? ` (${dur})` : ''}`;
   }
   if (effect?.kind === 'check-bonus') {
     const skill = effect.skill

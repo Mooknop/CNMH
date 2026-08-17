@@ -33,6 +33,11 @@ import {
   affix, unaffix, affixedKey, itemUidOf, deactivateTalisman, affixedTalismansByHost,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
+import {
+  shieldTalismanEffect, buildShieldBuffEntry, withShieldBuffApplied,
+  shieldBuffGrantedTraits, heartstoneSplit,
+} from '../../utils/shieldTalismans';
+import { grantTempHp } from '../../utils/hymnHealing';
 import { recordConsumed } from '../../utils/consumedLedger';
 import {
   isWhetstone, whetstoneMeta, whetstoneChoice, whetstoneDuration, whetstoneDurationLabel,
@@ -124,6 +129,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // the modal only checks active/round/order, no need for the full hook.
   const [encounter] = useSyncedState(globalKey(RELAY.ENCOUNTER), null);
   const [whetstonePick, setWhetstonePick] = useState(null);
+  // Shield-talisman activation inputs (#1246): the Heartstone's rolled 5d6+10
+  // total, and the Prismatic Crystal's triggering-damage-type pick. Only one
+  // activation card is live at a time (one talisman per host, #1657), so a
+  // single pair covers both the talisman's own card and its host's.
+  const [talismanRoll, setTalismanRoll] = useState('');
+  const [talismanChoice, setTalismanChoice] = useState('');
+  // Wielder HP (#1246 — Heartstone grants the wielder half the shield's temp
+  // HP through the normal temp-HP path, take-higher like Hymn of Healing).
+  const [, setWielderHp] = useSyncedState(syncKey(RELAY.HP, character?.id || 'none'), null);
   const { appendEvent } = useSessionLog();
   // Player-to-player item transfer (#656/#657) — out of combat only.
   const { give, giveConsumable } = useGiveItem(character?.id);
@@ -346,7 +360,106 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${t.name} from ${item.name}` });
     onClose();
   };
+
+  // Shield-talisman activation (#1246 — adamantine flake / heartstone /
+  // prismatic crystal / tree sap): instead of the log-only path, apply the
+  // talisman's structured effect. Heartstone is instantaneous (temp HP through
+  // the durability rail + the wielder's normal temp-HP pool); the timed kinds
+  // leave a `shieldBuff` entry in cnmh_effects_ that useShield / the trait
+  // display read and the shared sweeps expire. Returns false when the item
+  // isn't a shield-buff talisman (callers fall through to the generic path)
+  // or when a required input is missing (the button is disabled then anyway).
+  const activateShieldTalisman = (t, host) => {
+    const eff = shieldTalismanEffect(t);
+    if (!eff || !host) return false;
+    const who = character?.name || 'Someone';
+    if (eff.kind === 'shield-temp-hp') {
+      const total = parseInt(talismanRoll, 10);
+      if (!(total > 0)) return false;
+      const { shield: shieldTemp, wielder: wielderTemp } = heartstoneSplit(total);
+      itemHp.grantTempHp(host, shieldTemp);
+      if (eff.wielderHalf && wielderTemp > 0) {
+        setWielderHp((cur) => grantTempHp(
+          cur || { current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0 },
+          wielderTemp
+        ));
+      }
+      const wielderNote = eff.wielderHalf && wielderTemp > 0 ? `, ${who} gains ${wielderTemp}` : '';
+      appendEvent({
+        type: 'action',
+        text: `${who} activated ${t.name}: ${host.name} gains ${shieldTemp} temporary HP${wielderNote}`,
+      });
+    } else {
+      if (eff.kind === 'shield-energy-block' && !talismanChoice) return false;
+      const entry = buildShieldBuffEntry({
+        item: t,
+        shield: host,
+        charId: character?.id,
+        choice: eff.kind === 'shield-energy-block' ? talismanChoice : undefined,
+        encounter,
+        casterEntryId: selfEntryId,
+        nowSecs,
+      });
+      setEffects((cur) => withShieldBuffApplied(cur, entry));
+      const typeNote = entry.shieldBuff.energyBlock ? ` — ${entry.shieldBuff.energyBlock}` : '';
+      appendEvent({
+        type: 'action',
+        text: `${who} activated ${t.name} on ${host.name}: ${activationSummary(t, charData)}${typeNote}`,
+      });
+    }
+    deactivateTalisman({ talisman: t, setConsumed, setAffixed });
+    setTalismanRoll('');
+    setTalismanChoice('');
+    onClose();
+    return true;
+  };
+
+  // Whether a shield-buff talisman's Activate is missing a required input
+  // (Heartstone's rolled total / Prismatic Crystal's triggering type).
+  const shieldTalismanNeedsInput = (t) => {
+    const eff = shieldTalismanEffect(t);
+    if (!eff) return false;
+    if (eff.kind === 'shield-temp-hp') return !(parseInt(talismanRoll, 10) > 0);
+    if (eff.kind === 'shield-energy-block') return !talismanChoice;
+    return false;
+  };
+
+  // Activation-time inputs for a shield-buff talisman's card, or null.
+  const shieldTalismanInputs = (t) => {
+    const eff = shieldTalismanEffect(t);
+    if (eff?.kind === 'shield-temp-hp') {
+      return (
+        <input
+          type="number"
+          min="1"
+          className="talisman-activate-input"
+          placeholder={`${eff.roll} →`}
+          aria-label={`${t.name} rolled total`}
+          value={talismanRoll}
+          onChange={(e) => setTalismanRoll(e.target.value)}
+        />
+      );
+    }
+    if (eff?.kind === 'shield-energy-block') {
+      return (
+        <select
+          className="talisman-activate-input"
+          aria-label={`${t.name} triggering damage type`}
+          value={talismanChoice}
+          onChange={(e) => setTalismanChoice(e.target.value)}
+        >
+          <option value="">Triggering type…</option>
+          {(eff.choose || []).map((ty) => (
+            <option key={ty} value={ty}>{ty}</option>
+          ))}
+        </select>
+      );
+    }
+    return null;
+  };
+
   const doActivateHosted = (t) => {
+    if (activateShieldTalisman(t, item)) return;
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} activated ${t.name}: ${activationSummary(t, charData)}` });
     deactivateTalisman({ talisman: t, setConsumed, setAffixed });
     onClose();
@@ -356,6 +469,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // generic surface: consume the talisman and log its (computed) effect (#254).
   const activation = talisman && affixedTo ? activationOf(item) : null;
   const doActivate = () => {
+    if (activateShieldTalisman(item, affixedTo)) return;
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} activated ${item.name}: ${activationSummary(item, charData)}` });
     deactivateTalisman({ talisman: item, setConsumed, setAffixed });
     onClose();
@@ -834,11 +948,14 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {/* Display traits if they exist — an inscribed accessory rune grants
           derived Magical + Invested chips on top of the authored traits; a
           shield shows its effective traits (base + rune-granted, e.g. Feather →
-          Finesse, #1196 G3). */}
+          Finesse, #1196 G3, plus any active talisman-buff grant — Tree Sap's
+          Grapple, #1246). */}
       {(() => {
         const traits = accessory
           ? accessory.traits
-          : item.shield ? shieldEffectiveTraits(item) : item.traits;
+          : item.shield
+            ? shieldEffectiveTraits(item, shieldBuffGrantedTraits(effects, itemUidOf(item)))
+            : item.traits;
         return (traits || []).length > 0 ? (
           <div className="item-traits">
             {traits.map((trait, i) => (
@@ -1156,11 +1273,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                   )}
                 </div>
                 <div className="hosted-talisman-actions">
+                  {act && shieldTalismanInputs(t)}
                   {act && (
                     <button
                       type="button"
                       className="btn-small btn-primary"
                       data-testid={`hosted-activate-${itemUidOf(t)}`}
+                      disabled={shieldTalismanNeedsInput(t)}
                       onClick={() => doActivateHosted(t)}
                     >
                       Activate ({activationSummary(t, charData)})
@@ -1349,10 +1468,12 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                     {activation.cost === 'reaction' ? 'Reaction' : activation.cost === 'free' ? 'Free action' : `${activation.cost} action`}
                     {activation.trigger ? ` — ${activation.trigger}.` : ''}
                   </p>
+                  {shieldTalismanInputs(item)}
                   <button
                     type="button"
                     className="btn-small btn-primary"
                     data-testid="item-action-activate"
+                    disabled={shieldTalismanNeedsInput(item)}
                     onClick={doActivate}
                   >
                     Activate ({activationSummary(item, charData)})

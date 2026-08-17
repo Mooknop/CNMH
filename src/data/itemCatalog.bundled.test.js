@@ -242,7 +242,10 @@ describe('bundled item catalog (Slice 3)', () => {
   // (Ring of Observation Moderate/Greater) carries the `grantedSpells` grant.
   // #912: a variant-tiered worn-gear `modifiers` array (Backfire Mantle's Reflex-
   // vs-spells hint scales +1 → +2 across grades).
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense', 'grantedSpells', 'modifiers'];
+  // #1246: a graded shield talisman (Adamantine Flake, Tree Sap) overrides its
+  // whole `talisman` block so the higher grade's activation effect (bonus /
+  // duration) rides the variant.
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect', 'sense', 'grantedSpells', 'modifiers', 'talisman'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -295,6 +298,12 @@ describe('bundled item catalog (Slice 3)', () => {
             expect(typeof m.stat).toBe('string');
             expect(typeof m.amount).toBe('number');
           });
+        }
+        // #1246: a graded shield talisman overrides its whole talisman block —
+        // it must stay a well-formed affix-to + activation shape.
+        if (v.overrides.talisman !== undefined) {
+          expect(typeof v.overrides.talisman.affixTo).toBe('string');
+          expect(typeof v.overrides.talisman.activation).toBe('object');
         }
       });
     });

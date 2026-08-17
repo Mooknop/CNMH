@@ -57,6 +57,20 @@ describe('talismanActivation (#254/#339)', () => {
       expect(activationSummary(mesmerizingOpal, str18))
         .toBe('shift the Deception check outcome one step in your favour — to Feint');
     });
+
+    // Shield-buff kinds (#1246) — the machinery lives in shieldTalismans.js;
+    // the summary is the Activate label / log line.
+    it('summarizes the shield-buff kinds', () => {
+      const shieldy = (effect) => ({ name: 'S', talisman: { affixTo: 'shield', activation: { cost: 1, effect } } });
+      expect(activationSummary(shieldy({ kind: 'shield-hardness', bonus: 6, durationMinutes: 1 })))
+        .toBe('+6 Hardness to the shield (1 minute)');
+      expect(activationSummary(shieldy({ kind: 'shield-temp-hp', roll: '5d6+10', wielderHalf: true })))
+        .toBe('shield gains 5d6+10 temporary HP; you gain half');
+      expect(activationSummary(shieldy({ kind: 'shield-energy-block', choose: ['fire'], durationMinutes: 1 })))
+        .toBe('Shield Block the triggering damage type — shield immune to it (1 minute)');
+      expect(activationSummary(shieldy({ kind: 'shield-trait', traits: ['Grapple'], durationRounds: 1 })))
+        .toBe('the shield gains the grapple trait (1 round)');
+    });
   });
 
   describe('check outcome shift (#1085)', () => {

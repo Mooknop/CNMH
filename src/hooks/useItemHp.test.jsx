@@ -43,7 +43,7 @@ describe('useItemHp — statusFor', () => {
   it('a fresh item sits at its derived max (thin steel weapon)', () => {
     const { result } = renderHook(() => useItemHp('Pellias'));
     expect(result.current.statusFor(longsword)).toEqual({
-      hp: 20, maxHp: 20, hardness: 5, brokenThreshold: 10, broken: false, destroyed: false,
+      hp: 20, maxHp: 20, tempHp: 0, hardness: 5, brokenThreshold: 10, broken: false, destroyed: false,
     });
   });
 
@@ -58,7 +58,7 @@ describe('useItemHp — applyDamage', () => {
     const { result } = renderHook(() => useItemHp('Pellias'));
     let r;
     act(() => { r = result.current.applyDamage(longsword, 12); });
-    expect(r).toEqual({ prevented: 5, taken: 7, hpAfter: 13, broken: false, destroyed: false });
+    expect(r).toEqual({ prevented: 5, taken: 7, hpAfter: 13, tempHpAfter: 0, broken: false, destroyed: false });
     expect(result.current.statusFor(longsword)).toMatchObject({ hp: 13, maxHp: 20 });
     expect(__get('cnmh_itemhp_Pellias')).toEqual({ 'e-sword': { hp: 13 } });
   });
@@ -107,6 +107,40 @@ describe('useItemHp — repairItem', () => {
     expect(r).toBeNull();
     act(() => { r = result.current.repairItem(potion, 5); });
     expect(r).toBeNull();
+  });
+});
+
+describe('useItemHp — temporary HP (#1246 Heartstone)', () => {
+  it('grantTempHp takes the higher pool and rides the same record as hp', () => {
+    const { result } = renderHook(() => useItemHp('Pellias'));
+    let pool;
+    act(() => { pool = result.current.grantTempHp(longsword, 27); });
+    expect(pool).toBe(27);
+    expect(__get('cnmh_itemhp_Pellias')).toEqual({ 'e-sword': { hp: 20, tempHp: 27 } });
+    // Temp HP don't stack — a smaller grant is a no-op on the pool.
+    act(() => { pool = result.current.grantTempHp(longsword, 10); });
+    expect(pool).toBe(27);
+    expect(result.current.tempHpFor('e-sword')).toBe(27);
+    // Untracked items and non-positive amounts stay null.
+    act(() => { pool = result.current.grantTempHp(potion, 5); });
+    expect(pool).toBeNull();
+  });
+
+  it('applyDamage spends the pool before real HP and drops it from the record at 0', () => {
+    const { result } = renderHook(() => useItemHp('Pellias'));
+    act(() => { result.current.grantTempHp(longsword, 5); });
+    let r;
+    act(() => { r = result.current.applyDamage(longsword, 13); }); // H5 → 8 through
+    expect(r).toEqual({ prevented: 5, taken: 8, hpAfter: 17, tempHpAfter: 0, broken: false, destroyed: false });
+    expect(__get('cnmh_itemhp_Pellias')).toEqual({ 'e-sword': { hp: 17 } });
+  });
+
+  it('repairItem preserves an existing pool (setHp default keeps tempHp)', () => {
+    const { result } = renderHook(() => useItemHp('Pellias'));
+    act(() => { result.current.applyDamage(longsword, 17); }); // hp 8
+    act(() => { result.current.grantTempHp(longsword, 6); });
+    act(() => { result.current.repairItem(longsword, 5); });
+    expect(__get('cnmh_itemhp_Pellias')).toEqual({ 'e-sword': { hp: 13, tempHp: 6 } });
   });
 });
 

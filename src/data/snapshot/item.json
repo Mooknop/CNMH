@@ -243,7 +243,12 @@
       "affixTo": "shield",
       "activation": {
         "cost": 1,
-        "trigger": "You use the Shield Block reaction."
+        "trigger": "You use the Shield Block reaction.",
+        "effect": {
+          "kind": "shield-hardness",
+          "bonus": 2,
+          "durationMinutes": 1
+        }
       }
     },
     "description": "This tiny fleck of adamantine can impart some of its incredible hardness to the shield it is attached to. When activated, it grants the attached shield a +2 item bonus to Hardness for 1 minute.",
@@ -260,21 +265,63 @@
         "label": "Greater",
         "name": "Greater Adamantine Flake",
         "price": 90,
-        "effect": "The item bonus to hardness is increased to +6."
+        "effect": "The item bonus to hardness is increased to +6.",
+        "overrides": {
+          "talisman": {
+            "affixTo": "shield",
+            "activation": {
+              "cost": 1,
+              "trigger": "You use the Shield Block reaction.",
+              "effect": {
+                "kind": "shield-hardness",
+                "bonus": 6,
+                "durationMinutes": 1
+              }
+            }
+          }
+        }
       },
       {
         "level": 13,
         "label": "Major",
         "name": "Major Adamantine Flake",
         "price": 460,
-        "effect": "The item bonus to hardness is increased to +10."
+        "effect": "The item bonus to hardness is increased to +10.",
+        "overrides": {
+          "talisman": {
+            "affixTo": "shield",
+            "activation": {
+              "cost": 1,
+              "trigger": "You use the Shield Block reaction.",
+              "effect": {
+                "kind": "shield-hardness",
+                "bonus": 10,
+                "durationMinutes": 1
+              }
+            }
+          }
+        }
       },
       {
         "level": 18,
         "label": "True",
         "name": "True Adamantine Flake",
         "price": 1600,
-        "effect": "The item bonus to hardness is increased to +14."
+        "effect": "The item bonus to hardness is increased to +14.",
+        "overrides": {
+          "talisman": {
+            "affixTo": "shield",
+            "activation": {
+              "cost": 1,
+              "trigger": "You use the Shield Block reaction.",
+              "effect": {
+                "kind": "shield-hardness",
+                "bonus": 14,
+                "durationMinutes": 1
+              }
+            }
+          }
+        }
       }
     ]
   },
@@ -7211,7 +7258,12 @@
     "talisman": {
       "affixTo": "shield",
       "activation": {
-        "cost": 1
+        "cost": 1,
+        "effect": {
+          "kind": "shield-temp-hp",
+          "roll": "5d6+10",
+          "wielderHalf": true
+        }
       }
     },
     "description": "This small dense stone is wrapped in wire. When activated, it spreads across the face of your shield and up the arm that wields it, protecting it and its wearer for as long as the stone holds up against attack. Your shield gains 5d6 + 10 temporary Hit Points and you gain half that amount."
@@ -10579,7 +10631,19 @@
       "affixTo": "shield",
       "activation": {
         "cost": 1,
-        "trigger": "You are targeted by, or in the area of an effect that deals acid, cold, electricity, fire, poison, or sonic damage."
+        "trigger": "You are targeted by, or in the area of an effect that deals acid, cold, electricity, fire, poison, or sonic damage.",
+        "effect": {
+          "kind": "shield-energy-block",
+          "choose": [
+            "acid",
+            "cold",
+            "electricity",
+            "fire",
+            "poison",
+            "sonic"
+          ],
+          "durationMinutes": 1
+        }
       }
     },
     "description": "A small crystal that refracts light into its constituent colors, wrapped in a leather cord that can be tied to your shield. When activated, for 1 minute your shield transforms into an elemental version of the triggering damage type. During this effect, you may use your Shield Block reaction when you would take damage from the triggering damage type in addition to physical damage, and your shield is immune to the triggering damage type."
@@ -15378,7 +15442,14 @@
     "talisman": {
       "affixTo": "shield",
       "activation": {
-        "cost": 1
+        "cost": 1,
+        "effect": {
+          "kind": "shield-trait",
+          "traits": [
+            "Grapple"
+          ],
+          "durationRounds": 1
+        }
       }
     },
     "description": "This waxed pouch contains thick tree sap. When activated, the face of your shield becomes incredibly sticky. For 1 round the shield gains the grapple trait.",
@@ -15395,7 +15466,22 @@
         "label": "Greater",
         "name": "Greater Tree Sap",
         "price": 40,
-        "effect": "The shield gains the grapple trait for 1 minute."
+        "effect": "The shield gains the grapple trait for 1 minute.",
+        "overrides": {
+          "talisman": {
+            "affixTo": "shield",
+            "activation": {
+              "cost": 1,
+              "effect": {
+                "kind": "shield-trait",
+                "traits": [
+                  "Grapple"
+                ],
+                "durationMinutes": 1
+              }
+            }
+          }
+        }
       }
     ]
   },

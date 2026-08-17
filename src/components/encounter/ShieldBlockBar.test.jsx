@@ -91,7 +91,7 @@ describe('ShieldBlockBar', () => {
     fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
     fireEvent.click(screen.getByLabelText('Shield Block'));
 
-    expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
+    expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0, shieldImmune: false });
     expect(mockSpendReaction).toHaveBeenCalledWith('Shield Block');
     expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
       charId: 'Pellias',
@@ -154,7 +154,7 @@ describe('ShieldBlockBar', () => {
       renderDeflecting();
       fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
       fireEvent.click(screen.getByLabelText('Shield Block'));
-      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0, shieldImmune: false });
     });
 
     it('checking ranged passes +2 Hardness and notes it in the log', () => {
@@ -163,7 +163,7 @@ describe('ShieldBlockBar', () => {
       fireEvent.click(screen.getByLabelText(RANGED_LABEL));
       fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
       fireEvent.click(screen.getByLabelText('Shield Block'));
-      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 2 });
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 2, shieldImmune: false });
       expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
         text: expect.stringContaining('deflecting +2 Hardness (ranged)'),
       }));
@@ -202,7 +202,7 @@ describe('ShieldBlockBar', () => {
       fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
       fireEvent.click(screen.getByLabelText('Shield Block'));
       // 12 − 5 Hardness before the block; the block itself is unchanged.
-      expect(mockApplyBlock).toHaveBeenCalledWith(7, { hardnessBonus: 0 });
+      expect(mockApplyBlock).toHaveBeenCalledWith(7, { hardnessBonus: 0, shieldImmune: false });
       expect(mockRecord).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'u1:protecting:actuated', frequency: 'once per minute' }),
         expect.anything(),
@@ -217,7 +217,7 @@ describe('ShieldBlockBar', () => {
       renderProtecting();
       fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
       fireEvent.click(screen.getByLabelText('Shield Block'));
-      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0, shieldImmune: false });
       expect(mockRecord).not.toHaveBeenCalled();
     });
 
@@ -267,6 +267,49 @@ describe('ShieldBlockBar', () => {
       block();
       expect(mockAppendLog).not.toHaveBeenCalledWith(expect.objectContaining({
         text: expect.stringContaining('shockwave is stored'),
+      }));
+    });
+  });
+
+  // ── Prismatic Crystal energy block (#1246) ──
+  describe('prismatic crystal energy block (#1246)', () => {
+    const FIRE_LABEL = 'Triggering damage is fire (shield immune)';
+
+    it('shows no energy toggle without an active crystal buff', () => {
+      setup();
+      expect(screen.queryByLabelText(FIRE_LABEL)).not.toBeInTheDocument();
+    });
+
+    it('shows the toggle when useShield reports an energy-block window', () => {
+      mockShield.heldShield = { ...mockShield.heldShield, energyBlock: 'fire' };
+      setup();
+      expect(screen.getByLabelText(FIRE_LABEL)).toBeInTheDocument();
+    });
+
+    it('checking it blocks with shieldImmune and logs the immunity', () => {
+      mockShield.heldShield = { ...mockShield.heldShield, energyBlock: 'fire' };
+      mockApplyBlock.mockReturnValue({
+        prevented: 5, shieldHpAfter: 20, shieldTempHpAfter: 0, broken: false,
+      });
+      setup();
+      fireEvent.click(screen.getByLabelText(FIRE_LABEL));
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0, shieldImmune: true });
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('shield immune to fire — no shield damage'),
+      }));
+    });
+
+    it('a Heartstone temp pool shows in the surviving-shield log line', () => {
+      mockApplyBlock.mockReturnValue({
+        prevented: 5, shieldHpAfter: 20, shieldTempHpAfter: 18, broken: false,
+      });
+      setup();
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('shield → 20 HP (+18 temp)'),
       }));
     });
   });

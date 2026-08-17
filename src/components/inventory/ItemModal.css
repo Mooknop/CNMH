@@ -433,6 +433,19 @@
 .hosted-talisman-info .item-affix-hint { margin: 0; }
 .hosted-talisman-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
+/* Shield-talisman activation inputs (#1246): the Heartstone's rolled-total
+   field and the Prismatic Crystal's triggering-type select, sitting beside the
+   Activate button on either card. */
+.talisman-activate-input {
+  max-width: 9.5rem;
+  padding: 0.25rem 0.4rem;
+  font-size: var(--text-sm);
+  color: inherit;
+  background: color-mix(in srgb, var(--void-base) 60%, transparent);
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.18));
+  border-radius: var(--radius-sm);
+}
+
 /* ── pinned footer with loadout actions ── */
 .loot-foot,
 .modal-container.modal--loot .item-modal-actions {
