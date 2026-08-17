@@ -87,6 +87,30 @@ describe('catalyst spine', () => {
       expect(catalystAddActions(tuft)).toBe(1);
     });
 
+    it('imports the acid/flora/fire catalyst groups (W1-A) with their target spells', () => {
+      const ids = [
+        'necrotic-cap-lesser', 'necrotic-cap-moderate', 'necrotic-cap-greater', 'necrotic-cap-major',
+        'feral-linguist', 'feral-linguist-greater', 'wolliped-fleece', 'vultures-wing',
+        'bougainvillea-blossom-lesser', 'bougainvillea-blossom-moderate',
+        'bougainvillea-blossom-greater', 'bougainvillea-blossom-major', 'wemmuth-trinket',
+        'firestarter-pellets', 'firestarter-pellets-greater', 'firestarter-pellets-major',
+      ];
+      ids.forEach((id) => {
+        const c = items.find((i) => i.id === id);
+        expect(c, id).toBeTruthy();
+        expect(isCatalyst(c)).toBe(true);
+        expect(c.traits).not.toContain('3rd Party');
+      });
+      // spot-check a rider: Firestarter Pellets (Greater) → Fireball, +1 action
+      const pellets = items.find((i) => i.id === 'firestarter-pellets-greater');
+      expect(catalystTargetSpell(pellets)).toBe('fireball');
+      expect(catalystAddActions(pellets)).toBe(1);
+      // the newly imported target spells resolve
+      ['acid-grip', 'chilling-spray', 'enfeeble', 'entangling-flora', 'fireball'].forEach((id) => {
+        expect(spells.find((s) => s.id === id), id).toBeTruthy();
+      });
+    });
+
     it('imports blazing dive alongside the Phoenix Tail Feather', () => {
       const bd = spells.find((s) => s.id === 'blazing-dive');
       expect(bd).toBeTruthy();
