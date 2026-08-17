@@ -23,6 +23,7 @@
  *   - CAST_PROTOCOL / CAST_TIMEOUT_MS         → src/utils/castRelay.js
  *   - ENEMY_MOVE_PROTOCOL / FULL_MOVE_PROTOCOL / MAP_MOVE_PROTOCOL /
  *     MAP_TARGET_PROTOCOL / DIRECTIONAL_AREA_PROTOCOL → src/utils/movement.js
+ *   - AURA_PROTOCOL                           → src/utils/auraRelay.js
  *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
  */
 
@@ -135,6 +136,17 @@ export const MAP_TARGET_PROTOCOL = 17;
  *  (non-measuring) rosette, and `cnmh_pingpoint_global` pings the table while
  *  the GM adjudicates who is caught. */
 export const DIRECTIONAL_AREA_PROTOCOL = 18;
+
+// ── src/utils/auraRelay.js ───────────────────────────────────────────────────
+
+/** The bridge protocol that taught the relay the kinetic-aura emanation rail
+ *  (#1733 S1/S2): `auraset` (app → bridge, activate/deactivate a token-attached
+ *  Region) and `auramembers` (bridge → app, who is standing inside it).
+ *  `useAuraRegionSync` (the mirror) gates every send on this floor — below it,
+ *  or with no hello at all, the app-only `cnmh_aura_<charId>` key still drives
+ *  impulse gating exactly as before, but nothing ever reaches the bridge, and
+ *  `useAuraMembers` never reports membership as `known`. */
+export const AURA_PROTOCOL = 19;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 
