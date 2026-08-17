@@ -54,6 +54,13 @@ describe('parseFrequency', () => {
     expect(parseFrequency({ frequency: 'at will' })).toBeNull();
   });
 
+  it('understands once per minute in both forms (#1246)', () => {
+    expect(parseFrequency({ frequencyRule: { per: 'minute', uses: 1 } }))
+      .toEqual({ per: 'minute', uses: 1 });
+    expect(parseFrequency({ frequency: 'once per minute' }))
+      .toEqual({ per: 'minute', uses: 1 });
+  });
+
   it('returns null when no frequency is declared', () => {
     expect(parseFrequency({ name: 'Strike', traits: ['Attack'] })).toBeNull();
     expect(parseFrequency(null)).toBeNull();
@@ -114,6 +121,45 @@ describe('checkFrequency — clock windows', () => {
   it('is open with no records or no rule', () => {
     expect(checkFrequency({ rule, records: [], nowSecs: NOW }).available).toBe(true);
     expect(checkFrequency({ rule: null, records: [rec()], nowSecs: NOW }).available).toBe(true);
+  });
+});
+
+describe('checkFrequency — once per minute (#1246)', () => {
+  const rule = { per: 'minute', uses: 1 };
+
+  it('locks for 60 game seconds outside combat', () => {
+    const records = [rec({ per: 'minute', gameSecs: NOW - 30 })];
+    const gate = checkFrequency({ rule, records, nowSecs: NOW });
+    expect(gate).toMatchObject({
+      available: false,
+      lockKind: 'window',
+      availableAtSecs: NOW - 30 + WINDOW_SECS.minute,
+      availableAtRound: null,
+    });
+    expect(checkFrequency({ rule, records, nowSecs: NOW + 30 }).available).toBe(true);
+  });
+
+  it('falls back to a 10-round lock while the encounter clock stands still', () => {
+    const records = [rec({ per: 'minute', gameSecs: NOW, round: 3, entryId: 'e1' })];
+    const locked = checkFrequency({ rule, records, nowSecs: NOW, encounter: liveEncounter(5) });
+    expect(locked).toMatchObject({ available: false, lockKind: 'window', availableAtRound: 13 });
+    // Round 13 = ten rounds after the use — a minute has elapsed in rounds.
+    expect(checkFrequency({ rule, records, nowSecs: NOW, encounter: liveEncounter(13) }).available).toBe(true);
+  });
+
+  it('reverts to the game clock once the encounter ends', () => {
+    const records = [rec({ per: 'minute', gameSecs: NOW, round: 3, entryId: 'e1' })];
+    const ended = { ...liveEncounter(13), active: false, phase: 'ended' };
+    expect(checkFrequency({ rule, records, nowSecs: NOW + 30, encounter: ended }).available).toBe(false);
+    expect(checkFrequency({ rule, records, nowSecs: NOW + WINDOW_SECS.minute, encounter: ended }).available).toBe(true);
+  });
+
+  it('lockMessage carries the round-fallback hint during combat', () => {
+    const records = [rec({ per: 'minute', gameSecs: NOW - 6, round: 3 })];
+    const gate = checkFrequency({ rule, records, nowSecs: NOW, encounter: liveEncounter(4) });
+    const msg = lockMessage(gate, rule, NOW);
+    expect(msg).toContain('Once per minute');
+    expect(msg).toContain('(or round 13)');
   });
 });
 

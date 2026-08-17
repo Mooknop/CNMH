@@ -4,10 +4,14 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useFrequencyGate } from '../../hooks/useFrequencyGate';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import {
   dragonbreathMeta,
   dragonbreathBreath,
   dragonbreathDisplayName,
+  dragonbreathFreqAbility,
 } from '../../utils/dragonbreath';
 import './DragonbreathModal.css';
 
@@ -54,6 +58,23 @@ const DragonbreathModal = ({ isOpen, onClose, item, character, themeColor }) => 
   const [dmg, setDmg] = useState('');
   const [fired, setFired] = useState(false);
 
+  // Once-per-minute gate (#1246): the shared frequency engine derives the lock
+  // from the synced ledger (cnmh_freq_<charId>, key `<uid>:breathe`) vs the
+  // game clock — with a 10-round fallback while the encounter clock stands
+  // still — and renders the blocked section with the GM override / clear
+  // affordances.
+  const { gameDate, time } = useGameDate();
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
+  const casterEntryId =
+    order.find((e) => e.kind === 'pc' && e.charId === character?.id)?.entryId || null;
+  const frequencyGate = useFrequencyGate({
+    charId: character?.id || 'nobody',
+    ability: dragonbreathFreqAbility(item),
+    nowSecs,
+    encounter,
+    casterEntryId,
+  });
+
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
   const coneFt = breath ? breath.coneFt : 0;
   const areaLabel = shape === 'cone' ? `${coneFt}-ft cone` : `${breath?.emanationFt ?? 5}-ft emanation`;
@@ -69,7 +90,7 @@ const DragonbreathModal = ({ isOpen, onClose, item, character, themeColor }) => 
   const log = encounter?.active ? appendLog : ({ type, text }) => appendEvent({ type, text });
 
   const handleConfirm = () => {
-    if (!breath || picked.size === 0) return;
+    if (!breath || picked.size === 0 || !frequencyGate.gateOk) return;
     const targets = enemyTargets
       .filter((e) => picked.has(e.entryId))
       .map((e) => ({ entryId: e.entryId, name: e.name, saveMod: e.defenses?.saves?.reflex ?? null }));
@@ -90,10 +111,15 @@ const DragonbreathModal = ({ isOpen, onClose, item, character, themeColor }) => 
       ...(damage && { damage }),
     });
 
+    // Record the use against the frequency ledger (an override still records —
+    // the use happened, it just bypassed the lock, and the log says so).
+    let freqSuffix = '';
+    frequencyGate.applyOnConfirm({ addSuffix: (s) => { freqSuffix += s; } });
+
     log({
       type: 'action',
       charId: character.id,
-      text: `${character.name} breathes with ${dragonbreathDisplayName(item, item.name)} (${areaLabel}, ${expression}, basic Reflex DC ${breath.dc}) at ${targets.length} target${targets.length === 1 ? '' : 's'} — once per minute`,
+      text: `${character.name} breathes with ${dragonbreathDisplayName(item, item.name)} (${areaLabel}, ${expression}, basic Reflex DC ${breath.dc}) at ${targets.length} target${targets.length === 1 ? '' : 's'} — once per minute${freqSuffix}`,
     });
 
     if (encounterMode) spendActions(BREATH_ACTIONS, `${SHAPES[shape].verb} (${item.name})`);
@@ -214,13 +240,17 @@ const DragonbreathModal = ({ isOpen, onClose, item, character, themeColor }) => 
           <p className="dbm-hint">Optional — leave blank to request saves only and apply damage by hand.</p>
         </div>
 
+        {/* Frequency lock (#1246) — blocked-state section with the GM
+            override / clear-lock affordances; null while the breath is open. */}
+        {frequencyGate.section}
+
         <div className="dbm-actions">
           <button
             type="button"
             className="btn-primary dbm-confirm"
             data-testid="dbm-breathe"
             onClick={handleConfirm}
-            disabled={picked.size === 0 || fired}
+            disabled={picked.size === 0 || fired || !frequencyGate.gateOk}
           >
             {fired ? 'Breathed' : `${SHAPES[shape].verb}${encounterMode ? ` (${BREATH_ACTIONS} act)` : ''}`}
           </button>

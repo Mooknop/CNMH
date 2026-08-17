@@ -11,9 +11,15 @@
 //   round/entryId are stamped only when recorded during an active encounter.
 import { formatAvailableAt, formatGameDuration } from './gameTime';
 
-export const FREQUENCY_PERS = ['turn', 'round', 'hour', 'day', 'week'];
+export const FREQUENCY_PERS = ['turn', 'round', 'minute', 'hour', 'day', 'week'];
+
+// 1 encounter round = 6 seconds — window records stamped mid-encounter also age
+// out by rounds (see recordActive), so "once per minute" doubles as a
+// 10-round lock while the game clock stands still (#1246).
+export const SECS_PER_ROUND = 6;
 
 export const WINDOW_SECS = {
+  minute: 60,
   hour: 3600,
   day: 86400,
   week: 604800,
@@ -33,7 +39,7 @@ export function freqKeyFor(ability) {
   return ability?.id || slug(ability?.name) || null;
 }
 
-const FREQ_TEXT_RE = /(?:once|(\d+)\s*times?)\s+per\s+(turn|round|hour|day|week)/i;
+const FREQ_TEXT_RE = /(?:once|(\d+)\s*times?)\s+per\s+(turn|round|minute|hour|day|week)/i;
 
 /**
  * Resolve an ability's frequency rule → { per, uses } | null.
@@ -81,16 +87,30 @@ const recordActive = (rec, rule, { nowSecs, encounter, casterEntryId }) => {
   const windowSecs = WINDOW_SECS[rule.per];
   if (!windowSecs || typeof rec.gameSecs !== 'number') return false;
   if (rec.gameSecs > nowSecs) return false; // clock moved backwards
+  // Encounter-round fallback (#1246): the game clock usually stands still in
+  // combat, so a window record stamped this encounter also ages out by rounds
+  // (1 round = 6s — a 'minute' window frees after 10 rounds). Outside combat,
+  // or for records stamped outside one, the game clock governs alone.
+  if (
+    encounterRunning(encounter) &&
+    typeof rec.round === 'number' &&
+    encounter.round >= rec.round + windowSecs / SECS_PER_ROUND
+  ) {
+    return false;
+  }
   return nowSecs < rec.gameSecs + windowSecs;
 };
 
 /**
  * Gate an ability against its ledger records.
  * @returns {{ available: boolean, lastUsedSecs: number|null,
- *             availableAtSecs: number|null, lockKind: 'turn'|'round'|'window'|null }}
+ *             availableAtSecs: number|null, lockKind: 'turn'|'round'|'window'|null,
+ *             availableAtRound: number|null }}
+ * availableAtRound is set only for a window lock recorded during the running
+ * encounter — the round the round-fallback frees it (#1246).
  */
 export function checkFrequency({ rule, records, nowSecs, encounter, casterEntryId }) {
-  const open = { available: true, lastUsedSecs: null, availableAtSecs: null, lockKind: null };
+  const open = { available: true, lastUsedSecs: null, availableAtSecs: null, lockKind: null, availableAtRound: null };
   if (!rule) return open;
   const ctx = { nowSecs, encounter, casterEntryId };
   const active = (records || []).filter((r) => recordActive(r, rule, ctx));
@@ -109,11 +129,16 @@ export function checkFrequency({ rule, records, nowSecs, encounter, casterEntryI
   }
   // Window lock frees up when the *oldest* active record ages out.
   const oldest = active[0];
+  const availableAtRound =
+    encounterRunning(encounter) && typeof oldest.round === 'number'
+      ? oldest.round + WINDOW_SECS[rule.per] / SECS_PER_ROUND
+      : null;
   return {
     available: false,
     lastUsedSecs: last?.gameSecs ?? null,
     availableAtSecs: oldest.gameSecs + WINDOW_SECS[rule.per],
     lockKind: 'window',
+    availableAtRound,
   };
 }
 
@@ -157,6 +182,7 @@ export function pruneLedgerByPer(ledger, per) {
 const PER_LABEL = {
   turn: 'Once per turn',
   round: 'Once per round',
+  minute: 'Once per minute',
   hour: 'Once per hour',
   day: 'Once per day',
   week: 'Once per week',
@@ -182,6 +208,8 @@ export function lockMessage(gate, rule, nowSecs) {
     gate.availableAtSecs != null
       ? `available at ${formatAvailableAt(gate.availableAtSecs, nowSecs)}`
       : 'available later';
+  const atRound =
+    gate.availableAtRound != null ? ` (or round ${gate.availableAtRound})` : '';
   const daily = rule.per === 'day' ? ' or after daily preparations' : '';
-  return `${label} — ${ago}, ${at}${daily}`;
+  return `${label} — ${ago}, ${at}${atRound}${daily}`;
 }

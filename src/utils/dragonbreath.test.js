@@ -16,9 +16,12 @@ import {
   applyDragonbreathUpgrade,
   dragonbreathTierPrice,
   dragonbreathTierLevel,
+  dragonbreathFreqAbility,
   BREATH_EMANATION_FT,
+  BREATH_FREQUENCY_RULE,
 } from './dragonbreath';
 import { resolveWeapon, propertySlotCapacity } from './weaponRunes';
+import { parseFrequency } from './frequency';
 
 const entry = (dragonbreath, property) => ({
   name: 'Longsword',
@@ -142,7 +145,8 @@ describe('dragonbreath spine', () => {
     it('derives dice/DC/cone by tier plus a 5-ft emanation and kind damage', () => {
       expect(dragonbreathBreath(entry({ tier: 'base', dragonType: 'Red' }))).toEqual({
         dice: '4d6', dc: 23, coneFt: 15, emanationFt: BREATH_EMANATION_FT,
-        frequency: 'once per minute', damageTypes: ['fire'], save: 'Reflex',
+        frequency: 'once per minute', frequencyRule: { per: 'minute', uses: 1 },
+        damageTypes: ['fire'], save: 'Reflex',
       });
       expect(dragonbreathBreath(entry({ tier: 'greater', dragonType: 'Mirage' }))).toMatchObject({
         dice: '6d6', dc: 27, coneFt: 30, damageTypes: ['force', 'mental'],
@@ -158,6 +162,28 @@ describe('dragonbreath spine', () => {
 
     it('is null for a non-template entry', () => {
       expect(dragonbreathBreath({ name: 'Longsword' })).toBeNull();
+    });
+  });
+
+  describe('dragonbreathFreqAbility (#1246)', () => {
+    it('builds a per-UID Breathe ability the frequency engine parses as once per minute', () => {
+      const e = { uid: 'u-77', ...entry({ tier: 'base', dragonType: 'Red' }) };
+      const ability = dragonbreathFreqAbility(e);
+      expect(ability).toEqual({
+        id: 'u-77:breathe',
+        name: 'Breathe',
+        frequencyRule: { per: 'minute', uses: 1 },
+      });
+      expect(parseFrequency(ability)).toEqual(BREATH_FREQUENCY_RULE);
+      // #1727 gotcha — item traits are never forwarded (the Flourish branch
+      // would wrongly gate trait-bearing items at once per turn).
+      expect(ability.traits).toBeUndefined();
+    });
+
+    it('falls back to the entry id, and is null for a non-dragonbreath entry', () => {
+      expect(dragonbreathFreqAbility(entry({ tier: 'base', dragonType: 'Red' })).id)
+        .toBe('Longsword:breathe'); // uid → id → name fallback (itemUidOf)
+      expect(dragonbreathFreqAbility({ name: 'Longsword' })).toBeNull();
     });
   });
 
