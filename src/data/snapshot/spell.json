@@ -1844,6 +1844,27 @@
     ]
   },
   {
+    "id": "fire-shield",
+    "name": "Fire Shield",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Fire",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "",
+    "area": "",
+    "targets": "",
+    "duration": "1 minute",
+    "description": "You create a hovering shield made of fire. As long as the shield persists, its heat grants you cold resistance 5 and makes you immune to mild and severe environmental cold. You can Raise a Shield with the fire shield as a normal shield to gain a +1 circumstance bonus to AC. You can use the Shield Block reaction with the fire shield, which has Hardness 10, is immune to fire, and has 40 HP (with no Broken Threshold), and its Hardness is halved against effects that have the water trait. If you Shield Block a melee attack that is either an unarmed attack or made by an adjacent attacker, the attacker takes 2d6 fire damage.\n\nHeightened (+2) The cold resistance increases by 5, the HP increase by 10, and the fire damage increases by 1d6.",
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "fireball",
     "name": "Fireball",
     "level": 3,
@@ -1975,6 +1996,26 @@
     ]
   },
   {
+    "id": "ghostly-carrier",
+    "name": "Ghostly Carrier",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "area": "",
+    "targets": "",
+    "duration": "1 minute",
+    "description": "You create a Tiny, semi-corporeal figure with a form you choose. It hovers near you for the duration. When you Cast a Spell that has a range of touch, you can have the carrier move within range, deliver the spell to a creature there, and return to you. If the carrier must attempt a spell attack roll, it uses your normal bonuses. The carrier has your AC and saves, but it is destroyed by any damage.",
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "glimmer-of-charm",
     "name": "Glimmer of Charm",
     "level": 5,
@@ -2022,6 +2063,34 @@
     "traditions": [
       "arcane",
       "primal"
+    ]
+  },
+  {
+    "id": "grim-tendrils",
+    "name": "Grim Tendrils",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Void"
+    ],
+    "actions": "Two Actions",
+    "range": "",
+    "area": "30-foot line",
+    "targets": "",
+    "defense": "Fortitude",
+    "duration": "",
+    "description": "Tendrils of darkness curl out from your fingertips and race through the air. You deal 2d4 void damage and 1 persistent bleed damage to living creatures in the line. Each living creature in the line must attempt a Fortitude save.\n\nHeightened (+1) The void damage increases by 2d4, and the persistent bleed damage increases by 1.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half the void damage and no persistent bleed damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double void damage and double persistent bleed damage."
+    },
+    "traditions": [
+      "arcane",
+      "occult"
     ]
   },
   {
@@ -2170,6 +2239,27 @@
     ]
   },
   {
+    "id": "harm",
+    "name": "Harm",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Manipulate",
+      "Void"
+    ],
+    "actions": "One to Three Actions",
+    "range": "varies",
+    "area": "",
+    "targets": "1 living creature or 1 willing undead creature",
+    "defense": "Fortitude",
+    "basic": true,
+    "duration": "",
+    "description": "You channel void energy to harm the living or heal the undead. If the target is a living creature, you deal 1d8 void damage to it, and it gets a basic Fortitude save. If the target is a willing undead creature, you restore that amount of Hit Points. The number of actions you spend when Casting this Spell determines its targets, range, area, and other parameters.\n\nOne action: The spell has a range of touch.\n\nTwo actions (concentrate): The spell has a range of 30 feet. If you're healing an undead creature, increase the Hit Points restored by 8.\n\nThree actions (concentrate): You disperse void energy in a 30-foot emanation. This targets all living and undead creatures in the area.\n\nHeightened (+1) The amount of healing or damage increases by 1d8, and the extra healing for the 2-action version increases by 8.",
+    "traditions": [
+      "divine"
+    ]
+  },
+  {
     "id": "haste",
     "name": "Haste",
     "level": 3,
@@ -2313,6 +2403,30 @@
     "description": "Falsehoods pass your lips as smoothly as silk. You gain a +4 status bonus to Deception checks to Lie and against Perception checks to discern if you are telling the truth, and you add your level even if untrained. If the implausibility of your lies prompts a circumstance penalty or a DC increase, reduce that penalty by half or increase it by half.",
     "traditions": [
       "occult"
+    ]
+  },
+  {
+    "id": "howling-blizzard",
+    "name": "Howling Blizzard",
+    "level": 5,
+    "baseLevel": 5,
+    "traits": [
+      "Air",
+      "Cold",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions or Three Actions",
+    "range": "",
+    "area": "60-foot cone",
+    "targets": "",
+    "defense": "Reflex",
+    "basic": true,
+    "duration": "",
+    "description": "Freezing winds extend from your hands, pushing away from you with great force. If you Cast this Spell with 2 actions, it has an area of a 60-foot cone; if you Cast this Spell with 3 actions, it has a range of 500 feet and an area of a 30-foot burst. Each creature in the area takes 10d6 cold damage with a basic Reflex save. Snowdrifts and icy gales fill the area until the start of your next turn, making the area difficult terrain.\n\nHeightened (+1) The damage increases by 2d6.",
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {
@@ -2464,6 +2578,34 @@
     "traditions": [
       "arcane",
       "occult"
+    ]
+  },
+  {
+    "id": "impaling-spike",
+    "name": "Impaling Spike",
+    "level": 5,
+    "baseLevel": 5,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Metal"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "area": "",
+    "targets": "1 creature",
+    "defense": "Reflex",
+    "duration": "1 minute",
+    "description": "You conjure a spike that thrusts up from the earth beneath a target creature, potentially impaling it. The spike is made of cold iron and deals 8d6 piercing damage. The target must attempt a Reflex save.\n\nHeightened (+1) The damage increases by 2d6.",
+    "degrees": {
+      "Critical Success": "The target dodges the spike and is unaffected.",
+      "Success": "The target is struck by the spike and takes half damage.",
+      "Failure": "The target is impaled through a leg or another nonvital body part. The creature takes full damage and, if it's standing on solid ground, becomes immobilized. It can attempt to Escape (the DC is your spell DC). While it remains impaled, it takes damage from any weakness to cold iron it has at the end of each of its turns.",
+      "Critical Failure": "As failure, but the creature is impaled through a vital organ or its center of mass, taking double damage, and it is off-guard as long as it's impaled."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {
@@ -2973,6 +3115,38 @@
     ]
   },
   {
+    "id": "mask-of-terror",
+    "name": "Mask of Terror",
+    "level": 7,
+    "baseLevel": 7,
+    "traits": [
+      "Concentrate",
+      "Emotion",
+      "Fear",
+      "Illusion",
+      "Manipulate",
+      "Mental",
+      "Visual"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "area": "",
+    "targets": "1 creature",
+    "defense": "Will",
+    "duration": "1 minute",
+    "description": "The target appears to be a gruesome and terrifying creature. The effect is unique to each observer, so a human viewing the target might see a demon with bloody fangs, but a demon observing the target might see a glowing angelic visage.\n\nWhen any creature attempts a hostile action against the target, the creature must attempt a Will save. It is then temporarily immune until the end of its next turn.\n\nHeightened (8th) You can target up to 5 creatures. If a creature uses a hostile action or reaction that affects multiple targets simultaneously, it needs to attempt only one save against mask of terror.",
+    "degrees": {
+      "Success": "The creature is unaffected.",
+      "Failure": "The creature becomes frightened 2 before using its action.",
+      "Critical Failure": "The creature becomes frightened 2, and its action fails and is wasted."
+    },
+    "traditions": [
+      "arcane",
+      "occult",
+      "primal"
+    ]
+  },
+  {
     "id": "mending",
     "name": "Mending",
     "level": 1,
@@ -3090,6 +3264,27 @@
     "traditions": [
       "arcane",
       "occult"
+    ]
+  },
+  {
+    "id": "mist",
+    "name": "Mist",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Water"
+    ],
+    "actions": "Three Actions",
+    "range": "120 feet",
+    "area": "20-foot burst",
+    "targets": "",
+    "duration": "1 minute",
+    "description": "You call forth a cloud of mist. All creatures within the mist become concealed, and all creatures outside the mist become concealed to creatures within it. You can Dismiss the cloud.",
+    "traditions": [
+      "arcane",
+      "primal"
     ]
   },
   {

@@ -2795,6 +2795,25 @@
     "id": "breastplate"
   },
   {
+    "name": "Broken Ram's Thorn",
+    "description": "The thorny growths on a rosethorn ram's horns break off into jagged pieces when these animals fight. When used to enhance the two-action version of a Howling Blizzard spell, these thorns cause the squares directly adjacent to every creature within the spell's area of effect to become littered with icy caltrops. The first creature that moves into each affected square must succeed at an Acrobatics check with a DC equal to the spell's save DC or take an amount of cold damage equal to the spell's rank. When a creature takes damage from the icy caltrops, enough are damaged that other creatures moving into that square are safe.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 150,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "howling-blizzard",
+      "effect": "Squares adjacent to each creature in the area gain icy caltrops: the first creature to enter one must succeed at an Acrobatics check against the spell DC or take cold damage equal to the spell's rank.",
+      "addActions": 1
+    },
+    "id": "broken-rams-thorn"
+  },
+  {
     "name": "Brooch of Shielding",
     "description": "This piece of silver or gold jewelry, adorned with miniature images of kite shields, can be used to fasten a cloak or cape. The brooch automatically absorbs magic missile spells targeting you. A brooch of shielding can absorb 30 individual magic missiles before it melts and becomes useless. Sometimes when found, a brooch of shielding has already absorbed a number of missiles.",
     "image": "img_fdda7c13-21e4-4850-b02e-4790920f4e95.jpg",
@@ -4079,6 +4098,46 @@
       }
     ],
     "description": "This magic flask endlessly produces fresh water on command. Speak one of its three command words to produce a stream, fountain, or geyser."
+  },
+  {
+    "name": "Defiled Costa",
+    "description": "This still-bloody rib was taken from a priest of Urgathoa at the moment they passed into undeath and has a constant stench of decay. The first time any creature critically fails its saving throw against a Mask of Terror spell cast using this catalyst, it also takes 6d10 mental damage, with a basic Fortitude save against the spell's DC, as it lives through the memory of having its rib torn from its body. Once any creature takes this damage, the defiled costa's effect ends, and no other creatures take the damage, even if they critically fail.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mask-of-terror",
+      "effect": "The first creature to critically fail also takes 6d10 mental damage (basic Fortitude); the effect then ends.",
+      "addActions": 1
+    },
+    "id": "defiled-costa"
+  },
+  {
+    "name": "Defiled Costa (Greater)",
+    "description": "This still-bloody rib was taken from a priest of Urgathoa at the moment they passed into undeath and has a constant stench of decay. The first time any creature critically fails its saving throw against a Mask of Terror spell cast using this catalyst, it also takes 6d10 mental damage, with a basic Fortitude save against the spell's DC, as it lives through the memory of having its rib torn from its body. A creature who critically fails against this save is killed instantly. This effect has the incapacitation trait.\n\nOnce any creature takes this damage, the defiled costa's effect ends, and no other creatures take the damage, even if they critically fail.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 17,
+    "price": 2500,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mask-of-terror",
+      "effect": "The first creature to critically fail also takes 6d10 mental damage (basic Fortitude), dying instantly on a critical failure (incapacitation); the effect then ends.",
+      "addActions": 1
+    },
+    "id": "defiled-costa-greater"
   },
   {
     "name": "Demon Bone Tiles (Brimorak)",
@@ -6671,6 +6730,44 @@
     "noShop": true
   },
   {
+    "name": "Grave Token",
+    "description": "This simple charm is made from compacted grave dirt infused with bone dust. A Harm spell that's empowered by this catalyst can reach faraway targets. If the harm spell is cast with 1 action, its range is 30 feet; if it's cast with 2 actions, its range is 60 feet. This has no effect on the three-action area version of harm, though in most cases, you don't have enough actions to Activate the token and cast a three-action harm anyway.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 4,
+    "price": 18,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "harm",
+      "effect": "Range becomes 30 feet for the 1-action harm and 60 feet for the 2-action harm; the 3-action version is unaffected.",
+      "addActions": 1
+    },
+    "id": "grave-token"
+  },
+  {
+    "name": "Gravemist Taper",
+    "description": "A gravemist taper is a conical candle with symbols of terror and death carved into the wax. The taper can be used as a catalyst when casting a Mist spell, burning the taper away, coloring the mist gray, and filling the mist with ghastly, shadowy shapes. The flat check to overcome the concealed state from the mist rises to 7, and a creature who fails such a check becomes frightened 1. This aspect of the spell has the emotion, fear, and mental traits.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mist",
+      "effect": "The flat check to overcome concealment rises to 7, and a creature that fails it becomes frightened 1 (emotion, fear, mental)."
+    },
+    "id": "gravemist-taper"
+  },
+  {
     "id": "greataxe",
     "name": "Greataxe",
     "description": "This large battle axe is too heavy to wield with only one hand. Many greataxes incorporate two blades, and they are often \"bearded,\" having a hook at the bottom to increase the strength of their chopping power.",
@@ -7122,6 +7219,24 @@
     }
   },
   {
+    "name": "Hippogriff Feather",
+    "description": "Tawny-colored hippogriff feathers can be up to 2 feet long. Used as a catalyst with a Ghostly Carrier spell, a single hippogriff feather grants the hand semicorporeal wings that increase the hand's maneuverability. The hand has a range of only 60 feet, but its increased agility grants it a +1 status bonus to its AC and Reflex saves.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 12,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "ghostly-carrier",
+      "effect": "The carrier drops to a 60-foot range but gains a +1 status bonus to its AC and Reflex saves."
+    },
+    "id": "hippogriff-feather"
+  },
+  {
     "name": "Holy Water",
     "strikes": {
       "name": "Holy Water",
@@ -7542,6 +7657,82 @@
     ],
     "weight": 3,
     "id": "inventors-chair"
+  },
+  {
+    "name": "Irritating Seedpod",
+    "description": "When you crack open this soft, spongy seedpod, you can use it as a catalyst when casting a Mist spell. When you do, irritating pollen fills the area for the spell's duration. Creatures in the area must attempt a DC 21 Fortitude saving throw to avoid sneezing uncontrollably. On a failed save, the creature becomes slowed 1 for 1 round. A creature that succeeds at this saving throw becomes temporarily immune to the irritating seedpod's pollen for 10 minutes.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 55,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mist",
+      "effect": "Pollen fills the area for the spell's duration; creatures failing a DC 21 Fortitude save are slowed 1 for 1 round.",
+      "addActions": 1
+    },
+    "id": "irritating-seedpod"
+  },
+  {
+    "name": "Irritating Seedpod (Greater)",
+    "description": "When you crack open this soft, spongy seedpod, you can use it as a catalyst when casting a Mist spell. When you do, irritating pollen fills the area for the spell's duration. Creatures in the area must attempt a DC 24 Fortitude saving throw to avoid sneezing uncontrollably. On a failed save, the creature becomes slowed 1 for 3 rounds. A creature that succeeds at this saving throw becomes temporarily immune to the irritating seedpod's pollen for 10 minutes.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 190,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mist",
+      "effect": "Pollen fills the area for the spell's duration; creatures failing a DC 24 Fortitude save are slowed 1 for 3 rounds.",
+      "addActions": 1
+    },
+    "id": "irritating-seedpod-greater"
+  },
+  {
+    "name": "Irritating Seedpod (Lesser)",
+    "description": "When you crack open this soft, spongy seedpod, you can use it as a catalyst when casting a Mist spell. When you do, irritating pollen fills the area for the spell's duration. Creatures in the area must attempt a DC 15 Fortitude saving throw to avoid sneezing uncontrollably. On a failed save, the creature becomes slowed 1 for 1 round. Rather than last for the duration of the spell, the irritating pollen only remains in the area for 1 round. A creature that succeeds at this saving throw becomes temporarily immune to the irritating seedpod's pollen for 10 minutes.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 3,
+    "price": 11,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mist",
+      "effect": "Pollen fills the area for 1 round; creatures failing a DC 15 Fortitude save are slowed 1 for 1 round.",
+      "addActions": 1
+    },
+    "id": "irritating-seedpod-lesser"
+  },
+  {
+    "name": "Irritating Seedpod (Major)",
+    "description": "When you crack open this soft, spongy seedpod, you can use it as a catalyst when casting a Mist spell. When you do, irritating pollen fills the area for the spell's duration. Creatures in the area must attempt a DC 29 Fortitude saving throw to avoid sneezing uncontrollably. On a failed save, the creature becomes slowed 2 for 1 round, then slowed 1 for 3 rounds. A creature that succeeds at this saving throw becomes temporarily immune to the irritating seedpod's pollen for 10 minutes.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 800,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "mist",
+      "effect": "Pollen fills the area for the spell's duration; creatures failing a DC 29 Fortitude save are slowed 2 for 1 round, then slowed 1 for 3 rounds.",
+      "addActions": 1
+    },
+    "id": "irritating-seedpod-major"
   },
   {
     "id": "jade-bauble",
@@ -9182,6 +9373,63 @@
       "addActions": 1
     },
     "id": "necrotic-cap-moderate"
+  },
+  {
+    "name": "Nevercold",
+    "description": "Nevercold, sometimes mistakenly referred to as nevercoal, is the charcoal left after wildfires in the First World. True to its name, nevercold remains warm to the touch. If you use nevercold to cast Fire Shield, the spell's duration increases by 1 minute, the cold resistance you gain from it lasts 1 hour, and you're protected from the effects of severe cold for 8 hours.\n\nThe catalyst affects 4th-rank fire shield.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 180,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fire-shield",
+      "effect": "Duration increases by 1 minute, the cold resistance lasts 1 hour, and you're protected from severe cold for 8 hours (4th-rank fire shield).",
+      "addActions": 1
+    },
+    "id": "nevercold"
+  },
+  {
+    "name": "Nevercold (Compressed)",
+    "description": "Nevercold, sometimes mistakenly referred to as nevercoal, is the charcoal left after wildfires in the First World. True to its name, nevercold remains warm to the touch. If you use nevercold to cast Fire Shield, the spell's duration increases by 1 minute, the cold resistance you gain from it lasts 1 hour, and you're protected from the effects of severe cold for 8 hours.\n\nThe catalyst affects 6th-rank or lower fire shield, and the protection from severe cold lasts 24 hours.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 720,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fire-shield",
+      "effect": "As nevercold, on a 6th-rank or lower fire shield, with the severe-cold protection lasting 24 hours.",
+      "addActions": 1
+    },
+    "id": "nevercold-compressed"
+  },
+  {
+    "name": "Nevercold (Refined)",
+    "description": "Nevercold, sometimes mistakenly referred to as nevercoal, is the charcoal left after wildfires in the First World. True to its name, nevercold remains warm to the touch. If you use nevercold to cast Fire Shield, the spell's duration increases by 1 minute, the cold resistance you gain from it lasts 1 hour, and you're protected from the effects of severe cold for 8 hours.\n\nThe catalyst affects 8th-rank or lower fire shield, and the protection from severe cold lasts 24 hours.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 18,
+    "price": 3600,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fire-shield",
+      "effect": "As nevercold, on an 8th-rank or lower fire shield, with the severe-cold protection lasting 24 hours.",
+      "addActions": 1
+    },
+    "id": "nevercold-refined"
   },
   {
     "name": "Nightpitch",
@@ -12497,6 +12745,24 @@
         ]
       }
     ]
+  },
+  {
+    "name": "Silvered Marp Fur",
+    "description": "A marp that gnaws on silver rather than gold grows fur tipped with silver that can be further processed into a versatile spell catalyst. A spellcaster who uses silvered marp fur with an Impaling Spike spell creates a silver spike rather than a cold iron one.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 9,
+    "price": 110,
+    "bulk": "—",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "impaling-spike",
+      "effect": "The conjured spike is silver instead of cold iron."
+    },
+    "id": "silvered-marp-fur"
   },
   {
     "name": "Silvertongue Mutagen",
@@ -15877,6 +16143,26 @@
     "id": "vocoder-of-invisibility"
   },
   {
+    "name": "Void Salts",
+    "description": "This sachet is filled with a fine powder that seethes with energy distilled directly from the Void. When used in casting a Grim Tendrils spell, void salts allow you to split the area of the spell, creating any number of lines originating from you that total 30 feet in length. A creature that multiple lines pass through is only affected once.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 4,
+    "price": 15,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "grim-tendrils",
+      "effect": "Split the area into any number of lines originating from you totaling 30 feet; overlapping lines affect a creature only once.",
+      "addActions": 1
+    },
+    "id": "void-salts"
+  },
+  {
     "actions": [
       {
         "name": "Cast Cleanse Cuisine",
@@ -16491,6 +16777,24 @@
       "range": "adjacent",
       "effect": "it becomes deafened until it moves away from you"
     }
+  },
+  {
+    "name": "Witchwarg Fur",
+    "description": "The pelt of a witchwarg stays cold long after it leaves the creature's body. A tuft of this fur can freeze a Fire Shield spell into solid ice, inverting its usual effects. The spell's fire trait is replaced with the cold trait, you gain resistance to fire damage and environmental heat effects (instead of cold effects), the shield is immune to cold damage instead of fire damage, and its Hardness is halved against fire effects. The damage you deal to creatures that touch you or hit you with a melee or unarmed attack has its type changed to cold.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 52,
+    "bulk": "—",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "fire-shield",
+      "effect": "Inverts the spell to cold: you resist fire and heat instead of cold, the shield is immune to cold, and its damage becomes cold."
+    },
+    "id": "witchwarg-fur"
   },
   {
     "talisman": {
