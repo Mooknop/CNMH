@@ -90,6 +90,15 @@ vi.mock('../components/encounter/ReactionPrompt', () => ({
   }
 }));
 
+// TurnTrackerPanel (and its ShieldBlockBar) reads the game clock (rune
+// frequency gates); stub it like EffectsPanel so this suite needs no
+// GameDateProvider.
+vi.mock('../components/encounter/TurnTrackerPanel', () => ({
+  default: function DummyTurnTrackerPanel() {
+    return <div data-testid="turn-tracker-panel">Turn Tracker</div>;
+  }
+}));
+
 vi.mock('../components/character-sheet/FamiliarModal', () => ({
   default: function DummyFamiliarModal({ isOpen }) {
     return isOpen ? <div data-testid="familiar-modal">Familiar Modal</div> : null;
