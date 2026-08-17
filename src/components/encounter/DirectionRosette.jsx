@@ -20,16 +20,21 @@ import './DirectionRosette.css';
 // and this rosette.
 //
 // dc/dr are screen-space offsets (dr south = +1), included for a consumer
-// that wants a direction as a unit vector rather than a name.
+// that wants a direction as a unit vector rather than a name. `compassDeg`
+// (#1735 S3) is the SAME point expressed in the wire vocabulary — degrees
+// clockwise from north, `normalizeCompassDeg`'s convention
+// (`utils/spellArea.js`) — spelled out explicitly here rather than left as
+// "whatever this array's index times 45 works out to", so a consumer never
+// has to assume the two orderings stay in lockstep.
 export const ROSETTE_DIRECTIONS = [
-  { name: 'north', glyph: '↑', dc: 0, dr: -1 },
-  { name: 'northeast', glyph: '↗', dc: 1, dr: -1 },
-  { name: 'east', glyph: '→', dc: 1, dr: 0 },
-  { name: 'southeast', glyph: '↘', dc: 1, dr: 1 },
-  { name: 'south', glyph: '↓', dc: 0, dr: 1 },
-  { name: 'southwest', glyph: '↙', dc: -1, dr: 1 },
-  { name: 'west', glyph: '←', dc: -1, dr: 0 },
-  { name: 'northwest', glyph: '↖', dc: -1, dr: -1 },
+  { name: 'north', glyph: '↑', dc: 0, dr: -1, compassDeg: 0 },
+  { name: 'northeast', glyph: '↗', dc: 1, dr: -1, compassDeg: 45 },
+  { name: 'east', glyph: '→', dc: 1, dr: 0, compassDeg: 90 },
+  { name: 'southeast', glyph: '↘', dc: 1, dr: 1, compassDeg: 135 },
+  { name: 'south', glyph: '↓', dc: 0, dr: 1, compassDeg: 180 },
+  { name: 'southwest', glyph: '↙', dc: -1, dr: 1, compassDeg: 225 },
+  { name: 'west', glyph: '←', dc: -1, dr: 0, compassDeg: 270 },
+  { name: 'northwest', glyph: '↖', dc: -1, dr: -1, compassDeg: 315 },
 ];
 
 /**

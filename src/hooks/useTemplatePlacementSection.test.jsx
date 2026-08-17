@@ -456,6 +456,189 @@ describe('useTemplatePlacementSection — cone/line direction picker (#1751 S5)'
   });
 });
 
+describe('useTemplatePlacementSection — self-origin cone/line (#1735 S3)', () => {
+  it('opens straight to the rosette — no origin tap, no marker pin', async () => {
+    const { session } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+
+    expect(screen.getByRole('group', { name: 'cone facing' })).toBeInTheDocument();
+    expect(screen.queryByTestId('map-snapshot-pin')).not.toBeInTheDocument();
+  });
+
+  it('retires the pre-#1735 facing disclaimer once the bridge is ready', async () => {
+    const { session } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+
+    expect(screen.queryByText(/GM calls who is caught/)).not.toBeInTheDocument();
+  });
+
+  it('a facing pick computes real occupants — nearest-first, same as burst/emanation', async () => {
+    const { session } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+
+    // Goblin (2 east, 10 ft under the cone's own cell math) is caught; the
+    // ogre (8 east, 40 ft) is nowhere close to a 15-ft cone.
+    const occupants = screen.getByTestId('area-occupants');
+    expect(occupants).toHaveTextContent('Goblin (10 ft)');
+    expect(occupants).not.toHaveTextContent('Ogre');
+  });
+
+  it('draws the REAL cell coverage on the overlay, not a facing arrow', async () => {
+    const { session, container } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+
+    expect(container.querySelectorAll('.sao-template-cell').length).toBeGreaterThan(0);
+    expect(container.querySelector('.sao-direction-shaft')).toBeNull();
+  });
+
+  it('confirm sends a directional templateplace: origin, compass direction, no ping', async () => {
+    const { session } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    // East from the 1x1 caster at (0,0) on a 100px grid: the face midpoint
+    // (1, 0.5) in squares → world (100, 50).
+    expect(sentOf(session, RELAY.TEMPLATEPLACE).value).toMatchObject({
+      shape: 'cone', feet: 15, x: 100, y: 50, direction: 90,
+    });
+    expect(sentOf(session, RELAY.PINGPOINT)).toBeUndefined();
+  });
+
+  it('a line carries its width (default 5 ft) alongside direction', async () => {
+    const { session } = mount({ name: 'Boom-a-rang', area: '30-foot line' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+
+    expect(sentOf(session, RELAY.TEMPLATEPLACE).value).toMatchObject({
+      shape: 'line', feet: 30, direction: 90, width: 5,
+    });
+  });
+
+  it('adopting targets hands over the real, cell-computed occupant list', async () => {
+    const { session, adoptTargets } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    fireEvent.click(screen.getByRole('button', { name: /Target these/ }));
+
+    expect(adoptTargets).toHaveBeenCalledWith(['e-gob']);
+  });
+
+  it('a self-origin cone/line never range-blocks — there is no placement to gate', async () => {
+    const { session } = mount(
+      { name: 'Breathe Fire', area: '15-foot cone', range: '5 feet' },
+      { protocol: 18 }
+    );
+    await placeMap(session);
+    expect(screen.getByTestId('gate-ok')).toHaveTextContent('true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+    fireEvent.click(screen.getByRole('button', { name: 'confirm' }));
+    expect(sentOf(session, RELAY.TEMPLATEPLACE)).toBeDefined();
+    expect(screen.queryByTestId('area-range-blocked')).not.toBeInTheDocument();
+  });
+
+  it('shows no occupant claim before a facing is picked', async () => {
+    const { session } = mount({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    expect(screen.queryByTestId('area-occupants')).not.toBeInTheDocument();
+  });
+});
+
+// #1735 epic ruling (2026-08-16), applied RETROACTIVELY to burst/emanation
+// as well as the new cone/line flow: a player-facing occupant list, the
+// overlay's counted cells, and the auto-adopt "Target these N" flow must
+// never surface a `hidden: true` combatant, even when they are well within
+// the area. The GM's own dock-side save tooling (mounted on the full,
+// unfiltered encounter order) covers a hidden creature's save separately —
+// this flow simply never creates one for it.
+describe('useTemplatePlacementSection — hidden combatants excluded (#1735 epic ruling, retroactive)', () => {
+  const HIDDEN_POSITIONS = {
+    gridSize: 100,
+    positions: {
+      'e-pellias': { col: 0, row: 0 },
+      'e-gob': { col: 2, row: 0 },
+      'e-ogre': { col: 1, row: 0 }, // hidden, but well within range of everything below
+    },
+  };
+  const HIDDEN_ORDER = [
+    { entryId: 'e-pellias', kind: 'pc', charId: 'Pellias', name: 'Pellias' },
+    { entryId: 'e-gob', kind: 'enemy', name: 'Goblin' },
+    { entryId: 'e-ogre', kind: 'enemy', name: 'Ogre', hidden: true },
+  ];
+
+  const HiddenProbe = ({ ability, adoptTargets }) => {
+    const { section, applyOnConfirm, gateOk } = useTemplatePlacementSection({
+      ability, order: HIDDEN_ORDER, casterEntryId: 'e-pellias',
+      positionsState: HIDDEN_POSITIONS, adoptTargets,
+    });
+    return (
+      <div>
+        <span data-testid="gate-ok">{String(gateOk)}</span>
+        <button onClick={applyOnConfirm}>confirm</button>
+        {section}
+      </div>
+    );
+  };
+
+  const mountHidden = (ability, { protocol = 13, adoptTargets = vi.fn() } = {}) => {
+    const utils = renderWithProviders(<HiddenProbe ability={ability} adoptTargets={adoptTargets} />, {
+      session: { state: { global: { [RELAY.BRIDGEHELLO]: { protocol } } } },
+    });
+    return { ...utils, adoptTargets };
+  };
+
+  it('a burst never lists a hidden combatant, even in range', async () => {
+    const { session } = mountHidden({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0); // the goblin's square — the hidden ogre is adjacent, 0 ft away
+
+    const occupants = screen.getByTestId('area-occupants');
+    expect(occupants).toHaveTextContent('Goblin');
+    expect(occupants).not.toHaveTextContent('Ogre');
+  });
+
+  it('a burst never auto-adopts a hidden combatant as a save target', async () => {
+    const { session, adoptTargets } = mountHidden({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+    fireEvent.click(screen.getByRole('button', { name: /Target these/ }));
+
+    expect(adoptTargets).toHaveBeenCalledWith(['e-gob', 'e-pellias']);
+  });
+
+  it('the overlay never shades a hidden combatant\'s cell', async () => {
+    const { session, container } = mountHidden({ name: 'Fireball', area: '20-foot burst' });
+    await placeMap(session);
+    tapAt(0.2, 0);
+
+    // Only the goblin's and the caster's cells shade — never the hidden
+    // ogre's, even though it is the closest of the three.
+    expect(container.querySelectorAll('.sao-cell').length).toBe(2);
+  });
+
+  it('an emanation\'s occupant list excludes a hidden combatant too', () => {
+    mountHidden({ name: 'Gust of Wind', area: '30-foot emanation' });
+    const occupants = screen.getByTestId('area-occupants');
+    expect(occupants).toHaveTextContent('Goblin');
+    expect(occupants).not.toHaveTextContent('Ogre');
+  });
+
+  it('a self-origin cone (protocol 18) excludes a hidden combatant too', async () => {
+    const { session } = mountHidden({ name: 'Breathe Fire', area: '15-foot cone' }, { protocol: 18 });
+    await placeMap(session);
+    fireEvent.click(screen.getByRole('button', { name: 'east' }));
+
+    const occupants = screen.getByTestId('area-occupants');
+    expect(occupants).toHaveTextContent('Goblin');
+    expect(occupants).not.toHaveTextContent('Ogre');
+  });
+});
+
 // A probe with no positions payload at all (bridge connected, no combat).
 const PositionlessProbe = () => {
   const { section } = useTemplatePlacementSection({

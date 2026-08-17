@@ -17,6 +17,20 @@
   opacity: 0.3;
 }
 
+/* The full cone/line cell coverage (#1735 S3) — every cell the geometry
+   counts, shaded LIGHTER than .sao-cell below (which highlights cells that
+   actually hold a combatant) so an otherwise-empty cone/line still shows its
+   shape. This is the cone/line equivalent of burst/emanation's parametric
+   .sao-outline: neither directional shape has a closed-form outline worth
+   drawing, so the cell wash IS the outline. */
+.sao-template-cell {
+  fill: var(--color-theme, var(--accent-outline));
+  fill-opacity: 0.06;
+  stroke: var(--color-theme, var(--accent-outline));
+  stroke-width: 0.15;
+  opacity: 0.6;
+}
+
 /* Every cell `areaOccupants` actually counted — shaded so the map and the
    occupant list below it are visibly describing the same footprint. */
 .sao-cell {

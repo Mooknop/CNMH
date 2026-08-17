@@ -76,9 +76,13 @@ export const buildPingPoint = ({ x, y, sceneId, name }) => ({
   ts: Date.now(),
 });
 
-// A placed area's outline (#1573 B4). The bridge draws radial shapes only and
-// pings the centre either way, so a cone/line request is not worth sending.
-export const buildTemplatePlace = ({ shape, feet, x, y, sceneId, name }) => ({
+// A placed area's outline (#1573 B4). `direction` (compass degrees) and
+// `width` (line only, #1735 S2/S3) are additive/optional — a burst/emanation
+// request never carries them, and a pre-#1735 recipient simply never sees
+// the keys. `x`/`y` is a burst/emanation's placed point OR a cone/line's
+// self-derived origin (`directionalOriginWorld`, `utils/spellArea.js`) — the
+// caller decides which; this builder is shape-agnostic.
+export const buildTemplatePlace = ({ shape, feet, x, y, sceneId, name, direction, width }) => ({
   id: `tpl-${Date.now()}-${(counter += 1)}`,
   shape,
   feet,
@@ -86,5 +90,7 @@ export const buildTemplatePlace = ({ shape, feet, x, y, sceneId, name }) => ({
   y,
   sceneId: sceneId || '',
   ...(name ? { name } : {}),
+  ...(direction != null ? { direction } : {}),
+  ...(width != null ? { width } : {}),
   ts: Date.now(),
 });

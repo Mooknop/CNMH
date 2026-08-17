@@ -58,6 +58,15 @@ export const MOVE_SURFACE_PREF = 'moveSurface';
 // receives a target-set payload from a lifecycle it was never built for.
 export const MAP_TARGET_PROTOCOL = 17;
 
+// The bridge protocol that taught the relay directional area geometry
+// (#1735 S2, PR #1763): `templateplace` grows optional `direction` (compass
+// degrees) and `width` (line only), and a v14 bridge maps cone/line onto
+// Region cone/line shapes instead of refusing them. `useTemplatePlacementSection`
+// gates the self-origin cone/line flow (rosette → live cell preview → a
+// directional `templateplace`) on this floor; below it, cone/line keep the
+// v1 fallback verbatim — an aim-point ping and "the GM calls who is caught".
+export const DIRECTIONAL_AREA_PROTOCOL = 18;
+
 /**
  * Actions needed to cover a terrain-aware move cost against a Speed budget —
  * the generalized, charge-at-confirm form of needsNewStride's per-step

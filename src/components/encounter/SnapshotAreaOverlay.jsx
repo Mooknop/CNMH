@@ -32,9 +32,18 @@ import './SnapshotAreaOverlay.css';
 //                   occupancy boundary — is the point of this overlay; see
 //                   the epic's design sketch §B ("the disagreement is not a
 //                   bug to hide").
-//        cone/line  NOT computed here (#1735's geometry) — only a DIRECTION
-//                   INDICATOR (an arrow) once a rosette pick exists, never
-//                   cone/line cell occupancy.
+//        cone/line  has no closed-form outline the way a circle or a rounded
+//                   rectangle does, so once the self-origin flow can compute
+//                   real cells (#1735 S3, protocol ≥ DIRECTIONAL_AREA_PROTOCOL)
+//                   the FULL covered cell set (`templateCells`, every cell
+//                   `coneCells`/`lineCells` returned, not just the occupied
+//                   ones) doubles as its outline — shaded lighter than the
+//                   occupant cells below so an otherwise-empty cone/line
+//                   still shows its shape. Below that protocol floor there is
+//                   no real geometry to draw yet, so the OLD direction-arrow
+//                   hint (a facing indicator only, never measured geometry)
+//                   still renders whenever `templateCells` is omitted — the
+//                   pre-#1735 fallback, kept verbatim.
 //   2. The counted CELLS — every cell `areaOccupants` actually included
 //      (shaded), so the player sees exactly what the occupant list below
 //      the map is describing.
@@ -45,13 +54,20 @@ import './SnapshotAreaOverlay.css';
 //   snapshot       the snapdone payload ({ capture, worldRect, gridSize })
 //   shape          'burst' | 'emanation' | 'cone' | 'line'
 //   feet           the area's reach in feet
-//   origin         world {x,y} — the snapped grid intersection a burst/
-//                  cone/line originates from; null for emanation
-//   casterRect     {col,row,width,height} — the emanation origin; null
-//                  otherwise
+//   origin         world {x,y} — the snapped grid intersection a burst
+//                  originates from, or a cone/line's self-derived origin
+//                  (#1735 S3); null for emanation
+//   casterRect     {col,row,width,height} — the emanation origin, or (once
+//                  `templateCells` is in play) the cone/line self-origin
+//                  rectangle; null otherwise
 //   direction      { dc, dr } unit-ish offset (from DirectionRosette, #1751
-//                  S5) — draws the cone/line facing arrow when present;
-//                  ignored for burst/emanation
+//                  S5) — draws the PRE-#1735 cone/line facing-arrow hint when
+//                  present; ignored for burst/emanation, and superseded by
+//                  `templateCells` once real geometry is available (a caller
+//                  should pass one or the other, never both)
+//   templateCells  [{col,row}, …] — the FULL cone/line cell coverage (#1735
+//                  S3, from `directionalAreaCells`), shaded as the shape's
+//                  outline-equivalent; ignored for burst/emanation
 //   occupantCells  [{col,row}, …] — cells to shade (from `areaOccupants`,
 //                  mapped back to their `positions` cell)
 //   showLattice    boolean
@@ -161,6 +177,7 @@ const SnapshotAreaOverlay = ({
   origin = null,
   casterRect = null,
   direction = null,
+  templateCells = [],
   occupantCells = [],
   showLattice = false,
   feetPerSquare = 5,
@@ -180,7 +197,11 @@ const SnapshotAreaOverlay = ({
     ? toAttr(outlinePoints.map((p) => worldToNorm(p, snapshot)).filter(Boolean))
     : null;
 
-  const arrow = (shape === 'cone' || shape === 'line') && origin && direction
+  // The pre-#1735 facing-arrow hint — only when the caller hasn't handed us
+  // real geometry (`templateCells`) to draw instead. A caller past the
+  // DIRECTIONAL_AREA_PROTOCOL floor passes templateCells and omits
+  // `direction`, so this branch is naturally inert for it.
+  const arrow = (shape === 'cone' || shape === 'line') && origin && direction && templateCells.length === 0
     ? directionArrowWorldPoints(origin, direction, gridSize)
     : null;
   const arrowShaftStart = arrow ? worldToNorm(origin, snapshot) : null;
@@ -188,6 +209,11 @@ const SnapshotAreaOverlay = ({
   const arrowHead = arrow
     ? [arrow.tip, arrow.left, arrow.right].map((p) => worldToNorm(p, snapshot)).filter(Boolean)
     : null;
+
+  const templateCellPolygons = templateCells
+    .map((cell) => cellPolygonOnSnapshot(cell.col, cell.row, snapshot))
+    .filter(Boolean)
+    .map((polygon) => polygon.map((p) => ({ x: p.nx * 100, y: p.ny * 100 })));
 
   const cellPolygons = occupantCells
     .map((cell) => cellPolygonOnSnapshot(cell.col, cell.row, snapshot))
@@ -205,6 +231,9 @@ const SnapshotAreaOverlay = ({
     >
       {lattice.map((line, i) => (
         <line key={`lattice-${i}`} className="sao-lattice" x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
+      ))}
+      {templateCellPolygons.map((polygon, i) => (
+        <polygon key={`tcell-${i}`} className="sao-template-cell" points={toAttr(polygon)} />
       ))}
       {cellPolygons.map((polygon, i) => (
         <polygon key={`cell-${i}`} className="sao-cell" points={toAttr(polygon)} />
