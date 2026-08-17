@@ -14,6 +14,7 @@ import {
   applyStrikeOnCritSave, applyStrikeOnCritConditions,
   applyStrikeOnHitConditions, applyStrikeOnHitNotes,
 } from './strikeOnCrit';
+import { applyThirstingOnHit } from './shieldRuneStrike';
 import { APP, syncKey } from '../sync/keys';
 
 // Confirm-time appliers (extracted #1317 D4) — the remaining verbatim blocks
@@ -378,6 +379,18 @@ export const applyPostRollEffects = ({
     rayGroups,
     chainResults: strikeChainResults,
     order,
+    appendLog,
+  });
+
+  // Thirsting shield runes (#1246): a damaging hit with the shield (bash /
+  // throw / bound attachment) regains shield HP via the item-HP overlay.
+  applyThirstingOnHit({
+    ability,
+    character,
+    rayGroups,
+    chainResults: strikeChainResults,
+    getState,
+    sendUpdate,
     appendLog,
   });
 };

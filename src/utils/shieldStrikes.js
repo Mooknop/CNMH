@@ -23,6 +23,7 @@ import { itemUidOf } from './affix';
 import { flattenInventory } from './InventoryUtils';
 import { resolveItemStrikes, hasReturningRune } from './strikeUtils';
 import { shieldEffectiveTraits, shieldHasFinesse } from './shieldRunes';
+import { shieldRuneStrikeRiders } from './shieldRuneStrike';
 import { attachmentOnShield } from './shieldAttach';
 import { shieldCategory } from './shieldCategory';
 
@@ -120,11 +121,16 @@ export const shieldBashStrikes = (character, overlay) => {
     const uid = itemUidOf(item);
     const bashReplaced = !!attachmentOnShield(overlay, uid);
     const returning = hasReturningRune(item);
+    // Shield-rune damage riders (#1246 — Reverberating's opt-in release): the
+    // derived pseudo-weapon carries none of the SHIELD's runes, so fold them
+    // in here, after resolution, like the returning tag.
+    const runeRiders = shieldRuneStrikeRiders(item);
     const resolved = resolveItemStrikes(deriveShieldBash(item), character)
       .filter((s) => !(bashReplaced && s.type === 'melee'))
       .map((s) => ({
         ...s,
         ...(s.thrown ? { returning } : {}),
+        ...(runeRiders.length ? { riders: [...(s.riders || []), ...runeRiders] } : {}),
         shieldBash: true,
         hostUid: uid,
       }));

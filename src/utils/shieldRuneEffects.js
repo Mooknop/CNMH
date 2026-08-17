@@ -79,6 +79,22 @@ const saveHintModifiers = (hint, shieldEntry) => {
   return stats.map((stat) => ({ stat, kind, amount, vs: hint.vs }));
 };
 
+// Seeing runes (#1246): a PASSIVE item bonus to Perception checks to Sense
+// Motive and any check made to disbelieve an illusion, per grade. Conditional
+// (the app can't know a Perception check's sub-context), so it rides the DEF
+// with a `vs` tag — the #338/#510 hint path: it surfaces under the Perception
+// snode on the sheet and is never netted into the always-on number. The rune's
+// once-per-day counteract activation stays on its ShieldRuneActivations card.
+// NOTE (known trap): the roll-time toggle path is deliberately NOT wired —
+// SkillActionModal recomputes conditional toggles from RAW effects, so a
+// spine-synthesized `vs` skill modifier can't render there (#1311 audit).
+export const SEEING_PERCEPTION_HINT = {
+  seeing: 1,
+  'greater-seeing': 2,
+  'major-seeing': 3,
+};
+const SEEING_VS = 'Sense Motive or disbelieving an illusion';
+
 // Runes that grant an OPT-IN item bonus to a specific roll, surfaced as a toggle
 // at that roll's resolver (not netted into the sheet): the player opts in on the
 // exact check it applies to. Knowing → Recall Knowledge (while wielding);
@@ -149,6 +165,20 @@ export const heldShieldRuneEffects = (inventory = [], { raised = false } = {}) =
       out.push({
         entry: { id, effectId: id },
         def: { id, name: rune.name, modifiers: [{ stat: skill.stat, kind: 'item', amount: skill.amount }] },
+      });
+      return;
+    }
+    // Seeing runes: a conditional Perception item bonus (Sense Motive /
+    // disbelieve an illusion) — always-on while wielded, hint-only via `vs`.
+    const seeing = SEEING_PERCEPTION_HINT[rune.id];
+    if (seeing) {
+      out.push({
+        entry: { id, effectId: id },
+        def: {
+          id,
+          name: rune.name,
+          modifiers: [{ stat: 'perception', kind: 'item', amount: seeing, vs: SEEING_VS }],
+        },
       });
       return;
     }

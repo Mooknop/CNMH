@@ -9,13 +9,18 @@ import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
 import { useReadiedAction } from '../../hooks/useReadiedAction';
 import { useSession } from '../../contexts/SessionContext';
+import { useSyncedState } from '../../hooks/useSyncedState';
+import { useFrequency } from '../../hooks/useFrequency';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import { getFreeActions } from '../../utils/actionUtils';
 import { applyHymnTempHp } from '../../utils/hymnHealing';
 import { readiedExpireLog } from '../../utils/readiedAction';
+import { shieldPropertyRunes } from '../../utils/shieldRunes';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
-import { RELAY } from '../../sync/keys';
+import { RELAY, syncKey } from '../../sync/keys';
 
 // Residual turn panel (#411, #415): initiative order, round/status, action pips,
 // MAP, reaction and End Turn live in the SelfStatusBar (#1502 S3);
@@ -54,6 +59,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
   // Unlike a raised shield it persists across turns, so no turn-start reset.
   const { active: auraActive, deactivate: deactivateAura } = useAura(charId);
+
+  // Resuscitating shield rune (#1246): "Once per day the first time your turn
+  // starts and you have the dying condition, you regain 1 Hit Point." Offered
+  // on the owner's turn while dying, off the wielded shield's rune; spends the
+  // SAME `${uid}:resuscitating:actuated` daily ledger its ShieldRuneActivations
+  // card uses. The player confirms (an auto-write while dying felt too big a
+  // call for a log the table might miss).
+  const [hpState, setHpState] = useSyncedState(syncKey(RELAY.HP, charId || 'none'), null);
+  const { gateFor: gateForFreq, record: recordFreq } = useFrequency(charId);
+  const { gameDate, time } = useGameDate();
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
 
   // Readied action (#501) — declared on this PC's turn, fires off-turn. Cleared
   // here on its two end conditions: the reaction is spent (it fired, or was used
@@ -167,6 +183,45 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
 
   const markOfferHandled = (fa) =>
     setOffersHandled((cur) => ({ ...cur, [`${fa.name}:${turnToken}`]: true }));
+
+  // Resuscitating offer (#1246) — see the hook block above. The rune doc rides
+  // the full inventory entry (heldShield is the normalized view), and covers a
+  // strapped shield too (the rune triggers on your turn starting, not a raise).
+  const resuscHostItem = (inventory || []).find((e) => e && e.uid === heldShield?.uid) || null;
+  const resuscitating = shieldPropertyRunes(resuscHostItem).find((r) => r.id === 'resuscitating') || null;
+  const resuscAbility = {
+    id: heldShield ? `${heldShield.uid}:resuscitating:actuated` : null,
+    name: resuscitating?.actuated?.name || 'Resuscitating',
+    frequency: resuscitating?.actuated?.frequency || 'once per day',
+  };
+  const resuscGate = gateForFreq(resuscAbility, { nowSecs });
+  const resuscOffered =
+    !!resuscitating &&
+    resuscGate.available &&
+    (hpState?.dying || 0) > 0 &&
+    !offersHandled[`Resuscitating:${turnToken}`];
+
+  const handleResuscitate = () => {
+    if (!resuscOffered || !hpState) return;
+    // Regaining HP while dying (PF2e): lose the dying condition, increase
+    // wounded by 1 (capped at 3 for display sanity), and come back at 1 HP.
+    const next = {
+      ...hpState,
+      current: Math.min(hpState.max || 1, (hpState.current || 0) + 1),
+      dying: 0,
+      wounded: Math.min(3, (hpState.wounded || 0) + 1),
+      damageType: undefined,
+    };
+    setHpState(next);
+    recordFreq(resuscAbility, { nowSecs });
+    appendLog({
+      type: 'action',
+      charId,
+      text: `${characterName}'s Resuscitating rune flares — regains 1 HP and is no `
+        + `longer dying (wounded ${next.wounded})`,
+    });
+    setOffersHandled((cur) => ({ ...cur, [`Resuscitating:${turnToken}`]: true }));
+  };
 
   const handleUseFreeAction = (fa) => {
     spendActions(0, fa.name);
@@ -300,6 +355,30 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
           </button>
         </div>
       ))}
+
+      {/* Resuscitating shield rune (#1246) — offered while dying on your turn */}
+      {isInProgress && isMyTurn && resuscOffered && (
+        <div className="ttp-offer ttp-offer--resuscitating" role="group" aria-label="Resuscitating (shield rune)">
+          <span className="ttp-offer-name">
+            {resuscitating.name} <span className="ttp-offer-cost">(once per day — you are dying)</span>
+          </span>
+          <button
+            className="btn-secondary ttp-offer-use"
+            onClick={handleResuscitate}
+            title="Your turn started while you have the dying condition: regain 1 Hit Point (you lose dying and gain wounded 1)."
+            aria-label="Use Resuscitating (regain 1 HP)"
+          >
+            Regain 1 HP
+          </button>
+          <button
+            className="btn-text"
+            onClick={() => setOffersHandled((cur) => ({ ...cur, [`Resuscitating:${turnToken}`]: true }))}
+            aria-label="Dismiss Resuscitating"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Sustain-a-Spell prompts (#220) — one per tracked sustained spell */}
       {isInProgress && isMyTurn && pendingSustains.map((s) => (

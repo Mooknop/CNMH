@@ -20,6 +20,33 @@ const throwingRune = { id: 'throwing', type: 'property', name: 'Throwing' };
 const throwingShield = (uid, state, weight = 1) =>
   shield(uid, state, { weight, runes: { reinforcing: 'moderate', property: [throwingRune] } });
 
+describe('shieldStrikes — Reverberating riders (#1246)', () => {
+  const reverberating = { id: 'reverberating', type: 'property', name: 'Reverberating' };
+
+  it('a reverberating shield folds the opt-in release riders onto its bash', () => {
+    const inv = [shield('s1', 'held1', { runes: { property: [reverberating] } })];
+    const [bash] = shieldBashStrikes({ ...character, inventory: inv }, {});
+    expect(bash.riders).toHaveLength(2);
+    expect(bash.riders[0]).toMatchObject({
+      id: 'reverberating-charge', bonus: { perWeaponDie: 1 }, defaultOn: false,
+    });
+    expect(bash.riders[1]).toMatchObject({
+      id: 'reverberating-crit', persistent: { dice: '2d4', type: 'sonic' }, on: ['criticalSuccess'],
+    });
+  });
+
+  it('the throw carries them too, and a runeless shield carries none', () => {
+    const inv = [shield('s1', 'held1', {
+      runes: { reinforcing: 'moderate', property: [throwingRune, reverberating] },
+    })];
+    const strikes = shieldBashStrikes({ ...character, inventory: inv }, {});
+    const toss = strikes.find((s) => s.type === 'ranged');
+    expect(toss.riders.map((r) => r.id)).toEqual(['reverberating-charge', 'reverberating-crit']);
+    const [plain] = shieldBashStrikes({ ...character, inventory: [shield('s2', 'held1')] }, {});
+    expect(plain.riders).toBeUndefined();
+  });
+});
+
 describe('shieldStrikes — Shield Bash baseline', () => {
   it('a held shield contributes a martial melee Shield Bash (1d4 B + Str)', () => {
     const char = { ...character, inventory: [shield('s1', 'held1')] };

@@ -170,6 +170,107 @@ describe('ShieldBlockBar', () => {
     });
   });
 
+  // ── Protecting rune (#1246) ──
+  describe('Protecting: pre-block Hardness reduction (#1246)', () => {
+    const PROTECT_LABEL = 'Use Protecting (reduce damage by 5 before the block)';
+    const protectingInventory = [{
+      uid: 'u1', name: 'Steel Shield', shield: { hardness: 5, hp: 20 },
+      runes: {
+        property: [{
+          id: 'protecting', type: 'property', target: 'shield', name: 'Protecting',
+          actuated: { cost: 'none', name: 'Protecting', frequency: 'once per minute' },
+        }],
+      },
+    }];
+    const renderProtecting = () =>
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={protectingInventory} />);
+
+    it('shows no Protecting toggle without the rune', () => {
+      setup();
+      expect(screen.queryByLabelText(PROTECT_LABEL)).not.toBeInTheDocument();
+    });
+
+    it('offers the toggle while the once-per-minute gate is open', () => {
+      renderProtecting();
+      expect(screen.getByLabelText(PROTECT_LABEL)).toBeInTheDocument();
+    });
+
+    it('checked, it pre-reduces the entered damage by Hardness, spends the minute gate, and logs', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 18, broken: false });
+      renderProtecting();
+      fireEvent.click(screen.getByLabelText(PROTECT_LABEL));
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      // 12 − 5 Hardness before the block; the block itself is unchanged.
+      expect(mockApplyBlock).toHaveBeenCalledWith(7, { hardnessBonus: 0 });
+      expect(mockRecord).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'u1:protecting:actuated', frequency: 'once per minute' }),
+        expect.anything(),
+      );
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('Protecting: −5 before the block (once per minute)'),
+      }));
+    });
+
+    it('unchecked, the block runs on the full damage and the gate stays unspent', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
+      renderProtecting();
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+      expect(mockApplyBlock).toHaveBeenCalledWith(12, { hardnessBonus: 0 });
+      expect(mockRecord).not.toHaveBeenCalled();
+    });
+
+    it('a spent minute gate replaces the toggle with the used note', () => {
+      mockGateAvailable = false;
+      renderProtecting();
+      expect(screen.queryByLabelText(PROTECT_LABEL)).not.toBeInTheDocument();
+      expect(screen.getByTestId('shieldblock-protecting-spent')).toHaveTextContent(
+        'Protecting used — the clock frees it up'
+      );
+    });
+  });
+
+  // ── Reverberating rune (#1246) ──
+  describe('Reverberating: stored-charge reminder (#1246)', () => {
+    const reverbInventory = [{
+      uid: 'u1', name: 'Steel Shield', shield: { hardness: 5, hp: 20 },
+      runes: { property: [{ id: 'reverberating', type: 'property', name: 'Reverberating' }] },
+    }];
+    const block = () => {
+      fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+      fireEvent.click(screen.getByLabelText('Shield Block'));
+    };
+
+    it('a block with the runed shield logs the stored charge', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={reverbInventory} />);
+      block();
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'system',
+        text: expect.stringContaining('Reverberating: the shockwave is stored for 1 round'),
+      }));
+    });
+
+    it('a destroying block stores nothing', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 0, broken: true, destroyed: true });
+      render(<ShieldBlockBar charId="Pellias" characterName="Pellias" inventory={reverbInventory} />);
+      block();
+      expect(mockAppendLog).not.toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('shockwave is stored'),
+      }));
+    });
+
+    it('a runeless shield logs no stored charge', () => {
+      mockApplyBlock.mockReturnValue({ prevented: 5, shieldHpAfter: 13, broken: false });
+      setup();
+      block();
+      expect(mockAppendLog).not.toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringContaining('shockwave is stored'),
+      }));
+    });
+  });
+
   // ── Accessory-rune onBlock rider (#1033 S2) ──
   describe('accessory-rune onBlock rider (#1033)', () => {
     const retaliationShield = {

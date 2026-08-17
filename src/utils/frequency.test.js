@@ -90,6 +90,12 @@ describe('checkFrequency — clock windows', () => {
     expect(gate.available).toBe(true);
   });
 
+  it('handles the minute window (#1246)', () => {
+    const minute = { per: 'minute', uses: 1 };
+    expect(checkFrequency({ rule: minute, records: [rec({ per: 'minute', gameSecs: NOW - 30 })], nowSecs: NOW }).available).toBe(false);
+    expect(checkFrequency({ rule: minute, records: [rec({ per: 'minute', gameSecs: NOW - WINDOW_SECS.minute })], nowSecs: NOW }).available).toBe(true);
+  });
+
   it('handles day and week windows', () => {
     const day = { per: 'day', uses: 1 };
     const week = { per: 'week', uses: 1 };
