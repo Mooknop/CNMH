@@ -3,13 +3,18 @@
 // dock-format migration (#1556) retired the surface that called useEncounter's
 // endEncounter, so the GM's "End-encounter sweep" button (PartyPanel) is what
 // actually ends a fight — usable mid-session or after the fact. Per character
-// it resets turn-scoped combat state (turn economy, shield, stance, aura,
-// Hunt Prey, sustains, Harmless Bystander, playing, Lingering Composition) and
-// expires encounter-scoped effects (turn/round-bound durations); clock-based
+// it resets turn-scoped combat state (turn economy, shield, stance, Hunt Prey,
+// sustains, Harmless Bystander, playing, Lingering Composition) and expires
+// encounter-scoped effects (turn/round-bound durations); clock-based
 // immunities (expireAtSecs) and manually-applied effects are kept. The
 // once-per-sweep globals — the encounter record itself, Recall Knowledge
 // pruning, persistent damage, enemy fx, summons — live in
 // performEncounterGlobalSweep below.
+//
+// The kinetic aura (`APP.AURA`, #228/#1733 ruling 1) is deliberately NOT
+// reset here — it survives encounter end (kineticists keep auras running in
+// exploration, per `useAura.jsx`'s header). It only ever ends via manual
+// Dismiss, the overflow burn-out, or the KO sweep (`useAuraKoSweep`).
 //
 // React-free: takes getState / sendUpdate (the dailyPrep / applyAbility
 // pattern) so the same logic drives a per-character call and the party loop.
@@ -44,11 +49,6 @@ function computeCombatResets(character, getState) {
   const stance = getState(id, APP.STANCE);
   if (stance?.active) {
     resets.push({ type: 'stance', value: { active: false, name: null, ts: 0 }, label: 'stance' });
-  }
-
-  const aura = getState(id, APP.AURA);
-  if (aura?.active) {
-    resets.push({ type: 'aura', value: { active: false, ts: 0 }, label: 'aura' });
   }
 
   const huntprey = getState(id, APP.HUNTPREY);

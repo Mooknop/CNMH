@@ -7,6 +7,8 @@
 // (activatesAura / requiresAura / overflow) take precedence so content can
 // opt in or out without engine changes.
 
+import { parseSpellArea } from './spellArea';
+
 const hasTrait = (ability, name) => {
   const traits = Array.isArray(ability?.traits) ? ability.traits : [];
   const lower = String(name).toLowerCase();
@@ -39,3 +41,33 @@ export const characterHasKineticAura = (character) =>
       (f?.actions || []).some(activatesAura) ||
       (f?.strikes || []).some(activatesAura)
   ) || (character?.actions || []).some(activatesAura);
+
+// The character's aura-activating ability (Channel Elements or equivalent),
+// same iteration shape `characterHasKineticAura` uses — feats' actions and
+// strikes, then top-level actions.
+const findAuraAbility = (character) => {
+  for (const f of character?.feats || []) {
+    const found = (f?.actions || []).find(activatesAura) || (f?.strikes || []).find(activatesAura);
+    if (found) return found;
+  }
+  return (character?.actions || []).find(activatesAura) || null;
+};
+
+/**
+ * The aura's authored radius (#1733 ruling 2 — no fallback radius): reads
+ * `ability.areaShape` via `parseSpellArea` (`utils/spellArea.js`), the same
+ * authoring override a spell's area uses. An aura with no `activatesAura`
+ * ability, or one whose ability carries no machine-readable
+ * `areaShape: { shape: 'emanation', feet }`, resolves to null — callers must
+ * treat null as "never send `auraset`", not as an invitation to guess a size.
+ *
+ * @param {Object} character
+ * @returns {{feet:number, label:string}|null}
+ */
+export function auraProfile(character) {
+  const ability = findAuraAbility(character);
+  if (!ability) return null;
+  const area = parseSpellArea(ability);
+  if (!area || area.shape !== 'emanation' || !(Number(area.feet) > 0)) return null;
+  return { feet: Number(area.feet), label: ability.name || 'Aura' };
+}

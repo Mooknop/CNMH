@@ -3,6 +3,7 @@ import {
   requiresAura,
   isOverflow,
   characterHasKineticAura,
+  auraProfile,
 } from './kineticAura';
 
 const channelElements = {
@@ -101,5 +102,52 @@ describe('characterHasKineticAura', () => {
     expect(characterHasKineticAura(champion)).toBe(false);
     expect(characterHasKineticAura({})).toBe(false);
     expect(characterHasKineticAura(null)).toBe(false);
+  });
+});
+
+describe('auraProfile', () => {
+  it('resolves the authored radius via areaShape (#1733 ruling 2 — Channel Elements)', () => {
+    const pellias = {
+      feats: [{
+        name: 'Kineticist Dedication',
+        actions: [{ ...channelElements, areaShape: { shape: 'emanation', feet: 10 } }],
+        strikes: [metalBlast],
+      }],
+    };
+    expect(auraProfile(pellias)).toEqual({ feet: 10, label: 'Channel Elements' });
+  });
+
+  it('finds the activator via feat strikes when it is strike-shaped', () => {
+    const char = {
+      feats: [{
+        strikes: [{ name: 'Aura Strike', traits: ['Aura', 'Kineticist'], areaShape: { shape: 'emanation', feet: 15 } }],
+      }],
+    };
+    expect(auraProfile(char)).toEqual({ feet: 15, label: 'Aura Strike' });
+  });
+
+  it('finds the activator among top-level actions', () => {
+    const char = { actions: [{ ...channelElements, areaShape: { shape: 'emanation', feet: 5 } }] };
+    expect(auraProfile(char)).toEqual({ feet: 5, label: 'Channel Elements' });
+  });
+
+  it('returns null with no authored size — no fallback radius', () => {
+    const pellias = {
+      feats: [{ name: 'Kineticist Dedication', actions: [channelElements], strikes: [metalBlast] }],
+    };
+    expect(auraProfile(pellias)).toBeNull();
+  });
+
+  it('returns null when the areaShape is a non-emanation shape', () => {
+    const char = {
+      actions: [{ ...channelElements, areaShape: { shape: 'burst', feet: 10 } }],
+    };
+    expect(auraProfile(char)).toBeNull();
+  });
+
+  it('returns null when the character has no aura-activating ability', () => {
+    expect(auraProfile({ feats: [{ actions: [metalBlast] }] })).toBeNull();
+    expect(auraProfile({})).toBeNull();
+    expect(auraProfile(null)).toBeNull();
   });
 });
