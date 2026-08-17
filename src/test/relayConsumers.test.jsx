@@ -14,6 +14,7 @@ import { useDoors } from '../hooks/useDoors';
 import { useCharacterLiveState } from '../hooks/useCharacterLiveState';
 import { useFoeKit } from '../hooks/useFoeKit';
 import { usePathPreview } from '../hooks/usePathPreview';
+import { useAuraMembers } from '../hooks/useAuraMembers';
 
 beforeEach(() => window.localStorage.clear());
 
@@ -231,6 +232,34 @@ describe('pathpreview (#1744 S3/WS-4)', () => {
     act(() => { pushRelayFixture(session, RELAY.PATHPREVIEW); });
 
     expect(result.current.entries).toEqual([]);
+  });
+});
+
+describe('aura membership (#1733 S2)', () => {
+  it('useAuraMembers reflects the recorded membership payload, filtered to visible allies', () => {
+    const { result, session } = renderHookWithProviders(() => useAuraMembers('Pellias'));
+    act(() => { pushRelayFixture(session, RELAY.AURAMEMBERS, { charId: 'Pellias' }); });
+
+    expect(result.current.known).toBe(true);
+    expect(result.current.insideCount).toBe(relayFixtures.auramembers.value.inside.length);
+    // Typed asserts on the fields the tooltip/dossier actually read off the
+    // wire (see the moveopts note above): a bridge-side rename + re-record
+    // fails here, not vacuously on undefined === undefined.
+    expect(result.current.inside[0]).toMatchObject({
+      tokenId: expect.any(String), name: expect.any(String),
+      disposition: expect.any(Number), hidden: expect.any(Boolean),
+    });
+    // The recorded fixture has one friendly non-hidden ally (entryId
+    // cbt-ally-aura) and one hidden hostile (tokenId tok-lurker) — only the
+    // former counts toward the player-facing filtered view.
+    expect(result.current.visibleCount).toBe(1);
+    expect(result.current.visibleAllies[0].tokenId).toBe('tok-ally-aura');
+  });
+
+  it('reports unknown (not a lying zero) before any membership payload has landed', () => {
+    const { result } = renderHookWithProviders(() => useAuraMembers('Pellias'));
+    expect(result.current.known).toBe(false);
+    expect(result.current.visibleCount).toBe(0);
   });
 });
 

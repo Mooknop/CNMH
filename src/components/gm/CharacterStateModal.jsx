@@ -292,7 +292,7 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
     pushState('turnstate', freshTurnState());
     pushState('shieldraise', { raised: false, ts: 0 });
     pushState('stance', { active: false, name: null, ts: 0 });
-    pushState('aura', { active: false, ts: 0 });
+    pushState(APP.AURA, { active: false, ts: 0 });
     pushState('huntprey', null);
     pushState('sustains', []);
     appendEvent({ type: 'gm', text: `GM: cleared combat state for ${charName}` });
