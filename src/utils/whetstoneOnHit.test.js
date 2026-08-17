@@ -118,6 +118,68 @@ describe('applyWhetstoneOnHit (#1215)', () => {
       text: 'Limning Gem: lit up',
     });
   });
+
+  // ── round-timed condition stamps (#1246 D) ─────────────────────────────────
+  describe('onHit.duration expiry stamps (#1246 D)', () => {
+    const troll = { entryId: 'e-1', kind: 'enemy', name: 'Troll' };
+    const limningArgs = (results, overrides = {}) => baseArgs({
+      ability: {
+        name: 'Strike',
+        whetstoneOnHit: {
+          itemName: 'Limning Gem',
+          condition: 'limned',
+          duration: { until: 'rounds', rounds: 1 },
+          ...overrides,
+        },
+      },
+      rayGroups: ray(results),
+      order: [troll],
+      encounter: { active: true, phase: 'in-progress', round: 2, order: [troll] },
+      casterEntryId: 'e-pellias',
+    });
+
+    it('a normal hit stamps expireAt from duration, anchored to the wielder', () => {
+      const args = limningArgs([hit('e-1', 'success')]);
+      applyWhetstoneOnHit(args);
+      expect(args.applyEnemyCondition).toHaveBeenCalledWith('e-1', {
+        id: 'limned',
+        source: 'Limning Gem',
+        expireAt: { round: 3, entryId: 'e-pellias', boundary: 'turn-end' },
+      });
+    });
+
+    it('a critical hit applies un-stamped when no critDuration is authored (manual — gem duration)', () => {
+      const args = limningArgs([hit('e-1', 'criticalSuccess')]);
+      applyWhetstoneOnHit(args);
+      expect(args.applyEnemyCondition).toHaveBeenCalledWith('e-1', {
+        id: 'limned',
+        source: 'Limning Gem',
+      });
+    });
+
+    it('a critical hit uses critDuration when authored', () => {
+      const args = limningArgs([hit('e-1', 'criticalSuccess')], {
+        critDuration: { until: 'rounds', rounds: 10 },
+      });
+      applyWhetstoneOnHit(args);
+      expect(args.applyEnemyCondition).toHaveBeenCalledWith('e-1', expect.objectContaining({
+        expireAt: { round: 12, entryId: 'e-pellias', boundary: 'turn-end' },
+      }));
+    });
+
+    it('applies un-stamped outside an encounter context (no encounter arg)', () => {
+      const args = baseArgs({
+        ability: {
+          name: 'Strike',
+          whetstoneOnHit: { itemName: 'Limning Gem', condition: 'limned', duration: { until: 'rounds', rounds: 1 } },
+        },
+        rayGroups: ray([hit('e-1', 'success')]),
+        order: [troll],
+      });
+      applyWhetstoneOnHit(args);
+      expect(args.applyEnemyCondition).toHaveBeenCalledWith('e-1', { id: 'limned', source: 'Limning Gem' });
+    });
+  });
 });
 
 describe('applyWhetstoneReactionAndCrit (#1216)', () => {

@@ -244,6 +244,7 @@ export const applyPostRollEffects = ({
   chainResults,
   hasChainStrike,
   order,
+  encounter,
   damageProfile,
   fxAnimations,
   setPersistentMap,
@@ -302,13 +303,17 @@ export const applyPostRollEffects = ({
   });
 
   // Whetstone on-hit riders (#1215) — Analysis Eye / Leeching Fangs /
-  // Limning Gem fire off successful results.
+  // Limning Gem fire off successful results. `encounter` + `casterEntryId`
+  // anchor round-timed condition stamps (#1246 D — Limning Gem's "until the
+  // end of your next turn").
   applyWhetstoneOnHit({
     ability,
     character,
     rayGroups,
     chainResults: strikeChainResults,
     order,
+    encounter,
+    casterEntryId,
     getState,
     sendUpdate,
     appendLog,

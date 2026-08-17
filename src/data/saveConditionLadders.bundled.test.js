@@ -14,6 +14,14 @@ import { spells, effects } from './index';
 import { getCondition } from './pf2eConditions';
 
 const DEGREES = ['criticalSuccess', 'success', 'failure', 'criticalFailure'];
+// The resolveExpireAt duration vocabulary (utils/expiry.js) — a condition's
+// optional round-timed expiry stamp (#1246 D) must speak it or it silently
+// resolves to null (manual clear).
+const DURATION_UNTILS = [
+  'caster-turn-end', 'caster-turn-start',
+  'target-turn-end', 'target-turn-start',
+  'round-end', 'rounds',
+];
 const effectIds = new Set(effects.map((e) => e.id));
 const withLadder = spells.filter((s) => s.saveConditions);
 
@@ -28,6 +36,10 @@ describe('save-condition ladders (#987)', () => {
           expect(typeof c.id).toBe('string');
           expect(c.id.length).toBeGreaterThan(0);
           if (c.value != null) expect(typeof c.value).toBe('number');
+          if (c.duration != null) {
+            expect(DURATION_UNTILS).toContain(c.duration.until);
+            if (c.duration.until === 'rounds') expect(typeof c.duration.rounds).toBe('number');
+          }
         }
       }
     }
@@ -68,5 +80,16 @@ describe('save-condition ladders (#987)', () => {
       expect(ids(d)).toContain('off-guard');
     }
     expect(ids('criticalSuccess')).not.toContain('off-guard');
+  });
+
+  it('Steal the Show stamps its 1-round conditions for the round sweep, spotlight stays manual (#1246 D)', () => {
+    const sc = spells.find((s) => s.id === 'steal-the-show').saveConditions;
+    const oneRound = { until: 'rounds', rounds: 1 };
+    for (const d of ['success', 'failure', 'criticalFailure']) {
+      for (const c of sc[d]) expect(c.duration).toEqual(oneRound);
+    }
+    // The crit-success spotlight lasts the sustained spell's duration — the
+    // sustain cadence is manual, so no round stamp.
+    expect(sc.criticalSuccess[0].duration).toBeUndefined();
   });
 });

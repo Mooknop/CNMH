@@ -770,6 +770,49 @@ describe('per-degree target conditions (#1216 — whetstone save riders)', () =>
     expect(fx['e-goblin'].conditions.find((c) => c.id === 'stunned').value).toBe(1);
   });
 
+  // ── round-timed expiry stamps (#1246 D) ────────────────────────────────────
+
+  test('a condition authored with a duration is stamped with expireAt resolved at application time', () => {
+    useEncounter.mockReturnValue({
+      encounter: {
+        ...makeEncounter([{
+          ...baseRequest,
+          abilityName: 'Steal the Show',
+          save: 'will',
+          conditions: {
+            failure: [{ id: 'off-guard', duration: { until: 'rounds', rounds: 1 } }],
+          },
+        }]),
+        round: 3,
+        order: [{ entryId: 'pc-pellias', kind: 'pc', charId: 'char-a', name: 'Pellias' }],
+      },
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } }); // failure
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    const fx = enemyFx();
+    // rounds:1 anchored to the caster's entry, resolved against round 3 NOW.
+    expect(fx['e-goblin'].conditions[0].expireAt).toEqual({
+      round: 4, entryId: 'pc-pellias', boundary: 'turn-end',
+    });
+  });
+
+  test('a condition without a duration stays un-stamped — manual clear only (back-compat)', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([conditionRequest]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+      resolveSaveRequest: mockResolveSaveReq,
+    });
+    render(<RequestedSaves />);
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+    expect(enemyFx()['e-goblin'].conditions[0]).not.toHaveProperty('expireAt');
+  });
+
   test('a scopedToCaster condition (Reactive Flash off-guard) scopes to the attacker', () => {
     useEncounter.mockReturnValue({
       encounter: makeEncounter([{

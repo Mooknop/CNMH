@@ -10,14 +10,24 @@
 import { isExpired } from './expiry';
 import { hymnFastHealingFor, applyHymnFastHealing } from './hymnHealing';
 import { readThrough, readThroughList } from './syncedRead';
-import { APP, syncKey } from '../sync/keys';
+import { getCondition } from '../data/pf2eConditions';
+import { APP, GLOBAL_ID, syncKey, globalKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
 };
 
+// Display name for an enemy-condition id: real PF2e condition, else a backing
+// effect doc (on-hit markers like `limned` / `beacon-shot`), else the bare id —
+// the same chain EnemyConditionBadge renders.
+const conditionName = (id, effectCatalog) =>
+  getCondition(id)?.name
+    || (effectCatalog || []).find((e) => e.id === id)?.name
+    || id;
+
 /**
- * Sweep expired effects and granted actions from every PC in the order, given
+ * Sweep expired effects and granted actions from every PC in the order — plus
+ * round-timed enemy conditions on cnmh_enemyfx_global (#1246 D) — given
  * the turn/round boundaries crossed by a transition. Writes the survivors back
  * and logs each expiry. React-free.
  *
@@ -79,6 +89,39 @@ export function sweepExpiredOnBoundaries({ order, boundaries, getState, sendUpda
         .forEach((g) => {
           appendLog({ type: 'system', text: `${g.action?.name || g.source || 'Granted action'} expired for ${entry.name}` });
         });
+    }
+  }
+
+  // --- enemy conditions sweep (#1246 D) ---
+  // Round-timed enemy conditions carry the same expireAt shape on the global
+  // cnmh_enemyfx_global map (see useEnemyEffects). Un-stamped conditions are
+  // manual-clear-only and always survive; the whole map is wiped anyway by the
+  // GM's end-encounter sweep (performEncounterGlobalSweep), so this filter is
+  // idempotent and never fights it — nothing expired means no write at all.
+  const enemyFx = readThrough(getState, GLOBAL_ID, APP.ENEMYFX);
+  if (enemyFx && typeof enemyFx === 'object') {
+    let changed = false;
+    const next = {};
+    for (const [entryId, rec] of Object.entries(enemyFx)) {
+      const conditions = Array.isArray(rec?.conditions) ? rec.conditions : [];
+      const kept = conditions.filter((c) => !isExpired(c?.expireAt, boundaries));
+      if (kept.length !== conditions.length) {
+        changed = true;
+        const entryName = (order || []).find((e) => e.entryId === entryId)?.name || entryId;
+        conditions
+          .filter((c) => isExpired(c?.expireAt, boundaries))
+          .forEach((c) => {
+            const label = `${conditionName(c.id, effectCatalog)}${c.value != null ? ` ${c.value}` : ''}`;
+            appendLog({ type: 'system', text: `${label} expired on ${entryName}` });
+          });
+        next[entryId] = { ...rec, conditions: kept };
+      } else {
+        next[entryId] = rec;
+      }
+    }
+    if (changed) {
+      writeLocal(globalKey(APP.ENEMYFX), next);
+      sendUpdate(GLOBAL_ID, APP.ENEMYFX, next);
     }
   }
 }

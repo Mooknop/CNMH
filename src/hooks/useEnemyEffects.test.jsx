@@ -52,6 +52,51 @@ describe('useEnemyEffects', () => {
     expect(rec.conditions[0].value).toBe(2);
   });
 
+  // ── round-timed expiry stamps (#1246 D) ────────────────────────────────────
+  describe('expireAt stamps (#1246 D)', () => {
+    const stamp = { round: 2, entryId: 'e-pc', boundary: 'turn-end' };
+    const later = { round: 5, entryId: 'e-pc', boundary: 'turn-end' };
+
+    it('records the stamp on a fresh application, and omits the key without one', () => {
+      const { result } = renderHook(() => useEnemyEffects());
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled', expireAt: stamp }));
+      act(() => result.current.applyCondition(ENTRY, { id: 'off-guard' }));
+      const rec = result.current.effectsFor(ENTRY);
+      expect(rec.conditions.find((c) => c.id === 'dazzled').expireAt).toEqual(stamp);
+      expect(rec.conditions.find((c) => c.id === 'off-guard')).not.toHaveProperty('expireAt');
+    });
+
+    it('never shortens: an un-stamped re-application makes the merged entry manual', () => {
+      const { result } = renderHook(() => useEnemyEffects());
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled', expireAt: stamp }));
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled' })); // GM dock re-apply
+      expect(result.current.effectsFor(ENTRY).conditions[0]).not.toHaveProperty('expireAt');
+    });
+
+    it('never shortens: a stamped re-application over a manual entry keeps it manual', () => {
+      const { result } = renderHook(() => useEnemyEffects());
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled' }));
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled', expireAt: stamp }));
+      expect(result.current.effectsFor(ENTRY).conditions[0]).not.toHaveProperty('expireAt');
+    });
+
+    it('re-anchors to the incoming stamp when both sides are stamped (re-fire)', () => {
+      const { result } = renderHook(() => useEnemyEffects());
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled', expireAt: stamp }));
+      act(() => result.current.applyCondition(ENTRY, { id: 'dazzled', expireAt: later }));
+      expect(result.current.effectsFor(ENTRY).conditions[0].expireAt).toEqual(later);
+    });
+
+    it('stamps merge per scope — a scoped stamp never touches the generic entry', () => {
+      const { result } = renderHook(() => useEnemyEffects());
+      act(() => result.current.applyCondition(ENTRY, { id: 'off-guard' }));
+      act(() => result.current.applyCondition(ENTRY, { id: 'off-guard', scopedTo: 'izzy', expireAt: stamp }));
+      const rec = result.current.effectsFor(ENTRY);
+      expect(rec.conditions.find((c) => !c.scopedTo)).not.toHaveProperty('expireAt');
+      expect(rec.conditions.find((c) => c.scopedTo === 'izzy').expireAt).toEqual(stamp);
+    });
+  });
+
   it('stampImmunity + isImmune reflect an active per-caster immunity', () => {
     const { result } = renderHook(() => useEnemyEffects());
     act(() => result.current.stampImmunity(ENTRY, {

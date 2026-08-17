@@ -3260,13 +3260,21 @@
             "success": [
               {
                 "id": "dazzled",
-                "note": "1 round"
+                "note": "1 round",
+                "duration": {
+                  "until": "rounds",
+                  "rounds": 1
+                }
               }
             ],
             "failure": [
               {
                 "id": "blinded",
-                "note": "1 round, then dazzled 1 round"
+                "note": "1 round, then dazzled 1 round",
+                "duration": {
+                  "until": "rounds",
+                  "rounds": 1
+                }
               }
             ],
             "criticalFailure": [
@@ -3276,7 +3284,11 @@
               },
               {
                 "id": "blinded",
-                "note": "1 round, then dazzled 1 round"
+                "note": "1 round, then dazzled 1 round",
+                "duration": {
+                  "until": "rounds",
+                  "rounds": 1
+                }
               }
             ]
           }
@@ -8160,7 +8172,11 @@
       "effect": {
         "onHit": {
           "condition": "limned",
-          "note": "Target outlined in bright white light until the end of your next turn (critical hit: for the gem’s remaining duration); an Invisible target becomes Concealed instead."
+          "note": "Target outlined in bright white light until the end of your next turn (critical hit: for the gem’s remaining duration); an Invisible target becomes Concealed instead.",
+          "duration": {
+            "until": "rounds",
+            "rounds": 1
+          }
         }
       },
       "reminder": "Weapon sheds dim light (10 ft); hits outline the target in light until the end of your next turn."
@@ -10794,14 +10810,20 @@
               {
                 "id": "off-guard",
                 "scopedToCaster": true,
-                "note": "vs this attack"
+                "note": "vs this attack",
+                "duration": {
+                  "until": "caster-turn-end"
+                }
               }
             ],
             "criticalFailure": [
               {
                 "id": "off-guard",
                 "scopedToCaster": true,
-                "note": "vs this attack"
+                "note": "vs this attack",
+                "duration": {
+                  "until": "caster-turn-end"
+                }
               }
             ]
           }
