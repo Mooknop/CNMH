@@ -20,6 +20,8 @@ import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
 import { useExploitVulnerability } from '../../../hooks/useExploitVulnerability';
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { useAdjacency } from '../../../hooks/useAdjacency';
+import { useAura } from '../../../hooks/useAura';
+import { useAuraMembers } from '../../../hooks/useAuraMembers';
 import { useEnemyEffects } from '../../../hooks/useEnemyEffects';
 import { useEffects } from '../../../hooks/useEffects';
 import { useContent } from '../../../contexts/ContentContext';
@@ -128,6 +130,12 @@ const Dossier = ({ charId, character, model }) => {
   const [heroPoints] = useSyncedState(syncKey(RELAY.HEROPOINTS, charId || 'none'), 0);
   const [focusSpentRaw] = useSyncedState(syncKey(APP.FOCUS, charId || 'none'), 0);
   const { effects: selfEffects } = useEffects(charId || 'none');
+  // Aura membership read-out (#1733 S2) — shown only when your own aura is
+  // active AND the bridge's membership snapshot is known (never a lying
+  // zero). Player-facing: `visibleAllies`/`visibleCount` are already
+  // filtered to friendly + non-hidden by useAuraMembers.
+  const { active: auraActive } = useAura(charId || 'none');
+  const { known: auraKnown, visibleCount: auraVisibleCount } = useAuraMembers(charId || 'none');
 
   // ── Self focus (#1502 S2) — personal status readout ───────────────────────
   if (focusSelf) {
@@ -213,6 +221,11 @@ const Dossier = ({ charId, character, model }) => {
             <span className="dossier-meta-item">Focus <b>{focusLeft}/{focusMax}</b></span>
           )}
           {speedValue != null && <span className="dossier-meta-item">Speed {speedValue} ft</span>}
+          {auraActive && auraKnown && (
+            <span className="dossier-meta-item" data-testid="dossier-aura">
+              Aura <b>{auraVisibleCount} {auraVisibleCount === 1 ? 'ally' : 'allies'} inside</b>
+            </span>
+          )}
         </div>
       </section>
     );
