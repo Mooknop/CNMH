@@ -890,6 +890,25 @@
     "description": "An expanded alchemist's lab holds a wider array of reagents and apparatus. It grants a +1 item bonus to Crafting checks to create alchemical items (the bonus applies only to alchemical crafting)."
   },
   {
+    "name": "Alicorn Hair",
+    "description": "Hair shed from an alicorn's mane glows when it comes into contact with a living creature. A Stabilize spell empowered with an alicorn hair allows you to target 1 additional creature.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 1,
+    "price": 4,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "stabilize",
+      "effect": "The spell targets 1 additional creature.",
+      "addActions": 1
+    },
+    "id": "alicorn-hair"
+  },
+  {
     "actions": [
       {
         "name": "Shining Charge",
@@ -987,6 +1006,24 @@
     "price": 150,
     "weight": 0,
     "id": "amphisbaena-handwraps"
+  },
+  {
+    "name": "Amphisbaena Spittle",
+    "description": "Hardened clumps of amphisbaena spittle can be harvested from the dual-headed snake's hunting grounds. When a casting of Web of Eyes is empowered with this catalyst, you can place an additional scrying sensor on the back of each target's head, in the shape of a closed snake's eye. When a target shares their vision with the others affected by the spell, the eye blinks open, preventing the target from being flanked until the start of its next turn.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 21,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "web-of-eyes",
+      "effect": "While a target shares its vision, it can't be flanked until the start of its next turn."
+    },
+    "id": "amphisbaena-spittle"
   },
   {
     "name": "Analysis Eye",
@@ -1841,6 +1878,63 @@
       "note": "+3 item to Athletics + unarmed attacks (claw 3d8 S agile, jaws 3d10 P); −2 to Reflex, Acrobatics, Stealth. 1 hour."
     },
     "description": "Drinking this mutagen twists you into a hulking beast. Benefit: +3 item bonus to Athletics checks and unarmed attack rolls; you gain a claw (3d8 slashing, agile) and jaws (3d10 piercing) unarmed attack. Drawback: −2 penalty to Reflex saves, Acrobatics, and Stealth. Lasts 1 hour."
+  },
+  {
+    "name": "Black Ash",
+    "description": "On certain rare occasions, when a particularly despoiled tree or a powerful demonic fungal infestation (such as a Jeharlu Spore) is destroyed, the grimy black ash that remains behind functions as a catalyst called black ash. A Wall of Thorns empowered with this catalyst gains the fungus trait and appears diseased and toxic, with greasy filaments of dripping fungus growing through its vines. A creature damaged by this wall's thorns takes an additional 1d6 persistent poison damage.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-thorns",
+      "effect": "The wall gains the fungus trait; creatures damaged by its thorns also take 1d6 persistent poison damage."
+    },
+    "id": "black-ash"
+  },
+  {
+    "name": "Black Ash (Greater)",
+    "description": "On certain rare occasions, when a particularly despoiled tree or a powerful demonic fungal infestation (such as a Jeharlu Spore) is destroyed, the grimy black ash that remains behind functions as a catalyst called black ash. A Wall of Thorns empowered with this catalyst gains the fungus trait and appears diseased and toxic, with greasy filaments of dripping fungus growing through its vines. A creature damaged by this wall's thorns takes an additional 2d6 persistent poison damage.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-thorns",
+      "effect": "The wall gains the fungus trait; creatures damaged by its thorns also take 2d6 persistent poison damage."
+    },
+    "id": "black-ash-greater"
+  },
+  {
+    "name": "Black Ash (Major)",
+    "description": "On certain rare occasions, when a particularly despoiled tree or a powerful demonic fungal infestation (such as a Jeharlu Spore) is destroyed, the grimy black ash that remains behind functions as a catalyst called black ash. A Wall of Thorns empowered with this catalyst gains the fungus trait and appears diseased and toxic, with greasy filaments of dripping fungus growing through its vines. A creature damaged by this wall's thorns takes an additional 3d6 persistent poison damage.",
+    "traits": [
+      "Rare",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 15,
+    "price": 1300,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-thorns",
+      "effect": "The wall gains the fungus trait; creatures damaged by its thorns also take 3d6 persistent poison damage."
+    },
+    "id": "black-ash-major"
   },
   {
     "actions": [
@@ -3757,6 +3851,42 @@
     "description": "This elixir grants you darkvision for 24 hours."
   },
   {
+    "name": "Dazzling Rosary",
+    "description": "When energy courses through these lustrous beads, they glow brightly in the sacred colors of the spellcaster's faith. A Spiritual Armament empowered with this catalyst flashes with bright light when it critically Strikes a target, causing the target to be dazzled until the beginning of your next turn. The rosary can be used with a spiritual armament of 4th level or below.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 4,
+    "price": 15,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "spiritual-armament",
+      "effect": "A critical Strike from the spiritual armament leaves the target dazzled until the beginning of your next turn (spell of 4th level or below)."
+    },
+    "id": "dazzling-rosary"
+  },
+  {
+    "name": "Dazzling Rosary (Greater)",
+    "description": "When energy courses through these lustrous beads, they glow brightly in the sacred colors of the spellcaster's faith. A Spiritual Armament empowered with this catalyst flashes with bright light when it critically Strikes a target, causing the target to be dazzled until the beginning of your next turn. The rosary can be used with a spiritual armament of any level.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 12,
+    "price": 350,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "spiritual-armament",
+      "effect": "A critical Strike from the spiritual armament leaves the target dazzled until the beginning of your next turn (spell of any level)."
+    },
+    "id": "dazzling-rosary-greater"
+  },
+  {
     "name": "Deadlock Mint",
     "description": "Deadlock mint is a species of mint with small, green flowers, said to grow on battlefields where the opposing sides were equally matched. Sprigs of the flowers blow gently in a breeze of their own creation. If you cast Mystic Armor using deadlock mint, you release a small blast of concussive air in an emanation of a size that depends on the catalyst's type. Unattended objects up to a certain Bulk limit are pushed away from you. Large or smaller creatures must succeed at a Fortitude save equal to your spell save DC or be pushed the same distance away from you. Objects of 1 Bulk or less and creatures that fail the save are pushed 5 feet.",
     "traits": [
@@ -3964,6 +4094,24 @@
       "reminder": "Grants the Tear Rift action (2 actions): connect two squares within 30 ft as adjacent until the end of your next turn."
     },
     "id": "dimensional-cleavestone"
+  },
+  {
+    "name": "Dimensional Knot",
+    "description": "Shelynites originally crafted this complex knot of vibrant string for bracelets meant to tie the destinies of two people together. Now, however, spellcasters of all religions use them to enhance their capacity with teleportation magic. Adding this catalyst to a 4th-rank Translocate spell allows you to bring a single willing adjacent creature along with you; however, the teleportation is somewhat disorienting for them, causing them to become stunned 1.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 7,
+    "price": 60,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "translocate",
+      "effect": "You bring one willing adjacent creature along with you; that creature becomes stunned 1."
+    },
+    "id": "dimensional-knot"
   },
   {
     "actions": [
@@ -5470,6 +5618,24 @@
       "reminder": "The weapon vibrates when a creature with the chosen trait is within 60 feet (unless disguised/Hidden with Deception or Stealth DC 26+)."
     },
     "id": "foe-sensing-rod"
+  },
+  {
+    "name": "Force Tiles",
+    "description": "Light refracts in strange ways through these precisely ground glass tiles, lengthening the refracted force and causing it to push back. Adding this catalyst to a Wall of Force spell increases the wall's maximum length to 80 feet and maximum height to 40 feet and causes creatures that try to move into the wall's space (or are Shoved into the wall) to take 2d6 force damage.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 13,
+    "price": 525,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "wall-of-force",
+      "effect": "The wall can be up to 80 feet long and 40 feet high, and deals 2d6 force damage to creatures that move or are Shoved into it."
+    },
+    "id": "force-tiles"
   },
   {
     "name": "Frenzied Quintessence",
@@ -12066,6 +12232,24 @@
     "id": "skinstitch-salve"
   },
   {
+    "name": "Skyfisher Vapors",
+    "description": "Skyfisher vapors are only visible via their effect on a Toxic Cloud spell, or apparent lack thereof. These gases cause the conjured cloud to be as transparent as a skyfisher. The cloud is invisible, meaning it does not provide concealment, but it requires a successful Perception check against your spell DC to notice the cloud by faint distortions in the air. Your magical connection to the cloud means you always know where it is. This has no effect on its damage.",
+    "traits": [
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 25,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "toxic-cloud",
+      "effect": "The cloud turns invisible — it grants no concealment, and noticing it takes a Perception check against your spell DC."
+    },
+    "id": "skyfisher-vapors"
+  },
+  {
     "name": "Slayer's Stone",
     "description": "Activate (one-action, manipulate). This dull red stone is shot through with glittering veins of black and silver. When you apply a slayer's stone to your weapon, choose aberration, animal, beast, celestial, construct, dragon, elemental, fey, fiend, giant, monitor, ooze, or both fungus and plant. A weapon under the effect of a slayer's stone deals an additional 1d6 precision damage to the creatures with the chosen trait or traits for 1 minute. It's up to the GM's discretion whether this benefit applies against a creature disguised as a creature with the chosen trait or traits.",
     "traits": [
@@ -14798,6 +14982,86 @@
       "description": "Activate (free action, concentrate); Frequency once per day; Effect When your next action casts a shadow or void spell prepared from this grimoire, a roiling cloud of shadow spills out, creating dim light in a 30-foot emanation centered on you for 3 rounds (it does not apply where light is already darker than dim)."
     },
     "description": "This grimoire of funerary rites is bound in grave-cloth. Once per day it shrouds you in shadow as you cast a shadow or void spell."
+  },
+  {
+    "name": "Unsullied Blood (Greater)",
+    "description": "Blood offered from a willing donor was taken directly from the vein and stored in an ornate vial that keeps it as pure and red as the day it was extracted. When this catalyst is added to a Vampiric Feast or Vampiric Maiden spell of up to 6th level, instead of gaining temporary Hit Points based on the damage dealt, you recover half of the damage dealt as Hit Points. If the amount of Hit Points that would be restored by the spell exceeds your Hit Point maximum, you gain the excess as temporary Hit Points.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 200,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "vampiric-feast",
+      "effect": "You recover half the damage dealt as Hit Points instead of temporary Hit Points, with any excess as temporary Hit Points (spell up to 6th level).",
+      "addActions": 1
+    },
+    "id": "unsullied-blood-greater"
+  },
+  {
+    "name": "Unsullied Blood (Lesser)",
+    "description": "Blood offered from a willing donor was taken directly from the vein and stored in an ornate vial that keeps it as pure and red as the day it was extracted. When this catalyst is added to a Vampiric Feast spell of up to 4th level, instead of gaining temporary Hit Points based on the damage dealt, you recover half of the damage dealt as Hit Points.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 5,
+    "price": 30,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "vampiric-feast",
+      "effect": "You recover half the damage dealt as Hit Points instead of gaining temporary Hit Points (spell up to 4th level).",
+      "addActions": 1
+    },
+    "id": "unsullied-blood-lesser"
+  },
+  {
+    "name": "Unsullied Blood (Major)",
+    "description": "Blood offered from a willing donor was taken directly from the vein and stored in an ornate vial that keeps it as pure and red as the day it was extracted. When this catalyst is added to a Vampiric Feast, Vampiric Maiden, or Vampiric Exsanguination spell of any level, instead of gaining temporary Hit Points based on the damage dealt, you recover half of the damage dealt as Hit Points. If the amount of Hit Points that would be restored by the spell exceeds your Hit Point maximum, you gain the excess as temporary Hit Points.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 14,
+    "price": 900,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "vampiric-feast",
+      "effect": "You recover half the damage dealt as Hit Points instead of temporary Hit Points, with any excess as temporary Hit Points (spell of any level).",
+      "addActions": 1
+    },
+    "id": "unsullied-blood-major"
+  },
+  {
+    "name": "Unsullied Blood (Moderate)",
+    "description": "Blood offered from a willing donor was taken directly from the vein and stored in an ornate vial that keeps it as pure and red as the day it was extracted. When this catalyst is added to a Vampiric Feast spell of up to 5th level, instead of gaining temporary Hit Points based on the damage dealt, you recover half of the damage dealt as Hit Points. If the amount of Hit Points that would be restored by the spell exceeds your Hit Point maximum, you gain the excess as temporary Hit Points.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 8,
+    "price": 85,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystFor": "vampiric-feast",
+      "effect": "You recover half the damage dealt as Hit Points instead of temporary Hit Points, with any excess as temporary Hit Points (spell up to 5th level).",
+      "addActions": 1
+    },
+    "id": "unsullied-blood-moderate"
   },
   {
     "name": "Valorous Coin",

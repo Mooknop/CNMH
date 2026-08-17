@@ -93,5 +93,30 @@ describe('catalyst spine', () => {
       expect(bd.level).toBe(3);
       expect(bd.traits).toEqual(expect.arrayContaining(['Fire']));
     });
+
+    it('imports the blood/walls catalyst groups (W1-D) with their target spells', () => {
+      const ids = [
+        'dazzling-rosary', 'dazzling-rosary-greater', 'alicorn-hair', 'amphisbaena-spittle',
+        'black-ash', 'black-ash-greater', 'black-ash-major', 'dimensional-knot',
+        'force-tiles', 'skyfisher-vapors', 'unsullied-blood-lesser', 'unsullied-blood-moderate',
+        'unsullied-blood-greater', 'unsullied-blood-major',
+      ];
+      ids.forEach((id) => {
+        const c = items.find((i) => i.id === id);
+        expect(c, id).toBeTruthy();
+        expect(isCatalyst(c), id).toBe(true);
+        expect(c.traits, id).not.toContain('3rd Party');
+      });
+      // newly imported target spells resolve
+      ['toxic-cloud', 'translocate', 'vampiric-feast', 'wall-of-force', 'wall-of-thorns'].forEach((id) => {
+        expect(spells.find((s) => s.id === id), id).toBeTruthy();
+      });
+      // Dazzling Rosary points at the remastered spell id carried by our seed
+      expect(catalystTargetSpell(items.find((i) => i.id === 'dazzling-rosary'))).toBe('spiritual-armament');
+      // Unsullied Blood activates with a one-action envision → +1 action on the cast
+      expect(catalystAddActions(items.find((i) => i.id === 'unsullied-blood-lesser'))).toBe(1);
+      // Cast-a-Spell activation adds nothing
+      expect(catalystAddActions(items.find((i) => i.id === 'force-tiles'))).toBe(0);
+    });
   });
 });

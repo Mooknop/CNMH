@@ -4769,6 +4769,36 @@
     ]
   },
   {
+    "id": "toxic-cloud",
+    "name": "Toxic Cloud",
+    "level": 5,
+    "baseLevel": 5,
+    "traits": [
+      "Concentrate",
+      "Death",
+      "Manipulate",
+      "Poison"
+    ],
+    "actions": "Three Actions",
+    "range": "120 feet",
+    "area": "20-foot burst",
+    "targets": "",
+    "defense": "Fortitude",
+    "basic": true,
+    "duration": "1 minute",
+    "description": "You conjure a poisonous fog. This functions as Mist, except the area moves 10 feet away from you each round. You deal 6d8 poison damage to each breathing creature that starts its turn in the spell's area. You can Dismiss the spell.\n\nHeightened (+1) The damage increases by 1d8.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double damage."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "translate",
     "name": "Translate",
     "level": 2,
@@ -4789,6 +4819,26 @@
     "traditions": [
       "arcane",
       "divine",
+      "occult"
+    ]
+  },
+  {
+    "id": "translocate",
+    "name": "Translocate",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Teleportation"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "targets": "",
+    "duration": "",
+    "description": "You instantly transport yourself and any items you're wearing and holding from your current space to an unoccupied space within range you can see. If this would bring another creature with you—even if you're carrying it in an extradimensional container—the spell is lost.\n\nHeightened (5th) The range increases to 1 mile. You don't need to be able to see your destination, as long as you have been there in the past and know its relative location and distance from you. You are then temporarily immune for 1 hour.",
+    "traditions": [
+      "arcane",
       "occult"
     ]
   },
@@ -4850,6 +4900,36 @@
     "targets": "1 creature",
     "defense": "Reflex",
     "description": "With but a thought and a wave of your hand, you cause an unprepared enemy to move. The target creature attempts a Reflex save. You push the creature 10 feet at any point during its Stride. If the creature would be pushed into another creature or object, it must attempt a Reflex save, falling prone if it fails its save.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
+    ]
+  },
+  {
+    "id": "vampiric-feast",
+    "name": "Vampiric Feast",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Death",
+      "Manipulate",
+      "Void"
+    ],
+    "actions": "Two Actions",
+    "range": "touch",
+    "targets": "1 living creature",
+    "defense": "Fortitude",
+    "basic": true,
+    "duration": "",
+    "description": "Your touch leeches the lifeblood out of a target to empower yourself. You deal 6d6 void damage to the target. You gain temporary Hit Points equal to half the void damage the target takes (after applying resistances and the like). You lose any remaining temporary Hit Points after 1 minute.\n\nHeightened (+1) The damage increases by 2d6.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage.",
+      "Critical Failure": "The creature takes double damage."
+    },
     "traditions": [
       "arcane",
       "divine",
@@ -4952,6 +5032,47 @@
     "heightened": {
       "+1": "The fire damage increases by 1d6."
     },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "wall-of-force",
+    "name": "Wall of Force",
+    "level": 6,
+    "baseLevel": 6,
+    "traits": [
+      "Concentrate",
+      "Force",
+      "Manipulate"
+    ],
+    "actions": "Three Actions",
+    "range": "30 feet",
+    "targets": "",
+    "duration": "1 minute",
+    "description": "You form an invisible wall of pure magical force up to 50 feet long and up to 20 feet high. The wall has no discernible thickness. You must create the wall in an unbroken open space so its edges don't pass through any creatures or objects, or the spell is lost. The wall has AC 10, Hardness 30, and 60 Hit Points, and it's immune to critical hits and precision damage. The wall blocks physical effects from passing through it, and because it's made of force, it blocks incorporeal and ethereal creatures as well. Teleportation effects can pass through the barrier, as can visual effects (since the wall is invisible). Wall of force is immune to counteracting effects of its level or lower, but the wall is automatically destroyed by a Disintegrate spell of any rank.\n\nHeightened (+2) The Hit Points of the wall increase by 20.",
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
+    "id": "wall-of-thorns",
+    "name": "Wall of Thorns",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Plant",
+      "Wood"
+    ],
+    "actions": "Three Actions",
+    "range": "60 feet",
+    "targets": "",
+    "duration": "1 minute",
+    "description": "You grow a wall of thorny brambles from the ground. You create a 5-foot-thick wall of brambles and thorns in a straight line up to 60 feet long and 10 feet high. You must create the wall in an unbroken open space so its edges don't pass through any creatures or objects, or the spell is lost. The wall stands vertically. If you wish, the wall can be of a shorter length or height. Everything on each side of the wall has cover from creatures on the opposite side, and the wall's spaces are difficult terrain. For every move action a creature uses to enter at least one of the wall's spaces, that creature takes 3d4 piercing damage.\n\nEach 10-foot-by-10-foot section of the wall has AC 10, Hardness 10, and 20 Hit Points. It's immune to critical hits and precision damage. A destroyed section can be moved through freely.\n\nHeightened (+1) The Hit Points of each section of the wall increase by 5, and the piercing damage increases by 1d4.",
     "traditions": [
       "arcane",
       "primal"
