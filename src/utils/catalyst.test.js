@@ -162,6 +162,21 @@ describe('catalyst spine', () => {
       });
     });
 
+    it('imports Deathless Light as a trait-form catalyst (#1254 W2)', () => {
+      const dl = items.find((i) => i.id === 'deathless-light');
+      expect(dl).toBeTruthy();
+      expect(isCatalyst(dl)).toBe(true);
+      expect(catalystTargetTrait(dl)).toBe('Light');
+      expect(catalystTargetSpell(dl)).toBeNull();
+      expect(catalystAddActions(dl)).toBe(1); // Activate: 1 envision
+      expect(dl.level).toBe(10);
+      expect(dl.price).toBe(165);
+      expect(dl.traits).toEqual(['Uncommon', 'Catalyst', 'Consumable', 'Magical']);
+      expect(dl.traits).not.toContain('3rd Party');
+      // the targeted trait must be castable: >=1 light-trait spell in the catalog
+      expect(spells.some((s) => (s.traits || []).includes('Light'))).toBe(true);
+    });
+
     it('imports blazing dive alongside the Phoenix Tail Feather', () => {
       const bd = spells.find((s) => s.id === 'blazing-dive');
       expect(bd).toBeTruthy();

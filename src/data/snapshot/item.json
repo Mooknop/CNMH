@@ -4061,6 +4061,26 @@
     "id": "deadlock-mint-greater"
   },
   {
+    "name": "Deathless Light",
+    "description": "This glowing piece of flesh increases the spell rank of a spell with the light trait by 1 (maximum 7) when determining whether the spell's light will shine in magical darkness or counteract a Darkness spell.",
+    "traits": [
+      "Uncommon",
+      "Catalyst",
+      "Consumable",
+      "Magical"
+    ],
+    "level": 10,
+    "price": 165,
+    "bulk": "L",
+    "usage": "held in 1 hand",
+    "catalyst": {
+      "catalystForTrait": "Light",
+      "effect": "The spell's rank counts as 1 higher (maximum 7) to shine in magical darkness or counteract a Darkness spell.",
+      "addActions": 1
+    },
+    "id": "deathless-light"
+  },
+  {
     "id": "decanter-of-endless-water",
     "name": "Decanter of Endless Water",
     "level": 7,
