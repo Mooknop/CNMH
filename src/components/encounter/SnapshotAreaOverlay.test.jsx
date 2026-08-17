@@ -85,6 +85,46 @@ describe('SnapshotAreaOverlay (#1751 S2)', () => {
     expect(container.querySelector('.sao-direction-shaft')).toBeNull();
   });
 
+  // #1735 S3: once real cone/line cell geometry is available, it replaces
+  // the pre-#1735 facing-arrow hint entirely — the two never draw together.
+  describe('templateCells — real cone/line coverage (#1735 S3)', () => {
+    it('shades every cell handed in, independent of occupancy', () => {
+      const { container } = mount({
+        shape: 'cone', feet: 15, origin: { x: 200, y: 0 },
+        templateCells: [{ col: 2, row: 0 }, { col: 3, row: 0 }, { col: 3, row: 1 }],
+      });
+      expect(container.querySelectorAll('.sao-template-cell').length).toBe(3);
+    });
+
+    it('takes precedence over the facing-arrow hint when both are supplied', () => {
+      const { container } = mount({
+        shape: 'cone', feet: 15, origin: { x: 200, y: 0 }, direction: { dc: 1, dr: 0 },
+        templateCells: [{ col: 2, row: 0 }],
+      });
+      expect(container.querySelector('.sao-template-cell')).not.toBeNull();
+      expect(container.querySelector('.sao-direction-shaft')).toBeNull();
+    });
+
+    it('draws the pre-#1735 arrow when templateCells is empty, same as before', () => {
+      const { container } = mount({
+        shape: 'cone', feet: 15, origin: { x: 200, y: 0 }, direction: { dc: 1, dr: 0 },
+        templateCells: [],
+      });
+      expect(container.querySelector('.sao-direction-shaft')).not.toBeNull();
+      expect(container.querySelector('.sao-template-cell')).toBeNull();
+    });
+
+    it('renders nothing extra for burst/emanation, which never carry templateCells', () => {
+      const { container } = mount({
+        shape: 'burst', feet: 20, origin: { x: 200, y: 0 },
+        templateCells: [{ col: 0, row: 0 }],
+      });
+      // Still shaded — this prop is shape-agnostic at the rendering layer,
+      // it's just that only cone/line callers ever populate it.
+      expect(container.querySelectorAll('.sao-template-cell').length).toBe(1);
+    });
+  });
+
   it('draws a lattice only when asked', () => {
     const { container: without } = mount({ shape: 'burst', feet: 20, origin: { x: 200, y: 0 } });
     expect(without.querySelectorAll('.sao-lattice').length).toBe(0);

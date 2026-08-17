@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   parseSpellArea, areaNeedsPlacement, areaComputesOccupancy, areaOccupants, areaLabel,
   snapToGridIntersection, intersectionFromWorld, casterRectFromPosition, casterRectCenterWorld,
-  normalizeCompassDeg, coneCells, lineCells,
+  normalizeCompassDeg, coneCells, lineCells, directionalOriginWorld, directionalAreaCells,
 } from './spellArea';
 
 const order = [
@@ -46,6 +46,32 @@ describe('parseSpellArea', () => {
     expect(parseSpellArea({})).toBeNull();
     expect(parseSpellArea(null)).toBeNull();
   });
+
+  // #1735 S3 item 4: nothing in this repo's content authors a wide line
+  // today (every line spell is a plain "N-foot line"), but the parser is
+  // tolerant of one so a future wide-line spell doesn't silently default.
+  describe('line width (#1735 S3)', () => {
+    it('defaults to no explicit width for a plain line', () => {
+      expect(parseSpellArea({ area: '60-foot line' })).toEqual({ shape: 'line', feet: 60 });
+    });
+
+    it('reads an explicit wide-line clause off the text', () => {
+      expect(parseSpellArea({ area: '30-foot line, 10 feet wide' }))
+        .toEqual({ shape: 'line', feet: 30, width: 10 });
+      expect(parseSpellArea({ area: '30-foot line, 10-foot-wide' }))
+        .toEqual({ shape: 'line', feet: 30, width: 10 });
+    });
+
+    it('never attaches a width to a cone/burst/emanation', () => {
+      expect(parseSpellArea({ area: '15-foot cone, 10 feet wide' }))
+        .toEqual({ shape: 'cone', feet: 15 });
+    });
+
+    it('carries an authored width override through', () => {
+      expect(parseSpellArea({ area: 'special', areaShape: { shape: 'line', feet: 30, width: 15 } }))
+        .toEqual({ shape: 'line', feet: 30, width: 15 });
+    });
+  });
 });
 
 describe('shape classification', () => {
@@ -58,11 +84,17 @@ describe('shape classification', () => {
     expect(areaNeedsPlacement(null)).toBe(false);
   });
 
-  it('only bursts and emanations compute occupancy (cones/lines need a facing)', () => {
+  // #1735 S3: cone/line joined MEASURED_SHAPES — this file's own occupancy
+  // math no longer carves them out. The wire-protocol gate that decides
+  // whether a BRIDGE can act on that yet lives in `useTemplatePlacementSection`
+  // (`DIRECTIONAL_AREA_PROTOCOL`), not here — this function is protocol-blind
+  // by design.
+  it('every shape computes occupancy now that cone/line have self-origin geometry', () => {
     expect(areaComputesOccupancy({ shape: 'burst', feet: 20 })).toBe(true);
     expect(areaComputesOccupancy({ shape: 'emanation', feet: 30 })).toBe(true);
-    expect(areaComputesOccupancy({ shape: 'cone', feet: 15 })).toBe(false);
-    expect(areaComputesOccupancy({ shape: 'line', feet: 60 })).toBe(false);
+    expect(areaComputesOccupancy({ shape: 'cone', feet: 15 })).toBe(true);
+    expect(areaComputesOccupancy({ shape: 'line', feet: 60 })).toBe(true);
+    expect(areaComputesOccupancy(null)).toBe(false);
   });
 });
 
@@ -206,6 +238,68 @@ describe('areaOccupants — emanation, token-size-aware (#1751 OQ-1)', () => {
     // Goblin at (2,0) is adjacent to the rectangle's east edge — 5 ft, not 10.
     expect(inside.map((o) => [o.entryId, o.feet]))
       .toEqual([['e-ally', 0], ['e-gob', 5], ['e-ogre', 20]]);
+  });
+});
+
+// #1735 S3: cone/line occupancy — cell-set membership (`coneCells`/
+// `lineCells`, via `directionalAreaCells`) rather than a distance test, but
+// still reported/sorted by distance from the caster's own rectangle, same
+// reading as an emanation's "how far from me".
+describe('areaOccupants — cone/line, self-origin cell membership (#1735 S3)', () => {
+  const args = { positions, casterEntryId: 'e-caster', order };
+
+  it('a 15-ft east cone catches the goblin in its row but not the ally one row over', () => {
+    // Goblin (2,0) sits inside the 3-square-reach quarter-plane opening
+    // east from the 1x1 caster at (0,0); the ogre (5,0) is past the 15-ft
+    // reach, and the ally (1,1) is one row off-axis, outside a cone this
+    // short (see the `coneCells` east-facing fixtures for the full shape).
+    const inside = areaOccupants({ shape: 'cone', feet: 15 }, { ...args, compassDeg: 90 });
+    expect(inside.map((o) => [o.entryId, o.feet])).toEqual([['e-gob', 10]]);
+  });
+
+  it('the caster is never their own cone/line\'s victim', () => {
+    const inside = areaOccupants({ shape: 'cone', feet: 15 }, { ...args, compassDeg: 90 });
+    expect(inside.some((o) => o.entryId === 'e-caster')).toBe(false);
+  });
+
+  it('requires a facing — no compassDeg means no cells, never a guess', () => {
+    expect(areaOccupants({ shape: 'cone', feet: 15 }, args)).toEqual([]);
+    expect(areaOccupants({ shape: 'line', feet: 30 }, { ...args, compassDeg: null })).toEqual([]);
+  });
+
+  it('an unresolved compass value (not one of the eight points) also yields nothing', () => {
+    expect(areaOccupants({ shape: 'cone', feet: 15 }, { ...args, compassDeg: 30 })).toEqual([]);
+  });
+
+  it('a line only catches what its own width actually covers', () => {
+    // A 5-ft-wide (default) east line from the 1x1 caster only covers row 0
+    // — the goblin (2,0) and, at 30 ft reach, the ogre (5,0) too; the ally
+    // one row over (1,1) is never in a 5-ft-wide line regardless of length.
+    const inside = areaOccupants({ shape: 'line', feet: 30 }, { ...args, compassDeg: 90 });
+    expect(inside.map((o) => o.entryId)).toEqual(['e-gob', 'e-ogre']);
+  });
+
+  it('threads an explicit width through from the area', () => {
+    // Widen the same line to 15 ft (3 rows: -1, 0, +1 around the caster's
+    // own row) — now the ally (1,1) is caught too.
+    const inside = areaOccupants(
+      { shape: 'line', feet: 30, width: 15 }, { ...args, compassDeg: 90 }
+    );
+    expect(inside.map((o) => o.entryId)).toEqual(expect.arrayContaining(['e-gob', 'e-ogre', 'e-ally']));
+  });
+
+  it('ignores combatants the encounter order does not know, same as burst/emanation', () => {
+    const withGhost = { ...positions, 'e-ghost': { col: 1, row: 0 } };
+    const inside = areaOccupants(
+      { shape: 'cone', feet: 15 }, { ...args, positions: withGhost, compassDeg: 90 }
+    );
+    expect(inside.some((o) => o.entryId === 'e-ghost')).toBe(false);
+  });
+
+  it('returns nothing without a resolvable caster rectangle', () => {
+    expect(areaOccupants({ shape: 'cone', feet: 15 }, {
+      ...args, positions: { 'e-gob': { col: 2, row: 0 } }, compassDeg: 90,
+    })).toEqual([]);
   });
 });
 
@@ -808,5 +902,56 @@ describe('lineCells — symmetry and bad input (#1735 S1)', () => {
     const cells = lineCells(CASTER, 45, 60, 15);
     const sorted = [...cells].sort((a, b) => (a.row - b.row) || (a.col - b.col));
     expect(cells).toEqual(sorted);
+  });
+});
+
+// #1735 S3: the wire-facing origin point — what a directional `templateplace`
+// carries as x/y, and what SnapshotAreaOverlay draws the cell preview from.
+describe('directionalOriginWorld (#1735 S3)', () => {
+  it('is the face midpoint for a cardinal facing, in world pixels', () => {
+    // East from a 1x1 caster at (0,0): face midpoint (1, 0.5) in grid-square
+    // units, × 100px/square.
+    expect(directionalOriginWorld(CASTER, 90, 100)).toEqual({ x: 100, y: 50 });
+  });
+
+  it('is the corner for a diagonal facing', () => {
+    // Northeast from the same 1x1 caster: the NE corner (1, 0).
+    expect(directionalOriginWorld(CASTER, 45, 100)).toEqual({ x: 100, y: 0 });
+  });
+
+  it('lands on a grid line for an even-sized face, same as casterRectCenterWorld\'s rectangle math', () => {
+    // East from a 2x2 caster at (0,0): face midpoint (2, 1) × 100.
+    expect(directionalOriginWorld(BIG, 90, 100)).toEqual({ x: 200, y: 100 });
+  });
+
+  it('is null without a usable rect, facing, or grid size', () => {
+    expect(directionalOriginWorld(null, 90, 100)).toBeNull();
+    expect(directionalOriginWorld(CASTER, 30, 100)).toBeNull();
+    expect(directionalOriginWorld(CASTER, 90, 0)).toBeNull();
+  });
+});
+
+// #1735 S3: the shape-dispatch helper `areaOccupants` and the placement
+// preview share, so neither re-implements the cone-vs-line switch.
+describe('directionalAreaCells (#1735 S3)', () => {
+  it('dispatches a cone area to coneCells', () => {
+    expect(directionalAreaCells({ shape: 'cone', feet: 15 }, CASTER, 90))
+      .toEqual(coneCells(CASTER, 90, 15));
+  });
+
+  it('dispatches a line area to lineCells, threading an explicit width through', () => {
+    expect(directionalAreaCells({ shape: 'line', feet: 30, width: 15 }, CASTER, 90))
+      .toEqual(lineCells(CASTER, 90, 30, 15));
+  });
+
+  it('defaults a line with no explicit width to 5 ft', () => {
+    expect(directionalAreaCells({ shape: 'line', feet: 30 }, CASTER, 90))
+      .toEqual(lineCells(CASTER, 90, 30, 5));
+  });
+
+  it('is empty for a non-directional shape', () => {
+    expect(directionalAreaCells({ shape: 'burst', feet: 20 }, CASTER, 90)).toEqual([]);
+    expect(directionalAreaCells({ shape: 'emanation', feet: 20 }, CASTER, 90)).toEqual([]);
+    expect(directionalAreaCells(null, CASTER, 90)).toEqual([]);
   });
 });

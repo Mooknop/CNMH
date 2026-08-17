@@ -12,9 +12,19 @@ import { diagonalSquaresToFeet } from './rangeIncrement';
 //                is computable once a point is picked.
 //   emanation  — always centred on the caster. Nothing to place, and occupancy
 //                is computable immediately from the caster's own occupied space.
-//   cone/line  — need a direction, not just a point. v1 lets the player mark an
-//                aim point (which pings, so the table sees the intent) but does
-//                NOT compute occupancy — the GM adjudicates who is caught.
+//   cone/line  — need a direction, not just a point. Every cone/line is
+//                SELF-ORIGIN (#1735 epic ruling, 2026-08-16): the origin
+//                derives from the caster's own occupied rectangle, so there is
+//                no point to place at all — only a facing (the 8-point
+//                DirectionRosette) to pick. Once a facing is chosen, occupancy
+//                is computable from `coneCells`/`lineCells` below, the same as
+//                burst/emanation. This is a WIRE-gated capability
+//                (`DIRECTIONAL_AREA_PROTOCOL`, `utils/movement.js`) — a bridge
+//                below that floor can't accept a directional `templateplace`,
+//                so `useTemplatePlacementSection` keeps the pre-#1735 v1
+//                fallback (an aim-point ping; the GM adjudicates) for it,
+//                verbatim, even though this file's own occupancy math no
+//                longer needs that carve-out.
 //
 // Grid distance uses PF2e's alternating-diagonal rule (`diagonalSquaresToFeet`,
 // shared with `rangeIncrement.js`'s `gridDistanceFeet`), so "within 20 feet"
@@ -53,30 +63,54 @@ import { diagonalSquaresToFeet } from './rangeIncrement';
 //   payloads, or any client behind that protocol) — both default to 1, which
 //   reproduces the old single-cell behaviour exactly.
 //
-//   CONE/LINE — do not compute occupancy (see above); when #1735 gives them
-//   cell geometry, the origin is the same grid intersection a burst uses, so
-//   two area shapes in the same spell list never disagree about "your square".
+//   CONE/LINE — self-origin, per the #1735 epic ruling below the "Cones and
+//   lines" section further down this file: the origin is derived from the
+//   caster's own occupied RECTANGLE (the same one EMANATION uses), not a
+//   placed point, so a cone/line never disagrees with an emanation cast by
+//   the same creature about "where you are".
 
 const AREA_TEXT = /(\d+)\s*-?\s*(?:foot|feet|ft\.?)\s*[- ]?\s*(burst|emanation|cone|line)/i;
 
+// An optional trailing "N feet wide" / "N-foot-wide" clause on a line's area
+// text (#1735 S3 item 4) — PF2e's default line width is 5 ft, and nothing in
+// this repo's content authors a wider one today, so this exists purely so a
+// future wide-line spell parses instead of silently defaulting. Searched
+// independently of AREA_TEXT (rather than folded into one regex) because the
+// width clause can appear anywhere in the sentence, not just immediately
+// after "line".
+const LINE_WIDTH_TEXT = /(\d+)\s*-?\s*(?:foot|feet|ft\.?)\s*[- ]?\s*wide/i;
+
 export const PLACEABLE_SHAPES = ['burst', 'cone', 'line'];
-export const MEASURED_SHAPES = ['burst', 'emanation'];
+export const MEASURED_SHAPES = ['burst', 'emanation', 'cone', 'line'];
 
 /**
- * The spell's area as { shape, feet }, or null when it has none (or an
- * unparseable one — a spell that says "special" simply gets no placement UI).
+ * The spell's area as { shape, feet, width? }, or null when it has none (or
+ * an unparseable one — a spell that says "special" simply gets no placement
+ * UI). `width` is only ever present for a `line` whose text carries an
+ * explicit wide-line clause; every other line relies on the PF2e default
+ * (5 ft) applied downstream by `coneCells`/`lineCells`'s own callers.
  *
- * Authored override wins: `ability.areaShape = { shape: 'burst', feet: 20 }`.
+ * Authored override wins: `ability.areaShape = { shape: 'burst', feet: 20 }`
+ * (and, for a line, an optional `width`).
  */
 export function parseSpellArea(ability) {
   const override = ability?.areaShape;
   if (override?.shape && Number(override.feet) > 0) {
-    return { shape: String(override.shape).toLowerCase(), feet: Number(override.feet) };
+    const shape = String(override.shape).toLowerCase();
+    const parsed = { shape, feet: Number(override.feet) };
+    if (shape === 'line' && Number(override.width) > 0) parsed.width = Number(override.width);
+    return parsed;
   }
   const text = typeof ability?.area === 'string' ? ability.area : '';
   const match = AREA_TEXT.exec(text);
   if (!match) return null;
-  return { shape: match[2].toLowerCase(), feet: Number(match[1]) };
+  const shape = match[2].toLowerCase();
+  const parsed = { shape, feet: Number(match[1]) };
+  if (shape === 'line') {
+    const widthMatch = LINE_WIDTH_TEXT.exec(text);
+    if (widthMatch) parsed.width = Number(widthMatch[1]);
+  }
+  return parsed;
 }
 
 // A burst must be placed before its occupancy means anything; an emanation is
@@ -192,16 +226,26 @@ export function casterRectCenterWorld(rect, gridSize) {
 /**
  * Which combatants stand inside the area.
  *
- * @param {{shape:string,feet:number}} area
+ * @param {{shape:string,feet:number,width?:number}} area
  * @param {Object}   opts
  * @param {{col,row}} opts.originIntersection  the placed grid intersection
  *                     (burst) — a corner-space point, see `intersectionFromWorld`;
- *                     ignored for emanation.
+ *                     ignored for emanation/cone/line.
  * @param {Object}   opts.positions       { [entryId]: { col, row, width?, height? } }
  *                     from the bridge
- * @param {string}   opts.casterEntryId   the caster's combatant id (emanation origin)
- * @param {Array}    opts.order           encounter order, for names/kind
+ * @param {string}   opts.casterEntryId   the caster's combatant id (emanation
+ *                     origin; also the cone/line self-origin rectangle)
+ * @param {Array}    opts.order           encounter order, for names/kind —
+ *                     ALREADY hidden-filtered by the caller (`visibleOrder`);
+ *                     this function itself is hidden-agnostic, it just never
+ *                     resolves an entryId the order doesn't carry (see the
+ *                     "combatants the encounter order does not know" filter
+ *                     below, which is what makes that caller-side filter work)
  * @param {number}   [opts.feetPerSquare] scene scale (PF2e default 5)
+ * @param {number}   [opts.compassDeg]    the picked facing (cone/line only) —
+ *                     degrees clockwise from north, `DirectionRosette`/
+ *                     `normalizeCompassDeg`'s vocabulary; ignored for burst/
+ *                     emanation, required for cone/line (no facing = no cells)
  * @returns {Array<{entryId,name,kind,feet}>} occupants, nearest first; [] when
  *          the shape doesn't compute occupancy or positions are unavailable.
  */
@@ -211,30 +255,52 @@ export function areaOccupants(area, {
   casterEntryId,
   order = [],
   feetPerSquare = 5,
+  compassDeg,
 } = {}) {
   if (!areaComputesOccupancy(area) || !positions) return [];
 
   const isEmanation = area.shape === 'emanation';
-  const casterRect = isEmanation ? casterRectFromPosition(positions[casterEntryId]) : null;
-  if (isEmanation && !casterRect) return [];
-  if (!isEmanation && !originIntersection) return [];
+  const isDirectional = area.shape === 'cone' || area.shape === 'line';
+  const originsFromCaster = isEmanation || isDirectional;
+  const casterRect = originsFromCaster ? casterRectFromPosition(positions[casterEntryId]) : null;
+  if (originsFromCaster && !casterRect) return [];
+  if (!originsFromCaster && !originIntersection) return [];
+
+  // A directional shape's "origin" for occupancy purposes is the CELL SET
+  // `coneCells`/`lineCells` already worked out (self-origin point, quarter-
+  // plane test, 5-10-5 reach) — membership in that set replaces the
+  // distance-to-origin test burst/emanation use below.
+  let directionalCells = null;
+  if (isDirectional) {
+    const deg = normalizeCompassDeg(compassDeg);
+    if (deg === null) return [];
+    directionalCells = new Set(
+      directionalAreaCells(area, casterRect, deg, { feetPerSquare }).map((c) => `${c.col},${c.row}`)
+    );
+  }
 
   const entryOf = (entryId) => order.find((e) => e && e.entryId === entryId) || null;
 
   return Object.entries(positions)
     .map(([entryId, cell]) => ({ entryId, cell }))
-    // An emanation radiates FROM the caster, so they are its origin rather than
-    // something caught in it. A burst has no such courtesy — drop one at your
-    // own feet and you are standing in the fire like anyone else.
-    .filter(({ entryId }) => !(isEmanation && entryId === casterEntryId))
+    // An emanation radiates FROM the caster, and a cone/line originates ON
+    // their own space, so in both cases they are the area's origin rather
+    // than something caught in it. A burst has no such courtesy — drop one
+    // at your own feet and you are standing in the fire like anyone else.
+    .filter(({ entryId }) => !(originsFromCaster && entryId === casterEntryId))
+    .filter(({ cell }) => !isDirectional || directionalCells.has(`${cell.col},${cell.row}`))
     .map(({ entryId, cell }) => ({
       entryId,
       cell,
-      feet: isEmanation
+      // Directional distance is reported relative to the caster's own
+      // rectangle — the same "how far from me" reading an emanation gives —
+      // rather than re-deriving it from the cell math above, which already
+      // did the real (and different) reach test via set membership.
+      feet: originsFromCaster
         ? feetFromRectToCell(casterRect, cell, feetPerSquare)
         : feetFromIntersectionToCell(originIntersection, cell, feetPerSquare),
     }))
-    .filter(({ feet }) => feet <= area.feet)
+    .filter(({ feet }) => isDirectional || feet <= area.feet)
     .map(({ entryId, feet }) => {
       const entry = entryOf(entryId);
       return {
@@ -375,6 +441,28 @@ function selfOriginPoint(rect, step) {
     x: step.dc > 0 ? right : step.dc < 0 ? left : (left + right) / 2,
     y: step.dr > 0 ? bottom : step.dr < 0 ? top : (top + bottom) / 2,
   };
+}
+
+/**
+ * The world point a cone/line's origin sits at (#1735 S3) — `selfOriginPoint`
+ * above, converted from grid-square units to world pixels. This is exactly
+ * the `x`/`y` a directional `templateplace` request carries: the point this
+ * file measured cone/line cells from and the point Foundry draws the Region
+ * from must be the SAME point, or the canvas outline and the occupant list
+ * would silently disagree.
+ *
+ * @param {{col:number,row:number,width?:number,height?:number}} casterRect
+ * @param {number} compassDeg
+ * @param {number} gridSize  pixels per grid square
+ * @returns {{x:number,y:number}|null}
+ */
+export function directionalOriginWorld(casterRect, compassDeg, gridSize) {
+  const rect = casterRectFromPosition(casterRect);
+  const deg = normalizeCompassDeg(compassDeg);
+  const size = Number(gridSize);
+  if (!rect || deg === null || !Number.isFinite(size) || size <= 0) return null;
+  const origin = selfOriginPoint(rect, COMPASS_STEPS[deg]);
+  return { x: origin.x * size, y: origin.y * size };
 }
 
 // Is a cell center (offset dx/dy from the origin) inside the quarter-plane the
@@ -524,4 +612,31 @@ export function lineCells(casterRect, compassDeg, feet, width = 5, { feetPerSqua
     }
   }
   return sortCells(cells);
+}
+
+/**
+ * The cell set a directional area covers — `coneCells`/`lineCells`,
+ * dispatched by `area.shape` — so a caller with an `{shape,feet,width?}`
+ * area (what `parseSpellArea` hands back) doesn't need its own shape switch.
+ * Shared by `areaOccupants` (matches `positions` cells against it) and the
+ * placement UI's live preview (draws every cell here, not just the occupied
+ * ones — a cone/line has no closed-form outline the way a burst's circle
+ * does, so this cell set doubles as its outline).
+ *
+ * @param {{shape:string,feet:number,width?:number}} area
+ * @param {{col:number,row:number,width?:number,height?:number}} casterRect
+ * @param {number} compassDeg
+ * @param {Object} [opts]
+ * @param {number} [opts.feetPerSquare=5]
+ * @returns {Array<{col:number,row:number}>} [] for a non-directional shape,
+ *          or any input `coneCells`/`lineCells` themselves reject
+ */
+export function directionalAreaCells(area, casterRect, compassDeg, { feetPerSquare = 5 } = {}) {
+  if (area?.shape === 'cone') {
+    return coneCells(casterRect, compassDeg, area.feet, { feetPerSquare });
+  }
+  if (area?.shape === 'line') {
+    return lineCells(casterRect, compassDeg, area.feet, area.width || 5, { feetPerSquare });
+  }
+  return [];
 }

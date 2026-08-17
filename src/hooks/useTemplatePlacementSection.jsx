@@ -8,10 +8,12 @@ import { useBridgeStatus } from './useBridgeStatus';
 import { worldPointFromTap } from '../utils/snapshotGeometry';
 import { parseRangeIncrement } from '../utils/rangeIncrement';
 import { templateRangeGate } from '../utils/templateRangeGating';
-import { MAP_TARGET_PROTOCOL } from '../utils/movement';
+import { MAP_TARGET_PROTOCOL, DIRECTIONAL_AREA_PROTOCOL } from '../utils/movement';
+import { visibleOrder } from '../utils/encounterUtils';
 import {
   parseSpellArea, areaNeedsPlacement, areaComputesOccupancy, areaOccupants, areaLabel,
   snapToGridIntersection, intersectionFromWorld, casterRectFromPosition, casterRectCenterWorld,
+  directionalOriginWorld, directionalAreaCells,
 } from '../utils/spellArea';
 
 /**
@@ -26,9 +28,13 @@ import {
  * Shape behavior follows PF2e (see utils/spellArea):
  *   burst      → tap to place; occupants computed from the snapped intersection
  *   emanation  → nothing to place (centred on you); occupants computed at once
- *   cone/line  → tap an origin, pick a facing (DirectionRosette); pings so the
- *                table sees the intent, but occupancy needs #1735's cell
- *                geometry, so the GM still adjudicates who is caught
+ *   cone/line  → SELF-ORIGIN once the bridge speaks DIRECTIONAL_AREA_PROTOCOL
+ *                (#1735 S3): no tap at all, just an 8-point DirectionRosette
+ *                pick, and occupancy computes from the real `coneCells`/
+ *                `lineCells` cell set exactly like burst/emanation. BELOW
+ *                that floor the pre-#1735 v1 fallback still runs verbatim —
+ *                tap an aim point, pick a facing, ping the table, and let the
+ *                GM adjudicate who is caught.
  *
  * #1751 wave 2 adds, on top of wave 1's origin rework:
  *   S1  the capture is CENTRED ON THE CASTER at spell range (protocol ≥
@@ -42,8 +48,25 @@ import {
  *   S4  `templateRangeGate` HARD-BLOCKS confirm for an out-of-range snapped
  *       placement (ruled OQ-5) — an unparseable range degrades to no gate.
  *   S5  cone/line get an 8-point `DirectionRosette` after the origin tap; the
- *       overlay draws a facing ARROW, never computed cone/line cell
- *       occupancy (#1735's geometry, not built here).
+ *       overlay draws a facing ARROW — the fallback #1735 S3 keeps for a
+ *       sub-DIRECTIONAL_AREA_PROTOCOL bridge (see below).
+ *
+ * #1735 S3 (this wave) makes cone/line a full peer of burst/emanation at
+ * DIRECTIONAL_AREA_PROTOCOL and above:
+ *   - no origin tap — the rosette shows as soon as the map is open, and the
+ *     origin is derived from the caster's own rectangle (`directionalOriginWorld`)
+ *   - the overlay draws the REAL cell coverage (`directionalAreaCells`), not
+ *     just a facing hint
+ *   - `templateplace` carries `direction`/`width` and the bridge draws a real
+ *     Region wedge/line instead of only pinging
+ *   - occupants (and therefore the auto-adopt "Target these N" flow) compute
+ *     from the same cell set, nearest-caster-first, same as every other shape
+ *   - player-facing occupant lists — ALL FOUR shapes, retroactively for
+ *     burst/emanation too (a latent leak the epic's hidden-filtering ruling
+ *     named) — drop `hidden: true` combatants via `visibleOrder`; a hidden
+ *     creature is never auto-targeted for a save from this flow — the GM's
+ *     own dock-side save tooling covers that separately, on the full order
+ *     it always sees
  *
  * Placement is deliberately OPTIONAL — there is no confirm gate for a spell
  * with NO area, or for one whose placement is simply skipped. Every area
@@ -94,10 +117,28 @@ export const useTemplatePlacementSection = ({
 
   const area = useMemo(() => parseSpellArea(ability), [ability]);
   const hasArea = !!area;
-  const needsPlacement = areaNeedsPlacement(area);
-  const computesOccupancy = areaComputesOccupancy(area);
+  const directional = area?.shape === 'cone' || area?.shape === 'line';
+  // #1735 S3: a cone/line only gets the self-origin flow once the bridge
+  // speaks the protocol that taught `templateplace` its `direction`/`width`
+  // fields (PR #1763) — below that floor `spellArea.js`'s own
+  // `areaComputesOccupancy`/`PLACEABLE_SHAPES` now say cone/line behave like
+  // burst/emanation, but there is nowhere on the wire to SEND that yet, and
+  // no facing to compute from without the rosette this floor never shows.
+  // Both booleans below suppress that until the protocol (and therefore the
+  // whole flow) is actually available — the pre-#1735 v1 fallback runs
+  // unchanged for an older bridge.
+  const directionalReady = directional && (protocol ?? 0) >= DIRECTIONAL_AREA_PROTOCOL;
+  const needsPlacement = areaNeedsPlacement(area) && !directionalReady;
+  const computesOccupancy = areaComputesOccupancy(area) && (!directional || directionalReady);
 
   const positions = positionsState?.positions || null;
+  // Player-facing occupant lists exclude hidden combatants (#1735 epic
+  // ruling, RETROACTIVE to burst/emanation — a latent leak the ruling named).
+  // `areaOccupants`'s own "combatants the encounter order does not know"
+  // filter is what makes passing a pre-filtered order enough: an entryId
+  // `visibleOrder` dropped simply never resolves to an entry, so it's
+  // dropped from occupants too, with no separate filter needed there.
+  const visibleEncounterOrder = useMemo(() => visibleOrder(order), [order]);
 
   // The tapped point in world space, then SNAPPED to the nearest grid
   // intersection — a burst (or a cone/line's origin, #1751 OQ-1) originates
@@ -120,34 +161,74 @@ export const useTemplatePlacementSection = ({
   );
 
   // An emanation is centred on the caster's occupied RECTANGLE (token-size-
-  // aware) — nothing to tap; a burst/cone/line needs the placed intersection
-  // first. Split into rect + center so the overlay (S2) can draw the true
-  // rounded-rect ring from the rect itself, not just its center point.
+  // aware) — nothing to tap. A self-origin-ready cone/line (#1735 S3) shares
+  // the same rectangle (it's the face/corner ANY facing derives from), so
+  // both need it; a burst, or a cone/line still on the pre-#1735 fallback,
+  // needs the placed intersection instead. Split into rect + center so the
+  // overlay (S2) can draw the true rounded-rect ring from the rect itself,
+  // not just its center point.
   const casterRect = useMemo(() => {
-    if (area?.shape !== 'emanation') return null;
+    if (area?.shape !== 'emanation' && !directionalReady) return null;
     return casterRectFromPosition(positions?.[casterEntryId]);
-  }, [area, positions, casterEntryId]);
+  }, [area, directionalReady, positions, casterEntryId]);
   const casterWorld = useMemo(
     () => casterRectCenterWorld(casterRect, positionsState?.gridSize),
     [casterRect, positionsState]
   );
 
+  // The rosette's picked direction, translated to the wire's compass-degree
+  // vocabulary (#1735 S3) — `ROSETTE_DIRECTIONS` carries `compassDeg`
+  // explicitly (rather than this hook assuming the array's order matches
+  // `normalizeCompassDeg`'s), so a reorder of one never silently breaks the
+  // other. Only meaningful once `directionalReady`; null otherwise, and null
+  // before any rosette pick.
+  const compassDeg = useMemo(() => {
+    if (!directionalReady || !direction) return null;
+    return ROSETTE_DIRECTIONS.find((d) => d.name === direction)?.compassDeg ?? null;
+  }, [directionalReady, direction]);
+
+  // The self-derived origin a directional `templateplace` carries as its
+  // `x`/`y` (#1735 S3) — the SAME point `directionalAreaCells` measures cells
+  // from, so the canvas outline and the occupant list never disagree.
+  const directionalOrigin = useMemo(
+    () => (directionalReady && compassDeg !== null
+      ? directionalOriginWorld(casterRect, compassDeg, positionsState?.gridSize)
+      : null),
+    [directionalReady, compassDeg, casterRect, positionsState]
+  );
+
+  // The FULL cone/line cell coverage for the live preview (#1735 S3) —
+  // independent of who's actually standing in it, unlike `occupantCells`
+  // below: a cone with nobody in it should still show its shape.
+  const directionalTemplateCells = useMemo(() => {
+    if (!directionalReady || compassDeg === null || !casterRect) return [];
+    return directionalAreaCells(area, casterRect, compassDeg);
+  }, [directionalReady, compassDeg, casterRect, area]);
+
   const occupants = useMemo(() => {
     if (!computesOccupancy) return [];
     if (needsPlacement && !placedIntersection) return [];
+    if (directionalReady && compassDeg === null) return [];
     return areaOccupants(area, {
       originIntersection: placedIntersection,
       positions,
       casterEntryId,
-      order,
+      order: visibleEncounterOrder,
+      compassDeg,
     });
-  }, [area, computesOccupancy, needsPlacement, placedIntersection, positions, casterEntryId, order]);
+  }, [
+    area, computesOccupancy, needsPlacement, placedIntersection, positions, casterEntryId,
+    visibleEncounterOrder, directionalReady, compassDeg,
+  ]);
 
   // The cells the app will actually count, for the preview (#1751 S2) — every
   // occupant's own `positions` cell, re-derived rather than threaded through
   // `areaOccupants` (which intentionally returns entryId/name/kind/feet, not
   // the cell — occupancy math and the preview's drawing needs are separate
-  // concerns).
+  // concerns). Hidden combatants never enter `occupants` in the first place
+  // (see `visibleEncounterOrder` above), so their cells never shade here
+  // either — the same fix applies to the counted-cell preview as the text
+  // list below it.
   const occupantCells = useMemo(
     () => occupants
       .map((o) => positions?.[o.entryId])
@@ -156,9 +237,15 @@ export const useTemplatePlacementSection = ({
     [occupants, positions]
   );
 
-  // Where the area actually sits, whether it was tapped or derived. A burst/
-  // cone/line sends the SNAPPED intersection, not the raw tap.
-  const originWorld = area?.shape === 'emanation' ? casterWorld : placedIntersectionWorld;
+  // Where the area actually sits, whether it was tapped or derived. An
+  // emanation and a self-origin-ready cone/line derive it from the caster;
+  // a burst, or a cone/line still on the fallback, sends the tapped
+  // (SNAPPED) intersection.
+  const originWorld = area?.shape === 'emanation'
+    ? casterWorld
+    : directionalReady
+      ? directionalOrigin
+      : placedIntersectionWorld;
 
   // ── S4: range hard-block (#1751 OQ-5, ruled 2026-08-16 GM) ────────────────
   // `templateRangeGate` measures caster→placed distance in the SAME
@@ -169,6 +256,15 @@ export const useTemplatePlacementSection = ({
   // frame's own ~41%-in-the-corners slop the capture radius already accepts.
   // Unparseable ranges (touch/self/prose) degrade to `blocked: false` inside
   // the util itself — nothing here needs to special-case that.
+  //
+  // Self-origin shapes (emanation always, cone/line once `directionalReady`)
+  // trivially pass: `needsPlacement` is false for them, so this hits the
+  // early `{ blocked: false, ... }` branch below without ever calling
+  // `templateRangeGate`. That's correct, not a gap — a cone/line's `range`
+  // content field (when present at all) describes the SHAPE'S OWN LENGTH
+  // (`area.feet` already carries that), not a placement distance from the
+  // caster the way a burst's does, so there is nothing for a placement-range
+  // gate to measure here in the first place.
   const casterCell = positions?.[casterEntryId] || null;
   const rangeGate = useMemo(() => {
     if (!needsPlacement || !placedIntersection) {
@@ -284,14 +380,20 @@ export const useTemplatePlacementSection = ({
   // Confirm slice (#1573 B4): draw the real outline on the canvas when the
   // bridge can (the bridge pings its centre too), otherwise fall back to B2's
   // bare ping — a protocol-12 module still shows the table where it landed.
-  // Cones and lines are never drawn: they need a facing, so they only ping.
+  // #1735 S3: a directionalReady cone/line now draws too — a directional
+  // `direction`/`width` rides along, same as any other field on this
+  // request. Below DIRECTIONAL_AREA_PROTOCOL a cone/line still only ever
+  // pings (the local `computesOccupancy`, NOT `spellArea.js`'s own
+  // `areaComputesOccupancy(area)`, gates this — the local one already folds
+  // in the protocol floor; calling the imported function directly here would
+  // send a directional template to a bridge that can't parse it).
   // #1751 S4: an out-of-range tap hard-blocks BOTH the draw and the ping —
   // nothing about this placement should reach the table at all.
   const applyOnConfirm = useCallback(() => {
     if (!hasArea || !originWorld) return;
     if (rangeGate.blocked) return;
     const sceneId = snapshot?.capture?.sceneId;
-    const templateReq = canTemplate && areaComputesOccupancy(area)
+    const templateReq = canTemplate && computesOccupancy
       && placeTemplate({
         shape: area.shape,
         feet: area.feet,
@@ -299,6 +401,8 @@ export const useTemplatePlacementSection = ({
         y: originWorld.y,
         sceneId,
         name: ability?.name,
+        ...(directionalReady ? { direction: compassDeg } : {}),
+        ...(directionalReady && area.shape === 'line' ? { width: area.width || 5 } : {}),
       });
     if (!templateReq && canPing) {
       ping({ x: originWorld.x, y: originWorld.y, sceneId });
@@ -315,8 +419,8 @@ export const useTemplatePlacementSection = ({
       pendingTemplateRef.current = { reqId: templateReq.id, logId };
     }
   }, [
-    hasArea, originWorld, rangeGate, canTemplate, placeTemplate, canPing, ping,
-    snapshot, occupants, appendLog, ability, area,
+    hasArea, originWorld, rangeGate, canTemplate, computesOccupancy, placeTemplate, canPing, ping,
+    snapshot, occupants, appendLog, ability, area, directionalReady, compassDeg,
   ]);
 
   // Nothing to show for a spell with no area. #1751 OQ-6: the emanation
@@ -325,26 +429,33 @@ export const useTemplatePlacementSection = ({
   // the capture/placement UI below (the button, the snapshot viewer) gates
   // on `available`. A bridge-less client still gets the full section for a
   // spell that doesn't need placement.
+  // Do we know enough to claim an occupancy answer at all? A burst needs its
+  // tap; a directionalReady cone/line needs a rosette pick; everything else
+  // that computes occupancy (emanation, or a directionalReady cone/line once
+  // picked) knows immediately.
+  const occupancyReady = computesOccupancy
+    && (needsPlacement ? !!placedIntersection : (!directionalReady || compassDeg !== null));
+
   const section = !hasArea ? null : (
     <>
       <hr className="ct-divider" />
       <section className="ct-section" data-testid="area-placement-section">
         <h3 className="ct-section-title">Area — {areaLabel(area)}</h3>
 
-        {!needsPlacement && (
+        {!needsPlacement && !directional && (
           <div className="uam-variant-note">
             Centred on you — no placement needed.
           </div>
         )}
 
-        {needsPlacement && !available && (
+        {(needsPlacement || directionalReady) && !available && (
           <div className="uam-variant-note" role="status">
             No live map available — cast without placing, or let the GM judge
             who's caught.
           </div>
         )}
 
-        {needsPlacement && available && !snapshot && (
+        {(needsPlacement || directionalReady) && available && !snapshot && (
           <button
             type="button"
             className="btn-secondary"
@@ -374,8 +485,8 @@ export const useTemplatePlacementSection = ({
           <>
             <MapSnapshotViewer
               src={snapshot.url}
-              marker={marker}
-              onPick={(point) => {
+              marker={directionalReady ? null : marker}
+              onPick={directionalReady ? undefined : (point) => {
                 setMarker(point);
                 setAdopted(false);
                 setDirection(null);
@@ -386,15 +497,40 @@ export const useTemplatePlacementSection = ({
                   snapshot={snapshot}
                   shape={area.shape}
                   feet={area.feet}
-                  origin={area.shape === 'emanation' ? null : placedIntersectionWorld}
-                  casterRect={area.shape === 'emanation' ? casterRect : null}
-                  direction={directionVector}
+                  origin={
+                    area.shape === 'emanation'
+                      ? null
+                      : directionalReady ? directionalOrigin : placedIntersectionWorld
+                  }
+                  casterRect={
+                    area.shape === 'emanation'
+                      ? casterRect
+                      : directionalReady ? casterRect : null
+                  }
+                  direction={directionalReady ? null : directionVector}
+                  templateCells={directionalReady ? directionalTemplateCells : []}
                   occupantCells={occupantCells}
                   showLattice
                 />
               )}
             />
-            {!computesOccupancy && marker && (
+            {/* #1735 S3: a self-origin-ready cone/line jumps straight to the
+                rosette — no origin tap first, unlike the pre-#1735 fallback
+                just below. */}
+            {directionalReady && (
+              <DirectionRosette
+                value={direction}
+                onChange={(name) => {
+                  setDirection(name);
+                  setAdopted(false);
+                  setTemplateOutcome(null);
+                }}
+                label={`${area.shape} facing`}
+              />
+            )}
+            {/* Pre-#1735 fallback, kept verbatim: a cone/line only pings an
+                aim point, and the GM adjudicates who is caught. */}
+            {!computesOccupancy && !directionalReady && marker && (
               <>
                 <div className="uam-variant-note">
                   A {area.shape} needs a facing, so the GM calls who is caught — your
@@ -418,7 +554,7 @@ export const useTemplatePlacementSection = ({
           </div>
         )}
 
-        {computesOccupancy && (needsPlacement ? !!placedIntersection : true) && (
+        {occupancyReady && (
           <div className="uam-variant-note" data-testid="area-occupants">
             {!positions ? (
               'Token positions unavailable — the GM will judge who is caught.'
