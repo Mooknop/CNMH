@@ -240,8 +240,10 @@ test.describe('Player shop — Spellcasting Services', () => {
     // Both rank forms are in the cart ("in cart ×1" replaces each Add button).
     await expect(preview.locator('.ps-preview-form-incart')).toHaveCount(2);
 
-    // Back out of the takeover (Escape closes it first) — it overlays the cart bar.
-    await page.keyboard.press('Escape');
+    // Back out of the takeover via its own Back button (#943: the app navbar
+    // used to intercept this click; the overlay now portals above it) — it
+    // overlays the cart bar, so it must close before that's reachable.
+    await preview.getByRole('button', { name: 'Back' }).click();
     await expect(preview).toHaveCount(0);
     await page.getByTestId('cart-bar').click();
 
@@ -272,8 +274,10 @@ test.describe('Player shop — Spellcasting Services', () => {
       expect(entry).not.toHaveProperty('wareKey');
     }
 
-    // Inventory re-resolves the minimal entries to their derived names.
-    await page.keyboard.press('Escape');
+    // Inventory re-resolves the minimal entries to their derived names. A
+    // single shop here, so the header's Back chevron closes the storefront
+    // directly (#943: no longer navbar-blocked).
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
     await openPlayTab(page, 'Inventory');
     await expect(page.getByText('Scroll of E2E Brine Lash (Rank 2)').first()).toBeVisible();
