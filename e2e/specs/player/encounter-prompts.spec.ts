@@ -14,7 +14,7 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import { activeEncounter, readyTurnState, encounterState, pcEntry, enemyEntry } from '../../helpers/encounter';
 import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
@@ -159,5 +159,50 @@ test.describe('Encounter prompts', () => {
     // Spending the reaction clears the synced prompt for good and removes the region.
     await session.expectSent('cnmh_reactprompt_e2e-fighter', (v) => v === null);
     await expect(prompt).toBeHidden();
+  });
+
+  // Negative path (#518): a reaction trigger prompt is round-stamped
+  // (ReactionPrompt.jsx `roundLive`) precisely because a reaction window is
+  // immediate — if the round moves on before the player resolves it, the
+  // trigger it was firing for is long over. This pins that the prompt goes
+  // away on its own (no click required, nothing to resolve) and that the app
+  // never wrote a resolution on the player's behalf for a prompt that no
+  // longer applies.
+  test('reaction trigger: a stale round prompt drops on its own and is never resolved', async ({ page, seed }) => {
+    await seed({
+      character: [{
+        id: CHAR_ID,
+        name: CHAR_NAME,
+        level: 5,
+        reactions: [{ name: 'E2E Riposte', actions: 'Reaction', triggerType: 'attack-any' }],
+      }],
+    });
+    // Off-turn (the goblin is acting) so the round push below can't also be
+    // read as "my turn began" and trigger the unrelated turn-begin sweep
+    // (TurnTrackerPanel) — this test is isolated to the round-staleness gate.
+    const order = [pcEntry(CHAR_ID, CHAR_NAME, 20), enemyEntry('E2E Goblin', 15)];
+    const session = await mockSession(page, {
+      seed: {
+        cnmh_encounter_global: encounterState({ phase: 'in-progress', round: 1, currentTurnIndex: 1, order }),
+        'cnmh_turnstate_e2e-fighter': readyTurnState(),
+        'cnmh_reactprompt_e2e-fighter': { eventId: 'melee-attack', label: 'Goblin strikes!', round: 1 },
+      },
+    });
+
+    await gotoSheet(page);
+
+    const prompt = page.getByRole('region', { name: 'Reaction trigger prompt' });
+    await expect(prompt).toBeVisible();
+
+    // A new round starts before the player ever acts on the trigger — the
+    // prompt is stale by its own round stamp.
+    session.push('cnmh_encounter_global', {
+      active: true, phase: 'in-progress', round: 2, currentTurnIndex: 1, order, log: [], saveRequests: [],
+    });
+
+    await expect(prompt).toBeHidden();
+    // Nothing was resolved on the app's behalf: no reaction spend, no prompt clear.
+    expect(session.sent.some((m) => m.stateType === 'turnstate')).toBe(false);
+    expect(session.sent.some((m) => m.stateType === 'reactprompt')).toBe(false);
   });
 });

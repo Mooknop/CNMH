@@ -8,7 +8,14 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { activeEncounter, readyTurnState } from '../../helpers/encounter';
+import {
+  activeEncounter,
+  readyTurnState,
+  encounterState,
+  pcEntry,
+  enemyEntry,
+  expectOffTurnLive,
+} from '../../helpers/encounter';
 import { expectSheet, openPlayTab } from '../../helpers/sheet';
 
 const CHAR_ID = 'e2e-fighter';
@@ -102,5 +109,32 @@ test.describe('Ready an Action', () => {
       (v) => Array.isArray(v?.log) && v.log.some((e: any) => String(e.text).includes('readied action (Raise a Shield) expired')),
     );
     await expect(page.getByRole('button', { name: 'Ready an action' })).toBeVisible();
+  });
+
+  // Out-of-turn guard (#518): Ready is an on-turn-only declare surface —
+  // ReadyActionButton (src/components/encounter/ReadyActionButton.jsx) returns
+  // null outright unless isCharTurn(encounter, charId), unlike the soft
+  // OutOfTurnNotice warning other actions get. Off-turn the encounter stage
+  // (#471) takes over the play area entirely, so this pins both halves: the
+  // stage is up, and Ready never renders anywhere on the page while it is.
+  test('Ready an action does not render off-turn — it is an on-turn-only surface', async ({ page }) => {
+    await mockSession(page, {
+      seed: {
+        cnmh_encounter_global: encounterState({
+          phase: 'in-progress',
+          round: 1,
+          currentTurnIndex: 1, // the goblin is acting, not the fighter
+          order: [pcEntry(CHAR_ID, CHAR_NAME, 20), enemyEntry('E2E Goblin', 15)],
+        }),
+        [`cnmh_turnstate_${CHAR_ID}`]: readyTurnState(),
+      },
+    });
+
+    await page.goto(`/character/${CHAR_ID}`);
+    await expectSheet(page, CHAR_NAME);
+    await openPlayTab(page, 'Encounter');
+
+    await expectOffTurnLive(page);
+    await expect(page.getByRole('button', { name: 'Ready an action' })).toHaveCount(0);
   });
 });
