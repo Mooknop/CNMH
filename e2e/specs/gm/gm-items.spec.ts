@@ -296,4 +296,76 @@ test.describe('Item catalog editor', () => {
       artifact: { tiers: [{ level: 1, grants: ['staff'] }] },
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Validation and bad-input handling (#518)
+  // ---------------------------------------------------------------------------
+
+  test('leaving name blank blocks creation and surfaces the required-field error', async ({ page }) => {
+    await page.goto('/gm/items');
+
+    await page.getByRole('button', { name: '+ New item' }).click();
+    const form = page.getByTestId('item-form-new');
+    // Fill an unrelated field so a failure can only be the name check firing
+    // (itemFromForm: `if (!f.name.trim()) throw new Error('Item name is
+    // required.');`), then attempt to save with name left blank.
+    await form.getByLabel('price').fill('10');
+    await form.getByRole('button', { name: 'Create item' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('Item name is required.');
+    await expect(page.getByTestId('item-form-new')).toBeVisible();
+  });
+
+  test('malformed JSON in the extra-fields box blocks the save with a readable error', async ({ page, request }) => {
+    const id = testId('malformed');
+    const name = testTitle('malformed', id);
+
+    await page.goto('/gm/items');
+    await page.getByRole('button', { name: '+ New item' }).click();
+    const form = page.getByTestId('item-form-new');
+    await form.getByLabel('name', { exact: true }).fill(name);
+    // Not valid JSON — itemFromForm's JSON.parse throws, caught and surfaced
+    // as a GM-readable message rather than crashing the form.
+    await form.getByLabel('rest-json').fill('{ not valid json');
+    await form.getByRole('button', { name: 'Create item' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('invalid JSON in its extra fields');
+    await expect(page.getByTestId('item-form-new')).toBeVisible();
+
+    // Nothing was persisted.
+    const payload = await fetchContent(request);
+    expect(findInCollection(payload, 'item', id)).toBeUndefined();
+  });
+
+  test('typed delete confirmation stays disabled until the exact name is typed', async ({ page, request }) => {
+    const id = testId('guarded');
+    const name = testTitle('guarded', id);
+
+    await page.goto('/gm/items');
+    await page.getByRole('button', { name: '+ New item' }).click();
+    const form = page.getByTestId('item-form-new');
+    await form.getByLabel('name', { exact: true }).fill(name);
+    await form.getByRole('button', { name: 'Create item' }).click();
+    await expectSaved(page);
+
+    const savedForm = page.getByTestId(`item-form-${id}`);
+    await savedForm.getByRole('button', { name: 'Delete' }).click();
+
+    const dialog = page.getByRole('dialog', { name: 'Delete catalog item', exact: true });
+    await expect(dialog).toBeVisible();
+    const confirmBtn = dialog.getByRole('button', { name: 'Delete forever' });
+
+    // Wrong text (even a prefix of the real name) leaves the guard unarmed —
+    // ConfirmDialog.jsx: `armed = typed === requireType`, exact match only.
+    await dialog.getByLabel('confirm-input').fill(name.slice(0, -1));
+    await expect(confirmBtn).toBeDisabled();
+
+    // Clicking a disabled button is a no-op; back out via Cancel instead and
+    // confirm the item survived the whole attempt.
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toBeHidden();
+
+    const payload = await fetchContent(request);
+    expect(findInCollection(payload, 'item', id)).toMatchObject({ id, name });
+  });
 });

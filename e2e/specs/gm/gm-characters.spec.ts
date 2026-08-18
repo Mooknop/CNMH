@@ -435,4 +435,49 @@ test.describe('Character editor', () => {
     expect(char.inventory[0]).toMatchObject({ ref: swordId, quantity: 1 });
     expect(char.inventory[0].uid).toBeTruthy(); // uid was minted on save
   });
+
+  // -------------------------------------------------------------------------
+  // 9. Validation and bad-input handling (#518)
+  // -------------------------------------------------------------------------
+
+  test('leaving name blank blocks creation and surfaces the required-field error', async ({ page }) => {
+    await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
+    const form = page.getByTestId('character-form-new');
+
+    // Fill an unrelated field so a failure can only be the name check firing,
+    // then attempt to save with name left blank (GmCharacters.jsx: `if
+    // (!name) { form.setError('Name is required.'); return; }`).
+    await form.getByLabel('level').fill('5');
+    await form.getByRole('button', { name: 'Create character' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('Name is required.');
+    // Nothing was created — the new-character form is still up rather than
+    // being replaced by a saved-character form.
+    await expect(page.getByTestId('character-form-new')).toBeVisible();
+  });
+
+  test('a fractional level is truncated rather than rejected', async ({
+    page,
+    request,
+  }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
+    await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
+    const form = page.getByTestId('character-form-new');
+
+    await form.getByLabel('name', { exact: true }).fill(charName);
+    // A fractional level isn't a validation error the form rejects — every
+    // numeric field round-trips through GmCharacters.jsx's `toInt`, which
+    // truncates via parseInt rather than throwing.
+    await form.getByLabel('level').fill('3.9');
+
+    const id = await createChar(form, page, charName);
+    const payload = await fetchContent(request);
+    const char = findInCollection(payload, 'character', id) as any;
+
+    expect(char.level).toBe(3);
+  });
 });
