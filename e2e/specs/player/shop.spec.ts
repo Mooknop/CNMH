@@ -272,4 +272,46 @@ test.describe('Player shop storefront', () => {
     await page.getByTestId('ware-e2e-antidote').click();
     await expect(page.getByTestId('ware-preview')).toContainText('Recalled from a lore entry — not here to buy.');
   });
+
+  test('the header Back chevron returns to the shop picker without the navbar intercepting it', async ({ page, seed }) => {
+    // #943: mounted inline, the overlay was trapped in the character sheet's
+    // stacking context and painted under the fixed navbar, whose hitbox covers
+    // the header band — the chevron was unclickable for players, not just for
+    // Playwright's actionability check.
+    await seed({
+      lore: [location(), shopLore('e2e-shop-a', 'Mended Drum'), shopLore('e2e-shop-b', 'Second Stall')],
+      item: [{ id: 'e2e-antidote', name: 'E2E Antidote', price: 3, level: 1 }],
+    });
+    await mockSession(page, {
+      seed: {
+        cnmh_campaign_global: { location: 'Townsquare', locationLoreId: LOC_ID },
+        cnmh_playmode_global: 'downtime',
+        cnmh_shops_global: {
+          'e2e-shop-a': { revealed: true, open: true, wares: [{ ref: 'e2e-antidote' }] },
+          'e2e-shop-b': { revealed: true, open: true, wares: [{ ref: 'e2e-antidote' }] },
+        },
+        [`cnmh_gold_${CHAR_ID}`]: 100,
+      },
+    });
+
+    await page.goto(`/character/${CHAR_ID}`);
+    await waitForSheet(page);
+    await openDowntimeShop(page);
+
+    // Two shops here, so the storefront opens on the picker.
+    await page.getByRole('button', { name: /Mended Drum/ }).click();
+    const back = page.getByRole('button', { name: 'Back' });
+    await expect(back).toBeVisible();
+
+    // The chevron's own centre must be the topmost element there.
+    const topClass = await back.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.className;
+    });
+    expect(topClass).toContain('ps-back');
+
+    // And a real click must land — no `force`, so actionability is asserted.
+    await back.click();
+    await expect(page.getByRole('button', { name: /Second Stall/ })).toBeVisible();
+  });
 });
