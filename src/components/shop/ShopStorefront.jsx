@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
 import {
   resolveShopWares,
@@ -1141,7 +1142,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     </DropZone>
   );
 
-  return (
+  const overlay = (
     <div className="ps-overlay" role="dialog" aria-modal="true" aria-label="Shop" data-testid="shop-storefront">
       <div className="ps-frame" style={{ '--ps-accent': TAB_ACCENT[activeTab] || TAB_ACCENT.wares }}>
         {toast && <div className="ps-toast" role="status" data-testid="shop-toast">✓ {toast}</div>}
@@ -1241,6 +1242,13 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       </div>
     </div>
   );
+
+  // Portal to <body> like the shared Modal: mounted inline (DowntimeTab /
+  // LoreDrawer) the overlay is trapped in the character sheet's stacking
+  // context, which paints below the fixed navbar — the navbar hitbox then
+  // covers the header band's Back chevron (#943).
+  if (typeof document === 'undefined') return overlay;
+  return ReactDOM.createPortal(overlay, document.body);
 };
 
 export default ShopStorefront;

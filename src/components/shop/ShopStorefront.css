@@ -7,10 +7,10 @@
 .ps-overlay {
   position: fixed;
   inset: 0;
-  /* Ties with the character sheet's --z-navbar (also 1000) let the bottom rail
-     intercept clicks on the cart bar — among equal-stacked fixed siblings the
-     winner is DOM order, not z-index value, and the rail renders after this
-     overlay's portal-less mount point (#941). */
+  /* The overlay portals to <body> (#943) so this z-index competes at the root
+     stacking level, above the fixed navbar and bottom rail (--z-navbar) — a
+     portal-less mount was trapped inside the character sheet's stacking
+     context and lost the top-band hitbox to the navbar. */
   z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
