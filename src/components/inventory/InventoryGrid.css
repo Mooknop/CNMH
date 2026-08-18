@@ -480,6 +480,10 @@
   padding: 4px;
 }
 .inventory-grid .grid-capnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--shell-text-tertiary);
@@ -488,6 +492,9 @@
 .inventory-grid .grid-capnote em {
   color: var(--peril-light);
   font-style: normal;
+}
+.inventory-grid .grid-capnote-details {
+  flex: none;
 }
 .inventory-grid .cell-grid {
   display: grid;

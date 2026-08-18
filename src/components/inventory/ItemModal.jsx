@@ -761,15 +761,21 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // ── Give to another PC (#656/#657) — exploration/downtime only ──
   // Worn/stowed gear, containers (with their contents), and consumables (with
   // stack-splitting) are all givable. Held/dropped items, talismans, and any
-  // item hosting an affixed talisman are excluded to keep the transfer clean.
+  // item — or, for a container, any item in its subtree — that's involved in
+  // the affix overlay (hosting an affixed talisman, or itself an affixed
+  // talisman) are excluded, so a transfer never strands the giver's overlay
+  // entries. An un-affixed talisman stowed inside a container is fine to move.
   const canGive = mode === 'exploration' || mode === 'downtime';
-  const hostsAffixedTalisman = Object.values(affixed || {}).includes(uid);
+  const subtreeUids = flattenInventory([item]).map((it) => itemUidOf(it));
+  const subtreeInvolvesAffixOverlay = subtreeUids.some(
+    (u) => affixedHostUid(affixed, u) != null || Object.values(affixed || {}).includes(u)
+  );
   const givable =
     canGive &&
     uid != null &&
     (item.state === 'worn' || item.state === STOWED) &&
     !talisman &&
-    !hostsAffixedTalisman &&
+    !subtreeInvolvesAffixOverlay &&
     !bodyBound; // a tattoo is inked on — it can't change owners
   const recipients = (characters || []).filter((c) => c.id !== character?.id);
 
