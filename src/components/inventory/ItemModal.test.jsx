@@ -1807,6 +1807,41 @@ describe('ItemModal — give to another PC (#656)', () => {
     expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
   });
 
+  // Container-subtree affix guard: a container whose contents involve the
+  // affix overlay (either side) must not be givable, so a transfer never
+  // strands the giver's overlay entries.
+  it('shows the give block for a plain worn container with no affix involvement', () => {
+    const pack = {
+      ...wornItem,
+      name: 'Backpack',
+      container: { capacity: 4, contents: [{ uid: 'c1', name: 'Rope', weight: 1 }] },
+    };
+    renderGive(pack);
+    expect(screen.getByTestId('item-give')).toBeInTheDocument();
+  });
+
+  it('hides the give block when a content item hosts an affixed talisman (overlay value)', () => {
+    const pack = {
+      ...wornItem,
+      name: 'Backpack',
+      container: { capacity: 4, contents: [{ uid: 'c1', name: 'Shield', weight: 1 }] },
+    };
+    mockAffixed = { t9: 'c1' }; // talisman t9 affixed to content item c1
+    renderGive(pack);
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the give block when a content item is an affixed talisman (overlay key)', () => {
+    const pack = {
+      ...wornItem,
+      name: 'Backpack',
+      container: { capacity: 4, contents: [{ uid: 't9', name: 'Ghoul Glove', weight: 0.1 }] },
+    };
+    mockAffixed = { t9: 'elsewhere-uid' }; // t9 is itself an affixed talisman, stowed in the pack
+    renderGive(pack);
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
   it('hides the section when the giver is the only party member', () => {
     mockCharacters = [{ id: 'a', name: 'Ashka' }];
     renderGive();

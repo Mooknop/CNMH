@@ -188,8 +188,19 @@ const BagGrid = ({
       >
         {activeContainer && (
           <div className="grid-capnote">
-            {formatBulk(activeUsed)} / {activeCap} Bulk
-            {activeCap != null && activeUsed > activeCap && <em> · overfull</em>}
+            <span>
+              {formatBulk(activeUsed)} / {activeCap} Bulk
+              {activeCap != null && activeUsed > activeCap && <em> · overfull</em>}
+            </span>
+            <button
+              type="button"
+              className="btn-small btn-secondary grid-capnote-details"
+              data-testid="bag-details"
+              aria-label={`View ${activeContainer.name} details`}
+              onClick={() => onItemClick(activeContainer)}
+            >
+              Details
+            </button>
           </div>
         )}
         <div className="cell-grid">
