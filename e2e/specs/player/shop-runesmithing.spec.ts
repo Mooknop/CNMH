@@ -159,12 +159,9 @@ test.describe('Player shop — Runesmithing', () => {
     await expect(page.getByTestId('ware-e2e-antidote')).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Runes' })).toHaveCount(0);
 
-    // Over to the runesmith. (Escape + reopen rather than the header's Back
-    // chevron — the app navbar overlays that button's hitbox under Playwright's
-    // actionability check.)
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
-    await page.getByRole('button', { name: /Shop/ }).click();
+    // Over to the runesmith via the header's Back chevron (#943: the overlay
+    // now portals to <body>, so the navbar no longer intercepts this click).
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await page.getByRole('button', { name: 'The Cold Anvil' }).click();
     await expect(page.getByRole('tab', { name: 'Runes' })).toBeVisible();
 
@@ -331,7 +328,9 @@ test.describe('Player shop — Runesmithing', () => {
 
     // Back on the sheet: the order sits at the smith — ready 24h after
     // purchase AND back in this town (location already true; time missing).
-    await page.keyboard.press('Escape');
+    // A single shop here, so the header's Back chevron closes the storefront
+    // directly (#943: no longer navbar-blocked).
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
     const panel = page.getByTestId('rune-work-panel');
     await expect(panel).toContainText('Etching (ready 24h after purchase)');
@@ -433,8 +432,9 @@ test.describe('Player shop — Runesmithing', () => {
     );
 
     // It lands in inventory as an inert display item: named for the held rune,
-    // no effect on the weapon it sits beside.
-    await page.keyboard.press('Escape');
+    // no effect on the weapon it sits beside. A single shop here, so the
+    // header's Back chevron closes the storefront directly (#943).
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(page.getByTestId('shop-storefront')).toHaveCount(0);
     await openPlayTab(page, 'Inventory');
     await expect(page.getByText(`${RETURNING.name} Runestone`)).toBeVisible();
