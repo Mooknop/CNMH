@@ -64,6 +64,7 @@ import {
   applyEffectsOrLogGeneric,
   logRayGroupResults,
   applyPostRollEffects,
+  applyBystanderReveal,
 } from '../../utils/confirmAppliers';
 import { buildAttackToggles } from '../../utils/attackToggles';
 import { flourishFor } from '../../utils/flourishFor';
@@ -746,6 +747,15 @@ const UseAbilityModal = ({
     // use, so any cast — even one that fizzles on a flat check downstream —
     // consumes the armed state. Re-arming stays a SpellsHeader action.
     if (effectiveVerb === 'cast' && veraciousArmed) disarmVeracious();
+
+    // Harmless Bystander auto-lift (#465): same "every path is a committed use"
+    // reasoning — a hostile one blows the disguise, so enemy reactions come
+    // back online and everyone in the fight becomes immune to it for a day.
+    applyBystanderReveal({
+      ...ctx,
+      hostileTargets: selectedEntries.filter((e) => e.kind === 'enemy'),
+      isAttack,
+    });
 
     // Foundry-authoritative buffs (#455): when the ability's foundryEffect is
     // flagged `authoritative` AND the Foundry bridge is connected (its roster is

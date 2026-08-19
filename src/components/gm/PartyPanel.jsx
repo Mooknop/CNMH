@@ -350,7 +350,7 @@ const PartyPanel = () => {
   const runSweep = () => {
     let changed = 0;
     roster.forEach((c) => {
-      changed += performEncounterSweep({ character: c, getState, sendUpdate }).changed;
+      changed += performEncounterSweep({ character: c, getState, sendUpdate, nowSecs }).changed;
     });
     // Once per sweep, not per character: reset the shared encounter record,
     // prune Recall Knowledge, and clear the persistent / enemy-fx / summons

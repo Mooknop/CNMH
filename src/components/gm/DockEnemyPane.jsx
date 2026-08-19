@@ -23,6 +23,7 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { monogram } from '../encounter/commandsheet/Dossier';
 import PersistentChip from '../encounter/PersistentChip';
+import GmBystanderGate from './GmBystanderGate';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import MoveConfirmBar from '../encounter/MoveConfirmBar';
 import MoveMapSurface from '../encounter/MoveMapSurface';
@@ -902,6 +903,11 @@ const DockEnemyPane = ({ entry, tone = 'foe' }) => {
             </span>
           </div>
         </header>
+
+        {/* Harmless Bystander (#465) — whether this creature may react against
+            a PC still passing as a bystander, and why not when it may not.
+            Sits under the reaction pip it qualifies. */}
+        <GmBystanderGate entry={entry} />
 
         <div className="dock-enemy-vitals">
           {hp && hp.current != null && (

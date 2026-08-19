@@ -15,6 +15,12 @@ import {
   applyStrikeOnHitConditions, applyStrikeOnHitNotes,
 } from './strikeOnCrit';
 import { applyThirstingOnHit } from './shieldRuneStrike';
+import {
+  bystanderHiding,
+  bystanderObservers,
+  isHostileUse,
+  stampBystanderReveal,
+} from './bystander';
 import { APP, syncKey } from '../sync/keys';
 
 // Confirm-time appliers (extracted #1317 D4) — the remaining verbatim blocks
@@ -22,6 +28,66 @@ import { APP, syncKey } from '../sync/keys';
 // explicit ctx bag, following the chainResultsAppliers.js pattern (D3). The
 // orchestrator keeps only sequencing: the two early returns, the suffix
 // collector, the cost spend and the MAP recordAttack.
+
+const readLocal = (key) => {
+  try { return JSON.parse(window.localStorage.getItem(key)); } catch { return null; }
+};
+
+const writeLocal = (key, value) => {
+  try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
+};
+
+/**
+ * Harmless Bystander auto-lift (#465) — THE hostile-action chokepoint.
+ *
+ * Called at the very top of UseAbilityModal's confirm sequence, which is the
+ * one place every committed Strike / cast / activation passes through (the
+ * same spot the juice emit and the Veracious disarm hang off, for exactly that
+ * reason). If the acting PC is currently hiding behind a Harmless Bystander
+ * declaration and this use is hostile, she is recognized: suppression lifts and
+ * every non-ally in the encounter becomes immune to her Harmless Bystander for
+ * a day, keyed by the persistent creature key so the immunity outlives the
+ * fight.
+ *
+ * A no-op for everyone else, so it costs one getState per confirm.
+ *
+ * @param {Object} ctx - { ability, character, order, getState, sendUpdate,
+ *   appendLog, nowSecs } plus { hostileTargets, isAttack }
+ * @returns {boolean} whether the reveal was written
+ */
+export const applyBystanderReveal = ({
+  ability,
+  character,
+  order,
+  hostileTargets = [],
+  isAttack = false,
+  getState,
+  sendUpdate,
+  appendLog,
+  nowSecs,
+}) => {
+  const charId = character?.id;
+  if (!charId) return false;
+  const key = syncKey(APP.BYSTANDER, charId);
+  const prior = getState?.(charId, APP.BYSTANDER) ?? readLocal(key);
+  if (!bystanderHiding(prior)) return false;
+  if (!isHostileUse({ ability, hostileTargets, isAttack })) return false;
+
+  const observers = bystanderObservers(order);
+  const next = stampBystanderReveal(prior, observers, { charId, nowSecs });
+  writeLocal(key, next);
+  sendUpdate?.(charId, APP.BYSTANDER, next);
+
+  const tail = observers.length
+    ? ` — ${observers.map((o) => o.name).join(', ')} ${observers.length === 1 ? 'is' : 'are'} immune to it for 1 day`
+    : '';
+  appendLog?.({
+    type: 'action',
+    charId,
+    text: `${character.name} is recognized as hostile — Harmless Bystander ends${tail}`,
+  });
+  return true;
+};
 
 /**
  * Normalise resolver output into ray groups so single-roll and multi-ray casts

@@ -6,3 +6,10 @@
   white-space: nowrap;
   vertical-align: middle;
 }
+
+/* Recognized as hostile (#465) — the disguise is blown; dim it so a glance at
+   the strip separates "still hiding" from "they know". */
+.ttp-bystander-chip--revealed {
+  opacity: 0.65;
+  filter: grayscale(0.5);
+}

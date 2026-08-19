@@ -6,6 +6,7 @@ import { useBystander } from '../../hooks/useBystander';
 import { useInitiativeRoll } from '../../hooks/useInitiativeRoll';
 import { hasFeat } from '../../utils/CharacterUtils';
 import RollEntry from '../shared/RollEntry';
+import BystanderNotice from './BystanderNotice';
 import './InitiativeEntry.css';
 import { APP, globalKey } from '../../sync/keys';
 
@@ -122,6 +123,14 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
             </label>
           )}
 
+          {hasBystander && (
+            <BystanderNotice
+              charId={charId}
+              order={encounter.order}
+              inventory={model?.inventory}
+            />
+          )}
+
           {submitted ? (
             <div className="initiative-entry-submitted">
               <span className="initiative-entry-submitted-flag" aria-label="initiative-submitted">
@@ -230,6 +239,14 @@ const InitiativeEntry = ({ charId: charIdProp, character }) => {
             />
             <span>Harmless Bystander — roll Deception ({fmtMod(deceptionMod)}) instead of Perception</span>
           </label>
+        )}
+
+        {hasBystander && (
+          <BystanderNotice
+            charId={charId}
+            order={encounter.order}
+            inventory={model?.inventory}
+          />
         )}
 
         {bystanderActive ? (

@@ -18,6 +18,7 @@ import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/CharacterUtils';
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
+import { applyBystanderReveal } from '../../utils/confirmAppliers';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getCondition } from '../../data/pf2eConditions';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -267,6 +268,21 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     // Attack-trait actions advance the Multiple Attack Penalty.
     if (isAttack) recordAttack(1);
+
+    // Harmless Bystander auto-lift (#465): Demoralize / Trip / Feint aimed at a
+    // non-ally is every bit as hostile as a Strike, so it blows the disguise on
+    // the same terms UseAbilityModal's confirm does.
+    applyBystanderReveal({
+      ability: action,
+      character,
+      order,
+      hostileTargets: !selfTarget && target?.kind === 'enemy' ? [target] : [],
+      isAttack: isAttack && !selfTarget,
+      getState,
+      sendUpdate,
+      appendLog,
+      nowSecs,
+    });
 
     // Per RAW the target is temporarily immune after any (non-errored) attempt.
     if (immuneConfig) {
