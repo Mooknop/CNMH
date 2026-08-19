@@ -14,7 +14,10 @@ import {
   variantsFromForm,
   VariantsControl,
   FrequencyRuleControl,
+  AbilitySubform,
+  reactionToForm,
 } from './AbilitySubforms';
+import { TRIGGER_TYPES } from '../../utils/reactionTriggers';
 
 // First coverage for the GM ability-authoring subforms (#1311 proving ground):
 // the to/from-form codecs carry the authored ability JSON round trip, so a
@@ -142,5 +145,34 @@ describe('FrequencyRuleControl', () => {
     fireEvent.change(screen.getByLabelText('t-frequency-per'), { target: { value: 'day' } });
     fireEvent.change(screen.getByLabelText('t-frequency-uses'), { target: { value: '3' } });
     expect(JSON.parse(screen.getByTestId('authored').textContent)).toEqual({ per: 'day', uses: 3 });
+  });
+});
+
+// #278: an authored triggerType the engine no longer recognises (typo, or a
+// retired id) must not silently coerce to blank — the GM needs to see it.
+describe('AbilitySubform trigger-type select', () => {
+  it('shows no warning for a recognised triggerType', () => {
+    const value = reactionToForm({ name: 'Deflect Projectile', triggerType: TRIGGER_TYPES[0].id });
+    renderWithProviders(<AbilitySubform value={value} onChange={() => {}} idPrefix="t" />);
+    expect(screen.getByLabelText('t-trigger-type')).toHaveValue(TRIGGER_TYPES[0].id);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('shows no warning when no triggerType is authored', () => {
+    const value = reactionToForm({ name: 'Attack of Opportunity' });
+    renderWithProviders(<AbilitySubform value={value} onChange={() => {}} idPrefix="t" />);
+    expect(screen.getByLabelText('t-trigger-type')).toHaveValue('');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('renders an unknown triggerType as a visible option instead of coercing to blank, plus a warning', () => {
+    const value = reactionToForm({ name: 'Shield Block', triggerType: 'atack-melee' });
+    renderWithProviders(<AbilitySubform value={value} onChange={() => {}} idPrefix="t" />);
+    const select = screen.getByLabelText('t-trigger-type');
+    expect(select).toHaveValue('atack-melee');
+    expect(screen.getByText('⚠ unknown: atack-melee')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      '"atack-melee" doesn\'t match any engine trigger type — this reaction will never prompt.'
+    );
   });
 });

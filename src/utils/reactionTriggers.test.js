@@ -5,6 +5,8 @@ import {
   matchingReactions,
   feedTriggerEvent,
   isReactionCost,
+  isKnownTriggerType,
+  reactionCoverageGaps,
 } from './reactionTriggers';
 
 const deflect    = { name: 'Deflect Projectile',  triggerType: 'attack-ranged' };
@@ -105,6 +107,71 @@ describe('reactionTriggers', () => {
       expect(matchingReactions(undefined, 'ranged-attack')).toEqual([]);
       expect(matchingReactions([], 'ranged-attack')).toEqual([]);
       expect(matchingReactions(all, 'unknown-event')).toEqual([]);
+    });
+  });
+
+  describe('isKnownTriggerType', () => {
+    it('is true for every declared TRIGGER_TYPES id', () => {
+      TRIGGER_TYPES.forEach((t) => expect(isKnownTriggerType(t.id)).toBe(true));
+    });
+
+    it('is false for a typo, a removed id, or an empty value', () => {
+      expect(isKnownTriggerType('attack-rangedd')).toBe(false);
+      expect(isKnownTriggerType('some-retired-id')).toBe(false);
+      expect(isKnownTriggerType('')).toBe(false);
+      expect(isKnownTriggerType(undefined)).toBe(false);
+    });
+  });
+
+  describe('reactionCoverageGaps', () => {
+    it('returns empty gaps for a character with no reaction-cost abilities', () => {
+      expect(reactionCoverageGaps({ id: 'nobody' })).toEqual({ missing: [], unknown: [] });
+    });
+
+    it('returns empty gaps for a null/undefined character', () => {
+      expect(reactionCoverageGaps(null)).toEqual({ missing: [], unknown: [] });
+      expect(reactionCoverageGaps(undefined)).toEqual({ missing: [], unknown: [] });
+    });
+
+    it('flags a character.reactions entry with no triggerType as missing', () => {
+      const aoo = { name: 'Attack of Opportunity' }; // no triggerType authored
+      const { missing, unknown } = reactionCoverageGaps({ id: 'c1', reactions: [aoo] });
+      expect(missing).toEqual([aoo]);
+      expect(unknown).toEqual([]);
+    });
+
+    it('flags a character.reactions entry with an unrecognised triggerType as unknown', () => {
+      const typo = { name: 'Shield Block', triggerType: 'atack-melee' };
+      const { missing, unknown } = reactionCoverageGaps({ id: 'c1', reactions: [typo] });
+      expect(missing).toEqual([]);
+      expect(unknown).toEqual([typo]);
+    });
+
+    it('does not flag a reaction with a valid triggerType', () => {
+      const ok = { name: 'Deflect Projectile', triggerType: 'attack-ranged' };
+      expect(reactionCoverageGaps({ id: 'c1', reactions: [ok] })).toEqual({ missing: [], unknown: [] });
+    });
+
+    it('covers item- and feat-sourced reactions, not just character.reactions', () => {
+      const itemReaction = { name: 'Shield Block', triggerType: undefined };
+      const featReaction = { name: 'Wing Deflection', triggerType: 'bogus-id' };
+      const character = {
+        id: 'c1',
+        inventory: [{ name: 'Steel Shield', reactions: [itemReaction] }],
+        feats: [{ name: 'Draconic Wings', reactions: [featReaction] }],
+      };
+      const { missing, unknown } = reactionCoverageGaps(character);
+      expect(missing.map((r) => r.name)).toEqual(['Shield Block']);
+      expect(unknown.map((r) => r.name)).toEqual(['Wing Deflection']);
+    });
+
+    it('catches a reaction-cost ability authored into the actions list (isReactionCost catch)', () => {
+      const misfiled = { name: 'Stumble Aside', actions: 'Reaction' }; // no triggerType, wrong bucket
+      const notReaction = { name: 'Stride', actions: 'One Action' };
+      const character = { id: 'c1', actions: [misfiled, notReaction] };
+      const { missing, unknown } = reactionCoverageGaps(character);
+      expect(missing.map((r) => r.name)).toEqual(['Stumble Aside']);
+      expect(unknown).toEqual([]);
     });
   });
 
