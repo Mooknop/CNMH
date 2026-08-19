@@ -2,6 +2,8 @@ import React from 'react';
 import { screen, act } from '@testing-library/react';
 import { renderWithProviders } from '../../test/renderWithProviders';
 import { APP } from '../../sync/keys';
+import { DEFAULT_CLOCK } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import BystanderNotice from './BystanderNotice';
 
 beforeEach(() => window.localStorage.clear());
@@ -17,13 +19,19 @@ const SWORD = {
   uid: 'w1', name: 'Longsword', state: 'held1', hand: 1, strikes: [{ name: 'Longsword' }],
 };
 
-// A far-future expiry so the live game clock (4725 AR) never ages it out.
+// One day out from the clock the real GameDateProvider starts on, exactly as
+// makeImmunityEntry would stamp it. Deliberately NOT a huge sentinel value:
+// gameSecondsToClock walks the calendar a year per iteration from 4700, so a
+// far-future expiry costs hundreds of millions of iterations the moment
+// anything formats it (see GmBystanderGate.test.jsx).
+const NOW_SECS = toGameSeconds(DEFAULT_CLOCK);
+
 const immunity = (name) => ({
   effectId: 'ability-immunity',
   abilityKey: 'harmless-bystander',
   appliedBy: CHAR_ID,
   creatureName: name,
-  expireAtSecs: Number.MAX_SAFE_INTEGER,
+  expireAtSecs: NOW_SECS + 86400,
 });
 
 const render = (props = {}) =>

@@ -2,6 +2,8 @@ import React from 'react';
 import { screen, act } from '@testing-library/react';
 import { renderWithProviders, makeCharacter } from '../../test/renderWithProviders';
 import { RELAY, APP } from '../../sync/keys';
+import { DEFAULT_CLOCK } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import GmBystanderGate from './GmBystanderGate';
 
 beforeEach(() => window.localStorage.clear());
@@ -13,12 +15,25 @@ const ORDER = [
   GHOUL,
 ];
 
+// localStorage is cleared per test and the bus seeds no clock, so the real
+// GameDateProvider sits on DEFAULT_CLOCK — the immunity is stamped one day out
+// from there, exactly as makeImmunityEntry would write it.
+//
+// It must be a REALISTIC moment, not a sentinel: this is the only test that
+// takes the immune branch, which formats the expiry through
+// gameSecondsToClock, and that walks the calendar forward ONE YEAR PER
+// ITERATION from 4700. A Number.MAX_SAFE_INTEGER expiry is ~2.9e8 years out,
+// i.e. ~285 million iterations — 1.9s locally and >10s under CI coverage
+// instrumentation, which is what timed this test out.
+const NOW_SECS = toGameSeconds(DEFAULT_CLOCK);
+const ONE_DAY = 86400;
+
 const immunity = () => ({
   effectId: 'ability-immunity',
   abilityKey: 'harmless-bystander',
   appliedBy: CHAR_ID,
   creatureName: 'Ghoul',
-  expireAtSecs: Number.MAX_SAFE_INTEGER,
+  expireAtSecs: NOW_SECS + ONE_DAY,
 });
 
 const render = () =>
@@ -61,6 +76,9 @@ describe('GmBystanderGate (#465)', () => {
     expect(gate).toHaveTextContent('does not work on Ghoul');
     expect(gate).toHaveTextContent('It reacts normally.');
     expect(gate).not.toHaveTextContent('no reactions vs');
+    // The expiry is formatted off the live clock — a day out from DEFAULT_CLOCK
+    // (08:00) reads as tomorrow at the same time.
+    expect(gate).toHaveTextContent('immune until tomorrow 08:00');
   });
 
   it('reports the lift once she has been recognized this fight', () => {
