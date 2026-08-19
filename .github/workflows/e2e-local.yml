@@ -54,6 +54,18 @@ jobs:
 
       - run: npm ci
 
+      - name: Pin apt to the canonical Ubuntu mirror
+        # `playwright install --with-deps` runs apt-get, and the runner image's
+        # default azure.archive.ubuntu.com mirror blackholes often enough to hang
+        # the whole job until timeout-minutes kills it (2026-08-19 outage: shards
+        # sat 17+ min in `apt-get update`). Swap every apt source to
+        # archive.ubuntu.com before anything touches apt.
+        run: |
+          files=$(sudo grep -rlF azure.archive.ubuntu.com /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null || true)
+          if [ -n "$files" ]; then
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' $files
+          fi
+
       - name: Install Playwright browser
         # chromium engine also backs the mobile-chromium (Pixel 7) project.
         run: npx playwright install --with-deps chromium

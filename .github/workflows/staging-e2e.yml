@@ -78,6 +78,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Pin apt to the canonical Ubuntu mirror
+        # Same guard as e2e-local.yml: the runner's default azure mirror
+        # blackholes and hangs `playwright install --with-deps` in apt-get.
+        run: |
+          files=$(sudo grep -rlF azure.archive.ubuntu.com /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null || true)
+          if [ -n "$files" ]; then
+            sudo sed -i 's|azure\.archive\.ubuntu\.com|archive.ubuntu.com|g' $files
+          fi
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
