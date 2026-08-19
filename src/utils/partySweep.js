@@ -22,6 +22,7 @@
 import { defaultTurnState } from '../hooks/useTurnState';
 import { isEncounterScopedEffect } from './EffectUtils';
 import { pruneEncounterKnowledge } from './recallKnowledge';
+import { clearBystanderDeclaration } from './bystander';
 import { defaultEncounter } from './encounterUtils';
 import { RELAY, APP, GLOBAL_ID, syncKey, globalKey } from '../sync/keys';
 
@@ -31,7 +32,7 @@ const writeLocal = (key, value) => {
 
 // Compute the combat-state resets this character needs right now. Each carries
 // the synced `type`, the value to write, and a human label for the log.
-function computeCombatResets(character, getState) {
+function computeCombatResets(character, getState, nowSecs) {
   const id = character?.id;
   const resets = [];
 
@@ -62,10 +63,17 @@ function computeCombatResets(character, getState) {
   }
 
   // Harmless Bystander is declared per-encounter (#226 Slice D) — drop the
-  // flag so it doesn't carry into the next fight or onto the sheet.
+  // flag so it doesn't carry into the next fight or onto the sheet. The
+  // per-creature 1-day immunity ledger on the same key (#465) is deliberately
+  // KEPT: a creature that watched her turn hostile stays wise to the trick
+  // until the game clock expires it, which is the whole point of the mechanic.
   const bystander = getState(id, APP.BYSTANDER);
   if (bystander?.active) {
-    resets.push({ type: APP.BYSTANDER, value: { active: false, mod: null, ts: 0 }, label: 'Harmless Bystander' });
+    resets.push({
+      type: APP.BYSTANDER,
+      value: clearBystanderDeclaration(bystander, nowSecs),
+      label: 'Harmless Bystander',
+    });
   }
 
   // The playing state is turn-bound (#935) — no turns outside an encounter,
@@ -104,11 +112,13 @@ function expireEncounterEffects(character, getState) {
  * @param {Object}   character  - resolved character (needs id)
  * @param {Function} getState   - (charId, key) => value
  * @param {Function} sendUpdate - (charId, key, value) => void
+ * @param {number}   [nowSecs]  - current game seconds; lets the Harmless
+ *   Bystander clear prune immunity entries that already expired (#465)
  * @returns {{ summary: string, changed: number }}
  */
-export function performEncounterSweep({ character, getState, sendUpdate }) {
+export function performEncounterSweep({ character, getState, sendUpdate, nowSecs = null }) {
   const id = character?.id;
-  const resets = computeCombatResets(character, getState);
+  const resets = computeCombatResets(character, getState, nowSecs);
 
   const effectsDrop = expireEncounterEffects(character, getState);
   if (effectsDrop) resets.push({ type: 'effects', value: effectsDrop, label: 'encounter effects' });

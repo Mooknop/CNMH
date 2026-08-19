@@ -18,6 +18,8 @@ import { DEGREE_LABELS } from '../../utils/degreeDisplay';
 import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/CharacterUtils';
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
+import { applyBystanderReveal } from '../../utils/confirmAppliers';
+import { isNonAllyEntry } from '../../utils/bystander';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getCondition } from '../../data/pf2eConditions';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -267,6 +269,24 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     // Attack-trait actions advance the Multiple Attack Penalty.
     if (isAttack) recordAttack(1);
+
+    // Harmless Bystander auto-lift (#465): Demoralize / Trip / Feint aimed at a
+    // non-ally is every bit as hostile as a Strike, so it blows the disguise on
+    // the same terms UseAbilityModal's confirm does. Both signals are zeroed for
+    // a self-targeted action — Escape carries the Attack trait but squirming out
+    // of a grab is not hostile — and isNonAllyEntry keeps a FRIENDLY-disposition
+    // NPC target (#1537 S6) out of it.
+    applyBystanderReveal({
+      ability: action,
+      character,
+      order,
+      hostileTargets: !selfTarget && isNonAllyEntry(target) ? [target] : [],
+      isAttack: isAttack && !selfTarget,
+      getState,
+      sendUpdate,
+      appendLog,
+      nowSecs,
+    });
 
     // Per RAW the target is temporarily immune after any (non-errored) attempt.
     if (immuneConfig) {

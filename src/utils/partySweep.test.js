@@ -100,8 +100,26 @@ describe('performEncounterSweep', () => {
   it('clears a Harmless Bystander declaration (#226)', () => {
     store['thorn:bystander'] = { active: true, mod: 'deception', ts: 1 };
     const { summary } = performEncounterSweep({ character: CHAR, getState, sendUpdate });
-    expect(store['thorn:bystander']).toEqual({ active: false, mod: null, ts: 0 });
+    expect(store['thorn:bystander']).toMatchObject({ active: false, mod: null, revealed: false });
     expect(summary).toContain('Harmless Bystander');
+  });
+
+  // #465: the 1-day per-creature immunity ledger rides the SAME key as the
+  // declaration, and it must outlive the fight that created it.
+  it('keeps unexpired Harmless Bystander immunities and prunes expired ones', () => {
+    store['thorn:bystander'] = {
+      active: true,
+      mod: 'deception',
+      ts: 1,
+      revealed: true,
+      immune: {
+        'creature:ghoul': { abilityKey: 'harmless-bystander', appliedBy: 'thorn', expireAtSecs: 5000 },
+        'creature:rat':   { abilityKey: 'harmless-bystander', appliedBy: 'thorn', expireAtSecs: 100 },
+      },
+    };
+    performEncounterSweep({ character: CHAR, getState, sendUpdate, nowSecs: 1000 });
+    expect(Object.keys(store['thorn:bystander'].immune)).toEqual(['creature:ghoul']);
+    expect(store['thorn:bystander'].revealed).toBe(false);
   });
 
   it('clears the playing state (#935)', () => {

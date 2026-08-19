@@ -13,6 +13,7 @@ import { pruneLedgerByPer } from './frequency';
 import { staffPrepValue } from './staffPrep';
 import { clampSlotAllocation } from './slotSacrifice';
 import { unlockRepairs, hasLockedBroken } from './itemBroken';
+import { clearBystanderDeclaration } from './bystander';
 import { APP, syncKey } from '../sync/keys';
 
 const writeLocal = (key, value) => {
@@ -27,7 +28,7 @@ const eldSourcesOf = (character) => {
 // Compute the set of resets this character needs right now. Each reset carries
 // the synced state `type`, the value to write, and a human label for the log /
 // checklist. Pure — reads current state via getState only.
-function computeResets(character, getState) {
+function computeResets(character, getState, nowSecs = null) {
   const id = character?.id;
   const resets = [];
 
@@ -104,10 +105,16 @@ function computeResets(character, getState) {
   }
 
   // Harmless Bystander (#226 Slice D) — a leftover declaration is dropped on
-  // rest; encounter end is the usual clear path.
+  // rest; encounter end is the usual clear path. The per-creature 1-day
+  // immunity ledger riding the same key (#465) is preserved and merely pruned:
+  // it expires on the game clock, not on a night's sleep.
   const bystander = getState(id, APP.BYSTANDER);
   if (bystander?.active) {
-    resets.push({ type: 'bystander', value: { active: false, mod: null, ts: 0 }, label: 'Harmless Bystander' });
+    resets.push({
+      type: 'bystander',
+      value: clearBystanderDeclaration(bystander, nowSecs),
+      label: 'Harmless Bystander',
+    });
   }
 
   return resets;
@@ -134,7 +141,7 @@ function nextEffects(character, getState, nowSecs) {
 export function dailyPrepPlanFor(character, getState) {
   const eldSources = eldSourcesOf(character);
   const effectsDrop = nextEffects(character, getState, null);
-  const resets = computeResets(character, getState);
+  const resets = computeResets(character, getState, null);
   if (effectsDrop) resets.push({ type: 'effects', value: effectsDrop, label: 'daily effects' });
   return {
     resets,
@@ -163,7 +170,7 @@ export function dailyPrepPlanFor(character, getState) {
  */
 export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eldChoice, staffChoice, staffSlots }) {
   const id = character?.id;
-  const resets = computeResets(character, getState);
+  const resets = computeResets(character, getState, nowSecs);
 
   const effectsDrop = nextEffects(character, getState, nowSecs);
   if (effectsDrop) resets.push({ type: 'effects', value: effectsDrop, label: 'daily effects' });

@@ -1,0 +1,33 @@
+/* Harmless Bystander player-side read-out (#465) — sits under the initiative
+   toggle in InitiativeEntry. Uses the same gold register as the toggle label
+   it hangs off, so it reads as part of that block rather than a new card. */
+.bystander-notice {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid rgba(196, 154, 46, 0.35);
+  border-radius: 0.35rem;
+  background: rgba(196, 154, 46, 0.08);
+}
+
+.bystander-notice-line {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--gold-pale, var(--gold-pale));
+}
+
+.bystander-notice-line--warn {
+  font-weight: 700;
+  color: var(--color-warning, var(--gold-mid));
+}
+
+/* Recognized as hostile — the notice stops being a live gate and becomes a
+   past-tense record, so it steps back visually. */
+.bystander-notice--revealed {
+  border-color: rgba(196, 154, 46, 0.2);
+  background: rgba(196, 154, 46, 0.04);
+  opacity: 0.85;
+}
