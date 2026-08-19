@@ -97,6 +97,43 @@ describe('applyBystanderReveal', () => {
     })).toBe(true);
   });
 
+  // Escape is `selfTarget: true` AND carries the Attack trait (see
+  // src/data/skillActions.test.js). SkillActionModal zeroes both signals for a
+  // self-targeted action; squirming out of a grab must not blow the disguise.
+  it('does not fire for Escape — a self-targeted Attack-trait action', () => {
+    store['izzy:bystander'] = { active: true, mod: 'deception', ts: 1 };
+    expect(run({
+      ability: { name: 'Escape', selfTarget: true, traits: ['Attack'] },
+      isAttack: false,
+      hostileTargets: [],
+    })).toBe(false);
+    expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  // A FRIENDLY-disposition combatant (#1537 S6) rides kind 'enemy' — healing
+  // the town guard is not a hostile action.
+  it('does not fire when the only target is a friendly-disposition NPC', () => {
+    store['izzy:bystander'] = { active: true, mod: 'deception', ts: 1 };
+    expect(run({
+      ability: { name: 'Soothe', traits: ['Healing'] },
+      isAttack: false,
+      hostileTargets: [{ entryId: 'e-guard', kind: 'enemy', name: 'Town Guard', disposition: 1 }],
+    })).toBe(false);
+    expect(sendUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still fires when a real foe rides alongside a friendly NPC', () => {
+    store['izzy:bystander'] = { active: true, mod: 'deception', ts: 1 };
+    expect(run({
+      ability: { name: 'Fireball' },
+      isAttack: false,
+      hostileTargets: [
+        { entryId: 'e-guard', kind: 'enemy', name: 'Town Guard', disposition: 1 },
+        { entryId: 'e-b', kind: 'enemy', name: 'Bandit' },
+      ],
+    })).toBe(true);
+  });
+
   it('is idempotent — a second hostile action does not re-log', () => {
     store['izzy:bystander'] = { active: true, mod: 'deception', ts: 1 };
     run();

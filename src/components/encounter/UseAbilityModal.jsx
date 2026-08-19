@@ -66,6 +66,7 @@ import {
   applyPostRollEffects,
   applyBystanderReveal,
 } from '../../utils/confirmAppliers';
+import { isNonAllyEntry } from '../../utils/bystander';
 import { buildAttackToggles } from '../../utils/attackToggles';
 import { flourishFor } from '../../utils/flourishFor';
 import { buildRollFx } from '../../utils/rollToast';
@@ -751,9 +752,12 @@ const UseAbilityModal = ({
     // Harmless Bystander auto-lift (#465): same "every path is a committed use"
     // reasoning — a hostile one blows the disguise, so enemy reactions come
     // back online and everyone in the fight becomes immune to it for a day.
+    // isNonAllyEntry, not `kind === 'enemy'`: a FRIENDLY-disposition combatant
+    // (#1537 S6 — a summoned/NPC ally) rides the enemy kind, and healing one is
+    // not a hostile action.
     applyBystanderReveal({
       ...ctx,
-      hostileTargets: selectedEntries.filter((e) => e.kind === 'enemy'),
+      hostileTargets: selectedEntries.filter(isNonAllyEntry),
       isAttack,
     });
 

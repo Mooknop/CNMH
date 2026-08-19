@@ -12,6 +12,7 @@ import {
   suppressesReactionsAgainst,
   bystanderHiding,
   isHostileUse,
+  isNonAllyEntry,
   stampBystanderReveal,
   clearBystanderDeclaration,
   declareBystander,
@@ -66,6 +67,17 @@ describe('observers', () => {
       { entryId: 'e-ally', kind: 'enemy', name: 'Town Guard', disposition: 1 },
     ];
     expect(bystanderObservers(withAlly).map((o) => o.name)).toEqual(['Ghoul', 'Bandit']);
+  });
+
+  // The predicate both halves of the feature must agree on: the observer set
+  // and the callers' hostile-target sets are filtered through the same one.
+  it('isNonAllyEntry sorts combatants the same way for callers', () => {
+    expect(isNonAllyEntry({ kind: 'enemy', name: 'Ghoul' })).toBe(true);
+    expect(isNonAllyEntry({ kind: 'enemy', name: 'Town Guard', disposition: 1 })).toBe(false);
+    expect(isNonAllyEntry({ kind: 'pc', charId: IZZY })).toBe(false);
+    expect(isNonAllyEntry({ kind: 'summon' })).toBe(false);
+    expect(isNonAllyEntry(null)).toBe(false);
+    expect(isNonAllyEntry(undefined)).toBe(false);
   });
 });
 
@@ -161,13 +173,27 @@ describe('isHostileUse', () => {
     expect(isHostileUse({ ability: { name: 'Fear' }, hostileTargets: [{ entryId: 'e-g1' }] })).toBe(true);
   });
 
-  it('is true for an Attack-trait ability by trait alone', () => {
-    expect(isHostileUse({ ability: { name: 'Bomb', traits: ['Attack', 'Manipulate'] } })).toBe(true);
-  });
-
   it('is false for a self/ally-facing use', () => {
     expect(isHostileUse({ ability: { name: 'Heal', traits: ['Healing'] }, hostileTargets: [] })).toBe(false);
     expect(isHostileUse({})).toBe(false);
+  });
+
+  // Regression: Escape is selfTarget AND carries the Attack trait
+  // (src/data/skillActions.test.js). SkillActionModal zeroes both signals for a
+  // self-targeted action; reading the trait behind its back used to blow the
+  // disguise for squirming out of a grab — and stamp an irreversible day of
+  // immunity on the whole encounter.
+  it('never reads the Attack trait behind a caller that suppressed both signals', () => {
+    expect(isHostileUse({
+      ability: { name: 'Escape', selfTarget: true, traits: ['Attack'] },
+      hostileTargets: [],
+      isAttack: false,
+    })).toBe(false);
+  });
+
+  it('ignores the ability entirely — the caller owns both signals', () => {
+    expect(isHostileUse({ ability: { traits: ['Attack'] } })).toBe(false);
+    expect(isHostileUse({ isAttack: true })).toBe(true);
   });
 });
 

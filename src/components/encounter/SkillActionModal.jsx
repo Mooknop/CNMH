@@ -19,6 +19,7 @@ import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/Characte
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
 import { applyBystanderReveal } from '../../utils/confirmAppliers';
+import { isNonAllyEntry } from '../../utils/bystander';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getCondition } from '../../data/pf2eConditions';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -271,12 +272,15 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     // Harmless Bystander auto-lift (#465): Demoralize / Trip / Feint aimed at a
     // non-ally is every bit as hostile as a Strike, so it blows the disguise on
-    // the same terms UseAbilityModal's confirm does.
+    // the same terms UseAbilityModal's confirm does. Both signals are zeroed for
+    // a self-targeted action — Escape carries the Attack trait but squirming out
+    // of a grab is not hostile — and isNonAllyEntry keeps a FRIENDLY-disposition
+    // NPC target (#1537 S6) out of it.
     applyBystanderReveal({
       ability: action,
       character,
       order,
-      hostileTargets: !selfTarget && target?.kind === 'enemy' ? [target] : [],
+      hostileTargets: !selfTarget && isNonAllyEntry(target) ? [target] : [],
       isAttack: isAttack && !selfTarget,
       getState,
       sendUpdate,

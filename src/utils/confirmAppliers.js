@@ -19,6 +19,7 @@ import {
   bystanderHiding,
   bystanderObservers,
   isHostileUse,
+  isNonAllyEntry,
   stampBystanderReveal,
 } from './bystander';
 import { APP, syncKey } from '../sync/keys';
@@ -51,12 +52,16 @@ const writeLocal = (key, value) => {
  *
  * A no-op for everyone else, so it costs one getState per confirm.
  *
- * @param {Object} ctx - { ability, character, order, getState, sendUpdate,
+ * `hostileTargets` is re-filtered through isNonAllyEntry here as well as at the
+ * call sites: a FRIENDLY-disposition combatant (#1537 S6) carries kind
+ * 'enemy', and the reveal it would trigger stamps an irreversible day of
+ * immunity — worth spending the belt AND the braces on.
+ *
+ * @param {Object} ctx - { character, order, getState, sendUpdate,
  *   appendLog, nowSecs } plus { hostileTargets, isAttack }
  * @returns {boolean} whether the reveal was written
  */
 export const applyBystanderReveal = ({
-  ability,
   character,
   order,
   hostileTargets = [],
@@ -71,7 +76,8 @@ export const applyBystanderReveal = ({
   const key = syncKey(APP.BYSTANDER, charId);
   const prior = getState?.(charId, APP.BYSTANDER) ?? readLocal(key);
   if (!bystanderHiding(prior)) return false;
-  if (!isHostileUse({ ability, hostileTargets, isAttack })) return false;
+  const nonAllies = (hostileTargets || []).filter(isNonAllyEntry);
+  if (!isHostileUse({ hostileTargets: nonAllies, isAttack })) return false;
 
   const observers = bystanderObservers(order);
   const next = stampBystanderReveal(prior, observers, { charId, nowSecs });

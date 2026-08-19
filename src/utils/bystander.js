@@ -182,15 +182,23 @@ export function bystanderHiding(state) {
 
 /**
  * Does this committed ability use count as an observed hostile action?
- * Two independent signals, either is enough:
+ * Two signals, either is enough, and BOTH come from the caller:
  *   • it resolved against at least one non-ally combatant, or
- *   • it is an attack (the Attack trait / an attack-roll ability) — a Strike
- *     whose target lives in Foundry never reaches the app's selection list.
+ *   • `isAttack` — a Strike whose target lives in Foundry never reaches the
+ *     app's selection list, so the attack flag has to stand in for it.
+ *
+ * There is deliberately no `ability.traits` fallback here. `isAttack` already
+ * IS the Attack-trait predicate at both call sites (`isAttackAbility`), so a
+ * fallback adds nothing — but it would OVERRIDE a caller that suppressed the
+ * flag on purpose. SkillActionModal zeroes both signals for a self-targeted
+ * action, and Escape is `selfTarget: true` while carrying the Attack trait:
+ * squirming out of a grab is not a hostile action, and reading the trait
+ * behind the caller's back would blow the disguise and stamp the whole
+ * encounter with a day of immunity nothing can undo.
  */
-export function isHostileUse({ ability, hostileTargets = [], isAttack = false } = {}) {
+export function isHostileUse({ hostileTargets = [], isAttack = false } = {}) {
   if (isAttack) return true;
-  if ((hostileTargets || []).length > 0) return true;
-  return (ability?.traits || []).some((t) => String(t).toLowerCase() === 'attack');
+  return (hostileTargets || []).length > 0;
 }
 
 /**
@@ -198,6 +206,11 @@ export function isHostileUse({ ability, hostileTargets = [], isAttack = false } 
  * watched it becomes immune for a day. Idempotent — a second hostile action in
  * the same fight refreshes nothing that matters and never double-logs (callers
  * gate on `bystanderHiding`). Returns the next state; never mutates.
+ *
+ * Observers are the ones present AT THE MOMENT OF THE REVEAL, by design: the
+ * feat's immunity is to having *seen* her drop the act. Reinforcements that
+ * walk in afterwards did not, so they can be fooled again the same day — the
+ * disguise just has to be re-declared for the next fight.
  *
  * @param {Object} state     - current cnmh_bystander_<charId> payload
  * @param {Array}  observers - [{ key, name }] from bystanderObservers
