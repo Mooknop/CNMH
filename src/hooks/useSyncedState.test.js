@@ -152,6 +152,32 @@ describe('useSyncedState', () => {
     expect(JSON.parse(localStorage.getItem('cnmh_conditions_Pellias'))).toEqual([{ id: 'frightened' }]);
   });
 
+  // #283: a bridge-originated encounter push omits `log` (it doesn't own that
+  // field) rather than clobbering it with `[]`. `options.mergeIncoming` is the
+  // general seam that lets a caller reshape a remote update before it lands —
+  // exercised directly here (useEncounter.jsx supplies the encounter-specific
+  // reducer; see its own tests for that behavior end-to-end).
+  it('options.mergeIncoming reshapes an incoming subscribed update against the previous value', () => {
+    let captured;
+    mockSession.subscribe = vi.fn((c, t, cb) => { captured = cb; return vi.fn(); });
+    const mergeIncoming = (incoming, previous) =>
+      ('log' in incoming) ? incoming : { ...incoming, log: previous.log };
+    const { result } = renderHook(() =>
+      useSyncedState('cnmh_encounter_global', { active: false, log: [] }, { mergeIncoming })
+    );
+    act(() => { captured({ active: true, log: ['a-log-line'] }); });
+    expect(result.current[0]).toEqual({ active: true, log: ['a-log-line'] });
+
+    // A later update that omits `log` preserves the log this client already holds.
+    act(() => { captured({ active: true, round: 2 }); });
+    expect(result.current[0]).toEqual({ active: true, round: 2, log: ['a-log-line'] });
+
+    // An update that DOES carry `log` (even []) still replaces it — the
+    // back-compat window for an un-updated bridge module.
+    act(() => { captured({ active: true, round: 3, log: [] }); });
+    expect(result.current[0]).toEqual({ active: true, round: 3, log: [] });
+  });
+
   it('freezes synced writes in the offline sandbox (DO up, Foundry down)', () => {
     mockSession = { ...noopSession(), connected: true, foundryConnected: false };
     localStorage.setItem('cnmh_focus_IzzyUncut', JSON.stringify(3));

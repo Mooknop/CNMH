@@ -34,6 +34,23 @@ const ENCOUNTER_KEY  = globalKey(RELAY.ENCOUNTER);
 const ACTORMAP_KEY   = globalKey(RELAY.ACTORMAP);
 const SUMMONS_KEY    = globalKey(APP.SUMMONS);
 
+// The bridge pushes a full encounter snapshot on every Foundry combat event,
+// but `log` is app-side only — the bridge has no notion of it and omits the
+// key entirely (#283) rather than sending a clobbering `[]`. This merge shim
+// (wired via useSyncedState's `mergeIncoming` option below) is the other
+// half: an incoming update that LACKS `log` preserves whatever log this
+// client already holds instead of resetting it, and the preserved value
+// flows into `latest.current`, so a subsequent local write (appendLog, etc.)
+// reads it back through `cur` rather than starting from empty. An update
+// that DOES carry `log` — even `[]`, e.g. from an un-updated bridge module
+// during the rollout window — still replaces, unchanged from before.
+const mergeEncounterUpdate = (incoming, previous) => {
+  if (incoming && typeof incoming === 'object' && !Array.isArray(incoming) && !('log' in incoming)) {
+    return { ...incoming, log: (previous && previous.log) || [] };
+  }
+  return incoming;
+};
+
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
   id: `log-${Date.now()}-${logCounter++}`,
@@ -42,7 +59,7 @@ const makeLogEntry = (entry) => ({
 });
 
 export const useEncounter = () => {
-  const [encounter, setEncounter]   = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
+  const [encounter, setEncounter]   = useSyncedState(ENCOUNTER_KEY, defaultEncounter(), { mergeIncoming: mergeEncounterUpdate });
   const [actorMap, setActorMap]     = useSyncedState(ACTORMAP_KEY, {});
   const [summons]                   = useSyncedState(SUMMONS_KEY, []);
   const { getState, sendUpdate } = useSession();

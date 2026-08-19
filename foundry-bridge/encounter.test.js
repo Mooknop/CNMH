@@ -53,6 +53,13 @@ describe('encounter payload push', () => {
     expect(payload.foundryCombatId).toBe('combat1');
   });
 
+  test('payload omits `log` entirely — it is app-side only and must not clobber the app combat log (#283)', () => {
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+    const payload = send.mock.calls[0][2];
+    expect('log' in payload).toBe(false);
+  });
+
   test('mapped combatant is a pc with charId; unmapped is an enemy', () => {
     updateActorMap({ 'actor-pellias': 'Pellias' });
     global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
@@ -219,6 +226,8 @@ describe('encounter payload push', () => {
     expect(characterId).toBe('global');
     expect(key).toBe('encounter');
     expect(payload).toMatchObject({ active: false, phase: 'idle', order: [], foundryCombatId: null });
+    // Omitted, not `[]` — the app-side log must not be clobbered on idle (#283).
+    expect('log' in payload).toBe(false);
   });
 
   test('updateCombat with the bridge echo flag does not re-push', () => {
