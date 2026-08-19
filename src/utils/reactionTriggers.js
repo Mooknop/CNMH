@@ -5,6 +5,8 @@
 // a PC's reaction matches when its triggerType is in the event's match list.
 // Matching runs on the player's device, where the character's reactions live.
 
+import { getActions, getReactions } from './actionUtils';
+
 // What a reaction can declare. Shown as the "reaction trigger" select in the
 // GM ability editor; stored on the ability as `triggerType: <id>`.
 export const TRIGGER_TYPES = [
@@ -36,6 +38,13 @@ export const TRIGGER_EVENTS = [
 
 export const eventById = (eventId) =>
   TRIGGER_EVENTS.find((e) => e.id === eventId) || null;
+
+// Whether a triggerType id is one the engine actually broadcasts against
+// (#278). Used both by the ability editor — to flag an authored value that
+// doesn't match any TRIGGER_TYPES entry (typo, or an id later removed) — and
+// by the coverage audit below.
+export const isKnownTriggerType = (triggerType) =>
+  TRIGGER_TYPES.some((t) => t.id === triggerType);
 
 // Whether an ability/spell is reaction-cost, per the authored `actions` string
 // convention every cost parser shares (UseAbilityModal, actionIconUtils, the
@@ -92,4 +101,34 @@ export const feedTriggerEvent = (entry, { actorKind, viewerCharId, targetCharIdO
     default:
       return null;
   }
+};
+
+/**
+ * Reaction-trigger coverage audit for one character (#278). Finds
+ * reaction-cost abilities that will never prompt: either no `triggerType`
+ * was authored, or the authored value isn't (or is no longer) one of
+ * TRIGGER_TYPES.
+ *
+ * Reuses the same enumeration GmTriggerConsole/matchingReactions read —
+ * `getReactions(character)` — since every entry there is a reaction by
+ * virtue of its bucket (character.reactions / item.reactions / feat.reactions
+ * carry no `actions` cost string of their own). `getActions(character)` is
+ * also scanned, filtered through `isReactionCost`, as a defensive catch for a
+ * reaction-cost ability that was authored into the actions list instead of
+ * the reactions one — it would otherwise never surface here.
+ *
+ * @param {Object} character - character doc (getReactions/getActions input)
+ * @returns {{ missing: Array, unknown: Array }} reaction-cost abilities that
+ *   won't ever be woken by a fired trigger event, split by cause. Each entry
+ *   keeps its original ability shape (name, triggerType, source, …).
+ */
+export const reactionCoverageGaps = (character) => {
+  if (!character) return { missing: [], unknown: [] };
+  const reactionCost = [
+    ...getReactions(character),
+    ...getActions(character).filter(isReactionCost),
+  ];
+  const missing = reactionCost.filter((r) => r && !r.triggerType);
+  const unknown = reactionCost.filter((r) => r && r.triggerType && !isKnownTriggerType(r.triggerType));
+  return { missing, unknown };
 };

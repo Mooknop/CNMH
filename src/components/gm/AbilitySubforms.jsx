@@ -7,7 +7,7 @@ import React from 'react';
 import ImageField from './ImageField';
 import EffectsSubform, { effectsToForm, effectsFromForm } from './EffectsSubform';
 import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
-import { TRIGGER_TYPES } from '../../utils/reactionTriggers';
+import { TRIGGER_TYPES, isKnownTriggerType } from '../../utils/reactionTriggers';
 import TraitsField from '../shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
 
@@ -839,7 +839,19 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
             {TRIGGER_TYPES.map((t) => (
               <option key={t.id} value={t.id}>{t.label}</option>
             ))}
+            {/* An authored value the engine no longer recognises (typo, or a
+                retired id) — surface it rather than silently coercing the
+                select to blank, which would look identical to "no prompt"
+                and hide that the value needs fixing. */}
+            {value.triggerType && !isKnownTriggerType(value.triggerType) && (
+              <option value={value.triggerType}>{`⚠ unknown: ${value.triggerType}`}</option>
+            )}
           </select>
+          {value.triggerType && !isKnownTriggerType(value.triggerType) && (
+            <p className="gm-field-hint gm-field-hint--warning" role="alert">
+              &quot;{value.triggerType}&quot; doesn&apos;t match any engine trigger type — this reaction will never prompt.
+            </p>
+          )}
         </div>
         <div className="form-group">
           <label>requirements</label>

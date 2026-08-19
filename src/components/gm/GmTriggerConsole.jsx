@@ -3,7 +3,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useContent } from '../../contexts/ContentContext';
 import { getReactions } from '../../utils/actionUtils';
-import { TRIGGER_EVENTS, matchingReactions } from '../../utils/reactionTriggers';
+import { TRIGGER_EVENTS, matchingReactions, reactionCoverageGaps } from '../../utils/reactionTriggers';
 import { buildReactionPrompt } from '../../utils/reactionPrompt';
 import { useAuraMembers } from '../../hooks/useAuraMembers';
 import { filterAllyAuraReactions } from '../../utils/auraSources';
@@ -80,6 +80,18 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
   const eligible = pcEntries
     .map((entry) => ({ entry, names: eligibility[entry.charId]?.names }))
     .filter((row) => !!row.names);
+
+  // Coverage audit (#278): reaction-cost abilities that will never wake for
+  // ANY event fired here — no triggerType authored, or one the engine no
+  // longer recognises. Computed per-PC so the GM can spot a dead reaction
+  // before relying on it mid-fight, not just after this event comes up empty.
+  const coverage = pcEntries
+    .map((entry) => {
+      const char = (characters || []).find((c) => c.id === entry.charId);
+      const { missing, unknown } = reactionCoverageGaps(char);
+      return { entry, missing, unknown };
+    })
+    .filter((row) => row.missing.length > 0 || row.unknown.length > 0);
 
   if (pcEntries.length === 0) return null;
 
@@ -180,6 +192,20 @@ const GmTriggerConsole = ({ pcEntries = [], round }) => {
               .join(' · ')}`
           : 'No PCs in the encounter have a matching reaction for this event.'}
       </p>
+
+      {coverage.length > 0 && (
+        <p className="gm-field-hint gm-field-hint--warning" aria-label="reaction coverage gaps" role="alert">
+          Reactions that will never prompt: {coverage
+            .map(({ entry, missing, unknown }) => {
+              const gaps = [
+                ...missing.map((r) => `${r.name} (no trigger type)`),
+                ...unknown.map((r) => `${r.name} (unknown: "${r.triggerType}")`),
+              ];
+              return `${entry.name} — ${gaps.join(', ')}`;
+            })
+            .join(' · ')}
+        </p>
+      )}
 
       <button
         className="btn-primary"

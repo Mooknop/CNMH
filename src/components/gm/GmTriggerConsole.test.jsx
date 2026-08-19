@@ -23,6 +23,8 @@ vi.mock('../../hooks/useSessionLog', () => ({
 }));
 
 // Pellias holds a damaged-ally reaction; Blu a ranged-attack one; Ashka none.
+// Gapper carries two dead reactions (#278 coverage): one with no triggerType
+// authored, one with a value the engine no longer recognises.
 const mockCharacters = [
   {
     id: 'Pellias',
@@ -35,6 +37,14 @@ const mockCharacters = [
     reactions: [{ name: 'Deflect Projectile', triggerType: 'attack-ranged' }],
   },
   { id: 'Ashka', name: 'Ashka' },
+  {
+    id: 'Gapper',
+    name: 'Gapper',
+    reactions: [
+      { name: 'Untyped Reaction' },
+      { name: 'Typo Reaction', triggerType: 'atack-melee' },
+    ],
+  },
 ];
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
@@ -113,6 +123,26 @@ describe('GmTriggerConsole', () => {
     fireEvent.change(screen.getByLabelText('trigger note'), { target: { value: 'archer' } });
     fireEvent.click(screen.getByLabelText('Fire trigger'));
     expect(screen.getByLabelText('trigger note')).toHaveValue('');
+  });
+
+  // ── Reaction trigger coverage audit (#278) ─────────────────────────────────
+  describe('reaction coverage gaps', () => {
+    it('says nothing when no PC in the encounter has a dead reaction', () => {
+      render(<GmTriggerConsole pcEntries={pcs} />);
+      expect(screen.queryByLabelText('reaction coverage gaps')).toBeNull();
+    });
+
+    it('flags a PC whose reaction has no triggerType, and one with an unrecognised value', () => {
+      const withGapper = [...pcs, { charId: 'Gapper', name: 'Gapper', kind: 'pc', entryId: 'cbt-gapper' }];
+      render(<GmTriggerConsole pcEntries={withGapper} />);
+      const notice = screen.getByLabelText('reaction coverage gaps');
+      expect(notice).toHaveTextContent('Gapper');
+      expect(notice).toHaveTextContent('Untyped Reaction (no trigger type)');
+      expect(notice).toHaveTextContent('Typo Reaction (unknown: "atack-melee")');
+      // Pellias and Blu are fully wired — they shouldn't show up here.
+      expect(notice).not.toHaveTextContent('Pellias —');
+      expect(notice).not.toHaveTextContent('Blu —');
+    });
   });
 
   // ── Champion aura gating (#1733 S3) ───────────────────────────────────────

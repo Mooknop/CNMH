@@ -640,6 +640,14 @@
   opacity: 0.7;
 }
 
+/* A field value that won't behave as authored (e.g. an unrecognised trigger
+   type) — same warning palette as .gm-usage-chip.warning / TraitsField's
+   orphan-trait chip. */
+.gm-field-hint--warning {
+  opacity: 1;
+  color: var(--gold-light);
+}
+
 /* ── Monospaced display ──────────────────────────────────── */
 .gm-json {
   font-family: var(--font-mono);
