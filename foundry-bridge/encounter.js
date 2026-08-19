@@ -206,7 +206,8 @@ function pushIdleState() {
     round:  0,
     currentTurnIndex: 0,
     order:  [],
-    log:    [],
+    // log is app-side only; omitted (not []) so the app's merge shim preserves
+    // the existing combat log instead of clobbering it (#283).
     foundryCombatId: null,
   });
 }
@@ -278,7 +279,8 @@ function buildEncounterPayload(combat) {
     round,
     currentTurnIndex: Math.max(0, currentTurnIndex),
     order:            sortedOrder,
-    log:              [],  // log is app-side only; don't clobber
+    // log is app-side only — omitted entirely (not []) so the app's merge
+    // shim preserves the existing combat log instead of clobbering it (#283).
     foundryCombatId:  combat.id,
   };
 }

@@ -34,8 +34,16 @@ const removeLocal = (key) => {
 // offline-sandbox freeze even on a per-character resource key (e.g. setting
 // party gold from the GM dashboard while Foundry is offline). Player resource
 // burns on the same key stay frozen — only callers that opt in bypass.
+//
+// `options.mergeIncoming(incoming, previous)` lets a caller reshape a
+// REMOTE update before it lands (#283) — e.g. a bridge-originated encounter
+// push that omits a field it doesn't own so it doesn't clobber the value
+// this client already holds for it. Applied only to values arriving via the
+// live subscription / gap-read; the initial mount-time read (server or
+// localStorage) has no "previous" to merge against and is unaffected.
 export const useSyncedState = (key, initialValue, options) => {
   const authoritative = !!options?.authoritative;
+  const mergeIncoming = options?.mergeIncoming;
   const { getState, sendUpdate, subscribe, connected, foundryConnected, hydrations } = useSession();
   const hydrated = (hydrations || 0) > 0;
 
@@ -117,9 +125,10 @@ export const useSyncedState = (key, initialValue, options) => {
   useEffect(() => {
     if (!synced) return undefined;
     const unsubscribe = subscribe(characterId, stateType, (incoming) => {
-      latest.current = incoming;
-      setValue(incoming);
-      writeLocal(key, incoming);
+      const merged = mergeIncoming ? mergeIncoming(incoming, latest.current) : incoming;
+      latest.current = merged;
+      setValue(merged);
+      writeLocal(key, merged);
     });
     // Close the render→subscribe gap: FULL_STATE (or a peer UPDATE) that lands
     // after computeInitial ran but before this effect subscribed would
@@ -133,9 +142,10 @@ export const useSyncedState = (key, initialValue, options) => {
       gapRead.current = token;
       const server = getState(characterId, stateType);
       if (server !== undefined && server !== latest.current) {
-        latest.current = server;
-        setValue(server);
-        writeLocal(key, server);
+        const merged = mergeIncoming ? mergeIncoming(server, latest.current) : server;
+        latest.current = merged;
+        setValue(merged);
+        writeLocal(key, merged);
       } else if (server === undefined && hydrated) {
         // The snapshot is authoritative and holds nothing for this key: reset
         // to the default and purge the stale localStorage copy, so a value the
@@ -148,7 +158,7 @@ export const useSyncedState = (key, initialValue, options) => {
       }
     }
     return unsubscribe;
-  }, [synced, characterId, stateType, key, subscribe, getState, hydrations, hydrated, defaultValue, setValue]);
+  }, [synced, characterId, stateType, key, subscribe, getState, hydrations, hydrated, defaultValue, setValue, mergeIncoming]);
 
   const setAndSync = useCallback((updater) => {
     // Offline sandbox (#553): when the DO is up but Foundry isn't, synced

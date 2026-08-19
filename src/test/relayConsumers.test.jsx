@@ -103,6 +103,33 @@ describe('encounter', () => {
     expect(enc.order.length).toBe(relayFixtures.encounter.value.order.length);
     expect(enc.order[0]).toMatchObject({ entryId: expect.any(String), kind: expect.any(String), name: expect.any(String) });
   });
+
+  it('a bridge push without `log` preserves the app-side combat log instead of clobbering it (#283)', () => {
+    const { result, session } = renderHookWithProviders(() => useEncounter());
+
+    act(() => { result.current.appendLog({ type: 'system', text: 'Persistent damage: 2 fire' }); });
+    expect(result.current.encounter.log).toHaveLength(1);
+
+    // The recorded fixture is the real bridge shape post-#283 — it carries no
+    // `log` key at all (see foundry-bridge/__fixtures__/relay/encounter.json).
+    expect('log' in relayFixtures.encounter.value).toBe(false);
+    act(() => { pushRelayFixture(session, RELAY.ENCOUNTER); });
+
+    expect(result.current.encounter.log).toHaveLength(1);
+    expect(result.current.encounter.log[0].text).toBe('Persistent damage: 2 fire');
+
+    // A subsequent local write reads the preserved log back through `cur`
+    // rather than starting from empty.
+    act(() => { result.current.appendLog({ type: 'system', text: 'Round 2 begins' }); });
+    expect(result.current.encounter.log.map((e) => e.text)).toEqual([
+      'Persistent damage: 2 fire', 'Round 2 begins',
+    ]);
+
+    // An explicit `log` (even []) — e.g. an un-updated bridge module during
+    // the rollout window — still replaces, unchanged from before.
+    act(() => { pushRelayFixture(session, RELAY.ENCOUNTER, { log: [] }); });
+    expect(result.current.encounter.log).toEqual([]);
+  });
 });
 
 describe('foekit (#1531)', () => {
