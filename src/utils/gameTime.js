@@ -58,14 +58,24 @@ export function toGameSeconds(clock) {
   );
 }
 
+// Horizon for the year walk in gameSecondsToClock. Corrupt or sentinel
+// inputs (e.g. Number.MAX_SAFE_INTEGER as "never expires") would otherwise
+// iterate one year per loop pass and hang the UI thread.
+export const MAX_CLOCK_YEAR = 5700;
+const MAX_GAME_SECONDS = toGameSeconds({
+  day: 31, month: 11, year: MAX_CLOCK_YEAR, hour: 23, minute: 59, second: 59,
+});
+
 /**
  * Inverse of toGameSeconds — rebuild a clock from absolute game seconds.
  * Walks years/months forward from the 4700 reference; campaign dates sit a
- * few decades past it, so the walk is short.
+ * few decades past it, so the walk is short. Inputs past MAX_CLOCK_YEAR
+ * (including NaN/Infinity) clamp to that year's final instant.
  * @param {number} secs
  * @returns {Object} { day, month, year, hour, minute, second }
  */
 export function gameSecondsToClock(secs) {
+  if (!(secs <= MAX_GAME_SECONDS)) secs = MAX_GAME_SECONDS;
   let days = Math.floor(secs / SECS_PER_DAY);
   let rem = secs - days * SECS_PER_DAY;
 

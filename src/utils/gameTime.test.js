@@ -1,6 +1,7 @@
 import {
   GOLARION_MONTHS,
   SECS_PER_DAY,
+  MAX_CLOCK_YEAR,
   totalDaysSince4700,
   toGameSeconds,
   gameSecondsToClock,
@@ -54,6 +55,23 @@ describe('toGameSeconds / gameSecondsToClock', () => {
     for (const c of samples) {
       expect(gameSecondsToClock(toGameSeconds(c))).toEqual(c);
     }
+  });
+
+  it('clamps absurd inputs to the horizon year instead of hanging', () => {
+    const horizon = clock(31, 11, MAX_CLOCK_YEAR, 23, 59, 59);
+    const started = performance.now();
+    const rebuilt = gameSecondsToClock(Number.MAX_SAFE_INTEGER);
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(rebuilt).toEqual(horizon);
+    expect(gameSecondsToClock(Infinity)).toEqual(horizon);
+    expect(gameSecondsToClock(NaN)).toEqual(horizon);
+  });
+
+  it('leaves values at and below the horizon untouched', () => {
+    const horizon = clock(31, 11, MAX_CLOCK_YEAR, 23, 59, 59);
+    expect(gameSecondsToClock(toGameSeconds(horizon))).toEqual(horizon);
+    const below = clock(1, 0, MAX_CLOCK_YEAR - 1, 6, 0, 0);
+    expect(gameSecondsToClock(toGameSeconds(below))).toEqual(below);
   });
 
   it('an hour of seconds advances the rebuilt clock by an hour', () => {
