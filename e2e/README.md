@@ -24,6 +24,38 @@ bucket, on `http://localhost:8788`, serving the freshly built app via the ASSETS
 
 No `CF_ACCESS_*` secrets and no network egress required. **Use this for day-to-day dev and PRs.**
 
+#### Sharding it across N local stacks (`test:e2e:local:sharded`)
+
+`npm run test:e2e:local` is single-worker against one stack (see the singleton note
+above — `CampaignContent` is `idFromName('osprey-covey')` and `/api/gm/_test/reset` is
+a global wipe, so raising `workers` above 1 against one stack means two tests stomp on
+each other's seeded state). If a full local run is painful, `scripts/e2eShards.mjs`
+gets you the wall-clock win a different way — the same mechanism CI already uses across
+runners (`.github/workflows/e2e-local.yml`), just as OS processes on one machine instead
+of CI jobs:
+
+```bash
+npm run test:e2e:local:sharded              # N = 4 (default)
+npm run test:e2e:local:sharded -- --shards=2
+npm run test:e2e:local:sharded -- --shards=2 --grep "doors"   # extra args pass through
+```
+
+It builds the app **once** up front, then boots N full `wrangler dev` stacks
+concurrently — each its own port (`8788`, `8789`, …), each its own `.wrangler/e2e-state-<port>`
+DO/R2 dir (`playwright.config.ts`'s `E2E_PORT` / `E2E_STATE_DIR` / `E2E_SKIP_BUILD`) — and
+runs one Playwright shard against each. Output is prefixed `[shard i/N]`; a merged HTML
+report lands in `playwright-report/` same as a plain run.
+
+Each shard is a full wrangler-dev process + a headless Chromium instance, so the ceiling
+is machine memory, not CPU cores — the script does not default to `os.cpus().length`.
+Budget roughly 1-1.5GB per shard before raising N.
+
+A plain `npm run test:e2e:local` (no sharding) is completely unaffected — it still runs
+one stack on `:8788` and builds every time, exactly as before. Raising Playwright's own
+`workers` setting against a single stack (rather than fanning out separate stacks) is
+explicitly out of scope — see [#685](https://github.com/Mooknop/CNMH/issues/685)'s
+"Track 2" note on why that would require making the DO multi-tenant.
+
 ### Staging — deploy verification only
 
 ```bash

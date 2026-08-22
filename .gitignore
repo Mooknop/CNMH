@@ -13,6 +13,10 @@ foundry-bridge/coverage
 /test-results
 /playwright-report
 
+# scripts/e2eShards.mjs (#685) — per-shard blob reports, merged before the
+# final HTML report lands in the already-ignored /playwright-report above.
+/blob-report-shards
+
 # production build output
 /build
 /dist
