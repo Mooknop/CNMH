@@ -10,7 +10,7 @@
 
 import { WORKER_WSS_URL, CAMPAIGN_ID } from './config.js';
 import { getBridgeSecret, SECRET_SETTING } from './secret.js';
-import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, updateActorMap } from './encounter.js';
+import { initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll, updateActorMap, reconcileEncounter } from './encounter.js';
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import {
@@ -268,6 +268,10 @@ function dispatch(msg) {
       pushFlankedState();  // actorMap just became valid — re-evaluate with correct PC set
       pushMinionActors();  // minion→PC links resolve through the actor map
     }
+    // A combat deleted while the bridge was down never fired its deleteCombat
+    // push — if the snapshot still claims that combat is active, push the idle
+    // state the missed hook owed the app (see reconcileEncounter).
+    reconcileEncounter(msg.payload);
     // Dice sets (#1490 S7) are persisted campaign config — seed on connect so
     // the first 3D roll after a reconnect is already styled.
     const diceSets = msg.payload?.global?.[RELAY.DICESETS];
