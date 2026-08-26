@@ -4,7 +4,7 @@
 
 import {
   initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll,
-  updateActorMap, getActorMap, getActiveEntryId,
+  updateActorMap, getActorMap, getActiveEntryId, reconcileEncounter,
 } from './encounter.js';
 import { makeCombat, makeCombatant, makeActor } from './test/foundryMock.js';
 
@@ -31,6 +31,45 @@ describe('actor map', () => {
     expect(getActorMap()).toEqual({ 'actor-pellias': 'Pellias' });
     updateActorMap(null);
     expect(getActorMap()).toEqual({});
+  });
+});
+
+describe('reconcileEncounter (stale-combat reconciliation on FULL_STATE)', () => {
+  const staleEncounter = (overrides = {}) => ({
+    global: { encounter: { active: true, phase: 'in-progress', round: 4, foundryCombatId: 'combat-gone', ...overrides } },
+  });
+
+  test('active encounter bound to a deleted combat pushes the idle state', () => {
+    reconcileEncounter(staleEncounter());
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const [characterId, key, payload] = send.mock.calls[0];
+    expect(characterId).toBe('global');
+    expect(key).toBe('encounter');
+    expect(payload.active).toBe(false);
+    expect(payload.phase).toBe('idle');
+    expect(payload.foundryCombatId).toBeNull();
+    // log stays app-side only, exactly like the deleteCombat push (#283).
+    expect('log' in payload).toBe(false);
+  });
+
+  test('combat that still exists is left to the live hooks — no push', () => {
+    const combat = combatWithGoblinAndPellias();
+    global.game.combats.set('combat1', combat);
+    reconcileEncounter(staleEncounter({ foundryCombatId: 'combat1' }));
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  test('app-run encounter (no foundryCombatId) is app-owned — no push', () => {
+    reconcileEncounter(staleEncounter({ foundryCombatId: null }));
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  test('inactive or absent encounter — no push', () => {
+    reconcileEncounter(staleEncounter({ active: false }));
+    reconcileEncounter({ global: {} });
+    reconcileEncounter(undefined);
+    expect(send).not.toHaveBeenCalled();
   });
 });
 

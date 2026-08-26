@@ -199,6 +199,22 @@ function repushActiveEncounter() {
   if (combat) pushEncounterState(combat);
 }
 
+// Reconnect reconciliation: `active: false` is normally pushed by the
+// deleteCombat hook, so a combat deleted while the bridge was disconnected
+// (world closed, relay down) leaves the app stuck in a dead encounter with no
+// way out but the GM's emergency sweep. On every FULL_STATE — the snapshot
+// answering a (re)connect — check the app's claim: an active encounter bound
+// to a Foundry combat that no longer exists gets the same idle push the
+// missed hook would have made. An app-run encounter (no foundryCombatId) is
+// app-owned and never touched; a combat that still exists is left to the
+// live hooks.
+export function reconcileEncounter(fullStatePayload) {
+  const enc = fullStatePayload?.global?.[RELAY.ENCOUNTER];
+  if (!enc?.active || !enc.foundryCombatId) return;
+  if (getCombatById(enc.foundryCombatId)) return;
+  pushIdleState();
+}
+
 function pushIdleState() {
   _sendUpdate?.('global', RELAY.ENCOUNTER, {
     active: false,
