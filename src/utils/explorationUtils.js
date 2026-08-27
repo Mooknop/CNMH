@@ -1,5 +1,8 @@
 // Shared helpers for exploration activity highlight/eligibility logic.
-// Used by ExplorationList (chip rendering) and FollowExpertModal (picker filter).
+// Used by ExplorationList (the player's picker), FollowExpertModal (picker
+// filter) and DockExplorationRoster (the GM's act-as picker, #1810) — the two
+// pickers MUST offer the same activities for the same PC, so the gating rules
+// live here rather than being restated per surface.
 
 export function profLabel(rank) {
   if (rank >= 4) return 'Legendary';
@@ -16,6 +19,25 @@ export function skillProficienciesFor(character) {
     result[skill] = typeof data === 'object' ? (data.proficiency || 0) : (data || 0);
   }
   return result;
+}
+
+// Whether an activity is offered to a character at all.
+//   requiresFlag         — the named useCharacter() flag must be true
+//   requiresAnyFlag      — at least one of the named flags must be true
+//   requiresTrainedInAny — Trained (rank ≥ 1) in at least one of the named skills
+// An activity with none of these is always available.
+export function activityAvailableFor(activity, { flags = {}, skillProficiencies = {} } = {}) {
+  if (!activity) return false;
+  if (activity.requiresFlag && !flags[activity.requiresFlag]) return false;
+  if (activity.requiresAnyFlag && !activity.requiresAnyFlag.some((f) => !!flags[f])) return false;
+  if (activity.requiresTrainedInAny
+    && !activity.requiresTrainedInAny.some((s) => (skillProficiencies[s] || 0) >= 1)) return false;
+  return true;
+}
+
+// The gated activity list for one character, in catalog order.
+export function availableActivitiesFor(activities, character) {
+  return (activities || []).filter((a) => activityAvailableFor(a, character || {}));
 }
 
 // Returns the Expert+ label for an activity given a proficiency map, or null.

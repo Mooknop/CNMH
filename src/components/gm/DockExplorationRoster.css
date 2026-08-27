@@ -1,0 +1,247 @@
+/* GM Command Dock — Exploration roster strip (#1810, epic #1804 S6).
+   The party map's second column. Tokens only, no raw colors; the per-PC accent
+   arrives as --x-theme on the chip (the same dynamic-custom-property bridge
+   PartyPanel's rows use). The strip scrolls internally so a long roster can
+   never push the dock into a page scroll.
+
+   The buttons below reuse `.dock-exp-btn` from DockExplorationPane.css — the
+   strip only ever renders inside that pane. */
+
+.dock-exp-roster {
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-exp-roster-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dock-exp-roster-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+
+.dock-exp-roster-ready {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-roster-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-exp-roster-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ── one PC's chip ────────────────────────────────────────────── */
+
+.dock-exp-chip {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.dock-exp-chip.is-selected {
+  border-color: var(--x-theme, var(--shell-border-strong));
+  box-shadow: 0 0 0 1px var(--x-theme, transparent) inset;
+}
+
+.dock-exp-chip-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.dock-exp-chip-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.dock-exp-chip-main:hover {
+  background: var(--surface-inset-hover);
+}
+
+.dock-exp-chip-medal {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--x-theme, var(--shell-border-strong));
+  background: color-mix(in srgb, var(--x-theme, transparent) 22%, transparent);
+  color: var(--shell-text-primary);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dock-exp-chip-id {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dock-exp-chip-name {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-exp-chip-activity {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-exp-chip-activity.is-empty {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.dock-exp-chip-pace {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.dock-exp-chip-tag {
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  font-family: var(--font-ui);
+  font-size: 0.64rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-chip-speed {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--shell-text-primary);
+  white-space: nowrap;
+}
+
+.dock-exp-chip-pick {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-left: 1px solid var(--shell-border);
+  background: none;
+  color: var(--shell-text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dock-exp-chip-pick:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-chip-main:focus-visible,
+.dock-exp-chip-pick:focus-visible,
+.dock-exp-chip-option:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: -2px;
+}
+
+/* ── the act-as activity picker ───────────────────────────────── */
+
+.dock-exp-chip-menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid var(--shell-border);
+  background: color-mix(in srgb, var(--shell-text-primary) 5%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dock-exp-chip-option {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dock-exp-chip-option:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-chip-option.is-active {
+  background: color-mix(in srgb, var(--x-theme, transparent) 22%, transparent);
+  color: var(--shell-text-primary);
+  font-weight: 700;
+}
+
+.dock-exp-chip-option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

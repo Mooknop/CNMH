@@ -12,7 +12,7 @@ import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
-import { activityHighlightLabel } from '../../utils/explorationUtils';
+import { activityHighlightLabel, availableActivitiesFor } from '../../utils/explorationUtils';
 import './ExplorationList.css';
 import { APP, syncKey } from '../../sync/keys';
 
@@ -57,20 +57,14 @@ const ExplorationList = ({ character, characterColor }) => {
 
   const { flags, skillProficiencies } = characterModel;
 
-  const isTrained = (skillId) => (skillProficiencies[skillId] || 0) >= 1;
-
   const withHighlight = (activity) => {
     const label = activityHighlightLabel(activity, skillProficiencies);
     return label ? { ...activity, highlight: label } : activity;
   };
 
-  const activities = EXPLORATION_ACTIVITIES
-    .filter((activity) => {
-      if (activity.requiresFlag && !flags[activity.requiresFlag]) return false;
-      if (activity.requiresAnyFlag && !activity.requiresAnyFlag.some((f) => !!flags[f])) return false;
-      if (activity.requiresTrainedInAny && !activity.requiresTrainedInAny.some(isTrained)) return false;
-      return true;
-    })
+  // Shared gate (explorationUtils) — the GM's act-as picker on the dock
+  // (#1810) filters with the exact same rules.
+  const activities = availableActivitiesFor(EXPLORATION_ACTIVITIES, { flags, skillProficiencies })
     .map(withHighlight);
 
   const activeActivity = activities.find((a) => a.name === activeActivityName) || null;
