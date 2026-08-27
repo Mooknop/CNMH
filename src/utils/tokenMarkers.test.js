@@ -1,4 +1,4 @@
-import { buildPartyMarkers, buildTokenMarkers, footprintCorners, tintFor } from './tokenMarkers';
+import { buildDoorMarkers, buildPartyMarkers, buildTokenMarkers, footprintCorners, tintFor } from './tokenMarkers';
 
 // A 1000x1000 world captured edge-to-edge, gridSize 100 (10x10 cells) — no
 // `capture` matrix, so normalizedFromWorld falls back to the plain worldRect
@@ -180,5 +180,52 @@ describe('buildPartyMarkers', () => {
     expect(mixed.map((m) => m.moverId)).toEqual(['Ashka']);
     expect(buildPartyMarkers({ tokens: null, snapshot })).toEqual([]);
     expect(buildPartyMarkers({ tokens, snapshot: null })).toEqual([]);
+  });
+});
+
+// The GM dock's door-glyph overlay (#1809, epic #1804 S5): `dooropts_global`
+// carries every door on the rendered scene, filtered here to the ones inside
+// the captured frame.
+describe('buildDoorMarkers', () => {
+  const doors = [
+    { wallId: 'w1', state: 0, x: 550, y: 550 },
+    { wallId: 'w2', state: 2, x: 250, y: 850, secret: false },
+    { wallId: 'w-secret', state: 0, x: 800, y: 800, secret: true },
+    { wallId: 'w-offframe', state: 1, x: 1500, y: 1500 }, // outside the 0..1000 worldRect
+  ];
+
+  it('projects each in-frame door and drops the one outside worldRect', () => {
+    const markers = buildDoorMarkers({ doors, snapshot });
+    expect(markers.map((m) => m.wallId)).toEqual(['w1', 'w2', 'w-secret']);
+    expect(markers.find((m) => m.wallId === 'w1')).toMatchObject({
+      state: 0, secret: false, world: { x: 550, y: 550 }, center: { nx: 0.55, ny: 0.55 },
+    });
+  });
+
+  it('carries the state and secret flag through untouched', () => {
+    const markers = buildDoorMarkers({ doors, snapshot });
+    expect(markers.find((m) => m.wallId === 'w2')).toMatchObject({ state: 2, secret: false });
+    expect(markers.find((m) => m.wallId === 'w-secret')).toMatchObject({ state: 0, secret: true });
+  });
+
+  it('treats an absent `secret` field as false, matching the wire contract', () => {
+    const [marker] = buildDoorMarkers({ doors: [{ wallId: 'w1', state: 0, x: 0, y: 0 }], snapshot });
+    expect(marker.secret).toBe(false);
+  });
+
+  it('does not assume worldRect is given in min-first order', () => {
+    const reversedRect = { gridSize: 100, worldRect: { x1: 1000, y1: 1000, x2: 0, y2: 0 } };
+    const markers = buildDoorMarkers({ doors: [{ wallId: 'w1', state: 0, x: 550, y: 550 }], snapshot: reversedRect });
+    expect(markers).toHaveLength(1);
+  });
+
+  it('skips a malformed door entry rather than throwing', () => {
+    const malformed = [{ wallId: 'w-bad', state: 0 }, { state: 1, x: 1, y: 1 }];
+    expect(buildDoorMarkers({ doors: malformed, snapshot })).toEqual([]);
+  });
+
+  it('returns nothing without a doors array or a worldRect', () => {
+    expect(buildDoorMarkers({ doors: null, snapshot })).toEqual([]);
+    expect(buildDoorMarkers({ doors, snapshot: { gridSize: 100 } })).toEqual([]);
   });
 });

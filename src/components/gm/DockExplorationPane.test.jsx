@@ -242,4 +242,84 @@ describe('DockExplorationPane (#1808)', () => {
       characterId: 'global', value: true,
     });
   });
+
+  // Door glyphs (#1809, epic #1804 S5): the recorded dooropts_global fixture
+  // carries a regular door (w1), a secret door (w2), and a locked door (w3),
+  // all inside the party snapdone's worldRect.
+  describe('door glyphs', () => {
+    const DOORS = relayFixtures.dooroptsGlobal.value.doors;
+    const doorByWallId = (wallId) => DOORS.find((d) => d.wallId === wallId);
+
+    it('asks the bridge for every scene door on entry', () => {
+      const { session } = mountPane();
+      const req = lastSent(session, RELAY.DOORREQ);
+      expect(req).toMatchObject({ characterId: 'global' });
+      expect(req.value).toMatchObject({ ts: expect.any(Number) });
+    });
+
+    it('renders a glyph for every in-frame door, secret door included', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      act(() => { pushRelayFixture(session, 'dooroptsGlobal'); });
+
+      const markers = [...container.querySelectorAll('.dgo-marker')];
+      expect(markers.map((m) => m.dataset.wallId).sort()).toEqual(['w1', 'w2', 'w3']);
+      expect(container.querySelector('[data-wall-id="w2"]')).toHaveClass('dgo-marker--secret');
+      expect(container.querySelector('[data-wall-id="w3"]')).toHaveClass('dgo-marker--locked');
+    });
+
+    it('a tap on a door toggles it via doorinteract and never plans a move', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+      act(() => { pushRelayFixture(session, 'dooroptsGlobal'); });
+
+      const w1 = doorByWallId('w1'); // state 0 (closed), well clear of both PC markers
+      act(() => { tapWorld({ x: w1.x, y: w1.y }); });
+
+      const interact = lastSent(session, RELAY.DOORINTERACT);
+      expect(interact).toMatchObject({ characterId: 'global' });
+      expect(interact.value).toMatchObject({ wallId: 'w1', op: 'open' });
+      expect(lastSent(session, RELAY.MOVEPLAN)).toBeNull();
+      expect(lastSent(session, RELAY.MOVEREQ)).toBeNull(); // no PC was ever selected
+    });
+
+    it('a tap on an OPEN door closes it', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+      act(() => {
+        pushRelayFixture(session, 'dooroptsGlobal', {
+          doors: [{ wallId: 'w1', state: 1, x: 450, y: 500 }],
+        });
+      });
+
+      act(() => { tapWorld({ x: 450, y: 500 }); });
+      expect(lastSent(session, RELAY.DOORINTERACT).value).toMatchObject({ wallId: 'w1', op: 'close' });
+    });
+
+    it('a locked door is display-only — a tap consumes the gesture but sends nothing', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+      act(() => { pushRelayFixture(session, 'dooroptsGlobal'); });
+
+      const w3 = doorByWallId('w3'); // state 2 (locked)
+      act(() => { tapWorld({ x: w3.x, y: w3.y }); });
+
+      expect(lastSent(session, RELAY.DOORINTERACT)).toBeNull();
+      // Consumed by the door hit-test, not treated as a destination either.
+      expect(lastSent(session, RELAY.MOVEPLAN)).toBeNull();
+    });
+
+    it('door hit-testing does not swallow an ordinary PC-selection tap', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+      act(() => { pushRelayFixture(session, 'dooroptsGlobal'); });
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      expect(lastSent(session, RELAY.MOVEREQ)).toMatchObject({ characterId: 'Pellias' });
+    });
+  });
 });

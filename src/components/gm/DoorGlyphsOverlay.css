@@ -1,0 +1,59 @@
+/* DoorGlyphsOverlay (#1809) — an SVG layer inside MapSnapshotViewer's
+   `.msv-pane`, same flat 0-100 percentage viewBox convention as
+   PartyTokensOverlay.css / SnapshotRouteOverlay.css, so every stroke and
+   font-size here is already in that space and scales with pinch-zoom. */
+.dgo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.dgo-ring {
+  fill: var(--surface-inset);
+  stroke: var(--shell-border-strong);
+  stroke-width: 0.5;
+  fill-opacity: 0.85;
+}
+
+.dgo-glyph {
+  font-size: 3px;
+  paint-order: stroke;
+  stroke: var(--shell-bg);
+  stroke-width: 0.3px;
+  stroke-linejoin: round;
+}
+
+/* Closed: neutral shell tone (the default ring above already reads as
+   "closed" with no extra tint). */
+.dgo-marker--closed .dgo-ring {
+  stroke: var(--shell-text-secondary);
+}
+
+/* Open: the same verdant "go" tint the dock's movement switch uses for its
+   on-state. */
+.dgo-marker--open .dgo-ring {
+  stroke: var(--verdant-mid);
+  fill: color-mix(in srgb, var(--verdant-mid) 22%, var(--surface-inset));
+}
+
+/* Locked: gold, matching the app's existing "restricted/legendary" tint —
+   display-only, no tap action (the pane's hit-test never calls interactDoor
+   for state 2), so the ring alone communicates "don't bother tapping". */
+.dgo-marker--locked .dgo-ring {
+  stroke: var(--gold-mid);
+}
+
+/* Secret doors (#1809 scope update): ghosted + dashed, distinct from a door
+   the party can see, with no separate legend needed. Layered on top of
+   whatever state tint already applies above. */
+.dgo-marker--secret .dgo-ring {
+  stroke-dasharray: 1.1 0.9;
+  opacity: 0.6;
+}
+
+.dgo-marker--secret .dgo-glyph {
+  opacity: 0.6;
+}

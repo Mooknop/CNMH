@@ -5,8 +5,9 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { usePartyMapSurface } from '../../hooks/usePartyMapSurface';
 import { usePathPreview } from '../../hooks/usePathPreview';
+import { useSceneDoors } from '../../hooks/useSceneDoors';
 import { getCharacterColor } from '../../utils/CharacterUtils';
-import { buildPartyMarkers } from '../../utils/tokenMarkers';
+import { buildPartyMarkers, buildDoorMarkers } from '../../utils/tokenMarkers';
 import { hitTestMarkers } from '../../utils/markerHitTest';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { PARTY_MAP_PROTOCOL } from '../../utils/snapshotRelay';
@@ -14,6 +15,7 @@ import { APP, globalKey } from '../../sync/keys';
 import MapSnapshotViewer from '../encounter/MapSnapshotViewer';
 import SnapshotRouteOverlay from '../encounter/SnapshotRouteOverlay';
 import PartyTokensOverlay from './PartyTokensOverlay';
+import DoorGlyphsOverlay from './DoorGlyphsOverlay';
 import './DockExplorationPane.css';
 
 // GM Command Dock — Exploration pane (#1808, epic #1804 S4). Replaces the
@@ -56,8 +58,18 @@ import './DockExplorationPane.css';
 // LAYOUT SEAMS for the rest of the epic:
 //   · `.dock-exp-body` is a grid with one column today; S6's roster strip
 //     becomes its second column (see DockExplorationPane.css).
-//   · the map's `overlay` prop hosts a stack of %-space SVG siblings; S5's
-//     door glyphs are one more entry in that stack — see the marked seam below.
+//   · the map's `overlay` prop hosts a stack of %-space SVG siblings; S5
+//     (#1809) added `DoorGlyphsOverlay` as one more entry in that stack,
+//     below `PartyTokensOverlay` in draw order (a token standing on a door
+//     square still reads as a token first).
+//
+// DOOR GLYPHS (#1809, S5): `cnmh_dooropts_global` (protocol >= 20) carries
+// every door on the rendered scene; `buildDoorMarkers` filters that down to
+// the ones inside the captured frame and projects them, same as the party
+// token markers below. Door taps share the ONE tap handler's resolution
+// order — PC markers first, doors second, a destination cell last — so a
+// door standing near a PC's token is never ambiguous with a move order, and
+// a tap that lands a door never also plans a route.
 
 const STAGE_STATUS = {
   'awaiting-opts': 'Reading reachable squares…',
@@ -74,6 +86,7 @@ const DockExplorationPane = () => {
   const [feetTotal, setFeetTotal] = useState(0);
 
   const { status, snapshot, tokens, eligible, refresh } = usePartyMapSurface({ active: true });
+  const { doors, interactDoor } = useSceneDoors();
 
   const requestMoveRefreshRef = useRef(null);
 
@@ -115,6 +128,13 @@ const DockExplorationPane = () => {
   const markers = useMemo(
     () => buildPartyMarkers({ tokens, snapshot, characters, accentFor }),
     [tokens, snapshot, characters, accentFor]
+  );
+
+  // Re-filtered whenever the frame changes (a new capture may shift
+  // `worldRect`) or the door list itself changes (a bridge re-push).
+  const doorMarkers = useMemo(
+    () => buildDoorMarkers({ doors, snapshot }),
+    [doors, snapshot]
   );
 
   const selected = markers.find((m) => m.moverId === selectedId) || null;
@@ -167,6 +187,16 @@ const DockExplorationPane = () => {
     const hit = hitTestMarkers({ nx, ny }, markers, { paneWidthPx, paneHeightPx });
     if (hit) {
       selectMover(hit.moverId);
+      return;
+    }
+    // Doors resolve second, using the same shared snap radius — a tap that
+    // lands a door is consumed here and never falls through to a
+    // destination. Locked doors still consume the tap (no `interactDoor`
+    // call, matching the bridge's own ds===2 ignore) rather than letting the
+    // GM accidentally plan a move onto a door square they meant to tap.
+    const doorHit = hitTestMarkers({ nx, ny }, doorMarkers, { paneWidthPx, paneHeightPx });
+    if (doorHit) {
+      if (doorHit.state !== 2) interactDoor(doorHit.wallId, doorHit.state === 1 ? 'close' : 'open');
       return;
     }
     if (!selectedId) return;
@@ -242,10 +272,9 @@ const DockExplorationPane = () => {
                   onPick={handleMapTap}
                   overlay={(
                     /* Overlay stack — %-space SVG siblings inside `.msv-pane`,
-                       each inheriting the viewer's pan/zoom. S5 (#1809) adds
-                       its door-glyph layer here as one more sibling; nothing
-                       else in this component has to move for it. */
+                       each inheriting the viewer's pan/zoom. */
                     <>
+                      <DoorGlyphsOverlay doors={doorMarkers} />
                       {selected && (
                         <SnapshotRouteOverlay
                           snapshot={snapshot}
