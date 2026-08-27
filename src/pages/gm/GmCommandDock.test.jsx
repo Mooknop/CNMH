@@ -44,6 +44,14 @@ vi.mock('../../components/gm/DockEnemyPane', () => ({
     return <div data-testid="dock-enemy-pane" data-tone={tone}>{entry.name}</div>;
   },
 }));
+// #1808: the real pane drives the party-map relay (session + bridge protocol);
+// its own behaviour is covered in DockExplorationPane.test.jsx, so the page
+// test only asserts that exploration mode mounts it in place of the old stub.
+vi.mock('../../components/gm/DockExplorationPane', () => ({
+  default: function DummyDockExplorationPane() {
+    return <div data-testid="dock-exploration-pane">Exploration</div>;
+  },
+}));
 vi.mock('../../hooks/useAdvanceTurn', () => ({ useAdvanceTurn: vi.fn() }));
 vi.mock('../../components/gm/DockGmConsole', () => ({
   default: function DummyDockGmConsole({ pcEntries }) {
@@ -107,15 +115,16 @@ beforeEach(() => {
 });
 
 describe('GmCommandDock', () => {
-  it('stubs exploration mode', () => {
+  it('mounts the exploration pane in place of the old stub (#1808)', () => {
     usePlayMode.mockReturnValue({ mode: 'exploration' });
     useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
     renderDock();
-    // Both the top-bar kicker and the stub carry the mode name (#1556 S1).
+    // Both the top-bar kicker and the pane carry the mode name (#1556 S1).
     expect(screen.getAllByText('Exploration').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('dock-exploration-pane')).toBeInTheDocument();
     expect(
-      screen.getByText('Exploration controls arrive in a later slice.')
-    ).toBeInTheDocument();
+      screen.queryByText('Exploration controls arrive in a later slice.')
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId('encounter-skeleton')).not.toBeInTheDocument();
     expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
     // The GM console (and its toggle) and order strip are encounter-mode only.

@@ -25,7 +25,7 @@
 // snapshot image itself omits (`captureSceneSnapshot` already excludes
 // hidden tokens from the picture — a marker on top would be a location leak
 // worse than the name-in-a-list the chip list used to be).
-import { normalizedFromWorld } from './snapshotGeometry';
+import { normalizedFromWorld, cellFromWorldPoint, cellPolygonOnSnapshot } from './snapshotGeometry';
 
 const positiveInt = (value, fallback) =>
   Number.isInteger(value) && value >= 1 ? value : fallback;
@@ -106,6 +106,66 @@ export function buildTokenMarkers({ positions, order, snapshot } = {}) {
       height,
       center,
       footprint,
+    });
+  }
+  return markers;
+}
+
+/**
+ * Markers for the PARTY-framed capture's `tokens[]` (#1808, epic #1804 S4).
+ *
+ * The party ack is a different join from `buildTokenMarkers` above: it carries
+ * WORLD-SPACE token centres (`[{ moverId, x, y }]`) straight off the wire —
+ * not grid cells out of `positions` keyed by combat entryId — because
+ * exploration has no encounter and therefore no order to join against. The
+ * roster is the join target instead, so a marker can wear the PC's real name
+ * and accent colour.
+ *
+ * Output is intentionally the SAME shape `hitTestMarkers`
+ * (src/utils/markerHitTest.js) consumes — `center` + `footprint` — so the GM's
+ * tap resolves against exactly the geometry the overlay drew, the same "one
+ * source of truth for where a marker is" contract `buildTokenMarkers` keeps.
+ * The footprint is the token's own grid cell (1x1: the party ack carries no
+ * token size, and every PC in this campaign is Medium or smaller), which makes
+ * a tap ON a PC a direct hit and every other tap a destination.
+ *
+ * @param {Object} params
+ * @param {Array<{moverId:string,x:number,y:number}>} params.tokens - the ack's `tokens`
+ * @param {Object} params.snapshot - the snapdone payload ({capture, worldRect, gridSize})
+ * @param {Array} [params.characters] - roster docs, for name + accent-index lookup
+ * @param {(charId:string, index:number) => string|null} [params.accentFor] - per-PC accent
+ * @returns {Array<{moverId,charId,name,accent,world,cell,center,footprint}>}
+ */
+export function buildPartyMarkers({ tokens, snapshot, characters = [], accentFor = null } = {}) {
+  if (!Array.isArray(tokens) || !snapshot) return [];
+  const roster = Array.isArray(characters) ? characters : [];
+
+  const markers = [];
+  for (const token of tokens) {
+    const moverId = token?.moverId;
+    const x = Number(token?.x);
+    const y = Number(token?.y);
+    if (!moverId || !Number.isFinite(x) || !Number.isFinite(y)) continue;
+
+    const center = normalizedFromWorld({ x, y }, snapshot);
+    const cell = cellFromWorldPoint({ x, y }, snapshot.gridSize);
+    if (!center || !cell) continue; // ungeometrizable — nothing to draw or hit-test
+
+    // `moverId` is whatever the bridge resolves a mover by (resolveMoverId,
+    // foundry-bridge/movement.js) — for an actor-mapped PC that IS the roster
+    // charId, which is what makes this join a plain id match.
+    const index = roster.findIndex((c) => c.id === moverId);
+    const character = index >= 0 ? roster[index] : null;
+
+    markers.push({
+      moverId,
+      charId: character?.id ?? null,
+      name: character?.name ?? moverId,
+      accent: accentFor ? accentFor(moverId, index) : null,
+      world: { x, y },
+      cell,
+      center,
+      footprint: cellPolygonOnSnapshot(cell.col, cell.row, snapshot),
     });
   }
   return markers;

@@ -13,6 +13,7 @@ import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
+import DockExplorationPane from '../../components/gm/DockExplorationPane';
 import DockGmConsole from '../../components/gm/DockGmConsole';
 import DockOrderStrip from '../../components/gm/DockOrderStrip';
 import DockPcVitals from '../../components/gm/DockPcVitals';
@@ -31,7 +32,9 @@ import './GmCommandDock.css';
 // viewport pointer, and syncing it would need a new SANDBOX_WRITABLE_TYPES
 // entry for zero cross-client value.
 //
-// Exploration / Downtime are stubs until their slices land. Enemy turns render
+// Exploration mounts DockExplorationPane (#1808) — the party-framed map that
+// IS the GM's whole exploration control surface (tap a PC, tap a destination).
+// Downtime is still a stub until its slice lands. Enemy turns render
 // DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane, read-only until
 // the strike/cast rails (S3/S4) grow buttons on it.
 
@@ -305,11 +308,7 @@ const GmCommandDock = () => {
               sub="Downtime controls arrive in a later slice."
             />
           ) : (
-            <DockStub
-              icon="map"
-              title="Exploration"
-              sub="Exploration controls arrive in a later slice."
-            />
+            <DockExplorationPane />
           )}
         </div>
         {/* Side column (laptop-fit v2): party reactions with the GM console

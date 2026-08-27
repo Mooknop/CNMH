@@ -26,7 +26,12 @@ import {
 // `request({ moverId, radiusFeet })` (#1744 WS-3, protocol 16) asks for a
 // mover-centered capture instead of the GM's current viewport — both fields
 // optional and additive, so every existing caller's plain `request()` is
-// unaffected. The raw `ack` is also returned for callers that need to watch
+// unaffected. `request({ party: true })` (#1807, protocol 21) asks for the
+// party-framed capture instead, whose ack carries `tokens[]`; the protocol
+// floor for it is the CALLER's gate (see usePartyMapSurface), since `available`
+// here only promises the capture rail itself.
+//
+// The raw `ack` is also returned for callers that need to watch
 // the channel continuously rather than await a single correlated reply — the
 // bridge's unsolicited post-`movedone` broadcast (`trigger: 'movedone'`)
 // carries no request id this hook's promise can settle against.

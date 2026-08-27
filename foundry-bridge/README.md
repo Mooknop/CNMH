@@ -174,8 +174,10 @@ factories in `test/foundryMock.js`. Two layers:
   (`tokens` present, #1807) is recorded separately under the synthetic key
   `snapdone-party` (same recording flow — it's just a second recipe against the
   same `RELAY.SNAPDONE` emission) so the two acks' fixtures don't clobber each
-  other. Not yet consumed app-side — `src/test/relayFixtures.js` picks it up
-  when the app-side party-map slice lands.
+  other. Consumed app-side since #1808: `src/test/relayFixtures.js` registers it
+  under the synthetic key `snapdoneParty` and maps that back to
+  `RELAY.SNAPDONE` when pushing, so a re-record fails the party-map pane's
+  named tests too.
 - **Inbound relay contract tests** (`relayContractInbound.test.js`, #1749 S1
   follow-up) — the app→bridge mirror of the rail above, for the direction the
   outbound rail never covered. `relayContract.test.js` only ever recorded what

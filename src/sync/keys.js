@@ -7,7 +7,12 @@
 // (RELAY) + the README table; app-only types go in APP below. An ESLint rule
 // bans hand-written `cnmh_` literals in src/ (tests excepted), so every key
 // must come from this module.
-export { GLOBAL_ID, syncKey, globalKey } from '../../foundry-bridge/syncKeys.js';
+// PARTY_MAP_PROTOCOL (#1807) is a bridge-owned FEATURE FLOOR rather than a key,
+// but it lives in the same dependency-free bridge module for the same reason
+// the key builders do — so it re-exports through here too, keeping the
+// cross-package path in exactly one place. utils/snapshotRelay.js re-exports it
+// alongside the snapshot rail's other floors, which is where consumers read it.
+export { GLOBAL_ID, syncKey, globalKey, PARTY_MAP_PROTOCOL } from '../../foundry-bridge/syncKeys.js';
 import { RELAY as BRIDGE_RELAY } from '../../foundry-bridge/syncKeys.js';
 
 // #1736 S2 (app-only slice): the plan/confirm movement rail's relay pair.
