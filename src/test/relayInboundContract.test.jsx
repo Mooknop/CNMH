@@ -100,6 +100,11 @@ describe('inbound relay contract — app producers (#1749 S1 follow-up)', () => 
     });
   });
 
+  // The party-framed variant of this same channel (`{ party: true }`, #1807 /
+  // #1808's usePartyMapSurface) has no inbound fixture yet: adding one is only
+  // meaningful paired with a bridge-side recipe in relayContractInbound.test.js,
+  // so it waits for a bridge PR. Its emitted shape is asserted app-side in
+  // src/components/gm/DockExplorationPane.test.jsx meanwhile.
   describe(`${RELAY.SNAPREQ} — useMoverMapSurface (attacker-centered capture)`, () => {
     it('emits the same shape the fixture drives the bridge handler with', () => {
       const { session } = renderHookWithProviders(

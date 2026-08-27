@@ -1,0 +1,196 @@
+/* GM Command Dock — Exploration pane (#1808, epic #1804 S4).
+   Dock-scoped selectors, design tokens only, no page scroll: the pane owns its
+   own vertical space and the map column scrolls internally, same contract every
+   other dock panel keeps (see GmCommandDock.css). */
+
+.dock-exp {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--space-3);
+}
+
+.dock-exp-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.dock-exp-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.dock-exp-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+
+.dock-exp-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dock-exp-toggle-label {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+/* The body is a grid so S6 (#1810) can drop the roster strip in as a second
+   column — `grid-template-columns: minmax(0, 1fr) minmax(220px, 280px)` — with
+   no restructuring of the map column below it. */
+.dock-exp-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.dock-exp-map {
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-exp-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.dock-exp-note {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  font-size: 0.84rem;
+  color: var(--shell-text-secondary);
+  text-align: center;
+}
+
+.dock-exp-status {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-status--warn {
+  color: var(--ember-light);
+  font-weight: 600;
+}
+
+.dock-exp-distance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-distance strong {
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-btn {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dock-exp-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Movement toggle — the same `cnmh_exploremove_global` switch PlayModeControl
+   owns a copy of, restyled to the dock's 44px tap-target floor. */
+.dock-exp-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.dock-exp-switch-track {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 1px solid var(--shell-border-strong);
+  background: color-mix(in srgb, var(--shell-text-primary) 14%, transparent);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dock-exp-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--shell-text-secondary);
+  transition: left 0.15s, background 0.15s;
+}
+
+.dock-exp-switch--on .dock-exp-switch-track {
+  background: var(--verdant-mid);
+  border-color: var(--verdant-mid);
+}
+
+.dock-exp-switch--on .dock-exp-switch-knob {
+  left: 22px;
+  background: var(--shell-text-primary);
+}
+
+.dock-exp-switch:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}

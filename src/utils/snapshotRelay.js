@@ -1,4 +1,4 @@
-import { RELAY, globalKey } from '../sync/keys';
+import { RELAY, globalKey, PARTY_MAP_PROTOCOL } from '../sync/keys';
 
 // Scene-snapshot + map-ping relay contract (#1573 B1/B2).
 //
@@ -28,6 +28,17 @@ import { RELAY, globalKey } from '../sync/keys';
 // no request `id` a pending promise can correlate against, so a consumer
 // that wants to adopt it must watch the raw synced value by `moverId`
 // instead (see `useMoverMapSurface`).
+//
+// `party: true` (#1807, protocol 21) is the third capture shape: the world
+// rect framing EVERY actor-mapped PC token on the rendered scene, plus a
+// margin. Its ack adds `tokens: [{ moverId, x, y }]` — the world-space centre
+// of each token in frame — and carries `moverId: null`, which is exactly how a
+// consumer tells the three shapes apart: non-null `moverId` = mover-centered,
+// null + `tokens` = party-framed, null with no `tokens` = the legacy GM view.
+// While the play mode is 'exploration' with no combat active the bridge's
+// post-`movedone` broadcast is party-framed too, so a party surface adopts any
+// later `tokens`-bearing ack rather than only its own correlated reply (see
+// `usePartyMapSurface`).
 
 export const SNAPREQ_KEY = globalKey(RELAY.SNAPREQ);
 export const SNAPDONE_KEY = globalKey(RELAY.SNAPDONE);
@@ -42,6 +53,12 @@ export const SNAP_PROTOCOL = 11;
 export const PING_PROTOCOL = 12;
 export const TEMPLATE_PROTOCOL = 13;
 
+// The party-framed capture floor (#1807) is DEFINED bridge-side
+// (foundry-bridge/syncKeys.js, alongside PROTOCOL_VERSION) because the bridge
+// owns which bump grew the field; re-exported here so every snapshot-rail
+// consumer still reads its protocol floors from this one module.
+export { PARTY_MAP_PROTOCOL };
+
 // Capture + upload + ack is slower than a dice round-trip (a PIXI extract plus
 // an R2 PUT), so this is deliberately longer than ROLL_TIMEOUT_MS.
 export const SNAP_TIMEOUT_MS = 20_000;
@@ -55,13 +72,16 @@ export const MOVE_SNAP_TIMEOUT_MS = 8_000;
 
 let counter = 0;
 
-// `moverId` + `radiusFeet` (#1744 WS-2, protocol 16) are additive/optional —
-// omitting both sends byte-identical requests to every pre-#1744 consumer
-// (Ping the Map, area-spell placement).
-export const buildSnapshotRequest = ({ moverId, radiusFeet } = {}) => ({
+// `moverId` + `radiusFeet` (#1744 WS-2, protocol 16) and `party` (#1807,
+// protocol 21) are additive/optional — omitting them all sends byte-identical
+// requests to every pre-#1744 consumer (Ping the Map, area-spell placement).
+// `party` is only ever sent as `true`: a falsy value omits the field entirely
+// rather than asking an older bridge to reason about `party: false`.
+export const buildSnapshotRequest = ({ moverId, radiusFeet, party } = {}) => ({
   id: `snap-${Date.now()}-${(counter += 1)}`,
   ...(moverId ? { moverId } : {}),
   ...(radiusFeet != null ? { radiusFeet } : {}),
+  ...(party ? { party: true } : {}),
   ts: Date.now(),
 });
 
