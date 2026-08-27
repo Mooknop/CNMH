@@ -30,7 +30,7 @@ export function usePlayMode() {
   const { encounter } = useEncounter();
   const { connected, foundryConnected } = useSession();
   const { localMode, setLocalMode } = usePlayModeOverride();
-  const [gmMode, setGmMode] = useSyncedState(globalKey(APP.PLAYMODE), 'exploration');
+  const [gmMode, setGmMode] = useSyncedState(globalKey(RELAY.PLAYMODE), 'exploration');
   const [moveEnabled, setMoveEnabled] = useSyncedState(globalKey(RELAY.EXPLOREMOVE), false);
   const [moveOverride, setMoveOverride] = useSyncedState(globalKey(APP.EXPLOREOVERRIDE), false);
 

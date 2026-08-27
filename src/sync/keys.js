@@ -77,7 +77,6 @@ export const APP = Object.freeze({
   PERSISTENT: 'persistent',
   PINNEDROOM: 'pinnedroom',
   PLAYING: 'playing',
-  PLAYMODE: 'playmode',
   REACTORS: 'reactors',
   REACTPROMPT: 'reactprompt',
   READIED: 'readied',

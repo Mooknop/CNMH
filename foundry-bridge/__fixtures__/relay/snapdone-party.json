@@ -1,0 +1,41 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "snap-party-1",
+    "ok": true,
+    "url": "/api/images/tok_party.webp",
+    "capture": {
+      "a": 0.4864864864864865,
+      "b": 0,
+      "c": 0,
+      "d": 0.4864864864864865,
+      "tx": 0,
+      "ty": 0,
+      "screenW": 900,
+      "screenH": 705,
+      "sceneId": "scene-1"
+    },
+    "worldRect": {
+      "x1": 0,
+      "y1": 0,
+      "x2": 1850,
+      "y2": 1449.1666666666665
+    },
+    "gridSize": 100,
+    "tokens": [
+      {
+        "moverId": "Pellias",
+        "x": 550,
+        "y": 550
+      },
+      {
+        "moverId": "Ashka",
+        "x": 950,
+        "y": 550
+      }
+    ],
+    "moverId": null,
+    "trigger": "request",
+    "ts": 1700000000000
+  }
+}

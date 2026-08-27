@@ -26,7 +26,7 @@ describe('sync-key registry', () => {
 
   it('globalKey uses the shared global id', () => {
     expect(globalKey(RELAY.ENCOUNTER)).toBe(`cnmh_encounter_${GLOBAL_ID}`);
-    expect(globalKey(APP.PLAYMODE)).toBe('cnmh_playmode_global');
+    expect(globalKey(RELAY.PLAYMODE)).toBe('cnmh_playmode_global');
     expect(GLOBAL_ID).toBe('global');
   });
 
