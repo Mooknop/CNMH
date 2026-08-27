@@ -153,6 +153,12 @@ describe('ExplorationMove', () => {
     expect(screen.queryByRole('button', { name: 'Move Token' })).not.toBeInTheDocument();
   });
 
+  // #617/#1806: exploration movement always ignores creature occupancy.
+  it('always passes ignoreOccupancy: true to useTokenMovement', () => {
+    render(<ExplorationMove charId="char-1" />);
+    expect(mockMovement.lastOpts).toMatchObject({ ignoreOccupancy: true });
+  });
+
   it('does not auto-request when not in exploration mode', () => {
     mockPlayMode.mode = 'encounter';
     render(<ExplorationMove charId="char-1" />);

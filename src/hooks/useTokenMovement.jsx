@@ -25,10 +25,16 @@ import { RELAY, syncKey } from '../sync/keys';
 // fresh opts are loading (exploration chained moves).
 //
 // Props:
-//   charId      — character making the move
-//   onMoveDone  — called with the movedone payload when Foundry confirms the move
+//   charId          — character making the move
+//   onMoveDone      — called with the movedone payload when Foundry confirms the move
+//   ignoreOccupancy — (#617/#1806) exploration-mode surfaces pass true so every
+//                     outgoing movereq/moveconfirm carries ignoreOccupancy:
+//                     true, telling the bridge to skip #456's creature-
+//                     occupancy classification entirely (walls/doors still
+//                     block). Omitted/false reproduces prior behavior
+//                     byte-for-byte — encounter callers never pass it.
 
-export function useTokenMovement(charId, { onMoveDone } = {}) {
+export function useTokenMovement(charId, { onMoveDone, ignoreOccupancy = false } = {}) {
   const { sendUpdate } = useSession();
   const [stage, setStage] = useState(null);
   const [pickerOpts, setPickerOpts] = useState(null);
@@ -89,7 +95,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     pendingNextOpts.current = null; // a fresh probe supersedes any stale piggyback
     setPendingMoveType(moveType);
     setStage('awaiting-opts');
-    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts });
+    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts, ...(ignoreOccupancy ? { ignoreOccupancy: true } : {}) });
   };
 
   // Keeps the picker visible while refreshing for a new origin (exploration
@@ -110,7 +116,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     sessionTs.current = ts;
     setIsRefreshing(true);
     setStage('awaiting-opts');
-    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts });
+    sendUpdate(charId, RELAY.MOVEREQ, { moveType, ts, ...(ignoreOccupancy ? { ignoreOccupancy: true } : {}) });
   };
 
   // Sends the moveconfirm message. Callers may wrap this to add side-effects
@@ -123,6 +129,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
       moveType: pendingMoveType,
       actionCost,
       ts: sessionTs.current,
+      ...(ignoreOccupancy ? { ignoreOccupancy: true } : {}),
     });
     setStage('awaiting-done');
   };
@@ -165,6 +172,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
       moveType: pendingMoveType,
       actionCost,
       ts: sessionTs.current,
+      ...(ignoreOccupancy ? { ignoreOccupancy: true } : {}),
     });
     setStage('awaiting-done');
   };

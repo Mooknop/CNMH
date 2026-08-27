@@ -3,6 +3,7 @@ import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useMinionActors } from '../../hooks/useMinionActors';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
+import { usePlayMode } from '../../hooks/usePlayMode';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { minionTurnId } from '../../utils/minionUtils';
@@ -52,6 +53,15 @@ import './MinionMove.css';
 const MinionMove = ({ ownerId, role }) => {
   const { linkFor } = useMinionActors();
   const link = linkFor(ownerId, role);
+
+  // Minions move in encounters (charged actions) AND in exploration (free,
+  // GM-toggled). Occupancy only matters tactically (#456) — outside combat,
+  // #617/#1806 says walls/doors are the only thing that should block, same
+  // as ExplorationMove. mode comes from usePlayMode rather than the
+  // encounterMode below (which also checks combat phase) because "is this
+  // exploration" is exactly what usePlayMode already derives.
+  const { mode: playMode } = usePlayMode();
+  const ignoreOccupancy = playMode === 'exploration';
 
   const { encounter } = useEncounter();
   const { turnState, spendActions, refundActions } = useTurnState(minionTurnId(ownerId, role));
@@ -167,7 +177,7 @@ const MinionMove = ({ ownerId, role }) => {
     planMove,
     confirmPlannedMove,
     cancelPlan,
-  } = useTokenMovement(moverId, { onMoveDone: handleMoveDone });
+  } = useTokenMovement(moverId, { onMoveDone: handleMoveDone, ignoreOccupancy });
 
   requestMoveRefreshRef.current = requestMoveRefresh;
   cancelMoveRef.current = cancelMove;

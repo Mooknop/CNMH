@@ -79,7 +79,7 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
     planMove,
     confirmPlannedMove,
     cancelPlan,
-  } = useTokenMovement(charId, { onMoveDone: handleMoveDone });
+  } = useTokenMovement(charId, { onMoveDone: handleMoveDone, ignoreOccupancy: true });
 
   requestMoveRefreshRef.current = requestMoveRefresh;
 
