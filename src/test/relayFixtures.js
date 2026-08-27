@@ -13,6 +13,7 @@ import castdone from '../../foundry-bridge/__fixtures__/relay/castdone.json';
 import conditions from '../../foundry-bridge/__fixtures__/relay/conditions.json';
 import dmgdone from '../../foundry-bridge/__fixtures__/relay/dmgdone.json';
 import dooropts from '../../foundry-bridge/__fixtures__/relay/dooropts.json';
+import dooroptsGlobal from '../../foundry-bridge/__fixtures__/relay/dooropts_global.json';
 import encounter from '../../foundry-bridge/__fixtures__/relay/encounter.json';
 import exploremove from '../../foundry-bridge/__fixtures__/relay/exploremove.json';
 import flanked from '../../foundry-bridge/__fixtures__/relay/flanked.json';
@@ -42,18 +43,21 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 // gets one fixture per shape, which means the key can no longer BE the channel
 // token (they'd clobber each other). `snapdoneParty` is the party-framed
 // `snapdone` ack (#1807 — `tokens[]` present, `moverId: null`), distinct from
-// the legacy GM-view `snapdone.json`; SYNTHETIC_CHANNELS below maps it back to
-// the channel it actually rides on so `pushRelayFixture` still lands it on the
-// right key.
+// the legacy GM-view `snapdone.json`; `dooroptsGlobal` is the GLOBAL-id shape
+// of `dooropts` (#1805/#1809 — EVERY door on the scene, `secret?` present),
+// distinct from the per-character proximity-filtered `dooropts.json`.
+// SYNTHETIC_CHANNELS below maps each back to the channel it actually rides on
+// so `pushRelayFixture` still lands it on the right key.
 export const relayFixtures = {
-  actorfeed, adjacency, auramembers, castdone, conditions, dmgdone, dooropts, encounter, exploremove,
-  flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
+  actorfeed, adjacency, auramembers, castdone, conditions, dmgdone, dooropts, dooroptsGlobal, encounter,
+  exploremove, flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
   movedone, moveopts, moveplanned, pathpreview, pathpreviewgm, positions, rolldone, roster,
   savedone, snapdoneParty, strikedone, summonpool,
 };
 
 const SYNTHETIC_CHANNELS = {
   snapdoneParty: RELAY.SNAPDONE,
+  dooroptsGlobal: RELAY.DOOROPTS,
 };
 
 // Push a fixture into a test session bus as if the bridge sent it.

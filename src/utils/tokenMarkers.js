@@ -171,4 +171,56 @@ export function buildPartyMarkers({ tokens, snapshot, characters = [], accentFor
   return markers;
 }
 
+/**
+ * Door markers for the GM dock's door-glyph overlay (#1809, epic #1804 S5).
+ *
+ * Same contract as `buildPartyMarkers`: the derivation both `DoorGlyphsOverlay`
+ * (rendering) and the pane's tap handler (`hitTestMarkers`) build on, so the
+ * glyph the GM sees and the door their tap resolves to can never disagree.
+ * `cnmh_dooropts_global` carries EVERY door on the rendered scene, world-space
+ * — this filters that list down to the ones inside the captured frame
+ * (`snapshot.worldRect`) and projects the survivors forward, same
+ * `normalizedFromWorld` math `buildPartyMarkers` uses for tokens.
+ *
+ * Door markers carry a `center` but deliberately no `footprint` — a door is a
+ * point on a wall, not a token's grid square — so `hitTestMarkers` resolves a
+ * tap against one purely by its nearest-within-tolerance pass, the same snap
+ * radius a bare tap near (but not on) a PC marker gets.
+ *
+ * @param {Object} params
+ * @param {Array<{wallId:string,state:number,x:number,y:number,secret?:boolean}>} params.doors - the dooropts ack's `doors`
+ * @param {Object} params.snapshot - the snapdone payload ({ capture, worldRect, gridSize })
+ * @returns {Array<{wallId,state,secret,world:{x,y},center:{nx,ny}}>}
+ */
+export function buildDoorMarkers({ doors, snapshot } = {}) {
+  if (!Array.isArray(doors) || !snapshot?.worldRect) return [];
+
+  const { x1 = 0, y1 = 0, x2 = 0, y2 = 0 } = snapshot.worldRect;
+  const xMin = Math.min(x1, x2);
+  const xMax = Math.max(x1, x2);
+  const yMin = Math.min(y1, y2);
+  const yMax = Math.max(y1, y2);
+
+  const markers = [];
+  for (const door of doors) {
+    const wallId = door?.wallId;
+    const x = Number(door?.x);
+    const y = Number(door?.y);
+    if (!wallId || !Number.isFinite(x) || !Number.isFinite(y)) continue;
+    if (x < xMin || x > xMax || y < yMin || y > yMax) continue; // outside the captured frame
+
+    const center = normalizedFromWorld({ x, y }, snapshot);
+    if (!center) continue; // ungeometrizable — nothing to draw or hit-test
+
+    markers.push({
+      wallId,
+      state: door.state,
+      secret: !!door.secret,
+      world: { x, y },
+      center,
+    });
+  }
+  return markers;
+}
+
 export default buildTokenMarkers;
