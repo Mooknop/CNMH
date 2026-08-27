@@ -153,6 +153,23 @@ describe('MinionMove', () => {
     expect(h.lastMovementId).toBe('Ashka-companion');
   });
 
+  // #617/#1806: minion exploration movement ignores creature occupancy, same
+  // as ExplorationMove — but ONLY out of combat, since minions also move
+  // in-encounter where the #456 occupancy rules still apply.
+  it('passes ignoreOccupancy: true out of encounter (exploration)', () => {
+    linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+    h.encounter = { active: false, phase: 'idle' };
+    render(<MinionMove ownerId="Ashka" role="companion" />);
+    expect(h.lastMoveOpts).toMatchObject({ ignoreOccupancy: true });
+  });
+
+  it('passes ignoreOccupancy: false while an encounter is active', () => {
+    linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+    h.encounter = { active: true, phase: 'in-progress' };
+    render(<MinionMove ownerId="Ashka" role="companion" />);
+    expect(h.lastMoveOpts).toMatchObject({ ignoreOccupancy: false });
+  });
+
   it('opens the pad on the Move button when linked + on scene', () => {
     linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
     render(<MinionMove ownerId="Ashka" role="companion" />);

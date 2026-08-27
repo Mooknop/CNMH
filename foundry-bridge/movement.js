@@ -18,7 +18,13 @@
 // never sends `moveplan` gets byte-identical stepper behaviour.
 //
 // Protocol (all modeled as cnmh_* keys so the session relay relays them):
-//   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts }
+//   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts, ignoreOccupancy? }
+//                  ignoreOccupancy (#617/#1806): exploration-mode surfaces set
+//                    this true so the #456 creature-occupancy rules (below)
+//                    are skipped entirely — only walls/doors block. Absent
+//                    (undefined/false) reproduces Encounter-mode behavior
+//                    byte-for-byte. Also honored on cnmh_moveconfirm_<charId>
+//                    so the movedone piggyback (nextOpts) stays consistent.
 //   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, speed, originOccupied }
 //                  reachable[] entries: { col, row, feet, terrain, passThrough? }
 //                    passThrough: true → an ally's square; steppable to move
@@ -203,7 +209,7 @@ export async function handleMoveRequest(charId, value) {
   const token = resolveToken(charId);
   if (!token) return;
 
-  const options = await getStepNeighbors(token);
+  const options = await getStepNeighbors(token, undefined, Boolean(value?.ignoreOccupancy));
   if (!options) return;
 
   // Echo the request ts so the app can correlate this response to its request
@@ -311,8 +317,10 @@ async function confirmWaypointMove(charId, token, value) {
   );
 
   // Same piggyback as the stepper (#451) — the app re-opens the picker at the
-  // landing without another movereq→moveopts round-trip.
-  const nextOpts = await getStepNeighbors(token, landing);
+  // landing without another movereq→moveopts round-trip. ignoreOccupancy
+  // (#617/#1806) rides the same confirm payload as the stepper flow so the
+  // piggybacked opts stay consistent with the move that produced them.
+  const nextOpts = await getStepNeighbors(token, landing, Boolean(value?.ignoreOccupancy));
 
   _sendUpdate?.(charId, RELAY.MOVEDONE, {
     newPosition: landing,
@@ -363,9 +371,11 @@ export async function handleMoveConfirm(charId, value) {
   // Piggyback the landing cell's step options so a chained move doesn't pay
   // another movereq→moveopts round-trip (#451). Computed from the reported
   // landing, not by re-reading the token — token.x/y lag the animated move.
+  // ignoreOccupancy (#617/#1806) rides the moveconfirm payload so the
+  // piggybacked opts match the request that started this move.
   const nextOpts = await getStepNeighbors(token, {
     col, row, x: landed.x, y: landed.y,
-  });
+  }, Boolean(value?.ignoreOccupancy));
 
   _sendUpdate?.(charId, RELAY.MOVEDONE, {
     newPosition: { col, row, x: landed.x, y: landed.y },
@@ -386,14 +396,20 @@ export async function handleMoveConfirm(charId, value) {
 // `origin` (optional) overrides where the probe is centred — { col, row, x, y }
 // with x,y the cell's TOP-LEFT pixel. Used to probe the destination right after
 // a move (#451) without re-reading token.x/y, which lag the animated update.
-async function getStepNeighbors(token, origin) {
+// `ignoreOccupancy` (#617/#1806) is exploration mode's escape hatch: PF2e
+// occupancy rules (#456 — ally pass-through, enemy blocked, originOccupied
+// gating) only apply tactically in Encounter mode. When set, every neighbour
+// classifies purely on wall collision — no creature ever blocks, pass-throughs,
+// or occupied-origin. Absent (undefined/false) reproduces prior behavior
+// byte-for-byte, which is what every encounter-mode caller still sends.
+async function getStepNeighbors(token, origin, ignoreOccupancy = false) {
   const gridSize = getGridSize();
   const speed    = getSpeed(token.actor);
 
   const tokenPos = origin ?? getTokenGridPosition(token);
   const originCol = tokenPos.col;
   const originRow = tokenPos.row;
-  const occupied  = occupiedCells(token, gridSize);
+  const occupied  = ignoreOccupancy ? null : occupiedCells(token, gridSize);
   const reachable = [];
   const blocked   = [];
 
@@ -425,10 +441,12 @@ async function getStepNeighbors(token, origin) {
         continue;
       }
 
-      // Occupancy (#456). You may move *through* an ally's square but can't end
-      // there; enemies stay blocked (Tumble Through / size rules are out of
-      // scope — see #614). kind is 'ally' or 'enemy' so the picker colors it.
-      const occupant = occupied.get(`${col},${row}`);
+      // Occupancy (#456), skipped entirely in exploration mode (#617/#1806 —
+      // occupied is null when ignoreOccupancy is set). You may move *through*
+      // an ally's square but can't end there; enemies stay blocked (Tumble
+      // Through / size rules are out of scope — see #614). kind is 'ally' or
+      // 'enemy' so the picker colors it.
+      const occupant = occupied?.get(`${col},${row}`);
       if (occupant === 'enemy') {
         blocked.push({ col, row, kind: 'enemy' });
         continue;
@@ -447,8 +465,9 @@ async function getStepNeighbors(token, origin) {
 
   // The move may not END on an ally; flag it when the token already shares one
   // of its footprint cells with another creature (it stepped through), so the
-  // app can disable "Done" until the player steps clear.
-  const originOccupied = Array.from({ length: tW }).some((_, c) =>
+  // app can disable "Done" until the player steps clear. Always false in
+  // exploration mode (#617/#1806) — occupied is null there.
+  const originOccupied = occupied != null && Array.from({ length: tW }).some((_, c) =>
     Array.from({ length: tH }).some((_, r) =>
       occupied.has(`${originCol + c},${originRow + r}`)
     )

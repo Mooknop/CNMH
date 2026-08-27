@@ -147,6 +147,69 @@ describe('handleMoveRequest', () => {
   });
 });
 
+// Exploration-mode movement ignores creature occupancy (#617/#1806): the
+// movereq carries ignoreOccupancy: true and every #456 classification (ally
+// pass-through, enemy blocked, originOccupied) is skipped — only walls/doors
+// still block. Absent the flag, behavior is byte-for-byte the #456 suite above.
+describe('handleMoveRequest with ignoreOccupancy (#617/#1806)', () => {
+  test("an enemy's square is fully reachable, not blocked", async () => {
+    const enemy = makeToken({ id: 'tok-goblin', x: 600, y: 500, disposition: -1 }); // grid (6,5)
+    setupPellias({ allies: [enemy] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1, ignoreOccupancy: true });
+    const { reachable, blocked } = send.mock.calls[0][2];
+
+    expect(blocked.find((b) => b.col === 6 && b.row === 5)).toBeUndefined();
+    const cell = reachable.find((s) => s.col === 6 && s.row === 5);
+    expect(cell).toBeDefined();
+    expect(cell.passThrough).toBeUndefined();
+    expect(reachable).toHaveLength(8);
+    expect(blocked).toHaveLength(0);
+  });
+
+  test("an ally's square is fully reachable, without the passThrough flag", async () => {
+    const ally = makeToken({ id: 'tok-ally', x: 600, y: 500, disposition: 1 }); // grid (6,5)
+    setupPellias({ allies: [ally] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1, ignoreOccupancy: true });
+    const { reachable, blocked } = send.mock.calls[0][2];
+
+    expect(blocked).toHaveLength(0);
+    const cell = reachable.find((s) => s.col === 6 && s.row === 5);
+    expect(cell).toMatchObject({ col: 6, row: 5 });
+    expect(cell.passThrough).toBeUndefined();
+  });
+
+  test('originOccupied is false even while sharing a cell with an ally', async () => {
+    // Same setup as the #456 originOccupied-true test, but with the flag set.
+    const ally = makeToken({ id: 'tok-ally', x: 500, y: 500, disposition: 1 }); // grid (5,5)
+    setupPellias({ allies: [ally] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1, ignoreOccupancy: true });
+    expect(send.mock.calls[0][2].originOccupied).toBe(false);
+  });
+
+  test('walls still block — ignoreOccupancy only lifts creature occupancy', async () => {
+    setupPellias();
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      dest.x === 650 && dest.y === 550;
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1, ignoreOccupancy: true });
+    const { reachable, blocked } = send.mock.calls[0][2];
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'wall' });
+    expect(reachable).toHaveLength(7);
+  });
+
+  test('absent flag reproduces #456 behavior byte-for-byte', async () => {
+    const enemy = makeToken({ id: 'tok-goblin', x: 600, y: 500, disposition: -1 });
+    setupPellias({ allies: [enemy] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    const { blocked } = send.mock.calls[0][2];
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'enemy' });
+  });
+});
+
 describe('handleMoveConfirm', () => {
   test('moves the token (echo-tagged) and reports the new position + feet', async () => {
     const { token } = setupPellias();
@@ -205,6 +268,23 @@ describe('handleMoveConfirm', () => {
     await handleMoveConfirm('Nobody', { destination: { col: 6, row: 5 }, ts: 1 });
     expect(token.document.update).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
+  });
+
+  test('ignoreOccupancy on the confirm carries into the piggybacked nextOpts (#617/#1806)', async () => {
+    // Enemy sits at (7,5) — the east neighbour of the (6,5) landing cell.
+    const enemy = makeToken({ id: 'tok-goblin', x: 700, y: 500, disposition: -1 });
+    setupPellias({ allies: [enemy] });
+
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 1, ignoreOccupancy: true,
+    });
+
+    const { nextOpts } = send.mock.calls[0][2];
+    expect(nextOpts.blocked.find((b) => b.col === 7 && b.row === 5)).toBeUndefined();
+    const cell = nextOpts.reachable.find((s) => s.col === 7 && s.row === 5);
+    expect(cell).toBeDefined();
+    expect(cell.passThrough).toBeUndefined();
+    expect(nextOpts.originOccupied).toBe(false);
   });
 });
 
@@ -444,6 +524,28 @@ describe('handleMoveConfirm with waypoints (#1736 S1)', () => {
     );
     expect(token.findMovementPath).not.toHaveBeenCalled();
     expect(send.mock.calls[0][2].newPosition).toEqual({ col: 6, row: 5, x: 600, y: 500 });
+  });
+
+  test('ignoreOccupancy on a waypoint confirm carries into the piggybacked nextOpts (#617/#1806)', async () => {
+    // Enemy sits at (9,5) — the east neighbour of the (8,5) landing cell.
+    const enemy = makeToken({ id: 'tok-goblin', x: 900, y: 500, disposition: -1 });
+    const { token } = setupPellias({ allies: [enemy] });
+    global.game.release = { generation: 14 };
+    equipV14Movement(token);
+
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 8, row: 5 },
+      waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }],
+      moveType: 'stride',
+      ts: 61,
+      ignoreOccupancy: true,
+    });
+
+    const { nextOpts } = send.mock.calls[0][2];
+    expect(nextOpts.blocked.find((b) => b.col === 9 && b.row === 5)).toBeUndefined();
+    const cell = nextOpts.reachable.find((s) => s.col === 9 && s.row === 5);
+    expect(cell).toBeDefined();
+    expect(cell.passThrough).toBeUndefined();
   });
 });
 

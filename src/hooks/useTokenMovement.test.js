@@ -183,6 +183,74 @@ describe('useTokenMovement', () => {
   });
 });
 
+// #617/#1806: exploration-mode surfaces pass ignoreOccupancy so the bridge
+// skips the #456 creature-occupancy rules entirely. Additive — omitted (the
+// default) must reproduce every test above byte-for-byte.
+describe('ignoreOccupancy option (#617/#1806)', () => {
+  it('omitted → movereq and moveconfirm carry no ignoreOccupancy field', () => {
+    const { result } = setup(); // no ignoreOccupancy passed
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    expect(mockSendUpdate.mock.calls[0][2]).not.toHaveProperty('ignoreOccupancy');
+
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+    act(() => result.current.confirmMove({ col: 6, row: 5 }));
+    const confirmCall = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveconfirm');
+    expect(confirmCall[2]).not.toHaveProperty('ignoreOccupancy');
+  });
+
+  it('true → requestMove sends movereq with ignoreOccupancy: true', () => {
+    const { result } = setup({ ignoreOccupancy: true });
+    act(() => result.current.requestMove('stride'));
+    expect(mockSendUpdate).toHaveBeenCalledWith('char-1', 'movereq', expect.objectContaining({ ignoreOccupancy: true }));
+  });
+
+  it('true → requestMoveRefresh (round-trip fallback) sends movereq with ignoreOccupancy: true', () => {
+    let tsCounter = 4000;
+    vi.spyOn(Date, 'now').mockImplementation(() => tsCounter++);
+    const { result } = setup({ ignoreOccupancy: true });
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.requestMoveRefresh('stride'));
+
+    expect(mockSendUpdate).toHaveBeenLastCalledWith('char-1', 'movereq', expect.objectContaining({ ignoreOccupancy: true }));
+    Date.now.mockRestore();
+  });
+
+  it('true → confirmMove sends moveconfirm with ignoreOccupancy: true', () => {
+    const { result } = setup({ ignoreOccupancy: true });
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.confirmMove({ col: 6, row: 5 }));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('char-1', 'moveconfirm', expect.objectContaining({
+      destination: { col: 6, row: 5 }, ignoreOccupancy: true,
+    }));
+  });
+
+  it('true → confirmPlannedMove sends moveconfirm with ignoreOccupancy: true', () => {
+    const { result } = setup({ ignoreOccupancy: true });
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.planMove([{ col: 6, row: 5 }]));
+    const planTs = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveplan')[2].ts;
+    const path = [{ col: 6, row: 5, x: 600, y: 500 }];
+    pushMovePlanned({ path, costFeet: 5, clipped: false, reqTs: planTs });
+
+    act(() => result.current.confirmPlannedMove(0));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('char-1', 'moveconfirm', expect.objectContaining({
+      waypoints: path, ignoreOccupancy: true,
+    }));
+  });
+});
+
 // #1736 S2: the plan/confirm rail's additive stages. Every test above must
 // keep passing unchanged — these only exercise the new planMove /
 // confirmPlannedMove / cancelPlan surface.
