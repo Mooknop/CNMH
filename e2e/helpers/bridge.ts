@@ -25,6 +25,8 @@
  *     MAP_TARGET_PROTOCOL / DIRECTIONAL_AREA_PROTOCOL → src/utils/movement.js
  *   - AURA_PROTOCOL                           → src/utils/auraRelay.js
  *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
+ *   - SCENE_DOORS_PROTOCOL                    → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js)
+ *   - PARTY_MAP_PROTOCOL                      → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js, src/utils/snapshotRelay.js)
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -147,6 +149,25 @@ export const DIRECTIONAL_AREA_PROTOCOL = 18;
  *  impulse gating exactly as before, but nothing ever reaches the bridge, and
  *  `useAuraMembers` never reports membership as `known`. */
 export const AURA_PROTOCOL = 19;
+
+// ── foundry-bridge/syncKeys.js (GM Command Dock exploration pane, #1804) ────
+
+/** The bridge protocol that taught the relay the GLOBAL door feed (#1805):
+ *  `cnmh_dooropts_global` carries EVERY door on the rendered scene (not just
+ *  a per-character proximity-filtered list). `useSceneDoors` (the dock's
+ *  door-glyph overlay, #1809) reads `doorOpts` directly with no per-request
+ *  correlation, so seeding `cnmh_dooropts_global` in the initial mockSession
+ *  seed is enough — no `doorreq` round-trip needs to be answered. */
+export const SCENE_DOORS_PROTOCOL = 20;
+
+/** The bridge protocol that taught the relay the PARTY-framed snapshot
+ *  (#1807): `cnmh_snapreq_global` accepts `{ party: true }` and the ack
+ *  carries `tokens: [{ moverId, x, y }]` with `moverId: null` at the top
+ *  level — the shape `usePartyMapSurface` (the GM dock's exploration pane,
+ *  #1808) adopts. Below this floor — or with no hello at all — the pane
+ *  shows its "needs the Foundry bridge" note instead of a map; there is
+ *  deliberately no abstract-grid fallback (epic #1804 ruling). */
+export const PARTY_MAP_PROTOCOL = 21;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 

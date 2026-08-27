@@ -245,3 +245,39 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── time control wrapper (#1811) ─────────────────────────────── */
+/* ExplorationTimeControl was styled for PlayModeControl's much wider
+   `.pmc-context` column; these overrides are scoped under `.dock-exp-time`
+   so they only apply to THIS mount, never PlayModeControl's own — the
+   shared .pmc-* rules in PlayModeControl.css are untouched. */
+
+.dock-exp-time {
+  flex: none;
+  min-width: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+
+.dock-exp-time .pmc-explore-time {
+  min-width: 0;
+}
+
+.dock-exp-time .pmc-downtime-quick,
+.dock-exp-time .pmc-downtime-custom,
+.dock-exp-time .pmc-explore-suggestion {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.dock-exp-time .pmc-downtime-input {
+  min-width: 0;
+  flex: 1 1 56px;
+}
+
+/* Dock tap-target floor (epic polish item) — PlayModeControl's chips and
+   buttons don't carry a min-height because that page has room to spare. */
+.dock-exp-time .pmc-tchip,
+.dock-exp-time .pmc-btn {
+  min-height: 44px;
+}

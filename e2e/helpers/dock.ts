@@ -87,6 +87,30 @@ export const gotoFoeKitDock = async (page: Page) => {
   return pane;
 };
 
+/**
+ * Land on the dock with the exploration pane up (#1808/#1811, epic #1804
+ * S4-S7). The pane's own heading is the PANE-only element — unlike the
+ * encounter/enemy gates above, "in exploration" is the dock's DEFAULT mode
+ * (no active encounter, GM-set mode not 'downtime'), so it can render before
+ * `cnmh_encounter_global`'s FULL_STATE replay even lands; waiting on it alone
+ * proves the pane mounted, not that any bridge-derived state (bridgehello,
+ * exploremove, dooropts) has hydrated yet.
+ *
+ * Callers that then drive the map or door glyphs need a SECOND, feature-
+ * specific gate for that: the rendered `<img>` ("Battlefield snapshot") once
+ * a party-shaped snapdone has been adopted, or a roster chip
+ * (`dock-exp-chip-<charId>`) for roster-only interactions that don't touch
+ * the bridge at all. Mirrors `gotoNonPcDock`'s two-gate shape for the same
+ * reason: one element proves the pane is there, a second proves the specific
+ * state under test has arrived.
+ */
+export const gotoExplorationDock = async (page: Page) => {
+  await page.goto('/gm/dock');
+  await expect(page.getByRole('heading', { name: 'Party map' })).toBeVisible({
+    timeout: HYDRATE_TIMEOUT,
+  });
+};
+
 // ── Seed builders ────────────────────────────────────────────────────────────
 
 /**

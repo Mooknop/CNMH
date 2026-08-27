@@ -12,6 +12,7 @@ import { getCharacterColor } from '../../utils/CharacterUtils';
 import { formatSpeedBreakdown } from '../../utils/speed';
 import { monogram } from '../encounter/commandsheet/Dossier';
 import { APP, syncKey, globalKey } from '../../sync/keys';
+import ExplorationTimeControl from './ExplorationTimeControl';
 import './DockExplorationRoster.css';
 
 // GM Command Dock — Exploration roster strip (#1810, epic #1804 S6). The party
@@ -239,6 +240,19 @@ const DockExplorationRoster = ({ selectedId = null, onSelect = NOOP }) => {
         >
           New beat
         </button>
+      </div>
+
+      {/* Time control (#1811, epic #1804 S7) — the roster column's footer,
+          below the party-state actions. `.dock-exp-time` is a thin dock-scoped
+          wrapper (DockExplorationRoster.css) that keeps ExplorationTimeControl's
+          `.pmc-*` rows from overflowing this narrow column; it never touches
+          the shared .pmc-* rules PlayModeControl's own mount still relies on.
+          The component is self-contained: it reads cnmh_exploredist_global
+          (accrued by the pane's move handler) against cnmh_roster_global for
+          the distance→minutes suggestion, and Apply both advances the shared
+          clock and zeroes the tally. */}
+      <div className="dock-exp-time">
+        <ExplorationTimeControl />
       </div>
     </aside>
   );
