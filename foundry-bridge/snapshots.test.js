@@ -3,7 +3,7 @@
 
 import {
   initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace,
-  pushMoverSnapshot,
+  pushMoverSnapshot, setPlayMode,
 } from './snapshots.js';
 import { updateActorMap } from './encounter.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
@@ -430,10 +430,109 @@ describe('mover-centered capture', () => {
   });
 });
 
-// The post-move broadcast (#1744 WS-2, OQ-1 ruling): one capture for the whole
-// table instead of N private snapreqs.
-describe('pushMoverSnapshot', () => {
+// Party-framed capture (#1807): `snapreq { party: true }` frames the whole
+// mapped party — bbox of every in-frame token's own moverCaptureRect at a
+// shared margin — and echoes each token's world-space centre.
+describe('party-framed capture (#1807)', () => {
   afterEach(() => { updateActorMap({}); });
+
+  // Pellias (speed 25) at (1000,1000), Ashka (speed 40, the fastest — margin
+  // driver) at (2000,1000). Far enough apart that only a real union rect
+  // could contain both.
+  const partyWorld = () => {
+    const world = fakeCanvasWorld();
+    const tokPellias = makeToken({ id: 'tok-pellias', x: 1000, y: 1000, disposition: 1 });
+    const actorPellias = makeActor({
+      id: 'actor-pellias', name: 'Pellias', speed: 25, tokens: [tokPellias],
+    });
+    tokPellias.actor = actorPellias;
+    const tokAshka = makeToken({ id: 'tok-ashka', x: 2000, y: 1000, disposition: 1 });
+    const actorAshka = makeActor({ id: 'actor-ashka', name: 'Ashka', speed: 40, tokens: [tokAshka] });
+    tokAshka.actor = actorAshka;
+    global.game.actors.set('actor-pellias', actorPellias);
+    global.game.actors.set('actor-ashka', actorAshka);
+    global.canvas.tokens.placeables = [tokPellias, tokAshka];
+    updateActorMap({ 'actor-pellias': 'Pellias', 'actor-ashka': 'Ashka' });
+    return world;
+  };
+
+  test('frames the union bbox at the fastest party member\'s margin and echoes both centres', async () => {
+    partyWorld();
+    await handleSnapshotRequest({ id: 'snap-p1', party: true, ts: 1 });
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ id: 'snap-p1', ok: true, moverId: null, trigger: 'request' });
+    // Ashka's Speed 40 → margin 60ft → 1200px; the union of both per-token
+    // rects (each already clamped to the 4000×3000 canvas). y2 is the
+    // downscale-and-floor round trip captureWorldRect already applies to any
+    // mover-centered rect — not exact for a non-square box, same as it would
+    // be for a single mover at this size.
+    expect(value.worldRect.x1).toBe(0);
+    expect(value.worldRect.y1).toBe(0);
+    expect(value.worldRect.x2).toBe(3250);
+    expect(value.worldRect.y2).toBeCloseTo(2250, 0);
+    expect(value.tokens).toEqual(
+      expect.arrayContaining([
+        { moverId: 'Pellias', x: 1050, y: 1050 },
+        { moverId: 'Ashka', x: 2050, y: 1050 },
+      ]),
+    );
+    expect(value.tokens).toHaveLength(2);
+  });
+
+  test('a party member off the rendered scene is excluded from the box and the tokens list', async () => {
+    partyWorld();
+    global.canvas.tokens.placeables[1].document.parent = { id: 'scene-2', grid: { size: 100 } };
+    await handleSnapshotRequest({ id: 'snap-p2', party: true, ts: 1 });
+
+    const { value } = lastAck();
+    expect(value.tokens).toEqual([{ moverId: 'Pellias', x: 1050, y: 1050 }]);
+    // Margin still derives from Ashka's Speed (40) — an off-scene party member
+    // still counts toward "the fastest party member" — but the box itself
+    // only reflects Pellias, the one token actually in frame.
+    expect(value.worldRect).toEqual({ x1: 0, y1: 0, x2: 2250, y2: 2250 });
+  });
+
+  test('an unmapped charId never contributes — only the actor map defines the party', async () => {
+    partyWorld();
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    await handleSnapshotRequest({ id: 'snap-p3', party: true, ts: 1 });
+
+    expect(lastAck().value.tokens).toEqual([{ moverId: 'Pellias', x: 1050, y: 1050 }]);
+  });
+
+  test('no party member anywhere on the rendered scene falls back to the legacy GM view', async () => {
+    partyWorld();
+    // Both tokens' actors are resolvable, but neither token is on the scene
+    // the GM canvas is rendering — moverCaptureRect's own scene check excludes
+    // both (mirrors the single off-scene-member test above, for every member).
+    const otherScene = { id: 'scene-2', grid: { size: 100 } };
+    global.canvas.tokens.placeables[0].document.parent = otherScene;
+    global.canvas.tokens.placeables[1].document.parent = otherScene;
+    await handleSnapshotRequest({ id: 'snap-p4', party: true, ts: 1 });
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ id: 'snap-p4', ok: true, moverId: null, trigger: 'request' });
+    expect(value.tokens).toBeUndefined();
+    // The GM viewport rect, exactly like an unresolvable moverId falls back.
+    expect(value.capture).toMatchObject({ screenW: 1200, screenH: 800 });
+  });
+
+  test('a legacy (non-party) request never carries a tokens field', async () => {
+    fakeCanvasWorld();
+    await handleSnapshotRequest({ id: 'snap-p5', ts: 1 });
+    expect(lastAck().value.tokens).toBeUndefined();
+  });
+});
+
+// The post-move broadcast (#1744 WS-2, OQ-1 ruling; party framing #1807): one
+// capture for the whole table instead of N private snapreqs. Pinned to
+// 'downtime' here — NOT the default 'exploration' — so this describe exercises
+// the mover-centered path the encounter/downtime broadcast still uses; the
+// exploration-mode party switch has its own describe below.
+describe('pushMoverSnapshot', () => {
+  beforeEach(() => { setPlayMode('downtime'); });
+  afterEach(() => { updateActorMap({}); setPlayMode('exploration'); });
 
   const moverWorld = () => {
     const world = fakeCanvasWorld();
@@ -454,6 +553,7 @@ describe('pushMoverSnapshot', () => {
     expect(characterId).toBe('global');
     expect(value).toMatchObject({ ok: true, moverId: 'Pellias', trigger: 'movedone' });
     expect(value.worldRect).toEqual({ x1: 300, y1: 300, x2: 1800, y2: 1800 });
+    expect(value.tokens).toBeUndefined();
   });
 
   // snapdone is correlated by `id` app-side, so a broadcast must never collide
@@ -476,6 +576,108 @@ describe('pushMoverSnapshot', () => {
     moverWorld();
     await pushMoverSnapshot(null);
     expect(send).not.toHaveBeenCalled();
+  });
+
+  // A running Foundry combat overrides a stale/leftover 'exploration' tracked
+  // value — mirrors the app's own encounter.active-wins derivation.
+  test('an active combat keeps the mover-centered broadcast even when the tracked mode says exploration', async () => {
+    setPlayMode('exploration');
+    moverWorld();
+    global.game.combat = { active: true };
+    await pushMoverSnapshot('Pellias');
+
+    expect(lastAck().value).toMatchObject({ moverId: 'Pellias', trigger: 'movedone' });
+    expect(lastAck().value.tokens).toBeUndefined();
+    delete global.game.combat;
+  });
+});
+
+// Exploration-mode broadcast switch (#1807): out of combat, with the GM-set
+// mode 'exploration', the post-movedone broadcast frames the whole party
+// instead of just the mover who moved.
+describe('pushMoverSnapshot — exploration party broadcast (#1807)', () => {
+  afterEach(() => { updateActorMap({}); setPlayMode('exploration'); });
+
+  // Two mapped PCs: Pellias (speed 25, the mover-world default) at (1000,1000)
+  // and Ashka (speed 40, the fastest) at (2000,1000) — far enough apart that a
+  // single-mover rect could never contain both, so a passing test proves the
+  // union really happened.
+  const partyWorld = () => {
+    const world = fakeCanvasWorld();
+    const tokPellias = makeToken({ id: 'tok-pellias', x: 1000, y: 1000, disposition: 1 });
+    const actorPellias = makeActor({
+      id: 'actor-pellias', name: 'Pellias', speed: 25, tokens: [tokPellias],
+    });
+    tokPellias.actor = actorPellias;
+    const tokAshka = makeToken({ id: 'tok-ashka', x: 2000, y: 1000, disposition: 1 });
+    const actorAshka = makeActor({ id: 'actor-ashka', name: 'Ashka', speed: 40, tokens: [tokAshka] });
+    tokAshka.actor = actorAshka;
+    global.game.actors.set('actor-pellias', actorPellias);
+    global.game.actors.set('actor-ashka', actorAshka);
+    global.canvas.tokens.placeables = [tokPellias, tokAshka];
+    updateActorMap({ 'actor-pellias': 'Pellias', 'actor-ashka': 'Ashka' });
+    setPlayMode('exploration');
+    return world;
+  };
+
+  test('frames the whole party and carries every in-frame token position', async () => {
+    partyWorld();
+    await pushMoverSnapshot('Pellias');
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ ok: true, moverId: null, trigger: 'movedone' });
+    // Ashka's speed (40) is fastest → margin 60ft → 1200px. Union of Pellias's
+    // rect (centre 1050,1050 ± 1200, clamped to the canvas origin) and Ashka's
+    // (centre 2050,1050 ± 1200, y clamped the same way). y2 goes through the
+    // same downscale-and-floor round trip as any mover-centered rect.
+    expect(value.worldRect.x1).toBe(0);
+    expect(value.worldRect.y1).toBe(0);
+    expect(value.worldRect.x2).toBe(3250);
+    expect(value.worldRect.y2).toBeCloseTo(2250, 0);
+    expect(value.tokens).toEqual(
+      expect.arrayContaining([
+        { moverId: 'Pellias', x: 1050, y: 1050 },
+        { moverId: 'Ashka', x: 2050, y: 1050 },
+      ]),
+    );
+    expect(value.tokens).toHaveLength(2);
+  });
+
+  test('a party member off the rendered scene is absent from the frame and the tokens list', async () => {
+    partyWorld();
+    // Ashka's token lives on a different scene than the one canvas is showing.
+    global.canvas.tokens.placeables[1].document.parent = { id: 'scene-2', grid: { size: 100 } };
+    await pushMoverSnapshot('Pellias');
+
+    const { value } = lastAck();
+    expect(value.tokens).toEqual([{ moverId: 'Pellias', x: 1050, y: 1050 }]);
+  });
+
+  test('an unmapped charId contributes nothing — only the actor map defines the party', async () => {
+    partyWorld();
+    updateActorMap({ 'actor-pellias': 'Pellias' }); // Ashka dropped from the map
+    await pushMoverSnapshot('Pellias');
+
+    expect(lastAck().value.tokens).toEqual([{ moverId: 'Pellias', x: 1050, y: 1050 }]);
+  });
+
+  test('no party member on the rendered scene pushes nothing at all', async () => {
+    partyWorld();
+    const otherScene = { id: 'scene-2', grid: { size: 100 } };
+    global.canvas.tokens.placeables[0].document.parent = otherScene;
+    global.canvas.tokens.placeables[1].document.parent = otherScene;
+    await pushMoverSnapshot('Pellias');
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  test('downtime mode still uses the mover-centered rect, not the party', async () => {
+    partyWorld();
+    setPlayMode('downtime');
+    await pushMoverSnapshot('Pellias');
+
+    const { value } = lastAck();
+    expect(value).toMatchObject({ moverId: 'Pellias', trigger: 'movedone' });
+    expect(value.tokens).toBeUndefined();
   });
 });
 

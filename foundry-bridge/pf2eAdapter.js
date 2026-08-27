@@ -1769,6 +1769,25 @@ export function getCanvasBoundsRect() {
   return { x1: 0, y1: 0, x2: w, y2: h };
 }
 
+// A token's world-space CENTRE: top-left corner + half its footprint in
+// pixels (width/height in grid squares × the token's OWN scene grid size —
+// see getTokenScene/getSceneGridSize, since a token's scene need not be the
+// one the GM is looking at). Shared by moverCaptureRect (the rect frames
+// AROUND this point) and the party-capture rail (#1807), which reports it
+// verbatim as each in-frame token's position. Returns null when the token's
+// position can't be read.
+export function getTokenWorldCenter(token) {
+  if (!token) return null;
+  const scene = getTokenScene(token);
+  const gridSize = getSceneGridSize(scene);
+  const doc = token.document ?? token;
+  const x = Number(token.x ?? doc?.x);
+  const y = Number(token.y ?? doc?.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  const { width: tW, height: tH } = getTokenDimensions(token);
+  return { x: x + (tW * gridSize) / 2, y: y + (tH * gridSize) / 2 };
+}
+
 // The world rect to capture for a mover: `radiusFeet` in every direction from
 // the token's CENTRE, clamped to the canvas bounds. Returns null for a token
 // that isn't on the scene the GM client is rendering — the capture can only
@@ -1781,21 +1800,16 @@ export function moverCaptureRect(token, radiusFeet) {
   const activeId = canvas.scene?.id;
   if (scene?.id && activeId && scene.id !== activeId) return null;
 
-  const gridSize = getSceneGridSize(scene);
-  const doc = token.document ?? token;
-  const x = Number(token.x ?? doc?.x);
-  const y = Number(token.y ?? doc?.y);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  const center = getTokenWorldCenter(token);
+  if (!center) return null;
 
-  const { width: tW, height: tH } = getTokenDimensions(token);
-  const cx = x + (tW * gridSize) / 2;
-  const cy = y + (tH * gridSize) / 2;
+  const gridSize = getSceneGridSize(scene);
   const radiusPx = (feet / getGridDistance()) * gridSize;
 
-  let x1 = cx - radiusPx;
-  let y1 = cy - radiusPx;
-  let x2 = cx + radiusPx;
-  let y2 = cy + radiusPx;
+  let x1 = center.x - radiusPx;
+  let y1 = center.y - radiusPx;
+  let x2 = center.x + radiusPx;
+  let y2 = center.y + radiusPx;
 
   const bounds = getCanvasBoundsRect();
   if (bounds) {

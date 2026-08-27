@@ -513,6 +513,64 @@ const RECIPES = {
     return grab(send, RELAY.SNAPDONE);
   },
 
+  // A party-framed capture ack (#1807) — the SAME channel as SNAPDONE above,
+  // recorded under a synthetic key so `tokens` gets its own fixture file
+  // without clobbering the legacy (GM-view) one. Drives the world-rect render
+  // path (stage position/scale/pivot), the same seam
+  // relayContractInbound.test.js's SNAPREQ recipe uses, since a party capture
+  // always carries a worldRect.
+  'snapdone-party': async () => {
+    const send = jest.fn();
+    initSnapshots(send);
+    updateActorMap({ 'actor-pellias': 'Pellias', 'actor-ashka': 'Ashka' });
+    const tokPellias = makeToken({ id: 'tok-pellias', x: 500, y: 500, disposition: 1 });
+    const actorPellias = makeActor({
+      id: 'actor-pellias', name: 'Pellias', speed: 25, tokens: [tokPellias],
+    });
+    tokPellias.actor = actorPellias;
+    const tokAshka = makeToken({ id: 'tok-ashka', x: 900, y: 500, disposition: 1 });
+    const actorAshka = makeActor({ id: 'actor-ashka', name: 'Ashka', speed: 30, tokens: [tokAshka] });
+    tokAshka.actor = actorAshka;
+    global.game.actors.set('actor-pellias', actorPellias);
+    global.game.actors.set('actor-ashka', actorAshka);
+
+    const out = {
+      width: 0, height: 0,
+      getContext: () => ({ drawImage: jest.fn() }),
+      toDataURL: () => 'data:image/webp;base64,QUJD',
+    };
+    global.document = { createElement: () => out };
+    class Point {
+      constructor(x = 0, y = 0) { this.x = x; this.y = y; }
+      set(x, y) { this.x = x; this.y = y; }
+    }
+    global.PIXI = { RenderTexture: { create: () => ({ destroy: jest.fn() }) }, Point };
+    global.canvas = {
+      app: { renderer: { render: jest.fn(), extract: { canvas: () => ({}) } }, view: {} },
+      stage: { position: new Point(0, 0), scale: new Point(1, 1), pivot: new Point(0, 0) },
+      scene: { id: 'scene-1', grid: { size: 100 } },
+      notes: { visible: true },
+      drawings: { visible: true },
+      controls: { hud: { visible: true }, rulers: { visible: true } },
+      tiles: { placeables: [] },
+      tokens: { placeables: [tokPellias, tokAshka] },
+      dimensions: { width: 4000, height: 3000 },
+    };
+    global.game.settings = { get: (_m, key) => (key === 'bridgeSecret' ? 's3cret' : '') };
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ id: 'tok_party.webp', url: '/api/images/tok_party.webp' }),
+    }));
+    try {
+      await handleSnapshotRequest({ id: 'snap-party-1', party: true, ts: 1 });
+    } finally {
+      delete global.fetch;
+      delete global.document;
+      delete global.PIXI;
+    }
+    return grab(send, RELAY.SNAPDONE);
+  },
+
   [RELAY.FLANKED]: () => {
     const send = jest.fn();
     global.canvas.tokens.placeables = [];

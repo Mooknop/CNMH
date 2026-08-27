@@ -39,6 +39,7 @@ import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnM
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
 import {
   initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace, pushMoverSnapshot,
+  setPlayMode,
 } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { GLOBAL_ID, RELAY, PROTOCOL_VERSION } from './syncKeys.js';
@@ -278,6 +279,10 @@ function dispatch(msg) {
     // the first 3D roll after a reconnect is already styled.
     const diceSets = msg.payload?.global?.[RELAY.DICESETS];
     if (diceSets) updateDiceSets(diceSets);
+    // GM-set play mode (#1807) — the snapshot rail's exploration-broadcast gate
+    // needs the live value, not just the change events UPDATE delivers below.
+    const playMode = msg.payload?.global?.[RELAY.PLAYMODE];
+    if (playMode) setPlayMode(playMode);
     // Adjacency is classification-agnostic (keyed by combatant id), so it doesn't
     // need the actor map — but push once on connect so a mid-combat reconnect has
     // reach data without waiting for a token to move.
@@ -481,6 +486,13 @@ function dispatch(msg) {
   // Per-character Dice So Nice dice sets from the GM's Theme page (#1490 S7).
   if (characterId === 'global' && key === RELAY.DICESETS) {
     updateDiceSets(value);
+    return;
+  }
+
+  // GM-set play mode (#1807) — tracked so the snapshot rail's post-movedone
+  // broadcast knows when to frame the whole party instead of just the mover.
+  if (characterId === 'global' && key === RELAY.PLAYMODE) {
+    setPlayMode(value);
     return;
   }
 

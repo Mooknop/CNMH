@@ -2,9 +2,9 @@
 // placement: players have no Foundry client, so the GM canvas is captured,
 // uploaded, and served back to them as a plain image URL.
 //
-//   App → bridge:  cnmh_snapreq_global  = { id, ts, moverId?, radiusFeet? }
+//   App → bridge:  cnmh_snapreq_global  = { id, ts, moverId?, radiusFeet?, party? }
 //   Bridge → app:  cnmh_snapdone_global = { id, ok, url?, capture?, worldRect?,
-//                                           gridSize?, moverId, trigger, ts }
+//                                           gridSize?, tokens?, moverId, trigger, ts }
 //     url       — stable app-relative /api/images/… (the SAME secret-gated,
 //                 content-addressed R2 pipeline as bestiary tokens, filed under
 //                 the 'Scene Snapshots' catalog folder; captures are never
@@ -15,6 +15,9 @@
 //                 back to world coordinates
 //     worldRect — {x1,y1,x2,y2} viewport in world coords (matrix-less fallback)
 //     gridSize  — px per grid square, for world→cell math
+//     tokens    — [{ moverId, x, y }], world-space CENTRE of each party token in
+//                 frame — PARTY CAPTURES ONLY (#1807, see below); absent on a
+//                 mover-centered or legacy GM-view ack
 //
 // MOVER-CENTERED captures (#1744 WS-2, epic OQ-1/OQ-5): a `snapreq` naming a
 // `moverId` is answered with a capture of the WORLD RECT around that token
@@ -25,6 +28,38 @@
 // geometry fields keep their exact meaning (they describe the captured rect), so
 // the app's existing inverse tap math needs no change. A `snapreq` WITHOUT a
 // moverId is the legacy GM-view capture, unchanged.
+//
+// PARTY-FRAMED captures (#1807, epic #1804 S3): a `snapreq` carrying
+// `party: true` is answered with the world rect that frames EVERY actor-mapped
+// PC token currently on the rendered scene, plus a margin — the bounding box
+// of each in-frame token's own moverCaptureRect at a shared margin, which IS
+// the bbox expanded by that margin (each per-token rect is already {token
+// centre ± margin}, clamped to canvas bounds — see pf2eAdapter's
+// moverCaptureRect). The margin is 1.5× the fastest in-frame party member's
+// Speed — the same Stride-plus-half-again multiplier a single mover's default
+// radius uses (MOVER_RADIUS_SPEED_FACTOR) — falling back to the plain 30 ft
+// radius when no party member reports a Speed. A party member off the
+// rendered scene, or with no mapped token at all, is simply absent from the
+// frame and the `tokens` list (never a reason to nack the whole capture).
+// The ack then carries `tokens: [{ moverId, x, y }]` — the WORLD-SPACE CENTRE
+// of each token that made it into frame (see pf2eAdapter's
+// getTokenWorldCenter) — added ONLY on a party capture (request or broadcast);
+// every other capture's ack is byte-identical to before this slice. When no
+// party member has a token on the rendered scene, a party request falls back
+// to the legacy GM-view capture, mirroring the moverId-unresolved fallback
+// below rather than nacking.
+//
+// `moverId` on the ack distinguishes the THREE capture shapes the app now has
+// to render: non-null = mover-centered (frames one token); null + `tokens`
+// present = party-framed (frames the group, tap targets included); null with
+// no `tokens` = the legacy GM view.
+//
+// EXPLORATION BROADCAST (#1807): while the app's play mode is 'exploration'
+// (tracked from `cnmh_playmode_global` — see setPlayMode/trackPlayMode below —
+// and only when no Foundry combat is currently active), `pushMoverSnapshot`'s
+// post-`movedone` broadcast captures the PARTY rect instead of the single
+// mover's, so every client's party map refreshes after each move. Encounter
+// (combat active) and downtime broadcasts are unchanged — still mover-centered.
 //
 // The IMAGE never rides the relay: the session DO drops frames over 64KB and
 // synced keys persist to localStorage — only metadata and the URL travel.
@@ -63,9 +98,11 @@
 
 import { RELAY } from './syncKeys.js';
 import {
-  captureSceneSnapshot, getSpeed, moverCaptureRect, pingCanvasPoint, createMeasuredTemplate,
+  captureSceneSnapshot, getSpeed, moverCaptureRect, getTokenWorldCenter, pingCanvasPoint,
+  createMeasuredTemplate, getActiveCombat,
 } from './pf2eAdapter.js';
 import { resolveToken } from './movement.js';
+import { getActorMap } from './encounter.js';
 import { uploadImageBytes } from './tokenImages.js';
 
 // How far a mover-centered capture reaches when the request doesn't say: 1.5×
@@ -81,6 +118,26 @@ export function initSnapshots(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 }
 
+// The last-seen GM-set non-combat play mode (#1807), tracked from
+// cnmh_playmode_global — bridge.js calls this on FULL_STATE (seed from
+// persisted state) and on every UPDATE of that key, mirroring how it already
+// tracks dicesets. Mirrors the app's usePlayMode default so an unset key
+// (a fresh world, or a bridge that connected before the app ever wrote one)
+// reads as exploration rather than freezing the party map on downtime.
+let _playMode = 'exploration';
+
+export function setPlayMode(mode) {
+  if (typeof mode === 'string' && mode) _playMode = mode;
+}
+
+// The EFFECTIVE play mode this rail cares about: combat always wins (mirrors
+// usePlayMode's own `encounter.active ? 'encounter' : gmMode` derivation) —
+// read live off the real Foundry combat rather than trusting a possibly-stale
+// tracked value, since the bridge already has that answer for free.
+function isExplorationMode() {
+  return !getActiveCombat()?.active && _playMode === 'exploration';
+}
+
 // Called by bridge.js when cnmh_snapreq_global arrives.
 //
 // `moverId` (optional) switches the capture to the mover-centered world rect;
@@ -88,9 +145,26 @@ export function initSnapshots(sendUpdateFn) {
 // minion `<ownerCharId>-<role>`, combat entryId). An unresolvable moverId falls
 // back to the legacy GM-view capture rather than nacking — the player still gets
 // a map, just the GM's one.
+//
+// `party` (optional, #1807) switches the capture to the PARTY-framed rect
+// instead — see the header comment for the framing rule. No party member on
+// the rendered scene falls back to the legacy GM-view capture too, for the
+// same "a map beats no map" reason as an unresolved moverId.
 export async function handleSnapshotRequest(value) {
   const id = value?.id;
   if (!id) return;
+
+  if (value?.party) {
+    const party = partyCapture();
+    await deliver({
+      id,
+      moverId: null,
+      trigger: 'request',
+      worldRect: party?.rect ?? null,
+      tokens: party?.tokens ?? null,
+    });
+    return;
+  }
 
   const moverId = value?.moverId ? String(value.moverId) : null;
   const rect = moverId ? rectForMover(moverId, value?.radiusFeet) : null;
@@ -102,12 +176,33 @@ export async function handleSnapshotRequest(value) {
   });
 }
 
-// One broadcast mover-centered capture per completed move (#1744 WS-2, OQ-1
-// ruling): the bridge pushes it unprompted so N viewing clients cost ONE
-// capture instead of N private snapreqs. Wired to movement.js's move-done seam
-// in bridge.js, so this module and the movement rail stay independent.
+// One broadcast capture per completed move (#1744 WS-2, OQ-1 ruling; party
+// framing #1807): the bridge pushes it unprompted so N viewing clients cost
+// ONE capture instead of N private snapreqs. Wired to movement.js's move-done
+// seam in bridge.js, so this module and the movement rail stay independent.
+//
+// In exploration mode (no active combat, GM-set mode 'exploration') the
+// broadcast frames the whole PARTY instead of just the mover who moved — every
+// client's party map stays fresh after each step. Encounter and downtime
+// broadcasts are unchanged: still centered on the one mover that moved.
 export async function pushMoverSnapshot(moverId) {
   if (!moverId || !_sendUpdate) return;
+
+  if (isExplorationMode()) {
+    const party = partyCapture();
+    // No party member in frame at all — nothing worth broadcasting (mirrors
+    // the mover-centered "unknown mover" no-op below).
+    if (!party) return;
+    await deliver({
+      id: `snapmove-${moverId}-${Date.now()}`,
+      moverId: null,
+      trigger: 'movedone',
+      worldRect: party.rect,
+      tokens: party.tokens,
+    });
+    return;
+  }
+
   const rect = rectForMover(moverId);
   // No rect = the mover isn't on the rendered scene (or has no token any more).
   // A broadcast nobody asked for is not worth a nack.
@@ -118,6 +213,63 @@ export async function pushMoverSnapshot(moverId) {
     trigger: 'movedone',
     worldRect: rect,
   });
+}
+
+// Every actor-mapped PC charId (#1807 — "party" = resolvable via the SAME
+// actor map movement.js's resolveToken already reads), resolved to its placed
+// token exactly as a per-mover request would. A charId with no mapped actor,
+// no active token, or a token on another scene simply doesn't make it into
+// the returned list — resolveToken degrades to null the same way it does for
+// any other rail; there is no separate "party roster" to fall out of sync.
+function partyTokens() {
+  const actorMap = getActorMap();
+  const charIds = Array.from(new Set(Object.values(actorMap)));
+  return charIds
+    .map((charId) => ({ charId, token: resolveToken(charId) }))
+    .filter((entry) => entry.token);
+}
+
+// The shared margin for a party capture (#1807 ruling): 1.5× the fastest
+// resolvable party member's Speed — MOVER_RADIUS_SPEED_FACTOR, the same
+// Stride-plus-half-again multiplier a single mover's default radius uses — so
+// a full Stride from any edge token stays in frame. Falls back to the plain
+// MOVER_RADIUS_FALLBACK_FEET when no party member reports a Speed.
+function partyMarginFeet(entries) {
+  const speeds = entries.map((e) => Number(getSpeed(e.token.actor))).filter((s) => s > 0);
+  const fastest = speeds.length ? Math.max(...speeds) : 0;
+  return fastest > 0 ? fastest * MOVER_RADIUS_SPEED_FACTOR : MOVER_RADIUS_FALLBACK_FEET;
+}
+
+// The party-framed capture (#1807): the bounding box of every in-frame party
+// token's own moverCaptureRect at the shared margin — which IS the bbox
+// expanded by that margin, since each per-token rect is already {token centre
+// ± margin} clamped to canvas bounds — plus the world-space centre of each
+// token that contributed to the box. A token whose moverCaptureRect comes
+// back null (off the rendered scene, no readable geometry) is excluded from
+// both the box and `tokens`, exactly like the mover-centered rail already
+// treats an off-scene mover. Returns null when NO party member is in frame.
+function partyCapture() {
+  const entries = partyTokens();
+  if (!entries.length) return null;
+
+  const feet = partyMarginFeet(entries);
+  let rect = null;
+  const tokens = [];
+  for (const { charId, token } of entries) {
+    const tokenRect = moverCaptureRect(token, feet);
+    if (!tokenRect) continue;
+    rect = rect
+      ? {
+          x1: Math.min(rect.x1, tokenRect.x1),
+          y1: Math.min(rect.y1, tokenRect.y1),
+          x2: Math.max(rect.x2, tokenRect.x2),
+          y2: Math.max(rect.y2, tokenRect.y2),
+        }
+      : tokenRect;
+    const center = getTokenWorldCenter(token);
+    if (center) tokens.push({ moverId: charId, x: center.x, y: center.y });
+  }
+  return rect ? { rect, tokens } : null;
 }
 
 // The world rect for a mover, or null when it can't be built (unknown id, token
@@ -142,8 +294,10 @@ function defaultRadiusFeet(token) {
 
 // capture → R2 upload → snapdone ack. One path for every trigger, so a
 // broadcast capture and a requested one are indistinguishable to the app apart
-// from the `trigger` / `moverId` fields.
-async function deliver({ id, moverId, trigger, worldRect }) {
+// from the `trigger` / `moverId` fields. `tokens` (#1807) rides along ONLY
+// when the caller passes it (a party capture) — every other capture's ack is
+// unchanged from before this slice.
+async function deliver({ id, moverId, trigger, worldRect, tokens }) {
   const ack = (payload) =>
     _sendUpdate?.('global', RELAY.SNAPDONE, {
       id, ...payload, moverId, trigger, ts: Date.now(),
@@ -167,6 +321,7 @@ async function deliver({ id, moverId, trigger, worldRect }) {
       capture: snap.capture,
       worldRect: snap.worldRect,
       gridSize: snap.gridSize,
+      ...(tokens ? { tokens } : {}),
     });
   } catch (err) {
     console.error('CNMH Bridge | scene snapshot failed:', err);
