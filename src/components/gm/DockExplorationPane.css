@@ -56,16 +56,22 @@
   color: var(--shell-text-secondary);
 }
 
-/* The body is a grid so S6 (#1810) can drop the roster strip in as a second
-   column — `grid-template-columns: minmax(0, 1fr) minmax(220px, 280px)` — with
-   no restructuring of the map column below it. */
+/* Map + roster strip (#1810). The strip is the second column; both columns
+   stretch to the body's height so each can own its internal scroll — the dock
+   never scrolls the page. Narrow docks stack them instead. */
 .dock-exp-body {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
   gap: var(--space-4);
-  align-items: start;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .dock-exp-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .dock-exp-map {
@@ -142,6 +148,13 @@
 .dock-exp-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* Pressed state for the roster strip's readiness-override toggle (#1810). */
+.dock-exp-btn.is-on {
+  background: var(--verdant-mid);
+  border-color: var(--verdant-mid);
+  color: var(--shell-text-primary);
 }
 
 /* Movement toggle — the same `cnmh_exploremove_global` switch PlayModeControl

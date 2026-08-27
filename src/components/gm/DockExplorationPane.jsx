@@ -16,6 +16,7 @@ import MapSnapshotViewer from '../encounter/MapSnapshotViewer';
 import SnapshotRouteOverlay from '../encounter/SnapshotRouteOverlay';
 import PartyTokensOverlay from './PartyTokensOverlay';
 import DoorGlyphsOverlay from './DoorGlyphsOverlay';
+import DockExplorationRoster from './DockExplorationRoster';
 import './DockExplorationPane.css';
 
 // GM Command Dock — Exploration pane (#1808, epic #1804 S4). Replaces the
@@ -56,8 +57,9 @@ import './DockExplorationPane.css';
 // strip (#1810) and the time control (#1811) off it.
 //
 // LAYOUT SEAMS for the rest of the epic:
-//   · `.dock-exp-body` is a grid with one column today; S6's roster strip
-//     becomes its second column (see DockExplorationPane.css).
+//   · `.dock-exp-body` is a two-column grid: the map, and S6's roster strip
+//     (#1810 — DockExplorationRoster, which shares this component's mover
+//     selection and carries the per-PC activity control).
 //   · the map's `overlay` prop hosts a stack of %-space SVG siblings; S5
 //     (#1809) added `DoorGlyphsOverlay` as one more entry in that stack,
 //     below `PartyTokensOverlay` in draw order (a token standing on a door
@@ -258,7 +260,6 @@ const DockExplorationPane = () => {
       </header>
 
       <div className="dock-exp-body">
-        {/* S6 (#1810) adds the roster strip as this grid's second column. */}
         <div className="dock-exp-map">
           {!eligible ? (
             <p className="dock-exp-note" role="status">
@@ -336,6 +337,14 @@ const DockExplorationPane = () => {
             </>
           )}
         </div>
+
+        {/* The roster strip (#1810) — this grid's second column. It shares the
+            pane's mover selection, so tapping a chip and tapping that PC's
+            token are the same act (selectMover cancels the previous pick
+            either way). Rendered whether or not the bridge is up: activity
+            control and the party-state buttons are the degraded pane's whole
+            reason to exist. */}
+        <DockExplorationRoster selectedId={selectedId} onSelect={selectMover} />
       </div>
     </section>
   );
