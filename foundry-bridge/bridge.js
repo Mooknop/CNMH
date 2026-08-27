@@ -19,7 +19,9 @@ import {
 import { initPathPreview } from './pathPreview.js';
 import { initAuras, handleAuraSet, armAuraSweep, replayAuraState } from './auras.js';
 import { initTargeting, handleAction } from './targeting.js';
-import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
+import {
+  initDoors, handleDoorRequest, handleSceneDoorRequest, handleDoorInteract,
+} from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
@@ -39,7 +41,7 @@ import {
   initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace, pushMoverSnapshot,
 } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
-import { RELAY, PROTOCOL_VERSION } from './syncKeys.js';
+import { GLOBAL_ID, RELAY, PROTOCOL_VERSION } from './syncKeys.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -368,11 +370,17 @@ function dispatch(msg) {
     return;
   }
 
-  // Door detection / interaction.
+  // Door detection / interaction. The `global` id form of doorreq is the
+  // scene-scoped feed for the GM dock's door overlay (#1805) — every door on
+  // the rendered scene, secret doors included, no adjacency gate. The per-char
+  // form keeps its adjacency + hidden-secret rules unchanged.
   if (key === RELAY.DOORREQ) {
-    handleDoorRequest(characterId, value);
+    if (characterId === GLOBAL_ID) handleSceneDoorRequest(value);
+    else handleDoorRequest(characterId, value);
     return;
   }
+  // doorinteract needs only the wallId, so the same handler serves the
+  // per-character and `global` id forms.
   if (key === RELAY.DOORINTERACT) {
     handleDoorInteract(characterId, value);
     return;

@@ -109,6 +109,21 @@ data path moves, **only the adapter changes.**
   (3) hidden tokens are absent from it; (4) tapping the mover's own square in
   the app resolves to the cell it is standing on; (5) one broadcast `snapdone`
   with `trigger: 'movedone'` arrives per completed move, and only one.
+- **Walls / doors — read the SCENE, never the placeable layer (#452, fixed
+  #1805).** The WallDocument schema (`c` / `door` / `ds`) is unchanged v13 →
+  v14.365 and `Scene#walls` is still an embedded collection
+  (https://foundryvtt.com/api/v14/classes/foundry.documents.Scene.html), so the
+  wall helpers need no `generation` branch. What DOES differ is the placeable
+  layer: `canvas.walls.placeables` reads `objects?.children` and
+  `PlaceablesLayer#get(id)` resolves `documentCollection.get(id)?.object`, so
+  both go empty on a client whose walls layer was never drawn — and v14's Scene
+  Levels narrow it further, since the layer draws the current level's walls.
+  `getSceneWalls` / `getWallById` therefore read `canvas.scene.walls` (with
+  `getEmbeddedCollection('Wall')` and then the drawn layer as fallbacks) and
+  normalise everything to a WallDocument; `setDoorState` awaits
+  `WallDocument#update` and turns a rejection into a console warning.
+  Smoke-pass addition: open and close a door from the app, and confirm a door
+  toggled natively in Foundry re-pushes `cnmh_dooropts_global`.
 - **Namespaced core classes — dice half resolved (#1574).** `rollFormula` reads
   `foundry.dice.Roll` when present (the only exposure once v14 retires the
   deprecated global) with the bare global as the v13 fallback.

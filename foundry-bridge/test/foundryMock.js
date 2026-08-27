@@ -644,11 +644,70 @@ export function makeCanvas(opts = {}) {
       id: opts.sceneId ?? 'scene-1',
       grid: { size: gridSize, distance: opts.gridDistance ?? 5 },
       createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
+      // Embedded WallDocument collection — the adapter's source of truth for
+      // doors (#452). Empty until a test calls installWalls().
+      walls: makeCollection([]),
     },
     grid: { size: gridSize, measurePath },
     tokens,
-    walls: {},
+    // The PLACEABLE layer, empty until installWalls() draws it.
+    walls: { placeables: [], get: () => undefined },
   };
+}
+
+// --- walls / doors --------------------------------------------------------
+//
+// STRICTLY real-shaped (#452). A live Foundry WallDocument owns `c`/`door`/`ds`
+// (schema unchanged v13 → v14.365) and nothing else does; the `Wall` placeable
+// that wraps it exposes only `id` + `document`. The old mock let the adapter
+// read `wall.ds` off a hybrid stub, which is exactly why a helper that only
+// worked against the placeable layer looked green in CI and was dead at the
+// table. Do NOT add ds/door/c to the placeable here.
+
+// One WallDocument. `door`: 0 none / 1 door / 2 secret. `ds`: 0 closed /
+// 1 open / 2 locked. `update()` mutates in place and resolves, like the real
+// async Document#update.
+export function makeWallDocument(opts = {}) {
+  const doc = {
+    id: opts.id ?? autoId('wall'),
+    door: opts.door ?? 1,
+    ds: opts.ds ?? 0,
+    c: opts.c ?? [400, 400, 500, 400],
+    object: null,
+  };
+  doc.update = jest.fn(async (data) => {
+    Object.assign(doc, data);
+    return doc;
+  });
+  return doc;
+}
+
+// Install walls on the mocked world.
+//   canvas.scene.walls — the embedded document collection (always populated for
+//                        any client viewing the scene).
+//   canvas.walls       — the placeable layer. `drawn: false` models the live
+//                        client whose walls layer was never drawn (or, on v14,
+//                        a scene level whose walls aren't the drawn set): the
+//                        layer reports NOTHING while the scene collection is
+//                        still complete. That is the #452 failure mode.
+export function installWalls(docs = [], { drawn = true } = {}) {
+  const collection = makeCollection(docs);
+  if (global.canvas?.scene) global.canvas.scene.walls = collection;
+
+  const placeables = docs.map((doc) => {
+    const placeable = { id: doc.id, document: doc };
+    doc.object = drawn ? placeable : null;
+    return placeable;
+  });
+
+  global.canvas.walls = {
+    placeables: drawn ? placeables : [],
+    // PlaceablesLayer#get resolves documentCollection.get(id)?.object — so an
+    // undrawn layer resolves nothing even for a wall the scene definitely has.
+    get: (id) => (drawn ? placeables.find((p) => p.id === id) : undefined),
+  };
+
+  return { collection, placeables };
 }
 
 // PF2e's typed damage roll, as the adapter looks it up in CONFIG.Dice.rolls by

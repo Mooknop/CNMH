@@ -1406,35 +1406,117 @@ export function getMinionActorLinks(actorMap = {}) {
 }
 
 // --- Door / wall data ---
+//
+// LIVE-SHAPE CONTRACT (#452). A Foundry `Wall` is a *placeable*: it carries no
+// `ds`/`door`/`c` of its own — those live only on `.document` (a WallDocument,
+// schema `c`/`door`/`ds` unchanged v13 → v14.365) — and it exists only once the
+// walls layer has been DRAWN. `canvas.walls.placeables` reads
+// `this.objects?.children`, and `PlaceablesLayer#get(id)` resolves
+// `documentCollection.get(id)?.object`; both therefore go EMPTY on a client
+// whose walls layer was never drawn. v14 sharpens the hazard: Scene Levels mean
+// the layer draws the walls of the *current* level, so the placeable set is a
+// subset of the scene's walls even when it is populated.
+// `canvas.scene.walls` — the embedded WallDocument collection, still declared
+// on the v14 Scene schema (https://foundryvtt.com/api/v14/classes/foundry.documents.Scene.html)
+// — is populated for every client viewing the scene, drawn or not.
+// Sourcing doors from the layer is what made the door rail pass mocked tests
+// (which hand `placeables` straight in) and do nothing at the table.
+//
+// So: the scene's WallDocument collection is the source of truth, the layer is
+// only a fallback, and every helper below normalises to a WallDocument first.
+// All of it is capability-detected — no `game.release.generation` branch is
+// needed, because the shapes are identical on both generations.
 
-export function getSceneWalls() {
-  return canvas.walls?.placeables ?? [];
+// Unwrap a Wall placeable to its WallDocument; a WallDocument passes through
+// (the `updateWall` hook hands the bridge documents, not placeables).
+function toWallDocument(wall) {
+  if (!wall) return null;
+  return wall.document ?? wall;
 }
 
+// The viewed scene's embedded WallDocument collection, or null.
+function wallDocumentCollection() {
+  const scene = canvas.scene;
+  if (!scene) return null;
+  if (scene.walls) return scene.walls;
+  try {
+    return scene.getEmbeddedCollection?.('Wall') ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Every WallDocument on the viewed scene — drawn or not, whichever level.
+export function getSceneWalls() {
+  const collection = wallDocumentCollection();
+  if (collection) {
+    const docs = collection.contents ?? (typeof collection.values === 'function'
+      ? Array.from(collection.values())
+      : Array.from(collection));
+    if (docs.length) return docs;
+  }
+  // Fallback for a world that hands us a drawn layer but no scene collection.
+  return (canvas.walls?.placeables ?? []).map(toWallDocument).filter(Boolean);
+}
+
+// Resolve a wall id to its WallDocument. Ids emitted by the door feed are
+// document ids (a placeable's `id` getter returns `this.document.id`), so the
+// document collection is the right place to look them up.
 export function getWallById(id) {
-  return canvas.walls?.get?.(id) ?? null;
+  if (!id) return null;
+  const fromScene = wallDocumentCollection()?.get?.(id);
+  if (fromScene) return fromScene;
+  return toWallDocument(canvas.walls?.get?.(id)) ?? null;
+}
+
+// The wall's own document id.
+export function getWallId(wall) {
+  return toWallDocument(wall)?.id ?? null;
 }
 
 // A wall is a door when door > 0 (1 = door, 2 = secret door).
 export function isDoor(wall) {
-  return (wall?.document?.door ?? wall?.door ?? 0) > 0;
+  return getDoorType(wall) > 0;
 }
 
-// Door state: 0 = closed, 1 = open, 2 = locked.
+// Door type: 0 = not a door, 1 = door, 2 = secret door (CONST.WALL_DOOR_TYPES).
+export function getDoorType(wall) {
+  return Number(toWallDocument(wall)?.door ?? 0) || 0;
+}
+
+// Door state: 0 = closed, 1 = open, 2 = locked (CONST.WALL_DOOR_STATES).
 export function getDoorState(wall) {
-  return wall?.document?.ds ?? wall?.ds ?? 0;
+  return Number(toWallDocument(wall)?.ds ?? 0) || 0;
 }
 
 // Returns the wall's endpoint coords as [x1, y1, x2, y2].
 export function getWallCoords(wall) {
-  return wall?.document?.c ?? wall?.c ?? [0, 0, 0, 0];
+  const c = toWallDocument(wall)?.c;
+  return Array.isArray(c) && c.length === 4 ? c : [0, 0, 0, 0];
 }
 
-// Set a door's state (0 closed / 1 open / 2 locked).
-// Tagged with BRIDGE_SOURCE_FLAG so the bridge's own updateWall handler
-// can skip the echo when it originates from the app.
+// Set a door's state (0 closed / 1 open / 2 locked). ALWAYS async in live
+// Foundry — WallDocument#update returns a Promise — so this returns one too and
+// swallows a rejection into a console warning rather than an invisible
+// unhandled rejection (the #452 symptom: nothing happened, nothing was logged).
+// Tagged with BRIDGE_SOURCE_FLAG so the bridge's own updateWall handler can
+// tell an app-driven change from a native one.
 export function setDoorState(wall, ds) {
-  return wall.document.update({ ds }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+  const doc = toWallDocument(wall);
+  if (typeof doc?.update !== 'function') {
+    console.warn('CNMH Bridge | setDoorState: no updatable WallDocument for', wall);
+    return Promise.resolve(null);
+  }
+  return Promise.resolve(doc.update({ ds }, { [BRIDGE_SOURCE_FLAG]: 'app' }))
+    .catch((err) => {
+      console.warn('CNMH Bridge | door state update failed', err);
+      return null;
+    });
+}
+
+// Id of the scene currently rendered on the canvas ('' when none).
+export function getSceneId() {
+  return canvas.scene?.id ?? '';
 }
 
 // True if a wall blocks movement between two pixel points.

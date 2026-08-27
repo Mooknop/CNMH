@@ -6,7 +6,7 @@
 // the current global.Hooks / global.game environment. The MockWebSocket from
 // foundryMock is replaced with a tracking subclass so we can inspect sent data.
 
-import { makeActor, makeGame } from './test/foundryMock.js';
+import { makeActor, makeGame, makeWallDocument, installWalls } from './test/foundryMock.js';
 import { PROTOCOL_VERSION } from './syncKeys.js';
 
 // --- helpers ---------------------------------------------------------------
@@ -166,5 +166,54 @@ describe('pushHello (#1310)', () => {
     expect(hello.value.protocol).toBe(PROTOCOL_VERSION);
     expect(hello.value.module).toBe('0.0.0-test'); // makeGame's default module registry
     expect(typeof hello.value.ts).toBe('number');
+  });
+});
+
+// #1805: `global`-id forms of the door keys route to the scene-scoped handlers.
+// Everything else about the door rail is unit-tested in doors.test.js; this is
+// the dispatcher half — the piece that decides which handler a `global` id gets.
+describe('door relay routing (#1805)', () => {
+  // Drives a single inbound UPDATE through the real bridge dispatcher and
+  // returns every outbound UPDATE it produced.
+  function deliver({ characterId, key, value }) {
+    const { TrackedWS, getInstance } = makeTrackedWebSocketClass();
+    global.WebSocket = TrackedWS;
+    global.game = makeGame({ actors: [], settings: { bridgeSecret: RELAY_SECRET } });
+
+    let ws = null;
+    jest.isolateModules(() => {
+      require('./bridge.js');
+      global.Hooks.fire('ready');
+      ws = getInstance();
+      ws.onopen();
+      ws.sent.length = 0; // drop the connect-time roster/hello burst
+      ws.onmessage({ data: JSON.stringify({ type: 'UPDATE', characterId, key, value }) });
+    });
+    return ws.sent.map((s) => JSON.parse(s));
+  }
+
+  test('cnmh_doorreq_global answers with the scene-scoped dooropts_global', () => {
+    installWalls([
+      makeWallDocument({ id: 'w1', door: 1, ds: 0, c: [400, 500, 500, 500] }),
+      makeWallDocument({ id: 'w2', door: 2, ds: 0, c: [800, 500, 900, 500] }),
+    ]);
+
+    const opts = deliver({ characterId: 'global', key: 'doorreq', value: { ts: 9 } })
+      .find((m) => m.key === 'dooropts');
+
+    expect(opts).toMatchObject({ characterId: 'global', key: 'dooropts' });
+    expect(opts.value.sceneId).toBe('scene-1');
+    expect(opts.value.reqTs).toBe(9);
+    expect(opts.value.doors).toHaveLength(2);
+    expect(opts.value.doors[1].secret).toBe(true);
+  });
+
+  test('cnmh_doorinteract_global toggles the door', () => {
+    const doc = makeWallDocument({ id: 'w1', door: 1, ds: 0, c: [400, 500, 500, 500] });
+    installWalls([doc]);
+
+    deliver({ characterId: 'global', key: 'doorinteract', value: { wallId: 'w1', op: 'open', ts: 3 } });
+
+    expect(doc.update).toHaveBeenCalledWith({ ds: 1 }, expect.any(Object));
   });
 });

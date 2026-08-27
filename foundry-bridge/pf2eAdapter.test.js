@@ -29,10 +29,13 @@ import {
   createMeasuredTemplate, compassToRegionRotation, regionShapeTypeSupported,
   getGridDistance, getTokenScene, getSceneGridSize, isTokenHidden, getTokenName,
   pixelsToGrid, getCanvasBoundsRect, moverCaptureRect,
+  getSceneWalls, getWallById, getWallId, isDoor, getDoorType, getDoorState,
+  getWallCoords, setDoorState, getSceneId,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken, makeScene,
   makeCombat, makeCombatant, makeEffectItem, equipV14Movement,
+  makeWallDocument, installWalls,
 } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
@@ -483,6 +486,96 @@ describe('movement measurement contract', () => {
     expect(hasWallCollision(0, 0, 100, 0)).toBe(false);
     global.CONFIG.Canvas.polygonBackends.move.testCollision = () => true;
     expect(hasWallCollision(0, 0, 100, 0)).toBe(true);
+  });
+
+  // --- wall / door helpers (#452) -------------------------------------------
+  //
+  // The live shape: `c`/`door`/`ds` live ONLY on the WallDocument; the `Wall`
+  // placeable that wraps it exposes just `id` + `document`; and the placeable
+  // layer is populated only once it has been DRAWN (on v14, only for the drawn
+  // Scene Level). The scene's embedded WallDocument collection is the one
+  // source that is always complete, so that is what these helpers read.
+  describe('wall / door helpers', () => {
+    const wallSet = () => [
+      makeWallDocument({ id: 'w-door',   door: 1, ds: 0, c: [400, 500, 500, 500] }),
+      makeWallDocument({ id: 'w-secret', door: 2, ds: 1, c: [800, 500, 900, 500] }),
+      makeWallDocument({ id: 'w-plain',  door: 0, ds: 0, c: [0, 0, 100, 0] }),
+    ];
+
+    test.each([['drawn', true], ['UNDRAWN placeable layer', false]])(
+      'getSceneWalls / getWallById read the scene collection (%s)',
+      (_label, drawn) => {
+        installWalls(wallSet(), { drawn });
+        expect(getSceneWalls().map((w) => w.id)).toEqual(['w-door', 'w-secret', 'w-plain']);
+        expect(getWallById('w-secret')?.id).toBe('w-secret');
+        expect(getWallById('nope')).toBeNull();
+        expect(getWallById(undefined)).toBeNull();
+      },
+    );
+
+    test('getSceneWalls falls back to a drawn layer when the scene has no collection', () => {
+      installWalls(wallSet());
+      delete global.canvas.scene.walls;
+      // Placeables, not documents — the helper must unwrap them.
+      expect(getSceneWalls().map((w) => w.ds)).toEqual([0, 1, 0]);
+      expect(getWallById('w-door')?.id).toBe('w-door');
+    });
+
+    test('reads door fields off the document, whether given a document or a placeable', () => {
+      const { collection, placeables } = installWalls(wallSet());
+      const doc = collection.get('w-secret');
+      const placeable = placeables.find((p) => p.id === 'w-secret');
+      // The placeable is bare — proof the values can only be coming from .document.
+      expect(placeable).toEqual({ id: 'w-secret', document: doc });
+
+      for (const wall of [doc, placeable]) {
+        expect(isDoor(wall)).toBe(true);
+        expect(getDoorType(wall)).toBe(2);
+        expect(getDoorState(wall)).toBe(1);
+        expect(getWallCoords(wall)).toEqual([800, 500, 900, 500]);
+        expect(getWallId(wall)).toBe('w-secret');
+      }
+    });
+
+    test('non-door walls and missing/garbage input degrade to zeroes', () => {
+      installWalls(wallSet());
+      expect(isDoor(global.canvas.scene.walls.get('w-plain'))).toBe(false);
+      expect(getDoorType(null)).toBe(0);
+      expect(getDoorState(null)).toBe(0);
+      expect(getWallId(null)).toBeNull();
+      expect(getWallCoords(null)).toEqual([0, 0, 0, 0]);
+      expect(getWallCoords({ c: [1, 2] })).toEqual([0, 0, 0, 0]);
+    });
+
+    test('setDoorState awaits WallDocument#update and stamps BRIDGE_SOURCE_FLAG', async () => {
+      const { collection, placeables } = installWalls(wallSet());
+      const doc = collection.get('w-door');
+      await setDoorState(placeables[0], 1);
+      expect(doc.update).toHaveBeenCalledWith({ ds: 1 }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+      expect(doc.ds).toBe(1);
+    });
+
+    test('setDoorState resolves null (with a warning) when the update rejects', async () => {
+      const doc = makeWallDocument({ id: 'w-door' });
+      doc.update = jest.fn().mockRejectedValue(new Error('no permission'));
+      installWalls([doc]);
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        await expect(setDoorState(doc, 1)).resolves.toBeNull();
+        await expect(setDoorState({ id: 'not-a-doc' }, 1)).resolves.toBeNull();
+        expect(warn).toHaveBeenCalledTimes(2);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    test('getSceneId reads the rendered scene', () => {
+      expect(getSceneId()).toBe('scene-1');
+      global.canvas.scene = null;
+      expect(getSceneId()).toBe('');
+      expect(getSceneWalls()).toEqual([]);
+      expect(getWallById('w-door')).toBeNull();
+    });
   });
 
   test('getTokenDisposition reads document.disposition (defaults to 0)', () => {
