@@ -226,6 +226,38 @@ describe('DockExplorationRoster (#1810)', () => {
     expect(explorationEntries(session, 'Pellias')).toEqual([]);
   });
 
+  // ── time control (#1811) ──────────────────────────────────────────────────
+  // ExplorationTimeControl is self-contained (see ExplorationTimeControl.test)
+  // — these two just cover the dock-specific wiring: it mounts in the roster
+  // footer, and the closed loop (dock accrues exploredist → control reads it
+  // against the roster → Apply advances the REAL clock through GameDateContext
+  // and zeroes the tally) works from inside this provider tree.
+  it('mounts the exploration time control in the roster footer', () => {
+    mountStrip();
+
+    expect(screen.getByText('+10 min')).toBeInTheDocument();
+    expect(screen.getByText('+30 min')).toBeInTheDocument();
+    expect(screen.getByText('+1 hr')).toBeInTheDocument();
+  });
+
+  it('Apply on the distance suggestion advances the clock and zeroes the tally', () => {
+    // 300 ft at the roster's slowest Speed (25) → ~10 min, per the same math
+    // ExplorationTimeControl.test.jsx verifies in isolation.
+    const { session } = mountStrip({
+      state: seededState({
+        [RELAY.ROSTER]: [{ actorId: 'Pellias', name: 'Pellias', speed: 25 }],
+        exploredist: 300,
+      }),
+    });
+
+    expect(screen.getByText(/Party moved 300 ft/i)).toBeInTheDocument();
+    const applyBtns = screen.getAllByText('Apply');
+    fireEvent.click(applyBtns[applyBtns.length - 1]);
+
+    expect(lastSent(session, 'clock')).toMatchObject({ characterId: 'global' });
+    expect(lastSent(session, 'exploredist')).toMatchObject({ characterId: 'global', value: 0 });
+  });
+
   it('toggles the readiness override', () => {
     const { session } = mountStrip();
     const toggle = screen.getByRole('button', { name: 'Start movement' });
