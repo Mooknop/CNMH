@@ -13,10 +13,17 @@ import ExplorationTab from '../actions/ExplorationTab';
 // synced writes below are the actual wire messages the DO would fan out.
 
 const CHARACTERS = [
-  // Trained in Medicine → Treat Wounds is offered to Pellias only.
+  // Trained in Medicine → Treat Wounds is offered to Pellias only. Also
+  // trained Stealth/Perception (#1812 roll-math tests): level 1, all
+  // abilities at the 10/+0 default, so Trained (rank 1) = +3 and Expert
+  // (rank 2) = +5 — getSkillModifier's exact numbers, not a stand-in.
   makeCharacter({
     id: 'Pellias', name: 'Pellias', speed: 25,
-    skills: { medicine: { proficiency: 1 }, perception: { proficiency: 2 } },
+    skills: {
+      medicine: { proficiency: 1 },
+      perception: { proficiency: 2 },
+      stealth: { proficiency: 1 },
+    },
   }),
   makeCharacter({ id: 'Ashka', name: 'Ashka', speed: 30, skills: {} }),
 ];
@@ -290,5 +297,152 @@ describe('DockExplorationRoster ↔ pane selection (#1810)', () => {
     expect(container.querySelector('.pto-marker--selected')?.dataset.moverId).toBe(moverId);
     expect(within(chip(moverId)).getByRole('button', { name: `Select ${moverId} to move` }))
       .toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+// ─── dock-side secret checks (#1812, epic #1804 S8) ─────────────────────────
+describe('DockExplorationRoster secret checks (#1812)', () => {
+  const rollRow = (charId) => screen.getByTestId(`dock-exp-roll-${charId}`);
+  const result = (charId) => screen.queryByTestId(`dock-exp-result-${charId}`);
+  const rollBtn = (charId) => within(rollRow(charId)).getByRole('button', { name: new RegExp(`^Roll .* for `) });
+  const setDc = (charId, value) => fireEvent.change(
+    within(rollRow(charId)).getByLabelText(`Secret DC for ${charId}`),
+    { target: { value } }
+  );
+
+  // A d20 roll is `Math.floor(rng() * 20) + 1` (utils/explorationUtils.js
+  // rollD20, default rng = Math.random) — the midpoint of face's own [0,1)
+  // bucket lands on `face` for every face 1-20, so this is exact, not a
+  // stand-in. Spying on Math.random (not mocking the module) keeps the real
+  // rollD20/explorationDegreeOfSuccess code under test.
+  const mockFace = (face) => vi.spyOn(Math, 'random').mockReturnValue((face - 0.5) / 20);
+
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it('shows a roll affordance only for the picked activity\'s roll config, with the real skill modifier', () => {
+    mountStrip();
+
+    // Hustle has no mechanics.roll — no row at all.
+    pickFor('Ashka', 'Hustle');
+    expect(screen.queryByTestId('dock-exp-roll-Ashka')).toBeNull();
+
+    // Avoid Notice rolls Stealth; Pellias is Trained (rank 1) → +3.
+    pickFor('Pellias', 'Avoid Notice');
+    expect(within(rollRow('Pellias')).getByText('Stealth +3')).toBeInTheDocument();
+  });
+
+  it('rolls locally and puts nothing about the roll on the relay', () => {
+    const { session } = mountStrip();
+    pickFor('Pellias', 'Search'); // perception, secret:true, no onSuccessEffect
+
+    const before = session.sent.length;
+    mockFace(15);
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+
+    // A result renders locally...
+    expect(result('Pellias')).toBeInTheDocument();
+    // ...but not one single message went out for it (Search has no
+    // onSuccessEffect, so this isolates the roll itself, not just the DC).
+    expect(session.sent.length).toBe(before);
+  });
+
+  it('shows the raw total with no degree when no DC is set', () => {
+    mountStrip();
+    pickFor('Pellias', 'Search'); // Perception, Expert (rank 2) → +5
+
+    mockFace(11);
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+
+    // 11 + 5 = 16, no DC entered.
+    expect(within(result('Pellias')).getByText('d20 11 +5 = 16')).toBeInTheDocument();
+    expect(within(result('Pellias')).queryByText(/Success|Failure/)).toBeNull();
+  });
+
+  it('shows degree of success once a DC is entered', () => {
+    mountStrip();
+    pickFor('Pellias', 'Search'); // +5
+
+    setDc('Pellias', '15');
+    mockFace(11); // 11 + 5 = 16 ≥ 15 → success, < 25 → not critical
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+
+    expect(within(result('Pellias')).getByText('Success')).toBeInTheDocument();
+  });
+
+  it('applies onSuccessEffect exactly like the player-side flow on success', () => {
+    const { session } = mountStrip();
+    pickFor('Pellias', 'Avoid Notice'); // Stealth +3
+
+    setDc('Pellias', '10');
+    mockFace(15); // 15 + 3 = 18 ≥ 10 → success
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+
+    expect(explorationEntries(session, 'Pellias')).toEqual([
+      expect.objectContaining({ effectId: 'avoid-notice-hidden', source: 'exploration' }),
+    ]);
+    expect(within(result('Pellias')).getByText('Avoiding Notice applied')).toBeInTheDocument();
+  });
+
+  it('does not apply onSuccessEffect on a failure', () => {
+    const { session } = mountStrip();
+    pickFor('Pellias', 'Avoid Notice'); // Stealth +3
+
+    setDc('Pellias', '25');
+    mockFace(2); // 2 + 3 = 5 < 25 → failure
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+
+    expect(explorationEntries(session, 'Pellias')).toEqual([]);
+    expect(within(result('Pellias')).getByText('Avoiding Notice — success required')).toBeInTheDocument();
+  });
+
+  it('clears a stale roll result when the activity pick changes', () => {
+    mountStrip();
+    pickFor('Pellias', 'Search');
+    mockFace(11);
+    act(() => { fireEvent.click(rollBtn('Pellias')); });
+    expect(result('Pellias')).toBeInTheDocument();
+
+    pickFor('Pellias', 'Avoid Notice');
+    expect(screen.queryByTestId('dock-exp-result-Pellias')).toBeNull();
+  });
+
+  it('"Roll all" rolls exactly the roll-bearing picks, skipping non-roll and unpicked PCs', () => {
+    mountStrip();
+    pickFor('Pellias', 'Avoid Notice'); // roll-bearing
+    pickFor('Ashka', 'Hustle'); // no mechanics.roll
+
+    expect(screen.getByRole('button', { name: 'Roll all (1)' })).toBeInTheDocument();
+    mockFace(10);
+    act(() => { fireEvent.click(screen.getByRole('button', { name: 'Roll all (1)' })); });
+
+    expect(result('Pellias')).toBeInTheDocument();
+    expect(screen.queryByTestId('dock-exp-roll-Ashka')).toBeNull();
+  });
+
+  it('auto-picks the character\'s best trained skill for a skill-pick activity', () => {
+    // Investigate offers arcana/nature/occultism/religion/society/crafting —
+    // no requiresTrainedInAny gate on the activity itself, so it's pickable
+    // even though this PC is only trained in one of its skills. Re-seeded
+    // (not the shared CHARACTERS fixture) since Ashka there is untrained
+    // everywhere, which is exactly what the next test needs instead.
+    renderWithProviders(<DockExplorationRoster />, {
+      content: {
+        character: [
+          makeCharacter({ id: 'Ashka', name: 'Ashka', speed: 30, skills: { religion: { proficiency: 1 } } }),
+        ],
+      },
+      session: { state: seededState() },
+    });
+
+    pickFor('Ashka', 'Investigate');
+    expect(within(rollRow('Ashka')).getByText('Religion +3')).toBeInTheDocument();
+  });
+
+  it('disables the roll button when nothing is trained for a skill-pick activity', () => {
+    mountStrip();
+    pickFor('Ashka', 'Investigate'); // Ashka: skills: {} — nothing trained
+
+    expect(within(rollRow('Ashka')).getByText('no trained skill')).toBeInTheDocument();
+    expect(rollBtn('Ashka')).toBeDisabled();
   });
 });

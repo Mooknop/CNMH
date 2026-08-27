@@ -196,6 +196,117 @@
   outline-offset: -2px;
 }
 
+/* ── dock-side secret checks (#1812) ──────────────────────────── */
+
+.dock-exp-chip-roll {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+
+.dock-exp-chip-roll-mod {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-exp-chip-dc-label {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-chip-dc {
+  width: 44px;
+  min-height: 32px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  text-align: center;
+  padding: 2px 4px;
+}
+
+.dock-exp-chip-roll-btn {
+  flex: none;
+  min-width: 36px;
+  min-height: 32px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dock-exp-chip-roll-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+}
+
+.dock-exp-chip-roll-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dock-exp-chip-result {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-exp-chip-result-math {
+  font-weight: 600;
+  color: var(--shell-text-primary);
+}
+
+.dock-exp-chip-result-degree {
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dock-exp-degree--success .dock-exp-chip-result-degree,
+.dock-exp-degree--criticalSuccess .dock-exp-chip-result-degree {
+  background: color-mix(in srgb, var(--color-success, #2e7d32) 25%, transparent);
+  color: var(--color-success, #2e7d32);
+}
+
+.dock-exp-degree--failure .dock-exp-chip-result-degree,
+.dock-exp-degree--criticalFailure .dock-exp-chip-result-degree {
+  background: color-mix(in srgb, var(--color-danger, #c62828) 25%, transparent);
+  color: var(--color-danger, #c62828);
+}
+
+.dock-exp-chip-result-note {
+  font-style: italic;
+}
+
 /* ── the act-as activity picker ───────────────────────────────── */
 
 .dock-exp-chip-menu {

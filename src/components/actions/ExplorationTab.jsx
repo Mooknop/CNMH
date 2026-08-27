@@ -38,10 +38,16 @@ const ExplorationTab = ({ character, characterColor }) => {
 
   // Apply/clear the active activity's self-buff (e.g. Defend's +2 Perception)
   // while in exploration. Cleared automatically when the pick changes, is
-  // cleared, or the effective mode leaves exploration.
+  // cleared, or the effective mode leaves exploration. The third arg (#1812)
+  // tolerates a roll-granted onSuccessEffect (Avoid Notice's Stealth check,
+  // resolved via RollActivityModal below) sitting in the same tagged slot —
+  // without it, an activity with no constant `mechanics.effect` (Avoid Notice
+  // has none) reads as "wants nothing", and this hook's own same-tick local
+  // self-notify (see SessionContext's sendUpdate) would strip a roll's just-
+  // applied effect back out before the player ever saw it land.
   const activeDef = EXPLORATION_ACTIVITIES.find((a) => a.name === ownActivity) || null;
   const desiredEffectId = mode === 'exploration' ? (activeDef?.mechanics?.effect || null) : null;
-  useExplorationEffect(character?.id, desiredEffectId);
+  useExplorationEffect(character?.id, desiredEffectId, activeDef?.mechanics?.roll?.onSuccessEffect || null);
 
   // Scout: write this character's id to the global scout bonus key while active,
   // so InitiativeEntry can show the +1 reminder to the whole party.
