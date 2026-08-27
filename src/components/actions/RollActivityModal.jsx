@@ -5,25 +5,14 @@ import { useEffects } from '../../hooks/useEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSession } from '../../contexts/SessionContext';
 import { CharacterContext } from '../../contexts/CharacterContext';
-import { resolveActionRoll } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
-import { newEntryUid } from '../../utils/uid';
+import {
+  explorationRollBonus,
+  explorationDegreeOfSuccess as degreeOfSuccess,
+  applyExplorationSuccessEffect,
+} from '../../utils/explorationUtils';
 import './RollActivityModal.css';
 import { RELAY, APP, syncKey } from '../../sync/keys';
-
-const EXPLORATION_EFFECT_SOURCE = 'exploration';
-
-// Derive the degree of success from a d20 total vs DC, applying the PF2e
-// critical threshold rule (beat/miss DC by 10+). Deliberately NOT
-// computeSaveDegree (#1697 API freeze, "H — RollActivity + SkillCheck"): this
-// activity dialect never applied the nat-1/20 shift, and unifying the two is
-// a behavior change of its own, out of scope for a shell migration.
-function degreeOfSuccess(total, dc) {
-  if (total >= dc + 10) return 'criticalSuccess';
-  if (total >= dc)      return 'success';
-  if (total <= dc - 10) return 'criticalFailure';
-  return 'failure';
-}
 
 const SKILL_DISPLAY = {
   arcana: 'Arcana', nature: 'Nature', occultism: 'Occultism', religion: 'Religion',
@@ -90,27 +79,22 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
     return roll.skills.filter((s) => (profs[s] || 0) >= 1);
   }, [isPickType, roll, characterModel]);
 
-  // Resolve net bonus from conditions + effects using the existing pipeline
-  const rollProfile = useMemo(() => {
-    if (!skillId || !character || !characterModel) return null;
-    const syntheticAbility = { roll: { type: 'skill', skill: skillId } };
-    return resolveActionRoll(syntheticAbility, character, {
-      conditions: activeConditions || [],
-      effects: effects || [],
-      effectCatalog,
-    });
-  }, [skillId, character, characterModel, activeConditions, effects, effectCatalog]);
-
   // Follow the Expert: check if a +2 circumstance applies for the current skill
   const followExpert = getState(character?.id, APP.FOLLOWEXPERT);
   const followExpertBonus = (followExpert?.skillId && followExpert.skillId === skillId) ? 2 : 0;
-  const followExpertLabel = followExpertBonus ? 'Follow the Expert' : '';
 
-  const baseCircumstanceBonus = roll?.circumstanceBonus || 0;
-  const baseCircumstanceLabel = roll?.circumstanceLabel || '';
-  const circumstanceBonus = baseCircumstanceBonus + followExpertBonus;
-  const circumstanceLabel = [baseCircumstanceLabel, followExpertLabel].filter(Boolean).join(' + ');
-  const netBonus = rollProfile ? rollProfile.bonus + circumstanceBonus : null;
+  // Net bonus from conditions + effects + circumstance, via the shared
+  // resolver (explorationUtils, #1812) so this and the dock's secret rolls
+  // can never compute a different number for the same PC/skill.
+  const { bonus: netBonus, circumstanceBonus, circumstanceLabel } = useMemo(
+    () => explorationRollBonus(roll, skillId, character, {
+      conditions: activeConditions || [],
+      effects: effects || [],
+      effectCatalog,
+      followExpertBonus,
+    }),
+    [roll, skillId, character, activeConditions, effects, effectCatalog, followExpertBonus]
+  );
 
   const dcVal = parseInt(dc, 10);
   const hasDc = dc !== '' && !isNaN(dcVal);
@@ -183,13 +167,7 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
     let note;
     if (effectDef) {
       if (succeeded && effectTargetId) {
-        const current = getState(effectTargetId, APP.EFFECTS) || [];
-        const next = [
-          ...current,
-          { id: newEntryUid(), effectId: onSuccessEffectId, source: EXPLORATION_EFFECT_SOURCE, ts: Date.now() },
-        ];
-        try { window.localStorage.setItem(syncKey(APP.EFFECTS, effectTargetId), JSON.stringify(next)); } catch { /* noop */ }
-        sendUpdate(effectTargetId, APP.EFFECTS, next);
+        applyExplorationSuccessEffect(onSuccessEffectId, effectTargetId, { getState, sendUpdate });
         note = `${effectDef.name} applied${effectTargetName ? ` to ${effectTargetName}` : ''}`;
       } else {
         note = `${effectDef.name} — success required`;

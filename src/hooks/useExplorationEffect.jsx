@@ -27,15 +27,32 @@ export const EXPLORATION_EFFECT_SOURCE = 'exploration';
 // Both surfaces derive `desiredEffectId` from the same synced pick and the same
 // effective play mode, so they cannot want different values and oscillate.
 // Covered by DockExplorationRoster.test.jsx's dual-mount case.
-export function useExplorationEffect(charId, desiredEffectId) {
+//
+// `tolerateEffectId` (#1812) — an id this reconciler should leave alone even
+// though it isn't `desiredEffectId`. Exists because an activity can grant an
+// effect two different ways that BOTH land on this same tagged slot: the
+// constant self-buff `desiredEffectId` derives from (`mechanics.effect`,
+// active for as long as the activity is picked), and a ONE-TIME grant from a
+// successful `mechanics.roll.onSuccessEffect` (RollActivityModal, and now the
+// dock's secret checks). Avoid Notice is the clearest case: it has no
+// `mechanics.effect` at all — `desiredEffectId` is always null — so without
+// this, the instant a roll's onSuccessEffect write lands, this same-tick
+// local self-notify (SessionContext's sendUpdate notifies local subscribers
+// synchronously — see its own comment) would see "an exploration-sourced
+// entry that isn't null" and strip it right back out. Pass the current
+// activity's `mechanics.roll.onSuccessEffect` here so a roll-granted entry
+// survives; leave it unset for activities with no roll (unchanged behavior).
+export function useExplorationEffect(charId, desiredEffectId, tolerateEffectId = null) {
   const [effects, setEffects] = useSyncedState(syncKey(APP.EFFECTS, charId || 'none'), []);
 
   useEffect(() => {
     if (!charId) return;
     const list = effects || [];
     const current = list.find((e) => e.source === EXPLORATION_EFFECT_SOURCE) || null;
+    const currentId = current?.effectId || null;
     const wanted = desiredEffectId || null;
-    if ((current?.effectId || null) === wanted) return;
+    if (currentId === wanted) return;
+    if (currentId && tolerateEffectId && currentId === tolerateEffectId) return;
 
     const without = list.filter((e) => e.source !== EXPLORATION_EFFECT_SOURCE);
     setEffects(
@@ -51,7 +68,7 @@ export function useExplorationEffect(charId, desiredEffectId) {
           ]
         : without
     );
-  }, [charId, effects, desiredEffectId, setEffects]);
+  }, [charId, effects, desiredEffectId, tolerateEffectId, setEffects]);
 }
 
 export default useExplorationEffect;
