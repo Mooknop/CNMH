@@ -24,7 +24,7 @@ import { initCharacterSync } from './characterSync.js';
 import { initMinionSync, cacheMinions, _resetMinionCache } from './minionSync.js';
 import { initMinionActors, pushMinionActors } from './minionActors.js';
 import { initSummonPool, pushSummonPool } from './summonPool.js';
-import { initDoors, handleDoorRequest } from './doors.js';
+import { initDoors, handleDoorRequest, handleSceneDoorRequest } from './doors.js';
 import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initSaves, handleSaveRoll } from './saves.js';
 import { initDice, handleRollRequest } from './dice.js';
@@ -42,7 +42,7 @@ import {
   installFoundryGlobals, makeActor, makeToken, makeCombat, makeCombatant,
   makeGame, makeChatMessage, equipV14Movement, makeTokenMovement,
   makeNpcStrike, makeSpellcastingEntry, makeSpellItem, makeAbilityItem,
-  installTokenEmanation,
+  installTokenEmanation, makeWallDocument, installWalls,
 } from './test/foundryMock.js';
 
 const FIXTURE_DIR = path.join(__dirname, '__fixtures__', 'relay');
@@ -301,9 +301,28 @@ const RECIPES = {
   [RELAY.DOOROPTS]: () => {
     const send = movementWorld();
     initDoors(send);
-    const doc = { id: 'w1', door: 1, ds: 0, c: [400, 500, 500, 500], update: jest.fn() };
-    global.canvas.walls = { placeables: [{ id: 'w1', document: doc }], get: jest.fn() };
+    installWalls([makeWallDocument({ id: 'w1', door: 1, ds: 0, c: [400, 500, 500, 500] })]);
     handleDoorRequest('Pellias', { ts: 42 });
+    return grab(send, RELAY.DOOROPTS);
+  },
+
+  // The scene-scoped twin (#1805). Same RELAY type, `global` id, and a payload
+  // the per-character feed does not carry: `sceneId` plus a `secret: true`
+  // entry. Recorded with one regular, one SECRET and one LOCKED door so the
+  // committed fixture covers every door row the GM overlay will meet.
+  // Fixture: __fixtures__/relay/dooropts_global.json.
+  dooropts_global: () => {
+    const send = movementWorld();
+    initDoors(send);
+    // Secret door FIRST: diffShapes checks arrays against element [0], so this
+    // is what makes `secret` part of the recorded contract rather than an
+    // untested extra field.
+    installWalls([
+      makeWallDocument({ id: 'w2', door: 2, ds: 0, c: [800, 500, 900, 500] }),
+      makeWallDocument({ id: 'w1', door: 1, ds: 0, c: [400, 500, 500, 500] }),
+      makeWallDocument({ id: 'w3', door: 1, ds: 2, c: [100, 100, 200, 100] }),
+    ]);
+    handleSceneDoorRequest({ ts: 42 });
     return grab(send, RELAY.DOOROPTS);
   },
 
@@ -647,8 +666,9 @@ const RECIPES = {
   [RELAY.EXPLOREMOVE]: () => {
     const send = movementWorld();
     initDoors(send);
-    global.canvas.walls = { placeables: [], get: jest.fn() };
-    global.Hooks.callAll('updateWall', { door: 1 }, { ds: 1 }, {}, 'user1');
+    const door = makeWallDocument({ id: 'w1', door: 1, ds: 1, c: [400, 500, 500, 500] });
+    installWalls([door]);
+    global.Hooks.callAll('updateWall', door, { ds: 1 }, {}, 'user1');
     return grab(send, RELAY.EXPLOREMOVE);
   },
 };

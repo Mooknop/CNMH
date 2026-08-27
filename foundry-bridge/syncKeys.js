@@ -22,7 +22,14 @@ export const GLOBAL_ID = 'global';
 // exactly the degradation this exists to surface). Bump it in the same PR as
 // the payload change; the app-side minimum (src/hooks/useBridgeStatus.js)
 // decides when old protocols stop being acceptable.
-export const PROTOCOL_VERSION = 19;
+export const PROTOCOL_VERSION = 20;
+
+// Feature protocol floors — the version at which a specific rail became
+// available, so an app feature can gate on the capability it needs rather than
+// on head. Scene-scoped door feed (#1805): `cnmh_doorreq_global` →
+// `cnmh_dooropts_global` (all doors on the rendered scene, secret doors
+// included), `cnmh_doorinteract_global`, and the `updateWall` re-push.
+export const SCENE_DOORS_PROTOCOL = 20;
 
 // App ↔ bridge relay channels. Values are the bare <type> tokens carried as
 // the `key` field on the wire and used as the middle segment of storage keys.
