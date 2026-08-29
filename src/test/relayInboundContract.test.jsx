@@ -25,10 +25,12 @@ import actionFixture from '../../foundry-bridge/__fixtures__/relay/inbound/actio
 import moveplanFixture from '../../foundry-bridge/__fixtures__/relay/inbound/moveplan.json';
 import snapreqFixture from '../../foundry-bridge/__fixtures__/relay/inbound/snapreq.json';
 import auraSetFixture from '../../foundry-bridge/__fixtures__/relay/inbound/auraset.json';
+import groupmovereqFixture from '../../foundry-bridge/__fixtures__/relay/inbound/groupmovereq.json';
 import { RELAY } from '../sync/keys';
 import { useActionTargetSync, ACTION_SYNC_DEBOUNCE_MS } from '../hooks/useActionTargetSync';
 import { useTokenMovement } from '../hooks/useTokenMovement';
 import { useMoverMapSurface } from '../hooks/useMoverMapSurface';
+import { useGroupMove } from '../hooks/useGroupMove';
 import { buildAuraSet } from '../utils/auraRelay';
 
 // useSyncedState mirrors every incoming update to REAL window.localStorage —
@@ -126,6 +128,29 @@ describe('inbound relay contract — app producers (#1749 S1 follow-up)', () => 
       expect(emitted.value).toMatchObject({
         moverId: snapreqFixture.value.moverId,
         radiusFeet: snapreqFixture.value.radiusFeet,
+      });
+      expect(typeof emitted.value.id).toBe('string');
+      expect(typeof emitted.value.ts).toBe('number');
+    });
+  });
+
+  describe(`${RELAY.GROUPMOVEREQ} — useGroupMove.dispatch (#1825, epic #1822 B1)`, () => {
+    it('emits the same shape the fixture drives the bridge handler with', () => {
+      const { result, session } = renderHookWithProviders(() => useGroupMove());
+
+      act(() => { result.current.dispatch(groupmovereqFixture.value.moverIds, groupmovereqFixture.value.target); });
+
+      const sent = sentOn(session, RELAY.GROUPMOVEREQ);
+      expect(sent).toHaveLength(1);
+      const emitted = { characterId: sent[0].characterId, value: sent[0].value };
+
+      expect(diffShapes(emitted, groupmovereqFixture)).toEqual([]);
+      // Anti-vacuous, minus `id` — it's generated fresh per call, like every
+      // other id-correlated request builder (see the moveplan note above).
+      expect(emitted.characterId).toBe(groupmovereqFixture.characterId);
+      expect(emitted.value).toMatchObject({
+        moverIds: groupmovereqFixture.value.moverIds,
+        target: groupmovereqFixture.value.target,
       });
       expect(typeof emitted.value.id).toBe('string');
       expect(typeof emitted.value.ts).toBe('number');

@@ -213,6 +213,46 @@
   outline-offset: -2px;
 }
 
+/* ── group move outcome chip (#1825) ──────────────────────────── */
+
+.dock-exp-chip-groupmove {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-top: 1px solid var(--shell-border);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+}
+
+.dock-exp-chip-groupmove-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.66rem;
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.dock-exp-chip-groupmove--reached .dock-exp-chip-groupmove-label {
+  background: color-mix(in srgb, var(--color-success, #2e7d32) 25%, transparent);
+  color: var(--color-success, #2e7d32);
+}
+
+.dock-exp-chip-groupmove--partial .dock-exp-chip-groupmove-label {
+  background: color-mix(in srgb, var(--color-warning, #f57c00) 25%, transparent);
+  color: var(--color-warning, #f57c00);
+}
+
+.dock-exp-chip-groupmove--failed .dock-exp-chip-groupmove-label {
+  background: color-mix(in srgb, var(--color-danger, #c62828) 25%, transparent);
+  color: var(--color-danger, #c62828);
+}
+
+.dock-exp-chip-groupmove-feet {
+  color: var(--shell-text-secondary);
+}
+
 /* ── dock-side secret checks (#1812) ──────────────────────────── */
 
 .dock-exp-chip-roll {

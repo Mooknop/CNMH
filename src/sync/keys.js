@@ -12,7 +12,11 @@
 // the key builders do — so it re-exports through here too, keeping the
 // cross-package path in exactly one place. utils/snapshotRelay.js re-exports it
 // alongside the snapshot rail's other floors, which is where consumers read it.
-export { GLOBAL_ID, syncKey, globalKey, PARTY_MAP_PROTOCOL, SCENE_DOORS_PROTOCOL } from '../../foundry-bridge/syncKeys.js';
+// GROUP_MOVE_PROTOCOL (#1823, epic #1822) follows the same pattern —
+// utils/groupMoveRelay.js re-exports it for that rail's consumers.
+export {
+  GLOBAL_ID, syncKey, globalKey, PARTY_MAP_PROTOCOL, SCENE_DOORS_PROTOCOL, GROUP_MOVE_PROTOCOL,
+} from '../../foundry-bridge/syncKeys.js';
 import { RELAY as BRIDGE_RELAY } from '../../foundry-bridge/syncKeys.js';
 
 // #1736 S2 (app-only slice): the plan/confirm movement rail's relay pair.

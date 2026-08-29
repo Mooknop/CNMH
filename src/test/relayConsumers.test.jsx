@@ -7,6 +7,7 @@ import { renderHookWithProviders } from './renderWithProviders';
 import { relayFixtures, pushRelayFixture } from './relayFixtures';
 import { RELAY } from '../sync/keys';
 import { useTokenMovement } from '../hooks/useTokenMovement';
+import { useGroupMove } from '../hooks/useGroupMove';
 import { useEncounter } from '../hooks/useEncounter';
 import { useAdjacency } from '../hooks/useAdjacency';
 import { useMinions } from '../hooks/useMinions';
@@ -89,6 +90,37 @@ describe('movement chain (moveopts / movedone / nextOpts)', () => {
     const confirm = session.sent.at(-1);
     expect(confirm.stateType).toBe(RELAY.MOVECONFIRM);
     expect(confirm.value.waypoints).toEqual(planned.path);
+  });
+});
+
+describe('group move (#1825, epic #1822 B1)', () => {
+  it('useGroupMove settles the correlated groupmovedone into `results`', () => {
+    const { result, session } = renderHookWithProviders(() => useGroupMove());
+    act(() => { result.current.dispatch(['Ayla', 'Brann', 'Ghost'], { col: 10, row: 10 }); });
+
+    const req = session.sent.at(-1);
+    expect(req).toMatchObject({ characterId: 'global', stateType: RELAY.GROUPMOVEREQ });
+    expect(req.value).toMatchObject({
+      moverIds: ['Ayla', 'Brann', 'Ghost'],
+      target: { col: 10, row: 10 },
+      id: expect.any(String),
+    });
+    expect(result.current.inFlight).toBe(true);
+
+    act(() => { pushRelayFixture(session, RELAY.GROUPMOVEDONE, { id: req.value.id }); });
+
+    expect(result.current.inFlight).toBe(false);
+    // Typed asserts on the fields the outcome chips actually read off the
+    // wire (see the moveopts note above): a bridge-side rename + re-record
+    // fails here, not vacuously on undefined === undefined.
+    expect(result.current.results).toHaveLength(3);
+    expect(result.current.results[0]).toMatchObject({
+      moverId: expect.any(String), ok: expect.any(Boolean), feetMoved: expect.any(Number), reached: expect.any(Boolean),
+    });
+    // The recorded fixture covers all three outcome buckets — reached
+    // (Ayla), partial (Brann, reached:false + feetMoved>0), failed (Ghost,
+    // ok:false) — exactly what DockExplorationRoster's chips categorize.
+    expect(result.current.results).toEqual(relayFixtures.groupmovedone.value.results);
   });
 });
 

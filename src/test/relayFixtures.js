@@ -19,6 +19,7 @@ import exploremove from '../../foundry-bridge/__fixtures__/relay/exploremove.jso
 import flanked from '../../foundry-bridge/__fixtures__/relay/flanked.json';
 import foekit from '../../foundry-bridge/__fixtures__/relay/foekit.json';
 import foundryeffects from '../../foundry-bridge/__fixtures__/relay/foundryeffects.json';
+import groupmovedone from '../../foundry-bridge/__fixtures__/relay/groupmovedone.json';
 import heropoints from '../../foundry-bridge/__fixtures__/relay/heropoints.json';
 import hp from '../../foundry-bridge/__fixtures__/relay/hp.json';
 import minionactors from '../../foundry-bridge/__fixtures__/relay/minionactors.json';
@@ -50,7 +51,7 @@ import summonpool from '../../foundry-bridge/__fixtures__/relay/summonpool.json'
 // so `pushRelayFixture` still lands it on the right key.
 export const relayFixtures = {
   actorfeed, adjacency, auramembers, castdone, conditions, dmgdone, dooropts, dooroptsGlobal, encounter,
-  exploremove, flanked, foekit, foundryeffects, heropoints, hp, minionactors, minions,
+  exploremove, flanked, foekit, foundryeffects, groupmovedone, heropoints, hp, minionactors, minions,
   movedone, moveopts, moveplanned, pathpreview, pathpreviewgm, positions, rolldone, roster,
   savedone, snapdoneParty, strikedone, summonpool,
 };
