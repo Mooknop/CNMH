@@ -167,4 +167,18 @@ describe('distance suggestion', () => {
     expect(mockAdvanceSeconds).toHaveBeenCalledWith(600); // 10 min × 60
     expect(mockExploreDist).toBe(0);
   });
+
+  // unify-exploredist: the key may hold the per-character ledger instead of
+  // a legacy number — the suggestion must reduce it via the party MAX, not
+  // sum every character's total.
+  it('reduces a per-character ledger via MAX, not sum', () => {
+    // perChar MAX is 3000 (Ashka's), sum would be 5500 (a different
+    // suggestion bucket) — these numbers are picked so the two reductions
+    // disagree: 3000*12/20 = 1800s = 30 min vs 5500*12/20 = 3300s = 55min→60min.
+    mockExploreDist = { base: 0, perChar: { a: 3000, b: 2500 } };
+    mockRoster = [{ actorId: 'a1', speed: 20 }];
+    renderControl();
+    expect(screen.getByText(/Party moved 3000 ft/i)).toBeInTheDocument();
+    expect(screen.getByText(/~30 min/i)).toBeInTheDocument();
+  });
 });

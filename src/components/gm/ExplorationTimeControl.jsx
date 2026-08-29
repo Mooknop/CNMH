@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { partyExploreDistance } from '../../utils/exploreDistance';
 import { RELAY, APP, globalKey } from '../../sync/keys';
 
 // GM control for advancing time during exploration. Provides quick buttons
@@ -22,16 +23,21 @@ const ExplorationTimeControl = () => {
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('min');
 
+  // cnmh_exploredist_global may hold a legacy plain number or the
+  // per-character ledger (utils/exploreDistance.js); partyExploreDistance
+  // reduces either shape to the party's distance for this beat.
+  const partyFeet = partyExploreDistance(exploreDist);
+
   const suggestedMinutes = useMemo(() => {
-    if (!exploreDist || exploreDist <= 0 || !roster?.length) return null;
+    if (!partyFeet || partyFeet <= 0 || !roster?.length) return null;
     const speeds = roster.map((e) => e.speed).filter((s) => s > 0);
     if (!speeds.length) return null;
     const lowestSpeed = Math.min(...speeds);
-    const rawSeconds = (exploreDist * 12) / lowestSpeed;
+    const rawSeconds = (partyFeet * 12) / lowestSpeed;
     const rawMinutes = rawSeconds / 60;
     // Round to nearest 10 min; floor at 10 so a suggestion is always visible.
     return Math.max(10, Math.round(rawMinutes / 10) * 10);
-  }, [exploreDist, roster]);
+  }, [partyFeet, roster]);
 
   const applyCustom = useCallback(() => {
     const val = parseFloat(customValue);
@@ -92,7 +98,7 @@ const ExplorationTimeControl = () => {
       {suggestedMinutes != null && (
         <div className="pmc-explore-suggestion">
           <span className="pmc-explore-suggestion-label">
-            Party moved {exploreDist} ft → ~{suggestedMinutes} min
+            Party moved {partyFeet} ft → ~{suggestedMinutes} min
           </span>
           <button className="pmc-btn pmc-btn--primary pmc-btn--sm" onClick={applyDistanceSuggestion}>
             Apply

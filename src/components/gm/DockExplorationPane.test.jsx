@@ -5,6 +5,7 @@ import { relayFixtures, pushRelayFixture } from '../../test/relayFixtures';
 import { RELAY } from '../../sync/keys';
 import { PARTY_MAP_PROTOCOL } from '../../utils/snapshotRelay';
 import { GROUP_MOVE_PROTOCOL } from '../../utils/groupMoveRelay';
+import { partyExploreDistance } from '../../utils/exploreDistance';
 import DockExplorationPane from './DockExplorationPane';
 
 // The pane is the party-map control surface (#1808, epic #1804 S4): one
@@ -161,11 +162,47 @@ describe('DockExplorationPane (#1808)', () => {
     act(() => { pushRelayFixture(session, RELAY.MOVEDONE, { charId: 'Pellias', reqTs: planTs }); });
 
     const feet = relayFixtures.movedone.value.feetMoved;
-    expect(lastSent(session, 'exploredist')).toMatchObject({
-      characterId: 'global',
-      value: feet,
-    });
+    const sent = lastSent(session, 'exploredist');
+    expect(sent).toMatchObject({ characterId: 'global' });
+    expect(partyExploreDistance(sent.value)).toBe(feet);
     expect(screen.getByText(`${feet} ft`)).toBeInTheDocument();
+  });
+
+  // Regression test for the 5x-inflation bug (unify-exploredist): walking
+  // different PCs one at a time to the same beat used to SUM their feet.
+  // The unified per-character ledger takes the MAX instead.
+  it('single-moving two different PCs one after another accrues the MAX of their feet, not the sum', () => {
+    const { session, container } = mountPane();
+    landPartyMap(session);
+    withImageRect(container);
+
+    // Pellias walks 30 ft.
+    act(() => { tapWorld(PARTY.tokens[0]); });
+    const pelliasOptsTs = lastSent(session, RELAY.MOVEREQ).value.ts;
+    act(() => { pushRelayFixture(session, RELAY.MOVEOPTS, { charId: 'Pellias', reqTs: pelliasOptsTs }); });
+    act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+    const pelliasPlanTs = lastSent(session, RELAY.MOVEPLAN).value.ts;
+    act(() => { pushRelayFixture(session, RELAY.MOVEPLANNED, { charId: 'Pellias', reqTs: pelliasPlanTs }); });
+    act(() => {
+      pushRelayFixture(session, RELAY.MOVEDONE, { charId: 'Pellias', reqTs: pelliasPlanTs, feetMoved: 30 });
+    });
+
+    // Deselect Pellias, then Ashka walks 15 ft.
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    act(() => { tapWorld(PARTY.tokens[1]); });
+    const ashkaOptsTs = lastSent(session, RELAY.MOVEREQ).value.ts;
+    act(() => { pushRelayFixture(session, RELAY.MOVEOPTS, { charId: 'Ashka', reqTs: ashkaOptsTs }); });
+    act(() => { tapWorld({ x: 1450, y: 950 }, 3); });
+    const ashkaPlanTs = lastSent(session, RELAY.MOVEPLAN).value.ts;
+    act(() => { pushRelayFixture(session, RELAY.MOVEPLANNED, { charId: 'Ashka', reqTs: ashkaPlanTs }); });
+    act(() => {
+      pushRelayFixture(session, RELAY.MOVEDONE, { charId: 'Ashka', reqTs: ashkaPlanTs, feetMoved: 15 });
+    });
+
+    // MAX(30, 15) = 30, not the 45 a naive sum would give.
+    const sent = lastSent(session, 'exploredist');
+    expect(sent).toMatchObject({ characterId: 'global' });
+    expect(partyExploreDistance(sent.value)).toBe(30);
   });
 
   it('adopts the bridge’s unsolicited party rebroadcast after a move', () => {
@@ -478,7 +515,9 @@ describe('DockExplorationPane (#1808)', () => {
       });
 
       // Party's MAX, not the 20 ft a naive sum would give.
-      expect(lastSent(session, 'exploredist')).toMatchObject({ characterId: 'global', value: 15 });
+      const sent = lastSent(session, 'exploredist');
+      expect(sent).toMatchObject({ characterId: 'global' });
+      expect(partyExploreDistance(sent.value)).toBe(15);
       // The pane's own "Moved X ft" readout (scoped — Ashka's outcome chip
       // also reads "15 ft", coincidentally the same number here).
       expect(container.querySelector('.dock-exp-distance').textContent).toContain('15 ft');
@@ -515,7 +554,9 @@ describe('DockExplorationPane (#1808)', () => {
       });
 
       expect(screen.getByTestId('dock-exp-groupmove-Pellias')).toHaveClass('dock-exp-chip-groupmove--failed');
-      expect(lastSent(session, 'exploredist')).toMatchObject({ characterId: 'global', value: 10 });
+      const sent = lastSent(session, 'exploredist');
+      expect(sent).toMatchObject({ characterId: 'global' });
+      expect(partyExploreDistance(sent.value)).toBe(10);
     });
   });
 });

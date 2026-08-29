@@ -57,11 +57,12 @@ export function groupMoveOutcomeFor(result) {
   return result.reached ? GROUP_MOVE_OUTCOME.REACHED : GROUP_MOVE_OUTCOME.PARTIAL;
 }
 
-// The group's party-semantic accrual (epic ruling, #1825): the tally that
-// feeds cnmh_exploredist_global gets the group's MAX feetMoved, not the sum
-// of every mover's own distance — the party advanced together, one beat, one
-// number. See DockExplorationPane's exploredist comment for the single-move
-// side of this decision.
+// The group's party-semantic beat distance (epic ruling, #1825): the group
+// advanced together, one beat, one number — the MAX feetMoved across every
+// mover in the result set, not the sum. Used for the dock's own local
+// `feetTotal` display (and by tests/fixtures); the shared exploredist tally's
+// accrual is the per-character ledger in utils/exploreDistance.js instead
+// (unify-exploredist), which this no longer defines.
 export function maxFeetMoved(results) {
   return (results || []).reduce((max, r) => Math.max(max, Number(r?.feetMoved) || 0), 0);
 }

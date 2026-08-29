@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import ExplorationMove from './ExplorationMove';
+import { partyExploreDistance } from '../../utils/exploreDistance';
 
 const mockPlayMode = {
   mode: 'exploration',
@@ -247,7 +248,7 @@ describe('ExplorationMove', () => {
     act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
 
     expect(mockSetExploreDist).toHaveBeenCalledTimes(2);
-    expect(mockExploreDist).toBe(15);
+    expect(partyExploreDistance(mockExploreDist)).toBe(15);
   });
 
   it('non-GM: does not increment cnmh_exploredist_global', () => {
@@ -389,7 +390,7 @@ describe('ExplorationMove', () => {
 
       act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 35 }));
       expect(screen.getByLabelText('Distance walked')).toHaveTextContent('Moved 35 ft');
-      expect(mockExploreDist).toBe(35);
+      expect(partyExploreDistance(mockExploreDist)).toBe(35);
       // Chains a refresh probe exactly like the stepper does.
       expect(mockMovement.requestMoveRefresh).toHaveBeenCalledWith('stride');
     });

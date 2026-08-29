@@ -14,6 +14,7 @@ import { hitTestMarkers } from '../../utils/markerHitTest';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { PARTY_MAP_PROTOCOL } from '../../utils/snapshotRelay';
 import { GROUP_MOVE_PROTOCOL, groupMoveOutcomeFor, maxFeetMoved } from '../../utils/groupMoveRelay';
+import { accrueExploreDistance, accrueGroupExploreDistance } from '../../utils/exploreDistance';
 import { APP, globalKey } from '../../sync/keys';
 import MapSnapshotViewer from '../encounter/MapSnapshotViewer';
 import SnapshotRouteOverlay from '../encounter/SnapshotRouteOverlay';
@@ -72,8 +73,9 @@ import './DockExplorationPane.css';
 // already in flight, the tap is a deliberate no-op — `statusText` explains
 // why either way. The settled ack's `results[]` renders as outcome chips on
 // the roster (reached / partial / failed, `groupMoveOutcomeFor`) and its
-// party-semantic MAX `feetMoved` accrues onto `cnmh_exploredist_global` —
-// see the accrual comment below for why single moves keep summing instead.
+// results accrue onto `cnmh_exploredist_global` through the unified
+// per-character ledger — see utils/exploreDistance.js and the accrual
+// comment below.
 //
 // DEGRADATION (epic ruling): no bridge, or a bridge below PARTY_MAP_PROTOCOL,
 // shows a note instead of the map. There is deliberately no abstract-grid
@@ -129,49 +131,41 @@ const DockExplorationPane = () => {
 
   const requestMoveRefreshRef = useRef(null);
 
-  // Mirrors ExplorationMove's isGm branch (#1811 feeds on this tally) — the
-  // dock is a GM-only surface, so the accrual is unconditional here.
-  //
-  // SINGLE-MOVE ACCRUAL DECISION (#1825, epic #1822 B1): this still SUMS each
-  // movedone's feet, even though the epic calls out that walking N PCs
-  // one-by-one to the same beat inflates the tally against a suggestion
-  // formula (ExplorationTimeControl) that already divides by the party's
-  // slowest Speed. A true party-semantic fix here — tracking each PC's
-  // accrued-since-last-tally feet and taking the MAX, the same rule the group
-  // rail below uses — runs into a second independent writer this pane
-  // doesn't own: `ExplorationMove.jsx`'s own per-PC panel ALSO adds to this
-  // same `cnmh_exploredist_global` key (its `isGm` branch) whenever the GM is
-  // driving movement from an individual PC's own surface instead of the
-  // dock. A local per-mover max computed only from this pane's own taps would
-  // either ignore that writer's contributions or fight it for the key — a
-  // correct fix needs a shared reducer across both call sites, which is a
-  // bigger cross-cutting change than this slice's scope (dispatch + chips +
-  // fixture). Left as-is: the tally is a rounded-to-10-minute heuristic the
-  // GM can freely zero (the Reset button below, or ExplorationTimeControl's
-  // own Apply), and the inflation is visible in `feetTotal` the whole time —
-  // bounded and GM-correctable, not a silent error. The GROUP rail's own
-  // accrual (below) IS party-semantic from day one, since it has exactly one
-  // writer: this pane.
+  // UNIFIED ACCRUAL (unify-exploredist, following #1825/#1822): `cnmh_
+  // exploredist_global` holds a per-character feet ledger (utils/
+  // exploreDistance.js), not a plain running total. Both writers on this key
+  // — this pane's single-move accrual below AND ExplorationMove.jsx's own
+  // `isGm` branch — attribute feet to the character that moved instead of
+  // summing into one number; the readers (ExplorationTimeControl) reduce the
+  // ledger to a party distance as the MAX over per-character totals (plus any
+  // legacy base). Walking N PCs one-by-one to the same beat now reads that
+  // beat's single largest distance, not their sum, and a straggler catching
+  // up after a group move (below) adds nothing once their total is no higher
+  // than the group's. Per-character totals across genuinely separate beats
+  // can still under-count against each other — accepted, same as before: the
+  // tally is GM-resettable (the Reset button below, or ExplorationTimeControl's
+  // own Apply) and never over-counts.
   const handleMoveDone = useCallback((payload) => {
     const feet = payload?.feetMoved ?? 0;
     setFeetTotal((f) => f + feet);
-    if (feet > 0) setExploreDist((d) => (d || 0) + feet);
+    if (feet > 0) setExploreDist((d) => accrueExploreDistance(d, singleSelectedId, feet));
     // Re-arm the picker at the new origin so the GM can keep walking this PC
     // without re-selecting them (the bridge usually piggybacks nextOpts, so
     // this is normally free — see useTokenMovement.requestMoveRefresh).
     requestMoveRefreshRef.current?.('stride');
-  }, [setExploreDist]);
+  }, [setExploreDist, singleSelectedId]);
 
-  // GROUP MOVE settle (#1825): one accrual per settled group, using the
-  // group's MAX feetMoved — the epic's party-semantic ruling. Fires once per
-  // `groupMoveResults` array identity (a fresh dispatch always produces a new
-  // array, including the timeout's `[]`, which contributes 0 and is a no-op).
+  // GROUP MOVE settle (#1825): one accrual per settled group, folding every
+  // mover's own feetMoved through the same per-character ledger above —
+  // identical to the group's MAX feetMoved when the tally started clean.
+  // Fires once per `groupMoveResults` array identity (a fresh dispatch always
+  // produces a new array, including the timeout's `[]`, which is a no-op).
   useEffect(() => {
     if (!groupMoveResults) return;
     const feet = maxFeetMoved(groupMoveResults);
     if (feet <= 0) return;
     setFeetTotal((f) => f + feet);
-    setExploreDist((d) => (d || 0) + feet);
+    setExploreDist((d) => accrueGroupExploreDistance(d, groupMoveResults));
   }, [groupMoveResults, setExploreDist]);
 
   // Keyed on `singleSelectedId`. With nothing selected (or 2+ selected) the
