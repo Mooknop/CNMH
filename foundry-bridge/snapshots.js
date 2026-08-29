@@ -189,17 +189,7 @@ export async function pushMoverSnapshot(moverId) {
   if (!moverId || !_sendUpdate) return;
 
   if (isExplorationMode()) {
-    const party = partyCapture();
-    // No party member in frame at all — nothing worth broadcasting (mirrors
-    // the mover-centered "unknown mover" no-op below).
-    if (!party) return;
-    await deliver({
-      id: `snapmove-${moverId}-${Date.now()}`,
-      moverId: null,
-      trigger: 'movedone',
-      worldRect: party.rect,
-      tokens: party.tokens,
-    });
+    await pushPartySnapshot({ id: `snapmove-${moverId}-${Date.now()}` });
     return;
   }
 
@@ -213,6 +203,34 @@ export async function pushMoverSnapshot(moverId) {
     trigger: 'movedone',
     worldRect: rect,
   });
+}
+
+// ONE party-framed broadcast capture, unconditional (#1823). The exploration
+// branch of pushMoverSnapshot above is its first caller — the emission is
+// byte-identical to what that branch built inline before this was extracted —
+// and the group-move rail is the second: a group move settles N tokens and
+// wants exactly ONE recapture, so bridge.js wires this to groupMove's settled
+// seam rather than letting the per-mover broadcast fire N times.
+//
+// `trigger` stays 'movedone' for the group case deliberately: an app already
+// treats a 'movedone' broadcast as "the world moved, refresh the party map",
+// which is exactly what a settled group is. A new trigger value would be a
+// payload change no consumer needs.
+//
+// Returns true when a capture was actually delivered — no party member in
+// frame is not worth a nack (mirrors the mover-centered no-op).
+export async function pushPartySnapshot({ id, trigger = 'movedone' } = {}) {
+  if (!_sendUpdate) return false;
+  const party = partyCapture();
+  if (!party) return false;
+  await deliver({
+    id: id ?? `snapparty-${Date.now()}`,
+    moverId: null,
+    trigger,
+    worldRect: party.rect,
+    tokens: party.tokens,
+  });
+  return true;
 }
 
 // Every actor-mapped PC charId (#1807 — "party" = resolvable via the SAME

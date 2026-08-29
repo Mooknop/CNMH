@@ -425,15 +425,39 @@ export function installTokenEmanation(opts = {}) {
 //   clipAfter  — keep only this many waypoints after the origin (constrained)
 //   costPerLeg — feet each leg costs (models Region difficult terrain)
 //   stopAt     — { x, y } the document actually parks at (models a stop-short)
+//   stepped    — findMovementPath returns the PER-CELL route between the
+//                requested waypoints (Chebyshev interpolation) instead of the
+//                waypoints alone, which is what the real v14 pathfinder hands
+//                back. Needed by anything that slices a prefix out of a route
+//                (#1823's group-move budget clip) — with the default echo there
+//                is no intermediate cell to stop at.
 export function equipV14Movement(token, opts = {}) {
-  const { clipAfter = null, costPerLeg = null, stopAt = null } = opts;
+  const { clipAfter = null, costPerLeg = null, stopAt = null, stepped = false } = opts;
   const gridSize = global.canvas?.grid?.size ?? 100;
+
+  const route = (waypoints) => {
+    const echo = waypoints.map((w) => ({ x: w.x, y: w.y }));
+    if (!stepped || echo.length < 2) return echo;
+    const out = [echo[0]];
+    for (let i = 1; i < echo.length; i++) {
+      let { x, y } = out[out.length - 1];
+      const step = (from, to) => from + Math.sign(to - from) * Math.min(gridSize, Math.abs(to - from));
+      // Guarded: a target off the grid lattice would otherwise never converge.
+      for (let guard = 0; guard < 64; guard++) {
+        if (x === echo[i].x && y === echo[i].y) break;
+        x = step(x, echo[i].x);
+        y = step(y, echo[i].y);
+        out.push({ x, y });
+      }
+    }
+    return out;
+  };
 
   token.findMovementPath = jest.fn((waypoints) => ({
     // A resolved job exposes the path synchronously AND as a promise; the
     // adapter accepts either.
-    result: waypoints.map((w) => ({ x: w.x, y: w.y })),
-    promise: Promise.resolve(waypoints.map((w) => ({ x: w.x, y: w.y }))),
+    result: route(waypoints),
+    promise: Promise.resolve(route(waypoints)),
   }));
 
   token.constrainMovementPath = jest.fn((waypoints) =>

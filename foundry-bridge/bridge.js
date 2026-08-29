@@ -16,6 +16,9 @@ import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js'
 import {
   initMovement, setMoveDoneListener, handleMoveRequest, handleMovePlan, handleMoveConfirm,
 } from './movement.js';
+import {
+  initGroupMove, setGroupSettledListener, handleGroupMoveRequest,
+} from './groupMove.js';
 import { initPathPreview } from './pathPreview.js';
 import { initAuras, handleAuraSet, armAuraSweep, replayAuraState } from './auras.js';
 import { initTargeting, handleAction } from './targeting.js';
@@ -39,7 +42,7 @@ import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnM
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
 import {
   initSnapshots, handleSnapshotRequest, handlePingPoint, handleTemplatePlace, pushMoverSnapshot,
-  setPlayMode,
+  pushPartySnapshot, setPlayMode,
 } from './snapshots.js';
 import { getPlayerActors, getActorId, getSpeed, getModuleVersion } from './pf2eAdapter.js';
 import { GLOBAL_ID, RELAY, PROTOCOL_VERSION } from './syncKeys.js';
@@ -120,6 +123,7 @@ Hooks.once('ready', () => {
   initActorFeed(sendUpdate);
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
+  initGroupMove(sendUpdate);
   initPathPreview(sendUpdate);
   // After initMovement (#1733): the aura rail resolves its owner token through
   // movement.js's resolveToken, which reads the actor map initEncounter owns.
@@ -145,6 +149,11 @@ Hooks.once('ready', () => {
   // movement rail exposes the seam, the snapshot rail fills it, and neither
   // module imports the other.
   setMoveDoneListener(pushMoverSnapshot);
+  // …and exactly ONE party capture per completed GROUP move (#1823): the group
+  // rail composes movement's execution primitive rather than its ack wrapper,
+  // so no per-member capture ever fires; this is the group's single recapture.
+  setGroupSettledListener((groupId) =>
+    pushPartySnapshot({ id: `snapgroup-${groupId}-${Date.now()}` }));
   initDiceSets();
   connect();
 });
@@ -372,6 +381,14 @@ function dispatch(msg) {
   }
   if (key === RELAY.MOVECONFIRM) {
     handleMoveConfirm(characterId, value);
+    return;
+  }
+
+  // Exploration GROUP move (#1823) — one request, N movers spread around the
+  // tapped cell, acked together on cnmh_groupmovedone_global. Global-only: the
+  // whole point is that a selection of movers rides ONE key.
+  if (characterId === GLOBAL_ID && key === RELAY.GROUPMOVEREQ) {
+    handleGroupMoveRequest(value);
     return;
   }
 

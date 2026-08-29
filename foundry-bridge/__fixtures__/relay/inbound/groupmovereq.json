@@ -1,0 +1,9 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "grp-1700000000000",
+    "moverIds": ["Ayla", "Brann"],
+    "target": { "col": 10, "row": 10 },
+    "ts": 1700000000000
+  }
+}

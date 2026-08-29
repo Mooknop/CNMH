@@ -1,0 +1,40 @@
+{
+  "characterId": "global",
+  "value": {
+    "id": "grp-fixture",
+    "results": [
+      {
+        "moverId": "Ayla",
+        "ok": true,
+        "dest": {
+          "col": 10,
+          "row": 10,
+          "x": 1000,
+          "y": 1000
+        },
+        "feetMoved": 5,
+        "reached": true
+      },
+      {
+        "moverId": "Brann",
+        "ok": true,
+        "dest": {
+          "col": 13,
+          "row": 10,
+          "x": 1300,
+          "y": 1000
+        },
+        "feetMoved": 15,
+        "reached": false
+      },
+      {
+        "moverId": "Ghost",
+        "ok": false,
+        "dest": null,
+        "feetMoved": 0,
+        "reached": false
+      }
+    ],
+    "ts": 1700000000000
+  }
+}
