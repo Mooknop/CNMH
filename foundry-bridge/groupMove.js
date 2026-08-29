@@ -22,11 +22,24 @@
 //       dest      — the REAL landing cell `{ col, row, x, y }` — the same shape
 //                   `movedone.newPosition` uses (`x`,`y` = the cell's top-left
 //                   pixels).
-//       reached   — the mover ended in the cell the ring assignment gave it.
+//       reached   — the mover ended in the cell the spread assignment gave it.
 //                   false = it walked the reachable prefix and stopped short
-//                   (out of budget, or a wall clipped the route). `dest` and
-//                   `feetMoved` are honest either way — that one rule IS "as
-//                   close as they can".
+//                   (out of budget, or the route could not reach even going
+//                   around). `dest` and `feetMoved` are honest either way —
+//                   that one rule IS "as close as they can".
+//
+// ORDERING (#1832). Candidates are enumerated by WALKING distance from the
+// target — one flood fill through the walls — not by Chebyshev ring off a
+// straight ray from the target's centre, which is what shipped first. The ray
+// was wrong in both directions: it rejected the cell just around a corner
+// (perfectly reachable, the natural place for the second PC to stand) and it
+// accepted a cell merely VISIBLE past a wall's end with no route to it at all.
+// The consequence at the table is the whole point: tap into a corridor and the
+// party strings out ALONG the corridor, closest-to-the-goal first, instead of
+// scattering into geometric rings that sit behind a wall. Distinct destinations
+// and the closest-mover-first serving order are unchanged; a pocket smaller
+// than the party hands the overflow movers the target cell itself to path at
+// (see assignDestinations).
 //   Live-only and id-correlated, like snapreq/snapdone: a late bridge simply
 //   misses a request, and the app's timeout is the fallback.
 //
@@ -58,16 +71,19 @@ import {
   cellGeometry, resolveToken, tokenStartCenter, walkTokenPath,
 } from './movement.js';
 import {
-  getGridSize, getSpeed, gridToPixels, hasWallCollision, planTokenPath,
-  measureTokenPathCost,
+  getGridSize, getSpeed, gridToPixels, measureTokenPathCost,
 } from './pf2eAdapter.js';
+import { connectedCells, planRoutedPath } from './pathRoute.js';
 import { MOVER_RADIUS_FALLBACK_FEET, MOVER_RADIUS_SPEED_FACTOR } from './snapshots.js';
 import { GLOBAL_ID, RELAY } from './syncKeys.js';
 
-// How far out the spread search looks before giving up. 8 rings is a 17×17 cell
-// window — vastly more than a party needs on open ground, and a hard stop when
-// walls have sealed the target off (the alternative is an unbounded scan).
-const MAX_RING = 8;
+// How far out the spread's flood fill looks before giving up. 12 steps of
+// WALKING distance is vastly more than a party needs on open ground and enough
+// to string a party down a corridor; the cell cap is the hard stop for a wide
+// open scene (the alternative is an unbounded scan). Both bound a fill that
+// normally terminates in one or two layers.
+const MAX_SPREAD_DEPTH = 12;
+const MAX_SPREAD_CELLS = 400;
 
 let _sendUpdate = null;
 let _onGroupSettled = null;
@@ -107,57 +123,39 @@ function cellCentre(col, row, gridSize) {
 
 const sqDist = (a, b) => ((a.x - b.x) ** 2) + ((a.y - b.y) ** 2);
 
-// The cells at Chebyshev distance `ring` from (col,row), in col-then-row order
-// so the candidate list is deterministic before any distance sort touches it.
-// Ring 0 is the target cell itself.
-function ringCells(col, row, ring) {
-  if (ring === 0) return [{ col, row, ring: 0 }];
-  const cells = [];
-  for (let dc = -ring; dc <= ring; dc += 1) {
-    for (let dr = -ring; dr <= ring; dr += 1) {
-      if (Math.max(Math.abs(dc), Math.abs(dr)) !== ring) continue;
-      cells.push({ col: col + dc, row: row + dr, ring });
-    }
-  }
-  return cells;
-}
-
-// Expanding rings of WALKABLE candidate cells around the target. "Walkable" is
-// the target's own point of view: a cell whose centre a wall test rejects from
-// the target's centre is inside or behind a wall, so nobody is sent there. The
-// target cell itself is ring 0 and is walkable by definition (the GM tapped it).
-// Stops as soon as a ring completes with at least `needed` candidates banked —
-// whole rings, never a partial one, so the per-mover pick below always chooses
-// from a complete ring.
-function walkableCandidates(target, needed, gridSize) {
-  const origin = cellCentre(target.col, target.row, gridSize);
-  const out = [];
-  for (let ring = 0; ring <= MAX_RING && out.length < needed; ring += 1) {
-    for (const cell of ringCells(target.col, target.row, ring)) {
-      if (ring > 0) {
-        const c = cellCentre(cell.col, cell.row, gridSize);
-        if (hasWallCollision(origin.x, origin.y, c.x, c.y)) continue;
-      }
-      out.push(cell);
-    }
-  }
-  return out;
+// Candidate destination cells around the target, in ascending WALKING distance
+// from it (#1832). See the ORDERING note in the header — this replaced an
+// expanding-Chebyshev-ring scan whose walkability test was a straight ray from
+// the target's centre.
+function walkableCandidates(target, needed) {
+  return connectedCells(target, {
+    needed,
+    maxDepth: MAX_SPREAD_DEPTH,
+    maxCells: MAX_SPREAD_CELLS,
+  });
 }
 
 const cellKey = (c) => `${c.col},${c.row}`;
 
 // Spread assignment. Movers are served CLOSEST-PC-FIRST by straight-line
 // distance to the target (tie-broken by moverId, so a tie is stable and
-// reproducible), and each in turn takes a free cell from the LOWEST ring that
-// still has one — within that ring, the cell nearest to that mover, tie-broken
-// col-then-row. Nobody shares a destination.
+// reproducible), and each in turn takes a free cell from the NEAREST WALKING
+// DISTANCE that still has one — within that distance, the cell nearest to that
+// mover, tie-broken col-then-row. Nobody shares a destination.
 //
 // Serving the nearest PC first is what makes the formation read right: the PC
 // already standing next to the target gets the target cell, and the stragglers
 // fan outward instead of the ordering being an accident of the request array.
+//
+// OVERFLOW. A pocket smaller than the party (a closet, a dead-end alcove) runs
+// out of candidates. Those movers are given the TARGET CELL as their pathing
+// goal rather than being refused: `moveOne`'s best-partial walk takes them as
+// close as they can get and reports honestly, which is exactly the "as close as
+// they can" rule the rest of this rail follows. They are flagged `overflow` so
+// a caller can tell an assignment from a fallback.
 export function assignDestinations(movers, target, gridSize = getGridSize()) {
   const targetCentre = cellCentre(target.col, target.row, gridSize);
-  const candidates = walkableCandidates(target, movers.length, gridSize);
+  const candidates = walkableCandidates(target, movers.length);
 
   const order = [...movers].sort((a, b) => {
     const d = sqDist(a.centre, targetCentre) - sqDist(b.centre, targetCentre);
@@ -169,10 +167,13 @@ export function assignDestinations(movers, target, gridSize = getGridSize()) {
   const assigned = new Map();
   for (const mover of order) {
     const free = candidates.filter((c) => !taken.has(cellKey(c)));
-    if (!free.length) continue;
-    const lowestRing = Math.min(...free.map((c) => c.ring));
+    if (!free.length) {
+      assigned.set(mover.moverId, { col: target.col, row: target.row, dist: 0, overflow: true });
+      continue;
+    }
+    const nearest = Math.min(...free.map((c) => c.dist));
     const pool = free
-      .filter((c) => c.ring === lowestRing)
+      .filter((c) => c.dist === nearest)
       .sort((a, b) => {
         const d = sqDist(mover.centre, cellCentre(a.col, a.row, gridSize))
           - sqDist(mover.centre, cellCentre(b.col, b.row, gridSize));
@@ -222,20 +223,24 @@ async function affordablePrefix(token, path, startCentre, budget) {
 
 // --- execution ---------------------------------------------------------------
 
-// One mover's whole trip: plan the route to its assigned cell with the same core
-// path machinery the single tap-flow uses, clip it to the mover's budget, walk
-// what is left, and report the truth about where it ended up.
+// One mover's whole trip: plan the route to its assigned cell with the same
+// shared planner the single tap-flow uses — which from #1832 pathfinds around a
+// wall rather than stopping at it — clip it to the mover's budget, walk what is
+// left, and report the truth about where it ended up.
+//
+// The budget rides INTO the planner as well as clipping the result: a search
+// that knows the mover's reach never proposes a detour it cannot afford, and
+// affordablePrefix stays the authoritative (terrain-aware) clip on top.
 async function moveOne(token, cell, budgetOverride) {
   const geo = cellGeometry(token);
   const startCentre = tokenStartCenter(token, geo);
-  const { path } = await planTokenPath(
+  const budgetFeet = budgetFeetFor(token, budgetOverride);
+  const { path } = await planRoutedPath(
     token,
     [geo.toCenter({ col: cell.col, row: cell.row })],
-    { origin: startCentre },
+    { origin: startCentre, budgetFeet },
   );
-  const walk = await affordablePrefix(
-    token, path, startCentre, budgetFeetFor(token, budgetOverride),
-  );
+  const walk = await affordablePrefix(token, path, startCentre, budgetFeet);
   const { landing, feetMoved } = await walkTokenPath(token, walk, { origin: startCentre });
   return {
     dest: landing,
@@ -301,8 +306,10 @@ export async function handleGroupMoveRequest(value) {
   // caught here so Promise.all can never short-circuit the group.
   const outcomes = await Promise.all(resolved.map(async ({ moverId, token }) => {
     const cell = assigned.get(moverId);
-    // No cell at all = MAX_RING of walled-off pocket around the target. Nothing
-    // to walk toward, so this reads as a failure, not a zero-foot success.
+    // Belt and braces: the target cell is always candidate zero (the GM tapped
+    // it) and overflow movers are handed it explicitly, so an unassigned mover
+    // is not reachable from here — but a missing cell has nothing to walk
+    // toward, and that reads as a failure rather than a zero-foot success.
     if (!cell) return failed(moverId);
     try {
       return { moverId, ok: true, ...(await moveOne(token, cell, value?.budgetFeet)) };

@@ -1319,6 +1319,37 @@ export function measureMoveCost(fromX, fromY, toX, toY) {
   return Math.max(Math.round(dc), Math.round(dr)) * feetPerSquare;
 }
 
+// Pure-GEOMETRY cost of a whole centre-to-centre polyline (#1832). The
+// multi-point twin of measureMoveCost, and deliberately NOT the terrain-aware
+// measureTokenPathCost: pathfinding needs to know what the scene's diagonal
+// RULE is (PF2e's alternating 5-10-5 vs an equidistant Chebyshev grid), and a
+// two-diagonal probe through this function answers that question against the
+// live grid instead of guessing. Same degraded fallback as measureMoveCost.
+export function measureGridPathCost(points) {
+  const list = (points ?? []).map((p) => ({ x: Number(p.x), y: Number(p.y) }));
+  if (list.length < 2) return 0;
+  const grid = canvas?.grid;
+  if (typeof grid?.measurePath === 'function') {
+    const distance = grid.measurePath(list)?.distance;
+    if (Number.isFinite(distance)) return distance;
+  }
+  let total = 0;
+  for (let i = 1; i < list.length; i += 1) {
+    total += measureMoveCost(list[i - 1].x, list[i - 1].y, list[i].x, list[i].y);
+  }
+  return total;
+}
+
+// Does this world expose the v14 movement-path pipeline for this token (#1832)?
+// The pathfinding rail routes around walls only where that pipeline is live —
+// on the degraded pre-v14 backend planTokenPath is the leg-by-leg collision
+// walk, and #1832 deliberately leaves that behaviour byte-for-byte alone.
+// Capability-detected on top of the generation gate, exactly like planTokenPath.
+export function supportsMovementPathApi(token) {
+  const generation = game.release?.generation ?? 13;
+  return generation >= 14 && typeof token?.findMovementPath === 'function';
+}
+
 // All player-character actors on this world (hasPlayerOwner = true, type =
 // 'character'). Used to push cnmh_roster_global so the app can resolve
 // charId → token outside of active combat.

@@ -41,8 +41,12 @@
 //                    [{ col, row, x, y }, …] excluding the origin and ending at
 //                    the ACTUAL landing cell; x,y = the cell's top-left pixels.
 //                  costFeet = terrain-aware total, snapped to 5.
-//                  clipped = a wall/constraint stopped the route short of the
-//                    last requested waypoint — the app offers a waypoint tap.
+//                  clipped = the route stopped short of the last requested
+//                    waypoint — the app offers a waypoint tap. From protocol 23
+//                    (#1832) the route PATHFINDS around walls first, so this now
+//                    means "unreachable even going around" rather than "a wall
+//                    is in the way"; the shape is unchanged and the partial
+//                    route still rides along.
 //   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts, waypoints? }
 //                  waypoints (optional) = the planned path cells verbatim →
 //                    execute the whole multi-waypoint move. Absent → the legacy
@@ -79,11 +83,14 @@ import {
   measureMoveCost,
   hasWallCollision,
   moveToken,
-  planTokenPath,
   measureTokenPathCost,
   moveTokenPath,
   resolveCombatantToken,
 } from './pf2eAdapter.js';
+// The shared planning layer (#1832): planRoutedPath IS planTokenPath plus
+// "route around a clip". The plan and the confirm's re-plan both go through it,
+// which is what makes the route the player approved the route that executes.
+import { planRoutedPath } from './pathRoute.js';
 import { RELAY } from './syncKeys.js';
 
 let _sendUpdate = null;
@@ -264,7 +271,7 @@ export async function handleMovePlan(charId, value) {
   if (!cells.length) return;
 
   const geo = cellGeometry(token);
-  const { path, clipped } = await planTokenPath(token, cells.map(geo.toCenter));
+  const { path, clipped } = await planRoutedPath(token, cells.map(geo.toCenter));
   const costFeet = snapFeet(await measureTokenPathCost(token, path));
 
   // Echo the request ts (same correlation pattern as moveopts) so the app can
@@ -326,10 +333,12 @@ async function confirmWaypointMove(charId, token, value) {
   const startCenter = tokenStartCenter(token, geo);
 
   // Cheap staleness protection: the world can change between plan and confirm
-  // (a foe steps into the route), so re-plan/constrain right before executing
-  // rather than trusting the app's cached path. Worst case is a stop-short,
-  // which movedone already reports honestly.
-  const { path } = await planTokenPath(
+  // (a foe steps into the route), so re-plan right before executing rather than
+  // trusting the app's cached path. Worst case is a stop-short, which movedone
+  // already reports honestly. This MUST be the same routed planner the plan used
+  // (#1832) — a confirm that only constrained would walk into the wall the plan
+  // promised to go around.
+  const { path } = await planRoutedPath(
     token,
     value.waypoints.map(geo.toCenter),
     { origin: startCenter },
