@@ -17,7 +17,9 @@ devices.
 | `minionActors.js` | Ownership-derived minion→PC links + spawn-token handler (#362). |
 | `summonPool.js` | Summons-folder actor snapshot for the GM's Add-summon modal (#261). |
 | `movement.js` | Token movement: 8-direction step probe + move write-back. |
-| `groupMove.js` | Exploration GROUP move (#1823): ring-spread assignment + concurrent per-token pathing for a whole selection on one key. |
+| `groupMove.js` | Exploration GROUP move (#1823): spread assignment by walking distance + concurrent per-token pathing for a whole selection on one key. |
+| `pathfind.js` | Pure geometry — 8-way A* over grid cells + a connectivity flood fill, PF2e alternating-diagonal costs, wall test injected (no Foundry globals) (#1832). |
+| `pathRoute.js` | The shared planning layer: core's straight plan first, `pathfind.js` only on a clip. The one planner `handleMovePlan`, the confirm re-plan and `groupMove.moveOne` all consume (#1832). |
 | `doors.js` | Door detection near the PC token + open/close interaction. |
 | `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets; off-guard annotation for flanking melee strikes. |
 | `effects.js` | Apply compendium effect items to target actors on app request. |
@@ -95,11 +97,11 @@ channel, add its token there too so neither side hand-writes the string.
 | `movereq` | app → bridge | charId | `{ moveType, ts, ignoreOccupancy? }` — the `<id>` segment (all six movement channels) is a PC charId, a minion `<ownerCharId>-<role>` id (#362), or — protocol ≥ 10 — a combat entryId for foe movement from the GM dock (#1572); the bridge resolves in that order. `ignoreOccupancy` (#617/#1806, optional): exploration-mode surfaces (`ExplorationMove`, `MinionMove` out of encounter) set this `true` so the bridge skips the #456 creature-occupancy classification entirely below — no `blocked` ally/enemy squares, no `passThrough`, `originOccupied: false` — only walls/doors still block. Absent → unchanged Encounter-mode behavior. An older bridge simply ignores the unknown field (no protocol bump needed) |
 | `moveopts` | bridge → app | charId | `{ origin, reachable[], blocked[], gridSize, speed, originOccupied, reqTs }` — `reachable[]` entries `{ col, row, feet, terrain, passThrough? }`; `blocked[]` entries `{ col, row, kind: 'wall'\|'ally'\|'enemy' }`; `speed` = actor land Speed in feet (action accounting); `originOccupied` = token currently shares its cell with an ally, so the move may not END here |
 | `moveplan` | app → bridge | charId | `{ waypoints, moveType, ts }` — protocol ≥ 14 (#1736): plan a full-speed route. `waypoints` = the tapped destination cells `[{ col, row }, …]` in order, EXCLUDING the origin (one entry for the common open-room tap; more to chain around a corner). Read-only — nothing moves until a `moveconfirm` carries the plan |
-| `moveplanned` | bridge → app | charId | `{ path, costFeet, clipped, reqTs }` — the route core would ACTUALLY walk: `path` = `[{ col, row, x, y }, …]` excluding the origin and ending at the real landing cell (`x`,`y` = the cell's top-left pixels, as `moveopts`/`movedone` use); `costFeet` = terrain-aware total in feet snapped to 5 (v14 `TokenDocument#measureMovementPath`, so Region difficult terrain counts); `clipped` = a wall/constraint stopped the route short of the last requested waypoint, so the app offers an intermediate waypoint tap; `reqTs` echoes the plan's `ts` |
-| `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts, waypoints?, ignoreOccupancy? }` — `waypoints` (optional, protocol ≥ 14) is the planned `moveplanned.path` cells verbatim `[{ col, row }, …]`: present → execute the whole multi-waypoint route as one `TokenDocument#move`; absent → the legacy single-`destination` 5-ft stepper move, unchanged. The bridge re-plans/constrains at confirm time, so a stale plan degrades to an honest stop-short rather than an error. `ignoreOccupancy` (#617/#1806, optional) mirrors `movereq`'s flag — carried here too so the `movedone.nextOpts` piggyback stays consistent with the request that started the move |
+| `moveplanned` | bridge → app | charId | `{ path, costFeet, clipped, reqTs }` — the route core would ACTUALLY walk: `path` = `[{ col, row, x, y }, …]` excluding the origin and ending at the real landing cell (`x`,`y` = the cell's top-left pixels, as `moveopts`/`movedone` use); `costFeet` = terrain-aware total in feet snapped to 5 (v14 `TokenDocument#measureMovementPath`, so Region difficult terrain counts); `clipped` = the route stopped short of the last requested waypoint, so the app offers an intermediate waypoint tap; `reqTs` echoes the plan's `ts`. **Protocol ≥ 23 (#1832) PATHFINDS around walls**: a segment core's straight constrain would clip is re-planned with an 8-way A* (`pathfind.js`), so a tap past a corner comes back as a dog-leg route to the tapped cell instead of a stub ending at the wall. The payload SHAPE is unchanged; `clipped` now means *unreachable even routing around, within budget* — the best partial toward the destination still rides along in `path`, exactly as the truncated straight route used to. Open ground is untouched (the straight plan runs first and is returned verbatim), and a pre-v14 backend keeps the leg-by-leg collision walk |
+| `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts, waypoints?, ignoreOccupancy? }` — `waypoints` (optional, protocol ≥ 14) is the planned `moveplanned.path` cells verbatim `[{ col, row }, …]`: present → execute the whole multi-waypoint route as one `TokenDocument#move`; absent → the legacy single-`destination` 5-ft stepper move, unchanged. The bridge re-plans at confirm time through the SAME routed planner the plan used (protocol ≥ 23, #1832 — a confirm that only constrained would walk into the wall the plan promised to go around), so a stale plan degrades to an honest stop-short rather than an error. `ignoreOccupancy` (#617/#1806, optional) mirrors `movereq`'s flag — carried here too so the `movedone.nextOpts` piggyback stays consistent with the request that started the move |
 | `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs, nextOpts }` — identical shape for both confirm flows. `feetMoved` is the measured cost of the path ACTUALLY traveled and `newPosition` the real landing (a v14 move may legally stop short — the app refunds the over-charged actions). `nextOpts` is the `moveopts` payload for the landing cell (same shape), piggybacked so a chained step skips a `movereq`→`moveopts` round-trip (#451); consumed by `useTokenMovement` |
 | `groupmovereq` | app → bridge | `global` | `{ id, moverIds, target, ts, budgetFeet? }` — protocol ≥ 22 (#1823, epic #1822): move a SELECTION of PCs to spread destinations ringing one tapped cell, in one round trip. `moverIds` resolve through the same three id spaces as every movement key; `target` is a grid cell — canonically `{ col, row }`, with `{ x, y }` accepted as a col/row alias (the epic sketched the wire that way). `budgetFeet` (optional) overrides each mover's Speed-derived reach. Global-only: the whole point is that N movers ride ONE key. Live-only, id-correlated — never replayed from FULL_STATE. **No bridge-side gating**: the app owns the `exploremove`/`playmode` gate, the bridge executes what it is told, and creature occupancy is unconditionally ignored (#617 semantics — only walls/doors block) |
-| `groupmovedone` | bridge → app | `global` | `{ id, results, ts }` — ack for `groupmovereq` (`id` echoes). `results` is one row per REQUESTED moverId, in request order: `{ moverId, ok, dest, feetMoved, reached }`. `dest` is the REAL landing cell `{ col, row, x, y }` — the same shape `movedone.newPosition` uses (`x`,`y` = the cell's top-left pixels), which is why the out shape is a cell object rather than the epic's `{x,y}` sketch. `reached` = the mover ended in the ring cell the spread assigned it; `false` = it walked the affordable prefix toward that cell and stopped short (out of budget, or a wall clipped the route) — `dest`/`feetMoved` stay honest either way, and that one rule IS "as close as they can". `ok:false` (with `dest:null`, `feetMoved:0`) is reserved for a mover that never moved at all: an unresolvable id, a per-token error, or no assignable destination (a walled-in pocket). Exactly ONE party-framed `snapdone` broadcast fires after the whole group settles — never one per member |
+| `groupmovedone` | bridge → app | `global` | `{ id, results, ts }` — ack for `groupmovereq` (`id` echoes). `results` is one row per REQUESTED moverId, in request order: `{ moverId, ok, dest, feetMoved, reached }`. `dest` is the REAL landing cell `{ col, row, x, y }` — the same shape `movedone.newPosition` uses (`x`,`y` = the cell's top-left pixels), which is why the out shape is a cell object rather than the epic's `{x,y}` sketch. `reached` = the mover ended in the cell the spread assigned it; `false` = it walked the affordable prefix toward that cell and stopped short (out of budget, or — protocol ≥ 23 — unreachable even routing around the walls) — `dest`/`feetMoved` stay honest either way, and that one rule IS "as close as they can". `ok:false` (with `dest:null`, `feetMoved:0`) is reserved for a mover that never moved at all: an unresolvable id, a per-token error, or no assignable destination (a walled-in pocket). Exactly ONE party-framed `snapdone` broadcast fires after the whole group settles — never one per member |
 | `doorreq` | app → bridge | charId | `{ ts }` — request doors near the PC token |
 | `dooropts` | bridge → app | charId | `{ doors: [{ wallId, state, x, y }], reqTs }` — doors within ~1.5 grid squares; secret doors only when already open. `x`/`y` are the wall MIDPOINT in world pixels — the same space `moveopts`/`snapdone` project |
 | `doorinteract` | app → bridge | charId | `{ wallId, op: 'open'\|'close', ts }` — locked doors (ds 2) are ignored |
@@ -144,19 +146,26 @@ channel, add its token there too so neither side hand-writes the string.
 *selection*. Four rules define it; `groupMove.js` is the implementation and its
 header comment the long form.
 
-- **Spread assignment.** Candidate destinations are expanding Chebyshev rings
-  around the tapped cell — ring 0 is the target itself. A ring-k candidate is
-  dropped when a wall test from the TARGET's centre to the candidate's centre
-  collides: that cell is inside or behind a wall from where the GM tapped, so
-  nobody is sent there. Movers are then served **closest-PC-first** (straight-line
+- **Spread assignment.** Candidate destinations are enumerated by **walking
+  distance from the tapped cell** — one flood fill through the walls, `dist` 0
+  being the target itself (protocol ≥ 23, #1832; protocol 22 used expanding
+  Chebyshev rings filtered by a straight ray from the target's centre, which
+  both rejected the cell just around a corner and accepted cells merely visible
+  past a wall's end). Movers are served **closest-PC-first** (straight-line
   distance to the target, ties broken by `moverId` so the order is reproducible),
-  and each takes a free cell from the lowest ring that still has one — within
-  that ring, the cell nearest to that mover, ties broken col-then-row. **No two
-  movers share a destination**, and the result does not depend on the order
-  `moverIds` arrived in.
-- **Pathing.** Each mover routes to its assigned cell through the SAME core path
-  machinery the single tap-flow uses (`planTokenPath`): walls and doors block,
-  creatures never do. The route is then clipped to that mover's budget —
+  and each takes a free cell at the nearest walking distance that still has one —
+  within that distance, the cell nearest to that mover, ties broken col-then-row.
+  **No two movers share a destination**, and the result does not depend on the
+  order `moverIds` arrived in. At the table this means a corridor tap strings the
+  party out *along the corridor*, tight against the goal. A connected pocket
+  smaller than the party (a closet) hands the overflow movers the target cell
+  itself as their pathing goal — their best-partial walk takes them as close as
+  they can get, which is the same "as close as they can" rule `reached` reports.
+- **Pathing.** Each mover routes to its assigned cell through the SAME shared
+  planner the single tap-flow uses (`planRoutedPath`): walls and doors block,
+  creatures never do, and from protocol 23 a clipped route is **pathfound around
+  the wall** rather than stopped at it. The route is then clipped to that mover's
+  budget —
   **1.5× its own Speed**, the very multiplier the single flow already uses for a
   mover's default capture radius, so a group tap reaches exactly as far as the
   map that flow lets a player tap on (30 ft when the actor reports no Speed;

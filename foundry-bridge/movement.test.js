@@ -351,6 +351,12 @@ describe('handleMovePlan', () => {
     global.game.release = { generation: 14 };
     // constrainMovementPath keeps origin + 1 leg — a wall two cells out.
     equipV14Movement(token, { clipAfter: 1 });
+    // …and that wall is REAL (#1832): a full-height barrier sealing off every
+    // cell east of column 6, so the router genuinely cannot get around it and
+    // the clip stands. Without this the search would (correctly) route past a
+    // clip the mock fabricates but the scene does not actually contain.
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      Math.max(origin.x, dest.x) > 650;
 
     await handleMovePlan('Pellias', {
       waypoints: [{ col: 6, row: 5 }, { col: 7, row: 5 }, { col: 8, row: 5 }], ts: 3,

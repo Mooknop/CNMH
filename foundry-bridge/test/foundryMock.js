@@ -431,8 +431,20 @@ export function installTokenEmanation(opts = {}) {
 //                back. Needed by anything that slices a prefix out of a route
 //                (#1823's group-move budget clip) — with the default echo there
 //                is no intermediate cell to stop at.
+//   respectWalls — constrainMovementPath TRUNCATES the route at the first step
+//                a wall blocks (consulting the same
+//                CONFIG.Canvas.polygonBackends.move.testCollision the rest of
+//                the bridge does, centre-to-centre) and reports wasConstrained.
+//                That is what core actually does — it routes between waypoints
+//                and clips, it does NOT avoid walls — and it is what a
+//                pathfinding test (#1832) needs in order to be about a real
+//                maze rather than about a fabricated clip. Implies `stepped`:
+//                a route with no intermediate cells has nothing to clip AT.
 export function equipV14Movement(token, opts = {}) {
-  const { clipAfter = null, costPerLeg = null, stopAt = null, stepped = false } = opts;
+  const {
+    clipAfter = null, costPerLeg = null, stopAt = null, respectWalls = false,
+  } = opts;
+  const stepped = opts.stepped ?? respectWalls;
   const gridSize = global.canvas?.grid?.size ?? 100;
 
   const route = (waypoints) => {
@@ -460,10 +472,33 @@ export function equipV14Movement(token, opts = {}) {
     promise: Promise.resolve(route(waypoints)),
   }));
 
-  token.constrainMovementPath = jest.fn((waypoints) =>
-    (clipAfter === null
+  // Walls are tested centre-to-centre (the token's own footprint offset), like
+  // every other movement probe in the bridge.
+  const offX = (Math.max(1, Math.round(token.document?.width ?? 1)) * gridSize) / 2;
+  const offY = (Math.max(1, Math.round(token.document?.height ?? 1)) * gridSize) / 2;
+  const stepBlocked = (a, b) => {
+    const backend = global.CONFIG?.Canvas?.polygonBackends?.move;
+    if (typeof backend?.testCollision !== 'function') return false;
+    return Boolean(backend.testCollision(
+      { x: a.x + offX, y: a.y + offY },
+      { x: b.x + offX, y: b.y + offY },
+      { type: 'move', mode: 'any' },
+    ));
+  };
+
+  token.constrainMovementPath = jest.fn((waypoints) => {
+    if (respectWalls) {
+      const kept = waypoints.slice(0, 1);
+      for (let i = 1; i < waypoints.length; i++) {
+        if (stepBlocked(waypoints[i - 1], waypoints[i])) break;
+        kept.push(waypoints[i]);
+      }
+      return [kept, kept.length < waypoints.length];
+    }
+    return clipAfter === null
       ? [waypoints, false]
-      : [waypoints.slice(0, clipAfter + 1), waypoints.length > clipAfter + 1]));
+      : [waypoints.slice(0, clipAfter + 1), waypoints.length > clipAfter + 1];
+  });
 
   token.document.measureMovementPath = jest.fn((waypoints) => {
     let cost = 0;

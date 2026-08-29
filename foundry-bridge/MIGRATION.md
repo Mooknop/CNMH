@@ -45,6 +45,18 @@ data path moves, **only the adapter changes.**
   movement rail. Smoke pass additions: plan a full-speed stride from the app,
   confirm it, and verify the token walks the whole route with the reported
   cost — including one route across difficult terrain and one clipped at a wall.
+  **Pathfinding (#1832, protocol 23)** sits on top of the same switch point and
+  is v14-gated by `supportsMovementPathApi`: an unclipped straight plan is
+  returned untouched, and only a CLIPPED segment is re-run through
+  `pathfind.js`'s A* (`hasWallCollision` per step, `canvas.grid.measurePath`
+  probed once per search to detect the grid's diagonal rule). Pre-v14 keeps the
+  leg-by-leg collision walk verbatim. Smoke pass additions: **tap a destination
+  around a corner in a maze-shaped room and confirm the token walks AROUND the
+  wall rather than into it**, that the confirm executes the same dog-leg the
+  preview drew, and that a genuinely sealed destination still reports
+  "clipped" with the partial route. Then tap a GROUP move into a corridor: the
+  party must string out along the corridor, never into the walled-off cells
+  beside the tapped one.
   **Movement hooks — names VERIFIED against the 14.365 API docs (#1736 S3).**
   Earlier planning notes named `planToken` / `preMoveToken`; only the first is
   the right hook. The v14 movement-pipeline hooks are:
