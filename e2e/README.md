@@ -108,11 +108,13 @@ of the state.
 `helpers/bridge.ts` also holds the per-rail floors and timeouts — `ROLL_PROTOCOL` /
 `ROLL_TIMEOUT_MS` (`src/utils/diceRelay.js`), `SNAP_PROTOCOL` / `PING_PROTOCOL` /
 `TEMPLATE_PROTOCOL` / `SNAP_TIMEOUT_MS` (`src/utils/snapshotRelay.js`), and
-`SCENE_DOORS_PROTOCOL` / `PARTY_MAP_PROTOCOL` (the GM Command Dock exploration
-pane, #1804 — `foundry-bridge/syncKeys.js`, re-exported through `src/sync/keys.js`
-and `src/utils/snapshotRelay.js`). They are **copies**: `e2e/`
-deliberately never imports from `src/` (the same reason `CAMPAIGN_ID` is restated in
-`fixtures/session.ts`), so one file carries the drift rather than every spec.
+`SCENE_DOORS_PROTOCOL` / `PARTY_MAP_PROTOCOL` / `GROUP_MOVE_PROTOCOL` (the GM
+Command Dock exploration pane, #1804, and its group-move successor epic #1822 —
+`foundry-bridge/syncKeys.js`, re-exported through `src/sync/keys.js`,
+`src/utils/snapshotRelay.js`, and `src/utils/groupMoveRelay.js`). They are
+**copies**: `e2e/` deliberately never imports from `src/` (the same reason
+`CAMPAIGN_ID` is restated in `fixtures/session.ts`), so one file carries the drift
+rather than every spec.
 
 `helpers/dock.ts`'s `gotoExplorationDock` is the exploration-pane analog of its
 `gotoPcTurnDock` / `gotoNonPcDock` turn gates: it waits for the pane's own heading
@@ -121,7 +123,14 @@ bridge- or content-hydrated proof (the rendered snapshot image, a roster chip) t
 the caller, same two-gate shape as the encounter turn gates. See
 `e2e/specs/gm/dock-exploration.spec.ts` for the party-map / door-glyph / roster
 coverage built on it — including how a party-shaped `snapdone` ack and
-`cnmh_dooropts_global` get seeded on a bridgeless stack.
+`cnmh_dooropts_global` get seeded on a bridgeless stack — and
+`e2e/specs/gm/dock-group-move.spec.ts` (#1826, epic #1822's closing slice) for the
+multi-select group-move loop on top of it: dispatch (`cnmh_groupmovereq_global`),
+settled `cnmh_groupmovedone_global` outcome chips + an unsolicited party-capture
+refresh, `Select all`/`Clear`/toggle selection mechanics, a single-select
+regression proving the size-1 path is untouched, and the `GROUP_MOVE_PROTOCOL`
+degradation gate. A sibling file rather than an extension of
+`dock-exploration.spec.ts` — see that spec's own header for why.
 
 ## In CI
 

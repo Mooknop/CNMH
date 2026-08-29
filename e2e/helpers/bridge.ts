@@ -27,6 +27,7 @@
  *   - MIN_BRIDGE_PROTOCOL                     → src/hooks/useBridgeStatus.js
  *   - SCENE_DOORS_PROTOCOL                    → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js)
  *   - PARTY_MAP_PROTOCOL                      → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js, src/utils/snapshotRelay.js)
+ *   - GROUP_MOVE_PROTOCOL                     → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js, src/utils/groupMoveRelay.js)
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -168,6 +169,21 @@ export const SCENE_DOORS_PROTOCOL = 20;
  *  shows its "needs the Foundry bridge" note instead of a map; there is
  *  deliberately no abstract-grid fallback (epic #1804 ruling). */
 export const PARTY_MAP_PROTOCOL = 21;
+
+/** The bridge protocol that taught the relay GROUP MOVE (#1823/#1825, epic
+ *  #1822): `cnmh_groupmovereq_global` (`{ id, moverIds[], target: {col,row},
+ *  ts }`) dispatches a multi-select destination tap in ONE round trip — the
+ *  bridge assigns spread destinations and paths every selected mover
+ *  concurrently, then answers `cnmh_groupmovedone_global` (`{ id, results:
+ *  [{ moverId, ok, dest, feetMoved, reached }], ts }`) once the whole group
+ *  settles. `DockExplorationPane`'s N>1 destination-tap branch
+ *  (`useGroupMove`) gates the dispatch on this floor — below it, or with no
+ *  hello at all, a 2+ selection stays capped at "arrives with the next
+ *  bridge update" (a deliberate no-op, #1824's A2 degradation note); it never
+ *  falls back to N sequential single moves. The size-1 path is UNGATED by
+ *  this floor — it's `useTokenMovement`'s pre-existing machine, gated (if at
+ *  all) on `PARTY_MAP_PROTOCOL` alone. */
+export const GROUP_MOVE_PROTOCOL = 22;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 
