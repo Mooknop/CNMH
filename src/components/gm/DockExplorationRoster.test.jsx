@@ -358,6 +358,42 @@ describe('DockExplorationRoster select all / clear (#1824)', () => {
   });
 });
 
+// ─── group move outcome chips (#1825, epic #1822 B1) ────────────────────────
+describe('DockExplorationRoster group move outcome chips (#1825)', () => {
+  it('renders reached / partial / failed per the moverId → categorized-result map', () => {
+    mount(<DockExplorationRoster groupMoveOutcomes={new Map([
+      ['Pellias', { moverId: 'Pellias', ok: true, feetMoved: 5, reached: true, category: 'reached' }],
+      ['Ashka', { moverId: 'Ashka', ok: true, feetMoved: 15, reached: false, category: 'partial' }],
+    ])} />);
+
+    const pelliasChip = screen.getByTestId('dock-exp-groupmove-Pellias');
+    expect(pelliasChip).toHaveClass('dock-exp-chip-groupmove--reached');
+    expect(within(pelliasChip).getByText('Reached')).toBeInTheDocument();
+    expect(within(pelliasChip).getByText('5 ft')).toBeInTheDocument();
+
+    const ashkaChip = screen.getByTestId('dock-exp-groupmove-Ashka');
+    expect(ashkaChip).toHaveClass('dock-exp-chip-groupmove--partial');
+    expect(within(ashkaChip).getByText('Partial')).toBeInTheDocument();
+    expect(within(ashkaChip).getByText('15 ft')).toBeInTheDocument();
+  });
+
+  it('renders a failed outcome with no feet readout, since a failed mover never moved', () => {
+    mount(<DockExplorationRoster groupMoveOutcomes={new Map([
+      ['Pellias', { moverId: 'Pellias', ok: false, feetMoved: 0, reached: false, category: 'failed' }],
+    ])} />);
+
+    const pelliasChip = screen.getByTestId('dock-exp-groupmove-Pellias');
+    expect(pelliasChip).toHaveClass('dock-exp-chip-groupmove--failed');
+    expect(within(pelliasChip).getByText('Blocked')).toBeInTheDocument();
+    expect(within(pelliasChip).queryByText(/ft$/)).toBeNull();
+  });
+
+  it('renders no outcome chip at all when nothing has settled yet', () => {
+    mount(<DockExplorationRoster groupMoveOutcomes={null} />);
+    expect(screen.queryByTestId('dock-exp-groupmove-Pellias')).toBeNull();
+  });
+});
+
 // ─── dock-side secret checks (#1812, epic #1804 S8) ─────────────────────────
 describe('DockExplorationRoster secret checks (#1812)', () => {
   const rollRow = (charId) => screen.getByTestId(`dock-exp-roll-${charId}`);

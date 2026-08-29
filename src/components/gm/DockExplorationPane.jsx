@@ -3,14 +3,17 @@ import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
+import { useGroupMove } from '../../hooks/useGroupMove';
 import { usePartyMapSurface } from '../../hooks/usePartyMapSurface';
 import { usePathPreview } from '../../hooks/usePathPreview';
 import { useSceneDoors } from '../../hooks/useSceneDoors';
+import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import { buildPartyMarkers, buildDoorMarkers } from '../../utils/tokenMarkers';
 import { hitTestMarkers } from '../../utils/markerHitTest';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { PARTY_MAP_PROTOCOL } from '../../utils/snapshotRelay';
+import { GROUP_MOVE_PROTOCOL, groupMoveOutcomeFor, maxFeetMoved } from '../../utils/groupMoveRelay';
 import { APP, globalKey } from '../../sync/keys';
 import MapSnapshotViewer from '../encounter/MapSnapshotViewer';
 import SnapshotRouteOverlay from '../encounter/SnapshotRouteOverlay';
@@ -60,9 +63,17 @@ import './DockExplorationPane.css';
 //     select-fires-requestMove effect, same auto-confirm, same route overlay.
 //   · size === 0 or size >= 2 both leave the movement hook inert, exactly
 //     like the pre-#1824 "nothing selected" state did.
-// A destination tap with 2+ selected is a placeholder branch in
-// `handleMapTap` below — dispatch lands in slice B1 once the bridge rail
-// (#1823, protocol 22) ships; today it's a deliberate no-op (no relay write).
+// GROUP MOVE DISPATCH (#1825, epic #1822 B1): a destination tap with 2+
+// selected sends `cnmh_groupmovereq_global` via `useGroupMove` — a much
+// smaller state machine than `useTokenMovement` (one request, one
+// correlated `groupmovedone`, no picker/plan stages) since the bridge owns
+// spread assignment and per-mover pathing entirely. Gated on
+// `GROUP_MOVE_PROTOCOL` (22): below the floor, or while a group request is
+// already in flight, the tap is a deliberate no-op — `statusText` explains
+// why either way. The settled ack's `results[]` renders as outcome chips on
+// the roster (reached / partial / failed, `groupMoveOutcomeFor`) and its
+// party-semantic MAX `feetMoved` accrues onto `cnmh_exploredist_global` —
+// see the accrual comment below for why single moves keep summing instead.
 //
 // DEGRADATION (epic ruling): no bridge, or a bridge below PARTY_MAP_PROTOCOL,
 // shows a note instead of the map. There is deliberately no abstract-grid
@@ -110,11 +121,37 @@ const DockExplorationPane = () => {
 
   const { status, snapshot, tokens, eligible, refresh } = usePartyMapSurface({ active: true });
   const { doors, interactDoor } = useSceneDoors();
+  const { protocol } = useBridgeStatus();
+  const groupMoveEligible = (protocol ?? 0) >= GROUP_MOVE_PROTOCOL;
+  const {
+    dispatch: dispatchGroupMove, inFlight: groupMoveInFlight, results: groupMoveResults, clearResults: clearGroupMoveResults,
+  } = useGroupMove();
 
   const requestMoveRefreshRef = useRef(null);
 
   // Mirrors ExplorationMove's isGm branch (#1811 feeds on this tally) — the
   // dock is a GM-only surface, so the accrual is unconditional here.
+  //
+  // SINGLE-MOVE ACCRUAL DECISION (#1825, epic #1822 B1): this still SUMS each
+  // movedone's feet, even though the epic calls out that walking N PCs
+  // one-by-one to the same beat inflates the tally against a suggestion
+  // formula (ExplorationTimeControl) that already divides by the party's
+  // slowest Speed. A true party-semantic fix here — tracking each PC's
+  // accrued-since-last-tally feet and taking the MAX, the same rule the group
+  // rail below uses — runs into a second independent writer this pane
+  // doesn't own: `ExplorationMove.jsx`'s own per-PC panel ALSO adds to this
+  // same `cnmh_exploredist_global` key (its `isGm` branch) whenever the GM is
+  // driving movement from an individual PC's own surface instead of the
+  // dock. A local per-mover max computed only from this pane's own taps would
+  // either ignore that writer's contributions or fight it for the key — a
+  // correct fix needs a shared reducer across both call sites, which is a
+  // bigger cross-cutting change than this slice's scope (dispatch + chips +
+  // fixture). Left as-is: the tally is a rounded-to-10-minute heuristic the
+  // GM can freely zero (the Reset button below, or ExplorationTimeControl's
+  // own Apply), and the inflation is visible in `feetTotal` the whole time —
+  // bounded and GM-correctable, not a silent error. The GROUP rail's own
+  // accrual (below) IS party-semantic from day one, since it has exactly one
+  // writer: this pane.
   const handleMoveDone = useCallback((payload) => {
     const feet = payload?.feetMoved ?? 0;
     setFeetTotal((f) => f + feet);
@@ -124,6 +161,18 @@ const DockExplorationPane = () => {
     // this is normally free — see useTokenMovement.requestMoveRefresh).
     requestMoveRefreshRef.current?.('stride');
   }, [setExploreDist]);
+
+  // GROUP MOVE settle (#1825): one accrual per settled group, using the
+  // group's MAX feetMoved — the epic's party-semantic ruling. Fires once per
+  // `groupMoveResults` array identity (a fresh dispatch always produces a new
+  // array, including the timeout's `[]`, which contributes 0 and is a no-op).
+  useEffect(() => {
+    if (!groupMoveResults) return;
+    const feet = maxFeetMoved(groupMoveResults);
+    if (feet <= 0) return;
+    setFeetTotal((f) => f + feet);
+    setExploreDist((d) => (d || 0) + feet);
+  }, [groupMoveResults, setExploreDist]);
 
   // Keyed on `singleSelectedId`. With nothing selected (or 2+ selected) the
   // hook subscribes to an inert `cnmh_moveopts_null`-style key it never
@@ -209,8 +258,13 @@ const DockExplorationPane = () => {
   // hook is already inert (0 or 2+ selected), and it's what stops a
   // mid-flight plan/stage from leaking across a selection change when we're
   // leaving or entering the single-selection case.
+  // Every selection-changing call also clears any prior group-move outcome
+  // chips (#1825) — they're "transient but inspectable", not permanent: once
+  // the GM moves on to a different selection, the last group's results are
+  // no longer about who's currently selected.
   const toggleMover = (moverId) => {
     cancelMove();
+    clearGroupMoveResults();
     setSelectedIds((cur) => {
       const next = new Set(cur);
       if (next.has(moverId)) next.delete(moverId);
@@ -221,11 +275,13 @@ const DockExplorationPane = () => {
 
   const selectAllMovers = () => {
     cancelMove();
+    clearGroupMoveResults();
     setSelectedIds(new Set((Array.isArray(characters) ? characters : []).map((c) => c.id)));
   };
 
   const clearSelection = () => {
     cancelMove();
+    clearGroupMoveResults();
     setSelectedIds(new Set());
   };
 
@@ -254,10 +310,13 @@ const DockExplorationPane = () => {
     }
     if (selectedIds.size === 0) return;
     if (selectedIds.size > 1) {
-      // GROUP MOVE (slice B1, epic #1822): dispatch — `cnmh_groupmovereq_global`
-      // to the bridge rail #1823 builds in parallel — lands here. Until then
-      // a destination tap with 2+ selected is a deliberate no-op: no relay
-      // write, no plan. `statusText` below already tells the GM why.
+      // GROUP MOVE dispatch (#1825): below the protocol floor, or with a
+      // request already in flight, this stays a deliberate no-op — no relay
+      // write. `statusText` below tells the GM why either way.
+      if (!groupMoveEligible || groupMoveInFlight) return;
+      const world = worldPointFromTap(snapshot, nx, ny);
+      const cell = cellFromWorldPoint(world, snapshot.gridSize);
+      if (cell) dispatchGroupMove([...selectedIds], cell);
       return;
     }
     // size === 1 — today's single-flow path, byte-for-byte unchanged. One
@@ -279,10 +338,29 @@ const DockExplorationPane = () => {
     || (!canMove
       ? null
       : selectedIds.size > 1
-        ? `${selectedIds.size} selected — group move arrives with the next bridge update.`
+        ? (!groupMoveEligible
+          ? `${selectedIds.size} selected — group move arrives with the next bridge update.`
+          : groupMoveInFlight
+            ? `Moving ${selectedIds.size} party members…`
+            : `${selectedIds.size} selected — tap a destination to move them together.`)
         : selected
           ? `Tap a destination for ${selected.name}.`
           : 'Tap a party member to move them.');
+
+  // Per-PC outcome chips (#1825) — a moverId → categorized-result map from
+  // the last settled group move, or null before one has landed (or after a
+  // selection change clears it — see toggleMover/selectAllMovers/
+  // clearSelection above). `groupMoveOutcomeFor` is the epic's reached/
+  // partial/failed bucketing (utils/groupMoveRelay.js).
+  const groupMoveOutcomes = useMemo(() => {
+    if (!groupMoveResults) return null;
+    const map = new Map();
+    for (const r of groupMoveResults) {
+      if (!r?.moverId) continue;
+      map.set(r.moverId, { ...r, category: groupMoveOutcomeFor(r) });
+    }
+    return map;
+  }, [groupMoveResults]);
 
   return (
     <section className="dock-exp" aria-label="Exploration">
@@ -410,6 +488,7 @@ const DockExplorationPane = () => {
           onSelect={toggleMover}
           onSelectAll={selectAllMovers}
           onClear={clearSelection}
+          groupMoveOutcomes={groupMoveOutcomes}
         />
       </div>
     </section>

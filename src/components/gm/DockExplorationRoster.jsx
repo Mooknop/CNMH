@@ -38,6 +38,15 @@ const fmtMod = (m) => (m == null ? '—' : (m >= 0 ? `+${m}` : `${m}`));
 // renders selected, not just one. `onSelectAll`/`onClear` (also #1824) grab
 // or empty the whole party from here.
 //
+// GROUP MOVE OUTCOME CHIPS (#1825, epic #1822 B1): `groupMoveOutcomes` is a
+// moverId → categorized-result Map the pane derives from the last settled
+// `groupmovedone` (null before one lands, or once the selection changes —
+// see DockExplorationPane's toggleMover/selectAllMovers/clearSelection). Each
+// `RosterChip` renders its own entry as a small reached/partial/blocked badge
+// — the roster's existing per-chip layout already has room below the main
+// row (the roll-result readout uses the same slot shape), so this is one
+// more optional row rather than a new surface.
+//
 // ─── THE DOCK IS A WRITER, NOT JUST A VIEW ───────────────────────────────────
 // The GM sets each PC's `cnmh_exploration_<charId>` from here — an act-as write
 // on the SAME key the player's ExplorationList writes, so no new key, no
@@ -118,12 +127,21 @@ const fmtMod = (m) => (m == null ? '—' : (m >= 0 ? `+${m}` : `${m}`));
 
 const PACE_LABEL = { half: '½ Speed', double: '×2 Speed', full: 'Full Speed' };
 
+// Group-move outcome chip labels (#1825, epic #1822 B1) — the roster's
+// glanceable readout for a settled `groupmovedone`. Deliberately terse (this
+// sits inline in an already-dense chip row, not a modal): the category tells
+// the GM whether that PC landed where the ring assignment sent them, and
+// `feetMoved` (rendered by the caller) says how far they actually got either
+// way — `utils/groupMoveRelay.js`'s `groupMoveOutcomeFor` is the categorizer
+// both this component and DockExplorationPane's own memo call.
+const GROUPMOVE_LABEL = { reached: 'Reached', partial: 'Partial', failed: 'Blocked' };
+
 // ─── One PC's chip ───────────────────────────────────────────────────────────
 // Hooks must be unconditional and per-character, so every chip is its own
 // component (the PartyPanel/PartyMemberRow precedent) — the pick subscription,
 // the derived character, and the effect driver all live here.
 const RosterChip = ({
-  character, accent, selected, explorationActive, onSelect, effectCatalog, onRegisterRoll,
+  character, accent, selected, explorationActive, onSelect, effectCatalog, onRegisterRoll, groupMoveOutcome,
 }) => {
   const charId = character.id;
   const [pick, setPick] = useSyncedState(syncKey(APP.EXPLORATION, charId), null);
@@ -263,6 +281,21 @@ const RosterChip = ({
         </button>
       </div>
 
+      {groupMoveOutcome && (
+        <div
+          className={`dock-exp-chip-groupmove dock-exp-chip-groupmove--${groupMoveOutcome.category}`}
+          data-testid={`dock-exp-groupmove-${charId}`}
+          role="status"
+        >
+          <span className="dock-exp-chip-groupmove-label">
+            {GROUPMOVE_LABEL[groupMoveOutcome.category] || groupMoveOutcome.category}
+          </span>
+          {groupMoveOutcome.feetMoved > 0 && (
+            <span className="dock-exp-chip-groupmove-feet">{groupMoveOutcome.feetMoved} ft</span>
+          )}
+        </div>
+      )}
+
       {canRoll && (
         <div className="dock-exp-chip-roll" data-testid={`dock-exp-roll-${charId}`}>
           <span className="dock-exp-chip-roll-mod" title={circumstanceLabel ? `includes ${fmtMod(circumstanceBonus)} ${circumstanceLabel}` : undefined}>
@@ -334,7 +367,7 @@ const NOOP = () => {};
 const EMPTY_SELECTION = new Set();
 
 const DockExplorationRoster = ({
-  selectedIds = EMPTY_SELECTION, onSelect = NOOP, onSelectAll = NOOP, onClear = NOOP,
+  selectedIds = EMPTY_SELECTION, onSelect = NOOP, onSelectAll = NOOP, onClear = NOOP, groupMoveOutcomes = null,
 }) => {
   const { characters, theme, effects: effectCatalog } = useContent();
   const { sendUpdate } = useSession();
@@ -441,6 +474,7 @@ const DockExplorationRoster = ({
               onSelect={onSelect}
               effectCatalog={effectCatalog}
               onRegisterRoll={registerRoll}
+              groupMoveOutcome={groupMoveOutcomes?.get(c.id) || null}
             />
           ))}
         </ul>

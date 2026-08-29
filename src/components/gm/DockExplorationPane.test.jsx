@@ -4,6 +4,7 @@ import { renderWithProviders, makeCharacter } from '../../test/renderWithProvide
 import { relayFixtures, pushRelayFixture } from '../../test/relayFixtures';
 import { RELAY } from '../../sync/keys';
 import { PARTY_MAP_PROTOCOL } from '../../utils/snapshotRelay';
+import { GROUP_MOVE_PROTOCOL } from '../../utils/groupMoveRelay';
 import DockExplorationPane from './DockExplorationPane';
 
 // The pane is the party-map control surface (#1808, epic #1804 S4): one
@@ -398,6 +399,123 @@ describe('DockExplorationPane (#1808)', () => {
       selected = [...container.querySelectorAll('.pto-marker--selected')];
       expect(selected).toHaveLength(0);
       expect(screen.getByText('Tap a party member to move them.')).toBeInTheDocument();
+    });
+  });
+
+  // Group move dispatch (#1825, epic #1822 B1): the N>1 branch A2 left inert.
+  describe('group move dispatch (#1825)', () => {
+    const groupProtocolState = () => seededState({ protocol: GROUP_MOVE_PROTOCOL });
+
+    it('sends groupmovereq with the selection and tapped cell, and shows the eligible status line', () => {
+      const { session, container } = mountPane({ state: groupProtocolState() });
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); }); // Pellias
+      act(() => { tapWorld(PARTY.tokens[1]); }); // + Ashka
+      expect(screen.getByText('2 selected — tap a destination to move them together.')).toBeInTheDocument();
+
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+
+      const req = lastSent(session, RELAY.GROUPMOVEREQ);
+      expect(req).toMatchObject({ characterId: 'global' });
+      expect(req.value).toMatchObject({
+        moverIds: ['Pellias', 'Ashka'],
+        target: { col: 14, row: 9 },
+        id: expect.any(String),
+      });
+      expect(screen.getByText('Moving 2 party members…')).toBeInTheDocument();
+    });
+
+    it('below GROUP_MOVE_PROTOCOL, a destination tap still sends nothing (A2\'s degradation note)', () => {
+      const { session, container } = mountPane(); // default seededState is PARTY_MAP_PROTOCOL, one floor below 22
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      act(() => { tapWorld(PARTY.tokens[1]); });
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+
+      expect(lastSent(session, RELAY.GROUPMOVEREQ)).toBeNull();
+      expect(screen.getByText('2 selected — group move arrives with the next bridge update.'))
+        .toBeInTheDocument();
+    });
+
+    it('ignores further destination taps while a group request is in flight', () => {
+      const { session, container } = mountPane({ state: groupProtocolState() });
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      act(() => { tapWorld(PARTY.tokens[1]); });
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+      const sentAfterFirst = session.sent.filter((s) => s.stateType === RELAY.GROUPMOVEREQ).length;
+
+      // A second destination tap while the first request is still unsettled.
+      act(() => { tapWorld({ x: 1500, y: 1000 }, 3); });
+
+      expect(session.sent.filter((s) => s.stateType === RELAY.GROUPMOVEREQ)).toHaveLength(sentAfterFirst);
+    });
+
+    it('a settled groupmovedone renders per-PC outcome chips and accrues the MAX feetMoved onto exploredist', () => {
+      const { session, container } = mountPane({ state: groupProtocolState() });
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      act(() => { tapWorld(PARTY.tokens[1]); });
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+      const req = lastSent(session, RELAY.GROUPMOVEREQ);
+
+      act(() => {
+        pushRelayFixture(session, RELAY.GROUPMOVEDONE, {
+          id: req.value.id,
+          results: [
+            { moverId: 'Pellias', ok: true, dest: { col: 14, row: 9, x: 1400, y: 900 }, feetMoved: 5, reached: true },
+            { moverId: 'Ashka', ok: true, dest: { col: 15, row: 9, x: 1500, y: 900 }, feetMoved: 15, reached: false },
+          ],
+        });
+      });
+
+      // Party's MAX, not the 20 ft a naive sum would give.
+      expect(lastSent(session, 'exploredist')).toMatchObject({ characterId: 'global', value: 15 });
+      // The pane's own "Moved X ft" readout (scoped — Ashka's outcome chip
+      // also reads "15 ft", coincidentally the same number here).
+      expect(container.querySelector('.dock-exp-distance').textContent).toContain('15 ft');
+
+      const pelliasOutcome = screen.getByTestId('dock-exp-groupmove-Pellias');
+      expect(pelliasOutcome).toHaveClass('dock-exp-chip-groupmove--reached');
+      const ashkaOutcome = screen.getByTestId('dock-exp-groupmove-Ashka');
+      expect(ashkaOutcome).toHaveClass('dock-exp-chip-groupmove--partial');
+
+      // Changing the selection clears the transient outcome chips.
+      act(() => { tapWorld(PARTY.tokens[0]); }); // toggle Pellias off
+      expect(screen.queryByTestId('dock-exp-groupmove-Pellias')).toBeNull();
+      expect(screen.queryByTestId('dock-exp-groupmove-Ashka')).toBeNull();
+    });
+
+    it('a failed mover (ok:false) renders the "Blocked" outcome and contributes no feet', () => {
+      const { session, container } = mountPane({ state: groupProtocolState() });
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      act(() => { tapWorld(PARTY.tokens[1]); });
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+      const req = lastSent(session, RELAY.GROUPMOVEREQ);
+
+      act(() => {
+        pushRelayFixture(session, RELAY.GROUPMOVEDONE, {
+          id: req.value.id,
+          results: [
+            { moverId: 'Pellias', ok: false, dest: null, feetMoved: 0, reached: false },
+            { moverId: 'Ashka', ok: true, dest: { col: 15, row: 9, x: 1500, y: 900 }, feetMoved: 10, reached: true },
+          ],
+        });
+      });
+
+      expect(screen.getByTestId('dock-exp-groupmove-Pellias')).toHaveClass('dock-exp-chip-groupmove--failed');
+      expect(lastSent(session, 'exploredist')).toMatchObject({ characterId: 'global', value: 10 });
     });
   });
 });
