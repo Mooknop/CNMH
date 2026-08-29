@@ -21,9 +21,14 @@ import './PartyTokensOverlay.css';
 // Each marker is tinted with its PC's roster accent through `--marker-accent`
 // (the dynamic-per-character custom-property recipe), falling back to the
 // shared PC tint when the roster has no match for a `moverId`.
+//
+// SELECTION IS A SET (#1824, epic #1822 A2): `selectedIds` carries every
+// currently-selected mover, not just one — a destination tap moves the whole
+// set (size 1 = today's flow; size 2+ dispatch lands in slice B1). Every
+// member renders the same "lit" ring, not just a single active mover.
 const toPoints = (polygon) => polygon.map((p) => `${p.nx * 100},${p.ny * 100}`).join(' ');
 
-const PartyTokensOverlay = ({ markers = [], selectedId = null, dimmed = false }) => {
+const PartyTokensOverlay = ({ markers = [], selectedIds = null, dimmed = false }) => {
   if (!markers.length) return null;
 
   return (
@@ -34,7 +39,7 @@ const PartyTokensOverlay = ({ markers = [], selectedId = null, dimmed = false })
       aria-hidden="true"
     >
       {markers.map((m) => {
-        const selected = m.moverId === selectedId;
+        const selected = !!selectedIds?.has?.(m.moverId);
         return (
           <g
             key={m.moverId}

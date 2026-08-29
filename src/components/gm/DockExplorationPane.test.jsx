@@ -322,4 +322,82 @@ describe('DockExplorationPane (#1808)', () => {
       expect(lastSent(session, RELAY.MOVEREQ)).toMatchObject({ characterId: 'Pellias' });
     });
   });
+
+  // Selection set (#1824, epic #1822 A2): tapping toggles membership instead
+  // of replacing it. Size-1 behavior above is the byte-for-byte contract;
+  // these cover the set mechanics layered on top of it.
+  describe('selection set (#1824)', () => {
+    it('tapping a second PC ADDS them to the selection — both stay selected, only one movereq is ever sent', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); }); // selects Pellias — fires movereq
+      const movereqCountAfterFirst = session.sent.filter((s) => s.stateType === RELAY.MOVEREQ).length;
+
+      act(() => { tapWorld(PARTY.tokens[1]); }); // adds Ashka — does NOT replace Pellias
+
+      const selected = [...container.querySelectorAll('.pto-marker--selected')]
+        .map((m) => m.dataset.moverId)
+        .sort();
+      expect(selected).toEqual(['Ashka', 'Pellias']);
+      // The movement hook mounts on exactly one charId at a time; with 2
+      // selected it's inert, so adding the second PC sends no new movereq.
+      expect(session.sent.filter((s) => s.stateType === RELAY.MOVEREQ)).toHaveLength(movereqCountAfterFirst);
+    });
+
+    it('tapping an already-selected PC removes them, and the movement hook re-mounts on the survivor', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); }); // Pellias
+      act(() => { tapWorld(PARTY.tokens[1]); }); // + Ashka (size 2, hook inert)
+      act(() => { tapWorld(PARTY.tokens[0]); }); // - Pellias (back to size 1: Ashka)
+
+      const selected = [...container.querySelectorAll('.pto-marker--selected')]
+        .map((m) => m.dataset.moverId);
+      expect(selected).toEqual(['Ashka']);
+      // Dropping back to a single selection re-fires requestMove for the
+      // survivor — the same select-fires-requestMove effect the size-1 flow
+      // has always used.
+      expect(lastSent(session, RELAY.MOVEREQ)).toMatchObject({ characterId: 'Ashka' });
+    });
+
+    it('a destination tap with 2+ selected sends no relay writes', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+
+      act(() => { tapWorld(PARTY.tokens[0]); });
+      act(() => { tapWorld(PARTY.tokens[1]); });
+      const before = session.sent.length;
+
+      // Tap an empty square well clear of every marker's snap radius.
+      act(() => { tapWorld({ x: 1450, y: 950 }, 2); });
+
+      expect(session.sent.length).toBe(before);
+      expect(lastSent(session, RELAY.MOVEPLAN)).toBeNull();
+      expect(lastSent(session, RELAY.MOVECONFIRM)).toBeNull();
+      expect(screen.getByText('2 selected — group move arrives with the next bridge update.'))
+        .toBeInTheDocument();
+    });
+
+    it('Select all selects every roster PC; Clear empties the selection and cancels the in-flight pick', () => {
+      const { session, container } = mountPane();
+      landPartyMap(session);
+      withImageRect(container);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+      let selected = [...container.querySelectorAll('.pto-marker--selected')]
+        .map((m) => m.dataset.moverId)
+        .sort();
+      expect(selected).toEqual(['Ashka', 'Pellias']);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+      selected = [...container.querySelectorAll('.pto-marker--selected')];
+      expect(selected).toHaveLength(0);
+      expect(screen.getByText('Tap a party member to move them.')).toBeInTheDocument();
+    });
+  });
 });

@@ -50,6 +50,20 @@ import './DockExplorationPane.css';
 // — is unaffected; the S7 time-suggestion loop reads a tally that is
 // occasionally short, never long.
 //
+// SELECTION IS A SET (#1824, epic #1822 A2): tapping a PC marker or roster
+// chip TOGGLES membership in `selectedIds` instead of replacing it — the
+// group-move epic's ruling. `useTokenMovement` still mounts exactly ONCE
+// (never N instances): it's keyed on the selection's sole member when
+// `selectedIds.size === 1`, and on `null` (its existing inert-key path)
+// otherwise. That means:
+//   · size === 1 is BYTE-FOR-BYTE today's flow — same hook instance, same
+//     select-fires-requestMove effect, same auto-confirm, same route overlay.
+//   · size === 0 or size >= 2 both leave the movement hook inert, exactly
+//     like the pre-#1824 "nothing selected" state did.
+// A destination tap with 2+ selected is a placeholder branch in
+// `handleMapTap` below — dispatch lands in slice B1 once the bridge rail
+// (#1823, protocol 22) ships; today it's a deliberate no-op (no relay write).
+//
 // DEGRADATION (epic ruling): no bridge, or a bridge below PARTY_MAP_PROTOCOL,
 // shows a note instead of the map. There is deliberately no abstract-grid
 // fallback for the party view — per-PC grids defeat the point of one shared
@@ -84,8 +98,15 @@ const DockExplorationPane = () => {
   const { characters, theme } = useContent();
   const { moveEnabled, setMoveEnabled } = usePlayMode();
   const [, setExploreDist] = useSyncedState(globalKey(APP.EXPLOREDIST), 0);
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [feetTotal, setFeetTotal] = useState(0);
+
+  // The movement hook mounts on the selection's sole member when exactly one
+  // PC is selected, `null` otherwise (its existing inert-key path — see the
+  // file header). This is the ONE seam that keeps size-1 identical to the
+  // pre-#1824 single-select flow and guarantees we never mount N movement
+  // hooks for a multi-selection.
+  const singleSelectedId = selectedIds.size === 1 ? [...selectedIds][0] : null;
 
   const { status, snapshot, tokens, eligible, refresh } = usePartyMapSurface({ active: true });
   const { doors, interactDoor } = useSceneDoors();
@@ -104,14 +125,16 @@ const DockExplorationPane = () => {
     requestMoveRefreshRef.current?.('stride');
   }, [setExploreDist]);
 
-  // Keyed on the SELECTED PC. With nothing selected the hook subscribes to an
-  // inert `cnmh_moveopts_null`-style key it never writes to; every call below
-  // is gated on `selectedId`, and switching movers calls cancelMove() first so
-  // no stage/plan state ever leaks from one PC into the next.
+  // Keyed on `singleSelectedId`. With nothing selected (or 2+ selected) the
+  // hook subscribes to an inert `cnmh_moveopts_null`-style key it never
+  // writes to; every call below is gated on the single-selection case, and
+  // every selection-changing action calls cancelMove() first so no
+  // stage/plan state ever leaks from one PC (or one selection shape) into
+  // the next.
   const {
     stage, pickerOpts, plannedPath,
     requestMove, requestMoveRefresh, planMove, confirmPlannedMove, cancelPlan, cancelMove,
-  } = useTokenMovement(selectedId, { onMoveDone: handleMoveDone, ignoreOccupancy: true });
+  } = useTokenMovement(singleSelectedId, { onMoveDone: handleMoveDone, ignoreOccupancy: true });
 
   requestMoveRefreshRef.current = requestMoveRefresh;
   const requestMoveRef = useRef(null);
@@ -139,7 +162,10 @@ const DockExplorationPane = () => {
     [doors, snapshot]
   );
 
-  const selected = markers.find((m) => m.moverId === selectedId) || null;
+  // The single-selection marker (route overlay + status text below) — only
+  // meaningful when exactly one PC is selected, same gate as the movement
+  // hook itself.
+  const selected = markers.find((m) => m.moverId === singleSelectedId) || null;
 
   // Other movers' route ghosts — GM audience (this is a GM-exclusive mount,
   // the same channel DockRoutePreviews reads); the selected PC's own route is
@@ -149,20 +175,21 @@ const DockExplorationPane = () => {
   const ghosts = useMemo(() => {
     if (!snapshot) return [];
     return ghostEntries.filter((entry) => {
-      if (entry.id === selectedId) return false;
+      if (entry.id === singleSelectedId) return false;
       if (sceneId && entry.sceneId && entry.sceneId !== sceneId) return false;
       return true;
     });
-  }, [ghostEntries, snapshot, sceneId, selectedId]);
+  }, [ghostEntries, snapshot, sceneId, singleSelectedId]);
 
   // Selecting fires the mover's own movereq. It has to be an effect rather
   // than part of the tap handler: `requestMove` closes over the charId from
   // the render it was created in, so firing it in the same handler that sets
-  // the selection would send the request for the PREVIOUS mover.
+  // the selection would send the request for the PREVIOUS mover. Only fires
+  // for the single-selection case — the hook is inert for 0 or 2+ selected.
   useEffect(() => {
-    if (!selectedId || !canMove) return;
+    if (!singleSelectedId || !canMove) return;
     requestMoveRef.current?.('stride');
-  }, [selectedId, canMove]);
+  }, [singleSelectedId, canMove]);
 
   // AUTO-CONFIRM (the epic's no-confirm-gate ruling): the moment a planned
   // route lands, execute it. A plan with no cells is the one case worth
@@ -174,21 +201,44 @@ const DockExplorationPane = () => {
     else cancelPlanRef.current?.();
   }, [stage, plannedPath]);
 
-  const selectMover = (moverId) => {
+  // TOGGLE semantics (#1824, epic #1822 ruling — replaces the old
+  // replace-selection behavior): tapping a PC adds or removes them from the
+  // set without disturbing anyone else already selected. Every call that
+  // changes the selection's SHAPE cancels the currently-mounted movement
+  // hook first, exactly like the old selectMover did — harmless when that
+  // hook is already inert (0 or 2+ selected), and it's what stops a
+  // mid-flight plan/stage from leaking across a selection change when we're
+  // leaving or entering the single-selection case.
+  const toggleMover = (moverId) => {
     cancelMove();
-    setSelectedId((cur) => (cur === moverId ? null : moverId));
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      if (next.has(moverId)) next.delete(moverId);
+      else next.add(moverId);
+      return next;
+    });
+  };
+
+  const selectAllMovers = () => {
+    cancelMove();
+    setSelectedIds(new Set((Array.isArray(characters) ? characters : []).map((c) => c.id)));
+  };
+
+  const clearSelection = () => {
+    cancelMove();
+    setSelectedIds(new Set());
   };
 
   // ONE tap handler for the whole surface: a tap that resolves to a PC marker
-  // selects that mover, anything else is a destination for the current one.
-  // Marker resolution runs first and uses the shared CSS-px snap radius
-  // (hitTestMarkers), so a finger landing near a token never walks somebody
-  // onto their ally by accident.
+  // toggles that mover, anything else is a destination for the current
+  // selection. Marker resolution runs first and uses the shared CSS-px snap
+  // radius (hitTestMarkers), so a finger landing near a token never walks
+  // somebody onto their ally by accident.
   const handleMapTap = ({ nx, ny, paneWidthPx, paneHeightPx }) => {
     if (!snapshot || !canMove) return;
     const hit = hitTestMarkers({ nx, ny }, markers, { paneWidthPx, paneHeightPx });
     if (hit) {
-      selectMover(hit.moverId);
+      toggleMover(hit.moverId);
       return;
     }
     // Doors resolve second, using the same shared snap radius — a tap that
@@ -196,14 +246,23 @@ const DockExplorationPane = () => {
     // destination. Locked doors still consume the tap (no `interactDoor`
     // call, matching the bridge's own ds===2 ignore) rather than letting the
     // GM accidentally plan a move onto a door square they meant to tap.
+    // Selection size never changes this branch's behavior.
     const doorHit = hitTestMarkers({ nx, ny }, doorMarkers, { paneWidthPx, paneHeightPx });
     if (doorHit) {
       if (doorHit.state !== 2) interactDoor(doorHit.wallId, doorHit.state === 1 ? 'close' : 'open');
       return;
     }
-    if (!selectedId) return;
-    // One active plan at a time: ignore destination taps while a plan or a
-    // move is in flight — a fresh moveplan would re-key the correlation ts and
+    if (selectedIds.size === 0) return;
+    if (selectedIds.size > 1) {
+      // GROUP MOVE (slice B1, epic #1822): dispatch — `cnmh_groupmovereq_global`
+      // to the bridge rail #1823 builds in parallel — lands here. Until then
+      // a destination tap with 2+ selected is a deliberate no-op: no relay
+      // write, no plan. `statusText` below already tells the GM why.
+      return;
+    }
+    // size === 1 — today's single-flow path, byte-for-byte unchanged. One
+    // active plan at a time: ignore destination taps while a plan or a move
+    // is in flight — a fresh moveplan would re-key the correlation ts and
     // orphan the movedone the previous one is still waiting on.
     if (stage !== 'picking' && stage !== 'planned') return;
     const world = worldPointFromTap(snapshot, nx, ny);
@@ -219,9 +278,11 @@ const DockExplorationPane = () => {
   const statusText = STAGE_STATUS[stage]
     || (!canMove
       ? null
-      : selected
-        ? `Tap a destination for ${selected.name}.`
-        : 'Tap a party member to move them.');
+      : selectedIds.size > 1
+        ? `${selectedIds.size} selected — group move arrives with the next bridge update.`
+        : selected
+          ? `Tap a destination for ${selected.name}.`
+          : 'Tap a party member to move them.');
 
   return (
     <section className="dock-exp" aria-label="Exploration">
@@ -299,7 +360,7 @@ const DockExplorationPane = () => {
                       ))}
                       <PartyTokensOverlay
                         markers={markers}
-                        selectedId={selectedId}
+                        selectedIds={selectedIds}
                         dimmed={!canMove}
                       />
                     </>
@@ -339,12 +400,17 @@ const DockExplorationPane = () => {
         </div>
 
         {/* The roster strip (#1810) — this grid's second column. It shares the
-            pane's mover selection, so tapping a chip and tapping that PC's
-            token are the same act (selectMover cancels the previous pick
-            either way). Rendered whether or not the bridge is up: activity
-            control and the party-state buttons are the degraded pane's whole
-            reason to exist. */}
-        <DockExplorationRoster selectedId={selectedId} onSelect={selectMover} />
+            pane's selection SET (#1824), so tapping a chip and tapping that
+            PC's token are the same toggle act (toggleMover cancels the
+            movement hook's in-flight pick either way). Rendered whether or
+            not the bridge is up: activity control and the party-state
+            buttons are the degraded pane's whole reason to exist. */}
+        <DockExplorationRoster
+          selectedIds={selectedIds}
+          onSelect={toggleMover}
+          onSelectAll={selectAllMovers}
+          onClear={clearSelection}
+        />
       </div>
     </section>
   );
