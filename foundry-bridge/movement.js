@@ -225,7 +225,7 @@ export async function handleMoveRequest(charId, value) {
 //     getStepNeighbors offsets its rays — a corner-to-corner ray runs along the
 //     grid lines where walls sit).
 // The offset is the token's own footprint, so a Large creature converts right.
-function cellGeometry(token) {
+export function cellGeometry(token) {
   const gridSize = getGridSize();
   const { width: tW, height: tH } = getTokenDimensions(token);
   const offX = (tW * gridSize) / 2;
@@ -277,27 +277,27 @@ export async function handleMovePlan(charId, value) {
   });
 }
 
-// Execute a planned multi-waypoint route (#1736 S1) — the waypoint branch of
-// handleMoveConfirm. Reports through the SAME movedone shape as the stepper.
-async function confirmWaypointMove(charId, token, value) {
-  const geo = cellGeometry(token);
-  // Capture the start BEFORE the move: on the v14 pipeline the document may
-  // already read as the landing by the time the move resolves, and the route's
-  // cost has to be measured from where the token actually stood.
-  const startCenter = {
+// The token's CURRENT centre, in the creature-centre space the path rail speaks.
+// Callers capture this BEFORE a move: on the v14 pipeline the document may
+// already read as the landing by the time the move resolves, and a route's cost
+// has to be measured from where the token actually stood.
+export function tokenStartCenter(token, geo = cellGeometry(token)) {
+  return {
     x: Number(token.x ?? token.document?.x ?? 0) + geo.offX,
     y: Number(token.y ?? token.document?.y ?? 0) + geo.offY,
   };
+}
 
-  // Cheap staleness protection: the world can change between plan and confirm
-  // (a foe steps into the route), so re-plan/constrain right before executing
-  // rather than trusting the app's cached path. Worst case is a stop-short,
-  // which movedone already reports honestly.
-  const { path } = await planTokenPath(
-    token,
-    value.waypoints.map(geo.toCenter),
-    { origin: startCenter },
-  );
+// EXECUTION primitive, shared by the single-move confirm and the group-move rail
+// (#1823). Walks `path` — creature centres, excluding the origin, exactly what
+// planTokenPath returns — and reports where the token really landed and what
+// the trip really cost. Deliberately owns NO wire traffic and NO move-done
+// notification: those live in the ack wrappers around it, which is precisely
+// what keeps a group move from firing one per-mover capture per member (the
+// group rail composes this primitive, never confirmWaypointMove).
+export async function walkTokenPath(token, path, { origin } = {}) {
+  const geo = cellGeometry(token);
+  const startCenter = origin ?? tokenStartCenter(token, geo);
 
   // A route blocked at its very first segment still answers — a silent bridge
   // would strand the app's awaiting-done state.
@@ -315,6 +315,27 @@ async function confirmWaypointMove(charId, token, value) {
   const feetMoved = snapFeet(
     await measureTokenPathCost(token, traveled, { origin: startCenter }),
   );
+
+  return { landing, landedCenter, feetMoved };
+}
+
+// Execute a planned multi-waypoint route (#1736 S1) — the waypoint branch of
+// handleMoveConfirm. Reports through the SAME movedone shape as the stepper.
+async function confirmWaypointMove(charId, token, value) {
+  const geo = cellGeometry(token);
+  const startCenter = tokenStartCenter(token, geo);
+
+  // Cheap staleness protection: the world can change between plan and confirm
+  // (a foe steps into the route), so re-plan/constrain right before executing
+  // rather than trusting the app's cached path. Worst case is a stop-short,
+  // which movedone already reports honestly.
+  const { path } = await planTokenPath(
+    token,
+    value.waypoints.map(geo.toCenter),
+    { origin: startCenter },
+  );
+
+  const { landing, feetMoved } = await walkTokenPath(token, path, { origin: startCenter });
 
   // Same piggyback as the stepper (#451) — the app re-opens the picker at the
   // landing without another movereq→moveopts round-trip. ignoreOccupancy

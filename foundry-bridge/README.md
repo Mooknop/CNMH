@@ -17,6 +17,7 @@ devices.
 | `minionActors.js` | Ownership-derived minion→PC links + spawn-token handler (#362). |
 | `summonPool.js` | Summons-folder actor snapshot for the GM's Add-summon modal (#261). |
 | `movement.js` | Token movement: 8-direction step probe + move write-back. |
+| `groupMove.js` | Exploration GROUP move (#1823): ring-spread assignment + concurrent per-token pathing for a whole selection on one key. |
 | `doors.js` | Door detection near the PC token + open/close interaction. |
 | `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets; off-guard annotation for flanking melee strikes. |
 | `effects.js` | Apply compendium effect items to target actors on app request. |
@@ -97,6 +98,8 @@ channel, add its token there too so neither side hand-writes the string.
 | `moveplanned` | bridge → app | charId | `{ path, costFeet, clipped, reqTs }` — the route core would ACTUALLY walk: `path` = `[{ col, row, x, y }, …]` excluding the origin and ending at the real landing cell (`x`,`y` = the cell's top-left pixels, as `moveopts`/`movedone` use); `costFeet` = terrain-aware total in feet snapped to 5 (v14 `TokenDocument#measureMovementPath`, so Region difficult terrain counts); `clipped` = a wall/constraint stopped the route short of the last requested waypoint, so the app offers an intermediate waypoint tap; `reqTs` echoes the plan's `ts` |
 | `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts, waypoints?, ignoreOccupancy? }` — `waypoints` (optional, protocol ≥ 14) is the planned `moveplanned.path` cells verbatim `[{ col, row }, …]`: present → execute the whole multi-waypoint route as one `TokenDocument#move`; absent → the legacy single-`destination` 5-ft stepper move, unchanged. The bridge re-plans/constrains at confirm time, so a stale plan degrades to an honest stop-short rather than an error. `ignoreOccupancy` (#617/#1806, optional) mirrors `movereq`'s flag — carried here too so the `movedone.nextOpts` piggyback stays consistent with the request that started the move |
 | `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs, nextOpts }` — identical shape for both confirm flows. `feetMoved` is the measured cost of the path ACTUALLY traveled and `newPosition` the real landing (a v14 move may legally stop short — the app refunds the over-charged actions). `nextOpts` is the `moveopts` payload for the landing cell (same shape), piggybacked so a chained step skips a `movereq`→`moveopts` round-trip (#451); consumed by `useTokenMovement` |
+| `groupmovereq` | app → bridge | `global` | `{ id, moverIds, target, ts, budgetFeet? }` — protocol ≥ 22 (#1823, epic #1822): move a SELECTION of PCs to spread destinations ringing one tapped cell, in one round trip. `moverIds` resolve through the same three id spaces as every movement key; `target` is a grid cell — canonically `{ col, row }`, with `{ x, y }` accepted as a col/row alias (the epic sketched the wire that way). `budgetFeet` (optional) overrides each mover's Speed-derived reach. Global-only: the whole point is that N movers ride ONE key. Live-only, id-correlated — never replayed from FULL_STATE. **No bridge-side gating**: the app owns the `exploremove`/`playmode` gate, the bridge executes what it is told, and creature occupancy is unconditionally ignored (#617 semantics — only walls/doors block) |
+| `groupmovedone` | bridge → app | `global` | `{ id, results, ts }` — ack for `groupmovereq` (`id` echoes). `results` is one row per REQUESTED moverId, in request order: `{ moverId, ok, dest, feetMoved, reached }`. `dest` is the REAL landing cell `{ col, row, x, y }` — the same shape `movedone.newPosition` uses (`x`,`y` = the cell's top-left pixels), which is why the out shape is a cell object rather than the epic's `{x,y}` sketch. `reached` = the mover ended in the ring cell the spread assigned it; `false` = it walked the affordable prefix toward that cell and stopped short (out of budget, or a wall clipped the route) — `dest`/`feetMoved` stay honest either way, and that one rule IS "as close as they can". `ok:false` (with `dest:null`, `feetMoved:0`) is reserved for a mover that never moved at all: an unresolvable id, a per-token error, or no assignable destination (a walled-in pocket). Exactly ONE party-framed `snapdone` broadcast fires after the whole group settles — never one per member |
 | `doorreq` | app → bridge | charId | `{ ts }` — request doors near the PC token |
 | `dooropts` | bridge → app | charId | `{ doors: [{ wallId, state, x, y }], reqTs }` — doors within ~1.5 grid squares; secret doors only when already open. `x`/`y` are the wall MIDPOINT in world pixels — the same space `moveopts`/`snapdone` project |
 | `doorinteract` | app → bridge | charId | `{ wallId, op: 'open'\|'close', ts }` — locked doors (ds 2) are ignored |
@@ -135,6 +138,46 @@ channel, add its token there too so neither side hand-writes the string.
 | `pathpreviewgm` | bridge → app | `global` | Identical payload to `pathpreview`, **unfiltered** — every mover, hidden and hostile included (protocol ≥ 16, #1744 WS-1). The relay has no per-key ACL, so player devices still *receive* this key; the app render-gates it to GM surfaces. That is the accepted trade-off for a home table — wire-level audience separation in the session DO is out of scope (epic #1744, OQ-2 ruling). Consume `pathpreview` on player surfaces and `pathpreviewgm` on the GM dock; never both on the same surface, or a filtered ghost draws twice |
 | `fxplay` | app → bridge | `global` | `{ id, shape, file, source, targets:[entryId \| { x, y }], opts?, ts }` — resolved canvas-animation recipe (#1415, epic #1414). The app-side animation catalog (content) picks `shape` + `file` (a Sequencer database key); the bridge interprets the shape: `melee` = swing on each target rotated along the attack line, `projectile` = stretch source → target, `burst` = radial effect centered on each target (source-free — `source` may be null; save-spell recipes ride the save request and fire GM-side). Point targets are in the contract for later AoE templates. Fire-and-forget juice — silent no-op on unknown shape / unresolved tokens, warn-once when the Sequencer module is absent; needs Sequencer + an asset pack (e.g. JB2A free) in the world |
 
+### The group-move contract (#1823, protocol ≥ 22)
+
+`groupmovereq` → `groupmovedone` is the only movement rail that carries a
+*selection*. Four rules define it; `groupMove.js` is the implementation and its
+header comment the long form.
+
+- **Spread assignment.** Candidate destinations are expanding Chebyshev rings
+  around the tapped cell — ring 0 is the target itself. A ring-k candidate is
+  dropped when a wall test from the TARGET's centre to the candidate's centre
+  collides: that cell is inside or behind a wall from where the GM tapped, so
+  nobody is sent there. Movers are then served **closest-PC-first** (straight-line
+  distance to the target, ties broken by `moverId` so the order is reproducible),
+  and each takes a free cell from the lowest ring that still has one — within
+  that ring, the cell nearest to that mover, ties broken col-then-row. **No two
+  movers share a destination**, and the result does not depend on the order
+  `moverIds` arrived in.
+- **Pathing.** Each mover routes to its assigned cell through the SAME core path
+  machinery the single tap-flow uses (`planTokenPath`): walls and doors block,
+  creatures never do. The route is then clipped to that mover's budget —
+  **1.5× its own Speed**, the very multiplier the single flow already uses for a
+  mover's default capture radius, so a group tap reaches exactly as far as the
+  map that flow lets a player tap on (30 ft when the actor reports no Speed;
+  `budgetFeet` on the request overrides). Cost is monotonic along a route, so the
+  first leg that busts the budget ends the walk — an over-budget or wall-clipped
+  mover walks the affordable prefix and reports `reached: false` with a real
+  `dest`/`feetMoved`.
+- **Concurrent, isolated.** Every token moves under one `Promise.all`; a
+  rejection is caught per mover, so one token's failure is one `ok:false` row
+  and never blocks, delays, or aborts the rest.
+- **One capture, by composition.** The per-move snapshot rebroadcast belongs to
+  the single-move ACK WRAPPER (`handleMoveConfirm` → the `movedone` seam →
+  `pushMoverSnapshot`), not to movement execution. `groupMove.js` composes
+  `movement.js`'s execution primitive (`walkTokenPath`) and never that wrapper,
+  so a group move **structurally cannot** fire a per-member capture and the
+  single-move path is untouched. The one recapture a settled group does want
+  rides its own seam — `setGroupSettledListener`, wired in `bridge.js` to
+  `snapshots.js`'s `pushPartySnapshot` — which emits a single party-framed
+  `snapdone` with `trigger: 'movedone'` (deliberately the existing trigger: an
+  app already treats that broadcast as "the world moved, refresh the party map").
+
 ## Tests
 
 The bridge has its own jest project (it lives outside `src/`, so it does not run
@@ -169,6 +212,13 @@ factories in `test/foundryMock.js`. Two layers:
   first such pair. `diffShapes` compares arrays against element `[0]` only, so
   record the variant-carrying row first (`dooropts_global` leads with the secret
   door, which is what puts `secret` under contract).
+
+  `diffShapes` only ever descends into element `[0]`, so a channel whose array
+  carries several row FLAVOURS records the contract-bearing one first and the
+  rest as documentation: `groupmovedone` (#1823) leads with a `reached` row (a
+  real `dest` object is what puts the cell shape under contract) and then
+  records a stop-short row and an `ok:false`/`dest:null` row so the whole
+  `results[]` vocabulary is visible in the file.
 
   The `snapdone` fixture covers the legacy GM-view ack; the party-framed shape
   (`tokens` present, #1807) is recorded separately under the synthetic key
@@ -217,12 +267,17 @@ factories in `test/foundryMock.js`. Two layers:
   `auraset` (#1733 S1, hand-authored as an ACTIVATION: `active:true` with an
   explicitly authored `feet`, plus the optional `label`/`color`, so the fixture
   pins that a radius is part of the payload rather than something the bridge may
-  default). Only the
+  default), and `groupmovereq` (#1823, hand-authored as a TWO-mover selection
+  with a `{ col, row }` target — the bridge half asserts the fixture really
+  moves both movers onto distinct ring cells, so an app that renamed
+  `moverIds`/`target` fails here). Only the
   bridge half of `templateplace` runs today: the app producer still refuses to
   send a cone, so `src/test/relayInboundContract.test.jsx` picks this fixture
   up when #1735 S3 wires the rosette into `useTemplatePlacementSection`.
   `auraset` is in the same state for the same reason — `useAura` does not write
-  the bridge key yet, so the app half joins when #1733's app slice lands. The epic's own grep of `origin/main` found `action`
+  the bridge key yet, so the app half joins when #1733's app slice lands.
+  `groupmovereq` likewise: nothing app-side sends it until #1825 (B1) wires the
+  dock's group dispatch, and #1823 deliberately imports nothing app-side. The epic's own grep of `origin/main` found `action`
   was the only documented relay channel with no recorded emission at all;
   `moveplan`/`snapreq`'s mover-centered form are equally recent (#1736,
   #1744). **Not yet covered** (a follow-up, not swept here): `movereq`,

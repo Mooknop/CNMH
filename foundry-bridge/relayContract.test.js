@@ -19,6 +19,7 @@ import { diffShapes } from './__fixtures__/relay/shape.js';
 import { RELAY } from './syncKeys.js';
 
 import { initMovement, handleMoveRequest, handleMovePlan, handleMoveConfirm } from './movement.js';
+import { initGroupMove, handleGroupMoveRequest } from './groupMove.js';
 import { initEncounter, updateActorMap } from './encounter.js';
 import { initCharacterSync } from './characterSync.js';
 import { initMinionSync, cacheMinions, _resetMinionCache } from './minionSync.js';
@@ -167,6 +168,38 @@ const RECIPES = {
       ts: 999,
     });
     return grab(send, RELAY.MOVEPLANNED);
+  },
+
+  // Group move (#1823) — recorded with all THREE result flavours present, so
+  // the fixture documents the whole `results[]` vocabulary rather than only
+  // the happy row: Ayla reaches her assigned ring cell, Brann (Speed 10, six
+  // cells out) walks the affordable prefix and stops short, and 'Ghost'
+  // resolves to no token at all. Recorded on the v14 pipeline with a STEPPED
+  // path, which is where the budget clip lives.
+  [RELAY.GROUPMOVEDONE]: async () => {
+    const send = jest.fn();
+    updateActorMap({ 'actor-ayla': 'Ayla', 'actor-brann': 'Brann' });
+    initGroupMove(send);
+    global.game.release = { generation: 14 };
+
+    const place = (charId, col, speed) => {
+      const id = `actor-${charId.toLowerCase()}`;
+      const token = makeToken({ id: `tok-${charId.toLowerCase()}`, x: col * 100, y: 1000 });
+      const actor = makeActor({ id, name: charId, speed, tokens: [token] });
+      token.actor = actor;
+      global.game.actors.set(id, actor);
+      equipV14Movement(token, { stepped: true });
+      return token;
+    };
+    global.canvas.tokens.placeables = [place('Ayla', 9, 30), place('Brann', 16, 10)];
+
+    await handleGroupMoveRequest({
+      id: 'grp-fixture',
+      moverIds: ['Ayla', 'Brann', 'Ghost'],
+      target: { col: 10, row: 10 },
+      ts: STABLE_TS,
+    });
+    return grab(send, RELAY.GROUPMOVEDONE);
   },
 
   [RELAY.ROSTER]: () => {

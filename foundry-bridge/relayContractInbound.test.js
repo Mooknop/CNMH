@@ -29,6 +29,7 @@ import path from 'path';
 
 import { handleAction, _resetTargeting } from './targeting.js';
 import { initMovement, handleMovePlan } from './movement.js';
+import { initGroupMove, handleGroupMoveRequest } from './groupMove.js';
 import { initSnapshots, handleSnapshotRequest, handleTemplatePlace } from './snapshots.js';
 import { initAuras, handleAuraSet, _resetAuras } from './auras.js';
 import { updateActorMap } from './encounter.js';
@@ -112,6 +113,49 @@ describe('inbound relay contract (#1749 S1 follow-up)', () => {
       expect(payload.path).toHaveLength(fixture.value.waypoints.length);
       expect(payload.reqTs).toBe(fixture.value.ts);
       expect(typeof payload.costFeet).toBe('number');
+    });
+  });
+
+  describe(`${RELAY.GROUPMOVEREQ} — foundry-bridge/groupMove.js handleGroupMoveRequest`, () => {
+    test('the committed fixture is accepted: both movers land on distinct ring cells', async () => {
+      const send = jest.fn();
+      global.game.release = { generation: 14 };
+      updateActorMap({ 'actor-ayla': 'Ayla', 'actor-brann': 'Brann' });
+      initGroupMove(send);
+
+      const place = (charId, col) => {
+        const id = `actor-${charId.toLowerCase()}`;
+        const token = makeToken({ id: `tok-${charId.toLowerCase()}`, x: col * 100, y: 1000 });
+        const actor = makeActor({ id, name: charId, speed: 30, tokens: [token] });
+        token.actor = actor;
+        global.game.actors.set(id, actor);
+        equipV14Movement(token);
+        return token;
+      };
+      global.canvas.tokens.placeables = [place('Ayla', 9), place('Brann', 12)];
+
+      const fixture = readFixture(RELAY.GROUPMOVEREQ);
+
+      await expect(handleGroupMoveRequest(fixture.value)).resolves.not.toThrow();
+
+      const call = send.mock.calls.find((c) => c[1] === RELAY.GROUPMOVEDONE);
+      expect(call).toBeTruthy();
+      const [characterId, , payload] = call;
+      expect(characterId).toBe(fixture.characterId);
+      expect(payload.id).toBe(fixture.value.id);
+      // Observable effect: the fixture's `moverIds` and `target` were genuinely
+      // read — one row per requested mover, in request order, each on its own
+      // cell ringing the tapped one.
+      expect(payload.results.map((r) => r.moverId)).toEqual(fixture.value.moverIds);
+      expect(payload.results.every((r) => r.ok && r.reached)).toBe(true);
+      const cells = payload.results.map((r) => `${r.dest.col},${r.dest.row}`);
+      expect(new Set(cells).size).toBe(fixture.value.moverIds.length);
+      for (const r of payload.results) {
+        expect(Math.max(
+          Math.abs(r.dest.col - fixture.value.target.col),
+          Math.abs(r.dest.row - fixture.value.target.row),
+        )).toBeLessThanOrEqual(1);
+      }
     });
   });
 

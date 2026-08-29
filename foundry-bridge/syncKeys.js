@@ -22,7 +22,7 @@ export const GLOBAL_ID = 'global';
 // exactly the degradation this exists to surface). Bump it in the same PR as
 // the payload change; the app-side minimum (src/hooks/useBridgeStatus.js)
 // decides when old protocols stop being acceptable.
-export const PROTOCOL_VERSION = 21;
+export const PROTOCOL_VERSION = 22;
 
 // Feature protocol floors — the version at which a specific rail became
 // available, so an app feature can gate on the capability it needs rather than
@@ -37,6 +37,14 @@ export const SCENE_DOORS_PROTOCOL = 20;
 // this feature landed on; the app gates the party map on `protocol >=` this
 // constant.
 export const PARTY_MAP_PROTOCOL = 21;
+
+// Exploration GROUP move (#1823, epic #1822): `cnmh_groupmovereq_global` →
+// `cnmh_groupmovedone_global` — one request moves N selected PCs to spread
+// destinations ringing a tapped cell. Named separately from PROTOCOL_VERSION
+// for the same reason PARTY_MAP_PROTOCOL is: the app gates multi-select on
+// `protocol >=` this constant and caps the selection at 1 below it (today's
+// single-move flow IS the degradation).
+export const GROUP_MOVE_PROTOCOL = 22;
 
 // App ↔ bridge relay channels. Values are the bare <type> tokens carried as
 // the `key` field on the wire and used as the middle segment of storage keys.
@@ -64,6 +72,8 @@ export const RELAY = Object.freeze({
   FOEKIT: 'foekit',
   FOUNDRYEFFECTS: 'foundryeffects',
   FXPLAY: 'fxplay',
+  GROUPMOVEDONE: 'groupmovedone',
+  GROUPMOVEREQ: 'groupmovereq',
   HEROPOINTS: 'heropoints',
   HP: 'hp',
   INITCOMMIT: 'initcommit',
