@@ -1,7 +1,15 @@
 /* DoorGlyphsOverlay (#1809) — an SVG layer inside MapSnapshotViewer's
    `.msv-pane`, same flat 0-100 percentage viewBox convention as
    PartyTokensOverlay.css / SnapshotRouteOverlay.css, so every stroke and
-   font-size here is already in that space and scales with pinch-zoom. */
+   font-size here is already in that space and scales with pinch-zoom.
+
+   REDUCED OPACITY (user-requested follow-up to #1804/#1822/#1831): door
+   glyphs now read as light map annotations rather than solid icons, via the
+   `--dgo-opacity` custom property below (design-token pattern, no raw
+   numbers scattered through the rules) — the three state colors
+   (closed/open/locked, below) stay distinguishable at the reduced level, and
+   secret doors stay MORE ghosted than a regular door at rest (existing
+   #1809 ruling, preserved). */
 .dgo {
   position: absolute;
   inset: 0;
@@ -9,6 +17,23 @@
   height: 100%;
   pointer-events: none;
   overflow: visible;
+}
+
+.dgo-marker {
+  --dgo-opacity: 0.6;
+  opacity: var(--dgo-opacity);
+  /* Only the per-marker group re-enables hit-testing (the `.dgo` layer
+     itself stays pointer-events:none) so a mouse can :hover one glyph for
+     full-opacity precision-tapping without this layer ever intercepting tap
+     RESOLUTION — a pointer event on a marker still bubbles up through the
+     DOM to `.msv-frame`'s handler exactly as before; only which element it
+     originates from changes. */
+  pointer-events: auto;
+}
+
+.dgo-marker:hover,
+.dgo-marker:focus-visible {
+  --dgo-opacity: 1;
 }
 
 .dgo-ring {
@@ -48,12 +73,15 @@
 
 /* Secret doors (#1809 scope update): ghosted + dashed, distinct from a door
    the party can see, with no separate legend needed. Layered on top of
-   whatever state tint already applies above. */
-.dgo-marker--secret .dgo-ring {
-  stroke-dasharray: 1.1 0.9;
-  opacity: 0.6;
+   whatever state tint already applies above. Lower than `.dgo-marker`'s own
+   base `--dgo-opacity` (0.6) so a secret door stays MORE ghosted than a
+   regular one even at the reduced default — still resets to full opacity on
+   hover/focus like every other marker (the `:hover`/`:focus-visible` rule
+   above has higher specificity than this class alone, so it wins). */
+.dgo-marker--secret {
+  --dgo-opacity: 0.35;
 }
 
-.dgo-marker--secret .dgo-glyph {
-  opacity: 0.6;
+.dgo-marker--secret .dgo-ring {
+  stroke-dasharray: 1.1 0.9;
 }

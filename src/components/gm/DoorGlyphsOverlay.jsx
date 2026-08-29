@@ -39,6 +39,14 @@ const toPercent = (center) => ({ cx: center.nx * 100, cy: center.ny * 100 });
 // from "GM-only, revealed by the wall's own `secret` type" at a glance, with
 // no separate legend. Still tappable/toggleable like a regular door — only
 // the styling differs.
+//
+// REDUCED OPACITY (user-requested follow-up to #1804/#1822/#1831): glyphs sit
+// at a lighter default opacity (`--dgo-opacity`, DoorGlyphsOverlay.css) so
+// they read as annotations over the map art rather than solid icons, with a
+// secret door staying more ghosted still at rest. Full opacity is restored
+// on hover/focus for precision-tapping — this doesn't change tap RESOLUTION
+// at all (that's still the pane's own hit-test math against `doors`), only
+// how the glyph looks while a GM's cursor is over it.
 const DoorGlyphsOverlay = ({ doors = [] }) => {
   if (!doors.length) return null;
 
