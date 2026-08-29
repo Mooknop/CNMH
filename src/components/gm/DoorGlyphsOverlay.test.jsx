@@ -74,4 +74,27 @@ describe('DoorGlyphsOverlay (#1809)', () => {
     const { container } = render(<DoorGlyphsOverlay doors={[doorAt(0.5, 0.5)]} />);
     expect(container.querySelector('svg.dgo')).toHaveAttribute('aria-hidden', 'true');
   });
+
+  // REDUCED OPACITY (user-requested follow-up to #1804/#1822/#1831): the
+  // lighter-than-solid default and the secret-door ghosting are both driven
+  // by the `--dgo-opacity` CSS custom property (DoorGlyphsOverlay.css), not
+  // an inline style or a JS-computed value — so this only asserts the
+  // structural/class hooks that property keys off, never a computed opacity
+  // (Vitest's default config doesn't process imported CSS, so a
+  // `toHaveStyle`/`getComputedStyle` assertion here would pass or fail for
+  // the wrong reason regardless of what the stylesheet actually says).
+  it('carries no inline opacity style — the reduced-opacity treatment is CSS-only, keyed off the marker classes', () => {
+    const { container } = render(<DoorGlyphsOverlay doors={[
+      doorAt(0.1, 0.1, { wallId: 'w-regular' }),
+      doorAt(0.2, 0.2, { wallId: 'w-secret', secret: true }),
+    ]} />);
+    expect(container.querySelector('[data-wall-id="w-regular"]').getAttribute('style')).toBeNull();
+    const secret = container.querySelector('[data-wall-id="w-secret"]');
+    expect(secret.getAttribute('style')).toBeNull();
+    // The secret marker keeps BOTH its state class and the secret hook — the
+    // ghosting is layered on top of the state tint via that second class,
+    // never replacing it (see the file-header comment above).
+    expect(secret).toHaveClass('dgo-marker--closed');
+    expect(secret).toHaveClass('dgo-marker--secret');
+  });
 });

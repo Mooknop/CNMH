@@ -1,7 +1,15 @@
 /* PartyTokensOverlay (#1808) — an SVG layer inside MapSnapshotViewer's
    `.msv-pane`, same flat 0-100 percentage viewBox convention as
    SnapshotRouteOverlay.css / TokenMarkersOverlay.css, so every stroke and
-   font-size here is already in that space and scales with pinch-zoom. */
+   font-size here is already in that space and scales with pinch-zoom.
+
+   DECLUTTER (user-requested follow-up to #1804/#1822/#1831): the party map
+   is a live canvas snapshot — the real Foundry tokens are already visible in
+   the image underneath, so a drawn ring/dot/name-label on top of them was
+   redundant. Every marker still occupies the same DOM node (PartyTokensOverlay.jsx
+   keeps the full structure — it's the same geometry `hitTestMarkers` resolves
+   a tap against, and the unit/e2e suites still assert on it), it just paints
+   nothing: every visual property below resolves to fully transparent. */
 .pto {
   position: absolute;
   inset: 0;
@@ -11,52 +19,19 @@
   overflow: visible;
 }
 
-/* Movement disabled (the exploremove toggle is off): the party is still worth
-   SEEING, it just isn't tappable — so the whole layer reads as inert. */
-.pto--dimmed {
-  opacity: 0.55;
-}
-
 .pto-marker {
   --marker-accent: var(--ember-base);
 }
 
-.pto-footprint {
-  fill: var(--marker-accent);
-  stroke: var(--marker-accent);
-  stroke-width: 0.5;
-  fill-opacity: 0.16;
-}
-
-.pto-dot {
-  fill: var(--marker-accent);
-  stroke: var(--shell-bg);
-  stroke-width: 0.4;
-}
-
-/* The active mover: an unmistakable ring, the same "tapped marker is lit"
-   language TokenMarkersOverlay's selection ring uses. */
-.pto-select {
-  fill: none;
-  stroke: var(--marker-accent);
-  stroke-width: 0.9;
-  stroke-dasharray: 1.6 1;
-}
-
-.pto-marker--selected .pto-footprint {
-  fill-opacity: 0.42;
-  stroke-width: 1;
-}
-
+/* Selection feedback moved entirely to the roster chips (DockExplorationRoster)
+   per the user's request — nothing on the map itself renders selected state
+   any more. The elements below stay in the DOM as invisible hit-area /
+   DOM-identity hooks only. */
+.pto-footprint,
+.pto-dot,
+.pto-select,
 .pto-label {
-  font-size: 2.6px;
-  fill: var(--shell-text-primary);
-  paint-order: stroke;
-  stroke: var(--shell-bg);
-  stroke-width: 0.5px;
-  stroke-linejoin: round;
-}
-
-.pto-marker--selected .pto-label {
-  font-weight: 700;
+  fill: none;
+  stroke: none;
+  opacity: 0;
 }

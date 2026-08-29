@@ -22,10 +22,23 @@ import './PartyTokensOverlay.css';
 // (the dynamic-per-character custom-property recipe), falling back to the
 // shared PC tint when the roster has no match for a `moverId`.
 //
+// INVISIBLE HIT AREAS (user-requested follow-up to #1804, #1822/#1831): the
+// party map is a live canvas snapshot — the real Foundry tokens are already
+// visible in the picture, so a drawn ring/dot/name-label on top of them was
+// redundant visual noise. Every element below still renders — same DOM
+// identity (`data-mover-id`, `.pto-marker`(`--selected`), `.pto-footprint`,
+// `.pto-dot`, `.pto-label`) the tap hit-test geometry (`hitTestMarkers`) and
+// the unit/e2e suites both key off — it simply paints nothing any more
+// (PartyTokensOverlay.css strips fill/stroke/opacity to 0). Selection
+// feedback now lives ONLY in the roster chips (`DockExplorationRoster`,
+// which already render selected state of their own) — `.pto-marker--selected`
+// is still applied here so the DOM (and the tests) can still tell selection
+// state apart, it simply carries no visual treatment.
+//
 // SELECTION IS A SET (#1824, epic #1822 A2): `selectedIds` carries every
 // currently-selected mover, not just one — a destination tap moves the whole
 // set (size 1 = today's flow; size 2+ dispatch lands in slice B1). Every
-// member renders the same "lit" ring, not just a single active mover.
+// member still gets the `--selected` class, just with nothing left to render.
 const toPoints = (polygon) => polygon.map((p) => `${p.nx * 100},${p.ny * 100}`).join(' ');
 
 const PartyTokensOverlay = ({ markers = [], selectedIds = null, dimmed = false }) => {
