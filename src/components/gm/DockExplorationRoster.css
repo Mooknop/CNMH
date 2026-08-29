@@ -38,6 +38,23 @@
   color: var(--shell-text-secondary);
 }
 
+/* Select all / Clear (#1824) — sits between the readiness readout and the
+   chip list, same 44px tap-target floor as every other dock-exp-btn. */
+.dock-exp-roster-selectrow {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dock-exp-roster-selcount {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
 .dock-exp-roster-list {
   flex: 1;
   min-height: 0;

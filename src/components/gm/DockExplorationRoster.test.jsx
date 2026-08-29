@@ -298,6 +298,64 @@ describe('DockExplorationRoster ↔ pane selection (#1810)', () => {
     expect(within(chip(moverId)).getByRole('button', { name: `Select ${moverId} to move` }))
       .toHaveAttribute('aria-pressed', 'true');
   });
+
+  // Selection set (#1824, epic #1822 A2): a second chip tap ADDS rather than
+  // replaces, and toggling the same chip again removes it.
+  it('tapping a second chip adds them without deselecting the first', () => {
+    const { session, container } = mount(<DockExplorationPane />);
+    const req = [...session.sent].reverse().find((s) => s.stateType === RELAY.SNAPREQ);
+    act(() => { pushRelayFixture(session, 'snapdoneParty', { id: req?.value?.id }); });
+
+    act(() => {
+      fireEvent.click(within(chip('Pellias')).getByRole('button', { name: 'Select Pellias to move' }));
+    });
+    act(() => {
+      fireEvent.click(within(chip('Ashka')).getByRole('button', { name: 'Select Ashka to move' }));
+    });
+
+    expect(within(chip('Pellias')).getByRole('button', { name: 'Select Pellias to move' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(within(chip('Ashka')).getByRole('button', { name: 'Select Ashka to move' }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect([...container.querySelectorAll('.pto-marker--selected')]).toHaveLength(2);
+
+    // Tapping Pellias again removes just them.
+    act(() => {
+      fireEvent.click(within(chip('Pellias')).getByRole('button', { name: 'Select Pellias to move' }));
+    });
+    expect(within(chip('Pellias')).getByRole('button', { name: 'Select Pellias to move' }))
+      .toHaveAttribute('aria-pressed', 'false');
+    expect(within(chip('Ashka')).getByRole('button', { name: 'Select Ashka to move' }))
+      .toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+// ─── Select all / Clear (#1824, epic #1822 A2) ──────────────────────────────
+describe('DockExplorationRoster select all / clear (#1824)', () => {
+  it('calls back to the parent instead of owning selection itself', () => {
+    const onSelectAll = vi.fn();
+    const onClear = vi.fn();
+    mount(<DockExplorationRoster selectedIds={new Set(['Pellias'])} onSelectAll={onSelectAll} onClear={onClear} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+    expect(onSelectAll).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables Clear and hides the count when nothing is selected', () => {
+    mount(<DockExplorationRoster selectedIds={new Set()} />);
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeDisabled();
+    expect(screen.queryByText(/selected/)).toBeNull();
+  });
+
+  it('shows the selection count and renders every selected chip as selected, not just one', () => {
+    mount(<DockExplorationRoster selectedIds={new Set(['Pellias', 'Ashka'])} />);
+    expect(screen.getByText('2 selected')).toBeInTheDocument();
+    expect(within(chip('Pellias')).getByRole('button', { name: /^Select/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(chip('Ashka')).getByRole('button', { name: /^Select/ })).toHaveAttribute('aria-pressed', 'true');
+  });
 });
 
 // ─── dock-side secret checks (#1812, epic #1804 S8) ─────────────────────────

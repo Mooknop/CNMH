@@ -32,8 +32,11 @@ const fmtMod = (m) => (m == null ? '—' : (m >= 0 ? `+${m}` : `${m}`));
 // map's second column. Deliberately NOT five control panes: the epic's ruling
 // is that the map is the control surface, so this is one compact chip per PC —
 // who they are, what they're doing, how fast they're doing it, and whether
-// they're the selected mover. Tapping a chip selects that PC exactly like
-// tapping their token (the pane owns the selection; we just call back into it).
+// they're in the selection. Tapping a chip TOGGLES that PC exactly like
+// tapping their token (the pane owns the selection SET — #1824, epic #1822
+// A2 — we just call back into it); `selectedIds` is a `Set`, and every member
+// renders selected, not just one. `onSelectAll`/`onClear` (also #1824) grab
+// or empty the whole party from here.
 //
 // ─── THE DOCK IS A WRITER, NOT JUST A VIEW ───────────────────────────────────
 // The GM sets each PC's `cnmh_exploration_<charId>` from here — an act-as write
@@ -328,8 +331,11 @@ const RosterChip = ({
 
 // ─── The strip ───────────────────────────────────────────────────────────────
 const NOOP = () => {};
+const EMPTY_SELECTION = new Set();
 
-const DockExplorationRoster = ({ selectedId = null, onSelect = NOOP }) => {
+const DockExplorationRoster = ({
+  selectedIds = EMPTY_SELECTION, onSelect = NOOP, onSelectAll = NOOP, onClear = NOOP,
+}) => {
   const { characters, theme, effects: effectCatalog } = useContent();
   const { sendUpdate } = useSession();
   const { mode, moveOverride, setMoveOverride } = usePlayMode();
@@ -394,6 +400,33 @@ const DockExplorationRoster = ({ selectedId = null, onSelect = NOOP }) => {
         </span>
       </div>
 
+      {/* Select all / Clear (#1824, epic #1822 A2) — selection is a set now,
+          so the strip needs a fast way to grab the whole party or bail back
+          to nothing, same footing as the per-chip toggle below. */}
+      <div className="dock-exp-roster-selectrow">
+        <button
+          type="button"
+          className="dock-exp-btn"
+          onClick={onSelectAll}
+          disabled={roster.length === 0}
+        >
+          Select all
+        </button>
+        <button
+          type="button"
+          className="dock-exp-btn"
+          onClick={onClear}
+          disabled={selectedIds.size === 0}
+        >
+          Clear
+        </button>
+        {selectedIds.size > 0 && (
+          <span className="dock-exp-roster-selcount" role="status">
+            {selectedIds.size} selected
+          </span>
+        )}
+      </div>
+
       {roster.length === 0 ? (
         <p className="dock-exp-note">No characters in the roster yet.</p>
       ) : (
@@ -403,7 +436,7 @@ const DockExplorationRoster = ({ selectedId = null, onSelect = NOOP }) => {
               key={c.id}
               character={c}
               accent={theme?.accentOverrides?.[c.id] || getCharacterColor(i)}
-              selected={selectedId === c.id}
+              selected={selectedIds.has(c.id)}
               explorationActive={explorationActive}
               onSelect={onSelect}
               effectCatalog={effectCatalog}
