@@ -10,6 +10,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { formatSpeedBreakdown } from '../../utils/speed';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
 import { FULL_MOVE_PROTOCOL, clippedHintFor } from '../../utils/movement';
+import { accrueExploreDistance } from '../../utils/exploreDistance';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import MoveConfirmBar from '../encounter/MoveConfirmBar';
 import MoveMapSurface from '../encounter/MoveMapSurface';
@@ -61,11 +62,11 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
   const handleMoveDone = useCallback((payload) => {
     const feet = payload?.feetMoved ?? 0;
     setFeetTotal((f) => f + feet);
-    if (isGm && feet > 0) setExploreDist((d) => d + feet);
+    if (isGm && feet > 0) setExploreDist((d) => accrueExploreDistance(d, charId, feet));
     waypointsRef.current = [];
     requestMoveRefreshRef.current?.('stride');
     onMoveDone?.(payload);
-  }, [onMoveDone, isGm, setExploreDist]);
+  }, [onMoveDone, isGm, setExploreDist, charId]);
 
   const {
     stage,
