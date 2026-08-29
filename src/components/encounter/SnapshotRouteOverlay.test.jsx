@@ -84,4 +84,35 @@ describe('SnapshotRouteOverlay (#1744 S2)', () => {
     const { container } = mount({ origin: { col: 5, row: 5 } });
     expect(container.querySelector('svg')).toHaveClass('sro--own');
   });
+
+  // #1833 (epic #1831 P2): the bridge now routes around walls (protocol 23),
+  // so `moveplanned.path` can arrive as a dense multi-corner dog-leg instead
+  // of a couple of collinear cells. This component is claimed
+  // polyline-shape-agnostic — it just maps every cell to a point in order —
+  // so prove that claim with a routed-shape (non-straight) path: every
+  // corner must land in the polyline, in order, not just the endpoints.
+  it('draws every corner of a routed dog-leg path, in order (not a straight-line shortcut)', () => {
+    const dogLeg = [
+      { col: 6, row: 5 }, // east
+      { col: 6, row: 6 }, // jog south around an obstacle
+      { col: 6, row: 7 },
+      { col: 7, row: 7 }, // east along the jog
+      { col: 8, row: 7 },
+      { col: 8, row: 6 }, // back north
+      { col: 8, row: 5 },
+      { col: 9, row: 5 }, // resume east on the original row
+    ];
+    const { container } = mount({ origin: { col: 5, row: 5 }, cells: dogLeg });
+    const line = container.querySelector('.sro-line');
+    expect(line).not.toBeNull();
+    expect(roundPoints(line.getAttribute('points'))).toEqual([
+      [55, 55], // origin
+      [65, 55], [65, 65], [65, 75], [75, 75], [85, 75], [85, 65], [85, 55], [95, 55],
+    ]);
+    // The destination highlight still defaults to the LAST cell of the routed
+    // path, not a geometric nearest-corner — the dog-leg's actual landing
+    // square.
+    const dest = container.querySelector('.sro-dest');
+    expect(roundPoints(dest.getAttribute('points'))).toEqual([[90, 50], [100, 50], [100, 60], [90, 60]]);
+  });
 });

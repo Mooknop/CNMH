@@ -13,9 +13,14 @@ import './MoveConfirmBar.css';
 //                  the bar then reads just "35 ft")
 //   disabled      boolean  — disables Confirm (e.g. not enough actions left)
 //   disabledHint  string   — shown under the summary when disabled
-//   clipped       boolean  — the route stopped short of the tap (a wall)
-//   clippedHint   string   — note shown when clipped (defaults to the
-//                  waypoint-chaining hint every surface shares)
+//   clipped       boolean  — the route stopped short of the tap
+//   clippedHint   string   — note shown when clipped; every mounting surface
+//                  passes `clippedHintFor(protocol)` (utils/movement.js,
+//                  #1833 epic #1831 P2) so the wording tracks PATHFIND_PROTOCOL
+//                  — wall-framing below the floor, range/budget framing at or
+//                  above it, since the bridge routes around walls there and
+//                  `clipped` means unreachable-within-budget instead. Falls
+//                  back to the pre-pathfinding wall hint if a caller omits it.
 //   confirmLabel  string   — default 'Confirm'
 //   cancelLabel   string   — default 'Cancel'
 //   ariaLabel     string   — default 'Confirm move'

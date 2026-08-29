@@ -423,3 +423,78 @@ describe('plan/confirm rail (#1736 S2)', () => {
     expect(result.current.pickerOpts).toBeNull();
   });
 });
+
+// #1833 (epic #1831 P2): the bridge now routes plans around walls (A*
+// route-around-on-clip, protocol 23) instead of clipping a straight ray at
+// the first one, so `moveplanned.path` can arrive as a dense multi-corner
+// dog-leg instead of a couple of collinear cells. Nothing in this hook
+// interprets path SHAPE — it's stored and echoed as opaque data — so these
+// tests exist to nail that down: a routed-shape path must survive the
+// awaiting-plan → planned → confirm round trip byte-for-byte, the same as
+// any straight path already covered above.
+describe('dog-legged routed paths (#1833, epic #1831 P2)', () => {
+  // A corner-hugging route: east, then a jog south around an obstacle, then
+  // east again, then north back onto the original row — 4 distinct corners,
+  // 8 cells total. Every cell carries the full wire shape (col/row/x/y).
+  const DOG_LEG_PATH = [
+    { col: 6, row: 5, x: 600, y: 500 },
+    { col: 6, row: 6, x: 600, y: 600 },
+    { col: 6, row: 7, x: 600, y: 700 },
+    { col: 7, row: 7, x: 700, y: 700 },
+    { col: 8, row: 7, x: 800, y: 700 },
+    { col: 8, row: 6, x: 800, y: 600 },
+    { col: 8, row: 5, x: 800, y: 500 },
+    { col: 9, row: 5, x: 900, y: 500 },
+  ];
+
+  it('stores a dense dog-leg path verbatim on plannedPath when moveplanned arrives', () => {
+    const { result } = setup();
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.planMove([{ col: 9, row: 5 }]));
+    const planTs = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveplan')[2].ts;
+    pushMovePlanned({ path: DOG_LEG_PATH, costFeet: 40, clipped: false, reqTs: planTs });
+
+    expect(result.current.stage).toBe('planned');
+    // Every corner survives — not just the endpoints — and in order.
+    expect(result.current.plannedPath.path).toEqual(DOG_LEG_PATH);
+    expect(result.current.plannedPath.path).toHaveLength(8);
+  });
+
+  it('confirmPlannedMove echoes the full dog-leg route as waypoints, not a straight-line shortcut', () => {
+    const { result } = setup();
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.planMove([{ col: 9, row: 5 }]));
+    const planTs = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveplan')[2].ts;
+    pushMovePlanned({ path: DOG_LEG_PATH, costFeet: 40, clipped: false, reqTs: planTs });
+
+    act(() => result.current.confirmPlannedMove(2));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('char-1', 'moveconfirm', expect.objectContaining({
+      waypoints: DOG_LEG_PATH, moveType: 'stride', actionCost: 2,
+    }));
+    // Not collapsed to first/last cell — the confirm carries every corner.
+    const confirmCall = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveconfirm');
+    expect(confirmCall[2].waypoints).toHaveLength(8);
+  });
+
+  it('a clipped dog-leg (unreachable within budget, protocol 23 semantics) still stores the routed partial verbatim', () => {
+    const { result } = setup();
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+
+    act(() => result.current.planMove([{ col: 20, row: 5 }]));
+    const planTs = mockSendUpdate.mock.calls.find((c) => c[1] === 'moveplan')[2].ts;
+    // Best-partial-toward-goal semantics: the routed prefix rides along even
+    // though the tapped destination was out of budget.
+    pushMovePlanned({ path: DOG_LEG_PATH, costFeet: 40, clipped: true, reqTs: planTs });
+
+    expect(result.current.plannedPath).toEqual({ path: DOG_LEG_PATH, costFeet: 40, clipped: true });
+  });
+});

@@ -9,7 +9,7 @@ import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { useContent } from '../../contexts/ContentContext';
 import { formatSpeedBreakdown } from '../../utils/speed';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
-import { FULL_MOVE_PROTOCOL } from '../../utils/movement';
+import { FULL_MOVE_PROTOCOL, clippedHintFor } from '../../utils/movement';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import MoveConfirmBar from '../encounter/MoveConfirmBar';
 import MoveMapSurface from '../encounter/MoveMapSurface';
@@ -226,6 +226,7 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
             <MoveConfirmBar
               feet={plannedPath.costFeet}
               clipped={plannedPath.clipped}
+              clippedHint={clippedHintFor(protocol)}
               onConfirm={handleConfirmPlan}
               onCancel={handleCancelPlan}
             />

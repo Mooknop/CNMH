@@ -116,6 +116,17 @@ Command Dock exploration pane, #1804, and its group-move successor epic #1822 �
 `CAMPAIGN_ID` is restated in `fixtures/session.ts`), so one file carries the drift
 rather than every spec.
 
+`PATHFIND_PROTOCOL` (23, the movement pathfinding epic #1831's closing bump —
+`foundry-bridge/syncKeys.js`, re-exported through `src/sync/keys.js`) is a
+semantics-only floor: the wire shapes on the movement rail (`moveplanned.path`,
+`clipped`) are unchanged, but at/above it the bridge has already routed every
+planned segment around walls it can (`pathfind.js`'s A*), so `clipped: true`
+means "unreachable within the mover's budget" instead of "a wall blocked the
+straight segment". See `dock-exploration.spec.ts`'s dog-leg test for a
+`moveplanned` ack seeded with a dense multi-corner routed path and proof the
+GM dock's auto-confirm echoes it verbatim and `SnapshotRouteOverlay` draws
+every corner.
+
 `helpers/dock.ts`'s `gotoExplorationDock` is the exploration-pane analog of its
 `gotoPcTurnDock` / `gotoNonPcDock` turn gates: it waits for the pane's own heading
 (mounted immediately — exploration is the dock's default mode) and leaves any

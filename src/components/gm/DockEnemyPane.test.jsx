@@ -478,6 +478,47 @@ describe('DockEnemyPane (#1531 S2)', () => {
       expect(bar).not.toHaveTextContent('action');
     });
 
+    it('shows the wall-framed clipped note below the pathfinding protocol floor', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armTapMove(session);
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts });
+      });
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEPLANNED, {
+          reqTs: plan.value.ts, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 5, clipped: true,
+        });
+      });
+
+      expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
+    });
+
+    it('shows range/budget clipped copy on a protocol-23+ (pathfinding) bridge', async () => {
+      const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
+      armTapMove(session, { protocol: 23 });
+      openMove();
+      fireEvent.click(screen.getByRole('button', { name: 'Move Goblin Warrior' }));
+      const { ts } = lastMoveReq(session).value;
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEOPTS, { ...TAP_OPTS, reqTs: ts });
+      });
+      fireEvent.click(screen.getByLabelText(/Move to 6,5 —/));
+      const plan = session.sent.filter((m) => m.stateType === RELAY.MOVEPLAN).at(-1);
+      await act(async () => {
+        session.push('cbt-gob', RELAY.MOVEPLANNED, {
+          reqTs: plan.value.ts, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 5, clipped: true,
+        });
+      });
+
+      expect(screen.getByText(/Out of range — tap again to keep going/)).toBeInTheDocument();
+      expect(screen.queryByText(/Path stops at a wall/)).toBeNull();
+    });
+
     it('Confirm sends moveconfirm with waypoints and no action cost; Done logs the real total', async () => {
       const { session } = renderWithProviders(<DockEnemyPane entry={ENTRY} />);
       armTapMove(session);

@@ -297,6 +297,17 @@ describe('MinionMove', () => {
       expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
     });
 
+    it('shows range/budget clipped copy on a protocol-23+ (pathfinding) bridge', () => {
+      h.protocol = 23;
+      linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+      h.moveState.stage = 'planned';
+      h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30 };
+      h.moveState.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 5, clipped: true };
+      render(<MinionMove ownerId="Ashka" role="companion" />);
+      expect(screen.getByText(/Out of range — tap again to keep going/)).toBeInTheDocument();
+      expect(screen.queryByText(/Path stops at a wall/)).toBeNull();
+    });
+
     it('Cancel on the confirm bar backs out of the plan without leaving movement mode', () => {
       linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
       h.moveState.stage = 'planned';

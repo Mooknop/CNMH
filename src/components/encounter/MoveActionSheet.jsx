@@ -36,7 +36,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
-import { actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
+import { actionsForDistance, FULL_MOVE_PROTOCOL, clippedHintFor } from '../../utils/movement';
 import './MoveActionSheet.css';
 
 const LABEL = { stride: 'Stride', step: 'Step' };
@@ -332,6 +332,7 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
                     disabled={overBudget}
                     disabledHint="Not enough actions left this turn."
                     clipped={plannedPath.clipped}
+                    clippedHint={clippedHintFor(protocol)}
                     onConfirm={handleConfirm}
                     onCancel={handleCancelPlan}
                   />

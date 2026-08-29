@@ -1,3 +1,5 @@
+import { PATHFIND_PROTOCOL } from '../sync/keys';
+
 // Movement action accounting (#415, #391). Originally shared by the PC movement
 // sheet, minion movement, and the foe dock so all three charged Strides the same
 // way: 1 action on the first step, then one more each time the running distance
@@ -85,3 +87,18 @@ export const actionsForDistance = (costFeet, speed) => {
   if (!speed || speed <= 0) return 1;
   return Math.ceil(costFeet / speed);
 };
+
+// MoveConfirmBar's `clippedHint` copy, protocol-aware (#1833, epic #1831 P2).
+// Below PATHFIND_PROTOCOL a clipped plan means a wall genuinely blocked the
+// straight segment — "tap further" reads as "go around it". At/above the
+// floor the bridge already routed around every wall it could; `clipped` now
+// means the tapped destination is unreachable within the mover's remaining
+// budget, so the copy shifts to range/budget framing. The waypoint-chaining
+// BEHAVIOR is identical either side of the floor — re-tapping a clipped plan
+// still chains a waypoint onto it, which is exactly how you walk further than
+// one budget lets you in a single plan.
+export const clippedHintFor = (protocol) => (
+  (protocol ?? 0) >= PATHFIND_PROTOCOL
+    ? 'Out of range — tap again to keep going.'
+    : 'Path stops at a wall — tap further to add a waypoint.'
+);

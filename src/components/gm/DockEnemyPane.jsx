@@ -29,7 +29,7 @@ import MoveConfirmBar from '../encounter/MoveConfirmBar';
 import MoveMapSurface from '../encounter/MoveMapSurface';
 import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
-import { needsNewStride, actionsForDistance, ENEMY_MOVE_PROTOCOL, FULL_MOVE_PROTOCOL } from '../../utils/movement';
+import { needsNewStride, actionsForDistance, ENEMY_MOVE_PROTOCOL, FULL_MOVE_PROTOCOL, clippedHintFor } from '../../utils/movement';
 import { RELAY, globalKey } from '../../sync/keys';
 import './DockEnemyPane.css';
 
@@ -682,6 +682,7 @@ const DockEnemyMove = ({ entryId, name, fallbackSpeed }) => {
             <MoveConfirmBar
               feet={plannedPath.costFeet}
               clipped={plannedPath.clipped}
+              clippedHint={clippedHintFor(protocol)}
               onConfirm={handleConfirmPlan}
               onCancel={handleCancelPlan}
             />
