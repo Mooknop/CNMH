@@ -276,8 +276,9 @@ factories in `test/foundryMock.js`. Two layers:
   up when #1735 S3 wires the rosette into `useTemplatePlacementSection`.
   `auraset` is in the same state for the same reason — `useAura` does not write
   the bridge key yet, so the app half joins when #1733's app slice lands.
-  `groupmovereq` likewise: nothing app-side sends it until #1825 (B1) wires the
-  dock's group dispatch, and #1823 deliberately imports nothing app-side. The epic's own grep of `origin/main` found `action`
+  `groupmovereq` HAS since joined: #1825 (B1) wired `useGroupMove.dispatch`
+  (`DockExplorationPane`'s N>1 destination tap) to send it, so this file's
+  contract test now runs both halves against the same fixture. The epic's own grep of `origin/main` found `action`
   was the only documented relay channel with no recorded emission at all;
   `moveplan`/`snapreq`'s mover-centered form are equally recent (#1736,
   #1744). **Not yet covered** (a follow-up, not swept here): `movereq`,
