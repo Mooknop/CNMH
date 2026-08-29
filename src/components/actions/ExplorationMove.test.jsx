@@ -372,6 +372,16 @@ describe('ExplorationMove', () => {
       expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
     });
 
+    it('shows range/budget clipped copy on a protocol-23+ (pathfinding) bridge', () => {
+      mockProtocol = 23;
+      mockMovement.stage = 'planned';
+      mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+      mockMovement.plannedPath = { path: [{ col: 6, row: 5 }], costFeet: 5, clipped: true };
+      render(<ExplorationMove charId="char-1" />);
+      expect(screen.getByText(/Out of range — tap again to keep going/)).toBeInTheDocument();
+      expect(screen.queryByText(/Path stops at a wall/)).toBeNull();
+    });
+
     it('a completed move still tallies feetMoved into the distance readout and shared tally', () => {
       mockMovement.stage = 'picking';
       mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };

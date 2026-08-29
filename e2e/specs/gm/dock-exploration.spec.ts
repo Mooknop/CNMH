@@ -35,7 +35,7 @@
 import { test, expect, type APIRequestContext, type Page } from '../../fixtures/gm';
 import { mockSession, type MockSession } from '../../fixtures/session';
 import { gotoExplorationDock } from '../../helpers/dock';
-import { bridgeHello, PARTY_MAP_PROTOCOL } from '../../helpers/bridge';
+import { bridgeHello, PARTY_MAP_PROTOCOL, PATHFIND_PROTOCOL } from '../../helpers/bridge';
 
 const PELLIAS_ID = 'e2e-pellias';
 const PELLIAS_NAME = 'E2E Pellias';
@@ -219,6 +219,70 @@ test.describe('GM dock exploration pane (#1811, epic #1804 S7)', () => {
     // path verbatim, with no second GM tap in between.
     const confirm = await session.expectSent(`cnmh_moveconfirm_${PELLIAS_ID}`);
     expect(confirm.waypoints).toEqual([{ col: 5, row: 1, x: 550, y: 150 }]);
+  });
+
+  // #1833 (epic #1831 P2): on a protocol-23+ (pathfinding) bridge, a planned
+  // route can be a dense multi-corner dog-leg around a wall instead of a
+  // straight line to the tapped cell (the bridge routes around it itself
+  // now, PR #1834). This pane's NO CONFIRM GATE auto-confirms the instant
+  // moveplanned lands, so this proves the routed shape survives that
+  // auto-confirm verbatim — not collapsed to the tapped destination — and
+  // that the route overlay draws every corner, not just the endpoints.
+  test('a dog-legged routed plan auto-confirms with every corner intact and renders on the overlay', async ({
+    page,
+  }) => {
+    const session = await mockSession(page, { seed: baseSeed(PATHFIND_PROTOCOL) });
+    answerPartyCaptures(session, imageUrl);
+    session.onSent(`cnmh_movereq_${PELLIAS_ID}`, (req) => {
+      session.push(`cnmh_moveopts_${PELLIAS_ID}`, {
+        reqTs: req.ts,
+        origin: { col: 1, row: 1 },
+        reachable: [],
+        blocked: [],
+      });
+    });
+    // A dog-leg from origin (1,1) toward the tapped (5,1): east, jog south
+    // around an obstacle, east again, then back north onto the target row —
+    // 4 corners, 6 cells, deliberately NOT collinear with origin→destination.
+    const dogLeg = [
+      { col: 2, row: 1, x: 250, y: 150 },
+      { col: 2, row: 2, x: 250, y: 250 },
+      { col: 3, row: 2, x: 350, y: 250 },
+      { col: 4, row: 2, x: 450, y: 250 },
+      { col: 4, row: 1, x: 450, y: 150 },
+      { col: 5, row: 1, x: 550, y: 150 },
+    ];
+    session.onSent(`cnmh_moveplan_${PELLIAS_ID}`, (req) => {
+      session.push(`cnmh_moveplanned_${PELLIAS_ID}`, {
+        reqTs: req.ts,
+        path: dogLeg,
+        costFeet: 60,
+        clipped: false,
+      });
+    });
+
+    await gotoExplorationDock(page);
+    await expect(page.getByRole('img', { name: 'Battlefield snapshot' })).toBeVisible();
+
+    await tapMap(page, 0.15, 0.15);
+    await session.expectSent(`cnmh_movereq_${PELLIAS_ID}`);
+    await tapMap(page, DEST_NX, DEST_NY);
+    await session.expectSent(`cnmh_moveplan_${PELLIAS_ID}`);
+
+    // Auto-confirm echoes the ENTIRE routed path verbatim — every corner, in
+    // order — not just the tapped destination cell.
+    const confirm = await session.expectSent(`cnmh_moveconfirm_${PELLIAS_ID}`);
+    expect(confirm.waypoints).toEqual(dogLeg);
+
+    // The route overlay (SnapshotRouteOverlay, claimed polyline-shape-
+    // agnostic) draws the origin plus every routed cell — 7 points total,
+    // not a 2-point straight shortcut.
+    const routeLine = page.locator('svg.sro--own .sro-line');
+    await expect(routeLine).toHaveCount(1);
+    const pointCount = await routeLine.evaluate(
+      (el) => (el.getAttribute('points') || '').trim().split(/\s+/).filter(Boolean).length,
+    );
+    expect(pointCount).toBe(7);
   });
 
   // ── (2) door glyphs ──────────────────────────────────────────────────────

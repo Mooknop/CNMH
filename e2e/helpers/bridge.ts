@@ -28,6 +28,7 @@
  *   - SCENE_DOORS_PROTOCOL                    → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js)
  *   - PARTY_MAP_PROTOCOL                      → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js, src/utils/snapshotRelay.js)
  *   - GROUP_MOVE_PROTOCOL                     → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js, src/utils/groupMoveRelay.js)
+ *   - PATHFIND_PROTOCOL                       → foundry-bridge/syncKeys.js (re-exported src/sync/keys.js)
  */
 
 // ── src/utils/diceRelay.js ───────────────────────────────────────────────────
@@ -184,6 +185,21 @@ export const PARTY_MAP_PROTOCOL = 21;
  *  this floor — it's `useTokenMovement`'s pre-existing machine, gated (if at
  *  all) on `PARTY_MAP_PROTOCOL` alone. */
 export const GROUP_MOVE_PROTOCOL = 22;
+
+/** The bridge protocol that taught movement PATHFINDING (#1832, epic #1831
+ *  P1): every planned route now routes AROUND walls (A* route-around-on-clip)
+ *  instead of clipping straight at the first one, and the group-move ring
+ *  picks connectivity-valid destinations (BFS from the target). This is a
+ *  SEMANTICS bump, not a shape one — no relay payload gained, lost, or
+ *  retyped a field. Below this floor `moveplanned.clipped: true` means "a
+ *  wall blocked the straight segment, tap again to route around it manually";
+ *  at/above it, the bridge already routed around every wall it could, so
+ *  `clipped: true` means "unreachable even routing around, within the mover's
+ *  budget" — `MoveConfirmBar`'s hint copy (`clippedHintFor`, src/utils/
+ *  movement.js) shifts from wall-framing to range/budget framing at this
+ *  floor. The waypoint-chaining BEHAVIOR (re-tapping a clipped plan appends a
+ *  waypoint instead of replacing it) is identical either side of the floor. */
+export const PATHFIND_PROTOCOL = 23;
 
 // ── src/hooks/useBridgeStatus.js ─────────────────────────────────────────────
 

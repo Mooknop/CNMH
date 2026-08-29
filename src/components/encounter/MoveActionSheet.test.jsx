@@ -367,6 +367,26 @@ describe('MoveActionSheet', () => {
       expect(screen.getByText(/Path stops at a wall/)).toBeInTheDocument();
     });
 
+    it('shows range/budget clipped copy on a protocol-23+ (pathfinding) bridge', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(555);
+      let setHello, setOpts, setPlanned;
+      render(
+        <>
+          <SyncDriver skey="cnmh_bridgehello_global" onReady={(s) => (setHello = s)} />
+          <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+          <SyncDriver skey="cnmh_moveplanned_Pellias" onReady={(s) => (setPlanned = s)} />
+          <MoveActionSheet character={character} moveType="stride" onClose={() => {}} />
+        </>
+      );
+      act(() => setHello({ protocol: 23, module: '0.0.0-test', ts: 1 }));
+      act(() => setOpts({ reqTs: 555, origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 10 }));
+      fireEvent.click(screen.getByLabelText(/Move to 7,5 —/));
+      act(() => setPlanned({ reqTs: 555, path: [{ col: 6, row: 5, x: 600, y: 500 }], costFeet: 5, clipped: true }));
+
+      expect(screen.getByText(/Out of range — tap again to keep going/)).toBeInTheDocument();
+      expect(screen.queryByText(/Path stops at a wall/)).toBeNull();
+    });
+
     it('disables Confirm and shows a hint when the plan costs more actions than remain', () => {
       vi.spyOn(Date, 'now').mockReturnValue(555);
       let tsDriver, setHello, setOpts, setPlanned;

@@ -8,7 +8,7 @@ import { useBridgeStatus } from '../../hooks/useBridgeStatus';
 import { useMoveMapMode } from '../../hooks/useMoveMapMode';
 import { minionTurnId } from '../../utils/minionUtils';
 import { worldPointFromTap, cellFromWorldPoint } from '../../utils/snapshotGeometry';
-import { needsNewStride, actionsForDistance, FULL_MOVE_PROTOCOL } from '../../utils/movement';
+import { needsNewStride, actionsForDistance, FULL_MOVE_PROTOCOL, clippedHintFor } from '../../utils/movement';
 import MoveGridPicker from './MoveGridPicker';
 import MoveConfirmBar from './MoveConfirmBar';
 import MoveMapSurface from './MoveMapSurface';
@@ -328,6 +328,7 @@ const MinionMove = ({ ownerId, role }) => {
               disabled={overBudget}
               disabledHint="Not enough granted actions left."
               clipped={plannedPath.clipped}
+              clippedHint={clippedHintFor(protocol)}
               onConfirm={handleConfirmPlan}
               onCancel={handleCancelPlan}
             />

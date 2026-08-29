@@ -14,8 +14,12 @@
 // alongside the snapshot rail's other floors, which is where consumers read it.
 // GROUP_MOVE_PROTOCOL (#1823, epic #1822) follows the same pattern —
 // utils/groupMoveRelay.js re-exports it for that rail's consumers.
+// PATHFIND_PROTOCOL (#1833, epic #1831) follows the same pattern — the app
+// gates its routing-aware "out of range" hint copy on `protocol >=` this
+// constant and keeps the pre-pathfinding "tap again" wording below it.
 export {
   GLOBAL_ID, syncKey, globalKey, PARTY_MAP_PROTOCOL, SCENE_DOORS_PROTOCOL, GROUP_MOVE_PROTOCOL,
+  PATHFIND_PROTOCOL,
 } from '../../foundry-bridge/syncKeys.js';
 import { RELAY as BRIDGE_RELAY } from '../../foundry-bridge/syncKeys.js';
 
