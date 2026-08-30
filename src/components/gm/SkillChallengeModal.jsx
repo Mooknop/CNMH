@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -18,8 +18,16 @@ const emptyRow = () => ({ skill: 'arcana', dc: '' });
  * collection (#1470) — multiple tracks run concurrently; players derive
  * their prompt cards from the collection (ChallengePrompts), so no per-PC
  * prompt push is needed.
+ *
+ * `initial` (optional, #1841) pre-fills the form when the modal OPENS —
+ * `{ name?, skills?: [{ skill, dc }] }`. Added additively for the downtime
+ * pane's "push a check" button, which launches a challenge straight off a
+ * research source's own skill/DC list; every other caller omits it and gets
+ * the blank form unchanged. Applied once per open (a ref latch), never on
+ * re-render, so an inline object literal from a caller can't stomp the GM's
+ * typing mid-edit.
  */
-const SkillChallengeModal = ({ isOpen, onClose }) => {
+const SkillChallengeModal = ({ isOpen, onClose, initial = null }) => {
   const { characters } = useContent();
   const { appendEvent } = useSessionLog();
   const [challenges, setChallenges] = useSyncedState(globalKey(APP.VPCHALLENGE), null);
@@ -35,6 +43,24 @@ const SkillChallengeModal = ({ isOpen, onClose }) => {
   const [maxVal,     setMaxVal]     = useState('');
   const [failAt,     setFailAt]     = useState('');
   const [drain,      setDrain]      = useState('');
+
+  // Apply `initial` exactly once per open. The latch resets on close, so the
+  // next open re-seeds from whatever the caller passes then.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) {
+      seededRef.current = false;
+      return;
+    }
+    if (seededRef.current) return;
+    seededRef.current = true;
+    if (!initial) return;
+    if (initial.name) setName(initial.name);
+    const seedRows = (initial.skills || [])
+      .filter((s) => s && SKILL_KEYS.includes(s.skill))
+      .map((s) => ({ skill: s.skill, dc: s.dc == null ? '' : String(s.dc) }));
+    if (seedRows.length) setRows(seedRows);
+  }, [isOpen, initial]);
 
   const updateRow = (idx, patch) =>
     setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));

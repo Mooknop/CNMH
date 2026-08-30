@@ -13,6 +13,7 @@ import { getCharacterColor } from '../../utils/CharacterUtils';
 import EncounterSkeleton from '../../components/encounter/EncounterSkeleton';
 import DockReactionRail from '../../components/gm/DockReactionRail';
 import DockEnemyPane from '../../components/gm/DockEnemyPane';
+import DockDowntimePane from '../../components/gm/DockDowntimePane';
 import DockExplorationPane from '../../components/gm/DockExplorationPane';
 import DockGmConsole from '../../components/gm/DockGmConsole';
 import DockOrderStrip from '../../components/gm/DockOrderStrip';
@@ -34,7 +35,8 @@ import './GmCommandDock.css';
 //
 // Exploration mounts DockExplorationPane (#1808) — the party-framed map that
 // IS the GM's whole exploration control surface (tap a PC, tap a destination).
-// Downtime is still a stub until its slice lands. Enemy turns render
+// Downtime mounts DockDowntimePane (#1841) — the GMG research board (topics,
+// per-source RP accrual, tier unlocks). Enemy turns render
 // DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane, read-only until
 // the strike/cast rails (S3/S4) grow buttons on it.
 
@@ -302,11 +304,7 @@ const GmCommandDock = () => {
           {mode === 'encounter' ? (
             renderEncounterPane()
           ) : mode === 'downtime' ? (
-            <DockStub
-              icon="home"
-              title="Downtime"
-              sub="Downtime controls arrive in a later slice."
-            />
+            <DockDowntimePane />
           ) : (
             <DockExplorationPane />
           )}
