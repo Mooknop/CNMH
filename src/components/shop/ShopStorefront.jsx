@@ -65,10 +65,12 @@ const SPELL_SERVICES = [
 const wareAccentVar = (group) => `var(--${traitAccent(group)}-mid)`;
 const firstLetter = (s) => String(s || '?').trim().charAt(0).toUpperCase() || '?';
 const formLabel = (form) => form.label || (form.level != null ? `Lvl ${form.level}` : form.name);
-// A multi-form group headlines ONE description (the cheapest form's, per
-// groupWares) — a base grade like "Lesser" needs no line since that headline
-// IS its behavior, but a higher grade's own `effect` (or a variant `description`
-// that diverges from the headline) is the only place its actual delta shows up.
+// Every form with its own `effect` shows it — including the cheapest/head
+// form, whose concise effect line complements the full-prose headline above
+// (a symmetric ladder reads better for at-a-glance comparison than a blank
+// first row). Falls back to a variant `description` only when it diverges
+// from the group's headline (itself the head form's description, per
+// groupWares); a form with neither renders no line.
 const formEffectText = (form, group) => {
   if (form.effect) return form.effect;
   if (form.description && form.description !== group.description) return form.description;

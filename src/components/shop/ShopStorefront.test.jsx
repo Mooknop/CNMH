@@ -51,6 +51,25 @@ const items = [
       { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12, effect: 'Also cures 1 nonlethal poison stage.' },
     ],
   },
+  // Pins the per-form effect-line contract across all three cases: the head
+  // (cheapest) form's own `effect`, a non-head form's `description` that
+  // diverges from the group headline (itself the head form's description),
+  // and a non-head form whose `description` is identical to the headline.
+  {
+    id: 'frostvial',
+    name: 'Frost Vial',
+    weight: 0,
+    traits: ['Alchemical', 'Consumable'],
+    variants: [
+      { level: 1, label: 'Lesser', name: 'Lesser Frost Vial', price: 5,
+        description: 'A vial of enchanted water that splashes for cold damage.',
+        effect: '1d6 cold, 1 splash; no rider on hit.' },
+      { level: 2, label: 'Moderate', name: 'Moderate Frost Vial', price: 15,
+        description: 'A vial of enchanted water that splashes for cold damage.' },
+      { level: 3, label: 'Greater', name: 'Greater Frost Vial', price: 25,
+        description: 'A vial of enchanted water that splashes for cold damage, chilling deeply.' },
+    ],
+  },
 ];
 const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: ['Fire'] }];
 // Common, low-rank spells so the scroll offering (maxLevel 3, all traditions,
@@ -251,6 +270,38 @@ describe('ShopStorefront', () => {
       // Minor has neither `effect` nor a description distinct from the group's
       // headline (the base item has no description at all here) — no line.
       expect(within(minorRow).queryByTestId('form-effect')).toBeNull();
+    });
+
+    it('shows the head form\'s own effect line and derives non-head lines from description vs the group headline', () => {
+      renderShop({
+        waresStore: {
+          rings: {
+            wares: [
+              { ref: 'frostvial', level: 1 },
+              { ref: 'frostvial', level: 2 },
+              { ref: 'frostvial', level: 3 },
+            ],
+          },
+        },
+      });
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-frostvial'), { key: 'Enter' });
+      const preview = screen.getByTestId('ware-preview');
+      // The headline description is the head (cheapest) form's — Lesser's.
+      expect(within(preview).getByText('A vial of enchanted water that splashes for cold damage.')).toBeInTheDocument();
+      const forms = within(preview).getByLabelText('forms');
+      const lesserRow = within(forms).getByText('Lesser').closest('.ps-preview-form');
+      const moderateRow = within(forms).getByText('Moderate').closest('.ps-preview-form');
+      const greaterRow = within(forms).getByText('Greater').closest('.ps-preview-form');
+      // (a) Head form carries its own `effect` — shown alongside the full-prose headline.
+      expect(within(lesserRow).getByTestId('form-effect')).toHaveTextContent(
+        '1d6 cold, 1 splash; no rider on hit.'
+      );
+      // (c) Non-head form's `description` is identical to the group headline — no line.
+      expect(within(moderateRow).queryByTestId('form-effect')).toBeNull();
+      // (b) Non-head form's `description` diverges from the group headline — shown.
+      expect(within(greaterRow).getByTestId('form-effect')).toHaveTextContent(
+        'A vial of enchanted water that splashes for cold damage, chilling deeply.'
+      );
     });
   });
 
