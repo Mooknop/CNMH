@@ -38,6 +38,7 @@ import GmCalendar from './pages/gm/GmCalendar';
 import GmLore from './pages/gm/GmLore';
 import GmRooms from './pages/gm/GmRooms';
 import GmEvents from './pages/gm/GmEvents';
+import GmResearch from './pages/gm/GmResearch';
 import GmShops from './pages/gm/GmShops';
 import GmShopItems from './pages/gm/GmShopItems';
 import GmTownSupport from './pages/gm/GmTownSupport';
@@ -129,6 +130,7 @@ function App() {
                           <Route path="world/lore" element={<GmLore />} />
                           <Route path="world/rooms" element={<GmRooms />} />
                           <Route path="world/events" element={<GmEvents />} />
+                          <Route path="world/research" element={<GmResearch />} />
                           <Route path="world/shops" element={<GmShops />} />
                           <Route path="world/shop-items" element={<GmShopItems />} />
                           <Route path="world/town-support" element={<GmTownSupport />} />

@@ -219,6 +219,13 @@
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }
 .gm-rank-row input[aria-label$="-amount"] { flex: 0 0 70px; max-width: 70px; min-width: 0; }
 
+/* Research topics editor (#1842) — nested source/check rows, unlock cards */
+.gm-source-card,
+.gm-unlock-card { margin-bottom: 10px; }
+.gm-check-row { align-items: center; }
+.gm-check-row input { flex: 1; min-width: 90px; }
+.gm-check-row input[aria-label$="-dc"] { flex: 0 0 70px; max-width: 70px; min-width: 0; }
+
 /* Shop wares editor (#696 S2) */
 .gm-shop-head { align-items: flex-start; justify-content: space-between; }
 .gm-shop-head-actions { display: flex; gap: 8px; flex-shrink: 0; }

@@ -28,6 +28,7 @@ const SUBNAV = {
     { id: 'lore', label: 'Lore', icon: 'book', countKey: 'allLoreEntries' },
     { id: 'rooms', label: 'Rooms', icon: 'map', countKey: 'rooms' },
     { id: 'events', label: 'Events', icon: 'calendar', countKey: 'events' },
+    { id: 'research', label: 'Research', icon: 'spark', countKey: 'researchTopics' },
     { id: 'shops', label: 'Shops', icon: 'bag' },
     { id: 'shop-items', label: 'Shop Items', icon: 'bag' },
     { id: 'town-support', label: 'Town Support', icon: 'home' },
