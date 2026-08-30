@@ -1,0 +1,438 @@
+/* GM Command Dock — Downtime pane (#1841, epic #206 S3).
+   Dock-scoped selectors, design tokens only, no page scroll: the pane owns its
+   vertical space and the topic list scrolls internally, the same contract every
+   other dock panel keeps (see GmCommandDock.css / DockExplorationPane.css). */
+
+.dock-dt {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--space-3);
+}
+
+.dock-dt-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.dock-dt-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.dock-dt-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+
+.dock-dt-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-count {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-note {
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  font-size: 0.84rem;
+  color: var(--shell-text-secondary);
+  text-align: center;
+}
+
+/* The topic list is the pane's one scroll container. */
+.dock-dt-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dock-dt-card {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Unavailable topics collapse to title + toggle and dim right down — the
+   anti-metagaming ruling (#206): unspoiled future content never sits open. */
+.dock-dt-card--closed {
+  opacity: 0.55;
+  gap: var(--space-2);
+}
+
+.dock-dt-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.dock-dt-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-right: auto;
+  min-width: 0;
+}
+
+.dock-dt-card-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.dock-dt-level,
+.dock-dt-trait,
+.dock-dt-dc,
+.dock-dt-cost {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-level {
+  text-transform: uppercase;
+  color: var(--ember-light);
+  border-color: var(--ember-light);
+}
+
+.dock-dt-trait {
+  text-transform: uppercase;
+}
+
+.dock-dt-dc {
+  color: var(--shell-text-primary);
+  background: color-mix(in srgb, var(--shell-text-primary) 8%, transparent);
+}
+
+.dock-dt-cost {
+  border-style: dashed;
+}
+
+.dock-dt-closed-note {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dock-dt-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--shell-text-secondary);
+}
+
+/* Progress bar + total-RP fiat controls. */
+.dock-dt-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dock-dt-bar {
+  position: relative;
+  flex: 1;
+  min-width: 140px;
+  height: 10px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--shell-border-strong);
+  background: color-mix(in srgb, var(--shell-text-primary) 8%, transparent);
+  overflow: hidden;
+}
+
+.dock-dt-bar-fill {
+  display: block;
+  height: 100%;
+  width: var(--rp-pct, 0%);
+  border-radius: inherit;
+  background: var(--verdant-mid);
+  transition: width 0.3s ease;
+}
+
+/* A locked tier's tick is the ONLY thing it contributes to the card. */
+.dock-dt-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tick-pct, 0%);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--shell-text-secondary);
+  opacity: 0.6;
+}
+
+.dock-dt-tick[data-unlocked='true'] {
+  background: var(--shell-text-primary);
+  opacity: 1;
+}
+
+.dock-dt-progress-side {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dock-dt-rp {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.dock-dt-rp strong {
+  color: var(--shell-text-primary);
+}
+
+/* Source rows. */
+.dock-dt-sources {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-dt-source {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dock-dt-source-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.dock-dt-source-name {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  margin-right: auto;
+}
+
+.dock-dt-source-rp {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.dock-dt-source-note {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-source-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.dock-dt-source-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Steppers + buttons share the exploration pane's 44px tap-target floor. */
+.dock-dt-step,
+.dock-dt-btn {
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dock-dt-step {
+  min-width: 44px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.dock-dt-btn {
+  padding: 0 var(--space-3);
+  font-size: 0.76rem;
+}
+
+.dock-dt-step:hover:not(:disabled),
+.dock-dt-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-step:disabled,
+.dock-dt-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Unlocked tier texts — verbatim adventure prose, so give it reading room. */
+.dock-dt-tiers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-dt-tier {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.dock-dt-tier-rp {
+  flex: none;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--verdant-mid);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dock-dt-tier-text {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-reward {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-reward-label {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ember-light);
+}
+
+/* Availability switch — same shape as the exploration pane's movement toggle
+   so the two dock panes read as one control vocabulary. */
+.dock-dt-switch {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.dock-dt-switch-track {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 1px solid var(--shell-border-strong);
+  background: color-mix(in srgb, var(--shell-text-primary) 14%, transparent);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dock-dt-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--shell-text-secondary);
+  transition: left 0.15s, background 0.15s;
+}
+
+.dock-dt-switch--on .dock-dt-switch-track {
+  background: var(--verdant-mid);
+  border-color: var(--verdant-mid);
+}
+
+.dock-dt-switch--on .dock-dt-switch-knob {
+  left: 22px;
+  background: var(--shell-text-primary);
+}
+
+.dock-dt-switch:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}

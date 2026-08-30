@@ -52,6 +52,13 @@ vi.mock('../../components/gm/DockExplorationPane', () => ({
     return <div data-testid="dock-exploration-pane">Exploration</div>;
   },
 }));
+// #1841: same deal for the downtime pane — it drives the research synced key
+// and the GM content API; its behaviour lives in DockDowntimePane.test.jsx.
+vi.mock('../../components/gm/DockDowntimePane', () => ({
+  default: function DummyDockDowntimePane() {
+    return <div data-testid="dock-downtime-pane">Downtime</div>;
+  },
+}));
 vi.mock('../../hooks/useAdvanceTurn', () => ({ useAdvanceTurn: vi.fn() }));
 vi.mock('../../components/gm/DockGmConsole', () => ({
   default: function DummyDockGmConsole({ pcEntries }) {
@@ -191,14 +198,15 @@ describe('GmCommandDock', () => {
     });
   });
 
-  it('stubs downtime mode', () => {
+  it('mounts the downtime pane in downtime mode (#1841)', () => {
     usePlayMode.mockReturnValue({ mode: 'downtime' });
     useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
     renderDock();
     expect(screen.getAllByText('Downtime').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('dock-downtime-pane')).toBeInTheDocument();
     expect(
-      screen.getByText('Downtime controls arrive in a later slice.')
-    ).toBeInTheDocument();
+      screen.queryByText('Downtime controls arrive in a later slice.')
+    ).not.toBeInTheDocument();
   });
 
   describe('battle-mode top bar (#1556 S1)', () => {
