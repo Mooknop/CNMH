@@ -111,6 +111,28 @@ export const gotoExplorationDock = async (page: Page) => {
   });
 };
 
+/**
+ * Land on the dock with the downtime pane up (#1843, epic #206 S5). Like
+ * `gotoExplorationDock`, the pane's own heading ("Research", `DockDowntimePane`)
+ * is the PANE-only gate — downtime is a GM-SET `gmMode` (`cnmh_playmode_global`),
+ * not a bridge-derived state, so it renders as soon as `usePlayMode` resolves,
+ * with no bridgehello/protocol wait involved at all.
+ *
+ * `researchTopics` is real `ContentContext` data (the `research` collection,
+ * capture-only — seed it via `importDocs(request, 'research', [...])`, never
+ * the `seed` fixture, same as `monster`/`room`/`event`), not synced state, so
+ * this single gate does NOT prove a seeded topic has hydrated. A caller driving
+ * topic content needs a second, feature-specific gate — the topic's own card
+ * (`dock-dt-topic-<id>`) — the same two-gate shape `gotoExplorationDock` and
+ * `gotoNonPcDock` use for their own second halves.
+ */
+export const gotoDowntimeDock = async (page: Page) => {
+  await page.goto('/gm/dock');
+  await expect(page.getByRole('heading', { name: 'Research' })).toBeVisible({
+    timeout: HYDRATE_TIMEOUT,
+  });
+};
+
 // ── Seed builders ────────────────────────────────────────────────────────────
 
 /**
