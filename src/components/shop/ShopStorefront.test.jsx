@@ -48,7 +48,7 @@ const items = [
     traits: ['Healing', 'Consumable'],
     variants: [
       { level: 1, label: 'Minor', name: 'Minor Tonic', price: 4 },
-      { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12 },
+      { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12, effect: 'Also cures 1 nonlethal poison stage.' },
     ],
   },
 ];
@@ -236,6 +236,21 @@ describe('ShopStorefront', () => {
       const forms = within(preview).getByLabelText('forms');
       expect(within(forms).getByText('Minor')).toBeInTheDocument();
       expect(within(forms).getByText('Lesser')).toBeInTheDocument();
+    });
+
+    it("shows a form's effect line when it has one, and none for a form without", () => {
+      renderShop();
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'), { key: 'Enter' });
+      const forms = within(screen.getByTestId('ware-preview')).getByLabelText('forms');
+      const minorRow = within(forms).getByText('Minor').closest('.ps-preview-form');
+      const lesserRow = within(forms).getByText('Lesser').closest('.ps-preview-form');
+      // Lesser carries its own `effect` (merged from the variant) — shown.
+      expect(within(lesserRow).getByTestId('form-effect')).toHaveTextContent(
+        'Also cures 1 nonlethal poison stage.'
+      );
+      // Minor has neither `effect` nor a description distinct from the group's
+      // headline (the base item has no description at all here) — no line.
+      expect(within(minorRow).queryByTestId('form-effect')).toBeNull();
     });
   });
 

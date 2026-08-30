@@ -65,6 +65,15 @@ const SPELL_SERVICES = [
 const wareAccentVar = (group) => `var(--${traitAccent(group)}-mid)`;
 const firstLetter = (s) => String(s || '?').trim().charAt(0).toUpperCase() || '?';
 const formLabel = (form) => form.label || (form.level != null ? `Lvl ${form.level}` : form.name);
+// A multi-form group headlines ONE description (the cheapest form's, per
+// groupWares) — a base grade like "Lesser" needs no line since that headline
+// IS its behavior, but a higher grade's own `effect` (or a variant `description`
+// that diverges from the headline) is the only place its actual delta shows up.
+const formEffectText = (form, group) => {
+  if (form.effect) return form.effect;
+  if (form.description && form.description !== group.description) return form.description;
+  return null;
+};
 const atStockCap = (form, qty) => form.stock != null && qty >= form.stock;
 // A stocked ware bought down to 0 (#1139) stays on display as sold out rather
 // than vanishing — the shelf tells players the shop DID carry it.
@@ -376,6 +385,7 @@ const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) =
         <ul className="ps-preview-forms" aria-label="forms">
           {group.forms.map((f) => {
             const qty = qtyByKey[f.wareKey] || 0;
+            const effectText = formEffectText(f, group);
             return (
               <li key={f.wareKey} className="ps-preview-form">
                 <span className="ps-preview-form-label">{formLabel(f)}</span>
@@ -394,6 +404,9 @@ const Takeover = ({ group, town, qtyByKey, spellMap, runeMap, onAdd, onBack }) =
                     <button type="button" className="ps-preview-form-add" aria-label={`add ${formLabel(f)}`}
                       disabled={atStockCap(f, qty)} onClick={() => onAdd(f)}>Add</button>
                   )
+                )}
+                {effectText && (
+                  <span className="ps-preview-form-effect" data-testid="form-effect">{effectText}</span>
                 )}
               </li>
             );
