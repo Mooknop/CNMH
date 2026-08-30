@@ -168,6 +168,7 @@ export const ContentProvider = ({ children, initialContent }) => {
   const serverMonsters = serverList('monster');
   const serverRooms = serverList('room');
   const serverEvents = serverList('event');
+  const serverResearch = serverList('research');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -262,6 +263,10 @@ export const ContentProvider = ({ children, initialContent }) => {
     // Chapter-event tracker (#1112). Same capture-only, live-DO-only shape as
     // rooms — imported from the same Foundry journal dump, empty until then.
     events: serverEvents,
+    // GMG Research Topics (#1839, epic #206). Same capture-only, live-DO-only
+    // shape as rooms/events (tier text is verbatim Paizo prose) — empty until
+    // the GM authors topics via the DO editor.
+    researchTopics: serverResearch,
     refresh: loadSnapshot,
   };
 
@@ -291,6 +296,7 @@ const NOOP_CONTENT = {
   monsters: [],
   rooms: [],
   events: [],
+  researchTopics: [],
   refresh: () => Promise.resolve(),
 };
 
