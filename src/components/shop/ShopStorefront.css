@@ -378,7 +378,7 @@
 }
 .ps-preview-forms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .ps-preview-form {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);
   padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line); border-radius: 10px; background: var(--ps-screen);
 }
 .ps-preview-form-label { font-weight: 600; font-size: 12.5px; }
@@ -389,6 +389,13 @@
 .ps-preview-form-was {
   font-family: var(--font-body); font-weight: 500; font-size: 12px;
   color: var(--ps-ink3); text-decoration: line-through;
+}
+/* A higher grade's effect delta (Frost Vial Moderate/Greater etc) — the headline
+   description above only covers the cheapest form, so this is the only place a
+   player sees what a pricier grade actually does. Full-width so it wraps under
+   the label/price row rather than fighting them for space. */
+.ps-preview-form-effect {
+  flex-basis: 100%; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--ps-ink3);
 }
 .ps-preview-note { margin: 0; font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ps-ink3); }
 
