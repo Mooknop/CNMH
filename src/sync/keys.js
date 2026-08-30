@@ -94,6 +94,7 @@ export const APP = Object.freeze({
   REACTPROMPT: 'reactprompt',
   READIED: 'readied',
   REMOVED: 'removed',
+  RESEARCH: 'research',
   RUNECONFIG: 'runeconfig',
   RUNEWORK: 'runework',
   SAVEPROMPT: 'saveprompt',
