@@ -198,15 +198,38 @@ describe('GmCommandDock', () => {
     });
   });
 
-  it('mounts the downtime pane in downtime mode (#1841)', () => {
-    usePlayMode.mockReturnValue({ mode: 'downtime' });
-    useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
-    renderDock();
-    expect(screen.getAllByText('Downtime').length).toBeGreaterThan(0);
-    expect(screen.getByTestId('dock-downtime-pane')).toBeInTheDocument();
-    expect(
-      screen.queryByText('Downtime controls arrive in a later slice.')
-    ).not.toBeInTheDocument();
+  describe('downtime mode (#1841 → full-bleed pane, #1853)', () => {
+    const renderDowntime = () => {
+      usePlayMode.mockReturnValue({ mode: 'downtime' });
+      useEncounter.mockReturnValue({ encounter: { active: false, phase: 'idle', order: [] } });
+      renderDock();
+    };
+
+    it('mounts the downtime pane', () => {
+      renderDowntime();
+      expect(screen.getByTestId('dock-downtime-pane')).toBeInTheDocument();
+      expect(screen.getAllByText('Downtime').length).toBeGreaterThan(0);
+      expect(
+        screen.queryByText('Downtime controls arrive in a later slice.')
+      ).not.toBeInTheDocument();
+    });
+
+    // #1853: the pane brings its own 66px header (identity, day readout,
+    // advance chips, clock, close), so the shared top bar must NOT also render —
+    // two stacked headers would eat 132px of a 1024px-tall tablet screen and
+    // break the pane's no-scroll math. Every top-bar element is asserted absent,
+    // not just the container, because each one is a separate render branch.
+    it('renders the pane full-bleed with no shared top bar', () => {
+      renderDowntime();
+      expect(screen.queryByRole('link', { name: 'Close battle mode' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Command Dock' })).not.toBeInTheDocument();
+      expect(screen.queryByText('11:30 AM')).not.toBeInTheDocument();
+      expect(screen.queryByText('Sandpoint Cathedral')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dock-rail')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dock-console')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dock-order-strip')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('dock-exploration-pane')).not.toBeInTheDocument();
+    });
   });
 
   describe('battle-mode top bar (#1556 S1)', () => {

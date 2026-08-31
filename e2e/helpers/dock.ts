@@ -125,12 +125,37 @@ export const gotoExplorationDock = async (page: Page) => {
  * topic content needs a second, feature-specific gate — the topic's own card
  * (`dock-dt-topic-<id>`) — the same two-gate shape `gotoExplorationDock` and
  * `gotoNonPcDock` use for their own second halves.
+ *
+ * Since the #1853 redesign the pane is a fixed no-scroll shell whose left rail
+ * switches between seven views, ONE of which is in the DOM at a time. Research
+ * is the default (which is why its heading is still the gate); anything else
+ * needs `showDowntimeView` below before its elements exist at all.
  */
 export const gotoDowntimeDock = async (page: Page) => {
   await page.goto('/gm/dock');
   await expect(page.getByRole('heading', { name: 'Research' })).toBeVisible({
     timeout: HYDRATE_TIMEOUT,
   });
+};
+
+/**
+ * Switch the downtime dock to one of its seven views (#1853) and wait for that
+ * view's own heading. Views are mounted one at a time, so this is a GATE, not a
+ * convenience: assertions about Reputation/Period/Ledger/Training/Inventory/
+ * Resources elements race nothing — those elements simply do not exist until
+ * the rail button is tapped.
+ *
+ * Rail buttons carry a live meta line under the label ("Reputation" + "7
+ * factions"), so the locator matches the label PREFIX rather than the whole
+ * accessible name.
+ *
+ * The selected view persists per device (localStorage, `useDevicePref`), which
+ * a fresh Playwright context starts empty — so every spec lands on Research and
+ * must call this itself rather than inheriting another spec's selection.
+ */
+export const showDowntimeView = async (page: Page, label: string) => {
+  await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
+  await expect(page.getByRole('heading', { name: label })).toBeVisible();
 };
 
 // ── Seed builders ────────────────────────────────────────────────────────────

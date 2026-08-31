@@ -1,19 +1,27 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, makeCharacter } from '../../test/renderWithProviders';
 import { saveDocument } from '../../utils/gmApi';
 import DockDowntimePane from './DockDowntimePane';
 
-// GM Command Dock — Downtime pane (#1841, epic #206 S3; Reputation rail
-// #1850). Everything runs against the REAL provider stack: `research` topics
-// and `faction` docs ride ContentProvider's initialContent seam, party
-// research progress rides the in-memory session bus through the real
-// useSyncedState, and the RP/reputation math is the real utils/research.js +
-// utils/reputation.js. The only mocks are the GM content API (a network call,
-// spread from the original module so a new export can't break this factory)
-// and the shared ReputationRadarChart (real `recharts` needs a ResizeObserver
-// jsdom doesn't provide — see ReputationRadarChart.test.jsx for its own
-// coverage of the chart's actual rendering).
+// GM Command Dock — Downtime pane. Covers the #1853 no-scroll shell (header +
+// seven-view rail + view switching) and, through it, the two views that carry
+// live logic today: Research (#1841, epic #206 S3) and Reputation (#1850).
+// Everything runs against the REAL provider stack: `research` topics and
+// `faction` docs ride ContentProvider's initialContent seam, party research
+// progress / the downtime block / the clock ride the in-memory session bus
+// through the real useSyncedState, and the RP/reputation math is the real
+// utils/research.js + utils/reputation.js. The only mocks are the GM content
+// API (a network call, spread from the original module so a new export can't
+// break this factory) and the shared ReputationRadarChart (real `recharts`
+// needs a ResizeObserver jsdom doesn't provide — see ReputationRadarChart.test.jsx
+// for its own coverage of the chart's actual rendering).
+//
+// The rail is the reason most assertions below are container-scoped: the
+// research and reputation suites each mount the pane more than once in a single
+// test (two seeds, one comparison), and `screen` would then see both trees.
 vi.mock('../../utils/gmApi', async (importOriginal) => ({
   ...(await importOriginal()),
   saveDocument: vi.fn(),
@@ -73,27 +81,60 @@ const FACTION = {
   ],
 };
 
-const progressState = (entry) => ({
-  global: entry ? { research: { [TOPIC.id]: entry } } : {},
+// GameDateContext's DEFAULT_CLOCK is 5 Pharast 4725, 08:00 — a block stamped
+// two days earlier therefore reads as day 3.
+const BLOCK = { days: 7, active: true, startedAt: { day: 3, month: 2, year: 4725 } };
+
+const sessionState = ({ progress, block } = {}) => ({
+  global: {
+    ...(progress ? { research: { [TOPIC.id]: progress } } : {}),
+    ...(block ? { downtimeblock: block } : {}),
+  },
 });
 
-const mount = ({ topics = [TOPIC], progress, factions = [FACTION], ...rest } = {}) =>
+const mount = ({
+  topics = [TOPIC],
+  progress,
+  factions = [FACTION],
+  block,
+  characters = [makeCharacter({ id: 'pc-1', name: 'Pellias' })],
+  ...rest
+} = {}) =>
   renderWithProviders(<DockDowntimePane />, {
     content: {
       research: topics,
       lore: LORE,
       faction: factions,
-      character: [makeCharacter({ id: 'pc-1', name: 'Pellias' })],
+      character: characters,
     },
-    session: { state: progressState(progress) },
+    session: { state: sessionState({ progress, block }) },
     ...rest,
   });
 
+// ── Scoped locators ─────────────────────────────────────────────────────────
+// A rail button's accessible name is "{label} {live meta}", so anchor the label.
+const railButton = (result, label) =>
+  within(result.container).getByRole('button', { name: new RegExp(`^${label}`) });
+
+const header = (result) => within(result.container.querySelector('.dock-dt-header'));
+
+const showView = (result, label) => {
+  fireEvent.click(railButton(result, label));
+  return result;
+};
+
+/** Mount with the Reputation view selected — the rail is the only way in. */
+const mountRep = (opts) => showView(mount(opts), 'Reputation');
+
 const card = () => screen.getByTestId(`dock-dt-topic-${TOPIC.id}`);
-const factionRow = (id = FACTION.id) => screen.getByTestId(`dock-dt-faction-${id}`);
+const factionRow = (result, id = FACTION.id) =>
+  within(result.container).getByTestId(`dock-dt-faction-${id}`);
 
 const lastResearchWrite = (session) =>
   [...session.sent].reverse().find((s) => s.stateType === 'research')?.value ?? null;
+
+const lastClockWrite = (session) =>
+  [...session.sent].reverse().find((s) => s.stateType === 'clock')?.value ?? null;
 
 const lastLogWrite = (session) =>
   [...session.sent].reverse().find((s) => s.stateType === 'sessionlog')?.value ?? [];
@@ -114,7 +155,178 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('DockDowntimePane (#1841)', () => {
+describe('DockDowntimePane — shell (#1853)', () => {
+  const LABELS = [
+    'Research',
+    'Reputation',
+    'Period',
+    'Ledger',
+    'Training',
+    'Inventory',
+    'Resources',
+  ];
+
+  const railButtons = (result) =>
+    within(within(result.container).getByRole('navigation', { name: 'Downtime views' }))
+      .getAllByRole('button');
+
+  it('renders all seven views in the rail, Research pressed by default', () => {
+    const r = mount({ progress: open });
+    const buttons = railButtons(r);
+
+    expect(buttons).toHaveLength(7);
+    expect(buttons.map((b) => b.querySelector('.dock-dt-rail-label').textContent)).toEqual(LABELS);
+    expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual([
+      'true', 'false', 'false', 'false', 'false', 'false', 'false',
+    ]);
+  });
+
+  // e2e/helpers/dock.ts `gotoDowntimeDock` gates on this heading — it is the
+  // pane-only element proving the dock resolved to downtime mode, so Research
+  // must be the default view and must render its h2 on first paint.
+  it('renders the Research heading immediately (the e2e dock gate)', () => {
+    mount({ progress: open });
+    expect(screen.getByRole('heading', { name: 'Research', level: 2 })).toBeInTheDocument();
+  });
+
+  it('switching the rail swaps the view outright', () => {
+    const r = mount({ progress: open });
+
+    showView(r, 'Ledger');
+    expect(within(r.container).getByRole('heading', { name: 'Ledger' })).toBeInTheDocument();
+    expect(railButton(r, 'Ledger')).toHaveAttribute('aria-pressed', 'true');
+    // One view at a time — the outgoing pane is unmounted, not hidden.
+    expect(
+      within(r.container).queryByRole('heading', { name: 'Research' })
+    ).not.toBeInTheDocument();
+    expect(railButton(r, 'Research')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  // The selected view is a DEVICE preference, not synced campaign state: a
+  // reopen on this tablet returns to the same pane, and no other client sees it.
+  it('persists the selected view per device', () => {
+    const first = mount({ progress: open });
+    showView(first, 'Training');
+
+    const second = mount({ progress: open });
+    expect(within(second.container).getByRole('heading', { name: 'Training' })).toBeInTheDocument();
+    expect(railButton(second, 'Training')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('computes each rail meta line live', () => {
+    const r = mount({
+      progress: open,
+      topics: [TOPIC, { ...TOPIC, id: 'other-topic', title: 'Something else' }],
+    });
+
+    // Only TOPIC has an `available` flag in the seeded progress map.
+    expect(railButton(r, 'Research')).toHaveTextContent('1 open · 1 locked');
+    expect(railButton(r, 'Reputation')).toHaveTextContent('1 faction');
+    expect(railButton(r, 'Period')).toHaveTextContent('No block');
+    expect(railButton(r, 'Ledger')).toHaveTextContent('0 / 1 locked in');
+    expect(railButton(r, 'Training')).toHaveTextContent('0 tracks');
+    expect(railButton(r, 'Inventory')).toHaveTextContent('Hands & bags');
+    expect(railButton(r, 'Resources')).toHaveTextContent('HP · focus · slots');
+  });
+
+  it('reads the day of the block off the clock, not a stored counter', () => {
+    const r = mount({ progress: open, block: BLOCK });
+    expect(header(r).getByText('Day 3 / 7')).toBeInTheDocument();
+    expect(header(r).getByText('0 / 1 locked in')).toBeInTheDocument();
+    expect(railButton(r, 'Period')).toHaveTextContent('Day 3 / 7');
+  });
+
+  it('clamps the day readout to the block budget', () => {
+    // Stamped 30 days back — the block only granted 7, so it stays at day 7.
+    const r = mount({
+      progress: open,
+      block: { ...BLOCK, startedAt: { day: 5, month: 1, year: 4725 } },
+    });
+    expect(header(r).getByText('Day 7 / 7')).toBeInTheDocument();
+  });
+
+  it('says so quietly when no block is open', () => {
+    const r = mount({ progress: open });
+    expect(header(r).getByText('No open block')).toBeInTheDocument();
+    expect(header(r).queryByText(/locked in/)).not.toBeInTheDocument();
+    expect(header(r).queryByText(/^Day /)).not.toBeInTheDocument();
+  });
+
+  it('advances the shared clock forwards and backwards', () => {
+    const { session } = mount({ progress: open });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Forward eight hours' }));
+    expect(lastClockWrite(session)).toEqual(expect.objectContaining({ hour: 16, day: 5 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back one day' }));
+    expect(lastClockWrite(session)).toEqual(expect.objectContaining({ hour: 16, day: 4 }));
+  });
+
+  it('closes back to the GM dashboard', () => {
+    mount({ progress: open });
+    expect(screen.getByRole('link', { name: 'Close downtime dock' })).toHaveAttribute(
+      'href',
+      '/gm'
+    );
+  });
+
+  // jsdom has no layout — every element reports scrollHeight === clientHeight === 0,
+  // so a DOM overflow walk here would pass whatever the CSS said. The contract
+  // that actually prevents the overflow this redesign exists to kill lives in
+  // the stylesheets, so assert THAT: each link of the no-scroll chain, and the
+  // absence of any viewport-size fallback (a #1853 decision — this fixed layout
+  // is the only downtime dock UI, there is nothing to fall back to).
+  describe('the no-scroll CSS contract', () => {
+    const read = (path) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8');
+    const SHELL_CSS = read('./DockDowntimePane.css');
+    const VIEW_CSS = read('./downtime/DowntimeViews.css');
+
+    const declarations = (css, selector) => {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const match = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
+      return match ? match[1] : '';
+    };
+
+    it.each([
+      ['.dock-dt', ['overflow: hidden', 'flex-direction: column', 'min-height: 0']],
+      ['.dock-dt-header', ['flex: none', 'height: 66px']],
+      [
+        '.dock-dt-body',
+        ['min-height: 0', 'overflow: hidden', 'grid-template-columns: 148px minmax(0, 1fr)'],
+      ],
+      ['.dock-dt-content', ['min-height: 0', 'overflow: hidden']],
+    ])('%s keeps its link of the chain', (selector, required) => {
+      const rule = declarations(SHELL_CSS, selector);
+      expect(rule).not.toBe('');
+      required.forEach((decl) => expect(rule).toContain(decl));
+    });
+
+    it('the view frame fills its column instead of hugging its content', () => {
+      const rule = declarations(VIEW_CSS, '.dock-dt-view');
+      expect(rule).toContain('flex: 1');
+      expect(rule).toContain('min-height: 0');
+      expect(rule).toContain('grid-template-rows: var(--dock-dt-view-rows, auto minmax(0, 1fr))');
+    });
+
+    it('ships no viewport-size fallback layout', () => {
+      expect(SHELL_CSS).not.toMatch(/@media[^{]*(width|height)/);
+      expect(VIEW_CSS).not.toMatch(/@media[^{]*(width|height)/);
+    });
+
+    // Wave 1 moved Research and Reputation across with their old markup, so
+    // their bodies still scroll (#1854 / #1855 re-lay them out). That is the
+    // ONLY overflow allowed in the pane — if a third one appears, it wasn't
+    // this exception.
+    it('confines the temporary scroll exception to one opt-in class', () => {
+      const scrollers = [...VIEW_CSS.matchAll(/([^\s{}]+)\s*\{[^}]*overflow-y:\s*auto/g)].map(
+        (m) => m[1]
+      );
+      expect(scrollers).toEqual(['.dock-dt-view-body--scroll']);
+    });
+  });
+});
+
+describe('DockDowntimePane — Research (#1841)', () => {
   it('empty state offers the Research editor as the primary path', () => {
     mount({ topics: [] });
     const links = screen.getAllByRole('link', { name: /research editor|manage topics/i });
@@ -249,25 +461,24 @@ describe('DockDowntimePane (#1841)', () => {
   });
 
   it('clamps the manual total-RP adjust to 0…max', () => {
-    const { session } = mount({ progress: open });
-    const minus = within(card()).getByRole('button', {
+    const first = mount({ progress: open });
+    const minus = within(first.container).getByRole('button', {
       name: 'Remove a research point from The Pit',
     });
     expect(minus).toBeDisabled();
 
     fireEvent.click(
-      within(card()).getByRole('button', { name: 'Add a research point to The Pit' })
+      within(first.container).getByRole('button', { name: 'Add a research point to The Pit' })
     );
     // Manual fiat moves the topic total without touching perSourceRp.
-    const next = lastResearchWrite(session)[TOPIC.id];
+    const next = lastResearchWrite(first.session)[TOPIC.id];
     expect(next.rp).toBe(1);
     expect(next.perSourceRp).toEqual({});
 
     // At the ceiling the + is dead (adjustRp clamps to totalMaxRp anyway).
-    mount({ progress: { ...open, rp: 6 } });
-    const [, ceiling] = screen.getAllByTestId(`dock-dt-topic-${TOPIC.id}`);
+    const ceiling = mount({ progress: { ...open, rp: 6 } });
     expect(
-      within(ceiling).getByRole('button', { name: 'Add a research point to The Pit' })
+      within(ceiling.container).getByRole('button', { name: 'Add a research point to The Pit' })
     ).toBeDisabled();
   });
 
@@ -296,17 +507,16 @@ describe('DockDowntimePane (#1841)', () => {
 
 describe('DockDowntimePane — Reputation (#1850)', () => {
   it('renders the rank chip at exact rank boundaries', () => {
-    mount({ factions: [{ ...FACTION, reputation: 9 }] });
-    expect(within(factionRow()).getByText('Neutral')).toBeInTheDocument();
+    const low = mountRep({ factions: [{ ...FACTION, reputation: 9 }] });
+    expect(within(factionRow(low)).getByText('Neutral')).toBeInTheDocument();
 
-    mount({ factions: [{ ...FACTION, reputation: 10 }] });
-    const [, second] = screen.getAllByTestId(`dock-dt-faction-${FACTION.id}`);
-    expect(within(second).getByText('Friendly')).toBeInTheDocument();
+    const high = mountRep({ factions: [{ ...FACTION, reputation: 10 }] });
+    expect(within(factionRow(high)).getByText('Friendly')).toBeInTheDocument();
   });
 
   it('shows the score with no chip when it falls outside every rank', () => {
-    mount({ factions: [{ ...FACTION, reputation: 51 }] });
-    const row = factionRow();
+    const r = mountRep({ factions: [{ ...FACTION, reputation: 51 }] });
+    const row = factionRow(r);
     expect(within(row).getByText('51')).toBeInTheDocument();
     expect(within(row).queryByText('Revered')).not.toBeInTheDocument();
     // No rank matched, so no chip element at all — not just an empty one.
@@ -314,32 +524,30 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
   });
 
   it('shows the current rank\'s effect text when present, and omits it when absent', () => {
-    mount({ factions: [{ ...FACTION, reputation: -15 }] }); // Disliked, has an effect
+    const disliked = mountRep({ factions: [{ ...FACTION, reputation: -15 }] });
     expect(
-      screen.getByText('Prices rise 10% at Consortium-run shops.')
+      within(disliked.container).getByText('Prices rise 10% at Consortium-run shops.')
     ).toBeInTheDocument();
 
-    mount({ factions: [{ ...FACTION, reputation: 0 }] }); // Neutral, no effect
-    const [, second] = screen.getAllByTestId(`dock-dt-faction-${FACTION.id}`);
-    expect(within(second).queryByText(/Prices/)).not.toBeInTheDocument();
+    const neutral = mountRep({ factions: [{ ...FACTION, reputation: 0 }] });
+    expect(within(factionRow(neutral)).queryByText(/Prices/)).not.toBeInTheDocument();
   });
 
   it('clamps the steppers at the ladder\'s outer bounds', () => {
-    mount({ factions: [{ ...FACTION, reputation: 50 }] });
+    const top = mountRep({ factions: [{ ...FACTION, reputation: 50 }] });
     expect(
-      within(factionRow()).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
+      within(factionRow(top)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
     ).toBeDisabled();
 
-    mount({ factions: [{ ...FACTION, reputation: -50 }] });
-    const [, second] = screen.getAllByTestId(`dock-dt-faction-${FACTION.id}`);
+    const bottom = mountRep({ factions: [{ ...FACTION, reputation: -50 }] });
     expect(
-      within(second).getByRole('button', { name: `Lower ${FACTION.name} reputation` })
+      within(factionRow(bottom)).getByRole('button', { name: `Lower ${FACTION.name} reputation` })
     ).toBeDisabled();
   });
 
   it('falls back to a +-50 ladder for a faction authored with no ranks', () => {
-    mount({ factions: [{ id: 'unaligned', name: 'Unaligned', reputation: 0 }] });
-    const row = factionRow('unaligned');
+    const r = mountRep({ factions: [{ id: 'unaligned', name: 'Unaligned', reputation: 0 }] });
+    const row = factionRow(r, 'unaligned');
     expect(within(row).getByText('0')).toBeInTheDocument();
     expect(row.querySelector('.dock-dt-rep-rank')).toBeNull();
     expect(
@@ -350,9 +558,8 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
   it('collapses a burst of taps into ONE debounced saveDocument call', () => {
     vi.useFakeTimers();
     try {
-      mount();
-      const row = factionRow();
-      const raise = within(row).getByRole('button', {
+      const r = mountRep();
+      const raise = within(factionRow(r)).getByRole('button', {
         name: `Raise ${FACTION.name} reputation`,
       });
 
@@ -360,7 +567,7 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
       fireEvent.click(raise);
       fireEvent.click(raise);
       // Each tap shows immediately (optimistic) — no write has landed yet.
-      expect(within(factionRow()).getByText('3')).toBeInTheDocument();
+      expect(within(factionRow(r)).getByText('3')).toBeInTheDocument();
       expect(saveDocument).not.toHaveBeenCalled();
 
       act(() => {
@@ -381,17 +588,17 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
   it('logs a rank change once the committed value crosses a boundary', () => {
     vi.useFakeTimers();
     try {
-      const { session } = mount({ factions: [{ ...FACTION, reputation: 9 }] }); // Neutral, top edge
-      const row = factionRow();
+      // Neutral, top edge.
+      const r = mountRep({ factions: [{ ...FACTION, reputation: 9 }] });
       fireEvent.click(
-        within(row).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
+        within(factionRow(r)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
       );
 
       act(() => {
         vi.advanceTimersByTime(600);
       });
 
-      expect(lastLogWrite(session)[0]).toEqual(
+      expect(lastLogWrite(r.session)[0]).toEqual(
         expect.objectContaining({
           type: 'reputation',
           text: 'Reputation: Scarnetti Consortium rose to Friendly (10)',
@@ -405,10 +612,10 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
   it('stays silent when a committed change lands in the same rank', () => {
     vi.useFakeTimers();
     try {
-      const { session } = mount({ factions: [{ ...FACTION, reputation: 0 }] }); // Neutral, interior
-      const row = factionRow();
+      // Neutral, interior.
+      const r = mountRep({ factions: [{ ...FACTION, reputation: 0 }] });
       fireEvent.click(
-        within(row).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
+        within(factionRow(r)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
       );
 
       act(() => {
@@ -416,25 +623,28 @@ describe('DockDowntimePane — Reputation (#1850)', () => {
       });
 
       expect(saveDocument).toHaveBeenCalledTimes(1);
-      expect(lastLogWrite(session)).toEqual([]);
+      expect(lastLogWrite(r.session)).toEqual([]);
     } finally {
       vi.useRealTimers();
     }
   });
 
   it('collapses the mini radar by default and toggles it open', () => {
-    mount();
-    expect(screen.queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
+    const r = mountRep();
+    expect(within(r.container).queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
 
-    const toggle = screen.getByRole('button', { name: 'Radar' });
+    const toggle = within(r.container).getByRole('button', { name: 'Radar' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByTestId('dock-dt-rep-radar')).toBeInTheDocument();
-    expect(screen.getByTestId('dock-dt-rep-radar-mock')).toHaveAttribute('data-compact', 'true');
+    expect(within(r.container).getByTestId('dock-dt-rep-radar')).toBeInTheDocument();
+    expect(within(r.container).getByTestId('dock-dt-rep-radar-mock')).toHaveAttribute(
+      'data-compact',
+      'true'
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Hide radar' }));
-    expect(screen.queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
+    fireEvent.click(within(r.container).getByRole('button', { name: 'Hide radar' }));
+    expect(within(r.container).queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
   });
 });

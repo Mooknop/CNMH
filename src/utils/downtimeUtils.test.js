@@ -12,6 +12,7 @@ import {
   planSelected,
   planToLedger,
   clampPlan,
+  periodDayNumber,
 } from './downtimeUtils';
 
 describe('downtimeUtils', () => {
@@ -486,6 +487,34 @@ describe('downtimeUtils', () => {
         expect(clampPlan({ Research: 3 }, 0)).toEqual({});
         expect(clampPlan({ Research: 3 }, null)).toEqual({});
       });
+    });
+  });
+
+  // The dock header's "Day 3 / 7" readout (#1853). Derived from the clock vs
+  // the block's stamp at render time, never stored.
+  describe('periodDayNumber', () => {
+    const start = { day: 3, month: 2, year: 4725 }; // 3 Pharast
+
+    it('counts the start day as day 1', () => {
+      expect(periodDayNumber(start, start, 7)).toBe(1);
+    });
+
+    it('counts elapsed calendar days, carrying across months', () => {
+      expect(periodDayNumber(start, { day: 5, month: 2, year: 4725 }, 7)).toBe(3);
+      // Pharast has 31 days, so 2 Gozran is 30 days on from 3 Pharast.
+      expect(periodDayNumber(start, { day: 2, month: 3, year: 4725 }, 60)).toBe(31);
+    });
+
+    it('clamps to the granted budget and never drops below 1', () => {
+      expect(periodDayNumber(start, { day: 20, month: 2, year: 4725 }, 7)).toBe(7);
+      // A clock rewound behind the stamp still reads as the first day.
+      expect(periodDayNumber(start, { day: 1, month: 2, year: 4725 }, 7)).toBe(1);
+    });
+
+    it('reads as day 1 for an unknown stamp or a budget-less block', () => {
+      expect(periodDayNumber(null, { day: 5, month: 2, year: 4725 }, 7)).toBe(1);
+      expect(periodDayNumber({ day: 3 }, { day: 5, month: 2, year: 4725 }, 7)).toBe(1);
+      expect(periodDayNumber(start, { day: 5, month: 2, year: 4725 }, 0)).toBe(1);
     });
   });
 });

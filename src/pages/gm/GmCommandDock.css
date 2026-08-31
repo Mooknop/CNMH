@@ -16,6 +16,16 @@
   );
 }
 
+/* Downtime mode (#1853): the pane IS the dock. It brings its own 66px header
+   and its own body grid, so there is no `.gm-dock-topbar` and no
+   `.gm-dock-body` here — the pane is the frame's only child and takes the whole
+   stage. The gradient above still shows through: the pane paints no ground of
+   its own, which is what keeps all three modes reading as one surface. */
+.gm-dock--downtime > .dock-dt {
+  flex: 1;
+  min-height: 0;
+}
+
 .gm-dock-body {
   flex: 1;
   min-height: 0;

@@ -21,21 +21,24 @@
  * proves the pane mounted; the topic's own card (`dock-dt-topic-<id>`) proves
  * the capture-only content actually hydrated before any interaction.
  *
- * The final test below covers the pane's second section, party Reputation
- * (#1850). Unlike `research`, `faction` is a normal seeded collection (score
- * lives on the doc, not a synced key), so it goes through the `seed` fixture
- * like quest/lore/character. The write path is optimistic + debounced
- * (`DockDowntimePane`'s own header note): the row updates immediately on tap,
- * then a single commit lands ~600ms later — the test asserts BOTH the
- * immediate UI update and, via `waitForContent`, that the debounced commit
- * actually persisted to the faction doc.
+ * The final test below covers Reputation (#1850). Since the #1853 redesign the
+ * pane is a no-scroll shell whose left rail switches between seven views, so
+ * that test needs a THIRD gate the research tests don't: Research is the
+ * default view, and Reputation only exists in the DOM once its rail button has
+ * been tapped (`showDowntimeView`, helpers/dock.ts). Unlike `research`,
+ * `faction` is a normal seeded collection (score lives on the doc, not a synced
+ * key), so it goes through the `seed` fixture like quest/lore/character. The
+ * write path is optimistic + debounced (ReputationView's own header note): the
+ * row updates immediately on tap, then a single commit lands ~600ms later — the
+ * test asserts BOTH the immediate UI update and, via `waitForContent`, that the
+ * debounced commit actually persisted to the faction doc.
  */
 
 import { type Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
 import { importDocs, waitForContent } from '../../helpers/content';
-import { gotoDowntimeDock } from '../../helpers/dock';
+import { gotoDowntimeDock, showDowntimeView } from '../../helpers/dock';
 import { testId } from '../../helpers/ids';
 
 const TOPIC_ID = testId('research');
@@ -206,6 +209,8 @@ test.describe('GM dock downtime pane — research (#1843, epic #206 S5)', () => 
     await seed({ faction: [FACTION] });
     await mockSession(page, { seed: { cnmh_playmode_global: 'downtime' } });
     await gotoDowntimeDock(page);
+    // Research is the default view — Reputation lives behind the rail (#1853).
+    await showDowntimeView(page, 'Reputation');
 
     const row = factionRow(page);
     await expect(row).toBeVisible();

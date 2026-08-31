@@ -35,18 +35,25 @@ import './GmCommandDock.css';
 //
 // Exploration mounts DockExplorationPane (#1808) — the party-framed map that
 // IS the GM's whole exploration control surface (tap a PC, tap a destination).
-// Downtime mounts DockDowntimePane (#1841) — the GMG research board (topics,
-// per-source RP accrual, tier unlocks). Enemy turns render
-// DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane, read-only until
-// the strike/cast rails (S3/S4) grow buttons on it.
+// Enemy turns render DockEnemyPane (#1531 S2) — the full Foundry-fed stat pane,
+// read-only until the strike/cast rails (S3/S4) grow buttons on it.
+//
+// DOWNTIME IS THE ONE MODE THAT OWNS THE WHOLE SURFACE (#1853). DockDowntimePane
+// is a fixed, no-scroll frame with its own 66px header (identity, day-of-block
+// readout, advance-time chips, clock, close) and a 148px view rail, so this page
+// renders it FULL-BLEED and skips both the shared `.gm-dock-topbar` and the
+// `.gm-dock-body` grid — two headers stacked would eat 132px of a 1024px-tall
+// tablet screen and the pane's no-scroll math assumes it has the stage. The
+// encounter and exploration branches are untouched: they keep the shared top bar
+// and the body grid exactly as before.
 
 // Battle-mode top bar copy (#1556 S1). Encounter mode reads as BATTLE MODE;
-// the stub modes keep their own kicker so the chromeless frame still says
-// where the party is.
+// exploration keeps its own kicker so the chromeless frame still says where the
+// party is. Downtime has no entry on purpose — it renders its own header
+// instead of this top bar (#1853).
 const MODE_KICKERS = {
   encounter: 'Battle Mode',
   exploration: 'Exploration',
-  downtime: 'Downtime',
 };
 
 const PHASE_LABELS = {
@@ -239,6 +246,16 @@ const GmCommandDock = () => {
     );
   };
 
+  // Downtime owns the whole surface — its pane brings its own header (see the
+  // file note), so the shared chrome below is skipped entirely.
+  if (mode === 'downtime') {
+    return (
+      <div className="gm-dock gm-dock--downtime">
+        <DockDowntimePane />
+      </div>
+    );
+  }
+
   return (
     <div className="gm-dock">
       <header className="gm-dock-topbar">
@@ -301,13 +318,7 @@ const GmCommandDock = () => {
           />
         )}
         <div className="gm-dock-stage-col">
-          {mode === 'encounter' ? (
-            renderEncounterPane()
-          ) : mode === 'downtime' ? (
-            <DockDowntimePane />
-          ) : (
-            <DockExplorationPane />
-          )}
+          {mode === 'encounter' ? renderEncounterPane() : <DockExplorationPane />}
         </div>
         {/* Side column (laptop-fit v2): party reactions with the GM console
             stacked underneath — one column instead of two gives the stage

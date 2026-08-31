@@ -33,10 +33,35 @@
 // `d` ledger entries of { day: X, night: null }). State written by the legacy
 // picker/commit-bar (no `plan`) keeps its explicit `selected`/`ledger` instead.
 
+import { totalDaysSince4700 } from './gameTime';
+
 // Period identity is compared by value, not reference: block.startedAt is the
 // gameDate object, which round-trips through JSON (WebSocket/localStorage) and
 // is a fresh object on every read, so === would never match.
 const periodKey = (v) => (v == null ? null : JSON.stringify(v));
+
+// A { day, month, year } we can actually do calendar math on. The block's
+// startedAt is whatever the clock was when the GM started the period, and it
+// round-trips through JSON, so a partial/corrupt value has to read as "unknown"
+// rather than throw inside a render.
+const isDate = (d) =>
+  !!d && typeof d.day === 'number' && typeof d.month === 'number' && typeof d.year === 'number';
+
+// Which day of the block the party is currently living, 1-based and clamped to
+// [1, days] (#1853). The dock header and the Period rail both read "Day 3 / 7"
+// off this; it is derived at render time from the clock vs the block's stamp —
+// never stored — so a GM clock nudge moves it immediately and the number can't
+// drift out of sync with the calendar. Golarion month lengths / leap years come
+// from gameTime's totalDaysSince4700, the same walk GameDateContext uses.
+// An unknown stamp or a non-positive budget reads as day 1.
+export function periodDayNumber(startedAt, current, days) {
+  const budget = Math.floor(Number(days) || 0);
+  if (budget <= 0) return 1;
+  if (!isDate(startedAt) || !isDate(current)) return 1;
+  const elapsed = totalDaysSince4700(current) - totalDaysSince4700(startedAt);
+  if (!Number.isFinite(elapsed)) return 1;
+  return Math.min(budget, Math.max(1, elapsed + 1));
+}
 
 // True when the stored downtime state belongs to the active period.
 export function isCurrentPeriod(downtime, startedAt) {
