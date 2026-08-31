@@ -78,9 +78,25 @@ beforeEach(() => {
 });
 
 describe('DockDowntimePane (#1841)', () => {
-  it('shows an import hint when there are no research topics', () => {
+  it('empty state offers the Research editor as the primary path', () => {
     mount({ topics: [] });
-    expect(screen.getByRole('status')).toHaveTextContent(/research topic import CLI/i);
+    const links = screen.getAllByRole('link', { name: /research editor|manage topics/i });
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    links.forEach((l) => expect(l).toHaveAttribute('href', '/gm/world/research'));
+    expect(screen.getByRole('status')).toHaveTextContent(/no research topics yet/i);
+  });
+
+  it('header links to the Research editor when topics exist', () => {
+    mount({ progress: open });
+    expect(screen.getByRole('link', { name: /manage topics/i })).toHaveAttribute(
+      'href',
+      '/gm/world/research'
+    );
+  });
+
+  it('keeps the bulk-import hint in the empty state', () => {
+    mount({ topics: [] });
+    expect(screen.getByRole('status')).toHaveTextContent(/importResearchTopicsCli/);
   });
 
   it('renders an available topic with its sources, DC chips and cost note', () => {

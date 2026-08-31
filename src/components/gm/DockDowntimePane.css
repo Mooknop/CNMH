@@ -49,6 +49,31 @@
   color: var(--shell-text-secondary);
 }
 
+/* An anchor wearing the button class needs flex centering + no underline to
+   sit flush with its sibling <button>s. */
+a.dock-dt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.dock-dt-manage {
+  margin-left: auto;
+}
+
+.dock-dt-note p {
+  margin: 0 0 var(--space-3);
+}
+
+.dock-dt-note-alt {
+  font-size: 0.76rem;
+}
+
+.dock-dt-note p.dock-dt-note-alt {
+  margin: var(--space-3) 0 0;
+}
+
 .dock-dt-note {
   margin: 0;
   padding: var(--space-4);
