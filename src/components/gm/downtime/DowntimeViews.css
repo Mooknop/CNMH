@@ -1422,3 +1422,322 @@ a.dock-dt-btn {
   font-size: 0.76rem;
   color: var(--shell-text-secondary);
 }
+
+/* ── Party inventory view (#1859) ────────────────────────────────────────────
+   The one view with a persistent footer, so it opts into the frame's third
+   `auto` row rather than carrying a second grid definition of its own. */
+
+.dock-dt-view--footer {
+  --dock-dt-view-rows: auto minmax(0, 1fr) auto;
+}
+
+/* One column per PC. `--dock-dt-inv-cols` is set inline from the roster length
+   so a short roster spreads across the pane instead of huddling in the first
+   of five fixed tracks; the live campaign's five PCs give the spec'd
+   `repeat(5, minmax(0, 1fr))` exactly. */
+.dock-dt-inv-grid {
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--dock-dt-inv-cols, 5), minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.dock-dt-inv-col {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.dock-dt-inv-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dock-dt-inv-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dock-dt-inv-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--x-theme, var(--shell-text-tertiary));
+}
+
+.dock-dt-inv-name {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-dt-inv-bulk {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  color: var(--shell-text-tertiary);
+}
+
+/* Encumbrance is the reason this screen exists — over the limit it shouts. */
+.dock-dt-inv-bulk--over {
+  color: var(--peril-light);
+  font-weight: 700;
+}
+
+/* Hands strip. These are BUTTONS (see the view's header note) — a held item
+   has to be selectable or it could never leave the hand from this screen. */
+.dock-dt-inv-hands {
+  display: flex;
+  gap: 4px;
+}
+
+.dock-dt-inv-hand {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg);
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dock-dt-inv-hand--empty {
+  border-style: dashed;
+  cursor: default;
+}
+
+.dock-dt-inv-hand--on {
+  border-color: var(--ember-light);
+  border-style: solid;
+  background: color-mix(in srgb, var(--ember-mid) 20%, transparent);
+}
+
+.dock-dt-inv-hand:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+}
+
+.dock-dt-inv-hand:focus-visible,
+.dock-dt-inv-item:focus-visible,
+.dock-dt-inv-drop:focus-visible,
+.dock-dt-inv-page-btn:focus-visible {
+  outline: 2px solid var(--ember-light);
+  outline-offset: 2px;
+}
+
+.dock-dt-inv-hand-label,
+.dock-dt-inv-label {
+  font-family: var(--font-ui);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-inv-hand-item {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-dt-inv-hand--empty .dock-dt-inv-hand-item {
+  color: var(--shell-text-tertiary);
+}
+
+/* Stowed list. Never scrolls — an overlong list pages (see the pager below). */
+.dock-dt-inv-stowed {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.dock-dt-inv-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  background: var(--shell-bg);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dock-dt-inv-item:hover {
+  background: var(--surface-inset-hover);
+  border-color: var(--shell-border-strong);
+}
+
+.dock-dt-inv-item--on {
+  border-color: var(--ember-light);
+  background: color-mix(in srgb, var(--ember-mid) 20%, transparent);
+}
+
+.dock-dt-inv-item--on:hover {
+  border-color: var(--ember-light);
+  background: color-mix(in srgb, var(--ember-mid) 28%, transparent);
+}
+
+.dock-dt-inv-item-name {
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-dt-inv-item-qty {
+  flex: none;
+  font-size: 0.64rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-inv-empty {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-inv-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.dock-dt-inv-page-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dock-dt-inv-page-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dock-dt-inv-page-count {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  color: var(--shell-text-tertiary);
+}
+
+/* Destination button, pinned to the column bottom. Its inert state is not a
+   dimmed control — "Tap an item to move it" is instructional copy and has to
+   stay readable, so `:disabled` keeps full opacity here. */
+.dock-dt-inv-drop {
+  margin-top: auto;
+  min-height: 44px;
+  border: 1px dashed var(--shell-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--shell-text-tertiary);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.dock-dt-inv-drop:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.dock-dt-inv-drop--on {
+  border-color: var(--verdant-mid);
+  background: color-mix(in srgb, var(--verdant-mid) 18%, transparent);
+  color: var(--verdant-light);
+}
+
+.dock-dt-inv-drop--on:hover {
+  background: color-mix(in srgb, var(--verdant-mid) 28%, transparent);
+}
+
+/* Selection bar — the view's third grid row, always present so the GM never
+   has to hunt for where the held item went. */
+.dock-dt-inv-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.dock-dt-inv-bar-label {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-inv-bar-item {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ember-light);
+}
+
+.dock-dt-inv-bar-item--none {
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-inv-bar-msg {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: var(--peril-light);
+}
+
+.dock-dt-inv-bar-spacer {
+  flex: 1;
+}
+
+.dock-dt-inv-bar-btn {
+  padding: 0 var(--space-4);
+  font-size: 0.78rem;
+}
