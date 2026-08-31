@@ -158,6 +158,50 @@ export const showDowntimeView = async (page: Page, label: string) => {
   await expect(page.getByRole('heading', { name: label })).toBeVisible();
 };
 
+/**
+ * The downtime dock redesign's own acceptance clause (#1853/#1861 design
+ * handoff, "The non-negotiable constraint: no scrolling"), verbatim: at the
+ * dock's target viewport, no descendant's bottom edge may exceed the dock
+ * root's, and no element may carry more scrollable content than its visible
+ * box shows. Checks the WHOLE dock (`.dock-dt` — header + rail + whichever
+ * view is mounted), not just the active view, since the header/rail chain is
+ * shared chrome every view sits inside and is just as bound by the no-scroll
+ * rule.
+ *
+ * Call it after `gotoDowntimeDock`/`showDowntimeView` has landed on the view
+ * under test, at the 1366×1024 viewport the design targets (below that, less
+ * remaining height for the flexible grid rows makes overflow MORE likely, not
+ * less, so a smaller viewport is not a safe substitute).
+ *
+ * `label` is only for the assertion message — which view was on screen when a
+ * violation was found.
+ */
+export const assertNoOverflow = async (page: Page, label: string) => {
+  const violations = await page.evaluate(() => {
+    const EPS = 1.5; // subpixel slack, per the handoff's own "small epsilon" note
+    const root = document.querySelector('.dock-dt');
+    if (!root) return ['no .dock-dt root found in the DOM'];
+    const rootBottom = root.getBoundingClientRect().bottom;
+    const out: string[] = [];
+    root.querySelectorAll('*').forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      const tag = `${el.tagName.toLowerCase()}${
+        typeof (el as HTMLElement).className === 'string' && (el as HTMLElement).className
+          ? `.${(el as HTMLElement).className.trim().split(/\s+/).join('.')}`
+          : ''
+      }`;
+      if (rect.bottom > rootBottom + EPS) {
+        out.push(`${tag}: bottom ${rect.bottom.toFixed(1)} exceeds root bottom ${rootBottom.toFixed(1)}`);
+      }
+      if (el.scrollHeight > el.clientHeight + EPS) {
+        out.push(`${tag}: scrollHeight ${el.scrollHeight} exceeds clientHeight ${el.clientHeight}`);
+      }
+    });
+    return out;
+  });
+  expect(violations, `no-scroll violations while showing the ${label} view`).toEqual([]);
+};
+
 // ── Seed builders ────────────────────────────────────────────────────────────
 
 /**

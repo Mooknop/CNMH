@@ -192,7 +192,7 @@ const TrainingView = () => {
               const vendorName = trainingVendorById(tracks[0]?.vendorId)?.name || tracks[0]?.vendorId;
               const busy = busyId === char.id;
               return (
-                <div key={char.id} className="dock-dt-card dock-dt-train-card" data-testid={`dock-dt-train-${char.id}`}>
+                <div key={char.id} className="dock-dt-train-card" data-testid={`dock-dt-train-${char.id}`}>
                   <div className="dock-dt-train-head">
                     <span
                       className="dock-dt-train-dot"
