@@ -34,6 +34,7 @@
 // picker/commit-bar (no `plan`) keeps its explicit `selected`/`ledger` instead.
 
 import { totalDaysSince4700 } from './gameTime';
+import { DOWNTIME_ACTIVITIES } from '../data/downtimeActivities';
 
 // Period identity is compared by value, not reference: block.startedAt is the
 // gameDate object, which round-trips through JSON (WebSocket/localStorage) and
@@ -229,4 +230,26 @@ export function isFatigued(ledger) {
   const list = ledger || [];
   if (list.length === 0) return false;
   return list[list.length - 1].night != null;
+}
+
+// Ordered activity-colored day-groups for one PC's week, then the trailing
+// free block — { name, hue, days, paired }[] (the free group has `name: null`
+// and no hue). Order follows DOWNTIME_ACTIVITIES, the canonical fill order, so
+// a PC's segments always read Earn Income → Retrain → Research → Training →
+// Crafting → Free regardless of the plan's own key order.
+//
+// Shared by the player-facing Party Ledger (DowntimePartyLedger.jsx) and the
+// GM dock's Ledger view (components/gm/downtime/LedgerView.jsx, #1857) — moved
+// here from DowntimePartyLedger so both consumers derive the exact same
+// segments from a plan instead of two hand-synced copies.
+export function segmentsFor(plan, paired, blockDays) {
+  const groups = [];
+  for (const a of DOWNTIME_ACTIVITIES) {
+    const d = plan?.[a.name] || 0;
+    if (d > 0) groups.push({ name: a.name, hue: a.hue, days: d, paired: !!(paired && paired[a.name]) });
+  }
+  const used = groups.reduce((s, g) => s + g.days, 0);
+  const free = Math.max(0, (blockDays || 0) - used);
+  if (free > 0) groups.push({ name: null, days: free });
+  return groups;
 }

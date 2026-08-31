@@ -604,3 +604,176 @@ a.dock-dt-btn {
   align-items: center;
   gap: var(--space-2);
 }
+
+/* ── Party ledger view (#1857) ───────────────────────────────────────────── */
+
+/* The header carries an inline legend instead of a "manage" button — one
+   swatch per DOWNTIME_ACTIVITIES entry plus a dashed "Free" swatch. */
+.dock-dt-ledger-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.dock-dt-ledger-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.dock-dt-ledger-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.dock-dt-ledger-swatch--free {
+  background: transparent;
+  border: 1px dashed var(--shell-border-strong);
+}
+
+.dock-dt-ledger-body {
+  gap: var(--space-2);
+}
+
+/* Day-number header row and every PC row share this two-column template: a
+   fixed 200px name gutter beside the day ribbon. */
+.dock-dt-ledger-grid {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.dock-dt-ledger-days {
+  display: flex;
+  gap: 2px;
+}
+
+.dock-dt-ledger-day {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+}
+
+/* Rows share the remaining height evenly (each gets `flex: 1`) rather than
+   hugging their content — the same "no dead space" rule the shell applies to
+   card grids. */
+.dock-dt-ledger-rows {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-dt-ledger-row {
+  flex: 1;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  padding: var(--space-3);
+  min-width: 0;
+}
+
+.dock-dt-ledger-who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dock-dt-ledger-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c, var(--shell-text-tertiary));
+}
+
+.dock-dt-ledger-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dock-dt-ledger-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-dt-ledger-class {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-ledger-ribbon {
+  display: flex;
+  gap: 3px;
+  height: 100%;
+  min-height: 46px;
+}
+
+/* `flex` (proportional to `seg.days`) is set inline per-segment by LedgerView;
+   `--seg-hue` likewise, so the border/background below are the only bits that
+   need the custom property. */
+.dock-dt-ledger-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--seg-hue);
+  background: color-mix(in srgb, var(--seg-hue) 34%, transparent);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.dock-dt-ledger-seg.dock-dt-ledger-seg--free {
+  border: 1px dashed var(--shell-border-strong);
+  background: transparent;
+}
+
+.dock-dt-ledger-seg-name {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-dt-ledger-seg--free .dock-dt-ledger-seg-name {
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-ledger-seg-days {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--shell-text-primary);
+  opacity: 0.75;
+}
+
+.dock-dt-ledger-seg--free .dock-dt-ledger-seg-days {
+  color: var(--shell-text-tertiary);
+}

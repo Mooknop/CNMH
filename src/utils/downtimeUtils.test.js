@@ -13,7 +13,9 @@ import {
   planToLedger,
   clampPlan,
   periodDayNumber,
+  segmentsFor,
 } from './downtimeUtils';
+import { DOWNTIME_ACTIVITIES } from '../data/downtimeActivities';
 
 describe('downtimeUtils', () => {
   describe('benchmarkReached', () => {
@@ -515,6 +517,66 @@ describe('downtimeUtils', () => {
       expect(periodDayNumber(null, { day: 5, month: 2, year: 4725 }, 7)).toBe(1);
       expect(periodDayNumber({ day: 3 }, { day: 5, month: 2, year: 4725 }, 7)).toBe(1);
       expect(periodDayNumber(start, { day: 5, month: 2, year: 4725 }, 0)).toBe(1);
+    });
+  });
+
+  describe('segmentsFor', () => {
+    it('emits one group per assigned activity, in canonical DOWNTIME_ACTIVITIES order', () => {
+      // Plan keys are deliberately out of canonical order.
+      const plan = { Crafting: 2, 'Earn Income': 1, Research: 3 };
+      const segs = segmentsFor(plan, {}, 7);
+      expect(segs.map((s) => s.name)).toEqual(['Earn Income', 'Research', 'Crafting', null]);
+    });
+
+    it('carries each activity\'s hue token and day count', () => {
+      const plan = { Research: 3 };
+      const [seg] = segmentsFor(plan, {}, 7);
+      expect(seg.hue).toBe(DOWNTIME_ACTIVITIES.find((a) => a.name === 'Research').hue);
+      expect(seg.days).toBe(3);
+    });
+
+    it('flags paired activities from the paired map', () => {
+      const plan = { Crafting: 4 };
+      const segs = segmentsFor(plan, { Crafting: true }, 7);
+      expect(segs[0].paired).toBe(true);
+    });
+
+    it('defaults paired to false when absent', () => {
+      const plan = { Crafting: 4 };
+      const segs = segmentsFor(plan, {}, 7);
+      expect(segs[0].paired).toBe(false);
+      expect(segmentsFor(plan, null, 7)[0].paired).toBe(false);
+    });
+
+    it('appends a trailing free group for unassigned days', () => {
+      const plan = { Research: 3, 'Earn Income': 1 };
+      const segs = segmentsFor(plan, {}, 7);
+      const free = segs[segs.length - 1];
+      expect(free.name).toBeNull();
+      expect(free.days).toBe(3);
+      expect(free.hue).toBeUndefined();
+    });
+
+    it('omits the free group when the plan fills every day', () => {
+      const plan = { Research: 7 };
+      const segs = segmentsFor(plan, {}, 7);
+      expect(segs).toHaveLength(1);
+      expect(segs.every((s) => s.name !== null)).toBe(true);
+    });
+
+    it('never emits a negative free block for an over-committed plan', () => {
+      const plan = { Research: 10 };
+      const segs = segmentsFor(plan, {}, 7);
+      expect(segs.some((s) => s.name === null)).toBe(false);
+    });
+
+    it('treats an empty/missing plan as all-free', () => {
+      expect(segmentsFor({}, {}, 5)).toEqual([{ name: null, days: 5 }]);
+      expect(segmentsFor(null, null, 5)).toEqual([{ name: null, days: 5 }]);
+    });
+
+    it('emits nothing for a zero-day block with no plan', () => {
+      expect(segmentsFor({}, {}, 0)).toEqual([]);
     });
   });
 });
