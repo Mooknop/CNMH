@@ -3,23 +3,24 @@ import { Link } from 'react-router-dom';
 import { useContent } from '../../../contexts/ContentContext';
 import { useSessionLog } from '../../../hooks/useSessionLog';
 import { saveDocument } from '../../../utils/gmApi';
-import {
-  rankFor,
-  ladderBounds,
-  stepReputation,
-  rankChangeLogText,
-} from '../../../utils/reputation';
-import ReputationRadarChart from '../../shared/ReputationRadarChart';
+import { stepReputation, rankChangeLogText } from '../../../utils/reputation';
+import FactionCard from './FactionCard';
 import './DowntimeViews.css';
 
-// Downtime dock — Reputation view (#1850; moved out of DockDowntimePane into
-// its own view file by the #1853 redesign). One row per `reputation.Factions`
-// entry (the `faction` collection) — the score lives on the doc itself, not a
-// synced key.
+// Downtime dock — Reputation view (#1850, no-scroll ladder re-layout #1855).
+// One card per `reputation.Factions` entry (the `faction` collection) — the
+// score lives on the doc itself, not a synced key.
 //
-// ALL REPUTATION MATH LIVES IN utils/reputation.js: rank lookup, ladder bounds,
-// and the rose/fell phrasing. This component hands data to the util and writes
-// back what comes out.
+// NO RADAR ON THIS SCREEN (#1855 spec) — ReputationRadarChart stays wired up
+// for QuestTracker but is never imported here. The ladder (FactionCard +
+// ReputationLadder, ./downtime) is the one genuinely new visual primitive the
+// redesign adds; this file stays the data/mutation owner exactly as it was
+// pre-redesign, just handing `rep`/`onStep` down instead of rendering rows
+// inline.
+//
+// ALL REPUTATION MATH LIVES IN utils/reputation.js: rank lookup, ladder
+// segments/bounds, sign/tone, and the rose/fell phrasing. This component
+// hands data to the util and writes back what comes out.
 //
 // RANK-CHANGE SIDE EFFECTS FIRE IN THE COMMIT HANDLER, NOT AN EFFECT. The
 // handler compares the same before/after pair it just wrote via
@@ -40,11 +41,6 @@ import './DowntimeViews.css';
 // pre-burst baseline (not re-read on every tap) so the rank-change log compares
 // the value before the burst to the value the burst actually committed, not
 // intermediate taps.
-//
-// WAVE-1 SCROLL EXCEPTION: the body still carries the pre-redesign row list and
-// `.dock-dt-view-body--scroll`. The no-scroll re-layout (the two-column GMG
-// ladder card grid, no radar) is #1855; the shell around this view is already
-// no-scroll correct, so that slice replaces the body and nothing else.
 
 const COMMIT_DEBOUNCE_MS = 600;
 
@@ -52,12 +48,11 @@ const ReputationView = () => {
   const { reputation, refresh } = useContent();
   const { appendEvent } = useSessionLog();
 
-  // Collapsed-by-default mini radar, and the optimistic/debounced write
-  // plumbing (see header note). `pendingRep` is the local override per faction
-  // id while a burst is in flight or not yet reconciled with the live doc;
-  // `timersRef` the in-flight debounce timeout per faction id; `prevRepRef` the
-  // pre-burst baseline used for rank-change logging.
-  const [radarOpen, setRadarOpen] = useState(false);
+  // The optimistic/debounced write plumbing (see header note). `pendingRep`
+  // is the local override per faction id while a burst is in flight or not
+  // yet reconciled with the live doc; `timersRef` the in-flight debounce
+  // timeout per faction id; `prevRepRef` the pre-burst baseline used for
+  // rank-change logging.
   const [pendingRep, setPendingRep] = useState({});
   const timersRef = useRef({});
   const prevRepRef = useRef({});
@@ -138,88 +133,39 @@ const ReputationView = () => {
           <h2 className="dock-dt-heading">Reputation</h2>
         </div>
         {factions.length > 0 && (
-          <>
-            <span className="dock-dt-count">
-              {factions.length} faction{factions.length === 1 ? '' : 's'} · GMG ladder −50…50
-            </span>
-            <button
-              type="button"
-              className="dock-dt-btn dock-dt-rep-radar-toggle"
-              aria-expanded={radarOpen}
-              onClick={() => setRadarOpen((open) => !open)}
-            >
-              {radarOpen ? 'Hide radar' : 'Radar'}
-            </button>
-          </>
+          <span className="dock-dt-count">
+            {factions.length} faction{factions.length === 1 ? '' : 's'} · GMG ladder −50…50
+          </span>
         )}
         <Link className="dock-dt-btn" to="/gm/world/reputation">
           Manage factions
         </Link>
       </header>
 
-      <div className="dock-dt-view-body dock-dt-view-body--scroll">
-        {!factions.length ? (
-          <div className="dock-dt-note" role="status">
-            <p>No factions yet.</p>
-            <Link className="dock-dt-btn" to="/gm/world/reputation">
-              Author factions in the Reputation editor
-            </Link>
-          </div>
-        ) : (
-          <>
-            {radarOpen && (
-              <div className="dock-dt-rep-radar" data-testid="dock-dt-rep-radar">
-                <ReputationRadarChart factions={factions} compact />
-              </div>
-            )}
-            <ul className="dock-dt-rep-list">
-              {factions.map((faction) => {
-                const rep =
-                  pendingRep[faction.id] ??
-                  (typeof faction.reputation === 'number' ? faction.reputation : 0);
-                const rank = rankFor(faction, rep);
-                const { min, max } = ladderBounds(faction);
-                return (
-                  <li
-                    className="dock-dt-rep-row"
-                    key={faction.id}
-                    data-testid={`dock-dt-faction-${faction.id}`}
-                  >
-                    <div className="dock-dt-rep-head">
-                      <span className="dock-dt-rep-name">{faction.name}</span>
-                      <span className="dock-dt-rep-score">{rep}</span>
-                      {rank && <span className="dock-dt-rep-rank">{rank.name}</span>}
-                    </div>
-                    {rank?.effect && (
-                      <p className="dock-dt-rep-effect">{rank.effect}</p>
-                    )}
-                    <div className="dock-dt-rep-actions">
-                      <button
-                        type="button"
-                        className="dock-dt-step"
-                        aria-label={`Lower ${faction.name} reputation`}
-                        disabled={rep <= min}
-                        onClick={() => stepFaction(faction, -1)}
-                      >
-                        −
-                      </button>
-                      <button
-                        type="button"
-                        className="dock-dt-step"
-                        aria-label={`Raise ${faction.name} reputation`}
-                        disabled={rep >= max}
-                        onClick={() => stepFaction(faction, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </div>
+      {!factions.length ? (
+        <div className="dock-dt-note" role="status">
+          <p>No factions yet.</p>
+          <Link className="dock-dt-btn" to="/gm/world/reputation">
+            Author factions in the Reputation editor
+          </Link>
+        </div>
+      ) : (
+        <div className="dock-dt-rep-grid">
+          {factions.map((faction) => {
+            const rep =
+              pendingRep[faction.id] ??
+              (typeof faction.reputation === 'number' ? faction.reputation : 0);
+            return (
+              <FactionCard
+                key={faction.id}
+                faction={faction}
+                rep={rep}
+                onStep={(delta) => stepFaction(faction, delta)}
+              />
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

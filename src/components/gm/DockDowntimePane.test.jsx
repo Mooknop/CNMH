@@ -1,36 +1,29 @@
 import React from 'react';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { renderWithProviders, makeCharacter } from '../../test/renderWithProviders';
 import { saveDocument } from '../../utils/gmApi';
 import DockDowntimePane from './DockDowntimePane';
 
 // GM Command Dock — Downtime pane. Covers the #1853 no-scroll shell (header +
-// seven-view rail + view switching) and, through it, the two views that carry
-// live logic today: Research (#1841, epic #206 S3) and Reputation (#1850).
+// seven-view rail + view switching) and, through it, the Research view
+// (#1841, epic #206 S3), which still carries its wave-1 markup. Reputation's
+// own coverage moved to downtime/ReputationView.test.jsx when its no-scroll
+// ladder re-layout (#1855) gave it a real view file worth testing on its own.
 // Everything runs against the REAL provider stack: `research` topics and
 // `faction` docs ride ContentProvider's initialContent seam, party research
 // progress / the downtime block / the clock ride the in-memory session bus
-// through the real useSyncedState, and the RP/reputation math is the real
-// utils/research.js + utils/reputation.js. The only mocks are the GM content
-// API (a network call, spread from the original module so a new export can't
-// break this factory) and the shared ReputationRadarChart (real `recharts`
-// needs a ResizeObserver jsdom doesn't provide — see ReputationRadarChart.test.jsx
-// for its own coverage of the chart's actual rendering).
+// through the real useSyncedState, and the RP math is the real
+// utils/research.js. The only mock is the GM content API (a network call,
+// spread from the original module so a new export can't break this factory).
 //
 // The rail is the reason most assertions below are container-scoped: the
-// research and reputation suites each mount the pane more than once in a single
-// test (two seeds, one comparison), and `screen` would then see both trees.
+// research suite mounts the pane more than once in a single test (two seeds,
+// one comparison), and `screen` would then see both trees.
 vi.mock('../../utils/gmApi', async (importOriginal) => ({
   ...(await importOriginal()),
   saveDocument: vi.fn(),
-}));
-
-vi.mock('../shared/ReputationRadarChart', () => ({
-  default: (props) => (
-    <div data-testid="dock-dt-rep-radar-mock" data-compact={String(!!props.compact)} />
-  ),
 }));
 
 const TOPIC = {
@@ -123,12 +116,7 @@ const showView = (result, label) => {
   return result;
 };
 
-/** Mount with the Reputation view selected — the rail is the only way in. */
-const mountRep = (opts) => showView(mount(opts), 'Reputation');
-
 const card = () => screen.getByTestId(`dock-dt-topic-${TOPIC.id}`);
-const factionRow = (result, id = FACTION.id) =>
-  within(result.container).getByTestId(`dock-dt-faction-${id}`);
 
 const lastResearchWrite = (session) =>
   [...session.sent].reverse().find((s) => s.stateType === 'research')?.value ?? null;
@@ -144,15 +132,6 @@ const open = { available: true, rp: 0, perSourceRp: {} };
 beforeEach(() => {
   window.localStorage.clear();
   saveDocument.mockResolvedValue({});
-  // Reputation's commit handler calls ContentContext's real `refresh()`
-  // (a plain `fetch('/api/content')`, not the mocked gmApi) to re-pull the
-  // committed doc. Stub it so that resolves deterministically instead of
-  // hitting the network or racing undici's relative-URL handling.
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 describe('DockDowntimePane — shell (#1853)', () => {
@@ -502,149 +481,5 @@ describe('DockDowntimePane — Research (#1841)', () => {
     expect(screen.getByLabelText('skill 1 DC')).toHaveValue(19);
     expect(screen.getByLabelText('skill 2')).toHaveValue('society');
     expect(screen.getByLabelText('skill 2 DC')).toHaveValue(17);
-  });
-});
-
-describe('DockDowntimePane — Reputation (#1850)', () => {
-  it('renders the rank chip at exact rank boundaries', () => {
-    const low = mountRep({ factions: [{ ...FACTION, reputation: 9 }] });
-    expect(within(factionRow(low)).getByText('Neutral')).toBeInTheDocument();
-
-    const high = mountRep({ factions: [{ ...FACTION, reputation: 10 }] });
-    expect(within(factionRow(high)).getByText('Friendly')).toBeInTheDocument();
-  });
-
-  it('shows the score with no chip when it falls outside every rank', () => {
-    const r = mountRep({ factions: [{ ...FACTION, reputation: 51 }] });
-    const row = factionRow(r);
-    expect(within(row).getByText('51')).toBeInTheDocument();
-    expect(within(row).queryByText('Revered')).not.toBeInTheDocument();
-    // No rank matched, so no chip element at all — not just an empty one.
-    expect(row.querySelector('.dock-dt-rep-rank')).toBeNull();
-  });
-
-  it('shows the current rank\'s effect text when present, and omits it when absent', () => {
-    const disliked = mountRep({ factions: [{ ...FACTION, reputation: -15 }] });
-    expect(
-      within(disliked.container).getByText('Prices rise 10% at Consortium-run shops.')
-    ).toBeInTheDocument();
-
-    const neutral = mountRep({ factions: [{ ...FACTION, reputation: 0 }] });
-    expect(within(factionRow(neutral)).queryByText(/Prices/)).not.toBeInTheDocument();
-  });
-
-  it('clamps the steppers at the ladder\'s outer bounds', () => {
-    const top = mountRep({ factions: [{ ...FACTION, reputation: 50 }] });
-    expect(
-      within(factionRow(top)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
-    ).toBeDisabled();
-
-    const bottom = mountRep({ factions: [{ ...FACTION, reputation: -50 }] });
-    expect(
-      within(factionRow(bottom)).getByRole('button', { name: `Lower ${FACTION.name} reputation` })
-    ).toBeDisabled();
-  });
-
-  it('falls back to a +-50 ladder for a faction authored with no ranks', () => {
-    const r = mountRep({ factions: [{ id: 'unaligned', name: 'Unaligned', reputation: 0 }] });
-    const row = factionRow(r, 'unaligned');
-    expect(within(row).getByText('0')).toBeInTheDocument();
-    expect(row.querySelector('.dock-dt-rep-rank')).toBeNull();
-    expect(
-      within(row).getByRole('button', { name: 'Raise Unaligned reputation' })
-    ).toBeEnabled();
-  });
-
-  it('collapses a burst of taps into ONE debounced saveDocument call', () => {
-    vi.useFakeTimers();
-    try {
-      const r = mountRep();
-      const raise = within(factionRow(r)).getByRole('button', {
-        name: `Raise ${FACTION.name} reputation`,
-      });
-
-      fireEvent.click(raise);
-      fireEvent.click(raise);
-      fireEvent.click(raise);
-      // Each tap shows immediately (optimistic) — no write has landed yet.
-      expect(within(factionRow(r)).getByText('3')).toBeInTheDocument();
-      expect(saveDocument).not.toHaveBeenCalled();
-
-      act(() => {
-        vi.advanceTimersByTime(600);
-      });
-
-      expect(saveDocument).toHaveBeenCalledTimes(1);
-      expect(saveDocument).toHaveBeenCalledWith(
-        'faction',
-        FACTION.id,
-        expect.objectContaining({ id: FACTION.id, reputation: 3 })
-      );
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('logs a rank change once the committed value crosses a boundary', () => {
-    vi.useFakeTimers();
-    try {
-      // Neutral, top edge.
-      const r = mountRep({ factions: [{ ...FACTION, reputation: 9 }] });
-      fireEvent.click(
-        within(factionRow(r)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(600);
-      });
-
-      expect(lastLogWrite(r.session)[0]).toEqual(
-        expect.objectContaining({
-          type: 'reputation',
-          text: 'Reputation: Scarnetti Consortium rose to Friendly (10)',
-        })
-      );
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('stays silent when a committed change lands in the same rank', () => {
-    vi.useFakeTimers();
-    try {
-      // Neutral, interior.
-      const r = mountRep({ factions: [{ ...FACTION, reputation: 0 }] });
-      fireEvent.click(
-        within(factionRow(r)).getByRole('button', { name: `Raise ${FACTION.name} reputation` })
-      );
-
-      act(() => {
-        vi.advanceTimersByTime(600);
-      });
-
-      expect(saveDocument).toHaveBeenCalledTimes(1);
-      expect(lastLogWrite(r.session)).toEqual([]);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('collapses the mini radar by default and toggles it open', () => {
-    const r = mountRep();
-    expect(within(r.container).queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
-
-    const toggle = within(r.container).getByRole('button', { name: 'Radar' });
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(within(r.container).getByTestId('dock-dt-rep-radar')).toBeInTheDocument();
-    expect(within(r.container).getByTestId('dock-dt-rep-radar-mock')).toHaveAttribute(
-      'data-compact',
-      'true'
-    );
-
-    fireEvent.click(within(r.container).getByRole('button', { name: 'Hide radar' }));
-    expect(within(r.container).queryByTestId('dock-dt-rep-radar')).not.toBeInTheDocument();
   });
 });

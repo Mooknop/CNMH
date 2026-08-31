@@ -4,6 +4,11 @@ import {
   clampToLadder,
   stepReputation,
   rankChangeLogText,
+  GMG_LADDER,
+  ladderSegments,
+  repTone,
+  segmentTone,
+  formatSignedRep,
 } from './reputation';
 
 const FACTION = {
@@ -108,6 +113,82 @@ describe('utils/reputation', () => {
 
     it('is silent with no prior rank and no new rank', () => {
       expect(rankChangeLogText(NO_RANKS_FACTION, 0, 5)).toBeNull();
+    });
+  });
+
+  describe('ladderSegments (#1855)', () => {
+    it('derives segments from a faction\'s own ranks, sorted worst to best', () => {
+      // Authored out of order on purpose — sort order must not depend on it.
+      const scrambled = {
+        ranks: [
+          { name: 'Friendly', min: 10, max: 29 },
+          { name: 'Hunted', min: -50, max: -30 },
+          { name: 'Neutral', min: -9, max: 9 },
+        ],
+      };
+      const segs = ladderSegments(scrambled);
+      expect(segs.map((s) => s.name)).toEqual(['Hunted', 'Neutral', 'Friendly']);
+      expect(segs[0]).toEqual({ name: 'Hunted', abbr: 'Hun', min: -50, max: -30, span: 21 });
+      expect(segs[2]).toEqual({ name: 'Friendly', abbr: 'Fri', min: 10, max: 29, span: 20 });
+    });
+
+    it('falls back to the GMG default ladder for a faction with no valid ranks', () => {
+      expect(ladderSegments(NO_RANKS_FACTION)).toEqual(ladderSegments({ ranks: GMG_LADDER }));
+      expect(ladderSegments({ ranks: [{ name: 'broken' }] }).length).toBe(GMG_LADDER.length);
+    });
+
+    it('matches the GMG spec table\'s spans and abbreviations exactly', () => {
+      expect(ladderSegments(NO_RANKS_FACTION)).toEqual([
+        { name: 'Hunted', abbr: 'Hun', min: -50, max: -30, span: 21 },
+        { name: 'Hated', abbr: 'Hat', min: -29, max: -15, span: 15 },
+        { name: 'Disliked', abbr: 'Dis', min: -14, max: -5, span: 10 },
+        { name: 'Ignored', abbr: 'Ign', min: -4, max: 4, span: 9 },
+        { name: 'Liked', abbr: 'Lik', min: 5, max: 14, span: 10 },
+        { name: 'Admired', abbr: 'Adm', min: 15, max: 29, span: 15 },
+        { name: 'Revered', abbr: 'Rev', min: 30, max: 50, span: 21 },
+      ]);
+    });
+  });
+
+  describe('repTone', () => {
+    it('is positive above +4, negative below -4, neutral in between', () => {
+      expect(repTone(5)).toBe('positive');
+      expect(repTone(-5)).toBe('negative');
+      expect(repTone(4)).toBe('neutral');
+      expect(repTone(-4)).toBe('neutral');
+      expect(repTone(0)).toBe('neutral');
+    });
+
+    it('treats a non-numeric value as neutral', () => {
+      expect(repTone(undefined)).toBe('neutral');
+    });
+  });
+
+  describe('segmentTone', () => {
+    it('is positive for a friendly band (min >= 5)', () => {
+      expect(segmentTone({ min: 5, max: 14 })).toBe('positive');
+    });
+
+    it('is negative for a hostile band (max <= -5)', () => {
+      expect(segmentTone({ min: -14, max: -5 })).toBe('negative');
+    });
+
+    it('is neutral for the middle band', () => {
+      expect(segmentTone({ min: -4, max: 4 })).toBe('neutral');
+    });
+  });
+
+  describe('formatSignedRep', () => {
+    it('prefixes a positive score with +', () => {
+      expect(formatSignedRep(12)).toBe('+12');
+    });
+
+    it('leaves a negative score as-is', () => {
+      expect(formatSignedRep(-12)).toBe('-12');
+    });
+
+    it('renders zero with no sign', () => {
+      expect(formatSignedRep(0)).toBe('0');
     });
   });
 });

@@ -73,6 +73,98 @@ export function stepReputation(faction, current, delta) {
   return clampToLadder(faction, base + (delta || 0));
 }
 
+// The GMG default rank ladder (Gamemastery Guide, "Reputation"), worst to
+// best. This is the fallback segment set for the #1855 ladder visual when a
+// faction doc has no authored `ranks` — it is also, not coincidentally, the
+// same span `ladderBounds` falls back to above. Kept here (not hard-coded in
+// the component) so the one GMG table lives in one place.
+export const GMG_LADDER = [
+  { name: 'Hunted', min: -50, max: -30 },
+  { name: 'Hated', min: -29, max: -15 },
+  { name: 'Disliked', min: -14, max: -5 },
+  { name: 'Ignored', min: -4, max: 4 },
+  { name: 'Liked', min: 5, max: 14 },
+  { name: 'Admired', min: 15, max: 29 },
+  { name: 'Revered', min: 30, max: 50 },
+];
+
+/**
+ * The ladder segments to render for a faction's reputation strip, worst →
+ * best (sorted by `min`). Uses the faction's own authored `ranks` when it has
+ * at least one valid one; falls back to `GMG_LADDER` otherwise — so a
+ * freshly-authored faction with no ranks yet still gets a full seven-band
+ * ladder rather than an empty strip. Each segment carries a 3-letter
+ * abbreviation (the rank name's first 3 letters — matches every GMG rank
+ * name, e.g. "Hunted" → "Hun") and `span` (`max − min + 1`), which the
+ * ladder component uses as a flex-grow weight so band widths mirror the
+ * ladder's real numeric spans.
+ *
+ * @param {Object} faction
+ * @returns {Array<{name: string, abbr: string, min: number, max: number, span: number}>}
+ */
+export function ladderSegments(faction) {
+  const ranks = Array.isArray(faction?.ranks) ? faction.ranks : [];
+  const valid = ranks.filter(
+    (r) => r && typeof r.min === 'number' && typeof r.max === 'number'
+  );
+  const source = valid.length ? valid : GMG_LADDER;
+  return source
+    .slice()
+    .sort((a, b) => a.min - b.min)
+    .map((r) => ({
+      name: r.name || '',
+      abbr: (r.name || '???').slice(0, 3),
+      min: r.min,
+      max: r.max,
+      span: r.max - r.min + 1,
+    }));
+}
+
+/**
+ * Sign bucket for a reputation score — drives badge/score/segment coloring
+ * independently of whichever named rank (if any) the score falls in.
+ * `min`/`max` cross the same +5/-5 breakpoints the GMG bands themselves land
+ * on (Liked starts at 5, Disliked ends at -5), so this doubles as "friendly
+ * band" / "hostile band" / "neutral band" for a rank's own bounds too — see
+ * `segmentTone`.
+ *
+ * @param {number} rep
+ * @returns {'positive'|'negative'|'neutral'}
+ */
+export function repTone(rep) {
+  const n = typeof rep === 'number' ? rep : 0;
+  if (n > 4) return 'positive';
+  if (n < -4) return 'negative';
+  return 'neutral';
+}
+
+/**
+ * Tone for a single ladder segment, from its own bounds rather than the
+ * current score — used to color the ACTIVE segment (a friendly band lights
+ * up verdant, a hostile one peril, Ignored neutral) regardless of the exact
+ * score inside it.
+ *
+ * @param {{min: number, max: number}} seg
+ * @returns {'positive'|'negative'|'neutral'}
+ */
+export function segmentTone(seg) {
+  if (seg && seg.min >= 5) return 'positive';
+  if (seg && seg.max <= -5) return 'negative';
+  return 'neutral';
+}
+
+/**
+ * Explicit-sign score label — "+12", "-12", "0" — never a bare positive
+ * number, matching the GMG convention of always showing reputation's sign.
+ *
+ * @param {number} rep
+ * @returns {string}
+ */
+export function formatSignedRep(rep) {
+  const n = typeof rep === 'number' ? rep : 0;
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
 /**
  * Session-log text for a committed reputation change, or null when nothing
  * loggable happened. Fires ONLY when the committed value crosses into a
