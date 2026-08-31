@@ -1,12 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import SetDateTimeModal from './SetDateTimeModal';
 import { CharacterContext } from '../../contexts/CharacterContext';
-import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
-import { usePlayMode } from '../../hooks/usePlayMode';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
-import { periodState } from '../../utils/downtimeUtils';
+import { useDowntimeAutoAdvance } from '../../hooks/useDowntimeAutoAdvance';
 import { taskDc } from '../../utils/earnIncome';
 import DowntimeResultsApproval from './DowntimeResultsApproval';
 import PartyTrainingBoard from './PartyTrainingBoard';
@@ -20,11 +18,8 @@ import { APP, globalKey } from '../../sync/keys';
 // time nudges independent of the downtime block.
 const DowntimeControl = () => {
   const { characters } = useContext(CharacterContext) || {};
-  const { getState } = useSession();
-  const { setGmMode } = usePlayMode();
   const { advanceHours, advanceDays, formatGameDate, formatClockTime, gameDate } = useGameDate();
   const [block, setBlock] = useSyncedState(globalKey(APP.DOWNTIMEBLOCK), null);
-  const [, setSummary] = useSyncedState(globalKey(APP.DOWNTIMESUMMARY), null);
   const [taskMap, setTaskMap] = useSyncedState(globalKey(APP.EARNINCOMETASK), null);
   const [benchMap, setBenchMap] = useSyncedState(globalKey(APP.DOWNTIMEBENCH), null);
   const [customValue, setCustomValue] = useState('');
@@ -73,33 +68,12 @@ const DowntimeControl = () => {
 
   const { readyCount, total, allReady } = useDowntimePartyReady(blockActive ? blockDays : 0, blockStartedAt);
 
-  // Capture latest characters without adding the array to effect deps.
-  const charactersRef = useRef(characters);
-  charactersRef.current = characters;
-
   // Auto-advance: when every PC commits their last day, write a summary,
   // advance the clock, close the block, and return to Exploration mode.
-  // A ref prevents double-fire if the component re-renders while allReady
-  // is still true.
-  const autoAdvancedRef = useRef(false);
-  useEffect(() => {
-    if (!blockActive) {
-      autoAdvancedRef.current = false; // reset so a new block can fire again
-      return;
-    }
-    if (!allReady || autoAdvancedRef.current) return;
-    autoAdvancedRef.current = true;
-
-    const summaryChars = (charactersRef.current || []).map((c) => {
-      const dt = getState(c.id, APP.DOWNTIME);
-      const { selected, ledger } = periodState(dt, blockStartedAt, blockDays);
-      return { id: c.id, name: c.name, selected, ledger };
-    });
-    setSummary({ period: { days: blockDays, startedAt: blockStartedAt }, chars: summaryChars });
-    advanceDays(blockDays);
-    setBlock((prev) => (prev ? { ...prev, active: false } : prev));
-    setGmMode('exploration');
-  }, [allReady, blockActive, blockDays, blockStartedAt, advanceDays, setBlock, setGmMode, setSummary, getState]);
+  // Extracted to a shared hook (#1856) so the dock's Period view can mount
+  // the SAME effect without duplicating it — see that hook's file header for
+  // the double-fire guard.
+  useDowntimeAutoAdvance();
 
   const closeBlock = () => {
     if (!block) return;
