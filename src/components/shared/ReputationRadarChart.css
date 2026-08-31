@@ -7,6 +7,14 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Dock-scale mini radar (#1850) — the dock's own row list already shows each
+   faction's rank + effect, so this variant only needs to shrink the chart
+   itself; the effects list is hidden via the `compact` prop, not CSS. */
+.reputation-radar-chart--compact {
+  margin: 0;
+  padding: var(--space-3, 12px);
+}
+
 .reputation-radar-chart .radar-axis-text {
   fill: var(--void-mid);
   font-weight: 500;

@@ -1,7 +1,11 @@
-/* GM Command Dock — Downtime pane (#1841, epic #206 S3).
-   Dock-scoped selectors, design tokens only, no page scroll: the pane owns its
-   vertical space and the topic list scrolls internally, the same contract every
-   other dock panel keeps (see GmCommandDock.css / DockExplorationPane.css). */
+/* GM Command Dock — Downtime pane (#1841, epic #206 S3; Reputation rail
+   #1850). Dock-scoped selectors, design tokens only, no page scroll: the pane
+   owns its vertical space and `.dock-dt-body` is its ONE scroll container —
+   the same contract every other dock panel keeps (see GmCommandDock.css /
+   DockExplorationPane.css). Research and Reputation are two `.dock-dt-section`
+   children stacked inside that single region (not two independently-scrolling
+   panes) — each keeps its own `.dock-dt-head` sub-header, but there's exactly
+   one scrollbar for the whole pane. */
 
 .dock-dt {
   display: flex;
@@ -85,11 +89,27 @@ a.dock-dt-btn {
   text-align: center;
 }
 
-/* The topic list is the pane's one scroll container. */
+/* The pane's ONE scroll container — holds both the Research and Reputation
+   sections, so the whole pane scrolls as one region (see file header). */
 .dock-dt-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* A section (Research or Reputation) is a plain flex column — no scrolling or
+   sizing of its own, it just lays out inside the shared `.dock-dt-body`. */
+.dock-dt-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.dock-dt-topics {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -460,4 +480,82 @@ a.dock-dt-btn {
 .dock-dt-switch:focus-visible {
   outline: 2px solid var(--accent-outline);
   outline-offset: 2px;
+}
+
+/* Reputation section (#1850). */
+
+.dock-dt-rep-radar {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  padding: var(--space-2);
+}
+
+.dock-dt-rep-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dock-dt-rep-row {
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dock-dt-rep-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dock-dt-rep-name {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  margin-right: auto;
+}
+
+.dock-dt-rep-score {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+/* A rank chip only renders when the score falls inside a named rank — a
+   score outside every rank shows its number with no chip (#1850 ruling). */
+.dock-dt-rep-rank {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--verdant-mid);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dock-dt-rep-effect {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-rep-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
