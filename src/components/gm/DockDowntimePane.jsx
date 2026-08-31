@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
@@ -123,13 +124,24 @@ const DockDowntimePane = () => {
     return (
       <section className="dock-dt" aria-label="Downtime">
         <header className="dock-dt-head">
-          <span className="dock-dt-kicker">Downtime</span>
-          <h2 className="dock-dt-heading">Research</h2>
+          <div className="dock-dt-title">
+            <span className="dock-dt-kicker">Downtime</span>
+            <h2 className="dock-dt-heading">Research</h2>
+          </div>
+          <Link className="dock-dt-btn dock-dt-manage" to="/gm/world/research">
+            Manage topics
+          </Link>
         </header>
-        <p className="dock-dt-note" role="status">
-          No research topics yet — import them from the adventure journal dump with
-          the research topic import CLI (scripts/importResearchTopicsCli.js).
-        </p>
+        <div className="dock-dt-note" role="status">
+          <p>No research topics yet.</p>
+          <Link className="dock-dt-btn" to="/gm/world/research">
+            Author topics in the Research editor
+          </Link>
+          <p className="dock-dt-note-alt">
+            Or bulk-import from the adventure journal dump
+            (scripts/importResearchTopicsCli.js).
+          </p>
+        </div>
       </section>
     );
   }
@@ -144,6 +156,9 @@ const DockDowntimePane = () => {
         <span className="dock-dt-count">
           {topics.length} topic{topics.length === 1 ? '' : 's'}
         </span>
+        <Link className="dock-dt-btn dock-dt-manage" to="/gm/world/research">
+          Manage topics
+        </Link>
       </header>
 
       <div className="dock-dt-body">
