@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
-import { newEntryUid } from '../utils/uid';
 import { isBodyBound } from '../utils/itemState';
 import { recordConsumed } from '../utils/consumedLedger';
+import { reuid, subtreeUids } from '../utils/inventoryTransfer';
 import { APP, syncKey } from '../sync/keys';
 
 // Player-to-player item push (#656, #657). The recipient receives a clean,
@@ -16,31 +16,10 @@ import { APP, syncKey } from '../sync/keys';
 // overlay. Always credit the recipient BEFORE removing from the giver so a
 // mid-transfer failure can only duplicate (visible in the log), never destroy.
 
-// Deep-clone for the recipient: strip live/loadout-only fields and mint fresh
-// uids throughout (including a container's contents) so a gift can't collide
-// with an entry the recipient already owns. The recipient's effective tree
-// re-derives placement (container → Worn, contents → Stowed).
-const reuid = (item) => {
-  const { state, hand, ...rest } = item || {};
-  const next = { ...rest, uid: newEntryUid() };
-  if (next.container && Array.isArray(next.container.contents)) {
-    next.container = {
-      ...next.container,
-      contents: next.container.contents.map((c) => reuid(c)),
-    };
-  }
-  return next;
-};
-
-// Every uid in an item's subtree (the entry itself + any container contents) —
-// the full set that must leave the giver when a container is handed over.
-const subtreeUids = (item) => {
-  const out = item?.uid != null ? [item.uid] : [];
-  if (item?.container && Array.isArray(item.container.contents)) {
-    item.container.contents.forEach((c) => out.push(...subtreeUids(c)));
-  }
-  return out;
-};
+// `reuid` (deep-clone with fresh uids, live fields stripped) and `subtreeUids`
+// (every uid that must leave the giver) now live in utils/inventoryTransfer.js
+// so the GM dock's party-inventory move (#1859) runs the identical mechanics.
+// Behavior here is unchanged by that extraction.
 
 export const useGiveItem = (giverId) => {
   const { getState, sendUpdate, connected, foundryConnected } = useSession();
