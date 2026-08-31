@@ -2,7 +2,14 @@ import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 import './ReputationRadarChart.css';
 
-const ReputationRadarChart = ({ factions }) => {
+// `compact` (#1850, dock Reputation rail) shrinks the chart for the GM
+// Command Dock's mini radar and hides the effects list below it (the dock
+// renders each faction's active rank effect inline on its own row, so
+// repeating the list here would be redundant at dock scale). Purely
+// additive/opt-in — omitted, `compact` defaults false and every prop below
+// keeps its original value, so QuestTracker's `<ReputationRadarChart
+// factions={...} />` call renders pixel-identical to before.
+const ReputationRadarChart = ({ factions, compact = false }) => {
   // Helper function to get current standing
   const getCurrentStanding = (faction) => {
     const rep = faction.reputation;
@@ -37,8 +44,8 @@ const ReputationRadarChart = ({ factions }) => {
     .filter(effect => effect !== null);
 
   return (
-    <div className="reputation-radar-chart">
-      <ResponsiveContainer width="100%" height={400}>
+    <div className={`reputation-radar-chart${compact ? ' reputation-radar-chart--compact' : ''}`}>
+      <ResponsiveContainer width="100%" height={compact ? 220 : 400}>
         <RadarChart data={data}>
           <PolarGrid />
           <PolarAngleAxis
@@ -72,7 +79,7 @@ const ReputationRadarChart = ({ factions }) => {
         </RadarChart>
       </ResponsiveContainer>
 
-      {activeEffects.length > 0 && (
+      {!compact && activeEffects.length > 0 && (
         <div className="reputation-effects">
           <h3>Active Reputation Effects</h3>
           <div className="effects-list">

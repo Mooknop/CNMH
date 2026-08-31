@@ -20,12 +20,21 @@
  * Two-gate shape (mirrors `gotoExplorationDock`): `gotoDowntimeDock`'s heading
  * proves the pane mounted; the topic's own card (`dock-dt-topic-<id>`) proves
  * the capture-only content actually hydrated before any interaction.
+ *
+ * The final test below covers the pane's second section, party Reputation
+ * (#1850). Unlike `research`, `faction` is a normal seeded collection (score
+ * lives on the doc, not a synced key), so it goes through the `seed` fixture
+ * like quest/lore/character. The write path is optimistic + debounced
+ * (`DockDowntimePane`'s own header note): the row updates immediately on tap,
+ * then a single commit lands ~600ms later — the test asserts BOTH the
+ * immediate UI update and, via `waitForContent`, that the debounced commit
+ * actually persisted to the faction doc.
  */
 
 import { type Page } from '@playwright/test';
 import { test, expect } from '../../fixtures/gm';
 import { mockSession } from '../../fixtures/session';
-import { importDocs } from '../../helpers/content';
+import { importDocs, waitForContent } from '../../helpers/content';
 import { gotoDowntimeDock } from '../../helpers/dock';
 import { testId } from '../../helpers/ids';
 
@@ -66,6 +75,25 @@ const TOPIC = {
 
 const topicCard = (page: Page) =>
   page.getByTestId(`dock-dt-topic-${TOPIC_ID}`);
+
+// Reputation rail (#1850, successor to this same S5 train). A faction doc is
+// a normal seeded collection (unlike `research`, which is capture-only) —
+// seeded here via the `seed` fixture, same as quest/lore/character. Invented
+// fantasy content, same reasoning as TOPIC above (public repo).
+const FACTION_ID = testId('faction');
+const FACTION_NAME = 'E2E Scarnetti Consortium';
+const FACTION = {
+  id: FACTION_ID,
+  name: FACTION_NAME,
+  reputation: 9, // top edge of Neutral — one tap crosses into Friendly
+  ranks: [
+    { name: 'Disliked', min: -29, max: -10, effect: 'Prices rise at Consortium shops.' },
+    { name: 'Neutral', min: -9, max: 9 },
+    { name: 'Friendly', min: 10, max: 29, effect: 'Prices drop at Consortium shops.' },
+  ],
+};
+
+const factionRow = (page: Page) => page.getByTestId(`dock-dt-faction-${FACTION_ID}`);
 
 // `cnmh_research_global` seeded with the topic already open to the party —
 // tests 2 and 3 care about accrual, not the availability toggle itself
@@ -168,5 +196,32 @@ test.describe('GM dock downtime pane — research (#1843, epic #206 S5)', () => 
     await expect(card.locator('.dock-dt-source', { hasText: SOURCE_ELDERS })).toContainText('1 / 3 RP');
     await expect(card).toContainText('3 / 5 RP');
     await expect(addElders).toBeEnabled();
+  });
+
+  test('reputation: a stepper tap crosses a rank and persists to the faction doc (#1850)', async ({
+    page,
+    request,
+    seed,
+  }) => {
+    await seed({ faction: [FACTION] });
+    await mockSession(page, { seed: { cnmh_playmode_global: 'downtime' } });
+    await gotoDowntimeDock(page);
+
+    const row = factionRow(page);
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(FACTION_NAME);
+    await expect(row).toContainText('9');
+    await expect(row).toContainText('Neutral');
+
+    const raise = row.getByRole('button', { name: `Raise ${FACTION_NAME} reputation` });
+    await raise.click();
+
+    // Optimistic: the row updates immediately, before the debounced write lands.
+    await expect(row).toContainText('10');
+    await expect(row).toContainText('Friendly');
+
+    // The debounced commit (~600ms after the tap) actually persisted the new
+    // score to the faction doc — not just local optimism.
+    await waitForContent(request, 'faction', FACTION_ID, (entry) => entry?.reputation === 10);
   });
 });
