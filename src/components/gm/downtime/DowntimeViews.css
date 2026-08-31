@@ -1741,3 +1741,264 @@ a.dock-dt-btn {
   padding: 0 var(--space-4);
   font-size: 0.78rem;
 }
+
+/* ── Resources view (#1860) ──────────────────────────────────────────────────
+   The first view with a FOOTER BAR, so it opts the view frame into its third
+   `auto` grid row through the `--dock-dt-view-rows` hook the frame exposes
+   (see the top of this file) rather than a second root class. The five PC rows
+   share the middle row's height evenly — `flex: 1` each, no `align-content:
+   start` — which is the same anti-dead-space rule the card grids follow. */
+
+.dock-dt-res-view {
+  --dock-dt-view-rows: auto minmax(0, 1fr) auto;
+}
+
+.dock-dt-res-body {
+  gap: var(--space-2);
+}
+
+/* The exact 5-column template from the spec: identity / HP cluster / focus /
+   slots (flexible) / rest. */
+.dock-dt-res-row {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 190px 300px 150px minmax(0, 1fr) 96px;
+  gap: var(--space-3);
+  align-items: center;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  padding: var(--space-3);
+}
+
+.dock-dt-res-who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dock-dt-res-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--x-theme, var(--shell-text-tertiary));
+}
+
+.dock-dt-res-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dock-dt-res-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-dt-res-class {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
+}
+
+/* HpFx's wrapper IS the HP cluster (it renders a plain div around whatever it
+   is given), so the row's second column is the `hp-fx` element itself — the
+   floating damage/heal number it absolutely-positions therefore lands over the
+   bar it belongs to. */
+.dock-dt-res-hp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dock-dt-res-hp-gauge {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dock-dt-res-hp-label {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-res-hp-value {
+  margin-left: auto;
+  font-size: 0.86rem;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-res-bar {
+  height: 10px;
+  min-width: 0;
+}
+
+/* Bar tone is a remaining-fraction read (> 0.6 / > 0.3 / else), computed in
+   the view and expressed as a modifier so the thresholds live in exactly one
+   place — never as an inline color. */
+.dock-dt-res-bar--verdant .dock-dt-bar-fill {
+  background: var(--verdant-mid);
+}
+
+.dock-dt-res-bar--gold .dock-dt-bar-fill {
+  background: var(--gold-mid);
+}
+
+.dock-dt-res-bar--peril .dock-dt-bar-fill {
+  background: var(--peril-light);
+}
+
+.dock-dt-res-focus,
+.dock-dt-res-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dock-dt-res-label {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.dock-dt-res-pips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Focus pips are round and 16px; slot pips are 12px squares. Both are filled
+   with --arcane-mid while AVAILABLE and hollow once spent, so a glance across
+   the column reads as "how much magic is left", not "how much was used". */
+.dock-dt-res-pip {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--arcane-light);
+  background: transparent;
+}
+
+.dock-dt-res-pip--on {
+  background: var(--arcane-mid);
+}
+
+.dock-dt-res-readout {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.dock-dt-res-slot-groups {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dock-dt-res-slot-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dock-dt-res-rank {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--arcane-light);
+}
+
+.dock-dt-res-slot-pip {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--arcane-light);
+  background: transparent;
+}
+
+.dock-dt-res-slot-pip--on {
+  background: var(--arcane-mid);
+}
+
+.dock-dt-res-note {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.dock-dt-res-rest {
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+/* ── Footer action bar ────────────────────────────────────────────────────
+   The view's third grid row: explanatory copy on the left, party actions on
+   the right. Shares the dock's card shell so it reads as chrome rather than as
+   another PC row. */
+.dock-dt-footbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  padding: var(--space-3) var(--space-4);
+}
+
+.dock-dt-footbar-copy {
+  margin-right: auto;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
+.dock-dt-footbar .dock-dt-btn {
+  flex: none;
+  padding: 0 var(--space-4);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Refocus is an arcane-tinted secondary — same pool the focus pips draw from,
+   so the button and the thing it refills share a hue. */
+.dock-dt-btn--arcane {
+  border-color: color-mix(in srgb, var(--arcane-light) 45%, transparent);
+  background: color-mix(in srgb, var(--arcane-mid) 20%, transparent);
+  color: var(--arcane-light);
+}
+
+.dock-dt-btn--arcane:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--arcane-mid) 32%, transparent);
+  color: var(--arcane-light);
+}
+
+.dock-dt-footbar .dock-dt-res-rest-all {
+  padding: 0 var(--space-5);
+  font-size: 0.9rem;
+}
