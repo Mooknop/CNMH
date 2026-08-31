@@ -109,32 +109,42 @@ test.describe('GM dock downtime pane — research (#1843, epic #206 S5)', () => 
     await importDocs(request, 'research', [TOPIC]);
   });
 
-  test('a topic renders collapsed until the GM marks it available', async ({ page }) => {
+  test('a topic renders as a locked chip until the GM marks it available', async ({ page }) => {
+    // Since the #1854 list/detail re-layout, a topic the GM hasn't opened
+    // renders as a dashed chip at the bottom of the topic-list column (not a
+    // detail-pane target) — the chip itself IS the availability switch, reused
+    // untouched from the pre-#1854 toggle. `topicCard` (dock-dt-topic-<id>)
+    // resolves to this chip before the tap and to the detail pane after — the
+    // testid moves with whichever surface is the topic's current one.
     const session = await mockSession(page, {
       seed: { cnmh_playmode_global: 'downtime' },
     });
     await gotoDowntimeDock(page);
 
-    const card = topicCard(page);
-    await expect(card).toBeVisible();
-    await expect(card).toContainText(TOPIC_TITLE);
-    await expect(card).toContainText('Not yet open to the party.');
-    // Collapsed means collapsed: no sources, no progress bar, no tier text.
-    await expect(card).not.toContainText(SOURCE_ARCHIVE);
-    await expect(card).not.toContainText(SOURCE_ELDERS);
-    await expect(card).not.toContainText('research points');
+    const chip = topicCard(page);
+    await expect(chip).toBeVisible();
+    await expect(chip).toContainText(TOPIC_TITLE);
+    await expect(chip).toHaveAttribute('aria-checked', 'false');
+    await expect(chip).toHaveAttribute('aria-label', `${TOPIC_TITLE} available to the party`);
+    // Collapsed means collapsed: no sources, no progress bar, no tier text on
+    // the chip — it carries the title and nothing else.
+    await expect(chip).not.toContainText(SOURCE_ARCHIVE);
+    await expect(chip).not.toContainText(SOURCE_ELDERS);
+    await expect(chip).not.toContainText('research points');
 
-    const toggle = card.getByRole('switch', { name: `${TOPIC_TITLE} available to the party` });
-    await expect(toggle).toHaveAttribute('aria-checked', 'false');
-
-    await toggle.click();
+    await chip.click();
     await session.expectSent('cnmh_research_global', (v) => v?.[TOPIC_ID]?.available === true);
 
-    await expect(toggle).toHaveAttribute('aria-checked', 'true');
-    await expect(card).not.toContainText('Not yet open to the party.');
-    await expect(card).toContainText(SOURCE_ARCHIVE);
-    await expect(card).toContainText(SOURCE_ELDERS);
-    await expect(card).toContainText('0 / 5 RP');
+    // Now the only open topic — it's auto-selected and the SAME testid now
+    // resolves to its detail pane.
+    const detail = topicCard(page);
+    await expect(detail).toContainText(SOURCE_ARCHIVE);
+    await expect(detail).toContainText(SOURCE_ELDERS);
+    await expect(detail).toContainText('0 / 5 RP');
+    const detailToggle = detail.getByRole('switch', {
+      name: `${TOPIC_TITLE} available to the party`,
+    });
+    await expect(detailToggle).toHaveAttribute('aria-checked', 'true');
   });
 
   test('accruing RP from a source crosses a tier; a still-locked tier stays hidden', async ({ page }) => {
