@@ -11,9 +11,10 @@
    footer bar opt into a third `auto` row without a second class.
 
    TEMPORARY: `.dock-dt-view-body--scroll` is the wave-1 escape hatch for the
-   two views moved across with their old markup intact (Research, Reputation).
-   It is the ONLY overflow in the pane and it goes away with #1854 / #1855 —
-   do not reach for it in a new view. */
+   views moved across with their old markup intact. Reputation's re-layout
+   (#1855) dropped it; Research's own re-layout (#1854) is the last user. It
+   is the ONLY overflow allowed in the pane — do not reach for it in a new
+   view. */
 
 .dock-dt-view {
   flex: 1;
@@ -527,82 +528,178 @@ a.dock-dt-btn {
   outline-offset: 2px;
 }
 
-/* ── Reputation view (#1850) ─────────────────────────────────────────────── */
+/* ── Reputation view (#1850; no-scroll ladder re-layout #1855) ──────────────
+   Two-column card grid, one faction per card, `grid-auto-rows: minmax(0, 1fr)`
+   so all four rows stretch to fill the view instead of hugging their content
+   (the #1855 spec's explicit anti-dead-space rule — see the file header).
+   NO RADAR on this screen; ReputationRadarChart is not imported here. */
 
-.dock-dt-rep-radar {
+.dock-dt-rep-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.dock-dt-rep-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   border: 1px solid var(--shell-border);
   border-radius: var(--radius-md);
   background: var(--surface-inset);
-  padding: var(--space-2);
+  padding: var(--space-3);
 }
 
-.dock-dt-rep-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.dock-dt-rep-row {
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.dock-dt-rep-head {
+.dock-dt-rep-title-row {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
   gap: var(--space-2);
 }
 
 .dock-dt-rep-name {
-  font-family: var(--font-ui);
-  font-size: 0.82rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--shell-text-primary);
   margin-right: auto;
-}
-
-.dock-dt-rep-score {
-  font-family: var(--font-ui);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--shell-text-secondary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* A rank chip only renders when the score falls inside a named rank — a
-   score outside every rank shows its number with no chip (#1850 ruling). */
-.dock-dt-rep-rank {
+/* Rank badge — background carries the sign (positive/negative/neutral), text
+   stays a constant color so the badge reads at a glance regardless of tone.
+   Renders "Off ladder" (neutral tone) rather than disappearing when the score
+   falls outside every authored rank — #1855 spec, a deliberate change from
+   the pre-redesign chip-or-nothing behavior. */
+.dock-dt-rep-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
-  background: var(--verdant-mid);
   color: var(--shell-text-primary);
   font-family: var(--font-ui);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.dock-dt-rep-effect {
-  margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.4;
+.dock-dt-rep-badge--positive {
+  background: var(--verdant-mid);
+}
+
+.dock-dt-rep-badge--negative {
+  background: color-mix(in srgb, var(--peril-base) 55%, transparent);
+}
+
+.dock-dt-rep-badge--neutral {
+  background: var(--surface-raised);
+}
+
+.dock-dt-rep-score {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  min-width: 34px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dock-dt-rep-score--positive {
+  color: var(--verdant-light);
+}
+
+.dock-dt-rep-score--negative {
+  color: var(--peril-light);
+}
+
+.dock-dt-rep-score--neutral {
   color: var(--shell-text-secondary);
 }
 
-.dock-dt-rep-actions {
+.dock-dt-rep-ladder-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* The ladder — the one genuinely new visual primitive in this redesign
+   (ReputationLadder.jsx). Segment widths are set inline (`flex: seg.span`)
+   since they're per-faction data, not styling. */
+.dock-dt-ladder {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding-top: 4px;
+}
+
+.dock-dt-ladder-track {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.dock-dt-ladder-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-ui);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  background: color-mix(in srgb, var(--shell-text-primary) 7%, transparent);
+  /* A rank change is worth noticing even without the data-fx bloom (which
+     prefers-reduced-motion strips) — this short crossfade is the fallback. */
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.dock-dt-ladder-seg--active {
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-ladder-seg--positive {
+  background: var(--verdant-mid);
+}
+
+.dock-dt-ladder-seg--negative {
+  background: color-mix(in srgb, var(--peril-base) 60%, transparent);
+}
+
+.dock-dt-ladder-seg--neutral {
+  background: var(--surface-raised);
+}
+
+/* Overhangs the segment strip top and bottom (22px marker vs. 18px strip +
+   4px top padding on the container) so the exact score reads against the
+   bands even when it sits near a boundary. */
+.dock-dt-ladder-marker {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--shell-text-primary);
+  box-shadow: 0 0 0 1px var(--shell-bg);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.dock-dt-rep-effect {
+  margin: auto 0 0;
+  min-height: 1.4em;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
 }
 
 /* ── Party ledger view (#1857) ───────────────────────────────────────────── */
