@@ -1,23 +1,10 @@
 import React from 'react';
 import { usePartyDowntime } from '../../hooks/usePartyDowntime';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
+import { segmentsFor } from '../../utils/downtimeUtils';
 import PartyPresenceRail from '../shared/PartyPresenceRail';
 import PartyLedgerRow from '../shared/PartyLedgerRow';
 import './DowntimePartyLedger.css';
-
-// Ordered activity-colored day-groups for one PC's week, then the trailing free
-// block. Order follows DOWNTIME_ACTIVITIES (the canonical fill order).
-const segmentsFor = (plan, paired, blockDays) => {
-  const groups = [];
-  for (const a of DOWNTIME_ACTIVITIES) {
-    const d = plan?.[a.name] || 0;
-    if (d > 0) groups.push({ name: a.name, hue: a.hue, days: d, paired: !!(paired && paired[a.name]) });
-  }
-  const used = groups.reduce((s, g) => s + g.days, 0);
-  const free = Math.max(0, (blockDays || 0) - used);
-  if (free > 0) groups.push({ name: null, days: free });
-  return groups;
-};
 
 // A single PC's week as a ribbon of grouped, activity-colored day-blocks.
 const Ribbon = ({ plan, paired, blockDays }) => {
