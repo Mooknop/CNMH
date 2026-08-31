@@ -777,3 +777,133 @@ a.dock-dt-btn {
 .dock-dt-ledger-seg--free .dock-dt-ledger-seg-days {
   color: var(--shell-text-tertiary);
 }
+
+/* ── Training view (#1858) ───────────────────────────────────────────────── */
+
+.dock-dt-train-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.dock-dt-train-card {
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.dock-dt-train-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dock-dt-train-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--x-theme, var(--shell-text-tertiary));
+}
+
+.dock-dt-train-name {
+  margin-right: auto;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-train-vendor {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.dock-dt-train-tracks {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  overflow: hidden;
+}
+
+.dock-dt-train-track {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease-out;
+}
+
+.dock-dt-train-track-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.dock-dt-train-label {
+  margin-right: auto;
+  font-family: var(--font-ui);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--shell-text-primary);
+}
+
+.dock-dt-train-readout {
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--act-train);
+  white-space: nowrap;
+}
+
+.dock-dt-train-track--ready .dock-dt-train-readout {
+  color: var(--verdant-light);
+}
+
+.dock-dt-train-bar {
+  height: 8px;
+}
+
+.dock-dt-train-bar .dock-dt-bar-fill {
+  background: var(--act-train);
+}
+
+.dock-dt-train-track--ready .dock-dt-train-bar .dock-dt-bar-fill {
+  background: var(--verdant-light);
+}
+
+/* Threshold crossing (#1858): a brief accent bloom on the track that just hit
+   its benchmark. See src/fx.css for the [data-fx='bloom'] keyframe itself —
+   this just bridges its accent-outline read to the training hue. */
+.dock-dt-train-track[data-fx='bloom'] {
+  --accent-outline: var(--verdant-light);
+}
+
+.dock-dt-train-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.dock-dt-train-confirm {
+  flex: 1;
+}
+
+.dock-dt-train-confirm--ready {
+  border: 1px solid var(--verdant-mid);
+  background: color-mix(in srgb, var(--verdant-mid) 28%, transparent);
+  color: var(--verdant-light);
+}
+
+.dock-dt-train-confirm--ready:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--verdant-mid) 38%, transparent);
+  color: var(--verdant-light);
+}
