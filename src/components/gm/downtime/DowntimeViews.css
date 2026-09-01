@@ -676,7 +676,7 @@ a.dock-dt-btn {
 }
 
 .dock-dt-switch:focus-visible {
-  outline: 2px solid var(--accent-outline);
+  outline: 2px solid var(--ember-light);
   outline-offset: 2px;
 }
 
@@ -903,6 +903,13 @@ a.dock-dt-btn {
   align-items: center;
 }
 
+/* Modifier on the day-number header row (combined with .dock-dt-ledger-grid);
+   had no rule of its own — pins it to content height so it never competes
+   with .dock-dt-ledger-rows for the flexible space below. */
+.dock-dt-ledger-dayhead {
+  flex: none;
+}
+
 .dock-dt-ledger-days {
   display: flex;
   gap: 2px;
@@ -1038,8 +1045,21 @@ a.dock-dt-btn {
   gap: var(--space-3);
 }
 
+/* Inset-card shell, hand-rolled here rather than shared (matches
+   .dock-dt-rep-card / .dock-dt-period-card, which each do the same) — the
+   Research re-layout (#1854) deleted the old shared `.dock-dt-card` rule this
+   view's JSX still referenced, leaving these cards borderless. Fixed by
+   folding the shell directly into this selector instead of reintroducing a
+   shared class only one view uses. */
 .dock-dt-train-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  padding: var(--space-3);
   overflow: hidden;
 }
 
@@ -1208,7 +1228,13 @@ a.dock-dt-btn {
   font-family: var(--font-display);
   font-size: 2.4rem;
   font-weight: 800;
-  line-height: 1;
+  /* 1 clips Cinzel 800's own line box at this size — nothing paints outside
+     the box (no ancestor sets overflow: hidden here), but the flex-blockified
+     span's clientHeight came up short of its scrollHeight, an actual (if
+     invisible) no-scroll-rule violation the #1861 e2e coverage catches. 1.3
+     clears it with margin in Chromium; unlike the rest of this file's
+     font-sizes, this one isn't copied from the handoff verbatim. */
+  line-height: 1.3;
   color: var(--ember-light);
 }
 
@@ -1241,6 +1267,17 @@ a.dock-dt-btn {
   color: var(--shell-text-secondary);
 }
 
+/* Empty-roster fallback inside the "Locked in" card — same treatment as the
+   hint above it; this class had no rule at all (only the shared
+   `.dock-dt-card-label` above it did), which left it on UA-default <p> margins
+   inside a fixed-height card. */
+.dock-dt-closed-note {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
 .dock-dt-period-close {
   min-height: 44px;
   border-radius: var(--radius-sm);
@@ -1251,6 +1288,11 @@ a.dock-dt-btn {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.dock-dt-period-close:hover:not(:disabled) {
+  border-color: var(--peril-light);
+  background: color-mix(in srgb, var(--peril-base) 28%, transparent);
 }
 
 .dock-dt-period-close:disabled {
@@ -1405,6 +1447,10 @@ a.dock-dt-btn {
 
 .dock-dt-override-field--bench {
   color: var(--shell-text-secondary);
+}
+
+.dock-dt-override-field:hover {
+  background: var(--surface-inset-hover);
 }
 
 .dock-dt-override-field:focus-visible {
@@ -1648,6 +1694,11 @@ a.dock-dt-btn {
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.dock-dt-inv-page-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
 }
 
 .dock-dt-inv-page-btn:disabled {
